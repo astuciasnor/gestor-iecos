@@ -1,5 +1,11 @@
 # Gestor de Alocação de Carga Horária - IECOS/UFPA
 
+```markdown
+# Gestor de Alocação de Carga Horária - IECOS/UFPA
+
+![Capa do Projeto](img/capa_projeto.jpg)
+
+
 Sistema web para gestão, alocação e visualização de grades horárias acadêmicas. Desenvolvido para facilitar o trabalho dos diretores de faculdade e da secretaria acadêmica do IECOS/UFPA.
 
 🔗 **Acesse o Sistema:** [CLIQUE AQUI PARA ACESSAR](https://astuciasnor.github.io/gestor-iecos/)
