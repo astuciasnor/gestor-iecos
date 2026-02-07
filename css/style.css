@@ -405,7 +405,19 @@ input[type="date"] { color-scheme: dark; }
     }
 
     .calendar-month { box-shadow: none; border: 1px solid #ccc; page-break-after: always; }
-    .calendar-month h3 { background: var(--primary) !important; color: white !important; }
+    
+    /* CORREÇÃO PARA O MÊS APARECER NO PDF 
+       Usamos texto colorido e fundo branco para garantir visibilidade
+    */
+    .calendar-month h3 { 
+        background: transparent !important; 
+        color: var(--primary) !important; 
+        border-bottom: 3px solid var(--primary);
+        font-weight: 800;
+        padding-bottom: 5px;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
     
     .day-cell, .day-header { border: 1px solid #ccc !important; }
     .cal-slot-row { border-bottom: 1px solid #ddd; }
