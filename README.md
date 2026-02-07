@@ -1,5 +1,3 @@
-# Gestor de Alocação de Carga Horária - IECOS/UFPA
-
 ```markdown
 # Gestor de Alocação de Carga Horária - IECOS/UFPA
 
