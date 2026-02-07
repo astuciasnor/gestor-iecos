@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestor Acadêmico - Coordenação</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <div class="app-container">
+        <aside class="sidebar no-print">
+            <h2>Configuração</h2>
+            
+            <div class="form-group">
+                <label>Curso</label>
+                <select id="sel-curso"><option value="">Selecione...</option></select>
+            </div>
+
+            <div class="form-group">
+                <label>Turma</label>
+                <select id="sel-turma" disabled><option value="">Selecione um curso...</option></select>
+            </div>
+
+            <hr>
+
+            <h3>Oferta de Disciplina</h3>
+            
+            <div class="form-group">
+                <label>Disciplina</label>
+                <input type="text" id="inp-disciplina" list="list-disciplinas" placeholder="Busque a disciplina...">
+                <datalist id="list-disciplinas"></datalist>
+            </div>
+
+            <div class="form-group">
+                <label>Docente</label>
+                <input type="text" id="inp-docente" list="list-docentes" placeholder="Busque o docente...">
+                <datalist id="list-docentes"></datalist>
+            </div>
+
+            <div class="form-group">
+                <label>Tipo</label>
+                <select id="sel-tipo">
+                    <option value="regular">Regular (Semanal)</option>
+                    <option value="intensiva">Intensiva (Blocada)</option>
+                </select>
+            </div>
+
+            <div id="datas-intensiva" class="hidden">
+                <div class="form-group">
+                    <label>Início</label>
+                    <input type="date" id="inp-data-inicio">
+                </div>
+                <div class="form-group">
+                    <label>Fim</label>
+                    <input type="date" id="inp-data-fim">
+                </div>
+                <small style="display:block; color:#666; margin-top:5px; font-size:0.8em; line-height: 1.4;">
+                    * Alocará automaticamente 5 aulas por dia seguindo o horário padrão da turma.
+                </small>
+            </div>
+
+            <button id="btn-add-oferta" class="btn-primary">Adicionar à Grade</button>
+            
+            <hr>
+            
+            <div class="actions">
+                <button id="btn-export" class="btn-secondary">Exportar (JSON)</button>
+                <label for="inp-import" class="btn-secondary" style="cursor:pointer">Importar</label>
+                <input type="file" id="inp-import" accept=".json,.csv" style="display:none">
+                <button id="btn-clear" class="btn-danger">Limpar Tudo</button>
+            </div>
+        </aside>
+
+        <main class="content">
+            <header class="top-bar no-print">
+                <nav class="tabs">
+                    <button class="tab-btn active" data-tab="weekly">Grade Semanal</button>
+                    <button class="tab-btn" data-tab="monthly">Calendário da Turma</button>
+                    <button class="tab-btn" data-tab="teacher">Visão do Professor</button>
+                    <button class="tab-btn" data-tab="list">Lista de Ofertas</button>
+                </nav>
+                <button onclick="window.print()" class="btn-print">🖨️ Imprimir</button>
+            </header>
+
+            <div id="feedback-msg" class="feedback hidden"></div>
+
+            <section id="tab-weekly" class="tab-content active">
+                <div class="grid-header">
+                    <h2 id="turma-title">Selecione uma turma</h2>
+                    <p class="instruction">Para disciplinas <b>Regulares</b>: Clique direto nos horários abaixo.<br>Para <b>Intensivas</b>: Configure as datas no menu e clique em "Adicionar à Grade".</p>
+                </div>
+                <div id="weekly-grid" class="timetable"></div>
+            </section>
+
+            <section id="tab-monthly" class="tab-content">
+                <div class="calendar-controls no-print">
+                    <label>Período de Visualização:</label>
+                    <input type="date" id="cal-start" value="2025-10-13"> a 
+                    <input type="date" id="cal-end" value="2026-02-27">
+                    <button id="btn-gerar-cal" class="btn-secondary">Atualizar Calendário</button>
+                </div>
+                <div id="monthly-container"></div>
+            </section>
+
+            <section id="tab-teacher" class="tab-content">
+                <div class="form-group no-print" style="max-width: 400px; margin-bottom: 20px;">
+                    <label>Selecione o Professor para visualizar a agenda mensal:</label>
+                    <select id="sel-view-docente" style="width: 100%; padding: 8px;">
+                        <option value="">Carregando...</option>
+                    </select>
+                </div>
+                <div id="teacher-calendar-container"></div>
+            </section>
+
+            <section id="tab-list" class="tab-content">
+                <h3>Ofertas Cadastradas</h3>
+                <table class="data-table" id="ofertas-table" style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                        <tr style="background: #eee; text-align: left;">
+                            <th style="padding: 8px; border: 1px solid #ddd;">Disciplina</th>
+                            <th style="padding: 8px; border: 1px solid #ddd;">Docente</th>
+                            <th style="padding: 8px; border: 1px solid #ddd;">Tipo</th>
+                            <th style="padding: 8px; border: 1px solid #ddd;">Horário/Data</th>
+                            <th style="padding: 8px; border: 1px solid #ddd;">Carga Horária (Estimada)</th>
+                            <th style="padding: 8px; border: 1px solid #ddd;">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        </tbody>
+                </table>
+            </section>
+        </main>
+    </div>
+
+    <script type="module" src="js/main.js"></script>
+</body>
+</html>
