@@ -1,4 +1,3 @@
-```markdown
 # Gestor de Alocação de Carga Horária - IECOS/UFPA
 
 ![Capa do Projeto](img/capa_projeto.png)
