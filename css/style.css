@@ -1,16 +1,16 @@
 :root {
-    /* --- PALETA DE CORES INSTITUCIONAL (IECOS/UFPA) --- */
-    --primary: #2c3e50;      /* Azul Petróleo Escuro (Sidebar/Títulos) */
-    --primary-light: #34495e; /* Variação mais clara para hover */
-    --accent: #c0392b;       /* Vermelho UFPA (Botões de Ação/Destaque) */
-    --accent-hover: #e74c3c; /* Vermelho mais vivo para hover */
-    --bg-app: #ecf0f1;       /* Fundo da aplicação (Cinza Gelo - Conforto visual) */
-    --bg-panel: #ffffff;     /* Fundo dos painéis (Branco puro) */
+    /* --- PALETA DE CORES INSTITUCIONAL (UFPA/AMAZÔNIA) --- */
+    --primary: #004e28;      /* Verde UFPA */
+    --primary-light: #006633; /* Verde um pouco mais claro */
+    --accent: #c0392b;       /* Vermelho Terracota (Destaque) */
+    --accent-hover: #e74c3c;
+    --bg-app: #ecf0f1;       /* Fundo da aplicação (Cinza Gelo) */
+    --bg-panel: #ffffff;     /* Fundo dos painéis (Branco) */
     --text-main: #2c3e50;    /* Texto Principal */
-    --text-muted: #7f8c8d;   /* Texto Secundário (Cinza médio) */
+    --text-muted: #7f8c8d;   /* Texto Secundário */
     --border: #bdc3c7;       /* Bordas sutis */
     
-    --sidebar-width: 300px;  /* Largura do menu */
+    --sidebar-width: 300px;
 }
 
 /* --- RESET & ESTRUTURA --- */
@@ -30,8 +30,8 @@ body {
 /* --- SIDEBAR (MENU LATERAL) --- */
 .sidebar {
     width: var(--sidebar-width);
-    background: var(--primary); /* Fundo Escuro Elegante */
-    color: #ecf0f1; /* Texto Claro */
+    background: var(--primary);
+    color: #ecf0f1;
     padding: 20px;
     display: flex;
     flex-direction: column;
@@ -56,7 +56,7 @@ body {
     margin-top: 20px;
 }
 
-/* Formulários na Sidebar (Dark Mode) */
+/* Formulários na Sidebar */
 .form-group { margin-bottom: 15px; }
 .form-group label { 
     display: block; 
@@ -65,20 +65,27 @@ body {
     font-size: 0.85em; 
     color: #bdc3c7; 
 }
+
 .form-group input, .form-group select { 
     width: 100%; 
     padding: 10px; 
-    background: rgba(255,255,255,0.1); /* Translúcido */
+    background-color: var(--primary-light); 
     border: 1px solid rgba(255,255,255,0.2); 
     border-radius: 6px; 
-    color: #fff;
+    color: #fff; 
     font-size: 0.95em; 
 }
+
+.form-group select option {
+    background-color: var(--primary);
+    color: #fff;
+}
+
 .form-group input:focus, .form-group select:focus {
-    background: rgba(255,255,255,0.2);
+    background-color: var(--primary);
     border-color: #fff;
 }
-/* Ajuste para inputs date ficarem visíveis */
+
 input[type="date"] { color-scheme: dark; }
 
 .hidden { display: none !important; }
@@ -142,7 +149,6 @@ input[type="date"] { color-scheme: dark; }
     position: relative;
 }
 
-/* Barra de Topo (Tabs) */
 .top-bar { 
     background: var(--bg-panel); 
     padding: 0 20px; 
@@ -188,7 +194,6 @@ input[type="date"] { color-scheme: dark; }
 }
 .btn-print:hover { background: var(--primary-light); }
 
-/* Conteúdo das Abas */
 .tab-content { 
     display: none; 
     padding: 30px; 
@@ -199,14 +204,14 @@ input[type="date"] { color-scheme: dark; }
 
 /* --- GRADES E TABELAS --- */
 
-/* Grade Semanal */
 .grid-header { margin-bottom: 20px; }
 .grid-header h2 { margin: 0 0 5px 0; color: var(--primary); font-size: 1.8em; }
 .instruction { margin: 0; color: var(--text-muted); font-size: 1em; }
 
 .timetable {
     display: grid;
-    grid-template-columns: 80px repeat(6, 1fr); /* Hora + Dias */
+    /* Primeira coluna com 115px para caber a hora */
+    grid-template-columns: 115px repeat(6, 1fr); 
     gap: 2px;
     background: var(--border);
     border: 1px solid var(--border);
@@ -275,7 +280,16 @@ input[type="date"] { color-scheme: dark; }
     print-color-adjust: exact;
 }
 
-.month-grid { display: grid; grid-template-columns: repeat(7, 1fr); border-top: 1px solid #eee; }
+/* LAYOUT DO CALENDÁRIO:
+   0.6fr para Domingo e Sábado (mais estreitos)
+   1fr para Segunda a Sexta (mais largos)
+*/
+.month-grid { 
+    display: grid; 
+    grid-template-columns: 0.6fr repeat(5, 1fr) 0.6fr; 
+    border-top: 1px solid #eee; 
+}
+
 .day-header { 
     font-weight: bold; 
     text-align: center; 
@@ -286,9 +300,11 @@ input[type="date"] { color-scheme: dark; }
     border-right: 1px solid #eee; 
 }
 
+/* CÉLULA DO DIA */
 .day-cell { 
     border-right: 1px solid #f0f0f0; 
-    border-bottom: 1px solid #f0f0f0; 
+    /* BORDA INFERIOR MAIS GROSSA PARA SEPARAR SEMANAS */
+    border-bottom: 2px solid #bdc3c7; 
     min-height: 120px; 
     padding: 4px; 
     font-size: 0.8em; 
@@ -326,7 +342,7 @@ input[type="date"] { color-scheme: dark; }
     font-weight: 600;
 }
 
-/* Lista de Ofertas (Tabela) */
+/* Lista de Ofertas */
 .data-table { 
     width: 100%; 
     border-collapse: collapse; 
@@ -391,31 +407,6 @@ input[type="date"] { color-scheme: dark; }
     .calendar-month { box-shadow: none; border: 1px solid #ccc; page-break-after: always; }
     .calendar-month h3 { background: var(--primary) !important; color: white !important; }
     
-    /* Forçar bordas na impressão */
     .day-cell, .day-header { border: 1px solid #ccc !important; }
     .cal-slot-row { border-bottom: 1px solid #ddd; }
-}
-
-/* --- CORREÇÃO DOS MENUS DROP-DOWN --- */
-.form-group input, .form-group select { 
-    width: 100%; 
-    padding: 10px; 
-    /* Mudamos para uma cor sólida escura para evitar confusão do navegador */
-    background-color: var(--primary-light); 
-    border: 1px solid rgba(255,255,255,0.2); 
-    border-radius: 6px; 
-    color: #fff; /* Texto Branco */
-    font-size: 0.95em; 
-}
-
-/* O Segredo: Forçar a cor das opções internas do menu */
-.form-group select option {
-    background-color: var(--primary); /* Fundo Escuro */
-    color: #fff; /* Texto Branco */
-}
-
-/* Quando clica no campo */
-.form-group input:focus, .form-group select:focus {
-    background-color: var(--primary);
-    border-color: var(--accent);
 }

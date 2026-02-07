@@ -8,32 +8,29 @@
     
     <style>
         :root {
-            /* Verde Escuro UFPA */
             --primary: #004e28; 
             --primary-light: #006633;
         }
 
-        /* Container das logos lado a lado */
         .sidebar-header-logos {
             display: flex;
             justify-content: center;
             align-items: center;
-            gap: 15px; /* Espaço entre elas */
+            gap: 15px; 
             margin-bottom: 20px;
             margin-top: 15px;
             border-bottom: 1px solid rgba(255,255,255,0.2);
             padding-bottom: 20px;
         }
 
-        /* Estilo unificado para as imagens */
         .sidebar-header-logos img {
-            height: 70px; /* Altura fixa para igualar */
-            width: auto;  /* Largura automática proporcional */
-            border-radius: 8px; /* Cantos arredondados */
-            background: white; /* Fundo branco para destacar */
+            height: 70px;
+            width: auto;
+            border-radius: 8px;
+            background: white;
             padding: 2px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-            object-fit: contain; /* Garante que a imagem caiba sem distorcer */
+            object-fit: contain;
         }
     </style>
 </head>
@@ -46,6 +43,25 @@
             <input type="password" id="inp-senha" placeholder="Digite a senha..." style="padding: 10px; font-size: 16px; width: 100%; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 4px;">
             <button onclick="checkLogin()" style="background: #27ae60; color: white; border: none; padding: 10px 20px; font-size: 16px; cursor: pointer; border-radius: 4px; width: 100%;">Entrar</button>
             <p id="msg-erro" style="color: red; margin-top: 10px; display: none;">Senha incorreta!</p>
+        </div>
+    </div>
+
+    <div id="import-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10000; align-items: center; justify-content: center;">
+        <div style="background: white; padding: 30px; border-radius: 8px; max-width: 400px; text-align: center; box-shadow: 0 4px 20px rgba(0,0,0,0.5);">
+            <h3 style="color: var(--primary); margin-top: 0;">Como deseja importar?</h3>
+            <p style="color: #666; font-size: 0.9em; margin-bottom: 25px;">
+                Você carregou um arquivo de dados. Escolha como o sistema deve tratar essas novas informações.
+            </p>
+            
+            <div style="display: flex; gap: 10px; justify-content: center;">
+                <button id="btn-modal-replace" style="background: #e74c3c; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-weight: bold;">
+                    🗑️ Substituir Tudo
+                </button>
+                <button id="btn-modal-merge" style="background: #2980b9; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-weight: bold;">
+                    ➕ Mesclar (Juntar)
+                </button>
+            </div>
+            <button id="btn-modal-cancel" style="margin-top: 15px; background: transparent; border: none; color: #7f8c8d; cursor: pointer; text-decoration: underline;">Cancelar</button>
         </div>
     </div>
 
@@ -81,7 +97,6 @@
             
             <div class="sidebar-header-logos">
                 <img src="img/logo_iecos.png" alt="IECOS UFPA" title="IECOS UFPA">
-                
                 <img src="img/capa_projeto.png" alt="Gestor Acadêmico" title="Gestor Acadêmico">
             </div>
             

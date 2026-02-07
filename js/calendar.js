@@ -5,7 +5,7 @@ export function getCalendarEvents(turmaId, startDate, endDate, docenteFilter = n
     const days = getDaysArray(startDate, endDate);
     const calendarData = {}; 
 
-    // --- 1. Preparar Mapa de Carga Horária ---
+    // --- Preparação de Dados ---
     const chMap = {};
     const turmaToCurso = {};
 
@@ -25,7 +25,7 @@ export function getCalendarEvents(turmaId, startDate, endDate, docenteFilter = n
 
     const executionCount = {};
 
-    // --- 2. Preparar Listas ---
+    // --- Filtros ---
     let myAllocations = [];
     if (docenteFilter) {
         myAllocations = store.allocations.filter(a => a.docente === docenteFilter);
@@ -35,13 +35,12 @@ export function getCalendarEvents(turmaId, startDate, endDate, docenteFilter = n
     
     const myIntensives = myAllocations.filter(a => a.tipo === 'intensiva');
     const myRegulars = myAllocations.filter(a => a.tipo === 'regular');
-
-    // Lista Global para bloqueio de turma
     const allIntensives = store.allocations.filter(a => a.tipo === 'intensiva');
 
-    const feriados = store.rawData.feriados ? store.rawData.feriados.map(f => f.data) : [];
+    // --- LISTA DE FERIADOS ---
+    const feriadosList = store.rawData.feriados || [];
 
-    // --- 3. Loop dos Dias ---
+    // --- Loop dos Dias ---
     days.forEach(date => {
         const dateStr = toLocalDateString(date);
         const dayOfWeek = date.getDay(); 
@@ -53,12 +52,16 @@ export function getCalendarEvents(turmaId, startDate, endDate, docenteFilter = n
 
         const events = [];
 
-        if (feriados.includes(dateStr)) {
-            events.push({ type: 'holiday', title: 'Feriado' });
+        // 1. Verifica Feriado e PEGA O NOME
+        const feriadoObj = feriadosList.find(f => f.data === dateStr);
+        if (feriadoObj) {
+            const nomeFeriado = feriadoObj.nome || feriadoObj.descricao || 'Feriado';
+            events.push({ type: 'holiday', title: nomeFeriado });
             calendarData[dateStr] = events;
-            return;
+            return; 
         }
 
+        // 2. Lógica Normal de Aulas
         const globalActiveIntensives = allIntensives.filter(i => 
             dateStr >= i.dataInicio && dateStr <= i.dataFim
         );
@@ -67,7 +70,7 @@ export function getCalendarEvents(turmaId, startDate, endDate, docenteFilter = n
             dateStr >= i.dataInicio && dateStr <= i.dataFim
         );
 
-        // Adiciona Intensivas
+        // Intensivas
         myActiveIntensives.forEach(intense => {
             const key = `${intense.turmaId}|${intense.disciplina}`;
             const slotsConsumed = intense.horariosOcupados ? intense.horariosOcupados.length : 5;
@@ -76,10 +79,9 @@ export function getCalendarEvents(turmaId, startDate, endDate, docenteFilter = n
             events.push({ ...intense, priority: 2, title: `(I) ${intense.disciplina}` });
         });
 
-        // Adiciona Regulares
+        // Regulares
         myRegulars.forEach(reg => {
             if (reg.diaSemana == dayOfWeek) {
-                // Verifica bloqueio de turma (Intensiva Global)
                 const isClassBusy = globalActiveIntensives.some(intensive => intensive.turmaId === reg.turmaId);
 
                 if (!isClassBusy) {
@@ -100,8 +102,7 @@ export function getCalendarEvents(turmaId, startDate, endDate, docenteFilter = n
             }
         });
 
-        // --- NOVO: DETECTOR DE CONFLITOS (Mesmo Horário) ---
-        // Se houver mais de um evento com o MESMO horário, marca ambos como conflito.
+        // Detector de Conflitos
         const timeMap = {};
         events.forEach(e => {
             if(!timeMap[e.horario]) timeMap[e.horario] = [];
@@ -110,14 +111,11 @@ export function getCalendarEvents(turmaId, startDate, endDate, docenteFilter = n
 
         Object.keys(timeMap).forEach(h => {
             if (timeMap[h].length > 1) {
-                // Opa! Mais de uma aula no mesmo slot
                 timeMap[h].forEach(ev => ev.isConflict = true);
             }
         });
 
-        // Ordenação
         events.sort((a, b) => {
-            if(a.type === 'holiday') return -1;
             if(!a.horario) return -1;
             if(!b.horario) return 1;
             return a.horario.localeCompare(b.horario);

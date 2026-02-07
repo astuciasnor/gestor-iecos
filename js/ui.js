@@ -19,6 +19,9 @@ const inputConfig = {
     fim: document.getElementById('inp-data-fim')
 };
 
+// Variável temporária para importação
+let tempImportData = null;
+
 export function initUI() {
     selCurso.addEventListener('change', onCursoChange);
     selTurma.addEventListener('change', onTurmaChange);
@@ -41,8 +44,62 @@ export function initUI() {
     document.getElementById('btn-gerar-cal').addEventListener('click', renderMonthlyCalendar);
     selViewDocente.addEventListener('change', renderTeacherCalendar);
 
+    // --- LÓGICA DE IMPORTAÇÃO (MODAL) ---
+    const inpImport = document.getElementById('inp-import');
+    inpImport.addEventListener('change', handleFileSelect);
+
+    // Botões do Modal
+    document.getElementById('btn-modal-replace').addEventListener('click', () => {
+        if(tempImportData) {
+            store.allocations = tempImportData;
+            store.saveAllocations();
+            alert('Dados substituídos com sucesso!');
+            window.location.reload();
+        }
+        closeModal();
+    });
+
+    document.getElementById('btn-modal-merge').addEventListener('click', () => {
+        if(tempImportData) {
+            const count = store.mergeAllocations(tempImportData);
+            alert(`Mesclagem concluída! ${count} novas alocações adicionadas.`);
+            renderWeeklyGrid();
+            renderOfertasList();
+        }
+        closeModal();
+    });
+
+    document.getElementById('btn-modal-cancel').addEventListener('click', () => {
+        tempImportData = null;
+        inpImport.value = ''; // Limpa input
+        closeModal();
+    });
+
     populateCursos();
     populateDocentes();
+}
+
+function handleFileSelect(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const json = JSON.parse(e.target.result);
+            tempImportData = json;
+            // Abre o Modal
+            document.getElementById('import-modal').style.display = 'flex';
+        } catch (err) {
+            alert("Erro ao ler arquivo JSON. Verifique o formato.");
+            console.error(err);
+        }
+    };
+    reader.readAsText(file);
+}
+
+function closeModal() {
+    document.getElementById('import-modal').style.display = 'none';
 }
 
 function populateCursos() {
@@ -347,12 +404,11 @@ function generateCalendarGrid(container, turmaId, docenteName, start, end, title
 
     const eventsByDate = getCalendarEvents(turmaId, start, end, docenteName);
     
-    // CONTA CONFLITOS PARA O BANNER DE ALERTA
+    // Alerta de Conflitos
     let conflictCount = 0;
     Object.values(eventsByDate).forEach(events => {
         events.forEach(e => { if(e.isConflict) conflictCount++; });
     });
-    // Divide por 2 pois cada conflito marca 2 eventos
     conflictCount = Math.ceil(conflictCount / 2);
 
     if (conflictCount > 0) {
@@ -363,9 +419,8 @@ function generateCalendarGrid(container, turmaId, docenteName, start, end, title
         container.appendChild(alertDiv);
     }
 
-    // --- LÓGICA DE GRADE RÍGIDA ---
+    // Slots
     let slotsToRender = [];
-    
     if (turmaId) {
         slotsToRender = store.getHorariosTurma(); 
     } else if (docenteName) {
@@ -409,30 +464,32 @@ function generateCalendarGrid(container, turmaId, docenteName, start, end, title
 
             let html = `<span class="day-number">${dayData.date.split('-')[2]}</span>`;
 
-            const isHoliday = dayData.events.some(e => e.type === 'holiday');
-            if (isHoliday) {
+            // Lógica de FERIADO com NOME
+            const holidayEvent = dayData.events.find(e => e.type === 'holiday');
+            
+            if (holidayEvent) {
                 cell.style.background = '#f1f2f6';
-                html += `<div style="text-align:center; color:#7f8c8d; font-style:italic; padding-top:10px;">FERIADO</div>`;
+                html += `<div style="text-align:center; color:#7f8c8d; font-style:italic; padding-top:10px; font-weight:bold; font-size:0.9em;">
+                            ${holidayEvent.title}
+                         </div>`;
             } else {
                 if (slotsToRender.length > 0) {
                     slotsToRender.forEach((slotTime, index) => {
                         const isIntervalo = slotTime.toUpperCase().includes('INTERVALO');
-                        
                         const timeMatch = slotTime.match(/\d{2}:\d{2}/);
                         const timeLabel = timeMatch ? timeMatch[0] : "";
                         const currentHour = parseInt(timeLabel.split(':')[0], 10);
 
                         let rowExtraStyle = "";
+                        // AQUI: Separação de Turnos (Linha Fina da Cor Primária)
                         if (index > 0 && currentHour >= 13) {
                              const prevMatch = slotsToRender[index-1].match(/\d{2}:\d{2}/);
                              const prevHour = prevMatch ? parseInt(prevMatch[0].split(':')[0], 10) : 0;
                              if (prevHour <= 12) {
-                                 rowExtraStyle = "border-top: 2px solid #2980b9;";
+                                 rowExtraStyle = "border-top: 1px solid var(--primary);";
                              }
                         }
 
-                        // Busca evento (agora filtrando por conflito também)
-                        // IMPORTANTE: Se houver múltiplos eventos no mesmo slot (conflito), pegar todos
                         const eventsInSlot = dayData.events.filter(e => 
                             e.horario === slotTime || 
                             (e.horariosOcupados && e.horariosOcupados.includes(slotTime))
@@ -445,7 +502,6 @@ function generateCalendarGrid(container, turmaId, docenteName, start, end, title
                             content = '<span style="color:#95a5a6; font-style:italic; font-size:0.85em;">Intervalo</span>';
                             style = 'background:#f4f6f7;';
                         } else if (eventsInSlot.length > 0) {
-                            // Se tiver conflito (mais de 1 evento ou flag isConflict)
                             const isConflict = eventsInSlot.some(e => e.isConflict);
                             
                             if (isConflict) {
@@ -455,11 +511,10 @@ function generateCalendarGrid(container, turmaId, docenteName, start, end, title
                                     return `<small>[${e.turmaId}] ${info.abrev}</small>`;
                                 }).join('<br>');
                             } else {
-                                // Evento normal
                                 const event = eventsInSlot[0];
                                 const info = getDisciplinaInfo(event.disciplina);
-                                const label = docenteName ? `[${event.turmaId}] ${info.abrev}` : info.abrev;
-                                content = label;
+                                // LIMPEZA: Exibe apenas o nome da disciplina (Sem ID da turma)
+                                content = info.abrev;
                                 style = `background:${event.cor || '#bdc3c7'}; color:black;`;
                             }
                         } else {
@@ -477,7 +532,7 @@ function generateCalendarGrid(container, turmaId, docenteName, start, end, title
                         const info = getDisciplinaInfo(ev.disciplina);
                         const style = `background:${ev.cor || '#bdc3c7'}`;
                         html += `<div class="event-chip" style="${style}">
-                                    <span style="font-weight:bold">[${ev.turmaId}]</span> ${info.abrev}
+                                    ${info.abrev}
                                  </div>`;
                     });
                 }
