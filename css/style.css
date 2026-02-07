@@ -395,3 +395,27 @@ input[type="date"] { color-scheme: dark; }
     .day-cell, .day-header { border: 1px solid #ccc !important; }
     .cal-slot-row { border-bottom: 1px solid #ddd; }
 }
+
+/* --- CORREÇÃO DOS MENUS DROP-DOWN --- */
+.form-group input, .form-group select { 
+    width: 100%; 
+    padding: 10px; 
+    /* Mudamos para uma cor sólida escura para evitar confusão do navegador */
+    background-color: var(--primary-light); 
+    border: 1px solid rgba(255,255,255,0.2); 
+    border-radius: 6px; 
+    color: #fff; /* Texto Branco */
+    font-size: 0.95em; 
+}
+
+/* O Segredo: Forçar a cor das opções internas do menu */
+.form-group select option {
+    background-color: var(--primary); /* Fundo Escuro */
+    color: #fff; /* Texto Branco */
+}
+
+/* Quando clica no campo */
+.form-group input:focus, .form-group select:focus {
+    background-color: var(--primary);
+    border-color: var(--accent);
+}
