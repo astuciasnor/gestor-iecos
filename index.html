@@ -7,8 +7,46 @@
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
+<div id="login-screen" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #2c3e50; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999;">
+        <div style="background: white; padding: 40px; border-radius: 8px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
+            <img src="img/logo_iecos.png" alt="IECOS" style="height: 60px; margin-bottom: 20px;">
+            <h2 style="margin: 0 0 20px 0; color: #333;">Acesso Restrito</h2>
+            <input type="password" id="inp-senha" placeholder="Digite a senha..." style="padding: 10px; font-size: 16px; width: 100%; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 4px;">
+            <button onclick="checkLogin()" style="background: #27ae60; color: white; border: none; padding: 10px 20px; font-size: 16px; cursor: pointer; border-radius: 4px; width: 100%;">Entrar</button>
+            <p id="msg-erro" style="color: red; margin-top: 10px; display: none;">Senha incorreta!</p>
+        </div>
+    </div>
 
-    <div class="app-container">
+    <script>
+        function checkLogin() {
+            const senhaDigitada = document.getElementById('inp-senha').value;
+            // AQUI VOCÊ DEFINE A SENHA (Cuidado: visível no código fonte)
+            const senhaCorreta = "ufpa2026"; 
+
+            if (senhaDigitada === senhaCorreta) {
+                // Remove a tela de login
+                document.getElementById('login-screen').style.display = 'none';
+                // Mostra o app
+                document.querySelector('.app-container').style.display = 'flex';
+                // Salva que o usuário já logou (opcional, para não pedir de novo ao recarregar)
+                sessionStorage.setItem('auth', 'true');
+            } else {
+                document.getElementById('msg-erro').style.display = 'block';
+            }
+        }
+
+        // Verifica se já logou antes (para não pedir senha a cada F5)
+        if (sessionStorage.getItem('auth') === 'true') {
+            document.getElementById('login-screen').style.display = 'none';
+            document.querySelector('.app-container').style.display = 'flex';
+        }
+
+        // Permite apertar ENTER para entrar
+        document.getElementById('inp-senha').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') checkLogin();
+        });
+    </script>
+    <div class="app-container" style="display: none;">
         <aside class="sidebar no-print">
             <h2>Configuração</h2>
             
