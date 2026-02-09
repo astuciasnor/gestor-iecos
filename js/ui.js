@@ -1,6 +1,6 @@
 import { store } from './store.js';
 import { getCalendarEvents } from './calendar.js';
-import { countBusinessDays, countWeekdaysInPeriod, formatDate, checkTimeConflict, parseTime } from './utils.js';
+import { countBusinessDays, countWeekdaysInPeriod, formatDate, checkTimeConflict, parseTime, addBusinessDays } from './utils.js';
 
 // Elementos Globais
 const gridContainer = document.getElementById('weekly-grid');
@@ -23,57 +23,76 @@ const inputConfig = {
 let tempImportData = null;
 
 export function initUI() {
-    selCurso.addEventListener('change', onCursoChange);
-    selTurma.addEventListener('change', onTurmaChange);
+    // Listeners básicos
+    if (selCurso) selCurso.addEventListener('change', onCursoChange);
+    if (selTurma) selTurma.addEventListener('change', onTurmaChange);
     
-    inputConfig.tipo.addEventListener('change', (e) => {
-        const div = document.getElementById('datas-intensiva');
-        if(e.target.value === 'intensiva') {
-            div.classList.remove('hidden');
-        } else {
-            div.classList.add('hidden');
-        }
-    });
+    if (inputConfig.tipo) {
+        inputConfig.tipo.addEventListener('change', (e) => {
+            const div = document.getElementById('datas-intensiva');
+            if (div) {
+                if(e.target.value === 'intensiva') {
+                    div.classList.remove('hidden');
+                } else {
+                    div.classList.add('hidden');
+                }
+            }
+        });
+    }
 
-    document.getElementById('btn-add-oferta').addEventListener('click', handleAddManual);
+    const btnAdd = document.getElementById('btn-add-oferta');
+    if (btnAdd) btnAdd.addEventListener('click', handleAddManual);
     
     document.querySelectorAll('.tab-btn').forEach(btn => {
         btn.addEventListener('click', () => switchTab(btn.dataset.tab));
     });
 
-    document.getElementById('btn-gerar-cal').addEventListener('click', renderMonthlyCalendar);
-    selViewDocente.addEventListener('change', renderTeacherCalendar);
+    const btnGerarCal = document.getElementById('btn-gerar-cal');
+    if (btnGerarCal) btnGerarCal.addEventListener('click', renderMonthlyCalendar);
+    
+    if (selViewDocente) selViewDocente.addEventListener('change', renderTeacherCalendar);
 
     // --- LÓGICA DE IMPORTAÇÃO (MODAL) ---
     const inpImport = document.getElementById('inp-import');
-    inpImport.addEventListener('change', handleFileSelect);
+    if (inpImport) {
+        inpImport.addEventListener('change', handleFileSelect);
+    }
 
     // Botões do Modal
-    document.getElementById('btn-modal-replace').addEventListener('click', () => {
-        if(tempImportData) {
-            store.allocations = tempImportData;
-            store.saveAllocations();
-            alert('Dados substituídos com sucesso!');
-            window.location.reload();
-        }
-        closeModal();
-    });
+    const btnReplace = document.getElementById('btn-modal-replace');
+    if(btnReplace) {
+        btnReplace.addEventListener('click', () => {
+            if(tempImportData) {
+                store.allocations = tempImportData;
+                store.saveAllocations();
+                alert('Dados substituídos com sucesso!');
+                window.location.reload();
+            }
+            closeModal();
+        });
+    }
 
-    document.getElementById('btn-modal-merge').addEventListener('click', () => {
-        if(tempImportData) {
-            const count = store.mergeAllocations(tempImportData);
-            alert(`Mesclagem concluída! ${count} novas alocações adicionadas.`);
-            renderWeeklyGrid();
-            renderOfertasList();
-        }
-        closeModal();
-    });
+    const btnMerge = document.getElementById('btn-modal-merge');
+    if(btnMerge) {
+        btnMerge.addEventListener('click', () => {
+            if(tempImportData) {
+                const count = store.mergeAllocations(tempImportData);
+                alert(`Mesclagem concluída! ${count} novas alocações adicionadas.`);
+                renderWeeklyGrid();
+                renderOfertasList();
+            }
+            closeModal();
+        });
+    }
 
-    document.getElementById('btn-modal-cancel').addEventListener('click', () => {
-        tempImportData = null;
-        inpImport.value = ''; // Limpa input
-        closeModal();
-    });
+    const btnCancel = document.getElementById('btn-modal-cancel');
+    if(btnCancel) {
+        btnCancel.addEventListener('click', () => {
+            tempImportData = null;
+            if(inpImport) inpImport.value = ''; 
+            closeModal();
+        });
+    }
 
     populateCursos();
     populateDocentes();
@@ -88,8 +107,8 @@ function handleFileSelect(event) {
         try {
             const json = JSON.parse(e.target.result);
             tempImportData = json;
-            // Abre o Modal
-            document.getElementById('import-modal').style.display = 'flex';
+            const modal = document.getElementById('import-modal');
+            if(modal) modal.style.display = 'flex';
         } catch (err) {
             alert("Erro ao ler arquivo JSON. Verifique o formato.");
             console.error(err);
@@ -99,15 +118,18 @@ function handleFileSelect(event) {
 }
 
 function closeModal() {
-    document.getElementById('import-modal').style.display = 'none';
+    const modal = document.getElementById('import-modal');
+    if(modal) modal.style.display = 'none';
 }
 
 function populateCursos() {
-    if (!store.rawData) return;
+    if (!store.rawData || !selCurso) return;
     selCurso.innerHTML = '<option value="">Selecione...</option>';
-    store.rawData.cursos.forEach(c => {
-        selCurso.innerHTML += `<option value="${c.sigla}">${c.nome}</option>`;
-    });
+    if (store.rawData.cursos) {
+        store.rawData.cursos.forEach(c => {
+            selCurso.innerHTML += `<option value="${c.sigla}">${c.nome}</option>`;
+        });
+    }
 }
 
 function onCursoChange() {
@@ -117,7 +139,7 @@ function onCursoChange() {
     selTurma.disabled = !cursoSigla;
     selTurma.innerHTML = '<option value="">Selecione...</option>';
     
-    if (cursoSigla) {
+    if (cursoSigla && store.rawData.turmas) {
         const turmas = store.rawData.turmas.filter(t => t.curso_sigla === cursoSigla);
         turmas.forEach(t => {
              selTurma.innerHTML += `<option value="${t.turma_id}">${t.turma_label}</option>`;
@@ -127,8 +149,9 @@ function onCursoChange() {
 }
 
 function updateDisciplinaDatalist() {
+    if (!listDisciplinas) return;
     listDisciplinas.innerHTML = '';
-    if(!store.selectedCurso) return;
+    if(!store.selectedCurso || !store.rawData.disciplinas) return;
 
     const disciplinasDoCurso = store.rawData.disciplinas.filter(d => 
         d.curso_sigla === store.selectedCurso
@@ -144,8 +167,10 @@ function updateDisciplinaDatalist() {
 }
 
 function populateDocentes() {
+    if (!listDocentes || !selViewDocente || !store.rawData.docentes) return;
     listDocentes.innerHTML = '';
     selViewDocente.innerHTML = '<option value="">Selecione...</option>';
+    
     const nomes = [...new Set(store.rawData.docentes.map(d => d.nome))].sort();
     nomes.forEach(nome => {
         listDocentes.appendChild(new Option(nome));
@@ -168,8 +193,10 @@ function getDisciplinaInfo(nome) {
 }
 
 function renderWeeklyGrid() {
+    if (!gridContainer) return;
     gridContainer.innerHTML = '';
     const horarios = store.getHorariosTurma();
+    
     const dias = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
 
     if (horarios.length === 0) {
@@ -270,13 +297,25 @@ function handleAddManual() {
     if (!vals.disciplina || !vals.docente) return alert("Preencha todos os campos.");
 
     if (vals.tipo === 'intensiva') {
-        if (!vals.inicio || !vals.fim) return alert("Defina as datas.");
+        if (!vals.inicio) return alert("Defina a data de início.");
         
+        const info = getDisciplinaInfo(vals.disciplina);
+        const ch = info.ch || 0;
+
+        if (ch === 0) return alert(`A disciplina "${vals.disciplina}" tem Carga Horária 0 ou não foi encontrada no cadastro.`);
+
+        const diasNecessarios = Math.ceil(ch / 5);
+        const feriados = store.rawData.feriados || [];
+
+        const dataFimCalculada = addBusinessDays(vals.inicio, diasNecessarios, feriados);
+
         const slotsTurma = store.getHorariosTurma(); 
         const slotsReais = slotsTurma.filter(h => !h.toUpperCase().includes('INTERVALO'));
         const slotsIntensiva = slotsReais.slice(0, 5); 
 
         if(slotsIntensiva.length === 0) return alert("Erro: Não há horários configurados para esta turma.");
+
+        if(!confirm(`Disciplina: ${vals.disciplina} (${ch}h)\nDuração calculada: ${diasNecessarios} dias úteis.\n\nDe: ${formatDateBR(vals.inicio)}\nAté: ${formatDateBR(dataFimCalculada)}\n\nConfirmar alocação?`)) return;
 
         store.addAllocation({
             turmaId: store.selectedTurma,
@@ -284,13 +323,12 @@ function handleAddManual() {
             docente: vals.docente,
             tipo: 'intensiva',
             dataInicio: vals.inicio,
-            dataFim: vals.fim,
+            dataFim: dataFimCalculada,
             modelo: 'Automático',
             horariosOcupados: slotsIntensiva,
             cor: store.getDisciplinaColor(vals.disciplina)
         });
 
-        alert(`Disciplina Intensiva adicionada! (${slotsIntensiva.length} aulas/dia)`);
         renderOfertasList();
     } else {
         alert("Para regular, clique na grade.");
@@ -303,18 +341,21 @@ function getInputValues() {
         docente: inputConfig.docente.value,
         tipo: inputConfig.tipo.value,
         inicio: inputConfig.inicio.value,
-        fim: inputConfig.fim.value
+        fim: inputConfig.fim ? inputConfig.fim.value : ''
     };
 }
 
 function renderOfertasList() {
     const tbody = document.querySelector('#ofertas-table tbody');
+    if (!tbody) return;
     tbody.innerHTML = '';
     const list = store.allocations.filter(a => a.turmaId === store.selectedTurma);
     
     const feriados = store.rawData.feriados ? store.rawData.feriados.map(f => f.data) : [];
-    const semestreInicio = document.getElementById('cal-start').value;
-    const semestreFim = document.getElementById('cal-end').value;
+    const calStart = document.getElementById('cal-start');
+    const calEnd = document.getElementById('cal-end');
+    const semestreInicio = calStart ? calStart.value : '2025-01-01';
+    const semestreFim = calEnd ? calEnd.value : '2025-12-31';
 
     list.forEach(a => {
         const tr = document.createElement('tr');
@@ -325,7 +366,7 @@ function renderOfertasList() {
 
         if(a.tipo === 'regular') {
             const numAulas = countWeekdaysInPeriod(semestreInicio, semestreFim, parseInt(a.diaSemana), feriados);
-            totalHoras = numAulas * 1;
+            totalHoras = numAulas * 1; 
             details = `${numAulas} aulas`;
         } else {
             const diasUteis = countBusinessDays(a.dataInicio, a.dataFim);
@@ -366,10 +407,13 @@ function renderOfertasList() {
 
 function renderMonthlyCalendar() {
     const container = document.getElementById('monthly-container');
+    if (!container) return;
     if(!store.selectedTurma) return container.innerHTML = '<p>Selecione uma turma.</p>';
     
-    const start = document.getElementById('cal-start').value;
-    const end = document.getElementById('cal-end').value;
+    const calStart = document.getElementById('cal-start');
+    const calEnd = document.getElementById('cal-end');
+    const start = calStart ? calStart.value : '2025-01-01';
+    const end = calEnd ? calEnd.value : '2025-12-31';
 
     let turmaLabel = store.selectedTurma;
     if (store.rawData && store.rawData.turmas) {
@@ -384,10 +428,14 @@ function renderMonthlyCalendar() {
 
 function renderTeacherCalendar() {
     const container = document.getElementById('teacher-calendar-container');
+    if (!container || !selViewDocente) return;
     const docente = selViewDocente.value;
     if(!docente) return container.innerHTML = '<p>Selecione um professor.</p>';
-    const start = document.getElementById('cal-start').value;
-    const end = document.getElementById('cal-end').value;
+    
+    const calStart = document.getElementById('cal-start');
+    const calEnd = document.getElementById('cal-end');
+    const start = calStart ? calStart.value : '2025-01-01';
+    const end = calEnd ? calEnd.value : '2025-12-31';
     
     const title = `<span class="print-title-main">Cronograma Docente</span><br><span class="print-title-sub">${docente}</span>`;
 
@@ -404,7 +452,6 @@ function generateCalendarGrid(container, turmaId, docenteName, start, end, title
 
     const eventsByDate = getCalendarEvents(turmaId, start, end, docenteName);
     
-    // Alerta de Conflitos
     let conflictCount = 0;
     Object.values(eventsByDate).forEach(events => {
         events.forEach(e => { if(e.isConflict) conflictCount++; });
@@ -419,7 +466,6 @@ function generateCalendarGrid(container, turmaId, docenteName, start, end, title
         container.appendChild(alertDiv);
     }
 
-    // Slots
     let slotsToRender = [];
     if (turmaId) {
         slotsToRender = store.getHorariosTurma(); 
@@ -464,7 +510,6 @@ function generateCalendarGrid(container, turmaId, docenteName, start, end, title
 
             let html = `<span class="day-number">${dayData.date.split('-')[2]}</span>`;
 
-            // Lógica de FERIADO com NOME
             const holidayEvent = dayData.events.find(e => e.type === 'holiday');
             
             if (holidayEvent) {
@@ -481,7 +526,7 @@ function generateCalendarGrid(container, turmaId, docenteName, start, end, title
                         const currentHour = parseInt(timeLabel.split(':')[0], 10);
 
                         let rowExtraStyle = "";
-                        // AQUI: Separação de Turnos (Linha Fina da Cor Primária)
+                        // Linha fina separando turnos
                         if (index > 0 && currentHour >= 13) {
                              const prevMatch = slotsToRender[index-1].match(/\d{2}:\d{2}/);
                              const prevHour = prevMatch ? parseInt(prevMatch[0].split(':')[0], 10) : 0;
@@ -513,7 +558,6 @@ function generateCalendarGrid(container, turmaId, docenteName, start, end, title
                             } else {
                                 const event = eventsInSlot[0];
                                 const info = getDisciplinaInfo(event.disciplina);
-                                // LIMPEZA: Exibe apenas o nome da disciplina (Sem ID da turma)
                                 content = info.abrev;
                                 style = `background:${event.cor || '#bdc3c7'}; color:black;`;
                             }
@@ -562,6 +606,10 @@ function checkTeacherConflict(docente, dia, horario) {
 function switchTab(tabId) {
     document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-    document.getElementById(`tab-${tabId}`).classList.add('active');
-    document.querySelector(`button[data-tab="${tabId}"]`).classList.add('active');
+    
+    const tabEl = document.getElementById(`tab-${tabId}`);
+    if(tabEl) tabEl.classList.add('active');
+    
+    const btn = document.querySelector(`button[data-tab="${tabId}"]`);
+    if(btn) btn.classList.add('active');
 }

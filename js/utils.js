@@ -32,13 +32,11 @@ export function checkTimeConflict(startA, endA, startB, endB) {
 }
 
 // --- CORE: CORREÇÃO DE DATA ---
-// Transforma string "YYYY-MM-DD" em Objeto Date Local 00:00:00
 export function parseLocalDate(dateStr) {
     const [y, m, d] = dateStr.split('-').map(Number);
     return new Date(y, m - 1, d);
 }
 
-// Retorna array de datas garantindo hora local
 export function getDaysArray(start, end) {
     let arr = [];
     let dt = parseLocalDate(start);
@@ -51,7 +49,6 @@ export function getDaysArray(start, end) {
     return arr;
 }
 
-// Formata Date -> "YYYY-MM-DD" Local
 export function toLocalDateString(date) {
     const y = date.getFullYear();
     const m = String(date.getMonth() + 1).padStart(2, '0');
@@ -60,8 +57,6 @@ export function toLocalDateString(date) {
 }
 
 // --- FUNÇÕES DE CONTAGEM ---
-
-// Conta dias úteis (Seg-Sex), IGNORANDO Sábado (6) e Domingo (0)
 export function countBusinessDays(startDate, endDate) {
     let count = 0;
     let curDate = parseLocalDate(startDate);
@@ -77,7 +72,6 @@ export function countBusinessDays(startDate, endDate) {
     return count;
 }
 
-// Conta ocorrências de um dia da semana (ex: Segunda) descontando feriados
 export function countWeekdaysInPeriod(startDate, endDate, targetDayOfWeek, feriados = []) {
     let count = 0;
     let curDate = parseLocalDate(startDate);
@@ -85,7 +79,6 @@ export function countWeekdaysInPeriod(startDate, endDate, targetDayOfWeek, feria
     const feriadosSet = new Set(feriados);
 
     while (curDate <= end) {
-        // 0=Dom, 1=Seg, ... 6=Sab
         if (curDate.getDay() === targetDayOfWeek) {
             const dateStr = toLocalDateString(curDate);
             if (!feriadosSet.has(dateStr)) {
@@ -95,4 +88,29 @@ export function countWeekdaysInPeriod(startDate, endDate, targetDayOfWeek, feria
         curDate.setDate(curDate.getDate() + 1);
     }
     return count;
+}
+
+// --- NOVA FUNÇÃO: Adiciona dias úteis a uma data ---
+export function addBusinessDays(startDateStr, daysNeeded, feriados = []) {
+    let currentDate = new Date(startDateStr + "T12:00:00");
+    let daysFound = 0;
+    let lastValidDate = new Date(currentDate);
+
+    if (daysNeeded <= 0) return startDateStr;
+
+    while (daysFound < daysNeeded) {
+        const dayOfWeek = currentDate.getDay(); // 0=Dom, 6=Sab
+        const dateStr = currentDate.toISOString().split('T')[0];
+        
+        // Verifica feriado (seja string ou objeto)
+        const isHoliday = feriados.some(f => (f.data || f) === dateStr);
+
+        if (dayOfWeek !== 0 && dayOfWeek !== 6 && !isHoliday) {
+            daysFound++;
+            lastValidDate = new Date(currentDate);
+        }
+        currentDate.setDate(currentDate.getDate() + 1);
+    }
+
+    return lastValidDate.toISOString().split('T')[0];
 }

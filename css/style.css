@@ -1,19 +1,16 @@
 :root {
-    /* --- PALETA DE CORES INSTITUCIONAL (UFPA/AMAZÔNIA) --- */
-    --primary: #004e28;      /* Verde UFPA */
-    --primary-light: #006633; /* Verde um pouco mais claro */
-    --accent: #c0392b;       /* Vermelho Terracota (Destaque) */
+    --primary: #004e28;
+    --primary-light: #006633;
+    --accent: #c0392b;
     --accent-hover: #e74c3c;
-    --bg-app: #ecf0f1;       /* Fundo da aplicação (Cinza Gelo) */
-    --bg-panel: #ffffff;     /* Fundo dos painéis (Branco) */
-    --text-main: #2c3e50;    /* Texto Principal */
-    --text-muted: #7f8c8d;   /* Texto Secundário */
-    --border: #bdc3c7;       /* Bordas sutis */
-    
+    --bg-app: #ecf0f1;
+    --bg-panel: #ffffff;
+    --text-main: #2c3e50;
+    --text-muted: #7f8c8d;
+    --border: #bdc3c7;
     --sidebar-width: 300px;
 }
 
-/* --- RESET & ESTRUTURA --- */
 * { box-sizing: border-box; outline: none; }
 
 body { 
@@ -27,7 +24,6 @@ body {
 
 .app-container { display: flex; height: 100%; }
 
-/* --- SIDEBAR (MENU LATERAL) --- */
 .sidebar {
     width: var(--sidebar-width);
     background: var(--primary);
@@ -56,7 +52,6 @@ body {
     margin-top: 20px;
 }
 
-/* Formulários na Sidebar */
 .form-group { margin-bottom: 15px; }
 .form-group label { 
     display: block; 
@@ -90,7 +85,6 @@ input[type="date"] { color-scheme: dark; }
 
 .hidden { display: none !important; }
 
-/* Botões da Sidebar */
 .btn-primary { 
     width: 100%; 
     padding: 12px; 
@@ -139,7 +133,6 @@ input[type="date"] { color-scheme: dark; }
 }
 .btn-danger:hover { background: #c0392b; }
 
-/* --- ÁREA PRINCIPAL --- */
 .content { 
     flex-grow: 1; 
     display: flex; 
@@ -202,15 +195,12 @@ input[type="date"] { color-scheme: dark; }
 }
 .tab-content.active { display: block; }
 
-/* --- GRADES E TABELAS --- */
-
 .grid-header { margin-bottom: 20px; }
 .grid-header h2 { margin: 0 0 5px 0; color: var(--primary); font-size: 1.8em; }
 .instruction { margin: 0; color: var(--text-muted); font-size: 1em; }
 
 .timetable {
     display: grid;
-    /* Primeira coluna com 115px para caber a hora */
     grid-template-columns: 115px repeat(6, 1fr); 
     gap: 2px;
     background: var(--border);
@@ -247,7 +237,6 @@ input[type="date"] { color-scheme: dark; }
 } 
 .timetable .slot:hover { background: #f8f9fa; }
 
-/* Calendário Mensal */
 .calendar-controls { 
     margin-bottom: 20px; 
     background: var(--bg-panel); 
@@ -280,10 +269,6 @@ input[type="date"] { color-scheme: dark; }
     print-color-adjust: exact;
 }
 
-/* LAYOUT DO CALENDÁRIO:
-   0.6fr para Domingo e Sábado (mais estreitos)
-   1fr para Segunda a Sexta (mais largos)
-*/
 .month-grid { 
     display: grid; 
     grid-template-columns: 0.6fr repeat(5, 1fr) 0.6fr; 
@@ -300,10 +285,8 @@ input[type="date"] { color-scheme: dark; }
     border-right: 1px solid #eee; 
 }
 
-/* CÉLULA DO DIA */
 .day-cell { 
     border-right: 1px solid #f0f0f0; 
-    /* BORDA INFERIOR MAIS GROSSA PARA SEPARAR SEMANAS */
     border-bottom: 2px solid #bdc3c7; 
     min-height: 120px; 
     padding: 4px; 
@@ -315,7 +298,6 @@ input[type="date"] { color-scheme: dark; }
 .day-cell.empty { background: #fcfcfc; }
 .day-number { font-weight: bold; display: block; padding: 2px 6px; color: var(--primary-light); margin-bottom: 4px; }
 
-/* Slots do Calendário */
 .cal-slot-row {
     display: flex;
     font-size: 0.75em;
@@ -342,7 +324,6 @@ input[type="date"] { color-scheme: dark; }
     font-weight: 600;
 }
 
-/* Lista de Ofertas */
 .data-table { 
     width: 100%; 
     border-collapse: collapse; 
@@ -363,7 +344,6 @@ input[type="date"] { color-scheme: dark; }
 .data-table td { padding: 10px 15px; border-bottom: 1px solid #eee; }
 .data-table tr:hover { background: #f9f9f9; }
 
-/* --- IMPRESSÃO (PDF) --- */
 .print-only { display: none; }
 
 @media print {
@@ -406,9 +386,6 @@ input[type="date"] { color-scheme: dark; }
 
     .calendar-month { box-shadow: none; border: 1px solid #ccc; page-break-after: always; }
     
-    /* CORREÇÃO PARA O MÊS APARECER NO PDF 
-       Usamos texto colorido e fundo branco para garantir visibilidade
-    */
     .calendar-month h3 { 
         background: transparent !important; 
         color: var(--primary) !important; 

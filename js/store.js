@@ -2,8 +2,8 @@ import { generateUUID } from './utils.js';
 
 class Store {
     constructor() {
-        this.rawData = null; // dados_app.json
-        this.allocations = []; // { id, turmaId, disciplina, docente, tipo... }
+        this.rawData = null;
+        this.allocations = [];
         this.selectedCurso = null;
         this.selectedTurma = null;
     }
@@ -62,22 +62,16 @@ class Store {
         }
     }
 
-    // --- MUDANÇA CRUCIAL AQUI ---
     getHorariosTurma() {
         if (!this.selectedTurma || !this.rawData) return [];
         const turmaObj = this.rawData.turmas.find(t => t.turma_id === this.selectedTurma);
         if (!turmaObj) return [];
         
-        // PADRONIZAÇÃO FORÇADA:
-        // Não importa o curso, vamos usar a régua "Extendido" (Padrão EP)
-        // Baseado apenas no turno (Manhã ou Tarde)
-        
-        const turno = turmaObj.turno || 'Tarde'; // Default para evitar erro
+        const turno = turmaObj.turno || 'Tarde'; 
 
         if (turno === 'Manhã') {
             return this.rawData.horarios['manha_extendido'] || [];
         } else {
-            // Assume Tarde (e Noite se precisar no futuro)
             return this.rawData.horarios['tarde_extendido'] || [];
         }
     }

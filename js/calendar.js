@@ -5,10 +5,8 @@ export function getCalendarEvents(turmaId, startDate, endDate, docenteFilter = n
     const days = getDaysArray(startDate, endDate);
     const calendarData = {}; 
 
-    // --- Preparação de Dados ---
-    const chMap = {};
+    // --- Preparação ---
     const turmaToCurso = {};
-
     if (store.rawData.turmas) {
         store.rawData.turmas.forEach(t => {
             turmaToCurso[t.turma_id] = t.curso_sigla;
@@ -37,10 +35,9 @@ export function getCalendarEvents(turmaId, startDate, endDate, docenteFilter = n
     const myRegulars = myAllocations.filter(a => a.tipo === 'regular');
     const allIntensives = store.allocations.filter(a => a.tipo === 'intensiva');
 
-    // --- LISTA DE FERIADOS ---
     const feriadosList = store.rawData.feriados || [];
 
-    // --- Loop dos Dias ---
+    // --- Loop ---
     days.forEach(date => {
         const dateStr = toLocalDateString(date);
         const dayOfWeek = date.getDay(); 
@@ -52,7 +49,7 @@ export function getCalendarEvents(turmaId, startDate, endDate, docenteFilter = n
 
         const events = [];
 
-        // 1. Verifica Feriado e PEGA O NOME
+        // Feriado
         const feriadoObj = feriadosList.find(f => f.data === dateStr);
         if (feriadoObj) {
             const nomeFeriado = feriadoObj.nome || feriadoObj.descricao || 'Feriado';
@@ -61,7 +58,6 @@ export function getCalendarEvents(turmaId, startDate, endDate, docenteFilter = n
             return; 
         }
 
-        // 2. Lógica Normal de Aulas
         const globalActiveIntensives = allIntensives.filter(i => 
             dateStr >= i.dataInicio && dateStr <= i.dataFim
         );
@@ -102,7 +98,6 @@ export function getCalendarEvents(turmaId, startDate, endDate, docenteFilter = n
             }
         });
 
-        // Detector de Conflitos
         const timeMap = {};
         events.forEach(e => {
             if(!timeMap[e.horario]) timeMap[e.horario] = [];
