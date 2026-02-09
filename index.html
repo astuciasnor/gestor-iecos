@@ -32,7 +32,55 @@
             box-shadow: 0 4px 6px rgba(0,0,0,0.3);
             object-fit: contain;
         }
-    </style>
+    
+        /* ===== PDF/Impressão: meses em sequência + cabeçalho de mês colorido ===== */
+        .calendar-month > h3 {
+            margin: 18px 0 10px;
+            padding: 10px 14px;
+            border-radius: 10px;
+            background: var(--primary);
+            color: #fff;
+            letter-spacing: 0.08em;
+            font-size: 14px;
+        }
+
+        /* Separador de mês na tabela "Ofertas Cadastradas" (visual tipo dataframe) */
+        #ofertas-table tr.month-sep td {
+            background: var(--primary);
+            color: #fff;
+            font-weight: bold;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            padding: 10px 12px;
+            border-radius: 6px;
+        }
+
+        @media print {
+            /* NÃO forçar 1 mês por página (turma e professor) */
+            .calendar-month {
+                break-before: auto !important;
+                break-after: auto !important;
+                break-inside: auto !important;
+
+                page-break-before: auto !important;
+                page-break-after: auto !important;
+                page-break-inside: auto !important;
+
+                margin-bottom: 14mm;
+            }
+
+            /* garantir que fundos coloridos saiam no PDF */
+            .calendar-month > h3,
+            #ofertas-table tr.month-sep td {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+
+            /* evitar quebra feia no meio de linha da tabela */
+            #ofertas-table tr { break-inside: avoid; page-break-inside: avoid; }
+        }
+
+</style>
 </head>
 <body>
     

@@ -349,24 +349,44 @@ function renderOfertasList() {
     const tbody = document.querySelector('#ofertas-table tbody');
     if (!tbody) return;
     tbody.innerHTML = '';
+
     const list = store.allocations.filter(a => a.turmaId === store.selectedTurma);
-    
+
     const feriados = store.rawData.feriados ? store.rawData.feriados.map(f => f.data) : [];
     const calStart = document.getElementById('cal-start');
     const calEnd = document.getElementById('cal-end');
     const semestreInicio = calStart ? calStart.value : '2025-01-01';
     const semestreFim = calEnd ? calEnd.value : '2025-12-31';
 
-    list.forEach(a => {
+    const regular = list.filter(a => a.tipo === 'regular');
+    const intensivas = list.filter(a => a.tipo !== 'regular');
+
+    intensivas.sort((a, b) => (a.dataInicio || '').localeCompare(b.dataInicio || ''));
+    regular.sort((a, b) => (a.disciplina || '').localeCompare(b.disciplina || ''));
+
+    const appendSeparator = (label) => {
+        const tr = document.createElement('tr');
+        tr.className = 'month-sep';
+        tr.innerHTML = `<td colspan="6">${label}</td>`;
+        tbody.appendChild(tr);
+    };
+
+    const appendMonthSeparator = (monthKey) => {
+        const [y, m] = monthKey.split('-').map(n => parseInt(n, 10));
+        const nomeMes = new Date(y, m - 1, 2).toLocaleString('pt-BR', { month: 'long', year: 'numeric' });
+        appendSeparator(nomeMes.toUpperCase());
+    };
+
+    const appendRow = (a) => {
         const tr = document.createElement('tr');
         const info = getDisciplinaInfo(a.disciplina);
         const chMax = info.ch;
         let totalHoras = 0;
         let details = '';
 
-        if(a.tipo === 'regular') {
+        if (a.tipo === 'regular') {
             const numAulas = countWeekdaysInPeriod(semestreInicio, semestreFim, parseInt(a.diaSemana), feriados);
-            totalHoras = numAulas * 1; 
+            totalHoras = numAulas * 1;
             details = `${numAulas} aulas`;
         } else {
             const diasUteis = countBusinessDays(a.dataInicio, a.dataFim);
@@ -374,7 +394,7 @@ function renderOfertasList() {
             totalHoras = diasUteis * slotsPorDia;
             details = `${diasUteis} dias`;
         }
-        
+
         let color = '#2c3e50';
         if (chMax > 0) {
             if (totalHoras < chMax) color = '#d35400';
@@ -383,7 +403,7 @@ function renderOfertasList() {
         }
 
         const chInfo = `<b style="color:${color}">${totalHoras}</b> / ${chMax}h <small>(${details})</small>`;
-        const horarioTxt = a.tipo === 'regular' 
+        const horarioTxt = a.tipo === 'regular'
             ? `${['Dom','Seg','Ter','Qua','Qui','Sex','Sab'][a.diaSemana]} ${a.horario}`
             : `${formatDateBR(a.dataInicio)} a ${formatDateBR(a.dataFim)}`;
 
@@ -395,15 +415,44 @@ function renderOfertasList() {
             <td style="text-align:center;">${chInfo}</td>
             <td><button class="btn-danger" style="padding:4px; margin:0;">Excluir</button></td>
         `;
-        
+
         tr.querySelector('button').onclick = () => {
             store.removeAllocation(a.id);
             renderWeeklyGrid();
             renderOfertasList();
         };
+
         tbody.appendChild(tr);
+    };
+
+    // Intensivas agrupadas por mês (para impressão em sequência com destaque)
+    let currentMonth = null;
+    intensivas.forEach(a => {
+        const monthKey = a.dataInicio ? a.dataInicio.substring(0, 7) : '';
+        if (monthKey && monthKey !== currentMonth) {
+            appendMonthSeparator(monthKey);
+            currentMonth = monthKey;
+        }
+        if (!monthKey && currentMonth !== 'SEM DATA') {
+            appendSeparator('SEM DATA');
+            currentMonth = 'SEM DATA';
+        }
+        appendRow(a);
     });
+
+    // Regulares ficam no final (não têm mês/data)
+    if (regular.length > 0) {
+        appendSeparator('AULAS REGULARES (SEM DATA)');
+        regular.forEach(appendRow);
+    }
+
+    if (intensivas.length === 0 && regular.length === 0) {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td colspan="6" style="text-align:center; color:#666;">Nenhuma oferta cadastrada.</td>`;
+        tbody.appendChild(tr);
+    }
 }
+
 
 function renderMonthlyCalendar() {
     const container = document.getElementById('monthly-container');
