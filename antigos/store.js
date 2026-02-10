@@ -6,52 +6,7 @@ class Store {
         this.allocations = [];
         this.selectedCurso = null;
         this.selectedTurma = null;
-    
-
-        // Preferências de UI (persistem no navegador)
-        this.settings = {
-            termStart: '',
-            termEnd: '',
-            turnoOferta: ''
-        };
-        this.loadSettings();
-}
-
-
-    // ===== Settings (Período letivo / Turno) =====
-    loadSettings() {
-        try {
-            const saved = localStorage.getItem('academic_settings');
-            if (saved) {
-                const obj = JSON.parse(saved);
-                if (obj && typeof obj === 'object') {
-                    this.settings = { ...this.settings, ...obj };
-                }
-            }
-        } catch (e) {
-            console.warn('Falha ao carregar academic_settings:', e);
-        }
     }
-
-    saveSettings() {
-        try {
-            localStorage.setItem('academic_settings', JSON.stringify(this.settings));
-        } catch (e) {
-            console.warn('Falha ao salvar academic_settings:', e);
-        }
-    }
-
-    setTermDates(start, end) {
-        if (start) this.settings.termStart = start;
-        if (end) this.settings.termEnd = end;
-        this.saveSettings();
-    }
-
-    setTurnoOferta(turno) {
-        if (turno) this.settings.turnoOferta = turno;
-        this.saveSettings();
-    }
-
 
     async loadData() {
         try {
@@ -112,7 +67,7 @@ class Store {
         const turmaObj = this.rawData.turmas.find(t => t.turma_id === this.selectedTurma);
         if (!turmaObj) return [];
         
-        const turno = this.settings.turnoOferta || turmaObj.turno_padrao || turmaObj.turno || 'Tarde'; 
+        const turno = turmaObj.turno || 'Tarde'; 
 
         if (turno === 'Manhã') {
             return this.rawData.horarios['manha_extendido'] || [];

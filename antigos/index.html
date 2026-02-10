@@ -55,38 +55,6 @@
             border-radius: 6px;
         }
 
-        /* ===== Sidebar: controles compactos (Período letivo + Turno) ===== */
-        .sidebar .compact-row {
-            display: flex;
-            gap: 10px;
-            align-items: flex-end;
-        }
-
-        .sidebar .compact-row .form-group {
-            flex: 1;
-            margin-bottom: 10px;
-        }
-
-        .sidebar .inline-control {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 10px;
-            margin-top: -2px;
-            margin-bottom: 12px;
-        }
-
-        .sidebar .inline-control label {
-            margin: 0;
-            font-weight: 700;
-            white-space: nowrap;
-        }
-
-        .sidebar .inline-control select {
-            max-width: 180px;
-        }
-
-
         @media print {
             /* NÃO forçar 1 mês por página (turma e professor) */
             .calendar-month {
@@ -196,30 +164,6 @@
             <div class="form-group">
                 <label>Turma</label>
                 <select id="sel-turma" disabled><option value="">Selecione um curso...</option></select>
-            </div>
-
-            
-
-            <h3>Período Letivo</h3>
-
-            <div class="compact-row">
-                <div class="form-group">
-                    <label>Início</label>
-                    <input type="date" id="term-start">
-                </div>
-
-                <div class="form-group">
-                    <label>Fim</label>
-                    <input type="date" id="term-end">
-                </div>
-            </div>
-
-            <div class="inline-control">
-                <label for="sel-turno-oferta">Turno:</label>
-                <select id="sel-turno-oferta">
-                    <option value="Manhã">Manhã</option>
-                    <option value="Tarde">Tarde</option>
-                </select>
             </div>
 
             <hr>

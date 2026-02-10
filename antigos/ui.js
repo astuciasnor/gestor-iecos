@@ -10,15 +10,6 @@ const listDisciplinas = document.getElementById('list-disciplinas');
 const listDocentes = document.getElementById('list-docentes');
 const selViewDocente = document.getElementById('sel-view-docente');
 
-// Configurações persistentes (sidebar)
-const inpTermStart = document.getElementById('term-start');
-const inpTermEnd = document.getElementById('term-end');
-const selTurnoOferta = document.getElementById('sel-turno-oferta');
-
-// Controles de período (tabs)
-const calStart = document.getElementById('cal-start');
-const calEnd = document.getElementById('cal-end');
-
 // Inputs Config
 const inputConfig = {
     disciplina: document.getElementById('inp-disciplina'),
@@ -31,106 +22,17 @@ const inputConfig = {
 // Variável temporária para importação
 let tempImportData = null;
 
-
-function initPeriodoLetivoETurno() {
-    if (!store.settings) return;
-
-    // Defaults a partir dos controles existentes (tabs)
-    const defaultStart = (calStart && calStart.value) ? calStart.value : '';
-    const defaultEnd = (calEnd && calEnd.value) ? calEnd.value : '';
-
-    // Define defaults apenas se ainda não estiverem definidos
-    if (!store.settings.termStart && defaultStart) store.settings.termStart = defaultStart;
-    if (!store.settings.termEnd && defaultEnd) store.settings.termEnd = defaultEnd;
-    if (!store.settings.turnoOferta) store.settings.turnoOferta = 'Tarde';
-
-    if (typeof store.saveSettings === 'function') store.saveSettings();
-
-    // Sincroniza Store -> UI
-    if (inpTermStart && store.settings.termStart) inpTermStart.value = store.settings.termStart;
-    if (inpTermEnd && store.settings.termEnd) inpTermEnd.value = store.settings.termEnd;
-    if (selTurnoOferta) selTurnoOferta.value = store.settings.turnoOferta || 'Tarde';
-
-    if (calStart && store.settings.termStart) calStart.value = store.settings.termStart;
-    if (calEnd && store.settings.termEnd) calEnd.value = store.settings.termEnd;
-
-    // Sidebar -> Tabs / Store
-    if (inpTermStart) {
-        inpTermStart.addEventListener('change', () => {
-            store.setTermDates(inpTermStart.value, store.settings.termEnd);
-            if (calStart) calStart.value = inpTermStart.value;
-
-            // Ajuda: se for intensiva e o campo estiver vazio, usa o início do período letivo
-            if (inputConfig.inicio && !inputConfig.inicio.value) {
-                inputConfig.inicio.value = inpTermStart.value;
-            }
-
-            renderOfertasList();
-        });
-    }
-
-    if (inpTermEnd) {
-        inpTermEnd.addEventListener('change', () => {
-            store.setTermDates(store.settings.termStart, inpTermEnd.value);
-            if (calEnd) calEnd.value = inpTermEnd.value;
-            renderOfertasList();
-        });
-    }
-
-    // Tabs -> Sidebar / Store
-    if (calStart) {
-        calStart.addEventListener('change', () => {
-            store.setTermDates(calStart.value, store.settings.termEnd || (calEnd ? calEnd.value : ''));
-            if (inpTermStart) inpTermStart.value = calStart.value;
-            renderOfertasList();
-        });
-    }
-
-    if (calEnd) {
-        calEnd.addEventListener('change', () => {
-            store.setTermDates(store.settings.termStart || (calStart ? calStart.value : ''), calEnd.value);
-            if (inpTermEnd) inpTermEnd.value = calEnd.value;
-            renderOfertasList();
-        });
-    }
-
-    // Turno (preferência) -> re-render
-    if (selTurnoOferta) {
-        selTurnoOferta.addEventListener('change', () => {
-            store.setTurnoOferta(selTurnoOferta.value);
-            renderWeeklyGrid();
-            renderOfertasList();
-        });
-    }
-}
-
-
 export function initUI() {
     // Listeners básicos
     if (selCurso) selCurso.addEventListener('change', onCursoChange);
     if (selTurma) selTurma.addEventListener('change', onTurmaChange);
     
-    
-
-    // Inicializa e persiste Período Letivo + Turno (sidebar)
-    initPeriodoLetivoETurno();
-if (inputConfig.tipo) {
+    if (inputConfig.tipo) {
         inputConfig.tipo.addEventListener('change', (e) => {
             const div = document.getElementById('datas-intensiva');
             if (div) {
                 if(e.target.value === 'intensiva') {
                     div.classList.remove('hidden');
-
-                    // Se ainda não definiu a data de início da intensiva, use o início do período letivo
-                    if (store.settings && store.settings.termStart && inputConfig.inicio && !inputConfig.inicio.value) {
-                        inputConfig.inicio.value = store.settings.termStart;
-                    }
-
-                    // Sugestão: restringe o datepicker ao período letivo (sem bloquear uso avançado)
-                    if (store.settings && inputConfig.inicio) {
-                        if (store.settings.termStart) inputConfig.inicio.min = store.settings.termStart;
-                        if (store.settings.termEnd) inputConfig.inicio.max = store.settings.termEnd;
-                    }
                 } else {
                     div.classList.add('hidden');
                 }
@@ -278,15 +180,6 @@ function populateDocentes() {
 
 function onTurmaChange() {
     store.selectedTurma = selTurma.value;
-
-    // Se o turno ainda não foi definido pelo usuário, usa o turno padrão da turma selecionada
-    if (store.rawData && store.rawData.turmas && store.selectedTurma && (!store.settings || !store.settings.turnoOferta)) {
-        const turmaObj = store.rawData.turmas.find(t => t.turma_id === store.selectedTurma);
-        if (turmaObj && turmaObj.turno_padrao) {
-            store.setTurnoOferta(turmaObj.turno_padrao);
-            if (selTurnoOferta) selTurnoOferta.value = turmaObj.turno_padrao;
-        }
-    }
     renderWeeklyGrid();
     renderOfertasList();
 }
