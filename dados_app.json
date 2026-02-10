@@ -3,15 +3,7 @@
     {
       "nome": "Aldemir Branco de Oliveira Filho",
       "unidade": "IECOS",
-      "subunidade": "FBIO"
-    },
-    {
-      "nome": "Alessandra Nascimento Braga",
-      "unidade": "IECOS",
       "subunidade": "FACIN"
-    },
-    {
-      "nome": "Anderson Manoel Herculano Oliveira da Silva"
     },
     {
       "nome": "Carlos Alberto Martins Cordeiro",
@@ -29,19 +21,24 @@
       "subunidade": "FEPESCA"
     },
     {
-      "nome": "Carlos Murilo Tenório Maciel"
+      "nome": "Carlos Murilo Tenório Maciel",
+      "unidade": "IECOS",
+      "subunidade": "FACIN"
     },
     {
-      "nome": "Chiria Miranda da Costa"
+      "nome": "Colin Robert Beasley",
+      "unidade": "IECOS",
+      "subunidade": "FBIO"
     },
     {
-      "nome": "Colin Robert Beasley"
+      "nome": "Cristiana Ramalho Maciel",
+      "unidade": "IECOS",
+      "subunidade": "FBIO"
     },
     {
-      "nome": "Cristiana Ramalho Maciel"
-    },
-    {
-      "nome": "Daniel Abreu Vasconcelos Campelo"
+      "nome": "Daniel Abreu Vasconcelos Campelo",
+      "unidade": "IECOS",
+      "subunidade": "FEPESCA"
     },
     {
       "nome": "Dionísio de Souza Sampaio",
@@ -49,18 +46,19 @@
       "subunidade": "FACIN"
     },
     {
-      "nome": "Erneida Coelho de Araújo"
-    },
-    {
       "nome": "Evaldo Martins da Silva",
       "unidade": "IECOS",
       "subunidade": "FEPESCA"
     },
     {
-      "nome": "Francisco Carlos Alberto Fonteles Holanda"
+      "nome": "Francisco Carlos Alberto Fonteles Holanda",
+      "unidade": "IECOS",
+      "subunidade": "FEPESCA"
     },
     {
-      "nome": "Gláucia Caroline Silva de Oliveira"
+      "nome": "Gláucia Caroline Silva de Oliveira",
+      "unidade": "IECOS",
+      "subunidade": "FBIO"
     },
     {
       "nome": "Grazielle Fernanda Evangelista Gomes",
@@ -73,10 +71,9 @@
       "subunidade": "FEPESCA"
     },
     {
-      "nome": "Janice Muriel Fernandes Lima da Cunha"
-    },
-    {
-      "nome": "José Fernando Pina Assis"
+      "nome": "Janice Muriel Fernandes Lima da Cunha",
+      "unidade": "IECOS",
+      "subunidade": "FACIN"
     },
     {
       "nome": "Juliana Araripe Gomes da Silva",
@@ -84,19 +81,44 @@
       "subunidade": "FACIN"
     },
     {
-      "nome": "Liliane Miranda Freitas"
+      "nome": "Liliane Miranda Freitas",
+      "unidade": "IECOS",
+      "subunidade": "FACIN"
     },
     {
-      "nome": "Luci Cajueiro Carneiro Pereira"
+      "nome": "Lorena Batista de Moura",
+      "unidade": "IECOS",
+      "subunidade": "FEPESCA"
     },
     {
-      "nome": "Lucinaldo da Silva Bandtt"
+      "nome": "Luci Cajueiro Carneiro Pereira",
+      "unidade": "IECOS",
+      "subunidade": "FBIO"
     },
     {
-      "nome": "Luiz Marcelo de Lima Pinheiro"
+      "nome": "Lucinaldo da Silva Bandtt",
+      "unidade": "IECOS",
+      "subunidade": "FBIO"
     },
     {
-      "nome": "Marcelo Nazareno Vallinoto de Sousa"
+      "nome": "Marcelo Nazareno Vallinoto de Sousa",
+      "unidade": "IECOS",
+      "subunidade": "FBIO"
+    },
+    {
+      "nome": "Marcus Emanuel Barroncas Fernandes",
+      "unidade": "IECOS",
+      "subunidade": "FBIO"
+    },
+    {
+      "nome": "Marcus Vinícius Domingues",
+      "unidade": "IECOS",
+      "subunidade": "FACIN"
+    },
+    {
+      "nome": "Maria Iracilda da Cunha Sampaio",
+      "unidade": "IECOS",
+      "subunidade": "FBIO"
     },
     {
       "nome": "Marcos Ferreira Brabo",
@@ -104,33 +126,24 @@
       "subunidade": "FEPESCA"
     },
     {
-      "nome": "Marcus Emanuel Barroncas Fernandes"
-    },
-    {
-      "nome": "Marcus Vinícius Domingues"
-    },
-    {
-      "nome": "Maria Auxiliadora Pantoja"
-    },
-    {
-      "nome": "Maria Iracilda da Cunha Sampaio"
-    },
-    {
       "nome": "Marileide Moraes Alves",
       "unidade": "IECOS",
       "subunidade": "FEPESCA"
     },
     {
-      "nome": "Marivana Borges Silva"
+      "nome": "Marivana Borges Silva",
+      "unidade": "IECOS",
+      "subunidade": "FBIO"
     },
     {
-      "nome": "Moirah Paula Machado de Menezes"
+      "nome": "Moirah Paula Machado de Menezes",
+      "unidade": "IECOS",
+      "subunidade": "FBIO"
     },
     {
-      "nome": "Márcio Roberto Pietrobom da Silva"
-    },
-    {
-      "nome": "Nelane do Socorro Marques da Silva"
+      "nome": "Nelane do Socorro Marques da Silva",
+      "unidade": "IECOS",
+      "subunidade": "FBIO"
     },
     {
       "nome": "Nils Asp Edwin Neto",
@@ -138,12 +151,9 @@
       "subunidade": "FEPESCA"
     },
     {
-      "nome": "Pedro Andrés Chira Oliva"
-    },
-    {
-      "nome": "Prof Matematica",
-      "unidade": "CBRAG",
-      "subunidade": "FAMAT"
+      "nome": "Pedro Andrés Chira Oliva",
+      "unidade": "IECOS",
+      "subunidade": "FEPESCA"
     },
     {
       "nome": "Péricles Sena do Rêgo",
@@ -151,13 +161,14 @@
       "subunidade": "FACIN"
     },
     {
-      "nome": "Rafaela Lebreco Araújo"
+      "nome": "Rauquírio André Albuquerque Marinho da Costa",
+      "unidade": "IECOS",
+      "subunidade": "FBIO"
     },
     {
-      "nome": "Raugúrio André Albuquerque Marinho da Costa"
-    },
-    {
-      "nome": "Rita de Cássia Oliveira dos Santos"
+      "nome": "Rita de Cássia Oliveira dos Santos",
+      "unidade": "IECOS",
+      "subunidade": "FBIO"
     },
     {
       "nome": "Roberta Sá Leitão Barboza",
@@ -165,21 +176,19 @@
       "subunidade": "FEPESCA"
     },
     {
-      "nome": "Rosigleyes Corrêa de Sousa Felix"
+      "nome": "Rosigleyes Corrêa de Sousa Felix",
+      "unidade": "IECOS",
+      "subunidade": "FBIO"
     },
     {
-      "nome": "Rossineide Martins da Rocha"
-    },
-    {
-      "nome": "Sandra Nazaré Dias Bastos"
+      "nome": "Sandra Nazaré Dias Bastos",
+      "unidade": "IECOS",
+      "subunidade": "FBIO"
     },
     {
       "nome": "Simoni Santos da Silva",
       "unidade": "IECOS",
       "subunidade": "FEPESCA"
-    },
-    {
-      "nome": "Thiago Augusto Pedroso Barbosa"
     },
     {
       "nome": "Ulf Mehlig",
@@ -190,6 +199,41 @@
       "nome": "Zélia Maria Pimental Nunes",
       "unidade": "IECOS",
       "subunidade": "FEPESCA"
+    },
+    {
+      "nome": "Ana Garcês",
+      "unidade": "CBRAG",
+      "subunidade": "FACED"
+    },
+    {
+      "nome": "Priscilany Cavalcante dos Santos",
+      "unidade": "IECOS",
+      "subunidade": "FACIN"
+    },
+    {
+      "nome": "Fábio Batagini Quinteiro",
+      "unidade": "IECOS",
+      "subunidade": "FBIO"
+    },
+    {
+      "nome": "Roseane Pinto",
+      "unidade": "CBRAG",
+      "subunidade": "FAHIST"
+    },
+    {
+      "nome": "Cleide Marques",
+      "unidade": "IECOS",
+      "subunidade": "FEPESCA"
+    },
+    {
+      "nome": "Leonnan Oliveira",
+      "unidade": "IECOS",
+      "subunidade": "FEPESCA"
+    },
+    {
+      "nome": "Cláudia Sobrenome",
+      "unidade": "IECOS",
+      "subunidade": "FBIO"
     }
   ],
   "disciplinas": [
@@ -244,7 +288,7 @@
     {
       "codigo": "EP05073",
       "nome": "QUIMICA BASICA",
-      "abreviacao": "Quimi Basic",
+      "abreviacao": "Quim Basic",
       "ch": 45,
       "cor_disciplina": "#ffc6ff",
       "curso_sigla": "EP"
@@ -796,7 +840,7 @@
     {
       "codigo": "CBBR004",
       "nome": "MATEMATICA BASICA",
-      "abreviacao": "Mate Basi",
+      "abreviacao": "Matem Bas",
       "ch": 30,
       "cor_disciplina": "#fdffb6",
       "curso_sigla": "CB"
@@ -820,7 +864,7 @@
     {
       "codigo": "CBBR007",
       "nome": "BIOLOGIA EVOLUTIVA DO DESENVOLVIMENTO",
-      "abreviacao": "Biol Evol Dese",
+      "abreviacao": "Biol Evolut",
       "ch": 45,
       "cor_disciplina": "#a0c4ff",
       "curso_sigla": "CB"
@@ -844,7 +888,7 @@
     {
       "codigo": "CBBR067",
       "nome": "DIVERSIDADE DE ALGAS",
-      "abreviacao": "Dive Alga",
+      "abreviacao": "Divers Alga",
       "ch": 30,
       "cor_disciplina": "#e0bbe4",
       "curso_sigla": "CB"
@@ -852,7 +896,7 @@
     {
       "codigo": "CBBR073",
       "nome": "TEMAS CONTEMPORANEOS PARA A EDUCACAO",
-      "abreviacao": "Tema Cont Educ",
+      "abreviacao": "Tema Contemp Educ",
       "ch": 30,
       "cor_disciplina": "#ffdfd3",
       "curso_sigla": "CB"
@@ -860,7 +904,7 @@
     {
       "codigo": "CBBR074",
       "nome": "TEMAS SOCIOAMBIENTAIS E CULTURAIS",
-      "abreviacao": "Tema Soci Cult",
+      "abreviacao": "Tema Sociam Cult",
       "ch": 30,
       "cor_disciplina": "#ffc2c2",
       "curso_sigla": "CB"
@@ -868,7 +912,7 @@
     {
       "codigo": "CBBR080",
       "nome": "TOPICOS ESPECIAIS: ENSINO DE ECOLOGIA",
-      "abreviacao": "TE  Ensi Ecol",
+      "abreviacao": "TE Ensi Ecol",
       "ch": 30,
       "cor_disciplina": "#ffe2b9",
       "curso_sigla": "CB"
@@ -876,7 +920,7 @@
     {
       "codigo": "CBBR082",
       "nome": "TOPICOS ESPECIAIS: ENSINO EM EDUCACAO",
-      "abreviacao": "TE  Ensi Educ",
+      "abreviacao": "TE Ensi Educ",
       "ch": 30,
       "cor_disciplina": "#feffcc",
       "curso_sigla": "CB"
@@ -956,7 +1000,7 @@
     {
       "codigo": "CBBR021",
       "nome": "GENETICA GERAL",
-      "abreviacao": "Gene Gera",
+      "abreviacao": "Genet Geral",
       "ch": 75,
       "cor_disciplina": "#f0f2a0",
       "curso_sigla": "CB"
@@ -964,7 +1008,7 @@
     {
       "codigo": "CBBR022",
       "nome": "BIOESTATISTICA I",
-      "abreviacao": "Bioe",
+      "abreviacao": "Bioest I",
       "ch": 45,
       "cor_disciplina": "#b7f2ab",
       "curso_sigla": "CB"
@@ -972,7 +1016,7 @@
     {
       "codigo": "CBBR023",
       "nome": "METODOLOGIA CIENTIFICA",
-      "abreviacao": "Meto Cien",
+      "abreviacao": "Metod Cien",
       "ch": 15,
       "cor_disciplina": "#88e0ea",
       "curso_sigla": "CB"
@@ -988,7 +1032,7 @@
     {
       "codigo": "CBBR025",
       "nome": "LIBRAS I",
-      "abreviacao": "Libr",
+      "abreviacao": "Libras I",
       "ch": 45,
       "cor_disciplina": "#a79cea",
       "curso_sigla": "CB"
@@ -1044,7 +1088,7 @@
     {
       "codigo": "CBBR033",
       "nome": "LIBRAS II",
-      "abreviacao": "Libra II",
+      "abreviacao": "Libras II",
       "ch": 45,
       "cor_disciplina": "#e3ffdd",
       "curso_sigla": "CB"
@@ -1076,7 +1120,7 @@
     {
       "codigo": "CBBR037",
       "nome": "ESTAGIO I: ESPACOS NAO FORMAIS",
-      "abreviacao": "Esta I: Espa Nao Form",
+      "abreviacao": "Esta I: Esp Nao Form",
       "ch": 60,
       "cor_disciplina": "#ffe0ff",
       "curso_sigla": "CB"
@@ -1092,7 +1136,7 @@
     {
       "codigo": "CBBR039",
       "nome": "PALEONTOLOGIA GERAL",
-      "abreviacao": "Pale Gera",
+      "abreviacao": "Pale Geral",
       "ch": 45,
       "cor_disciplina": "#fff2ec",
       "curso_sigla": "CB"
@@ -1100,7 +1144,7 @@
     {
       "codigo": "CBBR040",
       "nome": "DIVERSIDADE VEGETAL I",
-      "abreviacao": "Dive Vege",
+      "abreviacao": "Divers Vege",
       "ch": 60,
       "cor_disciplina": "#e58383",
       "curso_sigla": "CB"
@@ -1108,7 +1152,7 @@
     {
       "codigo": "CBBR041",
       "nome": "DIVERSIDADE ANIMAL II",
-      "abreviacao": "Dive Anim Ii",
+      "abreviacao": "Divers Anim II",
       "ch": 60,
       "cor_disciplina": "#e5ac79",
       "curso_sigla": "CB"
@@ -1132,7 +1176,7 @@
     {
       "codigo": "CBBR045",
       "nome": "IMUNOLOGIA",
-      "abreviacao": "Imun",
+      "abreviacao": "Imunologia",
       "ch": 30,
       "cor_disciplina": "#72cbd4",
       "curso_sigla": "CB"
@@ -1140,7 +1184,7 @@
     {
       "codigo": "CBBR046",
       "nome": "DIVERSIDADE VEGETAL II",
-      "abreviacao": "Dive Vege Ii",
+      "abreviacao": "Divers Vege II",
       "ch": 45,
       "cor_disciplina": "#77b2f2",
       "curso_sigla": "CB"
@@ -1148,7 +1192,7 @@
     {
       "codigo": "CBBR047",
       "nome": "ESTAGIO II: CARACTERIZACAO ESCOLAR",
-      "abreviacao": "Esta Ii: Cara Esco",
+      "abreviacao": "Estag II: Carac Escol",
       "ch": 45,
       "cor_disciplina": "#9186f2",
       "curso_sigla": "CB"
@@ -1172,7 +1216,7 @@
     {
       "codigo": "CBBR050",
       "nome": "DIVERSIDADE VEGETAL III",
-      "abreviacao": "Dive Vege Iii",
+      "abreviacao": "Dive Vege III",
       "ch": 30,
       "cor_disciplina": "#e5b9a5",
       "curso_sigla": "CB"
@@ -1180,7 +1224,7 @@
     {
       "codigo": "CBBR051",
       "nome": "DIVERSIDADE ANIMAL III",
-      "abreviacao": "Dive Anim Iii",
+      "abreviacao": "Dive Anim III",
       "ch": 45,
       "cor_disciplina": "#ffeded",
       "curso_sigla": "CB"
@@ -1332,7 +1376,7 @@
     {
       "codigo": "CNBR005",
       "nome": "MATEMATICA BASICA",
-      "abreviacao": "Mate Basi",
+      "abreviacao": "Matem Basic",
       "ch": 60,
       "cor_disciplina": "#9bf6ff",
       "curso_sigla": "CN"
@@ -1436,7 +1480,7 @@
     {
       "codigo": "CNBR070",
       "nome": "TOPICOS ESPECIAIS E ENSINO DE BIOLOGIA CELULAR E EVOLUCAO",
-      "abreviacao": "TE  Ensi Bio Cel",
+      "abreviacao": "TE Ensi Bio Cel",
       "ch": 30,
       "cor_disciplina": "#ffd3ff",
       "curso_sigla": "CN"
@@ -1444,7 +1488,7 @@
     {
       "codigo": "CNBR071",
       "nome": "TOPICOS ESPECIAIS E ENSINO DE DIVERSIDADE BIOLOGICA ANIMAL",
-      "abreviacao": "TE  Ensi",
+      "abreviacao": "TE Ensi Div Animal",
       "ch": 30,
       "cor_disciplina": "#eccfe9",
       "curso_sigla": "CN"
@@ -1452,7 +1496,7 @@
     {
       "codigo": "CNBR072",
       "nome": "TOPICOS ESPECIAIS E ENSINO DE DIVERSIDADE BIOLOGICA VEGETAL",
-      "abreviacao": "TE  Ensi",
+      "abreviacao": "TE Ensi Div Vegetal",
       "ch": 30,
       "cor_disciplina": "#ffe8de",
       "curso_sigla": "CN"
@@ -1460,7 +1504,7 @@
     {
       "codigo": "CNBR073",
       "nome": "TOPICOS ESPECIAIS E ENSINO DE MICROBIOLOGIA",
-      "abreviacao": "TE  Ensi",
+      "abreviacao": "TE Ensi Microbiol",
       "ch": 30,
       "cor_disciplina": "#f29898",
       "curso_sigla": "CN"
@@ -1468,7 +1512,7 @@
     {
       "codigo": "CNBR074",
       "nome": "TOPICOS ESPECIAIS E ENSINO EM EDUCACAO AMBIENTAL",
-      "abreviacao": "TE  Ensi",
+      "abreviacao": "TE Ensi Edu Amb",
       "ch": 30,
       "cor_disciplina": "#f2c08f",
       "curso_sigla": "CN"
@@ -1476,7 +1520,7 @@
     {
       "codigo": "CNBR075",
       "nome": "TOPICOS ESPECIAIS EM ENSINO DE BIOLOGIA FUNCIONAL",
-      "abreviacao": "TE  Ensi",
+      "abreviacao": "TE Ensi Bol Funcional",
       "ch": 30,
       "cor_disciplina": "#f0f2a0",
       "curso_sigla": "CN"
@@ -1484,7 +1528,7 @@
     {
       "codigo": "CNBR076",
       "nome": "TOPICOS ESPECIAIS EM ENSINO DE CIENCIAS EXATAS E DA TERRA",
-      "abreviacao": "TE  Ensi",
+      "abreviacao": "TE Ensi de C Exatas e Ter",
       "ch": 30,
       "cor_disciplina": "#b7f2ab",
       "curso_sigla": "CN"
@@ -1492,7 +1536,7 @@
     {
       "codigo": "CNBR077",
       "nome": "TOPICOS ESPECIAIS EM ENSINO DE ECOLOGIA",
-      "abreviacao": "TE  Ensi",
+      "abreviacao": "TE Ensi",
       "ch": 30,
       "cor_disciplina": "#88e0ea",
       "curso_sigla": "CN"
@@ -1500,7 +1544,7 @@
     {
       "codigo": "CNBR010",
       "nome": "GENETICA BASICA",
-      "abreviacao": "Gene Basi",
+      "abreviacao": "Gene tBasic",
       "ch": 60,
       "cor_disciplina": "#8daeda",
       "curso_sigla": "CN"
@@ -1652,7 +1696,7 @@
     {
       "codigo": "CNBR029",
       "nome": "DIVERSIDADE VEGETAL I",
-      "abreviacao": "Dive Vege I",
+      "abreviacao": "Divers Vege I",
       "ch": 60,
       "cor_disciplina": "#72cbd4",
       "curso_sigla": "CN"
@@ -1660,7 +1704,7 @@
     {
       "codigo": "CNBR030",
       "nome": "LIBRAS II",
-      "abreviacao": "Libr Ii",
+      "abreviacao": "Libras II",
       "ch": 45,
       "cor_disciplina": "#77b2f2",
       "curso_sigla": "CN"
@@ -1692,7 +1736,7 @@
     {
       "codigo": "CNBR034",
       "nome": "FUNDAMENTOS DE FISICA II",
-      "abreviacao": "Fund Fisi Ii",
+      "abreviacao": "Fund Fisi II",
       "ch": 60,
       "cor_disciplina": "#e5b9a5",
       "curso_sigla": "CN"
@@ -1732,7 +1776,7 @@
     {
       "codigo": "CNBR039",
       "nome": "DIVERSIDADE VEGETAL II",
-      "abreviacao": "Dive Vege Ii",
+      "abreviacao": "Dive Vege IIi",
       "ch": 60,
       "cor_disciplina": "#e1fdff",
       "curso_sigla": "CN"
@@ -1892,7 +1936,7 @@
     {
       "codigo": "CNBR058",
       "nome": "MORFOFISIOLOGIA ANIMAL II",
-      "abreviacao": "Morf Anim Ii",
+      "abreviacao": "Morf Anim II",
       "ch": 60,
       "cor_disciplina": "#a5f7ff",
       "curso_sigla": "CN"
@@ -1916,354 +1960,396 @@
   ],
   "cursos": [
     {
+      "sigla": "EP",
+      "nome": "Engenharia de Pesca"
+    },
+    {
       "sigla": "CB",
       "nome": "Ciências Biológicas"
     },
     {
       "sigla": "CN",
       "nome": "Ciências Naturais"
-    },
-    {
-      "sigla": "EP",
-      "nome": "Engenharia de Pesca"
     }
   ],
   "turmas": [
     {
-      "curso_sigla": "CB",
-      "turma_ano": 2023,
-      "turma_id": "CB2023",
-      "turma_label": "CB 2023",
-      "turno_padrao": "Tarde",
-      "horario_padrao": "tarde_intensivo"
-    },
-    {
-      "curso_sigla": "CB",
-      "turma_ano": 2024,
-      "turma_id": "CB2024",
-      "turma_label": "CB 2024",
-      "turno_padrao": "Manhã",
-      "horario_padrao": "manha_intensivo"
-    },
-    {
-      "curso_sigla": "CB",
-      "turma_ano": 2025,
-      "turma_id": "CB2025",
-      "turma_label": "CB 2025",
-      "turno_padrao": "Tarde",
-      "horario_padrao": "tarde_intensivo"
-    },
-    {
-      "curso_sigla": "CB",
-      "turma_ano": 2026,
-      "turma_id": "CB2026",
-      "turma_label": "CB 2026",
-      "turno_padrao": "Manhã",
-      "horario_padrao": "manha_intensivo"
-    },
-    {
-      "curso_sigla": "CN",
-      "turma_ano": 2023,
-      "turma_id": "CN2023",
-      "turma_label": "CN 2023",
-      "turno_padrao": "Tarde",
-      "horario_padrao": "tarde_intensivo"
-    },
-    {
-      "curso_sigla": "CN",
-      "turma_ano": 2024,
-      "turma_id": "CN2024",
-      "turma_label": "CN 2024",
-      "turno_padrao": "Manhã",
-      "horario_padrao": "manha_intensivo"
-    },
-    {
-      "curso_sigla": "CN",
-      "turma_ano": 2025,
-      "turma_id": "CN2025",
-      "turma_label": "CN 2025",
-      "turno_padrao": "Tarde",
-      "horario_padrao": "tarde_intensivo"
-    },
-    {
-      "curso_sigla": "CN",
-      "turma_ano": 2026,
-      "turma_id": "CN2026",
-      "turma_label": "CN 2026",
-      "turno_padrao": "Manhã",
-      "horario_padrao": "manha_intensivo"
-    },
-    {
       "curso_sigla": "EP",
-      "turma_ano": 2022,
       "turma_id": "EP2022",
-      "turma_label": "EP 2022",
+      "turma_label": "EP2022",
+      "turma_ano": 2022,
       "turno_padrao": "Manhã",
       "horario_padrao": "manha_extendido"
     },
     {
       "curso_sigla": "EP",
-      "turma_ano": 2023,
       "turma_id": "EP2023",
-      "turma_label": "EP 2023",
+      "turma_label": "EP2023",
+      "turma_ano": 2023,
       "turno_padrao": "Tarde",
       "horario_padrao": "tarde_extendido"
     },
     {
       "curso_sigla": "EP",
-      "turma_ano": 2024,
       "turma_id": "EP2024",
-      "turma_label": "EP 2024",
+      "turma_label": "EP2024",
+      "turma_ano": 2024,
       "turno_padrao": "Manhã",
       "horario_padrao": "manha_extendido"
     },
     {
       "curso_sigla": "EP",
-      "turma_ano": 2025,
       "turma_id": "EP2025",
-      "turma_label": "EP 2025",
+      "turma_label": "EP2025",
+      "turma_ano": 2025,
       "turno_padrao": "Tarde",
       "horario_padrao": "tarde_extendido"
     },
     {
       "curso_sigla": "EP",
-      "turma_ano": 2026,
       "turma_id": "EP2026",
-      "turma_label": "EP 2026",
+      "turma_label": "EP2026",
+      "turma_ano": 2026,
       "turno_padrao": "Manhã",
       "horario_padrao": "manha_extendido"
+    },
+    {
+      "curso_sigla": "CB",
+      "turma_id": "CB2023",
+      "turma_label": "CB2023",
+      "turma_ano": 2023,
+      "turno_padrao": "Tarde",
+      "horario_padrao": "tarde_intensivo"
+    },
+    {
+      "curso_sigla": "CB",
+      "turma_id": "CB2024",
+      "turma_label": "CB2024",
+      "turma_ano": 2024,
+      "turno_padrao": "Manhã",
+      "horario_padrao": "manha_intensivo"
+    },
+    {
+      "curso_sigla": "CB",
+      "turma_id": "CB2025",
+      "turma_label": "CB2025",
+      "turma_ano": 2025,
+      "turno_padrao": "Tarde",
+      "horario_padrao": "tarde_intensivo"
+    },
+    {
+      "curso_sigla": "CB",
+      "turma_id": "CB2026",
+      "turma_label": "CB2026",
+      "turma_ano": 2026,
+      "turno_padrao": "Manhã",
+      "horario_padrao": "manha_intensivo"
+    },
+    {
+      "curso_sigla": "CN",
+      "turma_id": "CN2023",
+      "turma_label": "CN2023",
+      "turma_ano": 2023,
+      "turno_padrao": "Tarde",
+      "horario_padrao": "tarde_intensivo"
+    },
+    {
+      "curso_sigla": "CN",
+      "turma_id": "CN2024",
+      "turma_label": "CN2024",
+      "turma_ano": 2024,
+      "turno_padrao": "Manhã",
+      "horario_padrao": "manha_intensivo"
+    },
+    {
+      "curso_sigla": "CN",
+      "turma_id": "CN2025",
+      "turma_label": "CN2025",
+      "turma_ano": 2025,
+      "turno_padrao": "Tarde",
+      "horario_padrao": "tarde_intensivo"
+    },
+    {
+      "curso_sigla": "CN",
+      "turma_id": "CN2026",
+      "turma_label": "CN2026",
+      "turma_ano": 2026,
+      "turno_padrao": "Manhã",
+      "horario_padrao": "manha_intensivo"
+    },
+    {
+      "curso_sigla": "CB",
+      "turma_id": "CB2022",
+      "turma_label": "CB2022",
+      "turma_ano": 2022,
+      "turno_padrao": "Manhã",
+      "horario_padrao": "manha_intensivo"
+    },
+    {
+      "curso_sigla": "CN",
+      "turma_id": "CN2022",
+      "turma_label": "CN2022",
+      "turma_ano": 2022,
+      "turno_padrao": "Manhã",
+      "horario_padrao": "manha_intensivo"
     }
   ],
   "horarios": {
-    "manha_extendido": [
+    "horario_padrao": [
+      "manha_extendido",
+      "manha_extendido",
+      "manha_extendido",
+      "intervalo_manha_extendido",
+      "manha_extendido",
+      "manha_extendido",
+      "manha_extendido",
+      "tarde_extendido",
+      "tarde_extendido",
+      "tarde_extendido",
+      "intervalo_tarde_extendido",
+      "tarde_extendido",
+      "tarde_extendido",
+      "tarde_extendido"
+    ],
+    "ordem": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7"
+    ],
+    "faixa": [
       "07:30 - 08:20",
       "08:20 - 09:10",
       "09:10 - 10:00",
-      "INTERVALO (10:00 - 10:20)",
+      "10:00 - 10:20",
       "10:20 - 11:10",
       "11:10 - 12:00",
-      "12:00 - 12:50"
-    ],
-    "manha_intensivo": [
-      "08:00 - 08:50",
-      "08:50 - 09:40",
-      "09:40 - 10:30",
-      "INTERVALO (10:30 - 10:50)",
-      "10:50 - 11:40",
-      "11:40 - 12:30"
-    ],
-    "tarde_extendido": [
+      "12:00 - 12:50",
       "13:30 - 14:20",
       "14:20 - 15:10",
       "15:10 - 16:00",
-      "INTERVALO (16:00 - 16:20)",
+      "16:00 - 16:20",
       "16:20 - 17:10",
       "17:10 - 18:00",
       "18:00 - 18:50"
-    ],
-    "tarde_intensivo": [
-      "14:00 - 14:50",
-      "14:50 - 15:40",
-      "15:40 - 16:30",
-      "INTERVALO (16:30 - 16:50)",
-      "16:50 - 17:40",
-      "17:40 - 18:30"
     ]
   },
   "periodos": [],
   "feriados": [
     {
+      "curso_sigla": "",
+      "turma_id": "",
       "data": "2026-01-01",
-      "nome": "",
-      "curso_sigla": "",
-      "turma_id": ""
+      "nome": ""
     },
     {
+      "curso_sigla": "",
+      "turma_id": "",
+      "data": "2026-02-16",
+      "nome": ""
+    },
+    {
+      "curso_sigla": "",
+      "turma_id": "",
       "data": "2026-02-17",
-      "nome": "",
-      "curso_sigla": "",
-      "turma_id": ""
+      "nome": ""
     },
     {
-      "data": "2026-04-03",
-      "nome": "",
       "curso_sigla": "",
-      "turma_id": ""
+      "turma_id": "",
+      "data": "2026-02-18",
+      "nome": ""
     },
     {
+      "curso_sigla": "",
+      "turma_id": "",
+      "data": "2026-03-04",
+      "nome": ""
+    },
+    {
+      "curso_sigla": "",
+      "turma_id": "",
       "data": "2026-04-21",
-      "nome": "",
-      "curso_sigla": "",
-      "turma_id": ""
+      "nome": ""
     },
     {
-      "data": "2026-05-01",
-      "nome": "",
       "curso_sigla": "",
-      "turma_id": ""
+      "turma_id": "",
+      "data": "2026-01-05",
+      "nome": ""
     },
     {
-      "data": "2026-06-04",
-      "nome": "",
       "curso_sigla": "",
-      "turma_id": ""
+      "turma_id": "",
+      "data": "2026-04-06",
+      "nome": ""
     },
     {
-      "data": "2026-07-08",
-      "nome": "",
       "curso_sigla": "",
-      "turma_id": ""
+      "turma_id": "",
+      "data": "2026-08-07",
+      "nome": ""
     },
     {
+      "curso_sigla": "",
+      "turma_id": "",
       "data": "2026-08-15",
-      "nome": "",
-      "curso_sigla": "",
-      "turma_id": ""
+      "nome": ""
     },
     {
-      "data": "2026-09-07",
-      "nome": "",
       "curso_sigla": "",
-      "turma_id": ""
+      "turma_id": "",
+      "data": "2026-07-09",
+      "nome": ""
     },
     {
-      "data": "2026-10-07",
-      "nome": "",
       "curso_sigla": "",
-      "turma_id": ""
+      "turma_id": "",
+      "data": "2026-07-10",
+      "nome": ""
     },
     {
-      "data": "2026-10-12",
-      "nome": "",
       "curso_sigla": "",
-      "turma_id": ""
+      "turma_id": "",
+      "data": "2026-12-10",
+      "nome": ""
     },
     {
-      "data": "2026-11-02",
-      "nome": "",
       "curso_sigla": "",
-      "turma_id": ""
+      "turma_id": "",
+      "data": "2026-02-11",
+      "nome": ""
     },
     {
+      "curso_sigla": "",
+      "turma_id": "",
       "data": "2026-11-15",
-      "nome": "",
-      "curso_sigla": "",
-      "turma_id": ""
+      "nome": ""
     },
     {
+      "curso_sigla": "",
+      "turma_id": "",
       "data": "2026-11-20",
-      "nome": "",
-      "curso_sigla": "",
-      "turma_id": ""
+      "nome": ""
     },
     {
+      "curso_sigla": "",
+      "turma_id": "",
       "data": "2026-12-25",
-      "nome": "",
-      "curso_sigla": "",
-      "turma_id": ""
+      "nome": ""
     },
     {
+      "curso_sigla": "",
+      "turma_id": "",
       "data": "2026-12-26",
-      "nome": "",
-      "curso_sigla": "",
-      "turma_id": ""
+      "nome": ""
     },
     {
+      "curso_sigla": "",
+      "turma_id": "",
       "data": "2027-01-01",
-      "nome": "",
-      "curso_sigla": "",
-      "turma_id": ""
+      "nome": ""
     },
     {
-      "data": "2027-02-09",
-      "nome": "",
       "curso_sigla": "",
-      "turma_id": ""
+      "turma_id": "",
+      "data": "2027-09-02",
+      "nome": ""
     },
     {
+      "curso_sigla": "",
+      "turma_id": "",
       "data": "2027-03-26",
-      "nome": "",
-      "curso_sigla": "",
-      "turma_id": ""
+      "nome": ""
     },
     {
+      "curso_sigla": "",
+      "turma_id": "",
       "data": "2027-04-21",
-      "nome": "",
-      "curso_sigla": "",
-      "turma_id": ""
+      "nome": ""
     },
     {
-      "data": "2027-05-01",
-      "nome": "",
       "curso_sigla": "",
-      "turma_id": ""
+      "turma_id": "",
+      "data": "2027-01-05",
+      "nome": ""
     },
     {
+      "curso_sigla": "",
+      "turma_id": "",
       "data": "2027-05-27",
-      "nome": "",
-      "curso_sigla": "",
-      "turma_id": ""
+      "nome": ""
     },
     {
-      "data": "2027-07-08",
-      "nome": "",
       "curso_sigla": "",
-      "turma_id": ""
+      "turma_id": "",
+      "data": "2027-08-07",
+      "nome": ""
     },
     {
+      "curso_sigla": "",
+      "turma_id": "",
       "data": "2027-08-15",
-      "nome": "",
-      "curso_sigla": "",
-      "turma_id": ""
+      "nome": ""
     },
     {
-      "data": "2027-09-07",
-      "nome": "",
       "curso_sigla": "",
-      "turma_id": ""
+      "turma_id": "",
+      "data": "2027-07-09",
+      "nome": ""
     },
     {
-      "data": "2027-10-07",
-      "nome": "",
       "curso_sigla": "",
-      "turma_id": ""
+      "turma_id": "",
+      "data": "2027-07-10",
+      "nome": ""
     },
     {
-      "data": "2027-10-12",
-      "nome": "",
       "curso_sigla": "",
-      "turma_id": ""
+      "turma_id": "",
+      "data": "2027-12-10",
+      "nome": ""
     },
     {
-      "data": "2027-11-02",
-      "nome": "",
       "curso_sigla": "",
-      "turma_id": ""
+      "turma_id": "",
+      "data": "2027-02-11",
+      "nome": ""
     },
     {
+      "curso_sigla": "",
+      "turma_id": "",
       "data": "2027-11-15",
-      "nome": "",
-      "curso_sigla": "",
-      "turma_id": ""
+      "nome": ""
     },
     {
+      "curso_sigla": "",
+      "turma_id": "",
       "data": "2027-11-20",
-      "nome": "",
-      "curso_sigla": "",
-      "turma_id": ""
+      "nome": ""
     },
     {
+      "curso_sigla": "",
+      "turma_id": "",
       "data": "2027-12-25",
-      "nome": "",
-      "curso_sigla": "",
-      "turma_id": ""
+      "nome": ""
     },
     {
-      "data": "2027-12-26",
-      "nome": "",
       "curso_sigla": "",
-      "turma_id": ""
+      "turma_id": "",
+      "data": "2027-12-26",
+      "nome": ""
     }
   ],
-  "atualizado_em": "07/02/2026 19:52"
+  "atualizado_em": "10/02/2026 13:09"
 }
