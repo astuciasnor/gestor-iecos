@@ -3,9 +3,7 @@ import { getCalendarEvents } from './calendar.js';
 import {
   countBusinessDays,
   countWeekdaysInPeriod,
-  formatDate,
   checkTimeConflict,
-  parseTime,
   addBusinessDays
 } from './utils.js';
 
@@ -22,13 +20,12 @@ const inpTermStart = document.getElementById('term-start');
 const inpTermEnd = document.getElementById('term-end');
 const selTurnoOferta =
   document.getElementById('sel-turno_oferta') ||
-  document.getElementById('sel-turno-oferta'); // tolera id antigo
+  document.getElementById('sel-turno-oferta');
 
 // Controles de período (tabs)
 const calStart = document.getElementById('cal-start');
 const calEnd = document.getElementById('cal-end');
 
-// Inputs Config
 const inputConfig = {
   disciplina: document.getElementById('inp-disciplina'),
   docente: document.getElementById('inp-docente'),
@@ -37,141 +34,12 @@ const inputConfig = {
   fim: document.getElementById('inp-data-fim')
 };
 
-// Variável temporária para importação
 let tempImportData = null;
-
-/**
- * ======= Helpers (fallback robusto para horários) =======
- */
-function normalizeTurnoLabel(s) {
-  return (s || '')
-    .toString()
-    .trim()
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '');
-}
-
-function asHorariosArray(val, horariosObj) {
-  if (!val) return [];
-
-  // 1) Se já é um array de strings
-  if (Array.isArray(val)) {
-    const arr = val.filter(x => typeof x === 'string');
-
-    // Caso especial: array veio com "chaves/labels" em vez de horários
-    // Ex.: ["MANHA_EXTENDIDO"] ou ["manha_extendido"]
-    if (arr.length > 0) {
-      const first = arr[0];
-      const firstNorm = normalizeTurnoLabel(first);
-      const looksLikeKey =
-        firstNorm.includes('extendido') ||
-        firstNorm === 'manha' ||
-        firstNorm === 'tarde' ||
-        firstNorm === 'noite';
-
-      if (looksLikeKey && horariosObj && typeof horariosObj === 'object') {
-        const resolved = horariosObj[first] ?? horariosObj[firstNorm];
-        if (Array.isArray(resolved)) return resolved.filter(x => typeof x === 'string');
-      }
-    }
-
-    return arr;
-  }
-
-  // 2) Se é uma string apontando para uma chave dentro de horariosObj
-  if (typeof val === 'string') {
-    const k = val;
-    if (horariosObj && typeof horariosObj === 'object') {
-      const resolved = horariosObj[k] ?? horariosObj[normalizeTurnoLabel(k)];
-      if (Array.isArray(resolved)) return resolved.filter(x => typeof x === 'string');
-    }
-    return [];
-  }
-
-  return [];
-}
-
-function getHorariosFromRawDataByTurno(turnoLabel) {
-  if (!store.rawData || !store.rawData.horarios) return [];
-
-  const h = store.rawData.horarios;
-
-  // Se rawData.horarios já for um array direto
-  if (Array.isArray(h)) return h.filter(x => typeof x === 'string');
-
-  const t = normalizeTurnoLabel(turnoLabel);
-
-  const candidates = [];
-  if (t.includes('manha')) candidates.push('manha_extendido', 'manha', 'matutino');
-  if (t.includes('tarde')) candidates.push('tarde_extendido', 'tarde', 'vespertino');
-  if (t.includes('noite')) candidates.push('noite_extendido', 'noite', 'noturno');
-
-  // Se não reconheceu, tenta em ordem de prioridade
-  if (candidates.length === 0)
-    candidates.push('tarde_extendido', 'manha_extendido', 'noite_extendido', 'tarde', 'manha', 'noite');
-
-  for (const key of candidates) {
-    if (h && typeof h === 'object' && key in h) {
-      const arr = asHorariosArray(h[key], h);
-      if (arr.length > 0) return arr;
-    }
-  }
-
-  // fallback: qualquer lista válida dentro de h
-  if (h && typeof h === 'object') {
-    for (const v of Object.values(h)) {
-      const arr = asHorariosArray(v, h);
-      if (arr.length > 0) return arr;
-    }
-  }
-
-  return [];
-}
-
-function getHorariosTurmaSafe() {
-  // 1) tenta a implementação original do store
-  try {
-    const base = store.getHorariosTurma ? store.getHorariosTurma() : [];
-    if (Array.isArray(base) && base.length > 0) return base.filter(x => typeof x === 'string');
-  } catch (e) {
-    console.warn('store.getHorariosTurma() falhou:', e);
-  }
-
-  // 2) fallback por turno (preferência do usuário) ou turno_padrao da turma
-  let turno = store.settings?.turnoOferta || '';
-
-  if (!turno && store.rawData?.turmas && store.selectedTurma) {
-    const turmaObj = store.rawData.turmas.find(t => String(t.turma_id) === String(store.selectedTurma));
-    if (turmaObj && turmaObj.turno_padrao) turno = turmaObj.turno_padrao;
-  }
-
-  const horarios = getHorariosFromRawDataByTurno(turno);
-  if (horarios.length > 0) return horarios;
-
-  // 3) fallback final: tenta qualquer array em rawData.horarios
-  const h = store.rawData?.horarios;
-  if (h && typeof h === 'object') {
-    const firstNonEmpty = Object.values(h)
-      .map(v => asHorariosArray(v, h))
-      .find(arr => Array.isArray(arr) && arr.length > 0);
-    if (firstNonEmpty) return firstNonEmpty;
-  }
-
-  return [];
-}
 
 function cleanHorarioLabel(s) {
   const str = (s ?? '').toString();
-
-  // tenta extrair "HH:MM - HH:MM" ou "HH:MM–HH:MM"
   const m = str.match(/\b\d{1,2}:\d{2}\s*[-–]\s*\d{1,2}:\d{2}\b/);
   if (m) return m[0];
-
-  // remove lixo tipo "MANHA_EXTENDIDO"
-  const n = normalizeTurnoLabel(str);
-  if (n.includes('extendido') || n === 'manha' || n === 'tarde' || n === 'noite') return '';
-
   return str;
 }
 
@@ -179,18 +47,14 @@ function cleanHorarioLabel(s) {
  * ======= Período letivo + turno =======
  */
 function initPeriodoLetivoETurno() {
-  if (!store.settings) return;
-
   const defaultStart = calStart && calStart.value ? calStart.value : '';
   const defaultEnd = calEnd && calEnd.value ? calEnd.value : '';
 
   if (!store.settings.termStart && defaultStart) store.settings.termStart = defaultStart;
   if (!store.settings.termEnd && defaultEnd) store.settings.termEnd = defaultEnd;
   if (!store.settings.turnoOferta) store.settings.turnoOferta = 'Tarde';
+  store.saveSettings();
 
-  if (typeof store.saveSettings === 'function') store.saveSettings();
-
-  // Store -> UI
   if (inpTermStart && store.settings.termStart) inpTermStart.value = store.settings.termStart;
   if (inpTermEnd && store.settings.termEnd) inpTermEnd.value = store.settings.termEnd;
   if (selTurnoOferta) selTurnoOferta.value = store.settings.turnoOferta || 'Tarde';
@@ -198,15 +62,11 @@ function initPeriodoLetivoETurno() {
   if (calStart && store.settings.termStart) calStart.value = store.settings.termStart;
   if (calEnd && store.settings.termEnd) calEnd.value = store.settings.termEnd;
 
-  // Sidebar -> Tabs / Store
   if (inpTermStart) {
     inpTermStart.addEventListener('change', () => {
       store.setTermDates(inpTermStart.value, store.settings.termEnd);
       if (calStart) calStart.value = inpTermStart.value;
-
-      if (inputConfig.inicio && !inputConfig.inicio.value) {
-        inputConfig.inicio.value = inpTermStart.value;
-      }
+      if (inputConfig.inicio && !inputConfig.inicio.value) inputConfig.inicio.value = inpTermStart.value;
       renderOfertasList();
     });
   }
@@ -219,7 +79,6 @@ function initPeriodoLetivoETurno() {
     });
   }
 
-  // Tabs -> Sidebar / Store
   if (calStart) {
     calStart.addEventListener('change', () => {
       store.setTermDates(calStart.value, store.settings.termEnd || (calEnd ? calEnd.value : ''));
@@ -261,14 +120,8 @@ export function initUI() {
 
       if (e.target.value === 'intensiva') {
         div.classList.remove('hidden');
-
-        if (store.settings && store.settings.termStart && inputConfig.inicio && !inputConfig.inicio.value) {
+        if (store.settings.termStart && inputConfig.inicio && !inputConfig.inicio.value) {
           inputConfig.inicio.value = store.settings.termStart;
-        }
-
-        if (store.settings && inputConfig.inicio) {
-          if (store.settings.termStart) inputConfig.inicio.min = store.settings.termStart;
-          if (store.settings.termEnd) inputConfig.inicio.max = store.settings.termEnd;
         }
       } else {
         div.classList.add('hidden');
@@ -288,7 +141,7 @@ export function initUI() {
 
   if (selViewDocente) selViewDocente.addEventListener('change', renderTeacherCalendar);
 
-  // --- Importação (Modal) ---
+  // Import modal
   const inpImport = document.getElementById('inp-import');
   if (inpImport) inpImport.addEventListener('change', handleFileSelect);
 
@@ -341,8 +194,7 @@ function handleFileSelect(event) {
   const reader = new FileReader();
   reader.onload = function (e) {
     try {
-      const json = JSON.parse(e.target.result);
-      tempImportData = json;
+      tempImportData = JSON.parse(e.target.result);
       const modal = document.getElementById('import-modal');
       if (modal) modal.style.display = 'flex';
     } catch (err) {
@@ -359,17 +211,15 @@ function closeModal() {
 }
 
 /**
- * ======= Populate / Selects =======
+ * ======= Populate =======
  */
 function populateCursos() {
   if (!store.rawData || !selCurso) return;
 
   selCurso.innerHTML = '<option value="">Selecione...</option>';
-  if (store.rawData.cursos) {
-    store.rawData.cursos.forEach(c => {
-      selCurso.innerHTML += `<option value="${c.sigla}">${c.nome}</option>`;
-    });
-  }
+  (store.rawData.cursos || []).forEach(c => {
+    selCurso.innerHTML += `<option value="${c.sigla}">${c.curso}</option>`;
+  });
 }
 
 function onCursoChange() {
@@ -379,8 +229,9 @@ function onCursoChange() {
   selTurma.disabled = !cursoSigla;
   selTurma.innerHTML = '<option value="">Selecione...</option>';
 
-  if (cursoSigla && store.rawData.turmas) {
-    const turmas = store.rawData.turmas.filter(t => t.curso_sigla === cursoSigla);
+  if (cursoSigla && store.rawData?.turmas) {
+    // agora turmas pertencem ao curso pela coluna "sigla"
+    const turmas = store.rawData.turmas.filter(t => t.sigla === cursoSigla);
     turmas.forEach(t => {
       selTurma.innerHTML += `<option value="${t.turma_id}">${t.turma_label}</option>`;
     });
@@ -395,26 +246,25 @@ function onCursoChange() {
 function updateDisciplinaDatalist() {
   if (!listDisciplinas) return;
   listDisciplinas.innerHTML = '';
-  if (!store.selectedCurso || !store.rawData.disciplinas) return;
+  if (!store.selectedCurso || !store.rawData?.componentes) return;
 
-  const disciplinasDoCurso = store.rawData.disciplinas.filter(d => d.curso_sigla === store.selectedCurso);
-
-  disciplinasDoCurso.forEach(d => {
+  const comps = store.rawData.componentes.filter(c => c.sigla === store.selectedCurso);
+  comps.forEach(c => {
     const opt = document.createElement('option');
-    opt.value = d.nome;
-    opt.setAttribute('data-ch', d.ch);
-    opt.setAttribute('data-abrev', d.abreviacao || d.nome);
+    opt.value = c.componente;
+    opt.setAttribute('data-ch', c.ch ?? 0);
+    opt.setAttribute('data-abrev', c.abreviacao || c.componente);
     listDisciplinas.appendChild(opt);
   });
 }
 
 function populateDocentes() {
-  if (!listDocentes || !selViewDocente || !store.rawData.docentes) return;
+  if (!listDocentes || !selViewDocente || !store.rawData?.docentes) return;
 
   listDocentes.innerHTML = '';
   selViewDocente.innerHTML = '<option value="">Selecione...</option>';
 
-  const nomes = [...new Set(store.rawData.docentes.map(d => d.nome))].sort();
+  const nomes = [...new Set(store.rawData.docentes.map(d => d.docente))].sort();
   nomes.forEach(nome => {
     listDocentes.appendChild(new Option(nome));
     selViewDocente.add(new Option(nome, nome));
@@ -424,12 +274,12 @@ function populateDocentes() {
 function onTurmaChange() {
   store.selectedTurma = selTurma.value;
 
-  // Se o turno ainda não foi definido pelo usuário, usa o turno padrão da turma selecionada
-  if (store.rawData && store.rawData.turmas && store.selectedTurma && (!store.settings || !store.settings.turnoOferta)) {
+  // se o turno ainda não foi escolhido, use o turno da turma selecionada
+  if (store.rawData?.turmas && store.selectedTurma && !store.settings.turnoOferta) {
     const turmaObj = store.rawData.turmas.find(t => String(t.turma_id) === String(store.selectedTurma));
-    if (turmaObj && turmaObj.turno_padrao) {
-      store.setTurnoOferta(turmaObj.turno_padrao);
-      if (selTurnoOferta) selTurnoOferta.value = turmaObj.turno_padrao;
+    if (turmaObj?.turno) {
+      store.setTurnoOferta(turmaObj.turno);
+      if (selTurnoOferta) selTurnoOferta.value = turmaObj.turno;
     }
   }
 
@@ -440,14 +290,15 @@ function onTurmaChange() {
 /**
  * ======= Disciplina info =======
  */
-function getDisciplinaInfo(nome) {
-  if (!store.rawData) return { abrev: nome, ch: 0 };
+function getDisciplinaInfo(nomeComponente) {
+  if (!store.rawData?.componentes) return { abrev: nomeComponente, ch: 0 };
 
-  let d = store.rawData.disciplinas.find(x => x.nome === nome && x.curso_sigla === store.selectedCurso);
-  if (!d) d = store.rawData.disciplinas.find(x => x.nome === nome);
+  const c = store.rawData.componentes.find(x =>
+    x.componente === nomeComponente && x.sigla === store.selectedCurso
+  ) || store.rawData.componentes.find(x => x.componente === nomeComponente);
 
-  if (d) return { abrev: d.abreviacao || d.nome, ch: d.ch || 0 };
-  return { abrev: nome, ch: 0 };
+  if (c) return { abrev: c.abreviacao || c.componente, ch: c.ch || 0 };
+  return { abrev: nomeComponente, ch: 0 };
 }
 
 /**
@@ -457,8 +308,8 @@ function renderWeeklyGrid() {
   if (!gridContainer) return;
   gridContainer.innerHTML = '';
 
-  const horariosRaw = getHorariosTurmaSafe();
-  const horariosClean = horariosRaw
+  const horariosRaw = store.getHorariosTurma();
+  const horariosClean = (horariosRaw || [])
     .map(cleanHorarioLabel)
     .filter(s => s && s.trim().length > 0);
 
@@ -527,7 +378,7 @@ function renderSlotContent(cell, alloc) {
 
   cell.innerHTML = `
     <div style="font-size:0.85em; font-weight:bold; line-height:1.2; margin-bottom:2px;">${info.abrev}</div>
-    <div style="font-size:0.75em; color:#444;">${alloc.docente.split(' ')[0]}</div>
+    <div style="font-size:0.75em; color:#444;">${(alloc.docente || '').split(' ')[0] || ''}</div>
     <span class="remove-btn" style="color:red; font-weight:bold; font-size:0.8em; position:absolute; top:2px; right:2px;">×</span>
   `;
 
@@ -541,21 +392,25 @@ function renderSlotContent(cell, alloc) {
   };
 }
 
+function checkTeacherConflict(docente, dia, horario) {
+  return store.allocations.find(a => a.docente === docente && a.diaSemana == dia && a.horario === horario);
+}
+
 function handleSlotClick(dia, horario) {
   if (!store.selectedTurma) return alert('Selecione uma turma.');
 
   const { disciplina, docente, tipo } = getInputValues();
-  if (!disciplina || !docente) return alert('Preencha Disciplina e Docente na lateral.');
+  if (!disciplina || !docente) return alert('Preencha Componente e Docente na lateral.');
   if (tipo === 'intensiva') return alert('Para intensivas, configure as datas no menu e clique em "Adicionar à Grade".');
 
-  const conflito = checkTimeConflict ? checkTeacherConflict(docente, dia, horario) : false;
+  const conflito = checkTeacherConflict(docente, dia, horario);
   if (conflito) {
     if (!confirm(`O professor ${docente} já ministra aula na turma ${conflito.turmaId} neste horário. Continuar?`)) return;
   }
 
   store.addAllocation({
     turmaId: store.selectedTurma,
-    disciplina,
+    disciplina, // aqui continua "disciplina" por compat com allocations salvas, mas o valor é o NOME do componente
     docente,
     tipo,
     diaSemana: dia,
@@ -567,13 +422,9 @@ function handleSlotClick(dia, horario) {
   renderOfertasList();
 }
 
-/**
- * ======= Manual Add =======
- */
 function handleAddManual() {
   if (!store.selectedTurma) return alert('Selecione uma turma.');
   const vals = getInputValues();
-
   if (!vals.disciplina || !vals.docente) return alert('Preencha todos os campos.');
 
   if (vals.tipo === 'intensiva') {
@@ -581,31 +432,25 @@ function handleAddManual() {
 
     const info = getDisciplinaInfo(vals.disciplina);
     const ch = info.ch || 0;
-
-    if (ch === 0) return alert(`A disciplina "${vals.disciplina}" tem Carga Horária 0 ou não foi encontrada no cadastro.`);
+    if (ch === 0) return alert(`O componente "${vals.disciplina}" tem CH 0 ou não foi encontrado.`);
 
     const diasNecessarios = Math.ceil(ch / 5);
-    const feriados = store.rawData.feriados || [];
-
+    const feriados = store.rawData?.feriados || [];
     const dataFimCalculada = addBusinessDays(vals.inicio, diasNecessarios, feriados);
 
-    const slotsTurma = getHorariosTurmaSafe();
-    const slotsReais = slotsTurma
+    const slotsTurma = store.getHorariosTurma();
+    const slotsReais = (slotsTurma || [])
       .map(cleanHorarioLabel)
       .filter(h => h && !h.toUpperCase().includes('INTERVALO'));
 
     const slotsIntensiva = slotsReais.slice(0, 5);
-
     if (slotsIntensiva.length === 0) return alert('Erro: Não há horários configurados para esta turma.');
 
-    if (
-      !confirm(
-        `Disciplina: ${vals.disciplina} (${ch}h)\n` +
-          `Duração calculada: ${diasNecessarios} dias úteis.\n\n` +
-          `De: ${formatDateBR(vals.inicio)}\nAté: ${formatDateBR(dataFimCalculada)}\n\nConfirmar alocação?`
-      )
-    )
-      return;
+    if (!confirm(
+      `Componente: ${vals.disciplina} (${ch}h)\n` +
+      `Duração calculada: ${diasNecessarios} dias úteis.\n\n` +
+      `De: ${formatDateBR(vals.inicio)}\nAté: ${formatDateBR(dataFimCalculada)}\n\nConfirmar alocação?`
+    )) return;
 
     store.addAllocation({
       turmaId: store.selectedTurma,
@@ -643,14 +488,11 @@ function renderOfertasList() {
   if (!tbody) return;
 
   tbody.innerHTML = '';
-
   const list = store.allocations.filter(a => String(a.turmaId) === String(store.selectedTurma));
 
-  const feriados = store.rawData.feriados ? store.rawData.feriados.map(f => f.data) : [];
-  const calStartEl = document.getElementById('cal-start');
-  const calEndEl = document.getElementById('cal-end');
-  const semestreInicio = calStartEl ? calStartEl.value : '2025-01-01';
-  const semestreFim = calEndEl ? calEndEl.value : '2025-12-31';
+  const feriados = store.rawData?.feriados ? store.rawData.feriados.map(f => f.data) : [];
+  const semestreInicio = calStart ? calStart.value : '2025-01-01';
+  const semestreFim = calEnd ? calEnd.value : '2025-12-31';
 
   const regular = list.filter(a => a.tipo === 'regular');
   const intensivas = list.filter(a => a.tipo !== 'regular');
@@ -720,7 +562,6 @@ function renderOfertasList() {
     tbody.appendChild(tr);
   };
 
-  // Intensivas agrupadas por mês
   let currentMonth = null;
   intensivas.forEach(a => {
     const monthKey = a.dataInicio ? a.dataInicio.substring(0, 7) : '';
@@ -735,7 +576,6 @@ function renderOfertasList() {
     appendRow(a);
   });
 
-  // Regulares no final
   if (regular.length > 0) {
     appendSeparator('AULAS REGULARES (SEM DATA)');
     regular.forEach(appendRow);
@@ -760,13 +600,12 @@ function renderMonthlyCalendar() {
   const end = calEnd ? calEnd.value : '2025-12-31';
 
   let turmaLabel = store.selectedTurma;
-  if (store.rawData && store.rawData.turmas) {
+  if (store.rawData?.turmas) {
     const t = store.rawData.turmas.find(x => String(x.turma_id) === String(store.selectedTurma));
     if (t) turmaLabel = t.turma_label;
   }
 
   const title = `<span class="print-title-main">Calendário Acadêmico</span><br><span class="print-title-sub">${turmaLabel}</span>`;
-
   generateCalendarGrid(container, store.selectedTurma, null, start, end, title);
 }
 
@@ -781,7 +620,6 @@ function renderTeacherCalendar() {
   const end = calEnd ? calEnd.value : '2025-12-31';
 
   const title = `<span class="print-title-main">Cronograma Docente</span><br><span class="print-title-sub">${docente}</span>`;
-
   generateCalendarGrid(container, null, docente, start, end, title);
 }
 
@@ -795,41 +633,22 @@ function generateCalendarGrid(container, turmaId, docenteName, start, end, title
 
   const eventsByDate = getCalendarEvents(turmaId, start, end, docenteName);
 
-  let conflictCount = 0;
-  Object.values(eventsByDate).forEach(events => {
-    events.forEach(e => {
-      if (e.isConflict) conflictCount++;
-    });
-  });
-  conflictCount = Math.ceil(conflictCount / 2);
-
-  if (conflictCount > 0) {
-    const alertDiv = document.createElement('div');
-    alertDiv.className = 'no-print';
-    alertDiv.style.cssText =
-      'background: #c0392b; color: white; padding: 10px; text-align: center; margin-bottom: 20px; border-radius: 4px; font-weight: bold;';
-    alertDiv.innerHTML = `⚠️ Atenção: ${conflictCount} conflitos de horário detectados nesta visualização. Verifique os blocos em cinza.`;
-    container.appendChild(alertDiv);
-  }
-
+  // Horários para renderização
   let slotsToRender = [];
   if (turmaId) {
-    slotsToRender = getHorariosTurmaSafe().map(cleanHorarioLabel).filter(s => s && s.trim().length > 0);
+    slotsToRender = store.getHorariosTurma().map(cleanHorarioLabel).filter(s => s && s.trim().length > 0);
   } else if (docenteName) {
-    const h = store.rawData?.horarios || {};
-    const m = Array.isArray(h['manha_extendido']) ? h['manha_extendido'] : [];
-    const t = Array.isArray(h['tarde_extendido']) ? h['tarde_extendido'] : [];
-    slotsToRender = [...m, ...t].map(cleanHorarioLabel).filter(s => s && s.trim().length > 0);
+    // junta todos os turnos do horarios_por_turno
+    const hp = store.rawData?.horarios_por_turno || {};
+    slotsToRender = Object.values(hp).flat().map(cleanHorarioLabel).filter(s => s && s.trim().length > 0);
   }
 
   const months = {};
-  Object.keys(eventsByDate)
-    .sort()
-    .forEach(dateStr => {
-      const k = dateStr.substring(0, 7);
-      if (!months[k]) months[k] = [];
-      months[k].push({ date: dateStr, events: eventsByDate[dateStr] });
-    });
+  Object.keys(eventsByDate).sort().forEach(dateStr => {
+    const k = dateStr.substring(0, 7);
+    if (!months[k]) months[k] = [];
+    months[k].push({ date: dateStr, events: eventsByDate[dateStr] });
+  });
 
   Object.keys(months).forEach(monthKey => {
     const monthDiv = document.createElement('div');
@@ -837,7 +656,6 @@ function generateCalendarGrid(container, turmaId, docenteName, start, end, title
 
     const [y, m] = monthKey.split('-');
     const nomeMes = new Date(y, m - 1, 2).toLocaleString('pt-BR', { month: 'long', year: 'numeric' });
-
     monthDiv.innerHTML = `<h3>${nomeMes.toUpperCase()}</h3>`;
 
     const grid = document.createElement('div');
@@ -852,7 +670,6 @@ function generateCalendarGrid(container, turmaId, docenteName, start, end, title
       const cell = document.createElement('div');
       cell.className = 'day-cell';
       const dt = new Date(dayData.date + 'T12:00:00');
-
       if (dt.getDay() === 0 || dt.getDay() === 6) cell.classList.add('weekend');
 
       let html = `<span class="day-number">${dayData.date.split('-')[2]}</span>`;
@@ -861,22 +678,14 @@ function generateCalendarGrid(container, turmaId, docenteName, start, end, title
       if (holidayEvent) {
         cell.style.background = '#f1f2f6';
         html += `<div style="text-align:center; color:#7f8c8d; font-style:italic; padding-top:10px; font-weight:bold; font-size:0.9em;">
-                  ${holidayEvent.title}
-                 </div>`;
+          ${holidayEvent.title}
+        </div>`;
       } else {
         if (slotsToRender.length > 0) {
-          slotsToRender.forEach((slotTime, index) => {
+          slotsToRender.forEach(slotTime => {
             const isIntervalo = slotTime.toUpperCase().includes('INTERVALO');
             const timeMatch = slotTime.match(/\d{2}:\d{2}/);
             const timeLabel = timeMatch ? timeMatch[0] : '';
-            const currentHour = timeLabel ? parseInt(timeLabel.split(':')[0], 10) : 0;
-
-            let rowExtraStyle = '';
-            if (index > 0 && currentHour >= 13) {
-              const prevMatch = slotsToRender[index - 1].match(/\d{2}:\d{2}/);
-              const prevHour = prevMatch ? parseInt(prevMatch[0].split(':')[0], 10) : 0;
-              if (prevHour <= 12) rowExtraStyle = 'border-top: 1px solid var(--primary);';
-            }
 
             const eventsInSlot = dayData.events.filter(
               e => e.horario === slotTime || (e.horariosOcupados && e.horariosOcupados.includes(slotTime))
@@ -911,9 +720,9 @@ function generateCalendarGrid(container, turmaId, docenteName, start, end, title
             }
 
             html += `
-              <div class="cal-slot-row" style="${rowExtraStyle} ${style}">
+              <div class="cal-slot-row" style="${style}">
                 <div class="cal-slot-time">${timeLabel}</div>
-                <div class="cal-slot-content" title="${content.replace(/<[^>]*>?/gm, '')}">${content}</div>
+                <div class="cal-slot-content">${content}</div>
               </div>`;
           });
         } else {
@@ -940,10 +749,6 @@ function generateCalendarGrid(container, turmaId, docenteName, start, end, title
 function formatDateBR(dateStr) {
   if (!dateStr) return '';
   return dateStr.split('-').reverse().join('/');
-}
-
-function checkTeacherConflict(docente, dia, horario) {
-  return store.allocations.find(a => a.docente === docente && a.diaSemana == dia && a.horario === horario);
 }
 
 function switchTab(tabId) {
