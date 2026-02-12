@@ -3,7 +3,6 @@ import { getCalendarEvents } from './calendar.js';
 import {
   countBusinessDays,
   countWeekdaysInPeriod,
-  checkTimeConflict,
   addBusinessDays
 } from './utils.js';
 
@@ -36,11 +35,51 @@ const inputConfig = {
 
 let tempImportData = null;
 
+/**
+ * Extrai apenas "HH:MM - HH:MM" se existir.
+ * Isso mantém o padrão que a grade usa para comparar horários.
+ */
 function cleanHorarioLabel(s) {
   const str = (s ?? '').toString();
   const m = str.match(/\b\d{1,2}:\d{2}\s*[-–]\s*\d{1,2}:\d{2}\b/);
   if (m) return m[0];
   return str;
+}
+
+/**
+ * Garante que a palavra apareça exatamente como o usuário quer: "Intervalo"
+ * (mesmo que venha "INTERVALO (...)" do JSON).
+ */
+function formatIntervaloLabel(s) {
+  const str = (s ?? '').toString().trim();
+  if (!str) return str;
+
+  // Troca apenas o prefixo "INTERVALO" por "Intervalo"
+  // preservando o resto (ex.: "(10:00 - 10:20)")
+  if (str.toUpperCase().startsWith('INTERVALO')) {
+    return 'Intervalo' + str.slice('INTERVALO'.length);
+  }
+  // caso venha só "Intervalo" já está ok
+  if (str.toLowerCase().startsWith('intervalo')) {
+    return 'Intervalo' + str.slice('intervalo'.length);
+  }
+  return str;
+}
+
+/**
+ * Monta a lista final de horários que a UI vai renderizar.
+ * - Horários normais: "07:30 - 08:20"
+ * - Intervalos: "Intervalo (10:00 - 10:20)" (exatamente assim)
+ */
+function buildHorariosForUI() {
+  const horariosRaw = store.getHorariosTurma() || [];
+  return horariosRaw
+    .map(h => {
+      const s = String(h ?? '');
+      if (s.toUpperCase().includes('INTERVALO')) return formatIntervaloLabel(s);
+      return cleanHorarioLabel(s);
+    })
+    .filter(s => s && s.trim().length > 0);
 }
 
 /**
@@ -230,7 +269,6 @@ function onCursoChange() {
   selTurma.innerHTML = '<option value="">Selecione...</option>';
 
   if (cursoSigla && store.rawData?.turmas) {
-    // agora turmas pertencem ao curso pela coluna "sigla"
     const turmas = store.rawData.turmas.filter(t => t.sigla === cursoSigla);
     turmas.forEach(t => {
       selTurma.innerHTML += `<option value="${t.turma_id}">${t.turma_label}</option>`;
@@ -308,14 +346,10 @@ function renderWeeklyGrid() {
   if (!gridContainer) return;
   gridContainer.innerHTML = '';
 
-  const horariosRaw = store.getHorariosTurma();
-  const horariosClean = (horariosRaw || [])
-    .map(cleanHorarioLabel)
-    .filter(s => s && s.trim().length > 0);
-
+  const horariosUI = buildHorariosForUI();
   const dias = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
 
-  if (!store.selectedTurma || horariosClean.length === 0) {
+  if (!store.selectedTurma || horariosUI.length === 0) {
     gridContainer.innerHTML = `
       <p style="grid-column: 1/-1; padding: 20px;">
         Selecione uma turma válida.
@@ -329,7 +363,7 @@ function renderWeeklyGrid() {
   gridContainer.appendChild(createCell('header', ''));
   dias.forEach(d => gridContainer.appendChild(createCell('header', d)));
 
-  horariosClean.forEach(horarioStr => {
+  horariosUI.forEach(horarioStr => {
     const isIntervalo = horarioStr.toUpperCase().includes('INTERVALO');
 
     const hDiv = createCell('header', horarioStr);
@@ -337,7 +371,7 @@ function renderWeeklyGrid() {
     gridContainer.appendChild(hDiv);
 
     if (isIntervalo) {
-      const intDiv = createCell('header', 'INTERVALO');
+      const intDiv = createCell('header', 'Intervalo');
       intDiv.style.gridColumn = '2 / span 6';
       intDiv.style.background = '#e0e0e0';
       intDiv.style.color = '#7f8c8d';
@@ -410,7 +444,7 @@ function handleSlotClick(dia, horario) {
 
   store.addAllocation({
     turmaId: store.selectedTurma,
-    disciplina, // aqui continua "disciplina" por compat com allocations salvas, mas o valor é o NOME do componente
+    disciplina,
     docente,
     tipo,
     diaSemana: dia,
@@ -440,8 +474,8 @@ function handleAddManual() {
 
     const slotsTurma = store.getHorariosTurma();
     const slotsReais = (slotsTurma || [])
-      .map(cleanHorarioLabel)
-      .filter(h => h && !h.toUpperCase().includes('INTERVALO'));
+      .map(h => cleanHorarioLabel(h))
+      .filter(h => h && !String(h).toUpperCase().includes('INTERVALO'));
 
     const slotsIntensiva = slotsReais.slice(0, 5);
     if (slotsIntensiva.length === 0) return alert('Erro: Não há horários configurados para esta turma.');
@@ -633,14 +667,21 @@ function generateCalendarGrid(container, turmaId, docenteName, start, end, title
 
   const eventsByDate = getCalendarEvents(turmaId, start, end, docenteName);
 
-  // Horários para renderização
+  // Horários para renderização (inclui Intervalo com fundo cinza)
   let slotsToRender = [];
   if (turmaId) {
-    slotsToRender = store.getHorariosTurma().map(cleanHorarioLabel).filter(s => s && s.trim().length > 0);
+    slotsToRender = buildHorariosForUI();
   } else if (docenteName) {
     // junta todos os turnos do horarios_por_turno
     const hp = store.rawData?.horarios_por_turno || {};
-    slotsToRender = Object.values(hp).flat().map(cleanHorarioLabel).filter(s => s && s.trim().length > 0);
+    slotsToRender = Object.values(hp)
+      .flat()
+      .map(h => {
+        const s = String(h ?? '');
+        if (s.toUpperCase().includes('INTERVALO')) return formatIntervaloLabel(s);
+        return cleanHorarioLabel(s);
+      })
+      .filter(s => s && s.trim().length > 0);
   }
 
   const months = {};
@@ -695,8 +736,8 @@ function generateCalendarGrid(container, turmaId, docenteName, start, end, title
             let style = '';
 
             if (isIntervalo) {
-              content = '<span style="color:#95a5a6; font-style:italic; font-size:0.85em;">Intervalo</span>';
-              style = 'background:#f4f6f7;';
+              content = '<span style="color:#7f8c8d; font-style:italic; font-size:0.85em;">Intervalo</span>';
+              style = 'background:#e0e0e0;';
             } else if (eventsInSlot.length > 0) {
               const isConflict = eventsInSlot.some(e => e.isConflict);
               if (isConflict) {
