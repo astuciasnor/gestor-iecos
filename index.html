@@ -339,6 +339,25 @@
                         <strong>Dica Rápida:</strong> O sistema salva seus dados automaticamente no seu navegador enquanto você trabalha. Mas para garantir, sempre clique em <b>Exportar (JSON)</b> antes de fechar a janela!
                     </div>
 
+                    <div style="background: #fdecea; padding: 16px; border-left: 6px solid #c0392b; margin-bottom: 20px; border-radius: 8px;">
+                        <strong style="color:#922b21; font-size: 1.05em;">⚠️ Aviso importante (dados do Excel → JSON)</strong>
+                        <p style="margin: 10px 0 0; color:#4d4d4d;">
+                            Se você <b>editar a planilha Excel</b> (<code>planilha_base.xlsx</code>), é obrigatório <b>gerar novamente</b> o arquivo
+                            <code>dados_app.json</code> antes de abrir o sistema, senão as listas/grades podem ficar desatualizadas.
+                        </p>
+                        <ol style="margin: 10px 0 0; text-align:left; color:#4d4d4d;">
+                            <li>Salve a planilha <code>planilha_base.xlsx</code> na pasta do projeto.</li>
+                            <li>No terminal (com <code>.venv</code> ativo), rode:<br>
+                                <code>python convert_data.py --input .\planilha_base.xlsx --output .\dados_app.json</code>
+                            </li>
+                            <li>Abra/atualize o <code>index.html</code> no navegador.</li>
+                        </ol>
+                        <p style="margin: 10px 0 0; color:#4d4d4d;">
+                            Dica: se você estiver usando o Excel no Google Drive, basta <b>baixar o .xlsx</b> e rodar o comando acima.
+                        </p>
+                    </div>
+
+
                     <h3>1️⃣ Passo a Passo Básico</h3>
                     <ul style="list-style: none; padding: 0;">
                         <li style="margin-bottom: 15px;">
