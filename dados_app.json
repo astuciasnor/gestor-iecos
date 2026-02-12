@@ -1,1960 +1,2566 @@
 {
+  "meta": {
+    "generated_at": "2026-02-12T15:50:52",
+    "source_file": "planilha_base.xlsx"
+  },
   "docentes": [
     {
-      "nome": "Aldemir Branco de Oliveira Filho",
+      "docente": "Aldemir Branco de Oliveira Filho",
       "unidade": "IECOS",
       "subunidade": "FACIN"
     },
     {
-      "nome": "Carlos Alberto Martins Cordeiro",
+      "docente": "Carlos Alberto Martins Cordeiro",
       "unidade": "IECOS",
       "subunidade": "FEPESCA"
     },
     {
-      "nome": "Carlos Alessandro da Costa Baldez",
+      "docente": "Carlos Alessandro da Costa Baldez",
       "unidade": "CBRAG",
       "subunidade": "FAMAT"
     },
     {
-      "nome": "Carlos Eduardo Rangel Andrade",
+      "docente": "Carlos Eduardo Rangel Andrade",
       "unidade": "IECOS",
       "subunidade": "FEPESCA"
     },
     {
-      "nome": "Carlos Murilo Tenório Maciel",
+      "docente": "Carlos Murilo Tenório Maciel",
       "unidade": "IECOS",
       "subunidade": "FACIN"
     },
     {
-      "nome": "Colin Robert Beasley",
+      "docente": "Colin Robert Beasley",
       "unidade": "IECOS",
       "subunidade": "FBIO"
     },
     {
-      "nome": "Cristiana Ramalho Maciel",
+      "docente": "Cristiana Ramalho Maciel",
       "unidade": "IECOS",
       "subunidade": "FBIO"
     },
     {
-      "nome": "Daniel Abreu Vasconcelos Campelo",
+      "docente": "Daniel Abreu Vasconcelos Campelo",
       "unidade": "IECOS",
       "subunidade": "FEPESCA"
     },
     {
-      "nome": "Dionísio de Souza Sampaio",
+      "docente": "Dionísio de Souza Sampaio",
       "unidade": "IECOS",
       "subunidade": "FACIN"
     },
     {
-      "nome": "Evaldo Martins da Silva",
+      "docente": "Evaldo Martins da Silva",
       "unidade": "IECOS",
       "subunidade": "FEPESCA"
     },
     {
-      "nome": "Francisco Carlos Alberto Fonteles Holanda",
+      "docente": "Francisco Carlos Alberto Fonteles Holanda",
       "unidade": "IECOS",
       "subunidade": "FEPESCA"
     },
     {
-      "nome": "Gláucia Caroline Silva de Oliveira",
+      "docente": "Gláucia Caroline Silva de Oliveira",
       "unidade": "IECOS",
       "subunidade": "FBIO"
     },
     {
-      "nome": "Grazielle Fernanda Evangelista Gomes",
+      "docente": "Grazielle Fernanda Evangelista Gomes",
       "unidade": "IECOS",
       "subunidade": "FEPESCA"
     },
     {
-      "nome": "Hudson Cleber Pereira da Silva",
+      "docente": "Hudson Cleber Pereira da Silva",
       "unidade": "IECOS",
       "subunidade": "FEPESCA"
     },
     {
-      "nome": "Janice Muriel Fernandes Lima da Cunha",
+      "docente": "Janice Muriel Fernandes Lima da Cunha",
       "unidade": "IECOS",
       "subunidade": "FACIN"
     },
     {
-      "nome": "Juliana Araripe Gomes da Silva",
+      "docente": "Juliana Araripe Gomes da Silva",
       "unidade": "IECOS",
       "subunidade": "FACIN"
     },
     {
-      "nome": "Liliane Miranda Freitas",
+      "docente": "Liliane Miranda Freitas",
       "unidade": "IECOS",
       "subunidade": "FACIN"
     },
     {
-      "nome": "Lorena Batista de Moura",
+      "docente": "Lorena Batista de Moura",
       "unidade": "IECOS",
       "subunidade": "FEPESCA"
     },
     {
-      "nome": "Luci Cajueiro Carneiro Pereira",
+      "docente": "Luci Cajueiro Carneiro Pereira",
       "unidade": "IECOS",
       "subunidade": "FBIO"
     },
     {
-      "nome": "Lucinaldo da Silva Bandtt",
+      "docente": "Lucinaldo da Silva Bandtt",
       "unidade": "IECOS",
       "subunidade": "FBIO"
     },
     {
-      "nome": "Marcelo Nazareno Vallinoto de Sousa",
+      "docente": "Marcelo Nazareno Vallinoto de Sousa",
       "unidade": "IECOS",
       "subunidade": "FBIO"
     },
     {
-      "nome": "Marcus Emanuel Barroncas Fernandes",
+      "docente": "Marcus Emanuel Barroncas Fernandes",
       "unidade": "IECOS",
       "subunidade": "FBIO"
     },
     {
-      "nome": "Marcus Vinícius Domingues",
+      "docente": "Marcus Vinícius Domingues",
       "unidade": "IECOS",
       "subunidade": "FACIN"
     },
     {
-      "nome": "Maria Iracilda da Cunha Sampaio",
+      "docente": "Maria Iracilda da Cunha Sampaio",
       "unidade": "IECOS",
       "subunidade": "FBIO"
     },
     {
-      "nome": "Marcos Ferreira Brabo",
+      "docente": "Marcos Ferreira Brabo",
       "unidade": "IECOS",
       "subunidade": "FEPESCA"
     },
     {
-      "nome": "Marileide Moraes Alves",
+      "docente": "Marileide Moraes Alves",
       "unidade": "IECOS",
       "subunidade": "FEPESCA"
     },
     {
-      "nome": "Marivana Borges Silva",
+      "docente": "Marivana Borges Silva",
       "unidade": "IECOS",
       "subunidade": "FBIO"
     },
     {
-      "nome": "Moirah Paula Machado de Menezes",
+      "docente": "Moirah Paula Machado de Menezes",
       "unidade": "IECOS",
       "subunidade": "FBIO"
     },
     {
-      "nome": "Nelane do Socorro Marques da Silva",
+      "docente": "Nelane do Socorro Marques da Silva",
       "unidade": "IECOS",
       "subunidade": "FBIO"
     },
     {
-      "nome": "Nils Asp Edwin Neto",
+      "docente": "Nils Asp Edwin Neto",
       "unidade": "IECOS",
       "subunidade": "FEPESCA"
     },
     {
-      "nome": "Pedro Andrés Chira Oliva",
+      "docente": "Pedro Andrés Chira Oliva",
       "unidade": "IECOS",
       "subunidade": "FEPESCA"
     },
     {
-      "nome": "Péricles Sena do Rêgo",
+      "docente": "Péricles Sena do Rêgo",
       "unidade": "IECOS",
       "subunidade": "FACIN"
     },
     {
-      "nome": "Rauquírio André Albuquerque Marinho da Costa",
+      "docente": "Rauquírio André Albuquerque Marinho da Costa",
       "unidade": "IECOS",
       "subunidade": "FBIO"
     },
     {
-      "nome": "Rita de Cássia Oliveira dos Santos",
+      "docente": "Rita de Cássia Oliveira dos Santos",
       "unidade": "IECOS",
       "subunidade": "FBIO"
     },
     {
-      "nome": "Roberta Sá Leitão Barboza",
+      "docente": "Roberta Sá Leitão Barboza",
       "unidade": "IECOS",
       "subunidade": "FEPESCA"
     },
     {
-      "nome": "Rosigleyes Corrêa de Sousa Felix",
+      "docente": "Rosigleyes Corrêa de Sousa Felix",
       "unidade": "IECOS",
       "subunidade": "FBIO"
     },
     {
-      "nome": "Sandra Nazaré Dias Bastos",
+      "docente": "Sandra Nazaré Dias Bastos",
       "unidade": "IECOS",
       "subunidade": "FBIO"
     },
     {
-      "nome": "Simoni Santos da Silva",
+      "docente": "Simoni Santos da Silva",
       "unidade": "IECOS",
       "subunidade": "FEPESCA"
     },
     {
-      "nome": "Ulf Mehlig",
+      "docente": "Ulf Mehlig",
       "unidade": "IECOS",
       "subunidade": "FACIN"
     },
     {
-      "nome": "Zélia Maria Pimental Nunes",
+      "docente": "Zélia Maria Pimental Nunes",
       "unidade": "IECOS",
       "subunidade": "FEPESCA"
     },
     {
-      "nome": "Ana Garcês",
+      "docente": "Ana Garcês",
       "unidade": "CBRAG",
       "subunidade": "FACED"
     },
     {
-      "nome": "Priscilany Cavalcante dos Santos",
+      "docente": "Priscilany Cavalcante dos Santos",
       "unidade": "IECOS",
       "subunidade": "FACIN"
     },
     {
-      "nome": "Fábio Batagini Quinteiro",
+      "docente": "Fábio Batagini Quinteiro",
       "unidade": "IECOS",
       "subunidade": "FBIO"
     },
     {
-      "nome": "Roseane Pinto",
+      "docente": "Roseane Pinto",
       "unidade": "CBRAG",
       "subunidade": "FAHIST"
     },
     {
-      "nome": "Cleide Marques",
+      "docente": "Cleide Marques",
       "unidade": "IECOS",
       "subunidade": "FEPESCA"
     },
     {
-      "nome": "Leonnan Oliveira",
+      "docente": "Leonnan Oliveira",
       "unidade": "IECOS",
       "subunidade": "FEPESCA"
     },
     {
-      "nome": "Cláudia Sobrenome",
+      "docente": "Cláudia Xavier",
       "unidade": "IECOS",
       "subunidade": "FBIO"
+    },
+    {
+      "docente": "Iracely Rodrigues da Silva",
+      "unidade": "",
+      "subunidade": ""
+    },
+    {
+      "docente": "Daniel Gomes de Sousa",
+      "unidade": "",
+      "subunidade": ""
+    },
+    {
+      "docente": "Neide Ramos",
+      "unidade": "",
+      "subunidade": ""
+    },
+    {
+      "docente": "Natália Reis",
+      "unidade": "",
+      "subunidade": ""
+    },
+    {
+      "docente": "Dhemersson Santos",
+      "unidade": "IECOS",
+      "subunidade": "FBIO"
+    },
+    {
+      "docente": "Leiliane Rocha",
+      "unidade": "",
+      "subunidade": ""
+    },
+    {
+      "docente": "Vicent Ferrer",
+      "unidade": "",
+      "subunidade": ""
+    },
+    {
+      "docente": "Darlene Ferreira",
+      "unidade": "",
+      "subunidade": ""
+    },
+    {
+      "docente": "Benedito Nunes",
+      "unidade": "IECOS",
+      "subunidade": "FBIO"
+    },
+    {
+      "docente": "Cinthya Arruda",
+      "unidade": "",
+      "subunidade": ""
     }
   ],
-  "disciplinas": [
+  "componentes": [
     {
+      "sigla": "EP",
+      "periodo": "I",
       "codigo": "EP05005",
+      "cor": "#9bf6ff",
       "nome": "ECOLOGIA",
       "abreviacao": "Ecologia",
       "ch": 60,
-      "cor_disciplina": "#9bf6ff",
       "curso_sigla": "EP"
     },
     {
+      "sigla": "EP",
+      "periodo": "I",
       "codigo": "EP05003",
+      "cor": "#fdffb6",
       "nome": "INFORMATICA BASICA",
       "abreviacao": "Inform Basic",
       "ch": 45,
-      "cor_disciplina": "#fdffb6",
       "curso_sigla": "EP"
     },
     {
+      "sigla": "EP",
+      "periodo": "I",
       "codigo": "EP05001",
+      "cor": "#ffadad",
       "nome": "INGLES TECNICO",
       "abreviacao": "Ingles Tecn",
       "ch": 60,
-      "cor_disciplina": "#ffadad",
       "curso_sigla": "EP"
     },
     {
+      "sigla": "EP",
+      "periodo": "I",
       "codigo": "EP05006",
+      "cor": "#a0c4ff",
       "nome": "INTRODUCAO A ENGENHARIA DE PESCA",
       "abreviacao": "Intr Eng Pesca",
       "ch": 30,
-      "cor_disciplina": "#a0c4ff",
       "curso_sigla": "EP"
     },
     {
+      "sigla": "EP",
+      "periodo": "I",
       "codigo": "EP05004",
+      "cor": "#caffbf",
       "nome": "MATEMATICA BASICA",
       "abreviacao": "Matem Basic",
       "ch": 90,
-      "cor_disciplina": "#caffbf",
       "curso_sigla": "EP"
     },
     {
+      "sigla": "EP",
+      "periodo": "I",
       "codigo": "EP05002",
+      "cor": "#ffd6a5",
       "nome": "METODOLOGIA CIENTIFICA",
       "abreviacao": "Metod Cient",
       "ch": 45,
-      "cor_disciplina": "#ffd6a5",
       "curso_sigla": "EP"
     },
     {
+      "sigla": "EP",
+      "periodo": "I",
       "codigo": "EP05073",
+      "cor": "#ffc6ff",
       "nome": "QUIMICA BASICA",
       "abreviacao": "Quim Basic",
       "ch": 45,
-      "cor_disciplina": "#ffc6ff",
       "curso_sigla": "EP"
     },
     {
+      "sigla": "EP",
+      "periodo": "I",
       "codigo": "EP05007",
+      "cor": "#bdb2ff",
       "nome": "QUIMICA GERAL E ANALITICA",
       "abreviacao": "Quim Geral",
       "ch": 90,
-      "cor_disciplina": "#bdb2ff",
       "curso_sigla": "EP"
     },
     {
+      "sigla": "EP",
+      "periodo": "II",
       "codigo": "EP05010",
+      "cor": "#ffc2c2",
       "nome": "BIOQUIMICA",
       "abreviacao": "Bioquimica",
       "ch": 90,
-      "cor_disciplina": "#ffc2c2",
       "curso_sigla": "EP"
     },
     {
+      "sigla": "EP",
+      "periodo": "II",
       "codigo": "EP05009",
+      "cor": "#ffdfd3",
       "nome": "DESENHO TECNICO",
       "abreviacao": "Desen Tecn",
       "ch": 60,
-      "cor_disciplina": "#ffdfd3",
       "curso_sigla": "EP"
     },
     {
+      "sigla": "EP",
+      "periodo": "II",
       "codigo": "EP05011",
+      "cor": "#ffe2b9",
       "nome": "ESTATISTICA BASICA",
       "abreviacao": "Estat Basic",
       "ch": 45,
-      "cor_disciplina": "#ffe2b9",
       "curso_sigla": "EP"
     },
     {
+      "sigla": "EP",
+      "periodo": "II",
       "codigo": "EP05008",
+      "cor": "#e0bbe4",
       "nome": "MATEMATICA APLICADA",
       "abreviacao": "Matem Aplic",
       "ch": 60,
-      "cor_disciplina": "#e0bbe4",
       "curso_sigla": "EP"
     },
     {
+      "sigla": "EP",
+      "periodo": "II",
       "codigo": "EP05012",
+      "cor": "#feffcc",
       "nome": "MECANICA BASICA",
       "abreviacao": "Mecan Basic",
       "ch": 75,
-      "cor_disciplina": "#feffcc",
       "curso_sigla": "EP"
     },
     {
+      "sigla": "EP",
+      "periodo": "II",
       "codigo": "EP05069",
+      "cor": "#adf9ff",
       "nome": "TOPICOS ESPECIAIS EM AQUICULTURA",
       "abreviacao": "TE-Aquicultura",
       "ch": 30,
-      "cor_disciplina": "#adf9ff",
       "curso_sigla": "EP"
     },
     {
+      "sigla": "EP",
+      "periodo": "II",
       "codigo": "EP05013",
+      "cor": "#d9ffcf",
       "nome": "ZOOLOGIA AQUATICA",
       "abreviacao": "Zool Aquat",
       "ch": 60,
-      "cor_disciplina": "#d9ffcf",
       "curso_sigla": "EP"
     },
     {
+      "sigla": "EP",
+      "periodo": "III",
       "codigo": "EP05020",
+      "cor": "#f2c08f",
       "nome": "BOTANICA AQUATICA",
       "abreviacao": "Botan Aquat",
       "ch": 60,
-      "cor_disciplina": "#f2c08f",
       "curso_sigla": "EP"
     },
     {
+      "sigla": "EP",
+      "periodo": "III",
       "codigo": "EP05016",
+      "cor": "#ffd3ff",
       "nome": "DESENHO COMPUTACIONAL",
       "abreviacao": "Desen Comput",
       "ch": 60,
-      "cor_disciplina": "#ffd3ff",
       "curso_sigla": "EP"
     },
     {
+      "sigla": "EP",
+      "periodo": "III",
       "codigo": "EP05017",
+      "cor": "#eccfe9",
       "nome": "ECONOMIA",
       "abreviacao": "Economia",
       "ch": 45,
-      "cor_disciplina": "#eccfe9",
       "curso_sigla": "EP"
     },
     {
+      "sigla": "EP",
+      "periodo": "III",
       "codigo": "EP05019",
+      "cor": "#f29898",
       "nome": "ELETROMAGNETISMO",
       "abreviacao": "Eletromag",
       "ch": 75,
-      "cor_disciplina": "#f29898",
       "curso_sigla": "EP"
     },
     {
+      "sigla": "EP",
+      "periodo": "III",
       "codigo": "EP05014",
+      "cor": "#b4d1ff",
       "nome": "GEOMETRIA ANALITICA E ALGEBRA LINEAR",
       "abreviacao": "Geom Analit",
       "ch": 60,
-      "cor_disciplina": "#b4d1ff",
       "curso_sigla": "EP"
     },
     {
+      "sigla": "EP",
+      "periodo": "III",
       "codigo": "EP05015",
+      "cor": "#ccc6ff",
       "nome": "ICTIOLOGIA",
       "abreviacao": "Ictiologia",
       "ch": 45,
-      "cor_disciplina": "#ccc6ff",
       "curso_sigla": "EP"
     },
     {
+      "sigla": "EP",
+      "periodo": "III",
       "codigo": "EP05018",
+      "cor": "#ffe8de",
       "nome": "MICROBIOLOGIA DO PESCADO",
       "abreviacao": "Microb Pesc",
       "ch": 60,
-      "cor_disciplina": "#ffe8de",
       "curso_sigla": "EP"
     },
     {
+      "sigla": "EP",
+      "periodo": "IV",
       "codigo": "EP05024",
+      "cor": "#8daeda",
       "nome": "ECONOMIA APLICADA A PESCA E AQUICULTURA",
       "abreviacao": "Econo Aplic",
       "ch": 60,
-      "cor_disciplina": "#8daeda",
       "curso_sigla": "EP"
     },
     {
+      "sigla": "EP",
+      "periodo": "IV",
       "codigo": "EP05025",
+      "cor": "#a79cea",
       "nome": "GEOLOGIA DE AMBIENTES AQUATICOS",
       "abreviacao": "Geol Amb Aquat",
       "ch": 75,
-      "cor_disciplina": "#a79cea",
       "curso_sigla": "EP"
     },
     {
+      "sigla": "EP",
+      "periodo": "IV",
       "codigo": "EP05021",
+      "cor": "#f0f2a0",
       "nome": "MECANICA APLICADA",
       "abreviacao": "Mecan Aplic",
       "ch": 45,
-      "cor_disciplina": "#f0f2a0",
       "curso_sigla": "EP"
     },
     {
+      "sigla": "EP",
+      "periodo": "IV",
       "codigo": "EP05026",
+      "cor": "#f2b0f2",
       "nome": "METEOROLOGIA FISICA E SINOTICA",
       "abreviacao": "Met. Fisic Sinot",
       "ch": 60,
-      "cor_disciplina": "#f2b0f2",
       "curso_sigla": "EP"
     },
     {
+      "sigla": "EP",
+      "periodo": "IV",
       "codigo": "EP05027",
+      "cor": "#cba5d0",
       "nome": "QUALIDADE DO PESCADO",
       "abreviacao": "Quali Pesc",
       "ch": 60,
-      "cor_disciplina": "#cba5d0",
       "curso_sigla": "EP"
     },
     {
+      "sigla": "EP",
+      "periodo": "IV",
       "codigo": "EP05022",
+      "cor": "#b7f2ab",
       "nome": "TERMODINAMICA APLICADA",
       "abreviacao": "Termo Aplic",
       "ch": 45,
-      "cor_disciplina": "#b7f2ab",
       "curso_sigla": "EP"
     },
     {
+      "sigla": "EP",
+      "periodo": "IV",
       "codigo": "EP05070",
+      "cor": "#f2c9bb",
       "nome": "TOPICOS ESPECIAIS EM ECOLOGIA AQUATICA",
       "abreviacao": "TE-Ecol Aquat",
       "ch": 30,
-      "cor_disciplina": "#f2c9bb",
       "curso_sigla": "EP"
     },
     {
+      "sigla": "EP",
+      "periodo": "IV",
       "codigo": "EP05023",
+      "cor": "#88e0ea",
       "nome": "TOPOGRAFIA",
       "abreviacao": "Topografia",
       "ch": 60,
-      "cor_disciplina": "#88e0ea",
       "curso_sigla": "EP"
     },
     {
+      "sigla": "EP",
+      "periodo": "V",
       "codigo": "EP05030",
+      "cor": "#feffd9",
       "nome": "CARTOGRAFIA E GEOPROCESSAMENTO",
       "abreviacao": "Carto Geopr",
       "ch": 60,
-      "cor_disciplina": "#feffd9",
       "curso_sigla": "EP"
     },
     {
+      "sigla": "EP",
+      "periodo": "V",
       "codigo": "EP05033",
+      "cor": "#c9deff",
       "nome": "ELABORACAO E AVALIACAO DE PROJETOS PESQUEIROS E AQUICOLAS",
       "abreviacao": "Elab Avali Proj",
       "ch": 45,
-      "cor_disciplina": "#c9deff",
       "curso_sigla": "EP"
     },
     {
+      "sigla": "EP",
+      "periodo": "V",
       "codigo": "EP05034",
+      "cor": "#dcd5ff",
       "nome": "FISIOECOLOGIA DE ANIMAIS AQUATICOS",
       "abreviacao": "Fisiologia",
       "ch": 75,
-      "cor_disciplina": "#dcd5ff",
       "curso_sigla": "EP"
     },
     {
+      "sigla": "EP",
+      "periodo": "V",
       "codigo": "EP05029",
+      "cor": "#ffefcd",
       "nome": "LIMNOLOGIA",
       "abreviacao": "Limno",
       "ch": 75,
-      "cor_disciplina": "#ffefcd",
       "curso_sigla": "EP"
     },
     {
+      "sigla": "EP",
+      "periodo": "V",
       "codigo": "EP05032",
+      "cor": "#c0fcff",
       "nome": "MAQUINAS E MOTORES",
       "abreviacao": "Maqui Motor",
       "ch": 45,
-      "cor_disciplina": "#c0fcff",
       "curso_sigla": "EP"
     },
     {
+      "sigla": "EP",
+      "periodo": "V",
       "codigo": "EP05028",
+      "cor": "#ffd7d7",
       "nome": "SOCIOLOGIA APLICADA AS COMUNIDADES PESQUEIRAS",
       "abreviacao": "Sociologia",
       "ch": 45,
-      "cor_disciplina": "#ffd7d7",
       "curso_sigla": "EP"
     },
     {
+      "sigla": "EP",
+      "periodo": "V",
       "codigo": "EP05031",
+      "cor": "#e3ffdd",
       "nome": "TECNOLOGIA DO PESCADO",
       "abreviacao": "Tecno Pesca",
       "ch": 60,
-      "cor_disciplina": "#e3ffdd",
       "curso_sigla": "EP"
     },
     {
+      "sigla": "EP",
+      "periodo": "VI",
       "codigo": "EP05036",
+      "cor": "#f9e6ef",
       "nome": "AQUICULTURA",
       "abreviacao": "Aquicultura",
       "ch": 60,
-      "cor_disciplina": "#f9e6ef",
       "curso_sigla": "EP"
     },
     {
+      "sigla": "EP",
+      "periodo": "VI",
       "codigo": "EP05039",
+      "cor": "#e5ac79",
       "nome": "ENGENHARIA AQUICOLA",
       "abreviacao": "Engen Aquic",
       "ch": 75,
-      "cor_disciplina": "#e5ac79",
       "curso_sigla": "EP"
     },
     {
+      "sigla": "EP",
+      "periodo": "VI",
       "codigo": "EP05038",
+      "cor": "#e58383",
       "nome": "ENGENHARIA DO PROCESSAMENTO DO PESCADO",
       "abreviacao": "Eng Proce Pesc",
       "ch": 45,
-      "cor_disciplina": "#e58383",
       "curso_sigla": "EP"
     },
     {
+      "sigla": "EP",
+      "periodo": "VI",
       "codigo": "EP05040",
+      "cor": "#e3e58a",
       "nome": "GENETICA BASICA",
       "abreviacao": "Genet Basic",
       "ch": 60,
-      "cor_disciplina": "#e3e58a",
       "curso_sigla": "EP"
     },
     {
+      "sigla": "EP",
+      "periodo": "VI",
       "codigo": "EP05037",
+      "cor": "#fff2ec",
       "nome": "OCEANOGRAFIA",
       "abreviacao": "Oceanografia",
       "ch": 75,
-      "cor_disciplina": "#fff2ec",
       "curso_sigla": "EP"
     },
     {
+      "sigla": "EP",
+      "periodo": "VI",
       "codigo": "EP05041",
+      "cor": "#a1e595",
       "nome": "RELACOES ETNICO=RACIAIS E CIDADANIA",
       "abreviacao": "Relac Etnic Cida",
       "ch": 30,
-      "cor_disciplina": "#a1e595",
       "curso_sigla": "EP"
     },
     {
+      "sigla": "EP",
+      "periodo": "VI",
       "codigo": "EP05035",
+      "cor": "#ffe0ff",
       "nome": "SANIDADE DE ORGANISMOS AQUATICOS",
       "abreviacao": "Sanidade",
       "ch": 45,
-      "cor_disciplina": "#ffe0ff",
       "curso_sigla": "EP"
     },
     {
+      "sigla": "EP",
+      "periodo": "VI",
       "codigo": "EP05071",
+      "cor": "#72cbd4",
       "nome": "TOPICOS ESPECIAIS EM TECNOLOGIA DO PESCADO",
       "abreviacao": "TE Pescado",
       "ch": 30,
-      "cor_disciplina": "#72cbd4",
       "curso_sigla": "EP"
     },
     {
+      "sigla": "EP",
+      "periodo": "VII",
       "codigo": "EP05047",
+      "cor": "#ffeded",
       "nome": "CARCINICULTURA",
       "abreviacao": "Carcinicultura",
       "ch": 45,
-      "cor_disciplina": "#ffeded",
       "curso_sigla": "EP"
     },
     {
+      "sigla": "EP",
+      "periodo": "VII",
       "codigo": "EP05043",
+      "cor": "#9186f2",
       "nome": "ESTAGIO SUPERVISIONADO OBRIGATORIO DE TECNOLOGIA DO PESCADO",
       "abreviacao": "ESO Tec Pesc",
       "ch": 90,
-      "cor_disciplina": "#9186f2",
       "curso_sigla": "EP"
     },
     {
+      "sigla": "EP",
+      "periodo": "VII",
       "codigo": "EP05042",
+      "cor": "#77b2f2",
       "nome": "ESTATISTICA APLICADA A PESCA E AQUICULTURA",
       "abreviacao": "Estat Aplic Pesc",
       "ch": 45,
-      "cor_disciplina": "#77b2f2",
       "curso_sigla": "EP"
     },
     {
+      "sigla": "EP",
+      "periodo": "VII",
       "codigo": "EP05044",
+      "cor": "#e59ae5",
       "nome": "GENETICA APLICADA",
       "abreviacao": "Genet Aplic",
       "ch": 60,
-      "cor_disciplina": "#e59ae5",
       "curso_sigla": "EP"
     },
     {
+      "sigla": "EP",
+      "periodo": "VII",
       "codigo": "EP05050",
+      "cor": "#f1ffeb",
       "nome": "INTRODUCAO AO TRABALHO DE CONCLUSAO DE CURSO",
       "abreviacao": "Intro TCC",
       "ch": 15,
-      "cor_disciplina": "#f1ffeb",
       "curso_sigla": "EP"
     },
     {
+      "sigla": "EP",
+      "periodo": "VII",
       "codigo": "EP05049",
+      "cor": "#feffe6",
       "nome": "NAVEGACAO BASICA",
       "abreviacao": "Naveg Basic",
       "ch": 60,
-      "cor_disciplina": "#feffe6",
       "curso_sigla": "EP"
     },
     {
+      "sigla": "EP",
+      "periodo": "VII",
       "codigo": "EP05046",
+      "cor": "#e5b9a5",
       "nome": "PISCICULTURA",
       "abreviacao": "Piscicultura",
       "ch": 60,
-      "cor_disciplina": "#e5b9a5",
       "curso_sigla": "EP"
     },
     {
+      "sigla": "EP",
+      "periodo": "VII",
       "codigo": "EP05048",
+      "cor": "#fffcf1",
       "nome": "TECNICAS APLICADAS DE EDUCACAO NAO FORMAL",
       "abreviacao": "Tecn Aplic Educ",
       "ch": 45,
-      "cor_disciplina": "#fffcf1",
       "curso_sigla": "EP"
     },
     {
+      "sigla": "EP",
+      "periodo": "VII",
       "codigo": "EP05045",
+      "cor": "#b68fb9",
       "nome": "TECNICAS DE PESCA",
       "abreviacao": "Tecni Pesca",
       "ch": 45,
-      "cor_disciplina": "#b68fb9",
       "curso_sigla": "EP"
     },
     {
+      "sigla": "EP",
+      "periodo": "VIII",
       "codigo": "EP05052",
+      "cor": "#e6f0ff",
       "nome": "CONFECCAO DE APETRECHOS DE PESCA",
       "abreviacao": "Confe Apetr Pesc",
       "ch": 60,
-      "cor_disciplina": "#e6f0ff",
       "curso_sigla": "EP"
     },
     {
+      "sigla": "EP",
+      "periodo": "VIII",
       "codigo": "EP05057",
+      "cor": "#d86e6e",
       "nome": "DINAMICA DE POPULACOES PESQUEIRAS",
       "abreviacao": "Dinam Popul Pesq",
       "ch": 45,
-      "cor_disciplina": "#d86e6e",
       "curso_sigla": "EP"
     },
     {
+      "sigla": "EP",
+      "periodo": "VIII",
       "codigo": "EP05051",
+      "cor": "#e1fdff",
       "nome": "EMPREENDEDORISMO",
       "abreviacao": "Empreend",
       "ch": 30,
-      "cor_disciplina": "#e1fdff",
       "curso_sigla": "EP"
     },
     {
+      "sigla": "EP",
+      "periodo": "VIII",
       "codigo": "EP05054",
+      "cor": "#fff1ff",
       "nome": "ESTAGIO SUPERVISIONADO OBRIGATORIO DE AQUICULTURA",
       "abreviacao": "ESO Aquicult",
       "ch": 90,
-      "cor_disciplina": "#fff1ff",
       "curso_sigla": "EP"
     },
     {
+      "sigla": "EP",
+      "periodo": "VIII",
       "codigo": "EP05055",
+      "cor": "#fff9fc",
       "nome": "EXTENSAO PESQUEIRA E AQUICOLA",
       "abreviacao": "Exten Pesqu Aqui",
       "ch": 60,
-      "cor_disciplina": "#fff9fc",
       "curso_sigla": "EP"
     },
     {
+      "sigla": "EP",
+      "periodo": "VIII",
       "codigo": "EP05058",
+      "cor": "#d89663",
       "nome": "LIBRAS",
       "abreviacao": "Libra",
       "ch": 30,
-      "cor_disciplina": "#d89663",
       "curso_sigla": "EP"
     },
     {
+      "sigla": "EP",
+      "periodo": "VIII",
       "codigo": "EP05053",
+      "cor": "#f1eeff",
       "nome": "NUTRICAO DE ORGANISMOS AQUATICOS",
       "abreviacao": "Nutr Organ Aqua",
       "ch": 60,
-      "cor_disciplina": "#f1eeff",
       "curso_sigla": "EP"
     },
     {
+      "sigla": "EP",
+      "periodo": "VIII",
       "codigo": "EP05056",
+      "cor": "#fffbf8",
       "nome": "SISTEMAS DE NAVEGACAO",
       "abreviacao": "Siste Naveg",
       "ch": 60,
-      "cor_disciplina": "#fffbf8",
       "curso_sigla": "EP"
     },
     {
+      "sigla": "EP",
+      "periodo": "VIII",
       "codigo": "EP05072",
+      "cor": "#d6d874",
       "nome": "TOPICOS ESPECIAIS EM TECNOLOGIA E ORDENAMENTO PESQUEIRO",
       "abreviacao": "TE Orden. Pesq",
       "ch": 30,
-      "cor_disciplina": "#d6d874",
       "curso_sigla": "EP"
     },
     {
+      "sigla": "EP",
+      "periodo": "IX",
       "codigo": "EP05059",
+      "cor": "#8bcc7f",
       "nome": "ESTAGIO SUPERVISIONADO OBRIGATORIO EM TECNOLOGIA E ORDENAMENTO PESQUEIRO",
       "abreviacao": "ESO Ord Pesq",
       "ch": 90,
-      "cor_disciplina": "#8bcc7f",
       "curso_sigla": "EP"
     },
     {
+      "sigla": "EP",
+      "periodo": "IX",
       "codigo": "EP05060",
+      "cor": "#5cc0be",
       "nome": "GERENCIAMENTO COSTEIRO",
       "abreviacao": "Geren Coste",
       "ch": 60,
-      "cor_disciplina": "#5cc0be",
       "curso_sigla": "EP"
     },
     {
+      "sigla": "EP",
+      "periodo": "IX",
       "codigo": "EP05061",
+      "cor": "#61a0e5",
       "nome": "SISTEMAS DE PESCA",
       "abreviacao": "Siste Pesca",
       "ch": 45,
-      "cor_disciplina": "#61a0e5",
       "curso_sigla": "EP"
     },
     {
+      "sigla": "EP",
+      "periodo": "IX",
       "codigo": "EP05062",
+      "cor": "#7b70e5",
       "nome": "ADMINISTRACAO E LEGISLACAO PESQUEIRA E AQUICOLA",
       "abreviacao": "Admin Leg Pesq",
       "ch": 60,
-      "cor_disciplina": "#7b70e5",
       "curso_sigla": "EP"
     },
     {
+      "sigla": "EP",
+      "periodo": "IX",
       "codigo": "EP05063",
+      "cor": "#d884d8",
       "nome": "AVALIACAO DE ESTOQUES PESQUEIROS",
       "abreviacao": "Avali Estoq Pesq",
       "ch": 45,
-      "cor_disciplina": "#d884d8",
       "curso_sigla": "EP"
     },
     {
+      "sigla": "EP",
+      "periodo": "IX",
       "codigo": "EP05064",
+      "cor": "#a079a2",
       "nome": "PARASITOLOGIA DE ORGANISMOS AQUATICOS",
       "abreviacao": "Parasitologia",
       "ch": 45,
-      "cor_disciplina": "#a079a2",
       "curso_sigla": "EP"
     },
     {
+      "sigla": "EP",
+      "periodo": "IX",
       "codigo": "EP05065",
+      "cor": "#d8a38f",
       "nome": "ESTAGIO SUPERVISIONADO OBRIGATORIO DE EXTENSAO PESQUEIRA",
       "abreviacao": "ESO Ext Pesq",
       "ch": 90,
-      "cor_disciplina": "#d8a38f",
       "curso_sigla": "EP"
     },
     {
+      "sigla": "EP",
+      "periodo": "IX",
       "codigo": "EP05066",
+      "cor": "#ffb7b7",
       "nome": "MARKETING",
       "abreviacao": "Marketing",
       "ch": 30,
-      "cor_disciplina": "#ffb7b7",
       "curso_sigla": "EP"
     },
     {
+      "sigla": "EP",
+      "periodo": "X",
       "codigo": "EP05067",
+      "cor": "#ffdbb0",
       "nome": "TRABALHO DE CONCLUSAO DE CURSO",
       "abreviacao": "TCC",
       "ch": 180,
-      "cor_disciplina": "#ffdbb0",
       "curso_sigla": "EP"
     },
     {
+      "sigla": "EP",
+      "periodo": "X",
       "codigo": "EP05068",
+      "cor": "#fdffc0",
       "nome": "ATIVIDADES COMPLEMENTARES",
       "abreviacao": "Ativ. Compl",
       "ch": 120,
-      "cor_disciplina": "#fdffc0",
       "curso_sigla": "EP"
     },
     {
+      "sigla": "CB",
+      "periodo": "I",
       "codigo": "CBBR001",
+      "cor": "#ffadad",
       "nome": "BIOLOGIA CELULAR E MOLECULAR",
       "abreviacao": "Biol Celu Mole",
       "ch": 75,
-      "cor_disciplina": "#ffadad",
       "curso_sigla": "CB"
     },
     {
+      "sigla": "CB",
+      "periodo": "I",
       "codigo": "CBBR003",
+      "cor": "#ffd6a5",
       "nome": "ECOLOGIA GERAL",
       "abreviacao": "Ecol Gera",
       "ch": 75,
-      "cor_disciplina": "#ffd6a5",
       "curso_sigla": "CB"
     },
     {
+      "sigla": "CB",
+      "periodo": "I",
       "codigo": "CBBR004",
+      "cor": "#fdffb6",
       "nome": "MATEMATICA BASICA",
       "abreviacao": "Matem Bas",
       "ch": 30,
-      "cor_disciplina": "#fdffb6",
       "curso_sigla": "CB"
     },
     {
+      "sigla": "CB",
+      "periodo": "I",
       "codigo": "CBBR005",
+      "cor": "#caffbf",
       "nome": "DIDATICA APLICADA A FORMACAO DOCENTE",
       "abreviacao": "Dida Form Doce",
       "ch": 60,
-      "cor_disciplina": "#caffbf",
       "curso_sigla": "CB"
     },
     {
+      "sigla": "CB",
+      "periodo": "I",
       "codigo": "CBBR006",
+      "cor": "#9bf6ff",
       "nome": "INICIACAO A COMPUTACAO",
       "abreviacao": "Inic Comp",
       "ch": 30,
-      "cor_disciplina": "#9bf6ff",
       "curso_sigla": "CB"
     },
     {
+      "sigla": "CB",
+      "periodo": "I",
       "codigo": "CBBR007",
+      "cor": "#a0c4ff",
       "nome": "BIOLOGIA EVOLUTIVA DO DESENVOLVIMENTO",
       "abreviacao": "Biol Evolut",
       "ch": 45,
-      "cor_disciplina": "#a0c4ff",
       "curso_sigla": "CB"
     },
     {
+      "sigla": "CB",
+      "periodo": "I",
       "codigo": "CBBR008",
+      "cor": "#bdb2ff",
       "nome": "FILOSOFIA E HISTORIA DA CIENCIA",
       "abreviacao": "Filo Hist Cien",
       "ch": 30,
-      "cor_disciplina": "#bdb2ff",
       "curso_sigla": "CB"
     },
     {
+      "sigla": "CB",
+      "periodo": "I",
       "codigo": "CBBR066",
+      "cor": "#ffc6ff",
       "nome": "AVALIACAO NO PROCESSO EDUCACIONAL",
       "abreviacao": "Aval Proc Educ",
       "ch": 30,
-      "cor_disciplina": "#ffc6ff",
       "curso_sigla": "CB"
     },
     {
+      "sigla": "CB",
+      "periodo": "I",
       "codigo": "CBBR067",
+      "cor": "#e0bbe4",
       "nome": "DIVERSIDADE DE ALGAS",
       "abreviacao": "Divers Alga",
       "ch": 30,
-      "cor_disciplina": "#e0bbe4",
       "curso_sigla": "CB"
     },
     {
+      "sigla": "CB",
+      "periodo": "I",
       "codigo": "CBBR073",
+      "cor": "#ffdfd3",
       "nome": "TEMAS CONTEMPORANEOS PARA A EDUCACAO",
       "abreviacao": "Tema Contemp Educ",
       "ch": 30,
-      "cor_disciplina": "#ffdfd3",
       "curso_sigla": "CB"
     },
     {
+      "sigla": "CB",
+      "periodo": "I",
       "codigo": "CBBR074",
+      "cor": "#ffc2c2",
       "nome": "TEMAS SOCIOAMBIENTAIS E CULTURAIS",
       "abreviacao": "Tema Sociam Cult",
       "ch": 30,
-      "cor_disciplina": "#ffc2c2",
       "curso_sigla": "CB"
     },
     {
+      "sigla": "CB",
+      "periodo": "I",
       "codigo": "CBBR080",
+      "cor": "#ffe2b9",
       "nome": "TOPICOS ESPECIAIS: ENSINO DE ECOLOGIA",
-      "abreviacao": "TE Ensi Ecol",
+      "abreviacao": "TE  Ensi Ecol",
       "ch": 30,
-      "cor_disciplina": "#ffe2b9",
       "curso_sigla": "CB"
     },
     {
+      "sigla": "CB",
+      "periodo": "I",
       "codigo": "CBBR082",
+      "cor": "#feffcc",
       "nome": "TOPICOS ESPECIAIS: ENSINO EM EDUCACAO",
-      "abreviacao": "TE Ensi Educ",
+      "abreviacao": "TE  Ensi Educ",
       "ch": 30,
-      "cor_disciplina": "#feffcc",
       "curso_sigla": "CB"
     },
     {
+      "sigla": "CB",
+      "periodo": "II",
       "codigo": "CBBR010",
+      "cor": "#d9ffcf",
       "nome": "SISTEMATICA BIOLOGICA",
       "abreviacao": "Sist Biol",
       "ch": 30,
-      "cor_disciplina": "#d9ffcf",
       "curso_sigla": "CB"
     },
     {
+      "sigla": "CB",
+      "periodo": "II",
       "codigo": "CBBR011",
+      "cor": "#adf9ff",
       "nome": "VIRUS E PROCARIONTES",
       "abreviacao": "Viru Proc",
       "ch": 60,
-      "cor_disciplina": "#adf9ff",
       "curso_sigla": "CB"
     },
     {
+      "sigla": "CB",
+      "periodo": "II",
       "codigo": "CBBR012",
+      "cor": "#b4d1ff",
       "nome": "QUIMICA BASICA",
       "abreviacao": "Quim Basi",
       "ch": 30,
-      "cor_disciplina": "#b4d1ff",
       "curso_sigla": "CB"
     },
     {
+      "sigla": "CB",
+      "periodo": "II",
       "codigo": "CBBR013",
+      "cor": "#ccc6ff",
       "nome": "BIOQUIMICA",
       "abreviacao": "Bioq",
       "ch": 75,
-      "cor_disciplina": "#ccc6ff",
       "curso_sigla": "CB"
     },
     {
+      "sigla": "CB",
+      "periodo": "II",
       "codigo": "CBBR014",
+      "cor": "#ffd3ff",
       "nome": "PLANEJAMENTO, GESTAO E AVALIACAO",
       "abreviacao": "Plan Gest Aval",
       "ch": 60,
-      "cor_disciplina": "#ffd3ff",
       "curso_sigla": "CB"
     },
     {
+      "sigla": "CB",
+      "periodo": "II",
       "codigo": "CBBR015",
+      "cor": "#eccfe9",
       "nome": "BIOFISICA",
       "abreviacao": "Biof",
       "ch": 45,
-      "cor_disciplina": "#eccfe9",
       "curso_sigla": "CB"
     },
     {
+      "sigla": "CB",
+      "periodo": "II",
       "codigo": "CBBR017",
+      "cor": "#ffe8de",
       "nome": "MATEMATICA APLICADA A BIOLOGIA",
       "abreviacao": "Mate Biol",
       "ch": 30,
-      "cor_disciplina": "#ffe8de",
       "curso_sigla": "CB"
     },
     {
+      "sigla": "CB",
+      "periodo": "III",
       "codigo": "CBBR018",
+      "cor": "#f29898",
       "nome": "INTRODUCAO AOS EUCARIONTES",
       "abreviacao": "Intr Euca",
       "ch": 45,
-      "cor_disciplina": "#f29898",
       "curso_sigla": "CB"
     },
     {
+      "sigla": "CB",
+      "periodo": "III",
       "codigo": "CBBR020",
+      "cor": "#f2c08f",
       "nome": "DIVERSIDADE DE FUNGOS",
       "abreviacao": "Dive Fung",
       "ch": 45,
-      "cor_disciplina": "#f2c08f",
       "curso_sigla": "CB"
     },
     {
+      "sigla": "CB",
+      "periodo": "III",
       "codigo": "CBBR021",
+      "cor": "#f0f2a0",
       "nome": "GENETICA GERAL",
       "abreviacao": "Genet Geral",
       "ch": 75,
-      "cor_disciplina": "#f0f2a0",
       "curso_sigla": "CB"
     },
     {
+      "sigla": "CB",
+      "periodo": "III",
       "codigo": "CBBR022",
+      "cor": "#b7f2ab",
       "nome": "BIOESTATISTICA I",
       "abreviacao": "Bioest I",
       "ch": 45,
-      "cor_disciplina": "#b7f2ab",
       "curso_sigla": "CB"
     },
     {
+      "sigla": "CB",
+      "periodo": "III",
       "codigo": "CBBR023",
+      "cor": "#88e0ea",
       "nome": "METODOLOGIA CIENTIFICA",
       "abreviacao": "Metod Cien",
       "ch": 15,
-      "cor_disciplina": "#88e0ea",
       "curso_sigla": "CB"
     },
     {
+      "sigla": "CB",
+      "periodo": "III",
       "codigo": "CBBR024",
+      "cor": "#8daeda",
       "nome": "FISICA BASICA",
       "abreviacao": "Fisi Basi",
       "ch": 30,
-      "cor_disciplina": "#8daeda",
       "curso_sigla": "CB"
     },
     {
+      "sigla": "CB",
+      "periodo": "III",
       "codigo": "CBBR025",
+      "cor": "#a79cea",
       "nome": "LIBRAS I",
       "abreviacao": "Libras I",
       "ch": 45,
-      "cor_disciplina": "#a79cea",
       "curso_sigla": "CB"
     },
     {
+      "sigla": "CB",
+      "periodo": "IV",
       "codigo": "CBBR026",
+      "cor": "#f2b0f2",
       "nome": "MORFOLOGIA VEGETAL",
       "abreviacao": "Morf Vege",
       "ch": 75,
-      "cor_disciplina": "#f2b0f2",
       "curso_sigla": "CB"
     },
     {
+      "sigla": "CB",
+      "periodo": "IV",
       "codigo": "CBBR028",
+      "cor": "#cba5d0",
       "nome": "INTRODUCAO A GEOLOGIA",
       "abreviacao": "Intr Geol",
       "ch": 45,
-      "cor_disciplina": "#cba5d0",
       "curso_sigla": "CB"
     },
     {
+      "sigla": "CB",
+      "periodo": "IV",
       "codigo": "CBBR029",
+      "cor": "#f2c9bb",
       "nome": "GEOMORFOLOGIA COSTEIRA",
       "abreviacao": "Geom Cost",
       "ch": 60,
-      "cor_disciplina": "#f2c9bb",
       "curso_sigla": "CB"
     },
     {
+      "sigla": "CB",
+      "periodo": "IV",
       "codigo": "CBBR030",
+      "cor": "#ffd7d7",
       "nome": "SOCIOLOGIA, EDUCACAO E CIDADANIA",
       "abreviacao": "Soci Educ Cida",
       "ch": 45,
-      "cor_disciplina": "#ffd7d7",
       "curso_sigla": "CB"
     },
     {
+      "sigla": "CB",
+      "periodo": "IV",
       "codigo": "CBBR031",
+      "cor": "#ffefcd",
       "nome": "HISTORIAS DE VIDA E FORMACAO DOCENTE",
       "abreviacao": "Historia Vida Form",
       "ch": 30,
-      "cor_disciplina": "#ffefcd",
       "curso_sigla": "CB"
     },
     {
+      "sigla": "CB",
+      "periodo": "IV",
       "codigo": "CBBR032",
+      "cor": "#feffd9",
       "nome": "PSICOLOGIA DA APRENDIZAGEM",
       "abreviacao": "Psic Apre",
       "ch": 45,
-      "cor_disciplina": "#feffd9",
       "curso_sigla": "CB"
     },
     {
+      "sigla": "CB",
+      "periodo": "IV",
       "codigo": "CBBR033",
+      "cor": "#e3ffdd",
       "nome": "LIBRAS II",
       "abreviacao": "Libras II",
       "ch": 45,
-      "cor_disciplina": "#e3ffdd",
       "curso_sigla": "CB"
     },
     {
+      "sigla": "CB",
+      "periodo": "V",
       "codigo": "CBBR034",
+      "cor": "#c0fcff",
       "nome": "DIVERSIDADE ANIMAL I",
       "abreviacao": "Dive Anim",
       "ch": 60,
-      "cor_disciplina": "#c0fcff",
       "curso_sigla": "CB"
     },
     {
+      "sigla": "CB",
+      "periodo": "V",
       "codigo": "CBBR035",
+      "cor": "#c9deff",
       "nome": "EDUCACAO DO CAMPO",
       "abreviacao": "Educ Camp",
       "ch": 45,
-      "cor_disciplina": "#c9deff",
       "curso_sigla": "CB"
     },
     {
+      "sigla": "CB",
+      "periodo": "V",
       "codigo": "CBBR036",
+      "cor": "#dcd5ff",
       "nome": "EVOLUCAO E BIOGEOGRAFIA",
       "abreviacao": "Evol Biog",
       "ch": 75,
-      "cor_disciplina": "#dcd5ff",
       "curso_sigla": "CB"
     },
     {
+      "sigla": "CB",
+      "periodo": "V",
       "codigo": "CBBR037",
+      "cor": "#ffe0ff",
       "nome": "ESTAGIO I: ESPACOS NAO FORMAIS",
       "abreviacao": "Esta I: Esp Nao Form",
       "ch": 60,
-      "cor_disciplina": "#ffe0ff",
       "curso_sigla": "CB"
     },
     {
+      "sigla": "CB",
+      "periodo": "V",
       "codigo": "CBBR038",
+      "cor": "#f9e6ef",
       "nome": "EDUCACAO ESPECIAL E INCLUSIVA",
       "abreviacao": "Educ Espe Incl",
       "ch": 45,
-      "cor_disciplina": "#f9e6ef",
       "curso_sigla": "CB"
     },
     {
+      "sigla": "CB",
+      "periodo": "V",
       "codigo": "CBBR039",
+      "cor": "#fff2ec",
       "nome": "PALEONTOLOGIA GERAL",
       "abreviacao": "Pale Geral",
       "ch": 45,
-      "cor_disciplina": "#fff2ec",
       "curso_sigla": "CB"
     },
     {
+      "sigla": "CB",
+      "periodo": "V",
       "codigo": "CBBR040",
+      "cor": "#e58383",
       "nome": "DIVERSIDADE VEGETAL I",
       "abreviacao": "Divers Vege",
       "ch": 60,
-      "cor_disciplina": "#e58383",
       "curso_sigla": "CB"
     },
     {
+      "sigla": "CB",
+      "periodo": "VI",
       "codigo": "CBBR041",
+      "cor": "#e5ac79",
       "nome": "DIVERSIDADE ANIMAL II",
       "abreviacao": "Divers Anim II",
       "ch": 60,
-      "cor_disciplina": "#e5ac79",
       "curso_sigla": "CB"
     },
     {
+      "sigla": "CB",
+      "periodo": "VI",
       "codigo": "CBBR043",
+      "cor": "#e3e58a",
       "nome": "BIOLOGIA DE AGUA DOCE",
       "abreviacao": "Biol Agua Doce",
       "ch": 60,
-      "cor_disciplina": "#e3e58a",
       "curso_sigla": "CB"
     },
     {
+      "sigla": "CB",
+      "periodo": "VI",
       "codigo": "CBBR044",
+      "cor": "#a1e595",
       "nome": "ELABORACAO DE PROJETOS DE TCC",
       "abreviacao": "Elab Proj Tcc",
       "ch": 30,
-      "cor_disciplina": "#a1e595",
       "curso_sigla": "CB"
     },
     {
+      "sigla": "CB",
+      "periodo": "VI",
       "codigo": "CBBR045",
+      "cor": "#72cbd4",
       "nome": "IMUNOLOGIA",
       "abreviacao": "Imunologia",
       "ch": 30,
-      "cor_disciplina": "#72cbd4",
       "curso_sigla": "CB"
     },
     {
+      "sigla": "CB",
+      "periodo": "VI",
       "codigo": "CBBR046",
+      "cor": "#77b2f2",
       "nome": "DIVERSIDADE VEGETAL II",
       "abreviacao": "Divers Vege II",
       "ch": 45,
-      "cor_disciplina": "#77b2f2",
       "curso_sigla": "CB"
     },
     {
+      "sigla": "CB",
+      "periodo": "VI",
       "codigo": "CBBR047",
+      "cor": "#9186f2",
       "nome": "ESTAGIO II: CARACTERIZACAO ESCOLAR",
       "abreviacao": "Estag II: Carac Escol",
       "ch": 45,
-      "cor_disciplina": "#9186f2",
       "curso_sigla": "CB"
     },
     {
+      "sigla": "CB",
+      "periodo": "VI",
       "codigo": "CBBR048",
+      "cor": "#e59ae5",
       "nome": "HISTOLOGIA",
       "abreviacao": "Histologia",
       "ch": 30,
-      "cor_disciplina": "#e59ae5",
       "curso_sigla": "CB"
     },
     {
+      "sigla": "CB",
+      "periodo": "VII",
       "codigo": "CBBR049",
+      "cor": "#b68fb9",
       "nome": "ESTAGIO III: ENSINO FUNDAMENTAL",
       "abreviacao": "Esta Iii: Ensi Fund",
       "ch": 105,
-      "cor_disciplina": "#b68fb9",
       "curso_sigla": "CB"
     },
     {
+      "sigla": "CB",
+      "periodo": "VII",
       "codigo": "CBBR050",
+      "cor": "#e5b9a5",
       "nome": "DIVERSIDADE VEGETAL III",
       "abreviacao": "Dive Vege III",
       "ch": 30,
-      "cor_disciplina": "#e5b9a5",
       "curso_sigla": "CB"
     },
     {
+      "sigla": "CB",
+      "periodo": "VII",
       "codigo": "CBBR051",
+      "cor": "#ffeded",
       "nome": "DIVERSIDADE ANIMAL III",
       "abreviacao": "Dive Anim III",
       "ch": 45,
-      "cor_disciplina": "#ffeded",
       "curso_sigla": "CB"
     },
     {
+      "sigla": "CB",
+      "periodo": "VII",
       "codigo": "CBBR052",
+      "cor": "#fffcf1",
       "nome": "BIOLOGIA MARINHA",
       "abreviacao": "Biol Mari",
       "ch": 60,
-      "cor_disciplina": "#fffcf1",
       "curso_sigla": "CB"
     },
     {
+      "sigla": "CB",
+      "periodo": "VII",
       "codigo": "CBBR053",
+      "cor": "#feffe6",
       "nome": "ECOLOGIA DE POPULACOES",
       "abreviacao": "Ecol Popu",
       "ch": 75,
-      "cor_disciplina": "#feffe6",
       "curso_sigla": "CB"
     },
     {
+      "sigla": "CB",
+      "periodo": "VII",
       "codigo": "CBBR054",
+      "cor": "#f1ffeb",
       "nome": "BIOESTATISTICA II",
       "abreviacao": "Bioe Ii",
       "ch": 60,
-      "cor_disciplina": "#f1ffeb",
       "curso_sigla": "CB"
     },
     {
+      "sigla": "CB",
+      "periodo": "VIII",
       "codigo": "CBBR055",
+      "cor": "#e1fdff",
       "nome": "MORFOFISIOLOGIA ANIMAL I",
       "abreviacao": "Morf Anim",
       "ch": 75,
-      "cor_disciplina": "#e1fdff",
       "curso_sigla": "CB"
     },
     {
+      "sigla": "CB",
+      "periodo": "VIII",
       "codigo": "CBBR056",
+      "cor": "#e6f0ff",
       "nome": "ECOLOGIA DE COMUNIDADES",
       "abreviacao": "Ecol Comu",
       "ch": 75,
-      "cor_disciplina": "#e6f0ff",
       "curso_sigla": "CB"
     },
     {
+      "sigla": "CB",
+      "periodo": "VIII",
       "codigo": "CBBR058",
+      "cor": "#f1eeff",
       "nome": "DIVERSIDADE ANIMAL IV",
       "abreviacao": "Dive Anim Iv",
       "ch": 45,
-      "cor_disciplina": "#f1eeff",
       "curso_sigla": "CB"
     },
     {
+      "sigla": "CB",
+      "periodo": "VIII",
       "codigo": "CBBR059",
+      "cor": "#fff1ff",
       "nome": "EDUCACAO E SAUDE HUMANA",
       "abreviacao": "Educ Saud Huma",
       "ch": 45,
-      "cor_disciplina": "#fff1ff",
       "curso_sigla": "CB"
     },
     {
+      "sigla": "CB",
+      "periodo": "VIII",
       "codigo": "CBBR060",
+      "cor": "#fff9fc",
       "nome": "FISIOLOGIA VEGETAL",
       "abreviacao": "Fisi Vege",
       "ch": 75,
-      "cor_disciplina": "#fff9fc",
       "curso_sigla": "CB"
     },
     {
+      "sigla": "CB",
+      "periodo": "IX",
       "codigo": "CBBR009",
+      "cor": "#fffbf8",
       "nome": "TRABALHO DE CONCLUSAO DE CURSO (TCC)",
       "abreviacao": "Trab Conc Curs (tcc",
       "ch": 60,
-      "cor_disciplina": "#fffbf8",
       "curso_sigla": "CB"
     },
     {
+      "sigla": "CB",
+      "periodo": "IX",
       "codigo": "CBBR061",
+      "cor": "#d86e6e",
       "nome": "BIOLOGIA DA CONSERVACAO",
       "abreviacao": "Biol Cons",
       "ch": 60,
-      "cor_disciplina": "#d86e6e",
       "curso_sigla": "CB"
     },
     {
+      "sigla": "CB",
+      "periodo": "IX",
       "codigo": "CBBR062",
+      "cor": "#d89663",
       "nome": "MORFOFISIOLOGIA ANIMAL II",
       "abreviacao": "Morf Anim Ii",
       "ch": 75,
-      "cor_disciplina": "#d89663",
       "curso_sigla": "CB"
     },
     {
+      "sigla": "CB",
+      "periodo": "IX",
       "codigo": "CBBR063",
+      "cor": "#d6d874",
       "nome": "ESTAGIO V: ENSINO MEDIO",
       "abreviacao": "Esta V: Ensi Medi",
       "ch": 120,
-      "cor_disciplina": "#d6d874",
       "curso_sigla": "CB"
     },
     {
+      "sigla": "CB",
+      "periodo": "IX",
       "codigo": "CBBR064",
+      "cor": "#8bcc7f",
       "nome": "PARASITOLOGIA",
       "abreviacao": "Para",
       "ch": 60,
-      "cor_disciplina": "#8bcc7f",
       "curso_sigla": "CB"
     },
     {
+      "sigla": "CB",
+      "periodo": "IX",
       "codigo": "CBBR065",
+      "cor": "#5cc0be",
       "nome": "ATIVIDADES COMPLEMENTARES",
       "abreviacao": "Ativ Comp",
       "ch": 80,
-      "cor_disciplina": "#5cc0be",
       "curso_sigla": "CB"
     },
     {
+      "sigla": "CN",
+      "periodo": "I",
       "codigo": "CNBR001",
+      "cor": "#ffadad",
       "nome": "QUIMICA BASICA",
       "abreviacao": "Quim Basi",
       "ch": 60,
-      "cor_disciplina": "#ffadad",
       "curso_sigla": "CN"
     },
     {
+      "sigla": "CN",
+      "periodo": "I",
       "codigo": "CNBR002",
+      "cor": "#ffd6a5",
       "nome": "FILOSOFIA E METODO CIENTIFICO",
       "abreviacao": "Filo Meto Cien",
       "ch": 30,
-      "cor_disciplina": "#ffd6a5",
       "curso_sigla": "CN"
     },
     {
+      "sigla": "CN",
+      "periodo": "I",
       "codigo": "CNBR003",
+      "cor": "#fdffb6",
       "nome": "POLITICAS E LEGISLACAO DA EDUCACAO BASICA",
       "abreviacao": "Poli Legi Educ",
       "ch": 45,
-      "cor_disciplina": "#fdffb6",
       "curso_sigla": "CN"
     },
     {
+      "sigla": "CN",
+      "periodo": "I",
       "codigo": "CNBR004",
+      "cor": "#caffbf",
       "nome": "DIDATICA APLICADA A FORMACAO DOCENTE",
       "abreviacao": "Dida Apli Form",
       "ch": 45,
-      "cor_disciplina": "#caffbf",
       "curso_sigla": "CN"
     },
     {
+      "sigla": "CN",
+      "periodo": "I",
       "codigo": "CNBR005",
+      "cor": "#9bf6ff",
       "nome": "MATEMATICA BASICA",
       "abreviacao": "Matem Basic",
       "ch": 60,
-      "cor_disciplina": "#9bf6ff",
       "curso_sigla": "CN"
     },
     {
+      "sigla": "CN",
+      "periodo": "I",
       "codigo": "CNBR006",
+      "cor": "#a0c4ff",
       "nome": "BIOLOGIA CELULAR",
       "abreviacao": "Biol Celu",
       "ch": 60,
-      "cor_disciplina": "#a0c4ff",
       "curso_sigla": "CN"
     },
     {
+      "sigla": "CN",
+      "periodo": "I",
       "codigo": "CNBR007",
+      "cor": "#bdb2ff",
       "nome": "TENDENCIAS DA PESQUISA EM EDUCACAO EM CIENCIAS",
       "abreviacao": "Tend Pesq Educ",
       "ch": 45,
-      "cor_disciplina": "#bdb2ff",
       "curso_sigla": "CN"
     },
     {
+      "sigla": "CN",
+      "periodo": "I",
       "codigo": "CNBR008",
+      "cor": "#ffc6ff",
       "nome": "INICIACAO A COMPUTACAO",
       "abreviacao": "Inic Comp",
       "ch": 30,
-      "cor_disciplina": "#ffc6ff",
       "curso_sigla": "CN"
     },
     {
+      "sigla": "CN",
+      "periodo": "I",
       "codigo": "CNBR061",
+      "cor": "#e0bbe4",
       "nome": "AVALIACAO NO PROCESSO EDUCACIONAL",
       "abreviacao": "Aval Proc Educ",
       "ch": 30,
-      "cor_disciplina": "#e0bbe4",
       "curso_sigla": "CN"
     },
     {
+      "sigla": "CN",
+      "periodo": "I",
       "codigo": "CNBR062",
+      "cor": "#ffdfd3",
       "nome": "DIVERSIDADE DE ALGAS",
       "abreviacao": "Dive Alga",
       "ch": 30,
-      "cor_disciplina": "#ffdfd3",
       "curso_sigla": "CN"
     },
     {
+      "sigla": "CN",
+      "periodo": "I",
       "codigo": "CNBR063",
+      "cor": "#ffc2c2",
       "nome": "ESTRATEGIAS ALTERNATIVAS NO ENSINO DE CIENCIAS E BIOLOGIA",
       "abreviacao": "Estr Alte Ensi",
       "ch": 30,
-      "cor_disciplina": "#ffc2c2",
       "curso_sigla": "CN"
     },
     {
+      "sigla": "CN",
+      "periodo": "I",
       "codigo": "CNBR064",
+      "cor": "#ffe2b9",
       "nome": "ESTRATEGIAS ALTERNATIVAS NO ENSINO DE FISICA",
       "abreviacao": "Estr Alte Ensi",
       "ch": 30,
-      "cor_disciplina": "#ffe2b9",
       "curso_sigla": "CN"
     },
     {
+      "sigla": "CN",
+      "periodo": "I",
       "codigo": "CNBR065",
+      "cor": "#feffcc",
       "nome": "ESTRATEGIAS ALTERNATIVAS NO ENSINO DE QUIMICA",
       "abreviacao": "Estr Alte Ensi",
       "ch": 30,
-      "cor_disciplina": "#feffcc",
       "curso_sigla": "CN"
     },
     {
+      "sigla": "CN",
+      "periodo": "I",
       "codigo": "CNBR066",
+      "cor": "#d9ffcf",
       "nome": "INOVACAO E EMPREENDEDORISMO NA LICENCIATURA",
       "abreviacao": "Inov Empr Lice",
       "ch": 30,
-      "cor_disciplina": "#d9ffcf",
       "curso_sigla": "CN"
     },
     {
+      "sigla": "CN",
+      "periodo": "I",
       "codigo": "CNBR067",
+      "cor": "#adf9ff",
       "nome": "SEMINARIOS INTEGRADORES NA EDUCACAO CIENTIFICA",
       "abreviacao": "Semi Inte Educ",
       "ch": 30,
-      "cor_disciplina": "#adf9ff",
       "curso_sigla": "CN"
     },
     {
+      "sigla": "CN",
+      "periodo": "I",
       "codigo": "CNBR068",
+      "cor": "#b4d1ff",
       "nome": "TEMAS CONTEMPORANEOS PARA A EDUCACAO",
       "abreviacao": "Tema Cont Educ",
       "ch": 30,
-      "cor_disciplina": "#b4d1ff",
       "curso_sigla": "CN"
     },
     {
+      "sigla": "CN",
+      "periodo": "I",
       "codigo": "CNBR069",
+      "cor": "#ccc6ff",
       "nome": "TEMAS SOCIOAMBIENTAIS E CULTURAIS",
       "abreviacao": "Tema Soci Cult",
       "ch": 30,
-      "cor_disciplina": "#ccc6ff",
       "curso_sigla": "CN"
     },
     {
+      "sigla": "CN",
+      "periodo": "I",
       "codigo": "CNBR070",
+      "cor": "#ffd3ff",
       "nome": "TOPICOS ESPECIAIS E ENSINO DE BIOLOGIA CELULAR E EVOLUCAO",
-      "abreviacao": "TE Ensi Bio Cel",
+      "abreviacao": "TE  Ensi Bio Cel",
       "ch": 30,
-      "cor_disciplina": "#ffd3ff",
       "curso_sigla": "CN"
     },
     {
+      "sigla": "CN",
+      "periodo": "I",
       "codigo": "CNBR071",
+      "cor": "#eccfe9",
       "nome": "TOPICOS ESPECIAIS E ENSINO DE DIVERSIDADE BIOLOGICA ANIMAL",
-      "abreviacao": "TE Ensi Div Animal",
+      "abreviacao": "TE  Ensi Div Animal",
       "ch": 30,
-      "cor_disciplina": "#eccfe9",
       "curso_sigla": "CN"
     },
     {
+      "sigla": "CN",
+      "periodo": "I",
       "codigo": "CNBR072",
+      "cor": "#ffe8de",
       "nome": "TOPICOS ESPECIAIS E ENSINO DE DIVERSIDADE BIOLOGICA VEGETAL",
-      "abreviacao": "TE Ensi Div Vegetal",
+      "abreviacao": "TE  Ensi Div Vegetal",
       "ch": 30,
-      "cor_disciplina": "#ffe8de",
       "curso_sigla": "CN"
     },
     {
+      "sigla": "CN",
+      "periodo": "I",
       "codigo": "CNBR073",
+      "cor": "#f29898",
       "nome": "TOPICOS ESPECIAIS E ENSINO DE MICROBIOLOGIA",
-      "abreviacao": "TE Ensi Microbiol",
+      "abreviacao": "TE  Ensi Microbiol",
       "ch": 30,
-      "cor_disciplina": "#f29898",
       "curso_sigla": "CN"
     },
     {
+      "sigla": "CN",
+      "periodo": "I",
       "codigo": "CNBR074",
+      "cor": "#f2c08f",
       "nome": "TOPICOS ESPECIAIS E ENSINO EM EDUCACAO AMBIENTAL",
-      "abreviacao": "TE Ensi Edu Amb",
+      "abreviacao": "TE  Ensi Edu Amb",
       "ch": 30,
-      "cor_disciplina": "#f2c08f",
       "curso_sigla": "CN"
     },
     {
+      "sigla": "CN",
+      "periodo": "I",
       "codigo": "CNBR075",
+      "cor": "#f0f2a0",
       "nome": "TOPICOS ESPECIAIS EM ENSINO DE BIOLOGIA FUNCIONAL",
-      "abreviacao": "TE Ensi Bol Funcional",
+      "abreviacao": "TE  Ensi Bol Funcional",
       "ch": 30,
-      "cor_disciplina": "#f0f2a0",
       "curso_sigla": "CN"
     },
     {
+      "sigla": "CN",
+      "periodo": "I",
       "codigo": "CNBR076",
+      "cor": "#b7f2ab",
       "nome": "TOPICOS ESPECIAIS EM ENSINO DE CIENCIAS EXATAS E DA TERRA",
-      "abreviacao": "TE Ensi de C Exatas e Ter",
+      "abreviacao": "TE  Ensi de C Exatas e Ter",
       "ch": 30,
-      "cor_disciplina": "#b7f2ab",
       "curso_sigla": "CN"
     },
     {
+      "sigla": "CN",
+      "periodo": "I",
       "codigo": "CNBR077",
+      "cor": "#88e0ea",
       "nome": "TOPICOS ESPECIAIS EM ENSINO DE ECOLOGIA",
-      "abreviacao": "TE Ensi",
+      "abreviacao": "TE  Ensi",
       "ch": 30,
-      "cor_disciplina": "#88e0ea",
       "curso_sigla": "CN"
     },
     {
+      "sigla": "CN",
+      "periodo": "II",
       "codigo": "CNBR010",
+      "cor": "#8daeda",
       "nome": "GENETICA BASICA",
       "abreviacao": "Gene tBasic",
       "ch": 60,
-      "cor_disciplina": "#8daeda",
       "curso_sigla": "CN"
     },
     {
+      "sigla": "CN",
+      "periodo": "II",
       "codigo": "CNBR011",
+      "cor": "#a79cea",
       "nome": "EDUCACAO ESPECIAL E INCLUSIVA",
       "abreviacao": "Educ Espe Incl",
       "ch": 45,
-      "cor_disciplina": "#a79cea",
       "curso_sigla": "CN"
     },
     {
+      "sigla": "CN",
+      "periodo": "II",
       "codigo": "CNBR012",
+      "cor": "#f2b0f2",
       "nome": "QUIMICA INORGANICA",
       "abreviacao": "Quim Inor",
       "ch": 45,
-      "cor_disciplina": "#f2b0f2",
       "curso_sigla": "CN"
     },
     {
+      "sigla": "CN",
+      "periodo": "II",
       "codigo": "CNBR013",
+      "cor": "#cba5d0",
       "nome": "ECOLOGIA GERAL",
       "abreviacao": "Ecol Gera",
       "ch": 60,
-      "cor_disciplina": "#cba5d0",
       "curso_sigla": "CN"
     },
     {
+      "sigla": "CN",
+      "periodo": "II",
       "codigo": "CNBR014",
+      "cor": "#f2c9bb",
       "nome": "CALCULO",
       "abreviacao": "Calc",
       "ch": 45,
-      "cor_disciplina": "#f2c9bb",
       "curso_sigla": "CN"
     },
     {
+      "sigla": "CN",
+      "periodo": "II",
       "codigo": "CNBR015",
+      "cor": "#ffd7d7",
       "nome": "PLANEJAMENTO, GESTAO E AVALIACAO",
       "abreviacao": "Plan Gest Aval",
       "ch": 60,
-      "cor_disciplina": "#ffd7d7",
       "curso_sigla": "CN"
     },
     {
+      "sigla": "CN",
+      "periodo": "II",
       "codigo": "CNBR016",
+      "cor": "#ffefcd",
       "nome": "FUNDAMENTOS DE ECOLOGIA DA AMAZONIA",
       "abreviacao": "Fund Ecol Amaz",
       "ch": 45,
-      "cor_disciplina": "#ffefcd",
       "curso_sigla": "CN"
     },
     {
+      "sigla": "CN",
+      "periodo": "III",
       "codigo": "CNBR017",
+      "cor": "#feffd9",
       "nome": "QUIMICA ORGANICA",
       "abreviacao": "Quim Orga",
       "ch": 45,
-      "cor_disciplina": "#feffd9",
       "curso_sigla": "CN"
     },
     {
+      "sigla": "CN",
+      "periodo": "III",
       "codigo": "CNBR018",
+      "cor": "#e3ffdd",
       "nome": "MORFOLOGIA VEGETAL",
       "abreviacao": "Morf Vege",
       "ch": 60,
-      "cor_disciplina": "#e3ffdd",
       "curso_sigla": "CN"
     },
     {
+      "sigla": "CN",
+      "periodo": "III",
       "codigo": "CNBR019",
+      "cor": "#c0fcff",
       "nome": "METODOLOGIA DA PESQUISA",
       "abreviacao": "Meto Pesq",
       "ch": 15,
-      "cor_disciplina": "#c0fcff",
       "curso_sigla": "CN"
     },
     {
+      "sigla": "CN",
+      "periodo": "III",
       "codigo": "CNBR020",
+      "cor": "#c9deff",
       "nome": "LIBRAS I",
       "abreviacao": "Libr I",
       "ch": 30,
-      "cor_disciplina": "#c9deff",
       "curso_sigla": "CN"
     },
     {
+      "sigla": "CN",
+      "periodo": "III",
       "codigo": "CNBR021",
+      "cor": "#dcd5ff",
       "nome": "SOCIOLOGIA, EDUCACAO E CIDADANIA",
       "abreviacao": "Soci Educ Cida",
       "ch": 45,
-      "cor_disciplina": "#dcd5ff",
       "curso_sigla": "CN"
     },
     {
+      "sigla": "CN",
+      "periodo": "III",
       "codigo": "CNBR022",
+      "cor": "#ffe0ff",
       "nome": "FUNDAMENTOS DE FISICA I",
       "abreviacao": "Fund Fisi I",
       "ch": 60,
-      "cor_disciplina": "#ffe0ff",
       "curso_sigla": "CN"
     },
     {
+      "sigla": "CN",
+      "periodo": "III",
       "codigo": "CNBR023",
+      "cor": "#f9e6ef",
       "nome": "EVOLUCAO",
       "abreviacao": "Evol",
       "ch": 60,
-      "cor_disciplina": "#f9e6ef",
       "curso_sigla": "CN"
     },
     {
+      "sigla": "CN",
+      "periodo": "III",
       "codigo": "CNBR024",
+      "cor": "#fff2ec",
       "nome": "EDUCACAO E MEIO AMBIENTE NO ENSINO DE CIENCIAS",
       "abreviacao": "Educ Meio Ambi",
       "ch": 60,
-      "cor_disciplina": "#fff2ec",
       "curso_sigla": "CN"
     },
     {
+      "sigla": "CN",
+      "periodo": "IV",
       "codigo": "CNBR025",
+      "cor": "#e58383",
       "nome": "DIVERSIDADE DE PROTISTAS",
       "abreviacao": "Dive Prot",
       "ch": 30,
-      "cor_disciplina": "#e58383",
       "curso_sigla": "CN"
     },
     {
+      "sigla": "CN",
+      "periodo": "IV",
       "codigo": "CNBR026",
+      "cor": "#e5ac79",
       "nome": "METODOLOGIA DO ENSINO DE CIENCIAS",
       "abreviacao": "Meto Ensi Cien",
       "ch": 60,
-      "cor_disciplina": "#e5ac79",
       "curso_sigla": "CN"
     },
     {
+      "sigla": "CN",
+      "periodo": "IV",
       "codigo": "CNBR027",
+      "cor": "#e3e58a",
       "nome": "BIOQUIMICA",
       "abreviacao": "Bioq",
       "ch": 60,
-      "cor_disciplina": "#e3e58a",
       "curso_sigla": "CN"
     },
     {
+      "sigla": "CN",
+      "periodo": "IV",
       "codigo": "CNBR028",
+      "cor": "#a1e595",
       "nome": "FISICA DA TERRA E DO UNIVERSO",
       "abreviacao": "Fisi Terr Univ",
       "ch": 60,
-      "cor_disciplina": "#a1e595",
       "curso_sigla": "CN"
     },
     {
+      "sigla": "CN",
+      "periodo": "IV",
       "codigo": "CNBR029",
+      "cor": "#72cbd4",
       "nome": "DIVERSIDADE VEGETAL I",
       "abreviacao": "Divers Vege I",
       "ch": 60,
-      "cor_disciplina": "#72cbd4",
       "curso_sigla": "CN"
     },
     {
+      "sigla": "CN",
+      "periodo": "IV",
       "codigo": "CNBR030",
+      "cor": "#77b2f2",
       "nome": "LIBRAS II",
       "abreviacao": "Libras II",
       "ch": 45,
-      "cor_disciplina": "#77b2f2",
       "curso_sigla": "CN"
     },
     {
+      "sigla": "CN",
+      "periodo": "IV",
       "codigo": "CNBR031",
+      "cor": "#9186f2",
       "nome": "VIRUS E PROCARIONTES",
       "abreviacao": "Viru Proc",
       "ch": 45,
-      "cor_disciplina": "#9186f2",
       "curso_sigla": "CN"
     },
     {
+      "sigla": "CN",
+      "periodo": "V",
       "codigo": "CNBR032",
+      "cor": "#e59ae5",
       "nome": "DIVERSIDADE ZOOLOGICA I",
       "abreviacao": "Dive Zool I",
       "ch": 75,
-      "cor_disciplina": "#e59ae5",
       "curso_sigla": "CN"
     },
     {
+      "sigla": "CN",
+      "periodo": "V",
       "codigo": "CNBR033",
+      "cor": "#b68fb9",
       "nome": "EDUCACAO E PLURALIDADE CULTURAL NO ENSINO DE CIENCIAS",
       "abreviacao": "Educ Plur Cult",
       "ch": 45,
-      "cor_disciplina": "#b68fb9",
       "curso_sigla": "CN"
     },
     {
+      "sigla": "CN",
+      "periodo": "V",
       "codigo": "CNBR034",
+      "cor": "#e5b9a5",
       "nome": "FUNDAMENTOS DE FISICA II",
       "abreviacao": "Fund Fisi II",
       "ch": 60,
-      "cor_disciplina": "#e5b9a5",
       "curso_sigla": "CN"
     },
     {
+      "sigla": "CN",
+      "periodo": "V",
       "codigo": "CNBR035",
+      "cor": "#ffeded",
       "nome": "DIVERSIDADE DE FUNGOS",
       "abreviacao": "Dive Fung",
       "ch": 30,
-      "cor_disciplina": "#ffeded",
       "curso_sigla": "CN"
     },
     {
+      "sigla": "CN",
+      "periodo": "V",
       "codigo": "CNBR036",
+      "cor": "#fffcf1",
       "nome": "ESTAGIO DOCENTE EM ESPACOS FORMAIS E NAO- https://sigaa.ufpa.br/sigaa/graduacao/curriculo/lista.jsf# FORMAIS",
       "abreviacao": "Esta Doce Espa",
       "ch": 90,
-      "cor_disciplina": "#fffcf1",
       "curso_sigla": "CN"
     },
     {
+      "sigla": "CN",
+      "periodo": "V",
       "codigo": "CNBR037",
+      "cor": "#feffe6",
       "nome": "PSICOLOGIA DA APRENDIZAGEM",
       "abreviacao": "Psic Apre",
       "ch": 45,
-      "cor_disciplina": "#feffe6",
       "curso_sigla": "CN"
     },
     {
+      "sigla": "CN",
+      "periodo": "VI",
       "codigo": "CNBR038",
+      "cor": "#f1ffeb",
       "nome": "HISTORIAS DE VIDA E FORMACAO DOCENTE",
       "abreviacao": "Hist Vida Form",
       "ch": 30,
-      "cor_disciplina": "#f1ffeb",
       "curso_sigla": "CN"
     },
     {
+      "sigla": "CN",
+      "periodo": "VI",
       "codigo": "CNBR039",
+      "cor": "#e1fdff",
       "nome": "DIVERSIDADE VEGETAL II",
       "abreviacao": "Dive Vege IIi",
       "ch": 60,
-      "cor_disciplina": "#e1fdff",
       "curso_sigla": "CN"
     },
     {
+      "sigla": "CN",
+      "periodo": "VI",
       "codigo": "CNBR040",
+      "cor": "#e6f0ff",
       "nome": "GEOLOGIA",
       "abreviacao": "Geol",
       "ch": 45,
-      "cor_disciplina": "#e6f0ff",
       "curso_sigla": "CN"
     },
     {
+      "sigla": "CN",
+      "periodo": "VI",
       "codigo": "CNBR041",
+      "cor": "#f1eeff",
       "nome": "FISIOLOGIA VEGETAL",
       "abreviacao": "Fisi Vege",
       "ch": 60,
-      "cor_disciplina": "#f1eeff",
       "curso_sigla": "CN"
     },
     {
+      "sigla": "CN",
+      "periodo": "VI",
       "codigo": "CNBR042",
+      "cor": "#fff1ff",
       "nome": "ESTATISTICA E PROBABILIDADE",
       "abreviacao": "Esta Prob",
       "ch": 60,
-      "cor_disciplina": "#fff1ff",
       "curso_sigla": "CN"
     },
     {
+      "sigla": "CN",
+      "periodo": "VI",
       "codigo": "CNBR043",
+      "cor": "#fff9fc",
       "nome": "DIVERSIDADE ZOOLOGICA II",
       "abreviacao": "Dive Zool Ii",
       "ch": 75,
-      "cor_disciplina": "#fff9fc",
       "curso_sigla": "CN"
     },
     {
+      "sigla": "CN",
+      "periodo": "VI",
       "codigo": "CNBR044",
+      "cor": "#fffbf8",
       "nome": "ESTAGIO DOCENTE NO ENSINO FUNDAMENTAL I",
       "abreviacao": "Esta Doce Ensi",
       "ch": 100,
-      "cor_disciplina": "#fffbf8",
       "curso_sigla": "CN"
     },
     {
+      "sigla": "CN",
+      "periodo": "VII",
       "codigo": "CNBR045",
+      "cor": "#d86e6e",
       "nome": "EDUCACAO DO CAMPO",
       "abreviacao": "Educ Camp",
       "ch": 45,
-      "cor_disciplina": "#d86e6e",
       "curso_sigla": "CN"
     },
     {
+      "sigla": "CN",
+      "periodo": "VII",
       "codigo": "CNBR046",
+      "cor": "#d89663",
       "nome": "ESTAGIO DOCENTE NO ENSINO FUNDAMENTAL II",
       "abreviacao": "Esta Doce Ensi",
       "ch": 100,
-      "cor_disciplina": "#d89663",
       "curso_sigla": "CN"
     },
     {
+      "sigla": "CN",
+      "periodo": "VII",
       "codigo": "CNBR047",
+      "cor": "#d6d874",
       "nome": "IMUNOLOGIA",
       "abreviacao": "Imun",
       "ch": 45,
-      "cor_disciplina": "#d6d874",
       "curso_sigla": "CN"
     },
     {
+      "sigla": "CN",
+      "periodo": "VII",
       "codigo": "CNBR048",
+      "cor": "#8bcc7f",
       "nome": "BIOFISICA",
       "abreviacao": "Biof",
       "ch": 60,
-      "cor_disciplina": "#8bcc7f",
       "curso_sigla": "CN"
     },
     {
+      "sigla": "CN",
+      "periodo": "VII",
       "codigo": "CNBR049",
+      "cor": "#5cc0be",
       "nome": "ELABORACAO DE PROJETOS DE TCC",
       "abreviacao": "Elab Proj Tcc",
       "ch": 30,
-      "cor_disciplina": "#5cc0be",
       "curso_sigla": "CN"
     },
     {
+      "sigla": "CN",
+      "periodo": "VII",
       "codigo": "CNBR050",
+      "cor": "#61a0e5",
       "nome": "PALEONTOLOGIA",
       "abreviacao": "Pale",
       "ch": 45,
-      "cor_disciplina": "#61a0e5",
       "curso_sigla": "CN"
     },
     {
+      "sigla": "CN",
+      "periodo": "VII",
       "codigo": "CNBR051",
+      "cor": "#7b70e5",
       "nome": "PARASITOLOGIA HUMANA",
       "abreviacao": "Para Huma",
       "ch": 60,
-      "cor_disciplina": "#7b70e5",
       "curso_sigla": "CN"
     },
     {
+      "sigla": "CN",
+      "periodo": "VII",
       "codigo": "CNBR052",
+      "cor": "#d884d8",
       "nome": "MORFOFISIOLOGIA ANIMAL I",
       "abreviacao": "Morf Anim I",
       "ch": 60,
-      "cor_disciplina": "#d884d8",
       "curso_sigla": "CN"
     },
     {
+      "sigla": "CN",
+      "periodo": "VIII",
       "codigo": "CNBR009",
+      "cor": "#a079a2",
       "nome": "TRABALHO DE CONCLUSAO DE CURSO (TCC)",
       "abreviacao": "Trab Conc Curs",
       "ch": 60,
-      "cor_disciplina": "#a079a2",
       "curso_sigla": "CN"
     },
     {
+      "sigla": "CN",
+      "periodo": "VIII",
       "codigo": "CNBR053",
+      "cor": "#d8a38f",
       "nome": "EDUCACAO E SAUDE HUMANA",
       "abreviacao": "Educ Saud Huma",
       "ch": 45,
-      "cor_disciplina": "#d8a38f",
       "curso_sigla": "CN"
     },
     {
+      "sigla": "CN",
+      "periodo": "VIII",
       "codigo": "CNBR054",
+      "cor": "#ffb7b7",
       "nome": "ESTAGIO DOCENTE NA EDUCACAO DE JOVENS E ADULTOS",
       "abreviacao": "Esta Doce Educ",
       "ch": 115,
-      "cor_disciplina": "#ffb7b7",
       "curso_sigla": "CN"
     },
     {
+      "sigla": "CN",
+      "periodo": "VIII",
       "codigo": "CNBR055",
+      "cor": "#ffdbb0",
       "nome": "TECNOLOGIAS APLICADAS AO ENSINO DE QUIMICA",
       "abreviacao": "Tecn Apli Ensi",
       "ch": 60,
-      "cor_disciplina": "#ffdbb0",
       "curso_sigla": "CN"
     },
     {
+      "sigla": "CN",
+      "periodo": "VIII",
       "codigo": "CNBR056",
+      "cor": "#fdffc0",
       "nome": "TECNOLOGIAS APLICADAS AO ENSINO DE FISICA",
       "abreviacao": "Tecn Apli Ensi",
       "ch": 60,
-      "cor_disciplina": "#fdffc0",
       "curso_sigla": "CN"
     },
     {
+      "sigla": "CN",
+      "periodo": "VIII",
       "codigo": "CNBR057",
+      "cor": "#d4ffca",
       "nome": "HISTORIA E EMBRIOLOGIA",
       "abreviacao": "Hist Embr",
       "ch": 45,
-      "cor_disciplina": "#d4ffca",
       "curso_sigla": "CN"
     },
     {
+      "sigla": "CN",
+      "periodo": "VIII",
       "codigo": "CNBR058",
+      "cor": "#a5f7ff",
       "nome": "MORFOFISIOLOGIA ANIMAL II",
       "abreviacao": "Morf Anim II",
       "ch": 60,
-      "cor_disciplina": "#a5f7ff",
       "curso_sigla": "CN"
     },
     {
+      "sigla": "CN",
+      "periodo": "VIII",
       "codigo": "CNBR059",
+      "cor": "#aecbff",
       "nome": "BIOTECNOLOGIA",
       "abreviacao": "Biotecn",
       "ch": 30,
-      "cor_disciplina": "#aecbff",
       "curso_sigla": "CN"
     },
     {
+      "sigla": "CN",
+      "periodo": "VIII",
       "codigo": "CNBR060",
+      "cor": "#c7bdff",
       "nome": "ATIVIDADES COMPLEMENTARES",
       "abreviacao": "Ativ Comp",
       "ch": 80,
-      "cor_disciplina": "#c7bdff",
+      "curso_sigla": "CN"
+    }
+  ],
+  "turmas": [
+    {
+      "sigla": "EP",
+      "ano": 2022,
+      "turno": "Manhã",
+      "turma_id": "EP2022",
+      "turma_label": "EP2022",
+      "curso_sigla": "EP"
+    },
+    {
+      "sigla": "EP",
+      "ano": 2023,
+      "turno": "Tarde",
+      "turma_id": "EP2023",
+      "turma_label": "EP2023",
+      "curso_sigla": "EP"
+    },
+    {
+      "sigla": "EP",
+      "ano": 2024,
+      "turno": "Manhã",
+      "turma_id": "EP2024",
+      "turma_label": "EP2024",
+      "curso_sigla": "EP"
+    },
+    {
+      "sigla": "EP",
+      "ano": 2025,
+      "turno": "Tarde",
+      "turma_id": "EP2025",
+      "turma_label": "EP2025",
+      "curso_sigla": "EP"
+    },
+    {
+      "sigla": "EP",
+      "ano": 2026,
+      "turno": "Manhã",
+      "turma_id": "EP2026",
+      "turma_label": "EP2026",
+      "curso_sigla": "EP"
+    },
+    {
+      "sigla": "CB",
+      "ano": 2022,
+      "turno": "Manhã",
+      "turma_id": "CB2022",
+      "turma_label": "CB2022",
+      "curso_sigla": "CB"
+    },
+    {
+      "sigla": "CB",
+      "ano": 2023,
+      "turno": "Tarde",
+      "turma_id": "CB2023",
+      "turma_label": "CB2023",
+      "curso_sigla": "CB"
+    },
+    {
+      "sigla": "CB",
+      "ano": 2024,
+      "turno": "Manhã",
+      "turma_id": "CB2024",
+      "turma_label": "CB2024",
+      "curso_sigla": "CB"
+    },
+    {
+      "sigla": "CB",
+      "ano": 2025,
+      "turno": "Tarde",
+      "turma_id": "CB2025",
+      "turma_label": "CB2025",
+      "curso_sigla": "CB"
+    },
+    {
+      "sigla": "CB",
+      "ano": 2026,
+      "turno": "Manhã",
+      "turma_id": "CB2026",
+      "turma_label": "CB2026",
+      "curso_sigla": "CB"
+    },
+    {
+      "sigla": "CN",
+      "ano": 2022,
+      "turno": "Tarde",
+      "turma_id": "CN2022",
+      "turma_label": "CN2022",
+      "curso_sigla": "CN"
+    },
+    {
+      "sigla": "CN",
+      "ano": 2023,
+      "turno": "Manhã",
+      "turma_id": "CN2023",
+      "turma_label": "CN2023",
+      "curso_sigla": "CN"
+    },
+    {
+      "sigla": "CN",
+      "ano": 2024,
+      "turno": "Tarde",
+      "turma_id": "CN2024",
+      "turma_label": "CN2024",
+      "curso_sigla": "CN"
+    },
+    {
+      "sigla": "CN",
+      "ano": 2025,
+      "turno": "Manhã",
+      "turma_id": "CN2025",
+      "turma_label": "CN2025",
+      "curso_sigla": "CN"
+    },
+    {
+      "sigla": "CN",
+      "ano": 2026,
+      "turno": "Tarde",
+      "turma_id": "CN2026",
+      "turma_label": "CN2026",
       "curso_sigla": "CN"
     }
   ],
@@ -1972,384 +2578,2522 @@
       "nome": "Ciências Naturais"
     }
   ],
-  "turmas": [
+  "horarios": [
     {
-      "curso_sigla": "EP",
-      "turma_id": "EP2022",
-      "turma_label": "EP2022",
-      "turma_ano": 2022,
-      "turno_padrao": "Manhã",
-      "horario_padrao": "manha_extendido"
+      "turno": "Manhã",
+      "ordem": 1,
+      "faixa": "07:30 - 08:20"
     },
     {
-      "curso_sigla": "EP",
-      "turma_id": "EP2023",
-      "turma_label": "EP2023",
-      "turma_ano": 2023,
-      "turno_padrao": "Tarde",
-      "horario_padrao": "tarde_extendido"
+      "turno": "Manhã",
+      "ordem": 2,
+      "faixa": "08:20 - 09:10"
     },
     {
-      "curso_sigla": "EP",
-      "turma_id": "EP2024",
-      "turma_label": "EP2024",
-      "turma_ano": 2024,
-      "turno_padrao": "Manhã",
-      "horario_padrao": "manha_extendido"
+      "turno": "Manhã",
+      "ordem": 3,
+      "faixa": "09:10 - 10:00"
     },
     {
-      "curso_sigla": "EP",
-      "turma_id": "EP2025",
-      "turma_label": "EP2025",
-      "turma_ano": 2025,
-      "turno_padrao": "Tarde",
-      "horario_padrao": "tarde_extendido"
+      "turno": "Manhã",
+      "ordem": 4,
+      "faixa": "INTERVALO (10:00 - 10:20)"
     },
     {
-      "curso_sigla": "EP",
-      "turma_id": "EP2026",
-      "turma_label": "EP2026",
-      "turma_ano": 2026,
-      "turno_padrao": "Manhã",
-      "horario_padrao": "manha_extendido"
+      "turno": "Manhã",
+      "ordem": 5,
+      "faixa": "10:20 - 11:10"
     },
     {
-      "curso_sigla": "CB",
-      "turma_id": "CB2023",
-      "turma_label": "CB2023",
-      "turma_ano": 2023,
-      "turno_padrao": "Tarde",
-      "horario_padrao": "tarde_intensivo"
+      "turno": "Manhã",
+      "ordem": 6,
+      "faixa": "11:10 - 12:00"
     },
     {
-      "curso_sigla": "CB",
-      "turma_id": "CB2024",
-      "turma_label": "CB2024",
-      "turma_ano": 2024,
-      "turno_padrao": "Manhã",
-      "horario_padrao": "manha_intensivo"
+      "turno": "Manhã",
+      "ordem": 7,
+      "faixa": "12:00 - 12:50"
     },
     {
-      "curso_sigla": "CB",
-      "turma_id": "CB2025",
-      "turma_label": "CB2025",
-      "turma_ano": 2025,
-      "turno_padrao": "Tarde",
-      "horario_padrao": "tarde_intensivo"
+      "turno": "Tarde",
+      "ordem": 1,
+      "faixa": "13:30 - 14:20"
     },
     {
-      "curso_sigla": "CB",
-      "turma_id": "CB2026",
-      "turma_label": "CB2026",
-      "turma_ano": 2026,
-      "turno_padrao": "Manhã",
-      "horario_padrao": "manha_intensivo"
+      "turno": "Tarde",
+      "ordem": 2,
+      "faixa": "14:20 - 15:10"
     },
     {
-      "curso_sigla": "CN",
-      "turma_id": "CN2023",
-      "turma_label": "CN2023",
-      "turma_ano": 2023,
-      "turno_padrao": "Tarde",
-      "horario_padrao": "tarde_intensivo"
+      "turno": "Tarde",
+      "ordem": 3,
+      "faixa": "15:10 - 16:00"
     },
     {
-      "curso_sigla": "CN",
-      "turma_id": "CN2024",
-      "turma_label": "CN2024",
-      "turma_ano": 2024,
-      "turno_padrao": "Manhã",
-      "horario_padrao": "manha_intensivo"
+      "turno": "Tarde",
+      "ordem": 4,
+      "faixa": "INTERVALO (16:00 - 16:20)"
     },
     {
-      "curso_sigla": "CN",
-      "turma_id": "CN2025",
-      "turma_label": "CN2025",
-      "turma_ano": 2025,
-      "turno_padrao": "Tarde",
-      "horario_padrao": "tarde_intensivo"
+      "turno": "Tarde",
+      "ordem": 5,
+      "faixa": "16:20 - 17:10"
     },
     {
-      "curso_sigla": "CN",
-      "turma_id": "CN2026",
-      "turma_label": "CN2026",
-      "turma_ano": 2026,
-      "turno_padrao": "Manhã",
-      "horario_padrao": "manha_intensivo"
+      "turno": "Tarde",
+      "ordem": 6,
+      "faixa": "17:10 - 18:00"
     },
     {
-      "curso_sigla": "CB",
-      "turma_id": "CB2022",
-      "turma_label": "CB2022",
-      "turma_ano": 2022,
-      "turno_padrao": "Manhã",
-      "horario_padrao": "manha_intensivo"
-    },
-    {
-      "curso_sigla": "CN",
-      "turma_id": "CN2022",
-      "turma_label": "CN2022",
-      "turma_ano": 2022,
-      "turno_padrao": "Manhã",
-      "horario_padrao": "manha_intensivo"
+      "turno": "Tarde",
+      "ordem": 7,
+      "faixa": "18:00 - 18:50"
     }
   ],
-  "horarios": {
-    "horario_padrao": [
-      "manha_extendido",
-      "manha_extendido",
-      "manha_extendido",
-      "intervalo_manha_extendido",
-      "manha_extendido",
-      "manha_extendido",
-      "manha_extendido",
-      "tarde_extendido",
-      "tarde_extendido",
-      "tarde_extendido",
-      "intervalo_tarde_extendido",
-      "tarde_extendido",
-      "tarde_extendido",
-      "tarde_extendido"
-    ],
-    "ordem": [
-      "1",
-      "2",
-      "3",
-      "4",
-      "5",
-      "6",
-      "7",
-      "1",
-      "2",
-      "3",
-      "4",
-      "5",
-      "6",
-      "7"
-    ],
-    "faixa": [
+  "feriados": [
+    {
+      "data": "2026-01-01",
+      "feriado": "Confraternização Universal",
+      "dia": "Quinta-feira",
+      "tipo": "Nacional",
+      "nome_feriado": "Confraternização Universal",
+      "dia_semana": "Quinta-feira"
+    },
+    {
+      "data": "2026-02-16",
+      "feriado": "Carnaval",
+      "dia": "Segunda-feira",
+      "tipo": "Nacional",
+      "nome_feriado": "Carnaval",
+      "dia_semana": "Segunda-feira"
+    },
+    {
+      "data": "2026-02-17",
+      "feriado": "Carnaval",
+      "dia": "Terça-feira",
+      "tipo": "Nacional",
+      "nome_feriado": "Carnaval",
+      "dia_semana": "Terça-feira"
+    },
+    {
+      "data": "2026-02-18",
+      "feriado": "Carnaval",
+      "dia": "Quarta-feira",
+      "tipo": "Nacional",
+      "nome_feriado": "Carnaval",
+      "dia_semana": "Quarta-feira"
+    },
+    {
+      "data": "2026-04-03",
+      "feriado": "Sexta-feira Santa",
+      "dia": "Sexta-feira",
+      "tipo": "Nacional",
+      "nome_feriado": "Sexta-feira Santa",
+      "dia_semana": "Sexta-feira"
+    },
+    {
+      "data": "2026-04-21",
+      "feriado": "Tiradentes",
+      "dia": "Terça-feira",
+      "tipo": "Nacional",
+      "nome_feriado": "Tiradentes",
+      "dia_semana": "Terça-feira"
+    },
+    {
+      "data": "2026-05-01",
+      "feriado": "Dia do Trabalho",
+      "dia": "Sexta-feira",
+      "tipo": "Nacional",
+      "nome_feriado": "Dia do Trabalho",
+      "dia_semana": "Sexta-feira"
+    },
+    {
+      "data": "2026-06-04",
+      "feriado": "Corpus Christi",
+      "dia": "Quinta-feira",
+      "tipo": "Municipal",
+      "nome_feriado": "Corpus Christi",
+      "dia_semana": "Quinta-feira"
+    },
+    {
+      "data": "2026-07-08",
+      "feriado": "Fundação de Bragança",
+      "dia": "Quarta-feira",
+      "tipo": "Municipal",
+      "nome_feriado": "Fundação de Bragança",
+      "dia_semana": "Quarta-feira"
+    },
+    {
+      "data": "2026-08-15",
+      "feriado": "Adesão do Grão-Pará",
+      "dia": "Sábado",
+      "tipo": "Estadual",
+      "nome_feriado": "Adesão do Grão-Pará",
+      "dia_semana": "Sábado"
+    },
+    {
+      "data": "2026-09-07",
+      "feriado": "Independência do Brasil",
+      "dia": "Segunda-feira",
+      "tipo": "Nacional",
+      "nome_feriado": "Independência do Brasil",
+      "dia_semana": "Segunda-feira"
+    },
+    {
+      "data": "2026-10-07",
+      "feriado": "N. Sra. do Rosário (Padroeira)",
+      "dia": "Quarta-feira",
+      "tipo": "Municipal",
+      "nome_feriado": "N. Sra. do Rosário (Padroeira)",
+      "dia_semana": "Quarta-feira"
+    },
+    {
+      "data": "2026-10-12",
+      "feriado": "Nossa Senhora Aparecida",
+      "dia": "Segunda-feira",
+      "tipo": "Nacional",
+      "nome_feriado": "Nossa Senhora Aparecida",
+      "dia_semana": "Segunda-feira"
+    },
+    {
+      "data": "2026-11-02",
+      "feriado": "Finados",
+      "dia": "Segunda-feira",
+      "tipo": "Nacional",
+      "nome_feriado": "Finados",
+      "dia_semana": "Segunda-feira"
+    },
+    {
+      "data": "2026-11-15",
+      "feriado": "Proclamação da República",
+      "dia": "Domingo",
+      "tipo": "Nacional",
+      "nome_feriado": "Proclamação da República",
+      "dia_semana": "Domingo"
+    },
+    {
+      "data": "2026-11-20",
+      "feriado": "Dia da Consciência Negra",
+      "dia": "Sexta-feira",
+      "tipo": "Nacional",
+      "nome_feriado": "Dia da Consciência Negra",
+      "dia_semana": "Sexta-feira"
+    },
+    {
+      "data": "2026-12-25",
+      "feriado": "Natal",
+      "dia": "Sexta-feira",
+      "tipo": "Nacional",
+      "nome_feriado": "Natal",
+      "dia_semana": "Sexta-feira"
+    },
+    {
+      "data": "2026-12-26",
+      "feriado": "Dia de São Benedito",
+      "dia": "Sábado",
+      "tipo": "Municipal",
+      "nome_feriado": "Dia de São Benedito",
+      "dia_semana": "Sábado"
+    },
+    {
+      "data": "2027-01-01",
+      "feriado": "Confraternização Universal",
+      "dia": "Sexta-feira",
+      "tipo": "Nacional",
+      "nome_feriado": "Confraternização Universal",
+      "dia_semana": "Sexta-feira"
+    },
+    {
+      "data": "2027-02-09",
+      "feriado": "Carnaval (Ponto Facultativo)",
+      "dia": "Terça-feira",
+      "tipo": "Nacional",
+      "nome_feriado": "Carnaval (Ponto Facultativo)",
+      "dia_semana": "Terça-feira"
+    },
+    {
+      "data": "2027-03-26",
+      "feriado": "Sexta-feira Santa",
+      "dia": "Sexta-feira",
+      "tipo": "Nacional",
+      "nome_feriado": "Sexta-feira Santa",
+      "dia_semana": "Sexta-feira"
+    },
+    {
+      "data": "2027-04-21",
+      "feriado": "Tiradentes",
+      "dia": "Quarta-feira",
+      "tipo": "Nacional",
+      "nome_feriado": "Tiradentes",
+      "dia_semana": "Quarta-feira"
+    },
+    {
+      "data": "2027-05-01",
+      "feriado": "Dia do Trabalho",
+      "dia": "Sábado",
+      "tipo": "Nacional",
+      "nome_feriado": "Dia do Trabalho",
+      "dia_semana": "Sábado"
+    },
+    {
+      "data": "2027-05-27",
+      "feriado": "Corpus Christi",
+      "dia": "Quinta-feira",
+      "tipo": "Municipal",
+      "nome_feriado": "Corpus Christi",
+      "dia_semana": "Quinta-feira"
+    },
+    {
+      "data": "2027-07-08",
+      "feriado": "Fundação de Bragança",
+      "dia": "Quinta-feira",
+      "tipo": "Municipal",
+      "nome_feriado": "Fundação de Bragança",
+      "dia_semana": "Quinta-feira"
+    },
+    {
+      "data": "2027-08-15",
+      "feriado": "Adesão do Grão-Pará",
+      "dia": "Domingo",
+      "tipo": "Estadual",
+      "nome_feriado": "Adesão do Grão-Pará",
+      "dia_semana": "Domingo"
+    },
+    {
+      "data": "2027-09-07",
+      "feriado": "Independência do Brasil",
+      "dia": "Terça-feira",
+      "tipo": "Nacional",
+      "nome_feriado": "Independência do Brasil",
+      "dia_semana": "Terça-feira"
+    },
+    {
+      "data": "2027-10-07",
+      "feriado": "N. Sra. do Rosário (Padroeira)",
+      "dia": "Quinta-feira",
+      "tipo": "Municipal",
+      "nome_feriado": "N. Sra. do Rosário (Padroeira)",
+      "dia_semana": "Quinta-feira"
+    },
+    {
+      "data": "2027-10-12",
+      "feriado": "Nossa Senhora Aparecida",
+      "dia": "Terça-feira",
+      "tipo": "Nacional",
+      "nome_feriado": "Nossa Senhora Aparecida",
+      "dia_semana": "Terça-feira"
+    },
+    {
+      "data": "2027-11-02",
+      "feriado": "Finados",
+      "dia": "Terça-feira",
+      "tipo": "Nacional",
+      "nome_feriado": "Finados",
+      "dia_semana": "Terça-feira"
+    },
+    {
+      "data": "2027-11-15",
+      "feriado": "Proclamação da República",
+      "dia": "Segunda-feira",
+      "tipo": "Nacional",
+      "nome_feriado": "Proclamação da República",
+      "dia_semana": "Segunda-feira"
+    },
+    {
+      "data": "2027-11-20",
+      "feriado": "Dia da Consciência Negra",
+      "dia": "Sábado",
+      "tipo": "Nacional",
+      "nome_feriado": "Dia da Consciência Negra",
+      "dia_semana": "Sábado"
+    },
+    {
+      "data": "2027-12-25",
+      "feriado": "Natal",
+      "dia": "Sábado",
+      "tipo": "Nacional",
+      "nome_feriado": "Natal",
+      "dia_semana": "Sábado"
+    },
+    {
+      "data": "2027-12-26",
+      "feriado": "Dia de São Benedito",
+      "dia": "Domingo",
+      "tipo": "Municipal",
+      "nome_feriado": "Dia de São Benedito",
+      "dia_semana": "Domingo"
+    }
+  ],
+  "disciplinas": [
+    {
+      "sigla": "EP",
+      "periodo": "I",
+      "codigo": "EP05005",
+      "cor": "#9bf6ff",
+      "nome": "ECOLOGIA",
+      "abreviacao": "Ecologia",
+      "ch": 60,
+      "curso_sigla": "EP"
+    },
+    {
+      "sigla": "EP",
+      "periodo": "I",
+      "codigo": "EP05003",
+      "cor": "#fdffb6",
+      "nome": "INFORMATICA BASICA",
+      "abreviacao": "Inform Basic",
+      "ch": 45,
+      "curso_sigla": "EP"
+    },
+    {
+      "sigla": "EP",
+      "periodo": "I",
+      "codigo": "EP05001",
+      "cor": "#ffadad",
+      "nome": "INGLES TECNICO",
+      "abreviacao": "Ingles Tecn",
+      "ch": 60,
+      "curso_sigla": "EP"
+    },
+    {
+      "sigla": "EP",
+      "periodo": "I",
+      "codigo": "EP05006",
+      "cor": "#a0c4ff",
+      "nome": "INTRODUCAO A ENGENHARIA DE PESCA",
+      "abreviacao": "Intr Eng Pesca",
+      "ch": 30,
+      "curso_sigla": "EP"
+    },
+    {
+      "sigla": "EP",
+      "periodo": "I",
+      "codigo": "EP05004",
+      "cor": "#caffbf",
+      "nome": "MATEMATICA BASICA",
+      "abreviacao": "Matem Basic",
+      "ch": 90,
+      "curso_sigla": "EP"
+    },
+    {
+      "sigla": "EP",
+      "periodo": "I",
+      "codigo": "EP05002",
+      "cor": "#ffd6a5",
+      "nome": "METODOLOGIA CIENTIFICA",
+      "abreviacao": "Metod Cient",
+      "ch": 45,
+      "curso_sigla": "EP"
+    },
+    {
+      "sigla": "EP",
+      "periodo": "I",
+      "codigo": "EP05073",
+      "cor": "#ffc6ff",
+      "nome": "QUIMICA BASICA",
+      "abreviacao": "Quim Basic",
+      "ch": 45,
+      "curso_sigla": "EP"
+    },
+    {
+      "sigla": "EP",
+      "periodo": "I",
+      "codigo": "EP05007",
+      "cor": "#bdb2ff",
+      "nome": "QUIMICA GERAL E ANALITICA",
+      "abreviacao": "Quim Geral",
+      "ch": 90,
+      "curso_sigla": "EP"
+    },
+    {
+      "sigla": "EP",
+      "periodo": "II",
+      "codigo": "EP05010",
+      "cor": "#ffc2c2",
+      "nome": "BIOQUIMICA",
+      "abreviacao": "Bioquimica",
+      "ch": 90,
+      "curso_sigla": "EP"
+    },
+    {
+      "sigla": "EP",
+      "periodo": "II",
+      "codigo": "EP05009",
+      "cor": "#ffdfd3",
+      "nome": "DESENHO TECNICO",
+      "abreviacao": "Desen Tecn",
+      "ch": 60,
+      "curso_sigla": "EP"
+    },
+    {
+      "sigla": "EP",
+      "periodo": "II",
+      "codigo": "EP05011",
+      "cor": "#ffe2b9",
+      "nome": "ESTATISTICA BASICA",
+      "abreviacao": "Estat Basic",
+      "ch": 45,
+      "curso_sigla": "EP"
+    },
+    {
+      "sigla": "EP",
+      "periodo": "II",
+      "codigo": "EP05008",
+      "cor": "#e0bbe4",
+      "nome": "MATEMATICA APLICADA",
+      "abreviacao": "Matem Aplic",
+      "ch": 60,
+      "curso_sigla": "EP"
+    },
+    {
+      "sigla": "EP",
+      "periodo": "II",
+      "codigo": "EP05012",
+      "cor": "#feffcc",
+      "nome": "MECANICA BASICA",
+      "abreviacao": "Mecan Basic",
+      "ch": 75,
+      "curso_sigla": "EP"
+    },
+    {
+      "sigla": "EP",
+      "periodo": "II",
+      "codigo": "EP05069",
+      "cor": "#adf9ff",
+      "nome": "TOPICOS ESPECIAIS EM AQUICULTURA",
+      "abreviacao": "TE-Aquicultura",
+      "ch": 30,
+      "curso_sigla": "EP"
+    },
+    {
+      "sigla": "EP",
+      "periodo": "II",
+      "codigo": "EP05013",
+      "cor": "#d9ffcf",
+      "nome": "ZOOLOGIA AQUATICA",
+      "abreviacao": "Zool Aquat",
+      "ch": 60,
+      "curso_sigla": "EP"
+    },
+    {
+      "sigla": "EP",
+      "periodo": "III",
+      "codigo": "EP05020",
+      "cor": "#f2c08f",
+      "nome": "BOTANICA AQUATICA",
+      "abreviacao": "Botan Aquat",
+      "ch": 60,
+      "curso_sigla": "EP"
+    },
+    {
+      "sigla": "EP",
+      "periodo": "III",
+      "codigo": "EP05016",
+      "cor": "#ffd3ff",
+      "nome": "DESENHO COMPUTACIONAL",
+      "abreviacao": "Desen Comput",
+      "ch": 60,
+      "curso_sigla": "EP"
+    },
+    {
+      "sigla": "EP",
+      "periodo": "III",
+      "codigo": "EP05017",
+      "cor": "#eccfe9",
+      "nome": "ECONOMIA",
+      "abreviacao": "Economia",
+      "ch": 45,
+      "curso_sigla": "EP"
+    },
+    {
+      "sigla": "EP",
+      "periodo": "III",
+      "codigo": "EP05019",
+      "cor": "#f29898",
+      "nome": "ELETROMAGNETISMO",
+      "abreviacao": "Eletromag",
+      "ch": 75,
+      "curso_sigla": "EP"
+    },
+    {
+      "sigla": "EP",
+      "periodo": "III",
+      "codigo": "EP05014",
+      "cor": "#b4d1ff",
+      "nome": "GEOMETRIA ANALITICA E ALGEBRA LINEAR",
+      "abreviacao": "Geom Analit",
+      "ch": 60,
+      "curso_sigla": "EP"
+    },
+    {
+      "sigla": "EP",
+      "periodo": "III",
+      "codigo": "EP05015",
+      "cor": "#ccc6ff",
+      "nome": "ICTIOLOGIA",
+      "abreviacao": "Ictiologia",
+      "ch": 45,
+      "curso_sigla": "EP"
+    },
+    {
+      "sigla": "EP",
+      "periodo": "III",
+      "codigo": "EP05018",
+      "cor": "#ffe8de",
+      "nome": "MICROBIOLOGIA DO PESCADO",
+      "abreviacao": "Microb Pesc",
+      "ch": 60,
+      "curso_sigla": "EP"
+    },
+    {
+      "sigla": "EP",
+      "periodo": "IV",
+      "codigo": "EP05024",
+      "cor": "#8daeda",
+      "nome": "ECONOMIA APLICADA A PESCA E AQUICULTURA",
+      "abreviacao": "Econo Aplic",
+      "ch": 60,
+      "curso_sigla": "EP"
+    },
+    {
+      "sigla": "EP",
+      "periodo": "IV",
+      "codigo": "EP05025",
+      "cor": "#a79cea",
+      "nome": "GEOLOGIA DE AMBIENTES AQUATICOS",
+      "abreviacao": "Geol Amb Aquat",
+      "ch": 75,
+      "curso_sigla": "EP"
+    },
+    {
+      "sigla": "EP",
+      "periodo": "IV",
+      "codigo": "EP05021",
+      "cor": "#f0f2a0",
+      "nome": "MECANICA APLICADA",
+      "abreviacao": "Mecan Aplic",
+      "ch": 45,
+      "curso_sigla": "EP"
+    },
+    {
+      "sigla": "EP",
+      "periodo": "IV",
+      "codigo": "EP05026",
+      "cor": "#f2b0f2",
+      "nome": "METEOROLOGIA FISICA E SINOTICA",
+      "abreviacao": "Met. Fisic Sinot",
+      "ch": 60,
+      "curso_sigla": "EP"
+    },
+    {
+      "sigla": "EP",
+      "periodo": "IV",
+      "codigo": "EP05027",
+      "cor": "#cba5d0",
+      "nome": "QUALIDADE DO PESCADO",
+      "abreviacao": "Quali Pesc",
+      "ch": 60,
+      "curso_sigla": "EP"
+    },
+    {
+      "sigla": "EP",
+      "periodo": "IV",
+      "codigo": "EP05022",
+      "cor": "#b7f2ab",
+      "nome": "TERMODINAMICA APLICADA",
+      "abreviacao": "Termo Aplic",
+      "ch": 45,
+      "curso_sigla": "EP"
+    },
+    {
+      "sigla": "EP",
+      "periodo": "IV",
+      "codigo": "EP05070",
+      "cor": "#f2c9bb",
+      "nome": "TOPICOS ESPECIAIS EM ECOLOGIA AQUATICA",
+      "abreviacao": "TE-Ecol Aquat",
+      "ch": 30,
+      "curso_sigla": "EP"
+    },
+    {
+      "sigla": "EP",
+      "periodo": "IV",
+      "codigo": "EP05023",
+      "cor": "#88e0ea",
+      "nome": "TOPOGRAFIA",
+      "abreviacao": "Topografia",
+      "ch": 60,
+      "curso_sigla": "EP"
+    },
+    {
+      "sigla": "EP",
+      "periodo": "V",
+      "codigo": "EP05030",
+      "cor": "#feffd9",
+      "nome": "CARTOGRAFIA E GEOPROCESSAMENTO",
+      "abreviacao": "Carto Geopr",
+      "ch": 60,
+      "curso_sigla": "EP"
+    },
+    {
+      "sigla": "EP",
+      "periodo": "V",
+      "codigo": "EP05033",
+      "cor": "#c9deff",
+      "nome": "ELABORACAO E AVALIACAO DE PROJETOS PESQUEIROS E AQUICOLAS",
+      "abreviacao": "Elab Avali Proj",
+      "ch": 45,
+      "curso_sigla": "EP"
+    },
+    {
+      "sigla": "EP",
+      "periodo": "V",
+      "codigo": "EP05034",
+      "cor": "#dcd5ff",
+      "nome": "FISIOECOLOGIA DE ANIMAIS AQUATICOS",
+      "abreviacao": "Fisiologia",
+      "ch": 75,
+      "curso_sigla": "EP"
+    },
+    {
+      "sigla": "EP",
+      "periodo": "V",
+      "codigo": "EP05029",
+      "cor": "#ffefcd",
+      "nome": "LIMNOLOGIA",
+      "abreviacao": "Limno",
+      "ch": 75,
+      "curso_sigla": "EP"
+    },
+    {
+      "sigla": "EP",
+      "periodo": "V",
+      "codigo": "EP05032",
+      "cor": "#c0fcff",
+      "nome": "MAQUINAS E MOTORES",
+      "abreviacao": "Maqui Motor",
+      "ch": 45,
+      "curso_sigla": "EP"
+    },
+    {
+      "sigla": "EP",
+      "periodo": "V",
+      "codigo": "EP05028",
+      "cor": "#ffd7d7",
+      "nome": "SOCIOLOGIA APLICADA AS COMUNIDADES PESQUEIRAS",
+      "abreviacao": "Sociologia",
+      "ch": 45,
+      "curso_sigla": "EP"
+    },
+    {
+      "sigla": "EP",
+      "periodo": "V",
+      "codigo": "EP05031",
+      "cor": "#e3ffdd",
+      "nome": "TECNOLOGIA DO PESCADO",
+      "abreviacao": "Tecno Pesca",
+      "ch": 60,
+      "curso_sigla": "EP"
+    },
+    {
+      "sigla": "EP",
+      "periodo": "VI",
+      "codigo": "EP05036",
+      "cor": "#f9e6ef",
+      "nome": "AQUICULTURA",
+      "abreviacao": "Aquicultura",
+      "ch": 60,
+      "curso_sigla": "EP"
+    },
+    {
+      "sigla": "EP",
+      "periodo": "VI",
+      "codigo": "EP05039",
+      "cor": "#e5ac79",
+      "nome": "ENGENHARIA AQUICOLA",
+      "abreviacao": "Engen Aquic",
+      "ch": 75,
+      "curso_sigla": "EP"
+    },
+    {
+      "sigla": "EP",
+      "periodo": "VI",
+      "codigo": "EP05038",
+      "cor": "#e58383",
+      "nome": "ENGENHARIA DO PROCESSAMENTO DO PESCADO",
+      "abreviacao": "Eng Proce Pesc",
+      "ch": 45,
+      "curso_sigla": "EP"
+    },
+    {
+      "sigla": "EP",
+      "periodo": "VI",
+      "codigo": "EP05040",
+      "cor": "#e3e58a",
+      "nome": "GENETICA BASICA",
+      "abreviacao": "Genet Basic",
+      "ch": 60,
+      "curso_sigla": "EP"
+    },
+    {
+      "sigla": "EP",
+      "periodo": "VI",
+      "codigo": "EP05037",
+      "cor": "#fff2ec",
+      "nome": "OCEANOGRAFIA",
+      "abreviacao": "Oceanografia",
+      "ch": 75,
+      "curso_sigla": "EP"
+    },
+    {
+      "sigla": "EP",
+      "periodo": "VI",
+      "codigo": "EP05041",
+      "cor": "#a1e595",
+      "nome": "RELACOES ETNICO=RACIAIS E CIDADANIA",
+      "abreviacao": "Relac Etnic Cida",
+      "ch": 30,
+      "curso_sigla": "EP"
+    },
+    {
+      "sigla": "EP",
+      "periodo": "VI",
+      "codigo": "EP05035",
+      "cor": "#ffe0ff",
+      "nome": "SANIDADE DE ORGANISMOS AQUATICOS",
+      "abreviacao": "Sanidade",
+      "ch": 45,
+      "curso_sigla": "EP"
+    },
+    {
+      "sigla": "EP",
+      "periodo": "VI",
+      "codigo": "EP05071",
+      "cor": "#72cbd4",
+      "nome": "TOPICOS ESPECIAIS EM TECNOLOGIA DO PESCADO",
+      "abreviacao": "TE Pescado",
+      "ch": 30,
+      "curso_sigla": "EP"
+    },
+    {
+      "sigla": "EP",
+      "periodo": "VII",
+      "codigo": "EP05047",
+      "cor": "#ffeded",
+      "nome": "CARCINICULTURA",
+      "abreviacao": "Carcinicultura",
+      "ch": 45,
+      "curso_sigla": "EP"
+    },
+    {
+      "sigla": "EP",
+      "periodo": "VII",
+      "codigo": "EP05043",
+      "cor": "#9186f2",
+      "nome": "ESTAGIO SUPERVISIONADO OBRIGATORIO DE TECNOLOGIA DO PESCADO",
+      "abreviacao": "ESO Tec Pesc",
+      "ch": 90,
+      "curso_sigla": "EP"
+    },
+    {
+      "sigla": "EP",
+      "periodo": "VII",
+      "codigo": "EP05042",
+      "cor": "#77b2f2",
+      "nome": "ESTATISTICA APLICADA A PESCA E AQUICULTURA",
+      "abreviacao": "Estat Aplic Pesc",
+      "ch": 45,
+      "curso_sigla": "EP"
+    },
+    {
+      "sigla": "EP",
+      "periodo": "VII",
+      "codigo": "EP05044",
+      "cor": "#e59ae5",
+      "nome": "GENETICA APLICADA",
+      "abreviacao": "Genet Aplic",
+      "ch": 60,
+      "curso_sigla": "EP"
+    },
+    {
+      "sigla": "EP",
+      "periodo": "VII",
+      "codigo": "EP05050",
+      "cor": "#f1ffeb",
+      "nome": "INTRODUCAO AO TRABALHO DE CONCLUSAO DE CURSO",
+      "abreviacao": "Intro TCC",
+      "ch": 15,
+      "curso_sigla": "EP"
+    },
+    {
+      "sigla": "EP",
+      "periodo": "VII",
+      "codigo": "EP05049",
+      "cor": "#feffe6",
+      "nome": "NAVEGACAO BASICA",
+      "abreviacao": "Naveg Basic",
+      "ch": 60,
+      "curso_sigla": "EP"
+    },
+    {
+      "sigla": "EP",
+      "periodo": "VII",
+      "codigo": "EP05046",
+      "cor": "#e5b9a5",
+      "nome": "PISCICULTURA",
+      "abreviacao": "Piscicultura",
+      "ch": 60,
+      "curso_sigla": "EP"
+    },
+    {
+      "sigla": "EP",
+      "periodo": "VII",
+      "codigo": "EP05048",
+      "cor": "#fffcf1",
+      "nome": "TECNICAS APLICADAS DE EDUCACAO NAO FORMAL",
+      "abreviacao": "Tecn Aplic Educ",
+      "ch": 45,
+      "curso_sigla": "EP"
+    },
+    {
+      "sigla": "EP",
+      "periodo": "VII",
+      "codigo": "EP05045",
+      "cor": "#b68fb9",
+      "nome": "TECNICAS DE PESCA",
+      "abreviacao": "Tecni Pesca",
+      "ch": 45,
+      "curso_sigla": "EP"
+    },
+    {
+      "sigla": "EP",
+      "periodo": "VIII",
+      "codigo": "EP05052",
+      "cor": "#e6f0ff",
+      "nome": "CONFECCAO DE APETRECHOS DE PESCA",
+      "abreviacao": "Confe Apetr Pesc",
+      "ch": 60,
+      "curso_sigla": "EP"
+    },
+    {
+      "sigla": "EP",
+      "periodo": "VIII",
+      "codigo": "EP05057",
+      "cor": "#d86e6e",
+      "nome": "DINAMICA DE POPULACOES PESQUEIRAS",
+      "abreviacao": "Dinam Popul Pesq",
+      "ch": 45,
+      "curso_sigla": "EP"
+    },
+    {
+      "sigla": "EP",
+      "periodo": "VIII",
+      "codigo": "EP05051",
+      "cor": "#e1fdff",
+      "nome": "EMPREENDEDORISMO",
+      "abreviacao": "Empreend",
+      "ch": 30,
+      "curso_sigla": "EP"
+    },
+    {
+      "sigla": "EP",
+      "periodo": "VIII",
+      "codigo": "EP05054",
+      "cor": "#fff1ff",
+      "nome": "ESTAGIO SUPERVISIONADO OBRIGATORIO DE AQUICULTURA",
+      "abreviacao": "ESO Aquicult",
+      "ch": 90,
+      "curso_sigla": "EP"
+    },
+    {
+      "sigla": "EP",
+      "periodo": "VIII",
+      "codigo": "EP05055",
+      "cor": "#fff9fc",
+      "nome": "EXTENSAO PESQUEIRA E AQUICOLA",
+      "abreviacao": "Exten Pesqu Aqui",
+      "ch": 60,
+      "curso_sigla": "EP"
+    },
+    {
+      "sigla": "EP",
+      "periodo": "VIII",
+      "codigo": "EP05058",
+      "cor": "#d89663",
+      "nome": "LIBRAS",
+      "abreviacao": "Libra",
+      "ch": 30,
+      "curso_sigla": "EP"
+    },
+    {
+      "sigla": "EP",
+      "periodo": "VIII",
+      "codigo": "EP05053",
+      "cor": "#f1eeff",
+      "nome": "NUTRICAO DE ORGANISMOS AQUATICOS",
+      "abreviacao": "Nutr Organ Aqua",
+      "ch": 60,
+      "curso_sigla": "EP"
+    },
+    {
+      "sigla": "EP",
+      "periodo": "VIII",
+      "codigo": "EP05056",
+      "cor": "#fffbf8",
+      "nome": "SISTEMAS DE NAVEGACAO",
+      "abreviacao": "Siste Naveg",
+      "ch": 60,
+      "curso_sigla": "EP"
+    },
+    {
+      "sigla": "EP",
+      "periodo": "VIII",
+      "codigo": "EP05072",
+      "cor": "#d6d874",
+      "nome": "TOPICOS ESPECIAIS EM TECNOLOGIA E ORDENAMENTO PESQUEIRO",
+      "abreviacao": "TE Orden. Pesq",
+      "ch": 30,
+      "curso_sigla": "EP"
+    },
+    {
+      "sigla": "EP",
+      "periodo": "IX",
+      "codigo": "EP05059",
+      "cor": "#8bcc7f",
+      "nome": "ESTAGIO SUPERVISIONADO OBRIGATORIO EM TECNOLOGIA E ORDENAMENTO PESQUEIRO",
+      "abreviacao": "ESO Ord Pesq",
+      "ch": 90,
+      "curso_sigla": "EP"
+    },
+    {
+      "sigla": "EP",
+      "periodo": "IX",
+      "codigo": "EP05060",
+      "cor": "#5cc0be",
+      "nome": "GERENCIAMENTO COSTEIRO",
+      "abreviacao": "Geren Coste",
+      "ch": 60,
+      "curso_sigla": "EP"
+    },
+    {
+      "sigla": "EP",
+      "periodo": "IX",
+      "codigo": "EP05061",
+      "cor": "#61a0e5",
+      "nome": "SISTEMAS DE PESCA",
+      "abreviacao": "Siste Pesca",
+      "ch": 45,
+      "curso_sigla": "EP"
+    },
+    {
+      "sigla": "EP",
+      "periodo": "IX",
+      "codigo": "EP05062",
+      "cor": "#7b70e5",
+      "nome": "ADMINISTRACAO E LEGISLACAO PESQUEIRA E AQUICOLA",
+      "abreviacao": "Admin Leg Pesq",
+      "ch": 60,
+      "curso_sigla": "EP"
+    },
+    {
+      "sigla": "EP",
+      "periodo": "IX",
+      "codigo": "EP05063",
+      "cor": "#d884d8",
+      "nome": "AVALIACAO DE ESTOQUES PESQUEIROS",
+      "abreviacao": "Avali Estoq Pesq",
+      "ch": 45,
+      "curso_sigla": "EP"
+    },
+    {
+      "sigla": "EP",
+      "periodo": "IX",
+      "codigo": "EP05064",
+      "cor": "#a079a2",
+      "nome": "PARASITOLOGIA DE ORGANISMOS AQUATICOS",
+      "abreviacao": "Parasitologia",
+      "ch": 45,
+      "curso_sigla": "EP"
+    },
+    {
+      "sigla": "EP",
+      "periodo": "IX",
+      "codigo": "EP05065",
+      "cor": "#d8a38f",
+      "nome": "ESTAGIO SUPERVISIONADO OBRIGATORIO DE EXTENSAO PESQUEIRA",
+      "abreviacao": "ESO Ext Pesq",
+      "ch": 90,
+      "curso_sigla": "EP"
+    },
+    {
+      "sigla": "EP",
+      "periodo": "IX",
+      "codigo": "EP05066",
+      "cor": "#ffb7b7",
+      "nome": "MARKETING",
+      "abreviacao": "Marketing",
+      "ch": 30,
+      "curso_sigla": "EP"
+    },
+    {
+      "sigla": "EP",
+      "periodo": "X",
+      "codigo": "EP05067",
+      "cor": "#ffdbb0",
+      "nome": "TRABALHO DE CONCLUSAO DE CURSO",
+      "abreviacao": "TCC",
+      "ch": 180,
+      "curso_sigla": "EP"
+    },
+    {
+      "sigla": "EP",
+      "periodo": "X",
+      "codigo": "EP05068",
+      "cor": "#fdffc0",
+      "nome": "ATIVIDADES COMPLEMENTARES",
+      "abreviacao": "Ativ. Compl",
+      "ch": 120,
+      "curso_sigla": "EP"
+    },
+    {
+      "sigla": "CB",
+      "periodo": "I",
+      "codigo": "CBBR001",
+      "cor": "#ffadad",
+      "nome": "BIOLOGIA CELULAR E MOLECULAR",
+      "abreviacao": "Biol Celu Mole",
+      "ch": 75,
+      "curso_sigla": "CB"
+    },
+    {
+      "sigla": "CB",
+      "periodo": "I",
+      "codigo": "CBBR003",
+      "cor": "#ffd6a5",
+      "nome": "ECOLOGIA GERAL",
+      "abreviacao": "Ecol Gera",
+      "ch": 75,
+      "curso_sigla": "CB"
+    },
+    {
+      "sigla": "CB",
+      "periodo": "I",
+      "codigo": "CBBR004",
+      "cor": "#fdffb6",
+      "nome": "MATEMATICA BASICA",
+      "abreviacao": "Matem Bas",
+      "ch": 30,
+      "curso_sigla": "CB"
+    },
+    {
+      "sigla": "CB",
+      "periodo": "I",
+      "codigo": "CBBR005",
+      "cor": "#caffbf",
+      "nome": "DIDATICA APLICADA A FORMACAO DOCENTE",
+      "abreviacao": "Dida Form Doce",
+      "ch": 60,
+      "curso_sigla": "CB"
+    },
+    {
+      "sigla": "CB",
+      "periodo": "I",
+      "codigo": "CBBR006",
+      "cor": "#9bf6ff",
+      "nome": "INICIACAO A COMPUTACAO",
+      "abreviacao": "Inic Comp",
+      "ch": 30,
+      "curso_sigla": "CB"
+    },
+    {
+      "sigla": "CB",
+      "periodo": "I",
+      "codigo": "CBBR007",
+      "cor": "#a0c4ff",
+      "nome": "BIOLOGIA EVOLUTIVA DO DESENVOLVIMENTO",
+      "abreviacao": "Biol Evolut",
+      "ch": 45,
+      "curso_sigla": "CB"
+    },
+    {
+      "sigla": "CB",
+      "periodo": "I",
+      "codigo": "CBBR008",
+      "cor": "#bdb2ff",
+      "nome": "FILOSOFIA E HISTORIA DA CIENCIA",
+      "abreviacao": "Filo Hist Cien",
+      "ch": 30,
+      "curso_sigla": "CB"
+    },
+    {
+      "sigla": "CB",
+      "periodo": "I",
+      "codigo": "CBBR066",
+      "cor": "#ffc6ff",
+      "nome": "AVALIACAO NO PROCESSO EDUCACIONAL",
+      "abreviacao": "Aval Proc Educ",
+      "ch": 30,
+      "curso_sigla": "CB"
+    },
+    {
+      "sigla": "CB",
+      "periodo": "I",
+      "codigo": "CBBR067",
+      "cor": "#e0bbe4",
+      "nome": "DIVERSIDADE DE ALGAS",
+      "abreviacao": "Divers Alga",
+      "ch": 30,
+      "curso_sigla": "CB"
+    },
+    {
+      "sigla": "CB",
+      "periodo": "I",
+      "codigo": "CBBR073",
+      "cor": "#ffdfd3",
+      "nome": "TEMAS CONTEMPORANEOS PARA A EDUCACAO",
+      "abreviacao": "Tema Contemp Educ",
+      "ch": 30,
+      "curso_sigla": "CB"
+    },
+    {
+      "sigla": "CB",
+      "periodo": "I",
+      "codigo": "CBBR074",
+      "cor": "#ffc2c2",
+      "nome": "TEMAS SOCIOAMBIENTAIS E CULTURAIS",
+      "abreviacao": "Tema Sociam Cult",
+      "ch": 30,
+      "curso_sigla": "CB"
+    },
+    {
+      "sigla": "CB",
+      "periodo": "I",
+      "codigo": "CBBR080",
+      "cor": "#ffe2b9",
+      "nome": "TOPICOS ESPECIAIS: ENSINO DE ECOLOGIA",
+      "abreviacao": "TE  Ensi Ecol",
+      "ch": 30,
+      "curso_sigla": "CB"
+    },
+    {
+      "sigla": "CB",
+      "periodo": "I",
+      "codigo": "CBBR082",
+      "cor": "#feffcc",
+      "nome": "TOPICOS ESPECIAIS: ENSINO EM EDUCACAO",
+      "abreviacao": "TE  Ensi Educ",
+      "ch": 30,
+      "curso_sigla": "CB"
+    },
+    {
+      "sigla": "CB",
+      "periodo": "II",
+      "codigo": "CBBR010",
+      "cor": "#d9ffcf",
+      "nome": "SISTEMATICA BIOLOGICA",
+      "abreviacao": "Sist Biol",
+      "ch": 30,
+      "curso_sigla": "CB"
+    },
+    {
+      "sigla": "CB",
+      "periodo": "II",
+      "codigo": "CBBR011",
+      "cor": "#adf9ff",
+      "nome": "VIRUS E PROCARIONTES",
+      "abreviacao": "Viru Proc",
+      "ch": 60,
+      "curso_sigla": "CB"
+    },
+    {
+      "sigla": "CB",
+      "periodo": "II",
+      "codigo": "CBBR012",
+      "cor": "#b4d1ff",
+      "nome": "QUIMICA BASICA",
+      "abreviacao": "Quim Basi",
+      "ch": 30,
+      "curso_sigla": "CB"
+    },
+    {
+      "sigla": "CB",
+      "periodo": "II",
+      "codigo": "CBBR013",
+      "cor": "#ccc6ff",
+      "nome": "BIOQUIMICA",
+      "abreviacao": "Bioq",
+      "ch": 75,
+      "curso_sigla": "CB"
+    },
+    {
+      "sigla": "CB",
+      "periodo": "II",
+      "codigo": "CBBR014",
+      "cor": "#ffd3ff",
+      "nome": "PLANEJAMENTO, GESTAO E AVALIACAO",
+      "abreviacao": "Plan Gest Aval",
+      "ch": 60,
+      "curso_sigla": "CB"
+    },
+    {
+      "sigla": "CB",
+      "periodo": "II",
+      "codigo": "CBBR015",
+      "cor": "#eccfe9",
+      "nome": "BIOFISICA",
+      "abreviacao": "Biof",
+      "ch": 45,
+      "curso_sigla": "CB"
+    },
+    {
+      "sigla": "CB",
+      "periodo": "II",
+      "codigo": "CBBR017",
+      "cor": "#ffe8de",
+      "nome": "MATEMATICA APLICADA A BIOLOGIA",
+      "abreviacao": "Mate Biol",
+      "ch": 30,
+      "curso_sigla": "CB"
+    },
+    {
+      "sigla": "CB",
+      "periodo": "III",
+      "codigo": "CBBR018",
+      "cor": "#f29898",
+      "nome": "INTRODUCAO AOS EUCARIONTES",
+      "abreviacao": "Intr Euca",
+      "ch": 45,
+      "curso_sigla": "CB"
+    },
+    {
+      "sigla": "CB",
+      "periodo": "III",
+      "codigo": "CBBR020",
+      "cor": "#f2c08f",
+      "nome": "DIVERSIDADE DE FUNGOS",
+      "abreviacao": "Dive Fung",
+      "ch": 45,
+      "curso_sigla": "CB"
+    },
+    {
+      "sigla": "CB",
+      "periodo": "III",
+      "codigo": "CBBR021",
+      "cor": "#f0f2a0",
+      "nome": "GENETICA GERAL",
+      "abreviacao": "Genet Geral",
+      "ch": 75,
+      "curso_sigla": "CB"
+    },
+    {
+      "sigla": "CB",
+      "periodo": "III",
+      "codigo": "CBBR022",
+      "cor": "#b7f2ab",
+      "nome": "BIOESTATISTICA I",
+      "abreviacao": "Bioest I",
+      "ch": 45,
+      "curso_sigla": "CB"
+    },
+    {
+      "sigla": "CB",
+      "periodo": "III",
+      "codigo": "CBBR023",
+      "cor": "#88e0ea",
+      "nome": "METODOLOGIA CIENTIFICA",
+      "abreviacao": "Metod Cien",
+      "ch": 15,
+      "curso_sigla": "CB"
+    },
+    {
+      "sigla": "CB",
+      "periodo": "III",
+      "codigo": "CBBR024",
+      "cor": "#8daeda",
+      "nome": "FISICA BASICA",
+      "abreviacao": "Fisi Basi",
+      "ch": 30,
+      "curso_sigla": "CB"
+    },
+    {
+      "sigla": "CB",
+      "periodo": "III",
+      "codigo": "CBBR025",
+      "cor": "#a79cea",
+      "nome": "LIBRAS I",
+      "abreviacao": "Libras I",
+      "ch": 45,
+      "curso_sigla": "CB"
+    },
+    {
+      "sigla": "CB",
+      "periodo": "IV",
+      "codigo": "CBBR026",
+      "cor": "#f2b0f2",
+      "nome": "MORFOLOGIA VEGETAL",
+      "abreviacao": "Morf Vege",
+      "ch": 75,
+      "curso_sigla": "CB"
+    },
+    {
+      "sigla": "CB",
+      "periodo": "IV",
+      "codigo": "CBBR028",
+      "cor": "#cba5d0",
+      "nome": "INTRODUCAO A GEOLOGIA",
+      "abreviacao": "Intr Geol",
+      "ch": 45,
+      "curso_sigla": "CB"
+    },
+    {
+      "sigla": "CB",
+      "periodo": "IV",
+      "codigo": "CBBR029",
+      "cor": "#f2c9bb",
+      "nome": "GEOMORFOLOGIA COSTEIRA",
+      "abreviacao": "Geom Cost",
+      "ch": 60,
+      "curso_sigla": "CB"
+    },
+    {
+      "sigla": "CB",
+      "periodo": "IV",
+      "codigo": "CBBR030",
+      "cor": "#ffd7d7",
+      "nome": "SOCIOLOGIA, EDUCACAO E CIDADANIA",
+      "abreviacao": "Soci Educ Cida",
+      "ch": 45,
+      "curso_sigla": "CB"
+    },
+    {
+      "sigla": "CB",
+      "periodo": "IV",
+      "codigo": "CBBR031",
+      "cor": "#ffefcd",
+      "nome": "HISTORIAS DE VIDA E FORMACAO DOCENTE",
+      "abreviacao": "Historia Vida Form",
+      "ch": 30,
+      "curso_sigla": "CB"
+    },
+    {
+      "sigla": "CB",
+      "periodo": "IV",
+      "codigo": "CBBR032",
+      "cor": "#feffd9",
+      "nome": "PSICOLOGIA DA APRENDIZAGEM",
+      "abreviacao": "Psic Apre",
+      "ch": 45,
+      "curso_sigla": "CB"
+    },
+    {
+      "sigla": "CB",
+      "periodo": "IV",
+      "codigo": "CBBR033",
+      "cor": "#e3ffdd",
+      "nome": "LIBRAS II",
+      "abreviacao": "Libras II",
+      "ch": 45,
+      "curso_sigla": "CB"
+    },
+    {
+      "sigla": "CB",
+      "periodo": "V",
+      "codigo": "CBBR034",
+      "cor": "#c0fcff",
+      "nome": "DIVERSIDADE ANIMAL I",
+      "abreviacao": "Dive Anim",
+      "ch": 60,
+      "curso_sigla": "CB"
+    },
+    {
+      "sigla": "CB",
+      "periodo": "V",
+      "codigo": "CBBR035",
+      "cor": "#c9deff",
+      "nome": "EDUCACAO DO CAMPO",
+      "abreviacao": "Educ Camp",
+      "ch": 45,
+      "curso_sigla": "CB"
+    },
+    {
+      "sigla": "CB",
+      "periodo": "V",
+      "codigo": "CBBR036",
+      "cor": "#dcd5ff",
+      "nome": "EVOLUCAO E BIOGEOGRAFIA",
+      "abreviacao": "Evol Biog",
+      "ch": 75,
+      "curso_sigla": "CB"
+    },
+    {
+      "sigla": "CB",
+      "periodo": "V",
+      "codigo": "CBBR037",
+      "cor": "#ffe0ff",
+      "nome": "ESTAGIO I: ESPACOS NAO FORMAIS",
+      "abreviacao": "Esta I: Esp Nao Form",
+      "ch": 60,
+      "curso_sigla": "CB"
+    },
+    {
+      "sigla": "CB",
+      "periodo": "V",
+      "codigo": "CBBR038",
+      "cor": "#f9e6ef",
+      "nome": "EDUCACAO ESPECIAL E INCLUSIVA",
+      "abreviacao": "Educ Espe Incl",
+      "ch": 45,
+      "curso_sigla": "CB"
+    },
+    {
+      "sigla": "CB",
+      "periodo": "V",
+      "codigo": "CBBR039",
+      "cor": "#fff2ec",
+      "nome": "PALEONTOLOGIA GERAL",
+      "abreviacao": "Pale Geral",
+      "ch": 45,
+      "curso_sigla": "CB"
+    },
+    {
+      "sigla": "CB",
+      "periodo": "V",
+      "codigo": "CBBR040",
+      "cor": "#e58383",
+      "nome": "DIVERSIDADE VEGETAL I",
+      "abreviacao": "Divers Vege",
+      "ch": 60,
+      "curso_sigla": "CB"
+    },
+    {
+      "sigla": "CB",
+      "periodo": "VI",
+      "codigo": "CBBR041",
+      "cor": "#e5ac79",
+      "nome": "DIVERSIDADE ANIMAL II",
+      "abreviacao": "Divers Anim II",
+      "ch": 60,
+      "curso_sigla": "CB"
+    },
+    {
+      "sigla": "CB",
+      "periodo": "VI",
+      "codigo": "CBBR043",
+      "cor": "#e3e58a",
+      "nome": "BIOLOGIA DE AGUA DOCE",
+      "abreviacao": "Biol Agua Doce",
+      "ch": 60,
+      "curso_sigla": "CB"
+    },
+    {
+      "sigla": "CB",
+      "periodo": "VI",
+      "codigo": "CBBR044",
+      "cor": "#a1e595",
+      "nome": "ELABORACAO DE PROJETOS DE TCC",
+      "abreviacao": "Elab Proj Tcc",
+      "ch": 30,
+      "curso_sigla": "CB"
+    },
+    {
+      "sigla": "CB",
+      "periodo": "VI",
+      "codigo": "CBBR045",
+      "cor": "#72cbd4",
+      "nome": "IMUNOLOGIA",
+      "abreviacao": "Imunologia",
+      "ch": 30,
+      "curso_sigla": "CB"
+    },
+    {
+      "sigla": "CB",
+      "periodo": "VI",
+      "codigo": "CBBR046",
+      "cor": "#77b2f2",
+      "nome": "DIVERSIDADE VEGETAL II",
+      "abreviacao": "Divers Vege II",
+      "ch": 45,
+      "curso_sigla": "CB"
+    },
+    {
+      "sigla": "CB",
+      "periodo": "VI",
+      "codigo": "CBBR047",
+      "cor": "#9186f2",
+      "nome": "ESTAGIO II: CARACTERIZACAO ESCOLAR",
+      "abreviacao": "Estag II: Carac Escol",
+      "ch": 45,
+      "curso_sigla": "CB"
+    },
+    {
+      "sigla": "CB",
+      "periodo": "VI",
+      "codigo": "CBBR048",
+      "cor": "#e59ae5",
+      "nome": "HISTOLOGIA",
+      "abreviacao": "Histologia",
+      "ch": 30,
+      "curso_sigla": "CB"
+    },
+    {
+      "sigla": "CB",
+      "periodo": "VII",
+      "codigo": "CBBR049",
+      "cor": "#b68fb9",
+      "nome": "ESTAGIO III: ENSINO FUNDAMENTAL",
+      "abreviacao": "Esta Iii: Ensi Fund",
+      "ch": 105,
+      "curso_sigla": "CB"
+    },
+    {
+      "sigla": "CB",
+      "periodo": "VII",
+      "codigo": "CBBR050",
+      "cor": "#e5b9a5",
+      "nome": "DIVERSIDADE VEGETAL III",
+      "abreviacao": "Dive Vege III",
+      "ch": 30,
+      "curso_sigla": "CB"
+    },
+    {
+      "sigla": "CB",
+      "periodo": "VII",
+      "codigo": "CBBR051",
+      "cor": "#ffeded",
+      "nome": "DIVERSIDADE ANIMAL III",
+      "abreviacao": "Dive Anim III",
+      "ch": 45,
+      "curso_sigla": "CB"
+    },
+    {
+      "sigla": "CB",
+      "periodo": "VII",
+      "codigo": "CBBR052",
+      "cor": "#fffcf1",
+      "nome": "BIOLOGIA MARINHA",
+      "abreviacao": "Biol Mari",
+      "ch": 60,
+      "curso_sigla": "CB"
+    },
+    {
+      "sigla": "CB",
+      "periodo": "VII",
+      "codigo": "CBBR053",
+      "cor": "#feffe6",
+      "nome": "ECOLOGIA DE POPULACOES",
+      "abreviacao": "Ecol Popu",
+      "ch": 75,
+      "curso_sigla": "CB"
+    },
+    {
+      "sigla": "CB",
+      "periodo": "VII",
+      "codigo": "CBBR054",
+      "cor": "#f1ffeb",
+      "nome": "BIOESTATISTICA II",
+      "abreviacao": "Bioe Ii",
+      "ch": 60,
+      "curso_sigla": "CB"
+    },
+    {
+      "sigla": "CB",
+      "periodo": "VIII",
+      "codigo": "CBBR055",
+      "cor": "#e1fdff",
+      "nome": "MORFOFISIOLOGIA ANIMAL I",
+      "abreviacao": "Morf Anim",
+      "ch": 75,
+      "curso_sigla": "CB"
+    },
+    {
+      "sigla": "CB",
+      "periodo": "VIII",
+      "codigo": "CBBR056",
+      "cor": "#e6f0ff",
+      "nome": "ECOLOGIA DE COMUNIDADES",
+      "abreviacao": "Ecol Comu",
+      "ch": 75,
+      "curso_sigla": "CB"
+    },
+    {
+      "sigla": "CB",
+      "periodo": "VIII",
+      "codigo": "CBBR058",
+      "cor": "#f1eeff",
+      "nome": "DIVERSIDADE ANIMAL IV",
+      "abreviacao": "Dive Anim Iv",
+      "ch": 45,
+      "curso_sigla": "CB"
+    },
+    {
+      "sigla": "CB",
+      "periodo": "VIII",
+      "codigo": "CBBR059",
+      "cor": "#fff1ff",
+      "nome": "EDUCACAO E SAUDE HUMANA",
+      "abreviacao": "Educ Saud Huma",
+      "ch": 45,
+      "curso_sigla": "CB"
+    },
+    {
+      "sigla": "CB",
+      "periodo": "VIII",
+      "codigo": "CBBR060",
+      "cor": "#fff9fc",
+      "nome": "FISIOLOGIA VEGETAL",
+      "abreviacao": "Fisi Vege",
+      "ch": 75,
+      "curso_sigla": "CB"
+    },
+    {
+      "sigla": "CB",
+      "periodo": "IX",
+      "codigo": "CBBR009",
+      "cor": "#fffbf8",
+      "nome": "TRABALHO DE CONCLUSAO DE CURSO (TCC)",
+      "abreviacao": "Trab Conc Curs (tcc",
+      "ch": 60,
+      "curso_sigla": "CB"
+    },
+    {
+      "sigla": "CB",
+      "periodo": "IX",
+      "codigo": "CBBR061",
+      "cor": "#d86e6e",
+      "nome": "BIOLOGIA DA CONSERVACAO",
+      "abreviacao": "Biol Cons",
+      "ch": 60,
+      "curso_sigla": "CB"
+    },
+    {
+      "sigla": "CB",
+      "periodo": "IX",
+      "codigo": "CBBR062",
+      "cor": "#d89663",
+      "nome": "MORFOFISIOLOGIA ANIMAL II",
+      "abreviacao": "Morf Anim Ii",
+      "ch": 75,
+      "curso_sigla": "CB"
+    },
+    {
+      "sigla": "CB",
+      "periodo": "IX",
+      "codigo": "CBBR063",
+      "cor": "#d6d874",
+      "nome": "ESTAGIO V: ENSINO MEDIO",
+      "abreviacao": "Esta V: Ensi Medi",
+      "ch": 120,
+      "curso_sigla": "CB"
+    },
+    {
+      "sigla": "CB",
+      "periodo": "IX",
+      "codigo": "CBBR064",
+      "cor": "#8bcc7f",
+      "nome": "PARASITOLOGIA",
+      "abreviacao": "Para",
+      "ch": 60,
+      "curso_sigla": "CB"
+    },
+    {
+      "sigla": "CB",
+      "periodo": "IX",
+      "codigo": "CBBR065",
+      "cor": "#5cc0be",
+      "nome": "ATIVIDADES COMPLEMENTARES",
+      "abreviacao": "Ativ Comp",
+      "ch": 80,
+      "curso_sigla": "CB"
+    },
+    {
+      "sigla": "CN",
+      "periodo": "I",
+      "codigo": "CNBR001",
+      "cor": "#ffadad",
+      "nome": "QUIMICA BASICA",
+      "abreviacao": "Quim Basi",
+      "ch": 60,
+      "curso_sigla": "CN"
+    },
+    {
+      "sigla": "CN",
+      "periodo": "I",
+      "codigo": "CNBR002",
+      "cor": "#ffd6a5",
+      "nome": "FILOSOFIA E METODO CIENTIFICO",
+      "abreviacao": "Filo Meto Cien",
+      "ch": 30,
+      "curso_sigla": "CN"
+    },
+    {
+      "sigla": "CN",
+      "periodo": "I",
+      "codigo": "CNBR003",
+      "cor": "#fdffb6",
+      "nome": "POLITICAS E LEGISLACAO DA EDUCACAO BASICA",
+      "abreviacao": "Poli Legi Educ",
+      "ch": 45,
+      "curso_sigla": "CN"
+    },
+    {
+      "sigla": "CN",
+      "periodo": "I",
+      "codigo": "CNBR004",
+      "cor": "#caffbf",
+      "nome": "DIDATICA APLICADA A FORMACAO DOCENTE",
+      "abreviacao": "Dida Apli Form",
+      "ch": 45,
+      "curso_sigla": "CN"
+    },
+    {
+      "sigla": "CN",
+      "periodo": "I",
+      "codigo": "CNBR005",
+      "cor": "#9bf6ff",
+      "nome": "MATEMATICA BASICA",
+      "abreviacao": "Matem Basic",
+      "ch": 60,
+      "curso_sigla": "CN"
+    },
+    {
+      "sigla": "CN",
+      "periodo": "I",
+      "codigo": "CNBR006",
+      "cor": "#a0c4ff",
+      "nome": "BIOLOGIA CELULAR",
+      "abreviacao": "Biol Celu",
+      "ch": 60,
+      "curso_sigla": "CN"
+    },
+    {
+      "sigla": "CN",
+      "periodo": "I",
+      "codigo": "CNBR007",
+      "cor": "#bdb2ff",
+      "nome": "TENDENCIAS DA PESQUISA EM EDUCACAO EM CIENCIAS",
+      "abreviacao": "Tend Pesq Educ",
+      "ch": 45,
+      "curso_sigla": "CN"
+    },
+    {
+      "sigla": "CN",
+      "periodo": "I",
+      "codigo": "CNBR008",
+      "cor": "#ffc6ff",
+      "nome": "INICIACAO A COMPUTACAO",
+      "abreviacao": "Inic Comp",
+      "ch": 30,
+      "curso_sigla": "CN"
+    },
+    {
+      "sigla": "CN",
+      "periodo": "I",
+      "codigo": "CNBR061",
+      "cor": "#e0bbe4",
+      "nome": "AVALIACAO NO PROCESSO EDUCACIONAL",
+      "abreviacao": "Aval Proc Educ",
+      "ch": 30,
+      "curso_sigla": "CN"
+    },
+    {
+      "sigla": "CN",
+      "periodo": "I",
+      "codigo": "CNBR062",
+      "cor": "#ffdfd3",
+      "nome": "DIVERSIDADE DE ALGAS",
+      "abreviacao": "Dive Alga",
+      "ch": 30,
+      "curso_sigla": "CN"
+    },
+    {
+      "sigla": "CN",
+      "periodo": "I",
+      "codigo": "CNBR063",
+      "cor": "#ffc2c2",
+      "nome": "ESTRATEGIAS ALTERNATIVAS NO ENSINO DE CIENCIAS E BIOLOGIA",
+      "abreviacao": "Estr Alte Ensi",
+      "ch": 30,
+      "curso_sigla": "CN"
+    },
+    {
+      "sigla": "CN",
+      "periodo": "I",
+      "codigo": "CNBR064",
+      "cor": "#ffe2b9",
+      "nome": "ESTRATEGIAS ALTERNATIVAS NO ENSINO DE FISICA",
+      "abreviacao": "Estr Alte Ensi",
+      "ch": 30,
+      "curso_sigla": "CN"
+    },
+    {
+      "sigla": "CN",
+      "periodo": "I",
+      "codigo": "CNBR065",
+      "cor": "#feffcc",
+      "nome": "ESTRATEGIAS ALTERNATIVAS NO ENSINO DE QUIMICA",
+      "abreviacao": "Estr Alte Ensi",
+      "ch": 30,
+      "curso_sigla": "CN"
+    },
+    {
+      "sigla": "CN",
+      "periodo": "I",
+      "codigo": "CNBR066",
+      "cor": "#d9ffcf",
+      "nome": "INOVACAO E EMPREENDEDORISMO NA LICENCIATURA",
+      "abreviacao": "Inov Empr Lice",
+      "ch": 30,
+      "curso_sigla": "CN"
+    },
+    {
+      "sigla": "CN",
+      "periodo": "I",
+      "codigo": "CNBR067",
+      "cor": "#adf9ff",
+      "nome": "SEMINARIOS INTEGRADORES NA EDUCACAO CIENTIFICA",
+      "abreviacao": "Semi Inte Educ",
+      "ch": 30,
+      "curso_sigla": "CN"
+    },
+    {
+      "sigla": "CN",
+      "periodo": "I",
+      "codigo": "CNBR068",
+      "cor": "#b4d1ff",
+      "nome": "TEMAS CONTEMPORANEOS PARA A EDUCACAO",
+      "abreviacao": "Tema Cont Educ",
+      "ch": 30,
+      "curso_sigla": "CN"
+    },
+    {
+      "sigla": "CN",
+      "periodo": "I",
+      "codigo": "CNBR069",
+      "cor": "#ccc6ff",
+      "nome": "TEMAS SOCIOAMBIENTAIS E CULTURAIS",
+      "abreviacao": "Tema Soci Cult",
+      "ch": 30,
+      "curso_sigla": "CN"
+    },
+    {
+      "sigla": "CN",
+      "periodo": "I",
+      "codigo": "CNBR070",
+      "cor": "#ffd3ff",
+      "nome": "TOPICOS ESPECIAIS E ENSINO DE BIOLOGIA CELULAR E EVOLUCAO",
+      "abreviacao": "TE  Ensi Bio Cel",
+      "ch": 30,
+      "curso_sigla": "CN"
+    },
+    {
+      "sigla": "CN",
+      "periodo": "I",
+      "codigo": "CNBR071",
+      "cor": "#eccfe9",
+      "nome": "TOPICOS ESPECIAIS E ENSINO DE DIVERSIDADE BIOLOGICA ANIMAL",
+      "abreviacao": "TE  Ensi Div Animal",
+      "ch": 30,
+      "curso_sigla": "CN"
+    },
+    {
+      "sigla": "CN",
+      "periodo": "I",
+      "codigo": "CNBR072",
+      "cor": "#ffe8de",
+      "nome": "TOPICOS ESPECIAIS E ENSINO DE DIVERSIDADE BIOLOGICA VEGETAL",
+      "abreviacao": "TE  Ensi Div Vegetal",
+      "ch": 30,
+      "curso_sigla": "CN"
+    },
+    {
+      "sigla": "CN",
+      "periodo": "I",
+      "codigo": "CNBR073",
+      "cor": "#f29898",
+      "nome": "TOPICOS ESPECIAIS E ENSINO DE MICROBIOLOGIA",
+      "abreviacao": "TE  Ensi Microbiol",
+      "ch": 30,
+      "curso_sigla": "CN"
+    },
+    {
+      "sigla": "CN",
+      "periodo": "I",
+      "codigo": "CNBR074",
+      "cor": "#f2c08f",
+      "nome": "TOPICOS ESPECIAIS E ENSINO EM EDUCACAO AMBIENTAL",
+      "abreviacao": "TE  Ensi Edu Amb",
+      "ch": 30,
+      "curso_sigla": "CN"
+    },
+    {
+      "sigla": "CN",
+      "periodo": "I",
+      "codigo": "CNBR075",
+      "cor": "#f0f2a0",
+      "nome": "TOPICOS ESPECIAIS EM ENSINO DE BIOLOGIA FUNCIONAL",
+      "abreviacao": "TE  Ensi Bol Funcional",
+      "ch": 30,
+      "curso_sigla": "CN"
+    },
+    {
+      "sigla": "CN",
+      "periodo": "I",
+      "codigo": "CNBR076",
+      "cor": "#b7f2ab",
+      "nome": "TOPICOS ESPECIAIS EM ENSINO DE CIENCIAS EXATAS E DA TERRA",
+      "abreviacao": "TE  Ensi de C Exatas e Ter",
+      "ch": 30,
+      "curso_sigla": "CN"
+    },
+    {
+      "sigla": "CN",
+      "periodo": "I",
+      "codigo": "CNBR077",
+      "cor": "#88e0ea",
+      "nome": "TOPICOS ESPECIAIS EM ENSINO DE ECOLOGIA",
+      "abreviacao": "TE  Ensi",
+      "ch": 30,
+      "curso_sigla": "CN"
+    },
+    {
+      "sigla": "CN",
+      "periodo": "II",
+      "codigo": "CNBR010",
+      "cor": "#8daeda",
+      "nome": "GENETICA BASICA",
+      "abreviacao": "Gene tBasic",
+      "ch": 60,
+      "curso_sigla": "CN"
+    },
+    {
+      "sigla": "CN",
+      "periodo": "II",
+      "codigo": "CNBR011",
+      "cor": "#a79cea",
+      "nome": "EDUCACAO ESPECIAL E INCLUSIVA",
+      "abreviacao": "Educ Espe Incl",
+      "ch": 45,
+      "curso_sigla": "CN"
+    },
+    {
+      "sigla": "CN",
+      "periodo": "II",
+      "codigo": "CNBR012",
+      "cor": "#f2b0f2",
+      "nome": "QUIMICA INORGANICA",
+      "abreviacao": "Quim Inor",
+      "ch": 45,
+      "curso_sigla": "CN"
+    },
+    {
+      "sigla": "CN",
+      "periodo": "II",
+      "codigo": "CNBR013",
+      "cor": "#cba5d0",
+      "nome": "ECOLOGIA GERAL",
+      "abreviacao": "Ecol Gera",
+      "ch": 60,
+      "curso_sigla": "CN"
+    },
+    {
+      "sigla": "CN",
+      "periodo": "II",
+      "codigo": "CNBR014",
+      "cor": "#f2c9bb",
+      "nome": "CALCULO",
+      "abreviacao": "Calc",
+      "ch": 45,
+      "curso_sigla": "CN"
+    },
+    {
+      "sigla": "CN",
+      "periodo": "II",
+      "codigo": "CNBR015",
+      "cor": "#ffd7d7",
+      "nome": "PLANEJAMENTO, GESTAO E AVALIACAO",
+      "abreviacao": "Plan Gest Aval",
+      "ch": 60,
+      "curso_sigla": "CN"
+    },
+    {
+      "sigla": "CN",
+      "periodo": "II",
+      "codigo": "CNBR016",
+      "cor": "#ffefcd",
+      "nome": "FUNDAMENTOS DE ECOLOGIA DA AMAZONIA",
+      "abreviacao": "Fund Ecol Amaz",
+      "ch": 45,
+      "curso_sigla": "CN"
+    },
+    {
+      "sigla": "CN",
+      "periodo": "III",
+      "codigo": "CNBR017",
+      "cor": "#feffd9",
+      "nome": "QUIMICA ORGANICA",
+      "abreviacao": "Quim Orga",
+      "ch": 45,
+      "curso_sigla": "CN"
+    },
+    {
+      "sigla": "CN",
+      "periodo": "III",
+      "codigo": "CNBR018",
+      "cor": "#e3ffdd",
+      "nome": "MORFOLOGIA VEGETAL",
+      "abreviacao": "Morf Vege",
+      "ch": 60,
+      "curso_sigla": "CN"
+    },
+    {
+      "sigla": "CN",
+      "periodo": "III",
+      "codigo": "CNBR019",
+      "cor": "#c0fcff",
+      "nome": "METODOLOGIA DA PESQUISA",
+      "abreviacao": "Meto Pesq",
+      "ch": 15,
+      "curso_sigla": "CN"
+    },
+    {
+      "sigla": "CN",
+      "periodo": "III",
+      "codigo": "CNBR020",
+      "cor": "#c9deff",
+      "nome": "LIBRAS I",
+      "abreviacao": "Libr I",
+      "ch": 30,
+      "curso_sigla": "CN"
+    },
+    {
+      "sigla": "CN",
+      "periodo": "III",
+      "codigo": "CNBR021",
+      "cor": "#dcd5ff",
+      "nome": "SOCIOLOGIA, EDUCACAO E CIDADANIA",
+      "abreviacao": "Soci Educ Cida",
+      "ch": 45,
+      "curso_sigla": "CN"
+    },
+    {
+      "sigla": "CN",
+      "periodo": "III",
+      "codigo": "CNBR022",
+      "cor": "#ffe0ff",
+      "nome": "FUNDAMENTOS DE FISICA I",
+      "abreviacao": "Fund Fisi I",
+      "ch": 60,
+      "curso_sigla": "CN"
+    },
+    {
+      "sigla": "CN",
+      "periodo": "III",
+      "codigo": "CNBR023",
+      "cor": "#f9e6ef",
+      "nome": "EVOLUCAO",
+      "abreviacao": "Evol",
+      "ch": 60,
+      "curso_sigla": "CN"
+    },
+    {
+      "sigla": "CN",
+      "periodo": "III",
+      "codigo": "CNBR024",
+      "cor": "#fff2ec",
+      "nome": "EDUCACAO E MEIO AMBIENTE NO ENSINO DE CIENCIAS",
+      "abreviacao": "Educ Meio Ambi",
+      "ch": 60,
+      "curso_sigla": "CN"
+    },
+    {
+      "sigla": "CN",
+      "periodo": "IV",
+      "codigo": "CNBR025",
+      "cor": "#e58383",
+      "nome": "DIVERSIDADE DE PROTISTAS",
+      "abreviacao": "Dive Prot",
+      "ch": 30,
+      "curso_sigla": "CN"
+    },
+    {
+      "sigla": "CN",
+      "periodo": "IV",
+      "codigo": "CNBR026",
+      "cor": "#e5ac79",
+      "nome": "METODOLOGIA DO ENSINO DE CIENCIAS",
+      "abreviacao": "Meto Ensi Cien",
+      "ch": 60,
+      "curso_sigla": "CN"
+    },
+    {
+      "sigla": "CN",
+      "periodo": "IV",
+      "codigo": "CNBR027",
+      "cor": "#e3e58a",
+      "nome": "BIOQUIMICA",
+      "abreviacao": "Bioq",
+      "ch": 60,
+      "curso_sigla": "CN"
+    },
+    {
+      "sigla": "CN",
+      "periodo": "IV",
+      "codigo": "CNBR028",
+      "cor": "#a1e595",
+      "nome": "FISICA DA TERRA E DO UNIVERSO",
+      "abreviacao": "Fisi Terr Univ",
+      "ch": 60,
+      "curso_sigla": "CN"
+    },
+    {
+      "sigla": "CN",
+      "periodo": "IV",
+      "codigo": "CNBR029",
+      "cor": "#72cbd4",
+      "nome": "DIVERSIDADE VEGETAL I",
+      "abreviacao": "Divers Vege I",
+      "ch": 60,
+      "curso_sigla": "CN"
+    },
+    {
+      "sigla": "CN",
+      "periodo": "IV",
+      "codigo": "CNBR030",
+      "cor": "#77b2f2",
+      "nome": "LIBRAS II",
+      "abreviacao": "Libras II",
+      "ch": 45,
+      "curso_sigla": "CN"
+    },
+    {
+      "sigla": "CN",
+      "periodo": "IV",
+      "codigo": "CNBR031",
+      "cor": "#9186f2",
+      "nome": "VIRUS E PROCARIONTES",
+      "abreviacao": "Viru Proc",
+      "ch": 45,
+      "curso_sigla": "CN"
+    },
+    {
+      "sigla": "CN",
+      "periodo": "V",
+      "codigo": "CNBR032",
+      "cor": "#e59ae5",
+      "nome": "DIVERSIDADE ZOOLOGICA I",
+      "abreviacao": "Dive Zool I",
+      "ch": 75,
+      "curso_sigla": "CN"
+    },
+    {
+      "sigla": "CN",
+      "periodo": "V",
+      "codigo": "CNBR033",
+      "cor": "#b68fb9",
+      "nome": "EDUCACAO E PLURALIDADE CULTURAL NO ENSINO DE CIENCIAS",
+      "abreviacao": "Educ Plur Cult",
+      "ch": 45,
+      "curso_sigla": "CN"
+    },
+    {
+      "sigla": "CN",
+      "periodo": "V",
+      "codigo": "CNBR034",
+      "cor": "#e5b9a5",
+      "nome": "FUNDAMENTOS DE FISICA II",
+      "abreviacao": "Fund Fisi II",
+      "ch": 60,
+      "curso_sigla": "CN"
+    },
+    {
+      "sigla": "CN",
+      "periodo": "V",
+      "codigo": "CNBR035",
+      "cor": "#ffeded",
+      "nome": "DIVERSIDADE DE FUNGOS",
+      "abreviacao": "Dive Fung",
+      "ch": 30,
+      "curso_sigla": "CN"
+    },
+    {
+      "sigla": "CN",
+      "periodo": "V",
+      "codigo": "CNBR036",
+      "cor": "#fffcf1",
+      "nome": "ESTAGIO DOCENTE EM ESPACOS FORMAIS E NAO- https://sigaa.ufpa.br/sigaa/graduacao/curriculo/lista.jsf# FORMAIS",
+      "abreviacao": "Esta Doce Espa",
+      "ch": 90,
+      "curso_sigla": "CN"
+    },
+    {
+      "sigla": "CN",
+      "periodo": "V",
+      "codigo": "CNBR037",
+      "cor": "#feffe6",
+      "nome": "PSICOLOGIA DA APRENDIZAGEM",
+      "abreviacao": "Psic Apre",
+      "ch": 45,
+      "curso_sigla": "CN"
+    },
+    {
+      "sigla": "CN",
+      "periodo": "VI",
+      "codigo": "CNBR038",
+      "cor": "#f1ffeb",
+      "nome": "HISTORIAS DE VIDA E FORMACAO DOCENTE",
+      "abreviacao": "Hist Vida Form",
+      "ch": 30,
+      "curso_sigla": "CN"
+    },
+    {
+      "sigla": "CN",
+      "periodo": "VI",
+      "codigo": "CNBR039",
+      "cor": "#e1fdff",
+      "nome": "DIVERSIDADE VEGETAL II",
+      "abreviacao": "Dive Vege IIi",
+      "ch": 60,
+      "curso_sigla": "CN"
+    },
+    {
+      "sigla": "CN",
+      "periodo": "VI",
+      "codigo": "CNBR040",
+      "cor": "#e6f0ff",
+      "nome": "GEOLOGIA",
+      "abreviacao": "Geol",
+      "ch": 45,
+      "curso_sigla": "CN"
+    },
+    {
+      "sigla": "CN",
+      "periodo": "VI",
+      "codigo": "CNBR041",
+      "cor": "#f1eeff",
+      "nome": "FISIOLOGIA VEGETAL",
+      "abreviacao": "Fisi Vege",
+      "ch": 60,
+      "curso_sigla": "CN"
+    },
+    {
+      "sigla": "CN",
+      "periodo": "VI",
+      "codigo": "CNBR042",
+      "cor": "#fff1ff",
+      "nome": "ESTATISTICA E PROBABILIDADE",
+      "abreviacao": "Esta Prob",
+      "ch": 60,
+      "curso_sigla": "CN"
+    },
+    {
+      "sigla": "CN",
+      "periodo": "VI",
+      "codigo": "CNBR043",
+      "cor": "#fff9fc",
+      "nome": "DIVERSIDADE ZOOLOGICA II",
+      "abreviacao": "Dive Zool Ii",
+      "ch": 75,
+      "curso_sigla": "CN"
+    },
+    {
+      "sigla": "CN",
+      "periodo": "VI",
+      "codigo": "CNBR044",
+      "cor": "#fffbf8",
+      "nome": "ESTAGIO DOCENTE NO ENSINO FUNDAMENTAL I",
+      "abreviacao": "Esta Doce Ensi",
+      "ch": 100,
+      "curso_sigla": "CN"
+    },
+    {
+      "sigla": "CN",
+      "periodo": "VII",
+      "codigo": "CNBR045",
+      "cor": "#d86e6e",
+      "nome": "EDUCACAO DO CAMPO",
+      "abreviacao": "Educ Camp",
+      "ch": 45,
+      "curso_sigla": "CN"
+    },
+    {
+      "sigla": "CN",
+      "periodo": "VII",
+      "codigo": "CNBR046",
+      "cor": "#d89663",
+      "nome": "ESTAGIO DOCENTE NO ENSINO FUNDAMENTAL II",
+      "abreviacao": "Esta Doce Ensi",
+      "ch": 100,
+      "curso_sigla": "CN"
+    },
+    {
+      "sigla": "CN",
+      "periodo": "VII",
+      "codigo": "CNBR047",
+      "cor": "#d6d874",
+      "nome": "IMUNOLOGIA",
+      "abreviacao": "Imun",
+      "ch": 45,
+      "curso_sigla": "CN"
+    },
+    {
+      "sigla": "CN",
+      "periodo": "VII",
+      "codigo": "CNBR048",
+      "cor": "#8bcc7f",
+      "nome": "BIOFISICA",
+      "abreviacao": "Biof",
+      "ch": 60,
+      "curso_sigla": "CN"
+    },
+    {
+      "sigla": "CN",
+      "periodo": "VII",
+      "codigo": "CNBR049",
+      "cor": "#5cc0be",
+      "nome": "ELABORACAO DE PROJETOS DE TCC",
+      "abreviacao": "Elab Proj Tcc",
+      "ch": 30,
+      "curso_sigla": "CN"
+    },
+    {
+      "sigla": "CN",
+      "periodo": "VII",
+      "codigo": "CNBR050",
+      "cor": "#61a0e5",
+      "nome": "PALEONTOLOGIA",
+      "abreviacao": "Pale",
+      "ch": 45,
+      "curso_sigla": "CN"
+    },
+    {
+      "sigla": "CN",
+      "periodo": "VII",
+      "codigo": "CNBR051",
+      "cor": "#7b70e5",
+      "nome": "PARASITOLOGIA HUMANA",
+      "abreviacao": "Para Huma",
+      "ch": 60,
+      "curso_sigla": "CN"
+    },
+    {
+      "sigla": "CN",
+      "periodo": "VII",
+      "codigo": "CNBR052",
+      "cor": "#d884d8",
+      "nome": "MORFOFISIOLOGIA ANIMAL I",
+      "abreviacao": "Morf Anim I",
+      "ch": 60,
+      "curso_sigla": "CN"
+    },
+    {
+      "sigla": "CN",
+      "periodo": "VIII",
+      "codigo": "CNBR009",
+      "cor": "#a079a2",
+      "nome": "TRABALHO DE CONCLUSAO DE CURSO (TCC)",
+      "abreviacao": "Trab Conc Curs",
+      "ch": 60,
+      "curso_sigla": "CN"
+    },
+    {
+      "sigla": "CN",
+      "periodo": "VIII",
+      "codigo": "CNBR053",
+      "cor": "#d8a38f",
+      "nome": "EDUCACAO E SAUDE HUMANA",
+      "abreviacao": "Educ Saud Huma",
+      "ch": 45,
+      "curso_sigla": "CN"
+    },
+    {
+      "sigla": "CN",
+      "periodo": "VIII",
+      "codigo": "CNBR054",
+      "cor": "#ffb7b7",
+      "nome": "ESTAGIO DOCENTE NA EDUCACAO DE JOVENS E ADULTOS",
+      "abreviacao": "Esta Doce Educ",
+      "ch": 115,
+      "curso_sigla": "CN"
+    },
+    {
+      "sigla": "CN",
+      "periodo": "VIII",
+      "codigo": "CNBR055",
+      "cor": "#ffdbb0",
+      "nome": "TECNOLOGIAS APLICADAS AO ENSINO DE QUIMICA",
+      "abreviacao": "Tecn Apli Ensi",
+      "ch": 60,
+      "curso_sigla": "CN"
+    },
+    {
+      "sigla": "CN",
+      "periodo": "VIII",
+      "codigo": "CNBR056",
+      "cor": "#fdffc0",
+      "nome": "TECNOLOGIAS APLICADAS AO ENSINO DE FISICA",
+      "abreviacao": "Tecn Apli Ensi",
+      "ch": 60,
+      "curso_sigla": "CN"
+    },
+    {
+      "sigla": "CN",
+      "periodo": "VIII",
+      "codigo": "CNBR057",
+      "cor": "#d4ffca",
+      "nome": "HISTORIA E EMBRIOLOGIA",
+      "abreviacao": "Hist Embr",
+      "ch": 45,
+      "curso_sigla": "CN"
+    },
+    {
+      "sigla": "CN",
+      "periodo": "VIII",
+      "codigo": "CNBR058",
+      "cor": "#a5f7ff",
+      "nome": "MORFOFISIOLOGIA ANIMAL II",
+      "abreviacao": "Morf Anim II",
+      "ch": 60,
+      "curso_sigla": "CN"
+    },
+    {
+      "sigla": "CN",
+      "periodo": "VIII",
+      "codigo": "CNBR059",
+      "cor": "#aecbff",
+      "nome": "BIOTECNOLOGIA",
+      "abreviacao": "Biotecn",
+      "ch": 30,
+      "curso_sigla": "CN"
+    },
+    {
+      "sigla": "CN",
+      "periodo": "VIII",
+      "codigo": "CNBR060",
+      "cor": "#c7bdff",
+      "nome": "ATIVIDADES COMPLEMENTARES",
+      "abreviacao": "Ativ Comp",
+      "ch": 80,
+      "curso_sigla": "CN"
+    }
+  ],
+  "horarios_por_turno": {
+    "Manhã": [
       "07:30 - 08:20",
       "08:20 - 09:10",
       "09:10 - 10:00",
-      "10:00 - 10:20",
+      "INTERVALO (10:00 - 10:20)",
       "10:20 - 11:10",
       "11:10 - 12:00",
-      "12:00 - 12:50",
+      "12:00 - 12:50"
+    ],
+    "Tarde": [
       "13:30 - 14:20",
       "14:20 - 15:10",
       "15:10 - 16:00",
-      "16:00 - 16:20",
+      "INTERVALO (16:00 - 16:20)",
       "16:20 - 17:10",
       "17:10 - 18:00",
       "18:00 - 18:50"
     ]
-  },
-  "periodos": [],
-  "feriados": [
-    {
-      "curso_sigla": "",
-      "turma_id": "",
-      "data": "2026-01-01",
-      "nome": ""
-    },
-    {
-      "curso_sigla": "",
-      "turma_id": "",
-      "data": "2026-02-16",
-      "nome": ""
-    },
-    {
-      "curso_sigla": "",
-      "turma_id": "",
-      "data": "2026-02-17",
-      "nome": ""
-    },
-    {
-      "curso_sigla": "",
-      "turma_id": "",
-      "data": "2026-02-18",
-      "nome": ""
-    },
-    {
-      "curso_sigla": "",
-      "turma_id": "",
-      "data": "2026-03-04",
-      "nome": ""
-    },
-    {
-      "curso_sigla": "",
-      "turma_id": "",
-      "data": "2026-04-21",
-      "nome": ""
-    },
-    {
-      "curso_sigla": "",
-      "turma_id": "",
-      "data": "2026-01-05",
-      "nome": ""
-    },
-    {
-      "curso_sigla": "",
-      "turma_id": "",
-      "data": "2026-04-06",
-      "nome": ""
-    },
-    {
-      "curso_sigla": "",
-      "turma_id": "",
-      "data": "2026-08-07",
-      "nome": ""
-    },
-    {
-      "curso_sigla": "",
-      "turma_id": "",
-      "data": "2026-08-15",
-      "nome": ""
-    },
-    {
-      "curso_sigla": "",
-      "turma_id": "",
-      "data": "2026-07-09",
-      "nome": ""
-    },
-    {
-      "curso_sigla": "",
-      "turma_id": "",
-      "data": "2026-07-10",
-      "nome": ""
-    },
-    {
-      "curso_sigla": "",
-      "turma_id": "",
-      "data": "2026-12-10",
-      "nome": ""
-    },
-    {
-      "curso_sigla": "",
-      "turma_id": "",
-      "data": "2026-02-11",
-      "nome": ""
-    },
-    {
-      "curso_sigla": "",
-      "turma_id": "",
-      "data": "2026-11-15",
-      "nome": ""
-    },
-    {
-      "curso_sigla": "",
-      "turma_id": "",
-      "data": "2026-11-20",
-      "nome": ""
-    },
-    {
-      "curso_sigla": "",
-      "turma_id": "",
-      "data": "2026-12-25",
-      "nome": ""
-    },
-    {
-      "curso_sigla": "",
-      "turma_id": "",
-      "data": "2026-12-26",
-      "nome": ""
-    },
-    {
-      "curso_sigla": "",
-      "turma_id": "",
-      "data": "2027-01-01",
-      "nome": ""
-    },
-    {
-      "curso_sigla": "",
-      "turma_id": "",
-      "data": "2027-09-02",
-      "nome": ""
-    },
-    {
-      "curso_sigla": "",
-      "turma_id": "",
-      "data": "2027-03-26",
-      "nome": ""
-    },
-    {
-      "curso_sigla": "",
-      "turma_id": "",
-      "data": "2027-04-21",
-      "nome": ""
-    },
-    {
-      "curso_sigla": "",
-      "turma_id": "",
-      "data": "2027-01-05",
-      "nome": ""
-    },
-    {
-      "curso_sigla": "",
-      "turma_id": "",
-      "data": "2027-05-27",
-      "nome": ""
-    },
-    {
-      "curso_sigla": "",
-      "turma_id": "",
-      "data": "2027-08-07",
-      "nome": ""
-    },
-    {
-      "curso_sigla": "",
-      "turma_id": "",
-      "data": "2027-08-15",
-      "nome": ""
-    },
-    {
-      "curso_sigla": "",
-      "turma_id": "",
-      "data": "2027-07-09",
-      "nome": ""
-    },
-    {
-      "curso_sigla": "",
-      "turma_id": "",
-      "data": "2027-07-10",
-      "nome": ""
-    },
-    {
-      "curso_sigla": "",
-      "turma_id": "",
-      "data": "2027-12-10",
-      "nome": ""
-    },
-    {
-      "curso_sigla": "",
-      "turma_id": "",
-      "data": "2027-02-11",
-      "nome": ""
-    },
-    {
-      "curso_sigla": "",
-      "turma_id": "",
-      "data": "2027-11-15",
-      "nome": ""
-    },
-    {
-      "curso_sigla": "",
-      "turma_id": "",
-      "data": "2027-11-20",
-      "nome": ""
-    },
-    {
-      "curso_sigla": "",
-      "turma_id": "",
-      "data": "2027-12-25",
-      "nome": ""
-    },
-    {
-      "curso_sigla": "",
-      "turma_id": "",
-      "data": "2027-12-26",
-      "nome": ""
-    }
-  ],
-  "atualizado_em": "10/02/2026 13:09"
+  }
 }
