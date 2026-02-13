@@ -512,15 +512,21 @@ function renderWeeklyGrid() {
   const dias = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
 
   if (!store.selectedTurma || horariosUI.length === 0) {
-    gridContainer.innerHTML = `
-      <p style="grid-column: 1/-1; padding: 20px;">
-        Selecione uma turma válida.
-        <br><small style="color:#666;">
-          (Depuração: turma=${store.selectedTurma || '(vazio)'} | turno=${store.settings?.turnoOferta || '(vazio)'})
-        </small>
-      </p>`;
-    return;
-  }
+  const turnoAtual = store.settings?.turnoOferta || "Manhã";
+
+  gridContainer.innerHTML = `
+    <div style="grid-column: 1/-1; padding: 22px; background:#bdc3c7; border-radius: 6px;">
+      <ul style="margin:0; padding-left: 20px; color:#2c3e50; font-size: 1.05rem; line-height: 1.55; text-align:left; width:100%; display:block; margin-left:0;">
+        <li>Selecione um curso do IECOS</li>
+        <li>Selecione uma turma válida do seu curso</li>
+        <li>Insira data de início e fim do Período Letivo</li>
+        <li>Selecione um turno <span style="color:#34495e; font-size:0.95rem; opacity:0.9;">(Turno Atual: ${turnoAtual})</span></li>
+      </ul>
+    </div>
+  `;
+  return;
+}
+
 
   // Cabeçalho superior (dias)
   gridContainer.appendChild(createCell('header top-header', ''));
