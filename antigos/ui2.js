@@ -36,102 +36,6 @@ const inputConfig = {
 let tempImportData = null;
 
 /**
- * ======= Botão "×" para limpar inputs (alinhado ao LABEL) =======
- * - Aparece na mesma linha do nome (label), à direita
- * - Não mexe no HTML manualmente (injeta via JS)
- * - Fallback: se não achar label[for="..."], coloca ao lado do input
- */
-function setupClearButtonsSidebar() {
-  addClearXToField(inputConfig.disciplina, 'inp-disciplina');
-  addClearXToField(inputConfig.docente, 'inp-docente');
-}
-
-function addClearXToField(inputEl, inputId) {
-  if (!inputEl) return;
-
-  // Evita duplicar caso initUI rode duas vezes
-  const existing = document.querySelector(`[data-clear-for="${inputId}"]`);
-  if (existing) return;
-
-  const btn = document.createElement('button');
-  btn.type = 'button';
-  btn.textContent = '×';
-  btn.title = 'Limpar';
-  btn.setAttribute('aria-label', `Limpar ${inputId}`);
-  btn.dataset.clearFor = inputId;
-
-  // Estilo discreto, mas visível (ajuste se quiser)
-  btn.style.border = 'none';
-  btn.style.background = 'transparent';
-  btn.style.cursor = 'pointer';
-  btn.style.fontSize = '30px';
-  btn.style.lineHeight = '1';
-  btn.style.padding = '0 6px';
-  btn.style.marginLeft = '8px';
-  btn.style.color = '#c0392b';
-  btn.style.opacity = '0.85';
-
-  const toggleVisibility = () => {
-    const hasValue = String(inputEl.value || '').trim().length > 0;
-    btn.style.display = hasValue ? 'inline-flex' : 'none';
-  };
-
-  btn.addEventListener('click', (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    inputEl.value = '';
-    // Gatilhos para qualquer lógica que escuta mudanças
-    inputEl.dispatchEvent(new Event('input', { bubbles: true }));
-    inputEl.dispatchEvent(new Event('change', { bubbles: true }));
-    inputEl.focus();
-    toggleVisibility();
-  });
-
-  // Atualiza visibilidade
-  inputEl.addEventListener('input', toggleVisibility);
-  inputEl.addEventListener('change', toggleVisibility);
-
-  // 1) Tenta colocar no LABEL (mesma linha/direção do nome)
-  const label = document.querySelector(`label[for="${inputId}"]`);
-  if (label) {
-    // Tornar a linha do label flex para alinhar o "×" à direita
-    // (mantém o texto do label e joga o botão pro final)
-    label.style.display = 'flex';
-    label.style.alignItems = 'center';
-    label.style.justifyContent = 'space-between';
-
-    // Contêiner para o botão (mantém “×” no extremo direito)
-    const rightBox = document.createElement('span');
-    rightBox.style.display = 'inline-flex';
-    rightBox.style.alignItems = 'center';
-    rightBox.appendChild(btn);
-    label.appendChild(rightBox);
-
-    toggleVisibility();
-    return;
-  }
-
-  // 2) Fallback: coloca ao lado do input (sem quebrar layout)
-  const parent = inputEl.parentElement;
-  if (parent) {
-    parent.style.position = parent.style.position || 'relative';
-
-    btn.style.position = 'absolute';
-    btn.style.right = '8px';
-    btn.style.top = '70%';
-    btn.style.transform = 'translateY(-50%)';
-
-    // Evita o botão sobrepor o texto: empurra padding-right do input
-    const pr = parseInt(getComputedStyle(inputEl).paddingRight || '0', 10);
-    if (pr < 28) inputEl.style.paddingRight = '32px';
-
-    parent.appendChild(btn);
-  }
-
-  toggleVisibility();
-}
-
-/**
  * Extrai apenas "HH:MM - HH:MM" se existir.
  * Isso mantém o padrão que a grade usa para comparar horários.
  */
@@ -247,9 +151,6 @@ export function initUI() {
   if (selTurma) selTurma.addEventListener('change', onTurmaChange);
 
   initPeriodoLetivoETurno();
-
-  // injeta o "×" para limpar (Disciplina/Docente), alinhado ao label
-  setupClearButtonsSidebar();
 
   if (inputConfig.tipo) {
     inputConfig.tipo.addEventListener('change', e => {
@@ -572,11 +473,14 @@ function handleAddManual() {
     const dataFimCalculada = addBusinessDays(vals.inicio, diasNecessarios, feriados);
 
     // ======= REGRA CONFIÁVEL: ordem 4 é sempre Intervalo =======
+    // store.getHorariosTurma() deve vir ordenado por "ordem".
+    // Então pulamos SEMPRE o índice 3 (4ª posição), e usamos 1,2,3,5,6 como 5 aulas.
     const slotsTurmaRaw = store.getHorariosTurma() || [];
     const slotsOrdenados = slotsTurmaRaw
       .map(h => cleanHorarioLabel(h))
       .filter(h => h && String(h).trim().length > 0);
 
+    // precisa de pelo menos 6 entradas para existir "ordem 6"
     if (slotsOrdenados.length < 6) {
       return alert(
         'Erro: para intensivas com regra "ordem 4 = intervalo", o turno precisa ter pelo menos 6 linhas (ordem 1..6).\n' +
@@ -584,6 +488,7 @@ function handleAddManual() {
       );
     }
 
+    // pega: 1º, 2º, 3º, (pula 4º), 5º, 6º
     const slotsIntensiva = [
       slotsOrdenados[0],
       slotsOrdenados[1],
@@ -792,6 +697,7 @@ function generateCalendarGrid(container, turmaId, docenteName, start, end, title
   if (turmaId) {
     slotsToRender = buildHorariosForUI();
   } else if (docenteName) {
+    // junta todos os turnos do horarios_por_turno
     const hp = store.rawData?.horarios_por_turno || {};
     slotsToRender = Object.values(hp)
       .flat()
