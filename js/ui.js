@@ -32,6 +32,68 @@ const inputConfig = {
 let tempImportData = null;
 
 /**
+ * ======= FILTRO SEGURO (DATALIST) - Visão do Professor =======
+ * Objetivo:
+ * - Enquanto digita: reduzir a lista suspensa (datalist), SEM renderizar calendário
+ * - Só ao selecionar/confirmar (change): renderiza o calendário
+ */
+let __allTeacherNames = [];
+let __teacherFilterInitialized = false;
+
+function getDatalistForInput(inputEl) {
+  if (!inputEl) return null;
+  const listId = inputEl.getAttribute('list');
+  if (!listId) return null;
+  return document.getElementById(listId);
+}
+
+function refillDatalistOptions(datalistEl, names) {
+  if (!datalistEl) return;
+  datalistEl.innerHTML = '';
+  names.forEach((nome) => {
+    datalistEl.appendChild(new Option(nome, nome));
+  });
+}
+
+function setupTeacherDatalistFilter() {
+  if (!selViewDocente) return;
+  if (__teacherFilterInitialized) return;
+
+  // Só faz sentido se selViewDocente for INPUT com list="..."
+  const isInput = selViewDocente.tagName === 'INPUT';
+  if (!isInput) return;
+
+  const teacherDatalist = getDatalistForInput(selViewDocente);
+  if (!teacherDatalist) return;
+
+  __teacherFilterInitialized = true;
+
+  // 1) Enquanto digita: filtra SOMENTE a lista (não renderiza calendário)
+  selViewDocente.addEventListener('input', () => {
+    const q = String(selViewDocente.value || '').trim().toLowerCase();
+
+    // se vazio, mostra tudo novamente
+    if (!q) {
+      refillDatalistOptions(teacherDatalist, __allTeacherNames);
+      return;
+    }
+
+    // filtra por "contém"
+    const filtered = __allTeacherNames.filter((n) => n.toLowerCase().includes(q));
+
+    // evita dropdown gigante (opcional, mas ajuda muito se tiver muitos nomes)
+    const limited = filtered.slice(0, 50);
+
+    refillDatalistOptions(teacherDatalist, limited);
+  });
+
+  // 2) Só no CHANGE: renderiza calendário
+  selViewDocente.addEventListener('change', () => {
+    renderTeacherCalendar();
+  });
+}
+
+/**
  * ======= Botão "×" para limpar inputs (alinhado ao LABEL) =======
  */
 function setupClearButtonsSidebar() {
@@ -188,7 +250,6 @@ function applyWeeklyGridRowHeightScale(scaleNormal = 0.63, scaleHeaderAndInterva
     }
 
     // Força reflow após desabilitar style
-    // (o getBoundingClientRect já força)
     const rectH = sample.getBoundingClientRect().height;
     let base = rectH;
 
@@ -340,7 +401,13 @@ export function initUI() {
   const btnGerarCal = document.getElementById('btn-gerar-cal');
   if (btnGerarCal) btnGerarCal.addEventListener('click', renderMonthlyCalendar);
 
-  if (selViewDocente) selViewDocente.addEventListener('change', renderTeacherCalendar);
+  // >>> IMPORTANTE:
+  // Para "datalist + filtro" seguro, NÃO renderizar no input.
+  // Se selViewDocente for INPUT, o listener de change será adicionado no setupTeacherDatalistFilter().
+  // Se for SELECT, mantém o comportamento atual (change).
+  if (selViewDocente && selViewDocente.tagName === 'SELECT') {
+    selViewDocente.addEventListener('change', renderTeacherCalendar);
+  }
 
   // Import modal
   const inpImport = document.getElementById('inp-import');
@@ -459,16 +526,39 @@ function updateDisciplinaDatalist() {
 }
 
 function populateDocentes() {
-  if (!listDocentes || !selViewDocente || !store.rawData?.docentes) return;
+  if (!listDocentes || !store.rawData?.docentes) return;
 
   listDocentes.innerHTML = '';
-  selViewDocente.innerHTML = '<option value="">Selecione...</option>';
 
+  // nomes únicos
   const nomes = [...new Set(store.rawData.docentes.map((d) => d.docente))].sort();
+
+  // datalist do sidebar (docente)
   nomes.forEach((nome) => {
-    listDocentes.appendChild(new Option(nome));
-    selViewDocente.add(new Option(nome, nome));
+    listDocentes.appendChild(new Option(nome, nome));
   });
+
+  // ======= Visão do Professor: suporta SELECT ou INPUT+DATALIST =======
+  if (selViewDocente) {
+    if (selViewDocente.tagName === 'SELECT') {
+      selViewDocente.innerHTML = '<option value="">Selecione...</option>';
+      nomes.forEach((nome) => {
+        selViewDocente.add(new Option(nome, nome));
+      });
+    } else if (selViewDocente.tagName === 'INPUT') {
+      // guarda base completa para filtro
+      __allTeacherNames = nomes.slice();
+
+      // preenche o datalist ligado ao input
+      const teacherDatalist = getDatalistForInput(selViewDocente);
+      if (teacherDatalist) {
+        refillDatalistOptions(teacherDatalist, __allTeacherNames);
+      }
+
+      // inicializa filtro seguro
+      setupTeacherDatalistFilter();
+    }
+  }
 }
 
 function onTurmaChange() {
@@ -512,21 +602,20 @@ function renderWeeklyGrid() {
   const dias = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
 
   if (!store.selectedTurma || horariosUI.length === 0) {
-  const turnoAtual = store.settings?.turnoOferta || "Manhã";
+    const turnoAtual = store.settings?.turnoOferta || "Manhã";
 
-  gridContainer.innerHTML = `
-    <div style="grid-column: 1/-1; padding: 22px; background:#bdc3c7; border-radius: 6px;">
-      <ul style="margin:0; padding-left: 20px; color:#2c3e50; font-size: 1.05rem; line-height: 1.55; text-align:left; width:100%; display:block; margin-left:0;">
-        <li>Selecione um curso do IECOS</li>
-        <li>Selecione uma turma válida do seu curso</li>
-        <li>Insira data de início e fim do Período Letivo</li>
-        <li>Selecione um turno <span style="color:#34495e; font-size:0.95rem; opacity:0.9;">(Turno Atual: ${turnoAtual})</span></li>
-      </ul>
-    </div>
-  `;
-  return;
-}
-
+    gridContainer.innerHTML = `
+      <div style="grid-column: 1/-1; padding: 22px; background:#bdc3c7; border-radius: 6px;">
+        <ul style="margin:0; padding-left: 20px; color:#2c3e50; font-size: 1.05rem; line-height: 1.55; text-align:left; width:100%; display:block; margin-left:0;">
+          <li>Selecione um curso do IECOS</li>
+          <li>Selecione uma turma válida do seu curso</li>
+          <li>Insira data de início e fim do Período Letivo</li>
+          <li>Selecione um turno <span style="color:#34495e; font-size:0.95rem; opacity:0.9;">(Turno Atual: ${turnoAtual})</span></li>
+        </ul>
+      </div>
+    `;
+    return;
+  }
 
   // Cabeçalho superior (dias)
   gridContainer.appendChild(createCell('header top-header', ''));
@@ -571,8 +660,6 @@ function renderWeeklyGrid() {
     }
   });
 
-  // ✅ Fix + redução extra de 10%: normal = 0.63
-  // Cabeçalho e intervalo = 60% do normal
   applyWeeklyGridRowHeightScale(0.63, 0.6);
 }
 
