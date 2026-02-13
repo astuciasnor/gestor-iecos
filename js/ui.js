@@ -451,7 +451,7 @@ function updateDisciplinaDatalist() {
   const comps = store.rawData.componentes.filter((c) => c.sigla === store.selectedCurso);
   comps.forEach((c) => {
     const opt = document.createElement('option');
-    opt.value = c.componente;
+    opt.value = `${c.componente} (${c.ch ?? 0}h)`;
     opt.setAttribute('data-ch', c.ch ?? 0);
     opt.setAttribute('data-abrev', c.abreviacao || c.componente);
     listDisciplinas.appendChild(opt);
@@ -698,7 +698,7 @@ function handleAddManual() {
 
 function getInputValues() {
   return {
-    disciplina: inputConfig.disciplina?.value ?? '',
+    disciplina: (inputConfig.disciplina?.value ?? '').replace(/\s*\(\s*\d+\s*h\s*\)\s*$/i, ''),
     docente: inputConfig.docente?.value ?? '',
     tipo: inputConfig.tipo?.value ?? 'regular',
     inicio: inputConfig.inicio?.value ?? '',

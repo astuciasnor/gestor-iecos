@@ -58,3 +58,4 @@ O sistema é alimentado por arquivos estáticos. Para atualizar disciplinas, tur
 2. Gere o arquivo do app: `dados_app.json`
    ```bash
    python convert_data.py --input .\planilha_base.xlsx --output .\dados_app.json
+
