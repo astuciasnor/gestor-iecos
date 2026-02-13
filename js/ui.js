@@ -34,7 +34,18 @@ const inputConfig = {
 let tempImportData = null;
 
 /**
- * ======= Botão "×" para limpar inputs (CORRIGIDO) =======
+ * ======= Auxiliar de Tempo =======
+ * Converte "07:30" para minutos (450) para ordenar a grade do professor corretamente.
+ */
+function timeToMinutes(str) {
+  if (!str) return 99999;
+  const match = str.match(/(\d{1,2}):(\d{2})/);
+  if (!match) return 99999;
+  return parseInt(match[1]) * 60 + parseInt(match[2]);
+}
+
+/**
+ * ======= Botão "×" para limpar inputs =======
  */
 function setupClearButtonsSidebar() {
   addClearXToField(inputConfig.disciplina, 'inp-disciplina');
@@ -48,7 +59,6 @@ function setupClearButtonsSidebar() {
 function addClearXToField(inputEl, inputId) {
   if (!inputEl) return;
 
-  // Evita duplicar caso initUI rode duas vezes
   const existing = document.querySelector(`[data-clear-for="${inputId}"]`);
   if (existing) return;
 
@@ -63,14 +73,14 @@ function addClearXToField(inputEl, inputId) {
   btn.style.border = 'none';
   btn.style.background = 'transparent';
   btn.style.cursor = 'pointer';
-  btn.style.fontSize = '24px'; // Um pouco menor para encaixar melhor
+  btn.style.fontSize = '24px';
   btn.style.fontWeight = 'bold';
   btn.style.lineHeight = '1';
   btn.style.padding = '0';
   btn.style.margin = '0';
-  btn.style.color = '#c0392b'; // Vermelho escuro
+  btn.style.color = '#c0392b';
   btn.style.opacity = '0.9';
-  btn.style.zIndex = '10'; // Garante que fique por cima do input
+  btn.style.zIndex = '10';
 
   const toggleVisibility = () => {
     const hasValue = String(inputEl.value || '').trim().length > 0;
@@ -81,7 +91,7 @@ function addClearXToField(inputEl, inputId) {
     e.preventDefault();
     e.stopPropagation();
     inputEl.value = '';
-    // Dispara eventos para atualizar a UI (limpar calendário, etc)
+    // Dispara eventos para atualizar a UI
     inputEl.dispatchEvent(new Event('input', { bubbles: true }));
     inputEl.dispatchEvent(new Event('change', { bubbles: true }));
     inputEl.focus();
@@ -91,24 +101,19 @@ function addClearXToField(inputEl, inputId) {
   inputEl.addEventListener('input', toggleVisibility);
   inputEl.addEventListener('change', toggleVisibility);
 
-  // === MUDANÇA AQUI: Força o posicionamento relativo ao container do input ===
+  // Posicionamento relativo ao container do input
   const parent = inputEl.parentElement;
   if (parent) {
-    // Garante que o pai tenha posição relativa para o botão absoluto funcionar
     const parentStyle = window.getComputedStyle(parent);
     if (parentStyle.position === 'static') {
         parent.style.position = 'relative';
     }
 
     btn.style.position = 'absolute';
-    btn.style.right = '10px'; // Distância da direita
-    
-    // Tenta centralizar na área do input (geralmente a parte de baixo do form-group)
-    // top: 70% costuma funcionar bem para layouts "Label em cima + Input embaixo"
+    btn.style.right = '10px';
     btn.style.top = '70%'; 
     btn.style.transform = 'translateY(-50%)';
 
-    // Garante espaço no input para o texto não ficar atrás do X
     const currentPadding = parseInt(window.getComputedStyle(inputEl).paddingRight || '0', 10);
     if (currentPadding < 30) {
         inputEl.style.paddingRight = '35px';
@@ -148,6 +153,7 @@ function formatIntervaloLabel(s) {
 
 /**
  * Monta a lista final de horários que a UI vai renderizar.
+ * MODO ESTRITO: Retorna apenas o que está no turno configurado na sidebar.
  */
 function buildHorariosForUI() {
   const horariosRaw = store.getHorariosTurma() || [];
@@ -328,7 +334,7 @@ export function initUI() {
   const btnGerarCal = document.getElementById('btn-gerar-cal');
   if (btnGerarCal) btnGerarCal.addEventListener('click', renderMonthlyCalendar);
 
-  // ======= Visão do Professor (SIMPLIFICADO) =======
+  // ======= Visão do Professor =======
   if (selViewDocente) {
     // 1. Ao selecionar/mudar o nome, renderiza o calendário
     selViewDocente.addEventListener('change', () => {
@@ -466,7 +472,7 @@ function populateDocentes() {
   // 1. Pega nomes únicos e ordena
   const nomes = [...new Set(store.rawData.docentes.map((d) => d.docente))].sort();
 
-  // 2. Preenche lista da Sidebar (Adicionar Oferta)
+  // 2. Preenche lista da Sidebar
   if (listDocentes) {
     listDocentes.innerHTML = '';
     nomes.forEach((nome) => {
@@ -474,7 +480,7 @@ function populateDocentes() {
     });
   }
 
-  // 3. Preenche lista da Visão do Professor (Busca)
+  // 3. Preenche lista da Visão do Professor
   const listView = document.getElementById('list-view-docentes');
   if (listView) {
     listView.innerHTML = '';
@@ -487,12 +493,37 @@ function populateDocentes() {
 function onTurmaChange() {
   store.selectedTurma = selTurma.value;
 
-  if (store.rawData?.turmas && store.selectedTurma && !store.settings.turnoOferta) {
-    const turmaObj = store.rawData.turmas.find((t) => String(t.turma_id) === String(store.selectedTurma));
-    if (turmaObj?.turno) {
-      store.setTurnoOferta(turmaObj.turno);
-      if (selTurnoOferta) selTurnoOferta.value = turmaObj.turno;
-    }
+  // Detecção Automática de Turno (Manhã vs Tarde):
+  const alocacoesTurma = store.allocations.filter(a => String(a.turmaId) === String(store.selectedTurma));
+  const primeiraAula = alocacoesTurma.find(a => a.tipo === 'regular' && a.horario);
+  
+  if (primeiraAula) {
+      const hora = parseInt(primeiraAula.horario.split(':')[0]);
+      if (hora < 12) store.setTurnoOferta('Manhã');
+      else store.setTurnoOferta('Tarde'); // Sem noturno
+  } 
+  else if (store.rawData?.turmas && store.selectedTurma) {
+    const t = store.rawData.turmas.find(x => String(x.turma_id) === String(store.selectedTurma));
+    if (t?.turno) store.setTurnoOferta(t.turno);
+  }
+
+  // Ajuste de Datas (Mantido)
+  const intensivas = alocacoesTurma.filter(a => a.tipo === 'intensiva' && a.dataInicio);
+  if (intensivas.length > 0) {
+      const datas = intensivas.map(a => a.dataInicio).sort();
+      if (calStart && datas[0] < calStart.value) {
+          calStart.value = datas[0];
+          calStart.dispatchEvent(new Event('change')); 
+      }
+      const dataFim = intensivas.map(a => a.dataFim).sort().pop();
+      if (calEnd && dataFim > calEnd.value) {
+          calEnd.value = dataFim;
+          calEnd.dispatchEvent(new Event('change'));
+      }
+  }
+
+  if (selTurnoOferta) {
+      selTurnoOferta.value = store.settings.turnoOferta || 'Tarde';
   }
 
   renderWeeklyGrid();
@@ -521,6 +552,7 @@ function renderWeeklyGrid() {
   if (!gridContainer) return;
   gridContainer.innerHTML = '';
 
+  // Grade da Turma é ESTRITA (só mostra o turno selecionado)
   const horariosUI = buildHorariosForUI();
   const dias = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
 
@@ -540,14 +572,11 @@ function renderWeeklyGrid() {
     return;
   }
 
-  // Cabeçalho superior (dias)
   gridContainer.appendChild(createCell('header top-header', ''));
   dias.forEach((d) => gridContainer.appendChild(createCell('header top-header', d)));
 
   horariosUI.forEach((horarioStr) => {
     const isIntervalo = horarioStr.toUpperCase().includes('INTERVALO');
-
-    // primeira coluna: no intervalo, deixa só "HH:MM - HH:MM"
     const labelPrimeiraColuna = isIntervalo ? cleanHorarioLabel(horarioStr) : horarioStr;
 
     const hDiv = createCell(isIntervalo ? 'header interval-time' : 'header time', labelPrimeiraColuna);
@@ -868,19 +897,42 @@ function generateCalendarGrid(container, turmaId, docenteName, start, end, title
   const eventsByDate = getCalendarEvents(turmaId, start, end, docenteName);
 
   let slotsToRender = [];
+
+  // ================= LÓGICA DE SEPARAÇÃO (SEGURA) =================
   if (turmaId) {
+    // CASO 1: TURMA (ESTRITO)
+    // Mostra APENAS o turno selecionado na sidebar.
     slotsToRender = buildHorariosForUI();
-  } else if (docenteName) {
-    const hp = store.rawData?.horarios_por_turno || {};
-    slotsToRender = Object.values(hp)
-      .flat()
-      .map((h) => {
+  } 
+  else if (docenteName) {
+    // CASO 2: PROFESSOR (INTEGRAL DINÂMICO)
+    // Varremos TODAS as alocações do sistema para descobrir horários usados
+    // (incluindo intensivas e regulares de qualquer turno).
+    const allTimes = new Set();
+    
+    if (store.allocations) {
+        store.allocations.forEach(a => {
+            // Pega horário de aula regular
+            if (a.horario) allTimes.add(a.horario);
+            
+            // Pega horários de intensiva (array de strings)
+            if (a.horariosOcupados && Array.isArray(a.horariosOcupados)) {
+                a.horariosOcupados.forEach(h => allTimes.add(h));
+            }
+        });
+    }
+
+    // Limpa, padroniza e ordena (Manhã -> Tarde)
+    slotsToRender = [...allTimes]
+      .map(h => {
         const s = String(h ?? '');
         if (s.toUpperCase().includes('INTERVALO')) return formatIntervaloLabel(s);
         return cleanHorarioLabel(s);
       })
-      .filter((s) => s && s.trim().length > 0);
+      .filter(s => s && s.trim().length > 0)
+      .sort((a, b) => timeToMinutes(a) - timeToMinutes(b));
   }
+  // ===================================================================
 
   const months = {};
   Object.keys(eventsByDate)
@@ -940,16 +992,16 @@ function generateCalendarGrid(container, turmaId, docenteName, start, end, title
               style = 'background:#e0e0e0;';
             } else if (eventsInSlot.length > 0) {
               const isConflict = eventsInSlot.some((e) => e.isConflict);
+              
               if (isConflict) {
-                style = 'background: #7f8c8d; color: white; border: 2px solid #c0392b;';
-                content =
-                  `⚠️ CHOQUE! <br>` +
-                  eventsInSlot
-                    .map((e) => {
-                      const info = getDisciplinaInfo(e.disciplina);
-                      return `<small>[${e.turmaId}] ${info.abrev}</small>`;
-                    })
-                    .join('<br>');
+                 // Estilo LINHA ÚNICA para o choque (Ajustado)
+                 style = 'background: #7f8c8d; color: white; border: 1px solid #c0392b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0 4px; font-size: 0.85em;';
+                 
+                 const conflictNames = eventsInSlot
+                  .map((e) => getDisciplinaInfo(e.disciplina).abrev)
+                  .join(' <b style="color:#2c3e50">X</b> '); // X em negrito
+
+                 content = `<span title="Choque: ${conflictNames.replace(/<[^>]+>/g, '')}">⚠️ ${conflictNames}</span>`;
               } else {
                 const event = eventsInSlot[0];
                 const info = getDisciplinaInfo(event.disciplina);
