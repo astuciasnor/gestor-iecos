@@ -8,6 +8,8 @@ const selCurso = document.getElementById('sel-curso');
 const selTurma = document.getElementById('sel-turma');
 const listDisciplinas = document.getElementById('list-disciplinas');
 const listDocentes = document.getElementById('list-docentes');
+
+// ATENÇÃO: No seu HTML, certifique-se que o input da aba professor tenha id="sel-view-docente"
 const selViewDocente = document.getElementById('sel-view-docente');
 
 // Configurações persistentes (sidebar)
@@ -32,73 +34,15 @@ const inputConfig = {
 let tempImportData = null;
 
 /**
- * ======= FILTRO SEGURO (DATALIST) - Visão do Professor =======
- * Objetivo:
- * - Enquanto digita: reduzir a lista suspensa (datalist), SEM renderizar calendário
- * - Só ao selecionar/confirmar (change): renderiza o calendário
- */
-let __allTeacherNames = [];
-let __teacherFilterInitialized = false;
-
-function getDatalistForInput(inputEl) {
-  if (!inputEl) return null;
-  const listId = inputEl.getAttribute('list');
-  if (!listId) return null;
-  return document.getElementById(listId);
-}
-
-function refillDatalistOptions(datalistEl, names) {
-  if (!datalistEl) return;
-  datalistEl.innerHTML = '';
-  names.forEach((nome) => {
-    datalistEl.appendChild(new Option(nome, nome));
-  });
-}
-
-function setupTeacherDatalistFilter() {
-  if (!selViewDocente) return;
-  if (__teacherFilterInitialized) return;
-
-  // Só faz sentido se selViewDocente for INPUT com list="..."
-  const isInput = selViewDocente.tagName === 'INPUT';
-  if (!isInput) return;
-
-  const teacherDatalist = getDatalistForInput(selViewDocente);
-  if (!teacherDatalist) return;
-
-  __teacherFilterInitialized = true;
-
-  // 1) Enquanto digita: filtra SOMENTE a lista (não renderiza calendário)
-  selViewDocente.addEventListener('input', () => {
-    const q = String(selViewDocente.value || '').trim().toLowerCase();
-
-    // se vazio, mostra tudo novamente
-    if (!q) {
-      refillDatalistOptions(teacherDatalist, __allTeacherNames);
-      return;
-    }
-
-    // filtra por "contém"
-    const filtered = __allTeacherNames.filter((n) => n.toLowerCase().includes(q));
-
-    // evita dropdown gigante (opcional, mas ajuda muito se tiver muitos nomes)
-    const limited = filtered.slice(0, 50);
-
-    refillDatalistOptions(teacherDatalist, limited);
-  });
-
-  // 2) Só no CHANGE: renderiza calendário
-  selViewDocente.addEventListener('change', () => {
-    renderTeacherCalendar();
-  });
-}
-
-/**
- * ======= Botão "×" para limpar inputs (alinhado ao LABEL) =======
+ * ======= Botão "×" para limpar inputs (CORRIGIDO) =======
  */
 function setupClearButtonsSidebar() {
   addClearXToField(inputConfig.disciplina, 'inp-disciplina');
   addClearXToField(inputConfig.docente, 'inp-docente');
+  // Adiciona o botão de limpar também na visão do professor
+  if (selViewDocente) {
+    addClearXToField(selViewDocente, 'sel-view-docente');
+  }
 }
 
 function addClearXToField(inputEl, inputId) {
@@ -115,26 +59,29 @@ function addClearXToField(inputEl, inputId) {
   btn.setAttribute('aria-label', `Limpar ${inputId}`);
   btn.dataset.clearFor = inputId;
 
-  // Estilo discreto, mas visível
+  // Estilo do botão X
   btn.style.border = 'none';
   btn.style.background = 'transparent';
   btn.style.cursor = 'pointer';
-  btn.style.fontSize = '30px';
+  btn.style.fontSize = '24px'; // Um pouco menor para encaixar melhor
+  btn.style.fontWeight = 'bold';
   btn.style.lineHeight = '1';
-  btn.style.padding = '0 6px';
-  btn.style.marginLeft = '8px';
-  btn.style.color = '#c0392b';
-  btn.style.opacity = '0.85';
+  btn.style.padding = '0';
+  btn.style.margin = '0';
+  btn.style.color = '#c0392b'; // Vermelho escuro
+  btn.style.opacity = '0.9';
+  btn.style.zIndex = '10'; // Garante que fique por cima do input
 
   const toggleVisibility = () => {
     const hasValue = String(inputEl.value || '').trim().length > 0;
-    btn.style.display = hasValue ? 'inline-flex' : 'none';
+    btn.style.display = hasValue ? 'block' : 'none';
   };
 
   btn.addEventListener('click', (e) => {
     e.preventDefault();
     e.stopPropagation();
     inputEl.value = '';
+    // Dispara eventos para atualizar a UI (limpar calendário, etc)
     inputEl.dispatchEvent(new Event('input', { bubbles: true }));
     inputEl.dispatchEvent(new Event('change', { bubbles: true }));
     inputEl.focus();
@@ -144,35 +91,28 @@ function addClearXToField(inputEl, inputId) {
   inputEl.addEventListener('input', toggleVisibility);
   inputEl.addEventListener('change', toggleVisibility);
 
-  // 1) Tenta colocar no LABEL
-  const label = document.querySelector(`label[for="${inputId}"]`);
-  if (label) {
-    label.style.display = 'flex';
-    label.style.alignItems = 'center';
-    label.style.justifyContent = 'space-between';
-
-    const rightBox = document.createElement('span');
-    rightBox.style.display = 'inline-flex';
-    rightBox.style.alignItems = 'center';
-    rightBox.appendChild(btn);
-    label.appendChild(rightBox);
-
-    toggleVisibility();
-    return;
-  }
-
-  // 2) Fallback: coloca ao lado do input
+  // === MUDANÇA AQUI: Força o posicionamento relativo ao container do input ===
   const parent = inputEl.parentElement;
   if (parent) {
-    parent.style.position = parent.style.position || 'relative';
+    // Garante que o pai tenha posição relativa para o botão absoluto funcionar
+    const parentStyle = window.getComputedStyle(parent);
+    if (parentStyle.position === 'static') {
+        parent.style.position = 'relative';
+    }
 
     btn.style.position = 'absolute';
-    btn.style.right = '8px';
-    btn.style.top = '70%';
+    btn.style.right = '10px'; // Distância da direita
+    
+    // Tenta centralizar na área do input (geralmente a parte de baixo do form-group)
+    // top: 70% costuma funcionar bem para layouts "Label em cima + Input embaixo"
+    btn.style.top = '70%'; 
     btn.style.transform = 'translateY(-50%)';
 
-    const pr = parseInt(getComputedStyle(inputEl).paddingRight || '0', 10);
-    if (pr < 28) inputEl.style.paddingRight = '32px';
+    // Garante espaço no input para o texto não ficar atrás do X
+    const currentPadding = parseInt(window.getComputedStyle(inputEl).paddingRight || '0', 10);
+    if (currentPadding < 30) {
+        inputEl.style.paddingRight = '35px';
+    }
 
     parent.appendChild(btn);
   }
@@ -222,10 +162,6 @@ function buildHorariosForUI() {
 
 /**
  * ======= Ajuste de altura das linhas (Grade Semanal) =======
- * FIX importante:
- * - Quando a grade re-renderiza (ex.: ao clicar), não pode medir uma altura
- *   já "encolhida" pelo próprio style injetado; senão vai reduzindo aos poucos.
- * - Solução: desabilitar temporariamente o style injetado antes de medir.
  */
 function applyWeeklyGridRowHeightScale(scaleNormal = 0.63, scaleHeaderAndInterval = 0.6) {
   if (!gridContainer) return;
@@ -234,11 +170,9 @@ function applyWeeklyGridRowHeightScale(scaleNormal = 0.63, scaleHeaderAndInterva
     const styleId = 'weekly-grid-rowheight-style';
     let styleEl = document.getElementById(styleId);
 
-    // Desliga temporariamente o style (se existir) para medir a altura "base" real
     const hadStyle = !!styleEl;
     if (styleEl) styleEl.disabled = true;
 
-    // pega uma célula de slot como referência (mais confiável)
     const sample =
       gridContainer.querySelector('.slot') ||
       gridContainer.querySelector('.header.time') ||
@@ -249,7 +183,6 @@ function applyWeeklyGridRowHeightScale(scaleNormal = 0.63, scaleHeaderAndInterva
       return;
     }
 
-    // Força reflow após desabilitar style
     const rectH = sample.getBoundingClientRect().height;
     let base = rectH;
 
@@ -262,10 +195,9 @@ function applyWeeklyGridRowHeightScale(scaleNormal = 0.63, scaleHeaderAndInterva
       return;
     }
 
-    // Reabilita (antes de escrever o novo CSS)
     if (hadStyle && styleEl) styleEl.disabled = false;
 
-    const normalH = Math.max(24, Math.round(base * scaleNormal)); // um pouco menor e com piso
+    const normalH = Math.max(24, Math.round(base * scaleNormal));
     const smallH = Math.max(16, Math.round(normalH * scaleHeaderAndInterval));
 
     if (!styleEl) {
@@ -275,14 +207,11 @@ function applyWeeklyGridRowHeightScale(scaleNormal = 0.63, scaleHeaderAndInterva
     }
 
     styleEl.textContent = `
-      /* altura padrão para slots e headers comuns */
       #weekly-grid .slot,
       #weekly-grid .header.time {
         height: ${normalH}px !important;
         min-height: ${normalH}px !important;
       }
-
-      /* cabeçalho dos dias (linha superior) menor */
       #weekly-grid .header.top-header {
         height: ${smallH}px !important;
         min-height: ${smallH}px !important;
@@ -290,8 +219,6 @@ function applyWeeklyGridRowHeightScale(scaleNormal = 0.63, scaleHeaderAndInterva
         padding-top: 4px !important;
         padding-bottom: 4px !important;
       }
-
-      /* linha de intervalo */
       #weekly-grid .header.interval-time,
       #weekly-grid .header.interval-merge {
         height: ${smallH}px !important;
@@ -401,12 +328,20 @@ export function initUI() {
   const btnGerarCal = document.getElementById('btn-gerar-cal');
   if (btnGerarCal) btnGerarCal.addEventListener('click', renderMonthlyCalendar);
 
-  // >>> IMPORTANTE:
-  // Para "datalist + filtro" seguro, NÃO renderizar no input.
-  // Se selViewDocente for INPUT, o listener de change será adicionado no setupTeacherDatalistFilter().
-  // Se for SELECT, mantém o comportamento atual (change).
-  if (selViewDocente && selViewDocente.tagName === 'SELECT') {
-    selViewDocente.addEventListener('change', renderTeacherCalendar);
+  // ======= Visão do Professor (SIMPLIFICADO) =======
+  if (selViewDocente) {
+    // 1. Ao selecionar/mudar o nome, renderiza o calendário
+    selViewDocente.addEventListener('change', () => {
+        renderTeacherCalendar();
+        selViewDocente.blur(); // Tira o foco para melhorar UX em mobile
+    });
+
+    // 2. Se apagar o texto manualmente, limpa o calendário
+    selViewDocente.addEventListener('input', () => {
+        if (!selViewDocente.value) {
+            document.getElementById('teacher-calendar-container').innerHTML = '';
+        }
+    });
   }
 
   // Import modal
@@ -526,38 +461,26 @@ function updateDisciplinaDatalist() {
 }
 
 function populateDocentes() {
-  if (!listDocentes || !store.rawData?.docentes) return;
+  if (!store.rawData?.docentes) return;
 
-  listDocentes.innerHTML = '';
-
-  // nomes únicos
+  // 1. Pega nomes únicos e ordena
   const nomes = [...new Set(store.rawData.docentes.map((d) => d.docente))].sort();
 
-  // datalist do sidebar (docente)
-  nomes.forEach((nome) => {
-    listDocentes.appendChild(new Option(nome, nome));
-  });
+  // 2. Preenche lista da Sidebar (Adicionar Oferta)
+  if (listDocentes) {
+    listDocentes.innerHTML = '';
+    nomes.forEach((nome) => {
+      listDocentes.appendChild(new Option(nome, nome));
+    });
+  }
 
-  // ======= Visão do Professor: suporta SELECT ou INPUT+DATALIST =======
-  if (selViewDocente) {
-    if (selViewDocente.tagName === 'SELECT') {
-      selViewDocente.innerHTML = '<option value="">Selecione...</option>';
-      nomes.forEach((nome) => {
-        selViewDocente.add(new Option(nome, nome));
-      });
-    } else if (selViewDocente.tagName === 'INPUT') {
-      // guarda base completa para filtro
-      __allTeacherNames = nomes.slice();
-
-      // preenche o datalist ligado ao input
-      const teacherDatalist = getDatalistForInput(selViewDocente);
-      if (teacherDatalist) {
-        refillDatalistOptions(teacherDatalist, __allTeacherNames);
-      }
-
-      // inicializa filtro seguro
-      setupTeacherDatalistFilter();
-    }
+  // 3. Preenche lista da Visão do Professor (Busca)
+  const listView = document.getElementById('list-view-docentes');
+  if (listView) {
+    listView.innerHTML = '';
+    nomes.forEach((nome) => {
+      listView.appendChild(new Option(nome, nome));
+    });
   }
 }
 
@@ -736,7 +659,6 @@ function handleAddManual() {
     const feriados = store.rawData?.feriados || [];
     const dataFimCalculada = addBusinessDays(vals.inicio, diasNecessarios, feriados);
 
-    // ======= REGRA CONFIÁVEL: ordem 4 é sempre Intervalo =======
     const slotsTurmaRaw = store.getHorariosTurma() || [];
     const slotsOrdenados = slotsTurmaRaw
       .map((h) => cleanHorarioLabel(h))
@@ -754,7 +676,6 @@ function handleAddManual() {
     if (slotsIntensiva.length !== 5) {
       return alert('Erro: não consegui montar 5 horários para intensiva.\n' + `Montados: ${slotsIntensiva.length}`);
     }
-    // ======= FIM REGRA =======
 
     if (
       !confirm(
