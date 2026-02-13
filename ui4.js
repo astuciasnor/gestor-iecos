@@ -60,7 +60,7 @@ function addClearXToField(inputEl, inputId) {
   btn.setAttribute('aria-label', `Limpar ${inputId}`);
   btn.dataset.clearFor = inputId;
 
-  // Estilo discreto, mas visível
+  // Estilo discreto, mas visível (ajuste se quiser)
   btn.style.border = 'none';
   btn.style.background = 'transparent';
   btn.style.cursor = 'pointer';
@@ -80,22 +80,27 @@ function addClearXToField(inputEl, inputId) {
     e.preventDefault();
     e.stopPropagation();
     inputEl.value = '';
+    // Gatilhos para qualquer lógica que escuta mudanças
     inputEl.dispatchEvent(new Event('input', { bubbles: true }));
     inputEl.dispatchEvent(new Event('change', { bubbles: true }));
     inputEl.focus();
     toggleVisibility();
   });
 
+  // Atualiza visibilidade
   inputEl.addEventListener('input', toggleVisibility);
   inputEl.addEventListener('change', toggleVisibility);
 
   // 1) Tenta colocar no LABEL (mesma linha/direção do nome)
   const label = document.querySelector(`label[for="${inputId}"]`);
   if (label) {
+    // Tornar a linha do label flex para alinhar o "×" à direita
+    // (mantém o texto do label e joga o botão pro final)
     label.style.display = 'flex';
     label.style.alignItems = 'center';
     label.style.justifyContent = 'space-between';
 
+    // Contêiner para o botão (mantém “×” no extremo direito)
     const rightBox = document.createElement('span');
     rightBox.style.display = 'inline-flex';
     rightBox.style.alignItems = 'center';
@@ -106,7 +111,7 @@ function addClearXToField(inputEl, inputId) {
     return;
   }
 
-  // 2) Fallback: coloca ao lado do input
+  // 2) Fallback: coloca ao lado do input (sem quebrar layout)
   const parent = inputEl.parentElement;
   if (parent) {
     parent.style.position = parent.style.position || 'relative';
@@ -116,6 +121,7 @@ function addClearXToField(inputEl, inputId) {
     btn.style.top = '70%';
     btn.style.transform = 'translateY(-50%)';
 
+    // Evita o botão sobrepor o texto: empurra padding-right do input
     const pr = parseInt(getComputedStyle(inputEl).paddingRight || '0', 10);
     if (pr < 28) inputEl.style.paddingRight = '32px';
 
@@ -144,9 +150,12 @@ function formatIntervaloLabel(s) {
   const str = (s ?? '').toString().trim();
   if (!str) return str;
 
+  // Troca apenas o prefixo "INTERVALO" por "Intervalo"
+  // preservando o resto (ex.: "(10:00 - 10:20)")
   if (str.toUpperCase().startsWith('INTERVALO')) {
     return 'Intervalo' + str.slice('INTERVALO'.length);
   }
+  // caso venha só "Intervalo" já está ok
   if (str.toLowerCase().startsWith('intervalo')) {
     return 'Intervalo' + str.slice('intervalo'.length);
   }
@@ -167,74 +176,6 @@ function buildHorariosForUI() {
       return cleanHorarioLabel(s);
     })
     .filter(s => s && s.trim().length > 0);
-}
-
-/**
- * ======= Ajuste de altura das linhas (Grade Semanal) =======
- * - Normal: escala geral (ex.: 0.7)
- * - Cabeçalho dos dias (SEGUNDA..SÁBADO): 60% da altura normal
- * - Linha de INTERVALO (faixa cinza): 60% da altura normal
- *
- * OBS: isso injeta CSS só para #weekly-grid.
- */
-function applyWeeklyGridRowHeightScale(scaleNormal = 0.7, scaleHeaderAndInterval = 0.6) {
-  if (!gridContainer) return;
-
-  requestAnimationFrame(() => {
-    // pega uma célula de slot como referência (mais confiável)
-    const sample =
-      gridContainer.querySelector('.slot') ||
-      gridContainer.querySelector('.header.time') ||
-      gridContainer.querySelector('.header');
-
-    if (!sample) return;
-
-    const cs = getComputedStyle(sample);
-    let base = parseFloat(cs.height);
-
-    if (!base || Number.isNaN(base)) {
-      base = sample.getBoundingClientRect().height;
-    }
-    if (!base || Number.isNaN(base)) return;
-
-    const normalH = Math.max(26, Math.round(base * scaleNormal));
-    const smallH = Math.max(18, Math.round(normalH * scaleHeaderAndInterval));
-
-    let styleEl = document.getElementById('weekly-grid-rowheight-style');
-    if (!styleEl) {
-      styleEl = document.createElement('style');
-      styleEl.id = 'weekly-grid-rowheight-style';
-      document.head.appendChild(styleEl);
-    }
-
-    styleEl.textContent = `
-      /* altura padrão para slots e headers comuns */
-      #weekly-grid .slot,
-      #weekly-grid .header.time {
-        height: ${normalH}px !important;
-        min-height: ${normalH}px !important;
-      }
-
-      /* cabeçalho dos dias (linha superior) menor */
-      #weekly-grid .header.top-header {
-        height: ${smallH}px !important;
-        min-height: ${smallH}px !important;
-        line-height: 1.1 !important;
-        padding-top: 4px !important;
-        padding-bottom: 4px !important;
-      }
-
-      /* linha de intervalo: tanto a célula da 1ª coluna quanto a faixa central */
-      #weekly-grid .header.interval-time,
-      #weekly-grid .header.interval-merge {
-        height: ${smallH}px !important;
-        min-height: ${smallH}px !important;
-        line-height: 1.1 !important;
-        padding-top: 4px !important;
-        padding-bottom: 4px !important;
-      }
-    `;
-  });
 }
 
 /**
@@ -306,6 +247,8 @@ export function initUI() {
   if (selTurma) selTurma.addEventListener('change', onTurmaChange);
 
   initPeriodoLetivoETurno();
+
+  // injeta o "×" para limpar (Disciplina/Docente), alinhado ao label
   setupClearButtonsSidebar();
 
   if (inputConfig.tipo) {
@@ -468,6 +411,7 @@ function populateDocentes() {
 function onTurmaChange() {
   store.selectedTurma = selTurma.value;
 
+  // se o turno ainda não foi escolhido, use o turno da turma selecionada
   if (store.rawData?.turmas && store.selectedTurma && !store.settings.turnoOferta) {
     const turmaObj = store.rawData.turmas.find(t => String(t.turma_id) === String(store.selectedTurma));
     if (turmaObj?.turno) {
@@ -515,22 +459,18 @@ function renderWeeklyGrid() {
     return;
   }
 
-  // Cabeçalho superior (dias): menor (60%)
-  gridContainer.appendChild(createCell('header top-header', ''));
-  dias.forEach(d => gridContainer.appendChild(createCell('header top-header', d)));
+  gridContainer.appendChild(createCell('header', ''));
+  dias.forEach(d => gridContainer.appendChild(createCell('header', d)));
 
   horariosUI.forEach(horarioStr => {
     const isIntervalo = horarioStr.toUpperCase().includes('INTERVALO');
 
-    // ✅ primeira coluna: no intervalo, deixa só "HH:MM - HH:MM"
-    const labelPrimeiraColuna = isIntervalo ? cleanHorarioLabel(horarioStr) : horarioStr;
-
-    const hDiv = createCell(isIntervalo ? 'header interval-time' : 'header time', labelPrimeiraColuna);
+    const hDiv = createCell('header', horarioStr);
     if (isIntervalo) hDiv.style.background = '#e0e0e0';
     gridContainer.appendChild(hDiv);
 
     if (isIntervalo) {
-      const intDiv = createCell('header interval-merge', 'Intervalo');
+      const intDiv = createCell('header', 'Intervalo');
       intDiv.style.gridColumn = '2 / span 6';
       intDiv.style.background = '#e0e0e0';
       intDiv.style.color = '#7f8c8d';
@@ -556,15 +496,11 @@ function renderWeeklyGrid() {
       }
     }
   });
-
-  // ✅ Normal (slots e horários): 70%
-  // ✅ Cabeçalho (dias) e Intervalo: 60% da altura normal
-  applyWeeklyGridRowHeightScale(0.7, 0.6);
 }
 
-function createCell(classNames, text) {
+function createCell(type, text) {
   const div = document.createElement('div');
-  div.className = classNames;
+  div.className = type;
   div.textContent = text;
   return div;
 }
@@ -851,6 +787,7 @@ function generateCalendarGrid(container, turmaId, docenteName, start, end, title
 
   const eventsByDate = getCalendarEvents(turmaId, start, end, docenteName);
 
+  // Horários para renderização (inclui Intervalo com fundo cinza)
   let slotsToRender = [];
   if (turmaId) {
     slotsToRender = buildHorariosForUI();
