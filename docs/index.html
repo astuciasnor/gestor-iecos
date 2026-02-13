@@ -24,10 +24,10 @@
         }
 
         .sidebar-header-logos img {
-            height: 70px;
+            height: 104px;
             width: auto;
             border-radius: 8px;
-            background: white;
+            background: rgb(255, 255, 255);
             padding: 2px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.3);
             object-fit: contain;
@@ -54,6 +54,38 @@
             padding: 10px 12px;
             border-radius: 6px;
         }
+
+        /* ===== Sidebar: controles compactos (Período letivo + Turno) ===== */
+        .sidebar .compact-row {
+            display: flex;
+            gap: 10px;
+            align-items: flex-end;
+        }
+
+        .sidebar .compact-row .form-group {
+            flex: 1;
+            margin-bottom: 10px;
+        }
+
+        .sidebar .inline-control {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            margin-top: -2px;
+            margin-bottom: 12px;
+        }
+
+        .sidebar .inline-control label {
+            margin: 0;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .sidebar .inline-control select {
+            max-width: 180px;
+        }
+
 
         @media print {
             /* NÃO forçar 1 mês por página (turma e professor) */
@@ -145,11 +177,10 @@
             
             <div class="sidebar-header-logos">
                 <img src="img/logo_iecos.png" alt="IECOS UFPA" title="IECOS UFPA">
-                <img src="img/capa_projeto.png" alt="Gestor Acadêmico" title="Gestor Acadêmico">
             </div>
             
             <div style="text-align: center; margin-bottom: 25px; margin-top: -10px;">
-                <h1 style="color: white; font-size: 1rem; margin: 0; text-transform: uppercase; letter-spacing: 1px; font-weight: 700; opacity: 0.9;">
+                <h1 style="color: rgb(250, 239, 82); font-size: 1.3rem; margin: 0; text-transform: uppercase; letter-spacing: 1px; font-weight: 700; opacity: 0.9;">
                     Gestor Acadêmico
                 </h1>
             </div>
@@ -164,6 +195,30 @@
             <div class="form-group">
                 <label>Turma</label>
                 <select id="sel-turma" disabled><option value="">Selecione um curso...</option></select>
+            </div>
+
+            
+
+            <h3>Período Letivo</h3>
+
+            <div class="compact-row">
+                <div class="form-group">
+                    <label>Início</label>
+                    <input type="date" id="term-start">
+                </div>
+
+                <div class="form-group">
+                    <label>Fim</label>
+                    <input type="date" id="term-end">
+                </div>
+            </div>
+
+            <div class="inline-control">
+                <label for="sel-turno-oferta">Turno:</label>
+                <select id="sel-turno-oferta">
+                    <option value="Manhã">Manhã</option>
+                    <option value="Tarde">Tarde</option>
+                </select>
             </div>
 
             <hr>
@@ -274,54 +329,121 @@
                 </table>
             </section>
 
+            <!-- ====== AJUDA (alterada apenas aqui) ====== -->
             <section id="tab-tutorial" class="tab-content">
-                <div style="max-width: 800px; margin: 0 auto; line-height: 1.6;">
-                    <h2 style="border-bottom: 2px solid #2c3e50; padding-bottom: 10px;">Como usar o Gestor de Horários</h2>
-                    
-                    <div style="background: #e8f6f3; padding: 15px; border-left: 5px solid #1abc9c; margin-bottom: 20px;">
-                        <strong>Dica Rápida:</strong> O sistema salva seus dados automaticamente no seu navegador enquanto você trabalha. Mas para garantir, sempre clique em <b>Exportar (JSON)</b> antes de fechar a janela!
+                <div class="help-layout">
+
+                    <!-- ESQUERDA: conteúdo principal -->
+                    <div class="help-main">
+                        <h2 style="border-bottom: 2px solid #2c3e50; padding-bottom: 10px;">Como usar o Gestor de Horários</h2>
+
+                        <h3>1️⃣ Passo a Passo Básico</h3>
+                        <ul style="list-style: none; padding: 0;">
+                            <li style="margin-bottom: 15px;">
+                                <strong>1. Configure:</strong> No menu lateral esquerdo, selecione o <b>Curso</b> e a <b>Turma</b>.
+                            </li>
+                            <li style="margin-bottom: 15px;">
+                                <strong>2. Prepare a Aula:</strong> Escolha a <b>Disciplina</b> e o <b>Docente</b> nos campos de busca.
+                            </li>
+                            <li style="margin-bottom: 15px;">
+                                <strong>3. Aloque (Regular):</strong> Com a disciplina selecionada, <b>clique diretamente nos quadradinhos</b> da grade horária (Segunda a Sábado).
+                                Para remover, clique no "X" vermelho dentro da aula.
+                            </li>
+                            <li style="margin-bottom: 15px;">
+                                <strong>4. Aloque (Intensiva):</strong> Mude o "Tipo" para <b>Intensiva</b>, escolha a Data de Início e Fim, e clique no botão verde
+                                <b>"Adicionar à Grade (Intensiva)"</b>. O sistema preencherá os dias úteis automaticamente.
+                            </li>
+                        </ul>
+
+                        <hr>
+
+                        <h3>2️⃣ Verificando Conflitos (Para Diretores e Secretaria)</h3>
+                        <p>O sistema possui um detector visual de choques de horário.</p>
+                        <ol>
+                            <li><b>Clique em Exportar (JSON)</b> para salvar a grade do seu curso (ex.: <em>pesca.json</em>).</li>
+                            <li><b>Peça o arquivo do outro diretor</b> (ex.: <em>biologia.json</em>) para depois <b>Importá-lo</b>.</li>
+                            <li><b>Opcional (recomendado):</b> se você quer começar do zero, clique em <b>Limpar Tudo</b> antes de importar os
+                                seus próprios dados e os de outros cursos.</li>
+                            <li>No sistema, clique em <b>Importar</b> e carregue o primeiro arquivo.</li>
+                            <li>Clique em <b>Importar</b> novamente e carregue o segundo arquivo.</li>
+                            <li>Quando aparecer a pergunta:</li>
+                            <ul style="margin-top:6px;">
+                                <li><b>MESCLAR</b> (Juntar - Para comparar dois cursos e ver conflitos, use MESCLAR.): mantém o que já está carregado e <b>adiciona</b> os dados do segundo arquivo.</li>
+                                <li><b>SUBSTITUIR</b> (trocar): <b>apaga</b> o que está carregado e usa apenas os dados do arquivo importado.</li>
+                            </ul>
+                            <li>Depois, vá na aba <b>Visão do Professor</b> para identificar choques de horários.</li>
+                        </ol>
+
+                        <hr>
+
+                        <h3>3️⃣ Imprimindo e Relatórios</h3>
+                        <p>Para gerar o PDF bonito para o mural:</p>
+                        <ul>
+                            <li>Vá na aba <b>Calendário da Turma</b> (ou Visão do Professor).</li>
+                            <li>Clique no botão <b>🖨️ Imprimir</b> no topo da página.</li>
+                            <li>Nas configurações de impressão do navegador, marque a opção <b>"Gráficos de Plano de Fundo"</b> (Background Graphics) para que as cores saiam no papel.</li>
+                        </ul>
+
+                        <hr>
+
+                        <h3>4️⃣ Edição da Planilha de Dados (Google Drive)</h3>
+
+                        <div style="margin-top:10px; padding: 14px; border-left: 5px solid #f39c12; background:#fff8e6; border-radius:6px;">
+
+                            <p style="margin:0; font-weight:bold; color:#b9770e;">
+                                ⚠️ Atenção importante
+                            </p>
+
+                            <p style="margin:8px 0 0 0; line-height:1.5;">
+                                Você pode <b>editar diretamente os dados do sistema</b> (Componentes, Docentes, Turmas, etc.)
+                                acessando a <b>
+                                    <a
+                                        href="https://docs.google.com/spreadsheets/d/1-yPvZ_UfHtHwpvqO9pPlOEmwpSj9w163/edit?usp=sharing&ouid=101138601884265278263&rtpof=true&sd=true"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        style="color:#d35400; text-decoration: underline;"
+                                    >Planilha</a>
+                                </b> oficial no Google Drive (abre em nova aba).
+                            </p>
+
+                            <p style="margin:10px 0 0 0; font-size:0.95em; color:#444;">
+                                Ao editar:
+                            </p>
+
+                            <ul style="margin:6px 0 0 18px; line-height:1.5;">
+                                <li>Mantenha <b>exatamente os mesmos nomes de colunas</b>.</li>
+                                <li>Não altere a estrutura das abas.</li>
+                                <li>Evite excluir linhas estruturais.</li>
+                                <li>Se fizer mudanças importantes, <b>avise o desenvolvedor</b>.</li>
+                            </ul>
+
+                        </div>
+
                     </div>
 
-                    <h3>1️⃣ Passo a Passo Básico</h3>
-                    <ul style="list-style: none; padding: 0;">
-                        <li style="margin-bottom: 15px;">
-                            <strong>1. Configure:</strong> No menu lateral esquerdo, selecione o <b>Curso</b> e a <b>Turma</b>.
-                        </li>
-                        <li style="margin-bottom: 15px;">
-                            <strong>2. Prepare a Aula:</strong> Escolha a <b>Disciplina</b> e o <b>Docente</b> nos campos de busca.
-                        </li>
-                        <li style="margin-bottom: 15px;">
-                            <strong>3. Aloque (Regular):</strong> Com a disciplina selecionada, <b>clique diretamente nos quadradinhos</b> da grade horária (Segunda a Sábado). Para remover, clique no "X" vermelho dentro da aula.
-                        </li>
-                        <li style="margin-bottom: 15px;">
-                            <strong>4. Aloque (Intensiva):</strong> Mude o "Tipo" para <b>Intensiva</b>, escolha a Data de Início e Fim, e clique no botão verde <b>"Adicionar à Grade (Intensiva)"</b>. O sistema preencherá os dias úteis automaticamente.
-                        </li>
-                    </ul>
+                    <!-- DIREITA: cards fixos -->
+                    <aside class="help-side">
+                        <div class="help-card help-card-tip">
+                            <strong>Dica Rápida:</strong>
+                            <div style="margin-top:6px;">
+                                O sistema salva seus dados automaticamente no seu navegador enquanto você trabalha. Mas para garantir,
+                                sempre clique em <b>Exportar (JSON)</b> antes de fechar a janela!
+                            </div>
+                        </div>
 
-                    <hr>
+                        <div class="help-card help-card-dev">
+                            <strong>Fale com o desenvolvedor:</strong>
+                            <div style="margin-top:6px;">
+                                Prof. Dr. Evaldo Silva — se quiser solicitar uma implementação de nova funcionalidade neste programa web,
+                                corrigir algo, ou adicionar novos dados.
+                            </div>
+                        </div>
+                    </aside>
 
-                    <h3>2️⃣ Verificando Conflitos (Para Diretores e Secretaria)</h3>
-                    <p>O sistema possui um detector visual de choques de horário.</p>
-                    <ol>
-                        <li>Clique em <b>Exportar (JSON)</b> para salvar a grade do seu curso (ex: <em>pesca.json</em>).</li>
-                        <li>Peça o arquivo do outro diretor (ex: <em>biologia.json</em>).</li>
-                        <li>No sistema, clique em <b>Importar</b> e carregue o primeiro arquivo.</li>
-                        <li>Clique em <b>Importar</b> novamente e carregue o segundo arquivo.</li>
-                        <li>Uma janela perguntará o que fazer: Escolha <strong>MESCLAR</strong> (OK).</li>
-                        <li>Vá na aba <strong>"Visão do Professor"</strong>. Se houver horários encavalados, eles aparecerão com um alerta <span style="background:#c0392b; color:white; padding:2px 5px; font-size:0.8em; border-radius:3px;">⚠️ CHOQUE</span>.</li>
-                    </ol>
-
-                    <hr>
-
-                    <h3>3️⃣ Imprimindo e Relatórios</h3>
-                    <p>Para gerar o PDF bonito para o mural:</p>
-                    <ul>
-                        <li>Vá na aba <b>Calendário da Turma</b> (ou Visão do Professor).</li>
-                        <li>Clique no botão <b>🖨️ Imprimir</b> no topo da página.</li>
-                        <li>Nas configurações de impressão do navegador, marque a opção <b>"Gráficos de Plano de Fundo"</b> (Background Graphics) para que as cores saiam no papel.</li>
-                    </ul>
                 </div>
             </section>
+            <!-- ====== /AJUDA ====== -->
+
         </main>
     </div>
 
