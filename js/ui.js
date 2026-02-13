@@ -1,10 +1,6 @@
 import { store } from './store.js';
 import { getCalendarEvents } from './calendar.js';
-import {
-  countBusinessDays,
-  countWeekdaysInPeriod,
-  addBusinessDays
-} from './utils.js';
+import { countBusinessDays, countWeekdaysInPeriod, addBusinessDays } from './utils.js';
 
 // Elementos Globais
 const gridContainer = document.getElementById('weekly-grid');
@@ -37,9 +33,6 @@ let tempImportData = null;
 
 /**
  * ======= Botão "×" para limpar inputs (alinhado ao LABEL) =======
- * - Aparece na mesma linha do nome (label), à direita
- * - Não mexe no HTML manualmente (injeta via JS)
- * - Fallback: se não achar label[for="..."], coloca ao lado do input
  */
 function setupClearButtonsSidebar() {
   addClearXToField(inputConfig.disciplina, 'inp-disciplina');
@@ -89,7 +82,7 @@ function addClearXToField(inputEl, inputId) {
   inputEl.addEventListener('input', toggleVisibility);
   inputEl.addEventListener('change', toggleVisibility);
 
-  // 1) Tenta colocar no LABEL (mesma linha/direção do nome)
+  // 1) Tenta colocar no LABEL
   const label = document.querySelector(`label[for="${inputId}"]`);
   if (label) {
     label.style.display = 'flex';
@@ -127,7 +120,6 @@ function addClearXToField(inputEl, inputId) {
 
 /**
  * Extrai apenas "HH:MM - HH:MM" se existir.
- * Isso mantém o padrão que a grade usa para comparar horários.
  */
 function cleanHorarioLabel(s) {
   const str = (s ?? '').toString();
@@ -137,8 +129,7 @@ function cleanHorarioLabel(s) {
 }
 
 /**
- * Garante que a palavra apareça exatamente como o usuário quer: "Intervalo"
- * (mesmo que venha "INTERVALO (...)" do JSON).
+ * Garante "Intervalo" com capitalização consistente.
  */
 function formatIntervaloLabel(s) {
   const str = (s ?? '').toString().trim();
@@ -155,55 +146,70 @@ function formatIntervaloLabel(s) {
 
 /**
  * Monta a lista final de horários que a UI vai renderizar.
- * - Horários normais: "07:30 - 08:20"
- * - Intervalos: "Intervalo (10:00 - 10:20)" (exatamente assim)
  */
 function buildHorariosForUI() {
   const horariosRaw = store.getHorariosTurma() || [];
   return horariosRaw
-    .map(h => {
+    .map((h) => {
       const s = String(h ?? '');
       if (s.toUpperCase().includes('INTERVALO')) return formatIntervaloLabel(s);
       return cleanHorarioLabel(s);
     })
-    .filter(s => s && s.trim().length > 0);
+    .filter((s) => s && s.trim().length > 0);
 }
 
 /**
  * ======= Ajuste de altura das linhas (Grade Semanal) =======
- * - Normal: escala geral (ex.: 0.7)
- * - Cabeçalho dos dias (SEGUNDA..SÁBADO): 60% da altura normal
- * - Linha de INTERVALO (faixa cinza): 60% da altura normal
- *
- * OBS: isso injeta CSS só para #weekly-grid.
+ * FIX importante:
+ * - Quando a grade re-renderiza (ex.: ao clicar), não pode medir uma altura
+ *   já "encolhida" pelo próprio style injetado; senão vai reduzindo aos poucos.
+ * - Solução: desabilitar temporariamente o style injetado antes de medir.
  */
-function applyWeeklyGridRowHeightScale(scaleNormal = 0.7, scaleHeaderAndInterval = 0.6) {
+function applyWeeklyGridRowHeightScale(scaleNormal = 0.63, scaleHeaderAndInterval = 0.6) {
   if (!gridContainer) return;
 
   requestAnimationFrame(() => {
+    const styleId = 'weekly-grid-rowheight-style';
+    let styleEl = document.getElementById(styleId);
+
+    // Desliga temporariamente o style (se existir) para medir a altura "base" real
+    const hadStyle = !!styleEl;
+    if (styleEl) styleEl.disabled = true;
+
     // pega uma célula de slot como referência (mais confiável)
     const sample =
       gridContainer.querySelector('.slot') ||
       gridContainer.querySelector('.header.time') ||
       gridContainer.querySelector('.header');
 
-    if (!sample) return;
+    if (!sample) {
+      if (hadStyle && styleEl) styleEl.disabled = false;
+      return;
+    }
 
-    const cs = getComputedStyle(sample);
-    let base = parseFloat(cs.height);
+    // Força reflow após desabilitar style
+    // (o getBoundingClientRect já força)
+    const rectH = sample.getBoundingClientRect().height;
+    let base = rectH;
 
     if (!base || Number.isNaN(base)) {
-      base = sample.getBoundingClientRect().height;
+      const cs = getComputedStyle(sample);
+      base = parseFloat(cs.height);
     }
-    if (!base || Number.isNaN(base)) return;
+    if (!base || Number.isNaN(base)) {
+      if (hadStyle && styleEl) styleEl.disabled = false;
+      return;
+    }
 
-    const normalH = Math.max(26, Math.round(base * scaleNormal));
-    const smallH = Math.max(18, Math.round(normalH * scaleHeaderAndInterval));
+    // Reabilita (antes de escrever o novo CSS)
+    if (hadStyle && styleEl) styleEl.disabled = false;
 
-    let styleEl = document.getElementById('weekly-grid-rowheight-style');
+    const normalH = Math.max(24, Math.round(base * scaleNormal)); // um pouco menor e com piso
+    const smallH = Math.max(16, Math.round(normalH * scaleHeaderAndInterval));
+
     if (!styleEl) {
       styleEl = document.createElement('style');
-      styleEl.id = 'weekly-grid-rowheight-style';
+      styleEl.id = styleId;
       document.head.appendChild(styleEl);
     }
 
@@ -224,7 +230,7 @@ function applyWeeklyGridRowHeightScale(scaleNormal = 0.7, scaleHeaderAndInterval
         padding-bottom: 4px !important;
       }
 
-      /* linha de intervalo: tanto a célula da 1ª coluna quanto a faixa central */
+      /* linha de intervalo */
       #weekly-grid .header.interval-time,
       #weekly-grid .header.interval-merge {
         height: ${smallH}px !important;
@@ -309,7 +315,7 @@ export function initUI() {
   setupClearButtonsSidebar();
 
   if (inputConfig.tipo) {
-    inputConfig.tipo.addEventListener('change', e => {
+    inputConfig.tipo.addEventListener('change', (e) => {
       const div = document.getElementById('datas-intensiva');
       if (!div) return;
 
@@ -327,7 +333,7 @@ export function initUI() {
   const btnAdd = document.getElementById('btn-add-oferta');
   if (btnAdd) btnAdd.addEventListener('click', handleAddManual);
 
-  document.querySelectorAll('.tab-btn').forEach(btn => {
+  document.querySelectorAll('.tab-btn').forEach((btn) => {
     btn.addEventListener('click', () => switchTab(btn.dataset.tab));
   });
 
@@ -412,7 +418,7 @@ function populateCursos() {
   if (!store.rawData || !selCurso) return;
 
   selCurso.innerHTML = '<option value="">Selecione...</option>';
-  (store.rawData.cursos || []).forEach(c => {
+  (store.rawData.cursos || []).forEach((c) => {
     selCurso.innerHTML += `<option value="${c.sigla}">${c.curso}</option>`;
   });
 }
@@ -425,8 +431,8 @@ function onCursoChange() {
   selTurma.innerHTML = '<option value="">Selecione...</option>';
 
   if (cursoSigla && store.rawData?.turmas) {
-    const turmas = store.rawData.turmas.filter(t => t.sigla === cursoSigla);
-    turmas.forEach(t => {
+    const turmas = store.rawData.turmas.filter((t) => t.sigla === cursoSigla);
+    turmas.forEach((t) => {
       selTurma.innerHTML += `<option value="${t.turma_id}">${t.turma_label}</option>`;
     });
     updateDisciplinaDatalist();
@@ -442,8 +448,8 @@ function updateDisciplinaDatalist() {
   listDisciplinas.innerHTML = '';
   if (!store.selectedCurso || !store.rawData?.componentes) return;
 
-  const comps = store.rawData.componentes.filter(c => c.sigla === store.selectedCurso);
-  comps.forEach(c => {
+  const comps = store.rawData.componentes.filter((c) => c.sigla === store.selectedCurso);
+  comps.forEach((c) => {
     const opt = document.createElement('option');
     opt.value = c.componente;
     opt.setAttribute('data-ch', c.ch ?? 0);
@@ -458,8 +464,8 @@ function populateDocentes() {
   listDocentes.innerHTML = '';
   selViewDocente.innerHTML = '<option value="">Selecione...</option>';
 
-  const nomes = [...new Set(store.rawData.docentes.map(d => d.docente))].sort();
-  nomes.forEach(nome => {
+  const nomes = [...new Set(store.rawData.docentes.map((d) => d.docente))].sort();
+  nomes.forEach((nome) => {
     listDocentes.appendChild(new Option(nome));
     selViewDocente.add(new Option(nome, nome));
   });
@@ -469,7 +475,7 @@ function onTurmaChange() {
   store.selectedTurma = selTurma.value;
 
   if (store.rawData?.turmas && store.selectedTurma && !store.settings.turnoOferta) {
-    const turmaObj = store.rawData.turmas.find(t => String(t.turma_id) === String(store.selectedTurma));
+    const turmaObj = store.rawData.turmas.find((t) => String(t.turma_id) === String(store.selectedTurma));
     if (turmaObj?.turno) {
       store.setTurnoOferta(turmaObj.turno);
       if (selTurnoOferta) selTurnoOferta.value = turmaObj.turno;
@@ -486,9 +492,10 @@ function onTurmaChange() {
 function getDisciplinaInfo(nomeComponente) {
   if (!store.rawData?.componentes) return { abrev: nomeComponente, ch: 0 };
 
-  const c = store.rawData.componentes.find(x =>
-    x.componente === nomeComponente && x.sigla === store.selectedCurso
-  ) || store.rawData.componentes.find(x => x.componente === nomeComponente);
+  const c =
+    store.rawData.componentes.find(
+      (x) => x.componente === nomeComponente && x.sigla === store.selectedCurso
+    ) || store.rawData.componentes.find((x) => x.componente === nomeComponente);
 
   if (c) return { abrev: c.abreviacao || c.componente, ch: c.ch || 0 };
   return { abrev: nomeComponente, ch: 0 };
@@ -515,14 +522,14 @@ function renderWeeklyGrid() {
     return;
   }
 
-  // Cabeçalho superior (dias): menor (60%)
+  // Cabeçalho superior (dias)
   gridContainer.appendChild(createCell('header top-header', ''));
-  dias.forEach(d => gridContainer.appendChild(createCell('header top-header', d)));
+  dias.forEach((d) => gridContainer.appendChild(createCell('header top-header', d)));
 
-  horariosUI.forEach(horarioStr => {
+  horariosUI.forEach((horarioStr) => {
     const isIntervalo = horarioStr.toUpperCase().includes('INTERVALO');
 
-    // ✅ primeira coluna: no intervalo, deixa só "HH:MM - HH:MM"
+    // primeira coluna: no intervalo, deixa só "HH:MM - HH:MM"
     const labelPrimeiraColuna = isIntervalo ? cleanHorarioLabel(horarioStr) : horarioStr;
 
     const hDiv = createCell(isIntervalo ? 'header interval-time' : 'header time', labelPrimeiraColuna);
@@ -542,11 +549,12 @@ function renderWeeklyGrid() {
         cell.dataset.dia = i;
         cell.dataset.horario = horarioStr;
 
-        const alloc = store.allocations.find(a =>
-          String(a.turmaId) === String(store.selectedTurma) &&
-          a.tipo === 'regular' &&
-          a.diaSemana == i &&
-          a.horario === horarioStr
+        const alloc = store.allocations.find(
+          (a) =>
+            String(a.turmaId) === String(store.selectedTurma) &&
+            a.tipo === 'regular' &&
+            a.diaSemana == i &&
+            a.horario === horarioStr
         );
 
         if (alloc) renderSlotContent(cell, alloc);
@@ -557,9 +565,9 @@ function renderWeeklyGrid() {
     }
   });
 
-  // ✅ Normal (slots e horários): 70%
-  // ✅ Cabeçalho (dias) e Intervalo: 60% da altura normal
-  applyWeeklyGridRowHeightScale(0.7, 0.6);
+  // ✅ Fix + redução extra de 10%: normal = 0.63
+  // Cabeçalho e intervalo = 60% do normal
+  applyWeeklyGridRowHeightScale(0.63, 0.6);
 }
 
 function createCell(classNames, text) {
@@ -579,7 +587,7 @@ function renderSlotContent(cell, alloc) {
     <span class="remove-btn" style="color:red; font-weight:bold; font-size:0.8em; position:absolute; top:2px; right:2px;">×</span>
   `;
 
-  cell.querySelector('.remove-btn').onclick = e => {
+  cell.querySelector('.remove-btn').onclick = (e) => {
     e.stopPropagation();
     if (confirm('Remover esta aula?')) {
       store.removeAllocation(alloc.id);
@@ -590,7 +598,7 @@ function renderSlotContent(cell, alloc) {
 }
 
 function checkTeacherConflict(docente, dia, horario) {
-  return store.allocations.find(a => a.docente === docente && a.diaSemana == dia && a.horario === horario);
+  return store.allocations.find((a) => a.docente === docente && a.diaSemana == dia && a.horario === horario);
 }
 
 function handleSlotClick(dia, horario) {
@@ -638,37 +646,31 @@ function handleAddManual() {
     // ======= REGRA CONFIÁVEL: ordem 4 é sempre Intervalo =======
     const slotsTurmaRaw = store.getHorariosTurma() || [];
     const slotsOrdenados = slotsTurmaRaw
-      .map(h => cleanHorarioLabel(h))
-      .filter(h => h && String(h).trim().length > 0);
+      .map((h) => cleanHorarioLabel(h))
+      .filter((h) => h && String(h).trim().length > 0);
 
     if (slotsOrdenados.length < 6) {
       return alert(
         'Erro: para intensivas com regra "ordem 4 = intervalo", o turno precisa ter pelo menos 6 linhas (ordem 1..6).\n' +
-        `Encontradas: ${slotsOrdenados.length}.`
+          `Encontradas: ${slotsOrdenados.length}.`
       );
     }
 
-    const slotsIntensiva = [
-      slotsOrdenados[0],
-      slotsOrdenados[1],
-      slotsOrdenados[2],
-      slotsOrdenados[4],
-      slotsOrdenados[5]
-    ].filter(Boolean);
+    const slotsIntensiva = [slotsOrdenados[0], slotsOrdenados[1], slotsOrdenados[2], slotsOrdenados[4], slotsOrdenados[5]].filter(Boolean);
 
     if (slotsIntensiva.length !== 5) {
-      return alert(
-        'Erro: não consegui montar 5 horários para intensiva.\n' +
-        `Montados: ${slotsIntensiva.length}`
-      );
+      return alert('Erro: não consegui montar 5 horários para intensiva.\n' + `Montados: ${slotsIntensiva.length}`);
     }
     // ======= FIM REGRA =======
 
-    if (!confirm(
-      `Componente: ${vals.disciplina} (${ch}h)\n` +
-      `Duração calculada: ${diasNecessarios} dias úteis.\n\n` +
-      `De: ${formatDateBR(vals.inicio)}\nAté: ${formatDateBR(dataFimCalculada)}\n\nConfirmar alocação?`
-    )) return;
+    if (
+      !confirm(
+        `Componente: ${vals.disciplina} (${ch}h)\n` +
+          `Duração calculada: ${diasNecessarios} dias úteis.\n\n` +
+          `De: ${formatDateBR(vals.inicio)}\nAté: ${formatDateBR(dataFimCalculada)}\n\nConfirmar alocação?`
+      )
+    )
+      return;
 
     store.addAllocation({
       turmaId: store.selectedTurma,
@@ -706,32 +708,32 @@ function renderOfertasList() {
   if (!tbody) return;
 
   tbody.innerHTML = '';
-  const list = store.allocations.filter(a => String(a.turmaId) === String(store.selectedTurma));
+  const list = store.allocations.filter((a) => String(a.turmaId) === String(store.selectedTurma));
 
-  const feriados = store.rawData?.feriados ? store.rawData.feriados.map(f => f.data) : [];
+  const feriados = store.rawData?.feriados ? store.rawData.feriados.map((f) => f.data) : [];
   const semestreInicio = calStart ? calStart.value : '2025-01-01';
   const semestreFim = calEnd ? calEnd.value : '2025-12-31';
 
-  const regular = list.filter(a => a.tipo === 'regular');
-  const intensivas = list.filter(a => a.tipo !== 'regular');
+  const regular = list.filter((a) => a.tipo === 'regular');
+  const intensivas = list.filter((a) => a.tipo !== 'regular');
 
   intensivas.sort((a, b) => (a.dataInicio || '').localeCompare(b.dataInicio || ''));
   regular.sort((a, b) => (a.disciplina || '').localeCompare(b.disciplina || ''));
 
-  const appendSeparator = label => {
+  const appendSeparator = (label) => {
     const tr = document.createElement('tr');
     tr.className = 'month-sep';
     tr.innerHTML = `<td colspan="6">${label}</td>`;
     tbody.appendChild(tr);
   };
 
-  const appendMonthSeparator = monthKey => {
-    const [y, m] = monthKey.split('-').map(n => parseInt(n, 10));
+  const appendMonthSeparator = (monthKey) => {
+    const [y, m] = monthKey.split('-').map((n) => parseInt(n, 10));
     const nomeMes = new Date(y, m - 1, 2).toLocaleString('pt-BR', { month: 'long', year: 'numeric' });
     appendSeparator(nomeMes.toUpperCase());
   };
 
-  const appendRow = a => {
+  const appendRow = (a) => {
     const tr = document.createElement('tr');
     const info = getDisciplinaInfo(a.disciplina);
     const chMax = info.ch;
@@ -781,7 +783,7 @@ function renderOfertasList() {
   };
 
   let currentMonth = null;
-  intensivas.forEach(a => {
+  intensivas.forEach((a) => {
     const monthKey = a.dataInicio ? a.dataInicio.substring(0, 7) : '';
     if (monthKey && monthKey !== currentMonth) {
       appendMonthSeparator(monthKey);
@@ -819,7 +821,7 @@ function renderMonthlyCalendar() {
 
   let turmaLabel = store.selectedTurma;
   if (store.rawData?.turmas) {
-    const t = store.rawData.turmas.find(x => String(x.turma_id) === String(store.selectedTurma));
+    const t = store.rawData.turmas.find((x) => String(x.turma_id) === String(store.selectedTurma));
     if (t) turmaLabel = t.turma_label;
   }
 
@@ -858,22 +860,24 @@ function generateCalendarGrid(container, turmaId, docenteName, start, end, title
     const hp = store.rawData?.horarios_por_turno || {};
     slotsToRender = Object.values(hp)
       .flat()
-      .map(h => {
+      .map((h) => {
         const s = String(h ?? '');
         if (s.toUpperCase().includes('INTERVALO')) return formatIntervaloLabel(s);
         return cleanHorarioLabel(s);
       })
-      .filter(s => s && s.trim().length > 0);
+      .filter((s) => s && s.trim().length > 0);
   }
 
   const months = {};
-  Object.keys(eventsByDate).sort().forEach(dateStr => {
-    const k = dateStr.substring(0, 7);
-    if (!months[k]) months[k] = [];
-    months[k].push({ date: dateStr, events: eventsByDate[dateStr] });
-  });
+  Object.keys(eventsByDate)
+    .sort()
+    .forEach((dateStr) => {
+      const k = dateStr.substring(0, 7);
+      if (!months[k]) months[k] = [];
+      months[k].push({ date: dateStr, events: eventsByDate[dateStr] });
+    });
 
-  Object.keys(months).forEach(monthKey => {
+  Object.keys(months).forEach((monthKey) => {
     const monthDiv = document.createElement('div');
     monthDiv.className = 'calendar-month';
 
@@ -883,20 +887,20 @@ function generateCalendarGrid(container, turmaId, docenteName, start, end, title
 
     const grid = document.createElement('div');
     grid.className = 'month-grid';
-    ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'].forEach(d => (grid.innerHTML += `<div class="day-header">${d}</div>`));
+    ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'].forEach((d) => (grid.innerHTML += `<div class="day-header">${d}</div>`));
 
     const firstDate = months[monthKey][0].date;
     const startDow = new Date(firstDate + 'T12:00:00').getDay();
     for (let i = 0; i < startDow; i++) grid.innerHTML += `<div class="day-cell empty"></div>`;
 
-    months[monthKey].forEach(dayData => {
+    months[monthKey].forEach((dayData) => {
       const cell = document.createElement('div');
       cell.className = 'day-cell';
       const dt = new Date(dayData.date + 'T12:00:00');
       if (dt.getDay() === 0 || dt.getDay() === 6) cell.classList.add('weekend');
 
       let html = `<span class="day-number">${dayData.date.split('-')[2]}</span>`;
-      const holidayEvent = dayData.events.find(e => e.type === 'holiday');
+      const holidayEvent = dayData.events.find((e) => e.type === 'holiday');
 
       if (holidayEvent) {
         cell.style.background = '#f1f2f6';
@@ -905,13 +909,13 @@ function generateCalendarGrid(container, turmaId, docenteName, start, end, title
         </div>`;
       } else {
         if (slotsToRender.length > 0) {
-          slotsToRender.forEach(slotTime => {
+          slotsToRender.forEach((slotTime) => {
             const isIntervalo = slotTime.toUpperCase().includes('INTERVALO');
             const timeMatch = slotTime.match(/\d{2}:\d{2}/);
             const timeLabel = timeMatch ? timeMatch[0] : '';
 
             const eventsInSlot = dayData.events.filter(
-              e => e.horario === slotTime || (e.horariosOcupados && e.horariosOcupados.includes(slotTime))
+              (e) => e.horario === slotTime || (e.horariosOcupados && e.horariosOcupados.includes(slotTime))
             );
 
             let content = '';
@@ -921,13 +925,13 @@ function generateCalendarGrid(container, turmaId, docenteName, start, end, title
               content = '<span style="color:#7f8c8d; font-style:italic; font-size:0.85em;">Intervalo</span>';
               style = 'background:#e0e0e0;';
             } else if (eventsInSlot.length > 0) {
-              const isConflict = eventsInSlot.some(e => e.isConflict);
+              const isConflict = eventsInSlot.some((e) => e.isConflict);
               if (isConflict) {
                 style = 'background: #7f8c8d; color: white; border: 2px solid #c0392b;';
                 content =
                   `⚠️ CHOQUE! <br>` +
                   eventsInSlot
-                    .map(e => {
+                    .map((e) => {
                       const info = getDisciplinaInfo(e.disciplina);
                       return `<small>[${e.turmaId}] ${info.abrev}</small>`;
                     })
@@ -949,7 +953,7 @@ function generateCalendarGrid(container, turmaId, docenteName, start, end, title
               </div>`;
           });
         } else {
-          dayData.events.forEach(ev => {
+          dayData.events.forEach((ev) => {
             const info = getDisciplinaInfo(ev.disciplina);
             const style = `background:${ev.cor || '#bdc3c7'}`;
             html += `<div class="event-chip" style="${style}">${info.abrev}</div>`;
@@ -975,8 +979,8 @@ function formatDateBR(dateStr) {
 }
 
 function switchTab(tabId) {
-  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach((c) => c.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach((b) => b.classList.remove('active'));
 
   const tabEl = document.getElementById(`tab-${tabId}`);
   if (tabEl) tabEl.classList.add('active');
@@ -985,9 +989,4 @@ function switchTab(tabId) {
   if (btn) btn.classList.add('active');
 }
 
-export {
-  renderWeeklyGrid,
-  renderOfertasList,
-  renderMonthlyCalendar,
-  renderTeacherCalendar
-};
+export { renderWeeklyGrid, renderOfertasList, renderMonthlyCalendar, renderTeacherCalendar };
