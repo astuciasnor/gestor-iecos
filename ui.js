@@ -472,38 +472,13 @@ function handleAddManual() {
     const feriados = store.rawData?.feriados || [];
     const dataFimCalculada = addBusinessDays(vals.inicio, diasNecessarios, feriados);
 
-    // ======= REGRA CONFIÁVEL: ordem 4 é sempre Intervalo =======
-    // store.getHorariosTurma() deve vir ordenado por "ordem".
-    // Então pulamos SEMPRE o índice 3 (4ª posição), e usamos 1,2,3,5,6 como 5 aulas.
-    const slotsTurmaRaw = store.getHorariosTurma() || [];
-    const slotsOrdenados = slotsTurmaRaw
+    const slotsTurma = store.getHorariosTurma();
+    const slotsReais = (slotsTurma || [])
       .map(h => cleanHorarioLabel(h))
-      .filter(h => h && String(h).trim().length > 0);
+      .filter(h => h && !String(h).toUpperCase().includes('INTERVALO'));
 
-    // precisa de pelo menos 6 entradas para existir "ordem 6"
-    if (slotsOrdenados.length < 6) {
-      return alert(
-        'Erro: para intensivas com regra "ordem 4 = intervalo", o turno precisa ter pelo menos 6 linhas (ordem 1..6).\n' +
-        `Encontradas: ${slotsOrdenados.length}.`
-      );
-    }
-
-    // pega: 1º, 2º, 3º, (pula 4º), 5º, 6º
-    const slotsIntensiva = [
-      slotsOrdenados[0],
-      slotsOrdenados[1],
-      slotsOrdenados[2],
-      slotsOrdenados[4],
-      slotsOrdenados[5]
-    ].filter(Boolean);
-
-    if (slotsIntensiva.length !== 5) {
-      return alert(
-        'Erro: não consegui montar 5 horários para intensiva.\n' +
-        `Montados: ${slotsIntensiva.length}`
-      );
-    }
-    // ======= FIM REGRA =======
+    const slotsIntensiva = slotsReais.slice(0, 5);
+    if (slotsIntensiva.length === 0) return alert('Erro: Não há horários configurados para esta turma.');
 
     if (!confirm(
       `Componente: ${vals.disciplina} (${ch}h)\n` +

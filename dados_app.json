@@ -1,6 +1,6 @@
 {
   "meta": {
-    "generated_at": "2026-02-12T18:13:13",
+    "generated_at": "2026-02-12T20:07:39",
     "source_file": "planilha_base.xlsx"
   },
   "docentes": [
@@ -2442,73 +2442,73 @@
   },
   "feriados": [
     {
-      "data": "46023",
+      "data": "2026-01-01",
       "feriado": "Confraternização Universal",
       "dia": "Quinta-feira",
       "tipo": "Nacional"
     },
     {
-      "data": "46069",
+      "data": "2026-02-16",
       "feriado": "Carnaval",
       "dia": "Segunda-feira",
       "tipo": "Nacional"
     },
     {
-      "data": "46070",
+      "data": "2026-02-17",
       "feriado": "Carnaval",
       "dia": "Terça-feira",
       "tipo": "Nacional"
     },
     {
-      "data": "46071",
+      "data": "2026-02-18",
       "feriado": "Carnaval",
       "dia": "Quarta-feira",
       "tipo": "Nacional"
     },
     {
-      "data": "46115",
+      "data": "2026-04-03",
       "feriado": "Sexta-feira Santa",
       "dia": "Sexta-feira",
       "tipo": "Nacional"
     },
     {
-      "data": "46133",
+      "data": "2026-04-21",
       "feriado": "Tiradentes",
       "dia": "Terça-feira",
       "tipo": "Nacional"
     },
     {
-      "data": "46143",
+      "data": "2026-05-01",
       "feriado": "Dia do Trabalho",
       "dia": "Sexta-feira",
       "tipo": "Nacional"
     },
     {
-      "data": "46177",
+      "data": "2026-06-04",
       "feriado": "Corpus Christi",
       "dia": "Quinta-feira",
       "tipo": "Municipal"
     },
     {
-      "data": "46211",
+      "data": "2026-07-08",
       "feriado": "Fundação de Bragança",
       "dia": "Quarta-feira",
       "tipo": "Municipal"
     },
     {
-      "data": "46249",
+      "data": "2026-08-15",
       "feriado": "Adesão do Grão-Pará",
       "dia": "Sábado",
       "tipo": "Estadual"
     },
     {
-      "data": "46272",
+      "data": "2026-09-07",
       "feriado": "Independência do Brasil",
       "dia": "Segunda-feira",
       "tipo": "Nacional"
     },
     {
-      "data": "46302",
+      "data": "2026-10-07",
       "feriado": "N. Sra. do Rosário (Padroeira)",
       "dia": "Quarta-feira",
       "tipo": "Municipal"
@@ -2520,7 +2520,7 @@
       "tipo": "Nacional"
     },
     {
-      "data": "46328",
+      "data": "2026-11-02",
       "feriado": "Finados",
       "dia": "Segunda-feira",
       "tipo": "Nacional"
@@ -2550,61 +2550,61 @@
       "tipo": "Municipal"
     },
     {
-      "data": "46388",
+      "data": "2027-01-01",
       "feriado": "Confraternização Universal",
       "dia": "Sexta-feira",
       "tipo": "Nacional"
     },
     {
-      "data": "46427",
+      "data": "2027-02-09",
       "feriado": "Carnaval (Ponto Facultativo)",
       "dia": "Terça-feira",
       "tipo": "Nacional"
     },
     {
-      "data": "46472",
+      "data": "2027-03-26",
       "feriado": "Sexta-feira Santa",
       "dia": "Sexta-feira",
       "tipo": "Nacional"
     },
     {
-      "data": "46498",
+      "data": "2027-04-21",
       "feriado": "Tiradentes",
       "dia": "Quarta-feira",
       "tipo": "Nacional"
     },
     {
-      "data": "46508",
+      "data": "2027-05-01",
       "feriado": "Dia do Trabalho",
       "dia": "Sábado",
       "tipo": "Nacional"
     },
     {
-      "data": "46534",
+      "data": "2027-05-27",
       "feriado": "Corpus Christi",
       "dia": "Quinta-feira",
       "tipo": "Municipal"
     },
     {
-      "data": "46576",
+      "data": "2027-07-08",
       "feriado": "Fundação de Bragança",
       "dia": "Quinta-feira",
       "tipo": "Municipal"
     },
     {
-      "data": "46614",
+      "data": "2027-08-15",
       "feriado": "Adesão do Grão-Pará",
       "dia": "Domingo",
       "tipo": "Estadual"
     },
     {
-      "data": "46637",
+      "data": "2027-09-07",
       "feriado": "Independência do Brasil",
       "dia": "Terça-feira",
       "tipo": "Nacional"
     },
     {
-      "data": "46667",
+      "data": "2027-10-07",
       "feriado": "N. Sra. do Rosário (Padroeira)",
       "dia": "Quinta-feira",
       "tipo": "Municipal"
@@ -2616,7 +2616,7 @@
       "tipo": "Nacional"
     },
     {
-      "data": "46693",
+      "data": "2027-11-02",
       "feriado": "Finados",
       "dia": "Terça-feira",
       "tipo": "Nacional"
