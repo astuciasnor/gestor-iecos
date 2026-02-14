@@ -35,7 +35,7 @@ let tempImportData = null;
 
 /**
  * ======= Auxiliar de Tempo =======
- * Converte "07:30" para minutos (450) para ordenar a grade do professor corretamente.
+ * Converte "07:30" para minutos (450) para ordenar a grade corretamente.
  */
 function timeToMinutes(str) {
   if (!str) return 99999;
@@ -507,7 +507,7 @@ function onTurmaChange() {
     if (t?.turno) store.setTurnoOferta(t.turno);
   }
 
-  // Ajuste de Datas (Mantido)
+  // Ajuste de Datas
   const intensivas = alocacoesTurma.filter(a => a.tipo === 'intensiva' && a.dataInicio);
   if (intensivas.length > 0) {
       const datas = intensivas.map(a => a.dataInicio).sort();
@@ -898,32 +898,33 @@ function generateCalendarGrid(container, turmaId, docenteName, start, end, title
 
   let slotsToRender = [];
 
-  // ================= LÓGICA DE SEPARAÇÃO (SEGURA) =================
   if (turmaId) {
     // CASO 1: TURMA (ESTRITO)
     // Mostra APENAS o turno selecionado na sidebar.
     slotsToRender = buildHorariosForUI();
   } 
   else if (docenteName) {
-    // CASO 2: PROFESSOR (INTEGRAL DINÂMICO)
-    // Varremos TODAS as alocações do sistema para descobrir horários usados
-    // (incluindo intensivas e regulares de qualquer turno).
-    const allTimes = new Set();
-    
-    if (store.allocations) {
-        store.allocations.forEach(a => {
-            // Pega horário de aula regular
-            if (a.horario) allTimes.add(a.horario);
-            
-            // Pega horários de intensiva (array de strings)
-            if (a.horariosOcupados && Array.isArray(a.horariosOcupados)) {
-                a.horariosOcupados.forEach(h => allTimes.add(h));
-            }
-        });
+    // CASO 2: PROFESSOR (ESQUELETO PADRÃO: MANHÃ + TARDE)
+    // Buscamos a estrutura oficial "Manhã" e "Tarde" em rawData.
+    const hp = store.rawData?.horarios_por_turno || {};
+    const skeleton = [];
+
+    // Adiciona Manhã e Tarde na ordem
+    if (hp['Manhã']) skeleton.push(...hp['Manhã']);
+    if (hp['Tarde']) skeleton.push(...hp['Tarde']);
+
+    // Fallback: se não tiver config, varre alocações
+    if (skeleton.length === 0) {
+        if (store.allocations) {
+            store.allocations.forEach(a => {
+                if (a.horario) skeleton.push(a.horario);
+                if (a.horariosOcupados) a.horariosOcupados.forEach(h => skeleton.push(h));
+            });
+        }
     }
 
-    // Limpa, padroniza e ordena (Manhã -> Tarde)
-    slotsToRender = [...allTimes]
+    // Limpa, padroniza e ordena
+    slotsToRender = [...new Set(skeleton)]
       .map(h => {
         const s = String(h ?? '');
         if (s.toUpperCase().includes('INTERVALO')) return formatIntervaloLabel(s);
@@ -932,7 +933,6 @@ function generateCalendarGrid(container, turmaId, docenteName, start, end, title
       .filter(s => s && s.trim().length > 0)
       .sort((a, b) => timeToMinutes(a) - timeToMinutes(b));
   }
-  // ===================================================================
 
   const months = {};
   Object.keys(eventsByDate)
@@ -993,9 +993,10 @@ function generateCalendarGrid(container, turmaId, docenteName, start, end, title
             } else if (eventsInSlot.length > 0) {
               const isConflict = eventsInSlot.some((e) => e.isConflict);
               
-              if (isConflict) {
-                 // Estilo LINHA ÚNICA para o choque (Ajustado)
-                 style = 'background: #7f8c8d; color: white; border: 1px solid #c0392b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0 4px; font-size: 0.85em;';
+              // SÓ MOSTRA CHOQUE SE FOR VISÃO DO PROFESSOR (docenteName existe)
+              if (isConflict && docenteName) {
+                 // Estilo LINHA ÚNICA para o choque (Fina e Alinhada)
+                 style = 'width: 100%; box-sizing: border-box; background: #7f8c8d; color: white; border: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 1px 2px; font-size: 0.7em; display: flex; align-items: center; min-height: 0;';
                  
                  const conflictNames = eventsInSlot
                   .map((e) => getDisciplinaInfo(e.disciplina).abrev)
