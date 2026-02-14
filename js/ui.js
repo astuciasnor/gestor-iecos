@@ -995,8 +995,9 @@ function generateCalendarGrid(container, turmaId, docenteName, start, end, title
               
               // SÓ MOSTRA CHOQUE SE FOR VISÃO DO PROFESSOR (docenteName existe)
               if (isConflict && docenteName) {
-                 // Estilo LINHA ÚNICA para o choque (Fina e Alinhada)
-                 style = 'width: 100%; box-sizing: border-box; background: #7f8c8d; color: white; border: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 1px 2px; font-size: 0.7em; display: flex; align-items: center; min-height: 0;';
+                 // Estilo LINHA ÚNICA (Altura Normal)
+                 // Removemos padding reduzido e fonte pequena. Mantemos apenas o truncate.
+                 style = 'background: #7f8c8d; color: white; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;';
                  
                  const conflictNames = eventsInSlot
                   .map((e) => getDisciplinaInfo(e.disciplina).abrev)
