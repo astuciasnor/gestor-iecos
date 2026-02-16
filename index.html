@@ -301,15 +301,18 @@
                 <div id="monthly-container"></div>
             </section>
 
-            <section id="tab-teacher" class="tab-content">
-                <div class="form-group no-print" style="max-width: 400px; margin-bottom: 20px;">
-                    <label style="color: var(--primary);">Selecione o Professor para visualizar a agenda mensal:</label>
-                    <select id="sel-view-docente" style="width: 100%; padding: 8px; background: white; color: #333; border: 1px solid #ccc;">
-                        <option value="">Carregando...</option>
-                    </select>
-                </div>
-                <div id="teacher-calendar-container"></div>
-            </section>
+        <section id="tab-teacher" class="tab-content">
+            <div class="form-group no-print" style="max-width: 400px; margin-bottom: 20px; position: relative;">
+                <label style="color: var(--primary);" for="sel-view-docente">Selecione o Professor para visualizar a agenda
+                    mensal:</label>
+        
+                <input type="text" id="sel-view-docente" list="list-view-docentes" placeholder="Busque o professor..."
+                    autocomplete="off">
+        
+                <datalist id="list-view-docentes"></datalist>
+            </div>
+            <div id="teacher-calendar-container"></div>
+        </section>
 
             <section id="tab-list" class="tab-content">
                 <h3>Ofertas Cadastradas</h3>
