@@ -706,6 +706,35 @@ function handleAddManual() {
       return alert('Erro: não consegui montar 5 horários para intensiva.\n' + `Montados: ${slotsIntensiva.length}`);
     }
 
+    // --- NOVA VALIDAÇÃO: Choque de Intensivas (Mesma Turma e Horário) ---
+    const normalize = s => (s || '').replace(/\s/g, '');
+    
+    const conflitoIntensiva = store.allocations.find(a => {
+        // Filtra: Mesma Turma e Tipo Intensiva
+        if (a.turmaId !== store.selectedTurma) return false;
+        if (a.tipo !== 'intensiva') return false; 
+        
+        // 1. Verifica Sobreposição de Datas
+        const overlapData = (vals.inicio <= a.dataFim && dataFimCalculada >= a.dataInicio);
+        if (!overlapData) return false;
+
+        // 2. Verifica Sobreposição de Horários (Slots)
+        // Se a intensiva existente não tiver horarios definidos (erro de dados), bloqueia por segurança
+        if (!a.horariosOcupados || !Array.isArray(a.horariosOcupados)) return true;
+        
+        // Compara se algum horário da nova intensiva já está ocupado pela existente
+        const overlapHorario = a.horariosOcupados.some(savedSlot => 
+            slotsIntensiva.some(newSlot => normalize(savedSlot) === normalize(newSlot))
+        );
+        return overlapHorario;
+    });
+
+    if (conflitoIntensiva) {
+        alert("Outra disciplina vem sendo ministrada. Verifique o horário e dia de início dessa componente intensiva que está tentando alocar.");
+        return;
+    }
+    // --------------------------------------------------------------------
+
     if (
       !confirm(
         `Componente: ${vals.disciplina} (${ch}h)\n` +
@@ -980,9 +1009,15 @@ function generateCalendarGrid(container, turmaId, docenteName, start, end, title
             const timeMatch = slotTime.match(/\d{2}:\d{2}/);
             const timeLabel = timeMatch ? timeMatch[0] : '';
 
-            const eventsInSlot = dayData.events.filter(
-              (e) => e.horario === slotTime || (e.horariosOcupados && e.horariosOcupados.includes(slotTime))
-            );
+            // --- FILTRO ROBUSTO (SEM ESPAÇOS) ---
+            const normalizeTime = (t) => (t || '').replace(/\s/g, '');
+            const slotTimeNorm = normalizeTime(slotTime);
+
+            const eventsInSlot = dayData.events.filter(e => {
+                if (e.horario && normalizeTime(e.horario) === slotTimeNorm) return true;
+                if (e.horariosOcupados && e.horariosOcupados.some(h => normalizeTime(h) === slotTimeNorm)) return true;
+                return false;
+            });
 
             let content = '';
             let style = '';
@@ -996,12 +1031,12 @@ function generateCalendarGrid(container, turmaId, docenteName, start, end, title
               // SÓ MOSTRA CHOQUE SE FOR VISÃO DO PROFESSOR (docenteName existe)
               if (isConflict && docenteName) {
                  // Estilo LINHA ÚNICA (Altura Normal)
-                 // Removemos padding reduzido e fonte pequena. Mantemos apenas o truncate.
-                 style = 'background: #7f8c8d; color: white; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;';
+                 // ALERTA VERMELHO para o conflito
+                 style = 'background: #c0392b; color: white; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight:bold;';
                  
                  const conflictNames = eventsInSlot
                   .map((e) => getDisciplinaInfo(e.disciplina).abrev)
-                  .join(' <b style="color:#2c3e50">X</b> '); // X em negrito
+                  .join(' <b style="color:#fff">x</b> ');
 
                  content = `<span title="Choque: ${conflictNames.replace(/<[^>]+>/g, '')}">⚠️ ${conflictNames}</span>`;
               } else {
