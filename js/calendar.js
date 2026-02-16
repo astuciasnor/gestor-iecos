@@ -88,7 +88,6 @@ export function getCalendarEvents(turmaId, startDate, endDate, docenteFilter = n
       if (reg.diaSemana == dayOfWeek) {
         
         // Verifica BLOQUEIO
-        // Procura se existe alguma intensiva (de QUALQUER professor) na MESMA turma e MESMO horário
         const blockingIntensive = globalActiveIntensives.find(intensive => {
             if (intensive.turmaId !== reg.turmaId) return false;
             if (!intensive.horariosOcupados || !Array.isArray(intensive.horariosOcupados)) return true; // Segurança
@@ -100,20 +99,15 @@ export function getCalendarEvents(turmaId, startDate, endDate, docenteFilter = n
 
         if (blockingIntensive) {
           // *** AULA SUSPENSA ***
-          // Se estamos na visão do PROFESSOR (docenteFilter ativo), 
-          // mostramos que a aula dele foi "comida" pela intensiva.
           if (docenteFilter) {
              events.push({
                ...reg,
                type: 'suspension',
-               title: `Suspensão: ${blockingIntensive.disciplina}`, // Mostra qual matéria causou o bloqueio
-               cor: '#ecf0f1', // Cor cinza claro
+               title: `Suspensão: ${blockingIntensive.disciplina}`,
+               cor: '#ecf0f1',
                isSuspended: true
              });
           }
-          // Nota: Não incrementamos executionCount aqui, pois a aula não foi dada.
-          // Isso faz com que ela seja "empurrada" para o futuro, que é o comportamento correto.
-
         } else {
           // *** AULA NORMAL ***
           const cursoSigla = turmaToCurso[reg.turmaId];
@@ -134,8 +128,9 @@ export function getCalendarEvents(turmaId, startDate, endDate, docenteFilter = n
       }
     });
 
-    // --- Detecção de Conflitos Robusta (Visualização) ---
-    const conflictMap = {};
+    // --- Detecção de Conflitos Robusta (Por Slot) ---
+    // Mapeia cada horário NORMALIZADO para uma lista de eventos
+    const slotMap = {};
 
     events.forEach(e => {
       const slots = [];
@@ -147,21 +142,26 @@ export function getCalendarEvents(turmaId, startDate, endDate, docenteFilter = n
       slots.forEach(slotRaw => {
         const key = normalizeTime(slotRaw); 
         if (!key) return;
-
-        if (!conflictMap[key]) conflictMap[key] = [];
-        conflictMap[key].push(e);
+        if (!slotMap[key]) slotMap[key] = [];
+        slotMap[key].push(e);
       });
     });
 
-    Object.values(conflictMap).forEach(eventList => {
-      // Se tiver mais de 1 evento no mesmo horário, marca conflito.
-      // (A menos que sejam suspensões, que tecnicamente não são conflitos de agenda do professor, mas alertas)
-      if (eventList.length > 1) {
-        eventList.forEach(ev => { 
-            // Se for suspensão, não precisa marcar flag de conflito vermelho, pois já é cinza
-            if (ev.type !== 'suspension') {
-                ev.isConflict = true; 
-            }
+    // Analisa conflitos por horário específico
+    Object.entries(slotMap).forEach(([timeKey, eventList]) => {
+      // Se houver mais de 1 evento neste horário específico (e não forem suspensões)
+      const activeEvents = eventList.filter(ev => ev.type !== 'suspension');
+      
+      if (activeEvents.length > 1) {
+        activeEvents.forEach(ev => {
+           // Inicializa o array de conflitos específicos se não existir
+           if (!ev.conflictsAt) ev.conflictsAt = [];
+           // Adiciona este horário à lista de conflitos deste evento
+           if (!ev.conflictsAt.includes(timeKey)) {
+               ev.conflictsAt.push(timeKey);
+           }
+           // Mantemos a flag global para compatibilidade, mas a UI usará conflictsAt
+           ev.isConflict = true;
         });
       }
     });

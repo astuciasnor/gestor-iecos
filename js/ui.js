@@ -417,6 +417,9 @@ function handleFileSelect(event) {
 function closeModal() {
   const modal = document.getElementById('import-modal');
   if (modal) modal.style.display = 'none';
+  tempImportData = null; // Limpa variável temporária
+  const inp = document.getElementById('inp-import');
+  if (inp) inp.value = ''; // Limpa o input do browser
 }
 
 /**
@@ -1026,24 +1029,35 @@ function generateCalendarGrid(container, turmaId, docenteName, start, end, title
               content = '<span style="color:#7f8c8d; font-style:italic; font-size:0.85em;">Intervalo</span>';
               style = 'background:#e0e0e0;';
             } else if (eventsInSlot.length > 0) {
-              const isConflict = eventsInSlot.some((e) => e.isConflict);
               
-              // SÓ MOSTRA CHOQUE SE FOR VISÃO DO PROFESSOR (docenteName existe)
-              if (isConflict && docenteName) {
-                 // Estilo LINHA ÚNICA (Altura Normal)
-                 // ALERTA VERMELHO para o conflito
-                 style = 'background: #c0392b; color: white; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight:bold;';
-                 
-                 const conflictNames = eventsInSlot
-                  .map((e) => getDisciplinaInfo(e.disciplina).abrev)
-                  .join(' <b style="color:#fff">x</b> ');
-
-                 content = `<span title="Choque: ${conflictNames.replace(/<[^>]+>/g, '')}">⚠️ ${conflictNames}</span>`;
+              // Verifica se HÁ conflito (seja por haver > 1 evento no slot, seja por conflito específico marcado)
+              const hasSpecificConflict = eventsInSlot.some(e => e.conflictsAt && e.conflictsAt.includes(slotTimeNorm));
+              const implicitConflict = eventsInSlot.length > 1;
+              const isSuspended = eventsInSlot.some((e) => e.isSuspended);
+              
+              if (docenteName) {
+                  // VISÃO PROFESSOR
+                  if (hasSpecificConflict || implicitConflict) {
+                    // *** AQUI ENTRA O VERMELHO DO CHOQUE (Somente se houver conflito NESTE horário) ***
+                    style = 'background: #c0392b; color: white; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight:bold;';
+                    const conflictNames = eventsInSlot.map((e) => getDisciplinaInfo(e.disciplina).abrev).join(' <b style="color:#fff">x</b> ');
+                    content = `<span title="Choque: ${conflictNames.replace(/<[^>]+>/g, '')}">⚠️ ${conflictNames}</span>`;
+                  } else if (isSuspended) {
+                    style = 'background: #f1f2f6; color: #95a5a6; font-style:italic; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; border: 1px dashed #bdc3c7;';
+                    const suspendedEvent = eventsInSlot.find(e => e.isSuspended);
+                    content = `<span title="${suspendedEvent.title}">${suspendedEvent.title}</span>`;
+                  } else {
+                    const event = eventsInSlot[0];
+                    const info = getDisciplinaInfo(event.disciplina);
+                    content = info.abrev;
+                    style = `background:${event.cor || '#bdc3c7'}; color:black;`;
+                  }
               } else {
-                const event = eventsInSlot[0];
-                const info = getDisciplinaInfo(event.disciplina);
-                content = info.abrev;
-                style = `background:${event.cor || '#bdc3c7'}; color:black;`;
+                  // VISÃO TURMA (não mudamos nada aqui, mas mantemos a logica padrão)
+                  const event = eventsInSlot[0];
+                  const info = getDisciplinaInfo(event.disciplina);
+                  content = info.abrev;
+                  style = `background:${event.cor || '#bdc3c7'}; color:black;`;
               }
             } else {
               content = '&nbsp;';
