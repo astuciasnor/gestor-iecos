@@ -384,7 +384,23 @@ input[type="date"] { color-scheme: dark; }
         display: block;
     }
 
-    .calendar-month { box-shadow: none; border: 1px solid #ccc; page-break-after: always; }
+    /* === Ajustes de Quebra de Página no Calendário === */
+    .calendar-month { 
+        box-shadow: none; 
+        border: 1px solid #ccc; 
+        
+        /* Permite que o mês quebre se necessário */
+        page-break-inside: auto; 
+        break-inside: auto; 
+        
+        /* Não força quebra DEPOIS do mês, permitindo que outro comece na mesma página */
+        page-break-after: auto; 
+        break-after: auto;
+
+        /* Espaço para separar meses na mesma página */
+        margin-bottom: 25px;
+        display: block;
+    }
     
     .calendar-month h3 { 
         background: transparent !important; 
@@ -394,9 +410,22 @@ input[type="date"] { color-scheme: dark; }
         padding-bottom: 5px;
         -webkit-print-color-adjust: exact;
         print-color-adjust: exact;
+
+        /* Mantém o título colado com a primeira semana (não deixa órfão no final da página) */
+        page-break-after: avoid;
+        break-after: avoid;
     }
     
-    .day-cell, .day-header { border: 1px solid #ccc !important; }
+    .day-cell { 
+        border: 1px solid #ccc !important; 
+        
+        /* O SEGREDO: Impede que uma célula (dia) seja cortada ao meio.
+           Se não couber, o navegador joga a linha inteira para a próxima página. */
+        page-break-inside: avoid;
+        break-inside: avoid;
+    }
+    
+    .day-header { border: 1px solid #ccc !important; }
     .cal-slot-row { border-bottom: 1px solid #ddd; }
 }
 
