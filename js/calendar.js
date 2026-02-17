@@ -44,9 +44,10 @@ export function getCalendarEvents(turmaId, startDate, endDate, docenteFilter = n
       return true;
   });
 
-  const myIntensives = myAllocations.filter(a => a.tipo === 'intensiva');
+  // Híbrido é tratado como Intensiva para fins de loop de data
+  const myIntensives = myAllocations.filter(a => a.tipo === 'intensiva' || a.tipo === 'hibrido');
   const myRegulars = myAllocations.filter(a => a.tipo === 'regular');
-  const allIntensives = store.allocations.filter(a => a.tipo === 'intensiva');
+  const allIntensives = store.allocations.filter(a => a.tipo === 'intensiva' || a.tipo === 'hibrido');
 
   const feriadosList = store.rawData?.feriados || [];
 
@@ -85,7 +86,7 @@ export function getCalendarEvents(turmaId, startDate, endDate, docenteFilter = n
       i => dateStr >= i.dataInicio && dateStr <= i.dataFim
     );
 
-    // Renderizar Minhas Intensivas
+    // Renderizar Minhas Intensivas (e Híbridas)
     myActiveIntensives.forEach(intense => {
       const key = `${intense.turmaId}|${intense.disciplina}`;
       const slotsConsumed = intense.horariosOcupados ? intense.horariosOcupados.length : 5;
@@ -130,7 +131,8 @@ export function getCalendarEvents(turmaId, startDate, endDate, docenteFilter = n
         // Verifica BLOQUEIO
         const blockingIntensive = globalActiveIntensives.find(intensive => {
             if (intensive.turmaId !== reg.turmaId) return false;
-            if (!intensive.horariosOcupados || !Array.isArray(intensive.horariosOcupados)) return true; // Segurança
+            // Bloqueio seguro: se intensiva não tem slots definidos (erro), bloqueia tudo.
+            if (!intensive.horariosOcupados || !Array.isArray(intensive.horariosOcupados)) return true;
 
             const regHorarioNorm = normalizeTime(reg.horario);
             // Bate horário?

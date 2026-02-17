@@ -8,7 +8,8 @@
     --text-main: #2c3e50;
     --text-muted: #7f8c8d;
     --border: #bdc3c7;
-    --sidebar-width: 300px;
+    /* AUMENTADO A LARGURA DA SIDEBAR PARA 360px */
+    --sidebar-width: 360px;
 }
 
 * { box-sizing: border-box; outline: none; }
@@ -79,6 +80,37 @@ body {
 .form-group input:focus, .form-group select:focus {
     background-color: var(--primary);
     border-color: #fff;
+}
+
+/* NOVO: Layout para cor + disciplina lado a lado */
+.input-row-color {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.input-row-color input[type="text"] {
+    flex-grow: 1;
+}
+
+/* Estilo do Color Picker Redondo/Compacto */
+.input-row-color input[type="color"] {
+    width: 42px;
+    height: 42px;
+    padding: 0;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-radius: 50%; /* Redondo */
+    background: none;
+    cursor: pointer;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+.input-row-color input[type="color"]::-webkit-color-swatch-wrapper {
+    padding: 0; 
+}
+.input-row-color input[type="color"]::-webkit-color-swatch {
+    border: none;
+    border-radius: 50%;
 }
 
 input[type="date"] { color-scheme: dark; }
@@ -254,11 +286,7 @@ input[type="date"] { color-scheme: dark; }
     border-radius: 8px;
     box-shadow: 0 2px 10px rgba(0,0,0,0.05);
     margin-bottom: 40px; 
-    
-    /* IMPORTANTE: Garante que o conteúdo não seja cortado se exceder a altura */
     overflow: visible; 
-    
-    /* Permite que o mês quebre se necessário */
     page-break-inside: auto; 
     break-inside: auto; 
 }
@@ -272,8 +300,11 @@ input[type="date"] { color-scheme: dark; }
     letter-spacing: 2px; 
     -webkit-print-color-adjust: exact; 
     print-color-adjust: exact;
+    page-break-after: avoid;
+    break-after: avoid;
 }
 
+/* === AQUI ESTAVA O ERRO: Certifique-se que essa classe existe! === */
 .month-grid { 
     display: grid; 
     grid-template-columns: 0.6fr repeat(5, 1fr) 0.6fr; 
@@ -298,15 +329,21 @@ input[type="date"] { color-scheme: dark; }
     font-size: 0.8em; 
     background: white; 
     vertical-align: top; 
+    
+    page-break-inside: avoid;
+    break-inside: avoid;
+    
+    overflow: visible !important; 
+    display: block; 
 }
-.day-cell.weekend { background: #fafafa; }
-.day-cell.empty { background: #fcfcfc; }
-.day-number { font-weight: bold; display: block; padding: 2px 6px; color: var(--primary-light); margin-bottom: 4px; }
 
-.cal-slot-row {
+/* FIX: Impede que a linha de horário quebre ao meio */
+.cal-slot-row { 
+    border-bottom: 1px solid #ddd; 
+    page-break-inside: avoid;
+    break-inside: avoid;
     display: flex;
     font-size: 0.75em;
-    border-bottom: 1px solid #f5f5f5;
     padding: 2px 0;
     align-items: center;
 }
@@ -388,10 +425,42 @@ input[type="date"] { color-scheme: dark; }
     background: #c0392b;
 }
 
+/* NOVO: Estilo "Botão" para checkboxes Híbridos */
+.hybrid-slots-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* 2 colunas */
+    gap: 8px;
+}
+
+.hybrid-slots-grid label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--primary-light); /* Verde mais escuro do tema */
+    color: white;
+    padding: 10px 8px;
+    border-radius: 6px;
+    font-size: 0.85em;
+    cursor: pointer;
+    border: 1px solid rgba(255,255,255,0.2);
+    transition: background 0.2s;
+}
+
+.hybrid-slots-grid label:hover {
+    background: var(--primary); /* Highlight ao passar mouse */
+}
+
+.hybrid-slots-grid input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    margin: 0;
+    accent-color: var(--accent); /* Cor destaque do check */
+    cursor: pointer;
+}
+
 @media print {
     @page { margin: 1cm; size: landscape; }
     
-    /* FIX CRÍTICO: Resetar altura e overflow do body/html para evitar cortes na impressão */
     html, body {
         height: auto !important;
         overflow: visible !important;
@@ -402,13 +471,11 @@ input[type="date"] { color-scheme: dark; }
 
     .no-print, .sidebar, .top-bar { display: none !important; }
     
-    /* FIX: Permitir que containers cresçam livremente */
     .app-container { display: block; height: auto !important; overflow: visible !important; }
     .content { width: 100%; height: auto !important; overflow: visible !important; display: block; }
     
     .tab-content { display: none !important; }
     
-    /* FIX CRÍTICO: A aba ativa não pode ter scroll ou altura fixa na impressão */
     .tab-content.active { 
         display: block !important; 
         padding: 0; 
@@ -438,21 +505,14 @@ input[type="date"] { color-scheme: dark; }
         display: block;
     }
 
-    /* === Ajustes de Quebra de Página no Calendário === */
     .calendar-month { 
         box-shadow: none; 
         border: 1px solid #ccc; 
-        
-        /* Garante que o conteúdo não seja cortado */
         overflow: visible !important; 
-        
-        /* Permite que o mês quebre se necessário */
         page-break-inside: auto; 
         break-inside: auto; 
         page-break-after: auto; 
         break-after: auto;
-
-        /* Espaço para separar meses na mesma página */
         margin-bottom: 25px;
         display: block;
     }
@@ -465,26 +525,19 @@ input[type="date"] { color-scheme: dark; }
         padding-bottom: 5px;
         -webkit-print-color-adjust: exact;
         print-color-adjust: exact;
-
-        /* Mantém o título colado com a primeira semana */
         page-break-after: avoid;
         break-after: avoid;
     }
     
     .day-cell { 
         border: 1px solid #ccc !important; 
-        
-        /* Impede que uma célula (dia) seja cortada ao meio */
         page-break-inside: avoid;
         break-inside: avoid;
-        
-        /* Garante que o conteúdo interno não seja ocultado */
         overflow: visible !important; 
         display: block; 
     }
     
     .day-header { border: 1px solid #ccc !important; }
-    .cal-slot-row { border-bottom: 1px solid #ddd; }
 }
 
 /* ===== Ajuda: layout em duas colunas (sem retângulo cinza) ===== */

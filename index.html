@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="css/style.css">
     
     <style>
+        /* Ajustes específicos internos (se necessário override) */
         :root {
             --primary: #004e28; 
             --primary-light: #006633;
@@ -227,7 +228,10 @@
             
             <div class="form-group">
                 <label>Disciplina</label>
-                <input type="text" id="inp-disciplina" list="list-disciplinas" placeholder="Busque a disciplina...">
+                <div class="input-row-color">
+                    <input type="color" id="inp-color" value="#004e28" title="Escolha a cor da disciplina">
+                    <input type="text" id="inp-disciplina" list="list-disciplinas" placeholder="Busque a disciplina...">
+                </div>
                 <datalist id="list-disciplinas"></datalist>
             </div>
 
@@ -260,7 +264,14 @@
                 <select id="sel-tipo">
                     <option value="regular">Regular (Semanal)</option>
                     <option value="intensiva">Intensiva (Blocada)</option>
+                    <option value="hibrido">Híbrido (Intensivo Parcial)</option>
                 </select>
+            </div>
+
+            <div id="container-slots-hibrido" class="hidden form-group">
+                <label style="margin-bottom: 8px; color: #fff;">Selecione os Horários:</label>
+                <div id="hybrid-checkboxes" class="hybrid-slots-grid">
+                    </div>
             </div>
 
             <div id="datas-intensiva" class="hidden">
@@ -269,11 +280,11 @@
                     <input type="date" id="inp-data-inicio">
                 </div>
                 <small style="display:block; color:#bdc3c7; margin-top:5px; font-size:0.8em; line-height: 1.4;">
-                    * O sistema calculará a data final automaticamente baseada na CH da disciplina (5h/dia).
+                    * O sistema calculará a data final automaticamente baseada na CH e nos horários selecionados.
                 </small>
             </div>
 
-            <button id="btn-add-oferta" class="btn-primary">Adicionar à Grade (Intensiva)</button>
+            <button id="btn-add-oferta" class="btn-primary">Adicionar à Grade</button>
             
             <hr>
             
@@ -304,7 +315,7 @@
             <section id="tab-weekly" class="tab-content active">
                 <div class="grid-header">
                     <h2 id="turma-title">Selecione uma turma</h2>
-                    <p class="instruction">Para disciplinas <b>Regulares</b>: Clique direto nos horários abaixo.<br>Para <b>Intensivas</b>: Configure as datas no menu e clique em "Adicionar à Grade".</p>
+                    <p class="instruction">Para disciplinas <b>Regulares</b>: Clique direto nos horários abaixo.<br>Para <b>Intensivas/Híbridas</b>: Configure as datas no menu e clique em "Adicionar à Grade".</p>
                 </div>
                 <div id="weekly-grid" class="timetable"></div>
             </section>
@@ -362,36 +373,25 @@
                                 <strong>1. Configure:</strong> No menu lateral esquerdo, selecione o <b>Curso</b> e a <b>Turma</b>.
                             </li>
                             <li style="margin-bottom: 15px;">
-                                <strong>2. Prepare a Aula:</strong> Escolha a <b>Disciplina</b> e o <b>Docente</b>.
-                                <br><em>Novo: Marque "Múltiplos?" para adicionar até 4 professores dividindo a CH.</em>
+                                <strong>2. Prepare a Aula:</strong> Escolha a <b>Disciplina</b>.
+                                <br><em>Novo: Escolha a <b>Cor</b> no seletor circular.</em>
+                                <br><em>Novo: Marque "Múltiplos?" para adicionar até 4 professores.</em>
                             </li>
                             <li style="margin-bottom: 15px;">
                                 <strong>3. Aloque (Regular):</strong> Com a disciplina selecionada, <b>clique diretamente nos quadradinhos</b> da grade horária.
                             </li>
                             <li style="margin-bottom: 15px;">
-                                <strong>4. Aloque (Intensiva):</strong> Mude o "Tipo" para <b>Intensiva</b>, escolha a Data de Início e Fim, e clique no botão verde
-                                <b>"Adicionar à Grade (Intensiva)"</b>. O sistema preencherá os dias úteis automaticamente.
+                                <strong>4. Aloque (Intensiva):</strong> Mude o "Tipo" para <b>Intensiva</b>, escolha a Data de Início e clique em <b>"Adicionar"</b>.
+                            </li>
+                            <li style="margin-bottom: 15px;">
+                                <strong>5. Aloque (Híbrida):</strong> Mude o "Tipo" para <b>Híbrido</b>. Selecione <b>quais horários</b> do turno essa disciplina vai ocupar (ex: as 3 primeiras).
                             </li>
                         </ul>
 
                         <hr>
 
-                        <h3>2️⃣ Verificando Conflitos (Para Diretores e Secretaria)</h3>
-                        <p>O sistema possui um detector visual de choques de horário.</p>
-                        <ol>
-                            <li><b>Clique em Exportar (JSON)</b> para salvar a grade do seu curso (ex.: <em>pesca.json</em>).</li>
-                            <li><b>Peça o arquivo do outro diretor</b> (ex.: <em>biologia.json</em>) para depois <b>Importá-lo</b>.</li>
-                            <li><b>Opcional (recomendado):</b> se você quer começar do zero, clique em <b>Limpar Tudo</b> antes de importar os
-                                seus próprios dados e os de outros cursos.</li>
-                            <li>No sistema, clique em <b>Importar</b> e carregue o primeiro arquivo.</li>
-                            <li>Clique em <b>Importar</b> novamente e carregue o segundo arquivo.</li>
-                            <li>Quando aparecer a pergunta:</li>
-                            <ul style="margin-top:6px;">
-                                <li><b>MESCLAR</b> (Juntar - Para comparar dois cursos e ver conflitos, use MESCLAR.): mantém o que já está carregado e <b>adiciona</b> os dados do segundo arquivo.</li>
-                                <li><b>SUBSTITUIR</b> (trocar): <b>apaga</b> o que está carregado e usa apenas os dados do arquivo importado.</li>
-                            </ul>
-                            <li>Depois, vá na aba <b>Visão do Professor</b> para identificar choques de horários.</li>
-                        </ol>
+                        <h3>2️⃣ Verificando Conflitos</h3>
+                        <p>Para resolver conflitos parciais (ex: choque em apenas 3 horários), utilize o modo <b>Híbrido</b> para cadastrar a disciplina ocupando apenas os horários corretos. O sistema deixará de marcar choque nos horários que não foram selecionados.</p>
 
                         <hr>
 
@@ -400,43 +400,8 @@
                         <ul>
                             <li>Vá na aba <b>Calendário da Turma</b> (ou Visão do Professor).</li>
                             <li>Clique no botão <b>🖨️ Imprimir</b> no topo da página.</li>
-                            <li>Nas configurações de impressão do navegador, marque a opção <b>"Gráficos de Plano de Fundo"</b> (Background Graphics) para que as cores saiam no papel.</li>
+                            <li>Nas configurações de impressão do navegador, marque a opção <b>"Gráficos de Plano de Fundo"</b>.</li>
                         </ul>
-
-                        <hr>
-
-                        <h3>4️⃣ Edição da Planilha de Dados (Google Drive)</h3>
-
-                        <div style="margin-top:10px; padding: 14px; border-left: 5px solid #f39c12; background:#fff8e6; border-radius:6px;">
-
-                            <p style="margin:0; font-weight:bold; color:#b9770e;">
-                                ⚠️ Atenção importante
-                            </p>
-
-                            <p style="margin:8px 0 0 0; line-height:1.5;">
-                                Você pode <b>editar diretamente os dados do sistema</b> (Componentes, Docentes, Turmas, etc.)
-                                acessando a <b>
-                                    <a
-                                        href="https://docs.google.com/spreadsheets/d/1-yPvZ_UfHtHwpvqO9pPlOEmwpSj9w163/edit?usp=sharing&ouid=101138601884265278263&rtpof=true&sd=true"
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        style="color:#d35400; text-decoration: underline;"
-                                    >Planilha</a>
-                                </b> oficial no Google Drive (abre em nova aba).
-                            </p>
-
-                            <p style="margin:10px 0 0 0; font-size:0.95em; color:#444;">
-                                Ao editar:
-                            </p>
-
-                            <ul style="margin:6px 0 0 18px; line-height:1.5;">
-                                <li>Mantenha <b>exatamente os mesmos nomes de colunas</b>.</li>
-                                <li>Não altere a estrutura das abas.</li>
-                                <li>Evite excluir linhas estruturais.</li>
-                                <li>Se fizer mudanças importantes, <b>avise o desenvolvedor</b>.</li>
-                            </ul>
-
-                        </div>
 
                     </div>
 
