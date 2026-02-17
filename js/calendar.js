@@ -85,6 +85,12 @@ export function getCalendarEvents(turmaId, startDate, endDate, docenteFilter = n
 
     // Renderizar Regulares (com lógica de Suspensão)
     myRegulars.forEach(reg => {
+      // TRAVA DE SEGURANÇA:
+      // Se a data atual exceder o fim do período letivo oficial, NÃO aloca aulas regulares.
+      // Isso permite que o calendário mostre dias vazios (ex: Quinta/Sexta) para completar a semana
+      // sem gerar aulas fantasmas fora do período.
+      if (store.settings.termEnd && dateStr > store.settings.termEnd) return;
+
       if (reg.diaSemana == dayOfWeek) {
         
         // Verifica BLOQUEIO

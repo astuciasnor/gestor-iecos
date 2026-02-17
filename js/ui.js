@@ -892,7 +892,15 @@ function renderMonthlyCalendar() {
   if (!store.selectedTurma) return (container.innerHTML = '<p>Selecione uma turma.</p>');
 
   const start = calStart ? calStart.value : '2025-01-01';
-  const end = calEnd ? calEnd.value : '2025-12-31';
+  let end = calEnd ? calEnd.value : '2025-12-31';
+
+  // FIX: Estender até o fim do MÊS da data final selecionada
+  // Isso garante que o último mês seja renderizado completo na impressão
+  if (end) {
+      const dt = new Date(end + 'T12:00:00');
+      const lastDay = new Date(dt.getFullYear(), dt.getMonth() + 1, 0); // Dia 0 do mês seguinte = último dia deste
+      end = lastDay.toISOString().split('T')[0];
+  }
 
   let turmaLabel = store.selectedTurma;
   if (store.rawData?.turmas) {
@@ -912,7 +920,14 @@ function renderTeacherCalendar() {
   if (!docente) return (container.innerHTML = '<p>Selecione um professor.</p>');
 
   const start = calStart ? calStart.value : '2025-01-01';
-  const end = calEnd ? calEnd.value : '2025-12-31';
+  let end = calEnd ? calEnd.value : '2025-12-31';
+
+  // FIX: Estender até o fim do MÊS da data final selecionada
+  if (end) {
+      const dt = new Date(end + 'T12:00:00');
+      const lastDay = new Date(dt.getFullYear(), dt.getMonth() + 1, 0);
+      end = lastDay.toISOString().split('T')[0];
+  }
 
   const title = `<span class="print-title-main">Cronograma Docente</span><br><span class="print-title-sub">${docente}</span>`;
   generateCalendarGrid(container, null, docente, start, end, title);
@@ -1081,6 +1096,13 @@ function generateCalendarGrid(container, turmaId, docenteName, start, end, title
       cell.innerHTML = html;
       grid.appendChild(cell);
     });
+
+    // === FIX: Preencher o restante da semana com células vazias para fechar a grade visualmente ===
+    const lastDateObj = new Date(months[monthKey][months[monthKey].length - 1].date + 'T12:00:00');
+    const lastDow = lastDateObj.getDay(); // 0..6
+    for (let i = lastDow + 1; i <= 6; i++) {
+        grid.innerHTML += `<div class="day-cell empty" style="border-bottom: 2px solid #bdc3c7;"></div>`;
+    }
 
     monthDiv.appendChild(grid);
     container.appendChild(monthDiv);
