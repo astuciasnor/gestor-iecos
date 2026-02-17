@@ -232,8 +232,26 @@
             </div>
 
             <div class="form-group">
-                <label>Docente</label>
-                <input type="text" id="inp-docente" list="list-docentes" placeholder="Busque o docente...">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
+                    <label style="margin:0;">Docente(s)</label>
+                    <div style="font-size:0.85em; display:flex; align-items:center; gap:5px;">
+                        <input type="checkbox" id="chk-multi-docente" style="width:auto; transform: scale(1.2);">
+                        <label for="chk-multi-docente" style="margin:0; font-weight:normal; cursor:pointer; color:#feffcc;">Múltiplos?</label>
+                    </div>
+                </div>
+
+                <div id="container-single-docente">
+                    <input type="text" id="inp-docente" list="list-docentes" placeholder="Busque o docente...">
+                </div>
+
+                <div id="container-multi-docente" class="hidden">
+                    <div id="multi-docente-list"></div>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:5px;">
+                        <span id="total-ch-display" style="font-size:0.8em; color:#feffcc;">Total: 0h</span>
+                        <button id="btn-add-docente-row" type="button" class="btn-secondary" style="padding:4px 10px; font-size:0.8em;">+ Adicionar</button>
+                    </div>
+                </div>
+                
                 <datalist id="list-docentes"></datalist>
             </div>
 
@@ -332,11 +350,9 @@
                 </table>
             </section>
 
-            <!-- ====== AJUDA (alterada apenas aqui) ====== -->
             <section id="tab-tutorial" class="tab-content">
                 <div class="help-layout">
 
-                    <!-- ESQUERDA: conteúdo principal -->
                     <div class="help-main">
                         <h2 style="border-bottom: 2px solid #2c3e50; padding-bottom: 10px;">Como usar o Gestor de Horários</h2>
 
@@ -346,11 +362,11 @@
                                 <strong>1. Configure:</strong> No menu lateral esquerdo, selecione o <b>Curso</b> e a <b>Turma</b>.
                             </li>
                             <li style="margin-bottom: 15px;">
-                                <strong>2. Prepare a Aula:</strong> Escolha a <b>Disciplina</b> e o <b>Docente</b> nos campos de busca.
+                                <strong>2. Prepare a Aula:</strong> Escolha a <b>Disciplina</b> e o <b>Docente</b>.
+                                <br><em>Novo: Marque "Múltiplos?" para adicionar até 4 professores dividindo a CH.</em>
                             </li>
                             <li style="margin-bottom: 15px;">
-                                <strong>3. Aloque (Regular):</strong> Com a disciplina selecionada, <b>clique diretamente nos quadradinhos</b> da grade horária (Segunda a Sábado).
-                                Para remover, clique no "X" vermelho dentro da aula.
+                                <strong>3. Aloque (Regular):</strong> Com a disciplina selecionada, <b>clique diretamente nos quadradinhos</b> da grade horária.
                             </li>
                             <li style="margin-bottom: 15px;">
                                 <strong>4. Aloque (Intensiva):</strong> Mude o "Tipo" para <b>Intensiva</b>, escolha a Data de Início e Fim, e clique no botão verde
@@ -424,7 +440,6 @@
 
                     </div>
 
-                    <!-- DIREITA: cards fixos -->
                     <aside class="help-side">
                         <div class="help-card help-card-tip">
                             <strong>Dica Rápida:</strong>
@@ -445,9 +460,7 @@
 
                 </div>
             </section>
-            <!-- ====== /AJUDA ====== -->
-
-        </main>
+            </main>
     </div>
 
     <script type="module" src="js/main.js"></script>

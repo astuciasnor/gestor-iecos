@@ -23,15 +23,26 @@ export function getCalendarEvents(turmaId, startDate, endDate, docenteFilter = n
     });
   }
 
-  const executionCount = {};
+  const executionCount = {}; // Rastreia horas acumuladas por (turma+disciplina)
 
   // --- Filtros ---
-  let myAllocations = [];
-  if (docenteFilter) {
-    myAllocations = store.allocations.filter(a => a.docente === docenteFilter);
-  } else {
-    myAllocations = store.allocations.filter(a => a.turmaId === turmaId);
-  }
+  // AQUI: Filtro deve considerar se o professor está na lista de "docentes" da alocação
+  let myAllocations = store.allocations.filter(a => {
+      // 1. Filtro de Turma (Visão Turma)
+      if (turmaId && a.turmaId !== turmaId) return false;
+
+      // 2. Filtro de Docente (Visão Professor)
+      if (docenteFilter) {
+          // Verifica nome principal
+          if (a.docente === docenteFilter) return true;
+          // Verifica lista de múltiplos
+          if (a.docentes && Array.isArray(a.docentes)) {
+              return a.docentes.some(d => d.nome === docenteFilter);
+          }
+          return false;
+      }
+      return true;
+  });
 
   const myIntensives = myAllocations.filter(a => a.tipo === 'intensiva');
   const myRegulars = myAllocations.filter(a => a.tipo === 'regular');
@@ -78,17 +89,40 @@ export function getCalendarEvents(turmaId, startDate, endDate, docenteFilter = n
     myActiveIntensives.forEach(intense => {
       const key = `${intense.turmaId}|${intense.disciplina}`;
       const slotsConsumed = intense.horariosOcupados ? intense.horariosOcupados.length : 5;
-      executionCount[key] = (executionCount[key] || 0) + slotsConsumed;
+      
+      const currentCount = executionCount[key] || 0;
+      executionCount[key] = currentCount + slotsConsumed;
 
-      events.push({ ...intense, priority: 2, title: `(I) ${intense.disciplina}` });
+      // Lógica de Múltiplos Docentes (Quem assume HOJE?)
+      let activeDocenteName = intense.docente; // Default (pode ser o nome composto)
+      
+      if (intense.docentes && intense.docentes.length > 0) {
+          let acc = 0;
+          for (const d of intense.docentes) {
+              acc += parseInt(d.ch);
+              // Se o acumulado cobrir o início deste dia (currentCount), é este professor
+              // (Simplificação: block-based owner)
+              if (currentCount < acc) {
+                  activeDocenteName = d.nome;
+                  break;
+              }
+          }
+      }
+
+      // Se estivermos na Visão do Professor, só mostra se for ELE o ativo naquele dia
+      if (docenteFilter && activeDocenteName !== docenteFilter) return;
+
+      events.push({ 
+          ...intense, 
+          priority: 2, 
+          title: `(I) ${intense.disciplina}`, 
+          docente: activeDocenteName // Sobrescreve para exibição correta no card
+      });
     });
 
     // Renderizar Regulares (com lógica de Suspensão)
     myRegulars.forEach(reg => {
       // TRAVA DE SEGURANÇA:
-      // Se a data atual exceder o fim do período letivo oficial, NÃO aloca aulas regulares.
-      // Isso permite que o calendário mostre dias vazios (ex: Quinta/Sexta) para completar a semana
-      // sem gerar aulas fantasmas fora do período.
       if (store.settings.termEnd && dateStr > store.settings.termEnd) return;
 
       if (reg.diaSemana == dayOfWeek) {
@@ -106,13 +140,20 @@ export function getCalendarEvents(turmaId, startDate, endDate, docenteFilter = n
         if (blockingIntensive) {
           // *** AULA SUSPENSA ***
           if (docenteFilter) {
-             events.push({
-               ...reg,
-               type: 'suspension',
-               title: `Suspensão: ${blockingIntensive.disciplina}`,
-               cor: '#ecf0f1',
-               isSuspended: true
-             });
+             // Só mostra suspensão se o professor da regular for o ativo naquele momento
+             let slotDocente = reg.docente;
+             // (Verificação simplificada para suspensão: se o prof está na lista, mostra o aviso)
+             const isOwner = (reg.docente === docenteFilter) || (reg.docentes && reg.docentes.some(d => d.nome === docenteFilter));
+             
+             if (isOwner) {
+                 events.push({
+                   ...reg,
+                   type: 'suspension',
+                   title: `Suspensão: ${blockingIntensive.disciplina}`,
+                   cor: '#ecf0f1',
+                   isSuspended: true
+                 });
+             }
           }
         } else {
           // *** AULA NORMAL ***
@@ -127,8 +168,33 @@ export function getCalendarEvents(turmaId, startDate, endDate, docenteFilter = n
           const currentCount = executionCount[key] || 0;
 
           if (currentCount < maxCH) {
-            executionCount[key] = currentCount + 1;
-            events.push({ ...reg, priority: 1, title: reg.disciplina });
+            executionCount[key] = currentCount + 1; // 1 slot = 1 hora (aprox)
+
+            // === QUEM É O PROFESSOR DESTE SLOT? ===
+            let slotDocente = reg.docente;
+            
+            if (reg.docentes && reg.docentes.length > 0) {
+                let acc = 0;
+                for (const d of reg.docentes) {
+                    acc += parseInt(d.ch);
+                    // O slot atual é o (currentCount + 1)-ésimo
+                    // Se a aula atual (currentCount + 1) estiver dentro do acumulado deste prof, é ele.
+                    if ( (currentCount + 1) <= acc ) {
+                        slotDocente = d.nome;
+                        break;
+                    }
+                }
+            }
+
+            // Visão do Professor: só adiciona se for aula DELE
+            if (docenteFilter && slotDocente !== docenteFilter) return;
+
+            events.push({ 
+                ...reg, 
+                priority: 1, 
+                title: reg.disciplina,
+                docente: slotDocente // Importante para o UI saber quem pintar/mostrar
+            });
           }
         }
       }

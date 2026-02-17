@@ -238,6 +238,119 @@ function applyWeeklyGridRowHeightScale(scaleNormal = 0.63, scaleHeaderAndInterva
 }
 
 /**
+ * ======= LÓGICA DE MÚLTIPLOS DOCENTES =======
+ */
+function setupMultiDocenteUI() {
+    const chk = document.getElementById('chk-multi-docente');
+    const containerSingle = document.getElementById('container-single-docente');
+    const containerMulti = document.getElementById('container-multi-docente');
+    const btnAddRow = document.getElementById('btn-add-docente-row');
+
+    // Inicializa com 1 linha se estiver vazio
+    if(containerMulti.querySelector('.teacher-row') === null) {
+        addTeacherRow(); 
+    }
+
+    chk.addEventListener('change', () => {
+        if(chk.checked) {
+            containerSingle.classList.add('hidden');
+            containerMulti.classList.remove('hidden');
+        } else {
+            containerSingle.classList.remove('hidden');
+            containerMulti.classList.add('hidden');
+        }
+    });
+
+    btnAddRow.addEventListener('click', () => {
+        const rows = containerMulti.querySelectorAll('.teacher-row');
+        if(rows.length >= 4) {
+            alert("Máximo de 4 professores permitidos.");
+            return;
+        }
+        addTeacherRow();
+    });
+}
+
+function addTeacherRow(nome = '', ch = '') {
+    const list = document.getElementById('multi-docente-list');
+    const div = document.createElement('div');
+    div.className = 'teacher-row';
+
+    div.innerHTML = `
+        <input type="text" class="inp-multi-name" list="list-docentes" placeholder="Nome" value="${nome}">
+        <input type="number" class="inp-multi-ch" placeholder="CH" min="1" value="${ch}">
+        <button type="button" class="btn-remove-row" title="Remover">×</button>
+    `;
+
+    // Botão remover
+    div.querySelector('.btn-remove-row').onclick = () => {
+        if(list.querySelectorAll('.teacher-row').length > 1) {
+            div.remove();
+            updateTotalCHDisplay();
+        } else {
+            // Se for o último, apenas limpa
+            div.querySelector('.inp-multi-name').value = '';
+            div.querySelector('.inp-multi-ch').value = '';
+            updateTotalCHDisplay();
+        }
+    };
+
+    // Listener para atualizar total
+    div.querySelector('.inp-multi-ch').addEventListener('input', updateTotalCHDisplay);
+
+    list.appendChild(div);
+}
+
+function updateTotalCHDisplay() {
+    const inputs = document.querySelectorAll('.inp-multi-ch');
+    let total = 0;
+    inputs.forEach(inp => total += parseInt(inp.value || 0));
+    document.getElementById('total-ch-display').textContent = `Total: ${total}h`;
+}
+
+function getDocenteData() {
+    const isMulti = document.getElementById('chk-multi-docente').checked;
+    
+    if (!isMulti) {
+        const nome = inputConfig.docente.value.trim();
+        return {
+            mode: 'single',
+            isValid: !!nome,
+            docente: nome,
+            docentesList: null
+        };
+    } else {
+        // Modo Multi
+        const rows = document.querySelectorAll('.teacher-row');
+        const list = [];
+        let totalCH = 0;
+
+        rows.forEach(r => {
+            const nome = r.querySelector('.inp-multi-name').value.trim();
+            const ch = parseInt(r.querySelector('.inp-multi-ch').value || 0);
+            if(nome && ch > 0) {
+                list.push({ nome, ch });
+                totalCH += ch;
+            }
+        });
+
+        // Validação básica
+        if(list.length === 0) return { isValid: false };
+
+        // Nome composto para exibição
+        const nomeComposto = list.map(d => d.nome.split(' ')[0]).join(' / ');
+
+        return {
+            mode: 'multi',
+            isValid: true,
+            docente: nomeComposto + ' (Múltiplos)', // Label genérico
+            docentesList: list,
+            totalCH: totalCH
+        };
+    }
+}
+
+/**
  * ======= Período letivo + turno =======
  */
 function initPeriodoLetivoETurno() {
@@ -307,6 +420,7 @@ export function initUI() {
 
   initPeriodoLetivoETurno();
   setupClearButtonsSidebar();
+  setupMultiDocenteUI(); 
 
   if (inputConfig.tipo) {
     inputConfig.tipo.addEventListener('change', (e) => {
@@ -652,19 +766,39 @@ function checkTeacherConflict(docente, dia, horario) {
 function handleSlotClick(dia, horario) {
   if (!store.selectedTurma) return alert('Selecione uma turma.');
 
-  const { disciplina, docente, tipo } = getInputValues();
-  if (!disciplina || !docente) return alert('Preencha Componente e Docente na lateral.');
+  // Ler dados do componente
+  const disciplina = (inputConfig.disciplina?.value ?? '').replace(/\s*\(\s*\d+\s*h\s*\)\s*$/i, '');
+  if (!disciplina) return alert('Preencha a Disciplina.');
+
+  // Ler dados do docente (novo método)
+  const docData = getDocenteData();
+  if (!docData.isValid) return alert('Preencha o(s) Docente(s).');
+
+  // Validação de CH Máxima
+  const info = getDisciplinaInfo(disciplina);
+  const maxCH = info.ch || 0;
+  
+  if (docData.mode === 'multi') {
+      if (docData.totalCH > maxCH) {
+          return alert(`A soma das horas (${docData.totalCH}h) ultrapassa a carga horária da disciplina (${maxCH}h).`);
+      }
+  }
+
+  const tipo = inputConfig.tipo?.value ?? 'regular';
   if (tipo === 'intensiva') return alert('Para intensivas, configure as datas no menu e clique em "Adicionar à Grade".');
 
-  const conflito = checkTeacherConflict(docente, dia, horario);
+  // Checagem de conflito (simples para o primeiro professor da lista ou o único)
+  const mainProf = docData.mode === 'single' ? docData.docente : docData.docentesList[0].nome;
+  const conflito = checkTeacherConflict(mainProf, dia, horario);
   if (conflito) {
-    if (!confirm(`O professor ${docente} já ministra aula na turma ${conflito.turmaId} neste horário. Continuar?`)) return;
+    if (!confirm(`O professor ${mainProf} já ministra aula na turma ${conflito.turmaId} neste horário. Continuar?`)) return;
   }
 
   store.addAllocation({
     turmaId: store.selectedTurma,
     disciplina,
-    docente,
+    docente: docData.docente, // String para exibição simples
+    docentes: docData.docentesList, // Array estruturado
     tipo,
     diaSemana: dia,
     horario,
@@ -677,19 +811,33 @@ function handleSlotClick(dia, horario) {
 
 function handleAddManual() {
   if (!store.selectedTurma) return alert('Selecione uma turma.');
-  const vals = getInputValues();
-  if (!vals.disciplina || !vals.docente) return alert('Preencha todos os campos.');
+  
+  // Captura valores usando nova lógica de docente
+  const docData = getDocenteData();
+  if (!docData.isValid) return alert('Preencha o(s) Docente(s).');
 
-  if (vals.tipo === 'intensiva') {
-    if (!vals.inicio) return alert('Defina a data de início.');
+  // Input config auxiliar
+  const disciplina = (inputConfig.disciplina?.value ?? '').replace(/\s*\(\s*\d+\s*h\s*\)\s*$/i, '');
+  const tipo = inputConfig.tipo?.value ?? 'regular';
+  const inicio = inputConfig.inicio?.value ?? '';
 
-    const info = getDisciplinaInfo(vals.disciplina);
+  if (!disciplina) return alert('Preencha o componente.');
+
+  if (tipo === 'intensiva') {
+    if (!inicio) return alert('Defina a data de início.');
+
+    const info = getDisciplinaInfo(disciplina);
     const ch = info.ch || 0;
-    if (ch === 0) return alert(`O componente "${vals.disciplina}" tem CH 0 ou não foi encontrado.`);
+    if (ch === 0) return alert(`O componente "${disciplina}" tem CH 0 ou não foi encontrado.`);
+
+    if(docData.mode === 'multi' && docData.totalCH > ch) {
+        alert(`Atenção: A soma das cargas horárias (${docData.totalCH}h) excede a CH da disciplina (${ch}h).`);
+        return;
+    }
 
     const diasNecessarios = Math.ceil(ch / 5);
     const feriados = store.rawData?.feriados || [];
-    const dataFimCalculada = addBusinessDays(vals.inicio, diasNecessarios, feriados);
+    const dataFimCalculada = addBusinessDays(inicio, diasNecessarios, feriados);
 
     const slotsTurmaRaw = store.getHorariosTurma() || [];
     const slotsOrdenados = slotsTurmaRaw
@@ -709,23 +857,14 @@ function handleAddManual() {
       return alert('Erro: não consegui montar 5 horários para intensiva.\n' + `Montados: ${slotsIntensiva.length}`);
     }
 
-    // --- NOVA VALIDAÇÃO: Choque de Intensivas (Mesma Turma e Horário) ---
+    // Validação de choque (intensiva vs intensiva)
     const normalize = s => (s || '').replace(/\s/g, '');
-    
     const conflitoIntensiva = store.allocations.find(a => {
-        // Filtra: Mesma Turma e Tipo Intensiva
         if (a.turmaId !== store.selectedTurma) return false;
         if (a.tipo !== 'intensiva') return false; 
-        
-        // 1. Verifica Sobreposição de Datas
-        const overlapData = (vals.inicio <= a.dataFim && dataFimCalculada >= a.dataInicio);
+        const overlapData = (inicio <= a.dataFim && dataFimCalculada >= a.dataInicio);
         if (!overlapData) return false;
-
-        // 2. Verifica Sobreposição de Horários (Slots)
-        // Se a intensiva existente não tiver horarios definidos (erro de dados), bloqueia por segurança
         if (!a.horariosOcupados || !Array.isArray(a.horariosOcupados)) return true;
-        
-        // Compara se algum horário da nova intensiva já está ocupado pela existente
         const overlapHorario = a.horariosOcupados.some(savedSlot => 
             slotsIntensiva.some(newSlot => normalize(savedSlot) === normalize(newSlot))
         );
@@ -733,30 +872,30 @@ function handleAddManual() {
     });
 
     if (conflitoIntensiva) {
-        alert("Outra disciplina vem sendo ministrada. Verifique o horário e dia de início dessa componente intensiva que está tentando alocar.");
+        alert("Outra disciplina vem sendo ministrada. Verifique o horário e dia de início.");
         return;
     }
-    // --------------------------------------------------------------------
 
     if (
       !confirm(
-        `Componente: ${vals.disciplina} (${ch}h)\n` +
+        `Componente: ${disciplina} (${ch}h)\n` +
           `Duração calculada: ${diasNecessarios} dias úteis.\n\n` +
-          `De: ${formatDateBR(vals.inicio)}\nAté: ${formatDateBR(dataFimCalculada)}\n\nConfirmar alocação?`
+          `De: ${formatDateBR(inicio)}\nAté: ${formatDateBR(dataFimCalculada)}\n\nConfirmar alocação?`
       )
     )
       return;
 
     store.addAllocation({
       turmaId: store.selectedTurma,
-      disciplina: vals.disciplina,
-      docente: vals.docente,
+      disciplina: disciplina,
+      docente: docData.docente, // String composta
+      docentes: docData.docentesList, // Lista real
       tipo: 'intensiva',
-      dataInicio: vals.inicio,
+      dataInicio: inicio,
       dataFim: dataFimCalculada,
       modelo: 'Automático',
       horariosOcupados: slotsIntensiva,
-      cor: store.getDisciplinaColor(vals.disciplina)
+      cor: store.getDisciplinaColor(disciplina)
     });
 
     renderOfertasList();
