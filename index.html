@@ -7,7 +7,6 @@
     <link rel="stylesheet" href="css/style.css">
     
     <style>
-        /* Ajustes específicos internos (se necessário override) */
         :root {
             --primary: #004e28; 
             --primary-light: #006633;
@@ -229,7 +228,7 @@
             <div class="form-group">
                 <label>Disciplina</label>
                 <div class="input-row-color">
-                    <input type="color" id="inp-color" value="#004e28" title="Escolha a cor da disciplina">
+                    <input type="color" id="inp-color" value="#e91e63" title="Escolha a cor da disciplina">
                     <input type="text" id="inp-disciplina" list="list-disciplinas" placeholder="Busque a disciplina...">
                 </div>
                 <datalist id="list-disciplinas"></datalist>
@@ -268,18 +267,18 @@
             </div>
 
             <div id="container-slots-selection" class="hidden form-group">
-                <label style="margin-bottom: 8px; color: #fff;">Horários da Intensiva:</label>
+                <label style="margin-bottom: 8px; color: #fff;">Horários (Desmarque para Híbrido):</label>
                 <div id="slots-checkboxes" class="slots-selection-grid">
                     </div>
             </div>
 
             <div id="datas-intensiva" class="hidden">
                 <div class="form-group">
-                    <label>Data de Início</label>
+                    <label>Início</label>
                     <input type="date" id="inp-data-inicio">
                 </div>
                 <small style="display:block; color:#bdc3c7; margin-top:5px; font-size:0.8em; line-height: 1.4;">
-                    * O sistema calculará a data final automaticamente baseada na CH e nos horários selecionados acima.
+                    * O sistema calculará a data final automaticamente baseada na CH e nos horários selecionados.
                 </small>
             </div>
 
@@ -314,7 +313,7 @@
             <section id="tab-weekly" class="tab-content active">
                 <div class="grid-header">
                     <h2 id="turma-title">Selecione uma turma</h2>
-                    <p class="instruction">Para disciplinas <b>Regulares</b>: Clique direto nos horários abaixo.<br>Para <b>Intensivas</b>: Configure a data e horários no menu e clique em "Adicionar".</p>
+                    <p class="instruction">Para disciplinas <b>Regulares</b>: Clique direto nos horários abaixo.<br>Para <b>Intensivas</b>: Configure as datas no menu e clique em "Adicionar à Grade".</p>
                 </div>
                 <div id="weekly-grid" class="timetable"></div>
             </section>
@@ -372,22 +371,24 @@
                                 <strong>1. Configure:</strong> No menu lateral esquerdo, selecione o <b>Curso</b> e a <b>Turma</b>.
                             </li>
                             <li style="margin-bottom: 15px;">
-                                <strong>2. Prepare a Aula:</strong> Escolha a <b>Disciplina</b>.
-                                <br><em>Novo: Escolha a <b>Cor</b> no seletor circular.</em>
+                                <strong>2. Prepare a Aula:</strong> Escolha a <b>Disciplina</b> e <b>Cor</b>.
                                 <br><em>Novo: Marque "Múltiplos?" para adicionar até 4 professores.</em>
                             </li>
                             <li style="margin-bottom: 15px;">
                                 <strong>3. Aloque (Regular):</strong> Com a disciplina selecionada, <b>clique diretamente nos quadradinhos</b> da grade horária.
                             </li>
                             <li style="margin-bottom: 15px;">
-                                <strong>4. Aloque (Intensiva):</strong> Mude o "Tipo" para <b>Intensiva</b>. Escolha a data de início e, no painel de horários, marque quais horários do turno a aula ocupará (ex: se for das 14h às 17h, desmarque as duas últimas caixas). O sistema ajustará a data final automaticamente.
+                                <strong>4. Aloque (Intensiva):</strong> Mude o "Tipo" para <b>Intensiva</b>. 
+                                <br>Todos os horários virão marcados. 
+                                <br><b>Para Híbrido:</b> Desmarque os horários que a disciplina NÃO ocupará.
+                                <br>Escolha a Data de Início e clique em <b>"Adicionar"</b>.
                             </li>
                         </ul>
 
                         <hr>
 
                         <h3>2️⃣ Verificando Conflitos</h3>
-                        <p>O sistema detecta choques de horário automaticamente. Se uma disciplina Intensiva não ocupa todos os horários do turno, você pode alocar uma aula Regular nos horários que ficaram vagos sem gerar erros.</p>
+                        <p>Para resolver conflitos parciais (ex: choque em apenas 3 horários), utilize o modo <b>Intensivo</b> desmarcando os horários em conflito.</p>
 
                         <hr>
 

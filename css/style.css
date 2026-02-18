@@ -336,29 +336,40 @@ input[type="date"] { color-scheme: dark; }
     display: block; 
 }
 
-/* FIX: Impede que a linha de horário quebre ao meio */
+/* ===== FIX VISUAL DA LINHA DE HORÁRIO (Conforme Imagem) ===== */
 .cal-slot-row { 
-    border-bottom: 1px solid #ddd; 
+    display: flex; /* Flexbox para alinhar horário esquerda e conteúdo direita */
+    border-bottom: 1px solid white; /* Linha divisória branca entre slots */
+    min-height: 18px; /* Altura mínima consistente */
+    
     page-break-inside: avoid;
     break-inside: avoid;
-    display: flex;
     font-size: 0.75em;
-    padding: 2px 0;
-    align-items: center;
+    align-items: stretch; /* Garante que ambos tenham a mesma altura */
 }
+
+/* Coluna da Esquerda: Horário (Cinza Escuro) */
 .cal-slot-time {
-    width: 45px;
+    width: 42px; /* Largura fixa */
     font-weight: bold;
-    color: var(--text-muted);
+    color: #333;
+    background-color: #e0e0e0; /* Cinza conforme imagem */
     flex-shrink: 0;
-    text-align: right;
-    padding-right: 6px;
-    border-right: 2px solid #eee;
+    
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    
+    border-right: 2px solid white; /* Divisória vertical branca */
     font-family: monospace;
 }
+
+/* Coluna da Direita: Conteúdo (Colorido ou Cinza Claro se vazio) */
 .cal-slot-content {
-    flex-grow: 1;
+    flex-grow: 1; /* Ocupa o resto */
     padding-left: 6px;
+    display: flex;
+    align-items: center;
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
