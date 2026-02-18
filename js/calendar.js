@@ -1,5 +1,5 @@
 import { store } from './store.js';
-import { getDaysArray, toLocalDateString } from './utils.js';
+import { getDaysArray, toLocalDateString, countBusinessDays } from './utils.js';
 
 export function getCalendarEvents(turmaId, startDate, endDate, docenteFilter = null) {
   const days = getDaysArray(startDate, endDate);
@@ -23,7 +23,7 @@ export function getCalendarEvents(turmaId, startDate, endDate, docenteFilter = n
     });
   }
 
-  const executionCount = {}; // Rastreia horas acumuladas por (turma+disciplina)
+  const executionCount = {}; // Mantido para regulares
 
   // --- Filtros ---
   // AQUI: Filtro deve considerar se o professor está na lista de "docentes" da alocação
@@ -45,14 +45,27 @@ export function getCalendarEvents(turmaId, startDate, endDate, docenteFilter = n
   });
 
   // Híbrido é tratado como Intensiva para fins de loop de data
-  const myIntensives = myAllocations.filter(a => a.tipo === 'intensiva' || a.tipo === 'hibrido');
+  const myIntensives = myAllocations.filter(a => a.tipo === 'intensiva');
   const myRegulars = myAllocations.filter(a => a.tipo === 'regular');
-  const allIntensives = store.allocations.filter(a => a.tipo === 'intensiva' || a.tipo === 'hibrido');
+  const allIntensives = store.allocations.filter(a => a.tipo === 'intensiva');
 
   const feriadosList = store.rawData?.feriados || [];
 
   // Função auxiliar para limpar espaços e comparar horários
-  const normalizeTime = (t) => (t || '').replace(/\s/g, '');
+  const normalizeTime = (t) => (t || '').replace(/[^0-9:]/g, '');
+
+  // --- Helper para checar dia útil localmente ---
+  function isBusinessDay(dStr) {
+      // 1. Fim de semana (criação de data segura)
+      const d = new Date(dStr + 'T12:00:00');
+      const day = d.getDay();
+      if (day === 0 || day === 6) return false;
+
+      // 2. Feriado
+      if (feriadosList.some(f => f.data === dStr)) return false;
+
+      return true;
+  }
 
   // --- Loop ---
   days.forEach(date => {
@@ -76,7 +89,7 @@ export function getCalendarEvents(turmaId, startDate, endDate, docenteFilter = n
       return;
     }
 
-    // Intensivas ativas no sistema todo nesta data
+    // Intensivas ativas no sistema todo nesta data (para bloqueio)
     const globalActiveIntensives = allIntensives.filter(
       i => dateStr >= i.dataInicio && dateStr <= i.dataFim
     );
@@ -86,42 +99,64 @@ export function getCalendarEvents(turmaId, startDate, endDate, docenteFilter = n
       i => dateStr >= i.dataInicio && dateStr <= i.dataFim
     );
 
-    // Renderizar Minhas Intensivas (e Híbridas)
+    // --- Renderizar Minhas Intensivas (Lógica ITERATIVA EXATA) ---
     myActiveIntensives.forEach(intense => {
-      const key = `${intense.turmaId}|${intense.disciplina}`;
-      const slotsConsumed = intense.horariosOcupados ? intense.horariosOcupados.length : 5;
+      // Lista de slots usados no dia (ex: 3 slots se Hibrido, 5 se Full)
+      const slots = intense.horariosOcupados || [];
+      const slotsPerDay = slots.length;
       
-      const currentCount = executionCount[key] || 0;
-      executionCount[key] = currentCount + slotsConsumed;
-
-      // Lógica de Múltiplos Docentes (Quem assume HOJE?)
-      let activeDocenteName = intense.docente; // Default (pode ser o nome composto)
+      // 1. Calcular horas acumuladas exatas desde o início até ONTEM
+      let hoursBeforeToday = 0;
       
-      if (intense.docentes && intense.docentes.length > 0) {
-          let acc = 0;
-          for (const d of intense.docentes) {
-              acc += parseInt(d.ch);
-              // Se o acumulado cobrir o início deste dia (currentCount), é este professor
-              // (Simplificação: block-based owner)
-              if (currentCount < acc) {
-                  activeDocenteName = d.nome;
-                  break;
-              }
+      // Itera do inicio até ontem para contar slots "consumidos"
+      let cursor = new Date(intense.dataInicio + 'T12:00:00');
+      const targetDate = new Date(dateStr + 'T12:00:00');
+      
+      while (cursor < targetDate) {
+          const cStr = cursor.toISOString().split('T')[0];
+          if (isBusinessDay(cStr)) {
+             hoursBeforeToday += slotsPerDay;
           }
+          cursor.setDate(cursor.getDate() + 1);
       }
 
-      // Se estivermos na Visão do Professor, só mostra se for ELE o ativo naquele dia
-      if (docenteFilter && activeDocenteName !== docenteFilter) return;
+      // 3. Itera sobre CADA SLOT desta disciplina para HOJE
+      slots.forEach((slotTime, slotIndex) => {
+          
+          // Qual é o número sequencial desta hora no total do curso?
+          const currentHourNum = hoursBeforeToday + slotIndex + 1; // 1-based
 
-      events.push({ 
-          ...intense, 
-          priority: 2, 
-          title: `(I) ${intense.disciplina}`, 
-          docente: activeDocenteName // Sobrescreve para exibição correta no card
+          // Determina o professor dono desta hora específica
+          let slotDocente = intense.docente; // Default
+          
+          if (intense.docentes && intense.docentes.length > 0) {
+              let acc = 0;
+              for (const d of intense.docentes) {
+                  acc += parseInt(d.ch);
+                  // Se o acumulado de horas cobrir o início do dia de hoje (currentHourNum), é este o professor.
+                  if (currentHourNum <= acc) {
+                      slotDocente = d.nome;
+                      break;
+                  }
+              }
+          }
+
+          // Se estivermos na Visão do Professor, só mostra se for ELE o dono deste slot
+          if (docenteFilter && slotDocente !== docenteFilter) return;
+
+          events.push({ 
+              ...intense, 
+              priority: 2, 
+              title: `(I) ${intense.disciplina}`, 
+              docente: slotDocente, // Professor específico deste horário
+              horario: slotTime, // Amarra ao horário específico para exibição correta
+              // Removemos horariosOcupados aqui para o renderizador tratar como evento único de slot
+              horariosOcupados: null 
+          });
       });
     });
 
-    // Renderizar Regulares (com lógica de Suspensão)
+    // --- Renderizar Regulares ---
     myRegulars.forEach(reg => {
       // TRAVA DE SEGURANÇA:
       if (store.settings.termEnd && dateStr > store.settings.termEnd) return;
@@ -132,10 +167,10 @@ export function getCalendarEvents(turmaId, startDate, endDate, docenteFilter = n
         const blockingIntensive = globalActiveIntensives.find(intensive => {
             if (intensive.turmaId !== reg.turmaId) return false;
             // Bloqueio seguro: se intensiva não tem slots definidos (erro), bloqueia tudo.
-            if (!intensive.horariosOcupados || !Array.isArray(intensive.horariosOcupados)) return true;
+            if (!intensive.horariosOcupados || !Array.isArray(intensive.horariosOcupados)) return false;
 
             const regHorarioNorm = normalizeTime(reg.horario);
-            // Bate horário?
+            // Só bloqueia se o slot específico bater
             return intensive.horariosOcupados.some(h => normalizeTime(h) === regHorarioNorm);
         });
 
@@ -153,7 +188,8 @@ export function getCalendarEvents(turmaId, startDate, endDate, docenteFilter = n
                    type: 'suspension',
                    title: `Suspensão: ${blockingIntensive.disciplina}`,
                    cor: '#ecf0f1',
-                   isSuspended: true
+                   isSuspended: true,
+                   horario: reg.horario // Garante que apareça no slot certo
                  });
              }
           }
@@ -209,6 +245,9 @@ export function getCalendarEvents(turmaId, startDate, endDate, docenteFilter = n
     events.forEach(e => {
       const slots = [];
       if (e.horario) slots.push(e.horario);
+      // Como agora "explodimos" as intensivas em eventos individuais com 'horario', 
+      // não precisamos varrer 'horariosOcupados' aqui, pois ele é null no evento processado.
+      // Mas mantemos a lógica caso venha algo legado.
       if (e.horariosOcupados && Array.isArray(e.horariosOcupados)) {
         slots.push(...e.horariosOcupados);
       }

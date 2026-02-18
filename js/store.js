@@ -10,7 +10,9 @@ class Store {
     this.settings = {
       termStart: '',
       termEnd: '',
-      turnoOferta: '' // "Manhã" | "Tarde" | ...
+      turnoOferta: '', // "Manhã" | "Tarde" | ...
+      lastCurso: '',   // PERSISTÊNCIA
+      lastTurma: ''    // PERSISTÊNCIA
     };
 
     this.loadSettings();
@@ -48,6 +50,13 @@ class Store {
   setTurnoOferta(turno) {
     if (turno) this.settings.turnoOferta = turno;
     this.saveSettings();
+  }
+
+  // NOVO: Persistência de contexto
+  setLastContext(curso, turma) {
+      if (curso) this.settings.lastCurso = curso;
+      if (turma) this.settings.lastTurma = turma;
+      this.saveSettings();
   }
 
   // ===== Data =====

@@ -304,7 +304,6 @@ input[type="date"] { color-scheme: dark; }
     break-after: avoid;
 }
 
-/* === AQUI ESTAVA O ERRO: Certifique-se que essa classe existe! === */
 .month-grid { 
     display: grid; 
     grid-template-columns: 0.6fr repeat(5, 1fr) 0.6fr; 
@@ -425,36 +424,39 @@ input[type="date"] { color-scheme: dark; }
     background: #c0392b;
 }
 
-/* NOVO: Estilo "Botão" para checkboxes Híbridos */
-.hybrid-slots-grid {
+/* NOVO: Estilo "Botão" para checkboxes de Slots com GRID VERTICAL (1esq, 2esq, 3esq, 4dir...) */
+.slots-selection-grid {
     display: grid;
     grid-template-columns: 1fr 1fr; /* 2 colunas */
+    grid-auto-flow: column; /* FORÇA PREENCHIMENTO VERTICAL */
+    grid-template-rows: repeat(3, auto); /* Limita a 3 linhas para forçar a quebra para a 2ª coluna */
     gap: 8px;
 }
 
-.hybrid-slots-grid label {
+.slots-selection-grid label {
     display: flex;
     align-items: center;
     gap: 8px;
-    background: var(--primary-light); /* Verde mais escuro do tema */
+    background: var(--primary-light); 
     color: white;
-    padding: 10px 8px;
+    padding: 8px 10px;
     border-radius: 6px;
-    font-size: 0.85em;
+    font-size: 0.82em;
     cursor: pointer;
     border: 1px solid rgba(255,255,255,0.2);
     transition: background 0.2s;
+    white-space: nowrap;
 }
 
-.hybrid-slots-grid label:hover {
-    background: var(--primary); /* Highlight ao passar mouse */
+.slots-selection-grid label:hover {
+    background: var(--primary);
 }
 
-.hybrid-slots-grid input[type="checkbox"] {
-    width: 18px;
-    height: 18px;
+.slots-selection-grid input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
     margin: 0;
-    accent-color: var(--accent); /* Cor destaque do check */
+    accent-color: var(--accent);
     cursor: pointer;
 }
 

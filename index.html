@@ -264,23 +264,22 @@
                 <select id="sel-tipo">
                     <option value="regular">Regular (Semanal)</option>
                     <option value="intensiva">Intensiva (Blocada)</option>
-                    <option value="hibrido">Híbrido (Intensivo Parcial)</option>
                 </select>
             </div>
 
-            <div id="container-slots-hibrido" class="hidden form-group">
-                <label style="margin-bottom: 8px; color: #fff;">Selecione os Horários:</label>
-                <div id="hybrid-checkboxes" class="hybrid-slots-grid">
+            <div id="container-slots-selection" class="hidden form-group">
+                <label style="margin-bottom: 8px; color: #fff;">Horários da Intensiva:</label>
+                <div id="slots-checkboxes" class="slots-selection-grid">
                     </div>
             </div>
 
             <div id="datas-intensiva" class="hidden">
                 <div class="form-group">
-                    <label>Início</label>
+                    <label>Data de Início</label>
                     <input type="date" id="inp-data-inicio">
                 </div>
                 <small style="display:block; color:#bdc3c7; margin-top:5px; font-size:0.8em; line-height: 1.4;">
-                    * O sistema calculará a data final automaticamente baseada na CH e nos horários selecionados.
+                    * O sistema calculará a data final automaticamente baseada na CH e nos horários selecionados acima.
                 </small>
             </div>
 
@@ -315,7 +314,7 @@
             <section id="tab-weekly" class="tab-content active">
                 <div class="grid-header">
                     <h2 id="turma-title">Selecione uma turma</h2>
-                    <p class="instruction">Para disciplinas <b>Regulares</b>: Clique direto nos horários abaixo.<br>Para <b>Intensivas/Híbridas</b>: Configure as datas no menu e clique em "Adicionar à Grade".</p>
+                    <p class="instruction">Para disciplinas <b>Regulares</b>: Clique direto nos horários abaixo.<br>Para <b>Intensivas</b>: Configure a data e horários no menu e clique em "Adicionar".</p>
                 </div>
                 <div id="weekly-grid" class="timetable"></div>
             </section>
@@ -381,17 +380,14 @@
                                 <strong>3. Aloque (Regular):</strong> Com a disciplina selecionada, <b>clique diretamente nos quadradinhos</b> da grade horária.
                             </li>
                             <li style="margin-bottom: 15px;">
-                                <strong>4. Aloque (Intensiva):</strong> Mude o "Tipo" para <b>Intensiva</b>, escolha a Data de Início e clique em <b>"Adicionar"</b>.
-                            </li>
-                            <li style="margin-bottom: 15px;">
-                                <strong>5. Aloque (Híbrida):</strong> Mude o "Tipo" para <b>Híbrido</b>. Selecione <b>quais horários</b> do turno essa disciplina vai ocupar (ex: as 3 primeiras).
+                                <strong>4. Aloque (Intensiva):</strong> Mude o "Tipo" para <b>Intensiva</b>. Escolha a data de início e, no painel de horários, marque quais horários do turno a aula ocupará (ex: se for das 14h às 17h, desmarque as duas últimas caixas). O sistema ajustará a data final automaticamente.
                             </li>
                         </ul>
 
                         <hr>
 
                         <h3>2️⃣ Verificando Conflitos</h3>
-                        <p>Para resolver conflitos parciais (ex: choque em apenas 3 horários), utilize o modo <b>Híbrido</b> para cadastrar a disciplina ocupando apenas os horários corretos. O sistema deixará de marcar choque nos horários que não foram selecionados.</p>
+                        <p>O sistema detecta choques de horário automaticamente. Se uma disciplina Intensiva não ocupa todos os horários do turno, você pode alocar uma aula Regular nos horários que ficaram vagos sem gerar erros.</p>
 
                         <hr>
 
