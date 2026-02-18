@@ -179,7 +179,7 @@ export function getCalendarEvents(turmaId, startDate, endDate, docenteFilter = n
     );
 
     myActiveIntensives.forEach(intense => {
-      // ** CHECK SUPRESSÃO POR PRIORITÁRIA **
+      // ** CHECK SUPRESSÃO VISUAL (HOJE) **
       if (turmasWithPriorityToday.has(String(intense.turmaId))) {
           // Intensiva suspensa neste dia
           return; 
@@ -188,17 +188,27 @@ export function getCalendarEvents(turmaId, startDate, endDate, docenteFilter = n
       const slots = intense.horariosOcupados || [];
       const slotsPerDay = slots.length;
       
-      // Contagem de horas (precisa pular dias bloqueados por prioritária para ser exato?
-      // Por simplicidade, usamos contagem de dias úteis padrão, o sistema visual se ajusta)
+      // === CORREÇÃO CRÍTICA V2.0: CÁLCULO DE HORAS ACUMULADAS ===
+      // Identificar quais dias da semana são bloqueados por Regular Prioritária PARA ESTA TURMA
+      // Isso impede que dias "pulados" sejam contados como horas aula dadas.
+      const blockedDaysForTurma = new Set(
+          allPriorityRegulars
+            .filter(p => String(p.turmaId) === String(intense.turmaId))
+            .map(p => parseInt(p.diaSemana)) // Retorna 0..6
+      );
+
       let hoursBeforeToday = 0;
       let cursor = new Date(intense.dataInicio + 'T12:00:00');
       const targetDate = new Date(dateStr + 'T12:00:00');
       
       while (cursor < targetDate) {
           const cStr = cursor.toISOString().split('T')[0];
-          // NOTA: Para v2.0 perfeita, deveríamos checar se cStr teve prioritária também.
-          // Mantido isBusinessDay simples para performance v1 -> v2 transição.
-          if (isBusinessDay(cStr)) hoursBeforeToday += slotsPerDay;
+          const dow = cursor.getDay();
+          
+          // Só conta hora se for dia útil E se o dia NÃO estiver bloqueado por uma Prioritária
+          if (isBusinessDay(cStr) && !blockedDaysForTurma.has(dow)) {
+             hoursBeforeToday += slotsPerDay;
+          }
           cursor.setDate(cursor.getDate() + 1);
       }
 
