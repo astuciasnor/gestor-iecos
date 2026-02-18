@@ -1072,7 +1072,6 @@ function renderOfertasList() {
   }
 }
 
-// ... Restante das funções de calendário (MANTIDAS) ...
 function renderMonthlyCalendar() {
   const container = document.getElementById('monthly-container');
   if (!container) return;
@@ -1230,9 +1229,10 @@ function generateCalendarGrid(container, turmaId, docenteName, start, end, title
                     const conflictNames = eventsInSlot.map((e) => getDisciplinaInfo(e.disciplina).abrev).join(' <b style="color:#fff">x</b> ');
                     content = `<span title="Choque: ${conflictNames.replace(/<[^>]+>/g, '')}">⚠️ ${conflictNames}</span>`;
                   } else if (isSuspended) {
-                    style = 'background: #f1f2f6; color: #95a5a6; font-style:italic; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; border: 1px dashed #bdc3c7;';
+                    // MUDANÇA VISUAL AQUI (PARA CORRESPONDER AO TÍTULO DO EVENTO)
                     const suspendedEvent = eventsInSlot.find(e => e.isSuspended);
-                    content = `<span title="${suspendedEvent.title}">${suspendedEvent.title}</span>`;
+                    // O estilo já é aplicado via classe .suspended-slot abaixo
+                    content = suspendedEvent.title; 
                   } else {
                     const event = eventsInSlot[0];
                     const info = getDisciplinaInfo(event.disciplina);
@@ -1240,26 +1240,52 @@ function generateCalendarGrid(container, turmaId, docenteName, start, end, title
                     style = `background:${event.cor || '#bdc3c7'}; color:black;`;
                   }
               } else {
+                  // VISÃO TURMA
                   const event = eventsInSlot[0];
-                  const info = getDisciplinaInfo(event.disciplina);
-                  content = info.abrev;
                   
-                  // Se for prioritária, dá um destaque visual
-                  if (event.isPriority) {
-                      style += 'border: 2px solid #8e44ad; font-weight:bold;';
+                  // SE FOR SUSPENSO (TIPO NOVO)
+                  if (event.type === 'suspended') {
+                      content = event.title; // "⛔ Suspensa (Nome)"
+                      // A classe .suspended-slot já cuida do estilo, mas aplicamos inline para garantir override
+                      style = ''; // Limpa estilo inline para usar a classe
+                  } else {
+                      const info = getDisciplinaInfo(event.disciplina);
+                      content = info.abrev;
+                      
+                      // Se for prioritária, dá um destaque visual
+                      if (event.isPriority) {
+                          style += 'border: 2px solid #8e44ad; font-weight:bold;';
+                      }
+                      style = `background:${event.cor || '#bdc3c7'}; color:black; ${style}`;
                   }
-
-                  style = `background:${event.cor || '#bdc3c7'}; color:black; ${style}`;
               }
             } else {
                content = '&nbsp;'; 
                style = 'background: #ecf0f1;'; 
             }
 
+            // === APLICAR CLASSE SUSPENDED SE NECESSÁRIO ===
+            // Verifica se tem algum evento suspenso na lista filtrada para este slot
+            const isSuspendedSlot = eventsInSlot.some(e => e.type === 'suspended');
+            
+            // Verifica se é um evento que está sobrepondo (usurpando) uma regular
+            const isOverridingSlot = eventsInSlot.some(e => e.isOverriding);
+
+            let className = 'cal-slot-content';
+            if (isSuspendedSlot) className += ' suspended-slot';
+            if (isOverridingSlot) className += ' overriding-event';
+            
+            // Tooltip logic
+            let tooltip = '';
+            if (isSuspendedSlot) {
+                const suspEvent = eventsInSlot.find(e => e.type === 'suspended');
+                tooltip = `title="${suspEvent.blockingReason || 'Suspenso'}"`;
+            }
+
             html += `
               <div class="cal-slot-row">
                 <div class="cal-slot-time">${timeLabel}</div>
-                <div class="cal-slot-content" style="${style}">${content}</div>
+                <div class="${className}" style="${style}" ${tooltip}>${content}</div>
               </div>`;
           });
         } else {
