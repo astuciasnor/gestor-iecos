@@ -864,25 +864,37 @@ function handleAddManual() {
     // Helper de normalização
     const normalize = s => (s || '').split(/\s/)[0].replace(/[^0-9:]/g, '');
 
-    // === VALIDAÇÃO DE CHOQUE COM LÓGICA DE SALA BLOQUEADA ===
+    // === BUSCA DE CONFLITOS (COM SUPORTE A ATUALIZAÇÃO) ===
     const conflitoIntensiva = store.allocations.find(a => {
-        // Ignora a própria
-        if (String(a.turmaId) === String(store.selectedTurma) && a.disciplina === disciplina) return false;
+        
+        // 1. VERIFICAÇÃO DE ATUALIZAÇÃO (Mesma Turma + Mesma Disciplina)
+        // Se encontrarmos a mesma disciplina na mesma turma...
+        if (String(a.turmaId) === String(store.selectedTurma) && a.disciplina === disciplina) {
+            // ...e houver colisão de datas, consideramos um "encontro" para perguntar se quer substituir.
+            if (a.tipo === 'intensiva') {
+                if (isDateOverlap(inicio, dataFimCalculada, a.dataInicio, a.dataFim)) return true;
+            } else {
+                // Se for regular, também retorna true para perguntar se quer substituir a regular pela intensiva
+                return true; 
+            }
+            // Se as datas não batem (ex: intensiva em outro mês), não é conflito.
+            return false;
+        }
 
-        // Verifica PROFESSOR em comum
+        // 2. Verifica PROFESSOR em comum
         const newTeachers = docData.mode === 'single' ? [docData.docente] : docData.docentesList.map(d=>d.nome);
         const storedTeachers = a.docentes ? a.docentes.map(d=>d.nome) : [a.docente];
         const hasCommonTeacher = newTeachers.some(nt => storedTeachers.includes(nt));
         if (!hasCommonTeacher) return false;
 
-        // Verifica DATA
+        // 3. Verifica DATA
         let isDateCollision = true;
         if (a.tipo === 'intensiva') {
             isDateCollision = isDateOverlap(inicio, dataFimCalculada, a.dataInicio, a.dataFim);
         }
         if (!isDateCollision) return false;
 
-        // Verifica HORÁRIO
+        // 4. Verifica HORÁRIO
         let isTimeCollision = false;
         const newSlotsNorm = slotsIntensiva.map(normalize);
         let existingSlotsNorm = [];
@@ -894,25 +906,20 @@ function handleAddManual() {
         isTimeCollision = newSlotsNorm.some(ns => existingSlotsNorm.includes(ns));
         if (!isTimeCollision) return false;
 
-        // === SUPRESSÃO: A SALA DA REGULAR ESTÁ OCUPADA? ===
+        // 5. SUPRESSÃO (Soberania da Sala)
+        // Se chegou até aqui, é um choque de Professor/Horário. 
+        // Mas se 'a' for Regular, verificamos se a sala DELA já não está ocupada por outra Intensiva.
         if (a.tipo === 'regular') {
-            // Se conflita com Regular X na Turma A...
-            // Procuramos se existe ALGUMA intensiva na Turma A, nesses mesmos dias e horários.
             const intensivaBlockingRoom = store.allocations.find(i => {
                 if (i.tipo !== 'intensiva') return false;
-                if (String(i.turmaId) !== String(a.turmaId)) return false; // Deve ser na mesma turma da regular
-                
-                // Checa data da inserção X data da intensiva bloqueadora
+                if (String(i.turmaId) !== String(a.turmaId)) return false; 
                 if (!isDateOverlap(inicio, dataFimCalculada, i.dataInicio, i.dataFim)) return false;
-
-                // Checa horário da regular X horário da intensiva
                 const intSlots = (i.horariosOcupados || []).map(normalize);
                 return intSlots.includes(normalize(a.horario));
             });
 
             if (intensivaBlockingRoom) {
-                // A sala da regular está tomada. O professor da regular está, portanto, livre (ou dando a intensiva).
-                // Conflito Falso.
+                // Sala bloqueada -> Professor da regular livre -> Falso Positivo.
                 return false;
             }
         }
@@ -921,13 +928,16 @@ function handleAddManual() {
     });
 
     if (conflitoIntensiva) {
+        // Se for a PRÓPRIA disciplina (Atualização)
         if (String(conflitoIntensiva.turmaId) === String(store.selectedTurma) && conflitoIntensiva.disciplina === disciplina) {
             if(confirm(`Já existe uma alocação para ${disciplina} neste período. Deseja atualizar os horários/slots?`)) {
                 store.removeAllocation(conflitoIntensiva.id);
+                // O código segue abaixo para adicionar a nova versão...
             } else {
-                return;
+                return; // Usuário cancelou
             }
         } else {
+            // Choque real com outra disciplina/professor
             const tipoConflito = conflitoIntensiva.tipo === 'regular' ? 'Regular (Semanal)' : 'Intensiva';
             alert(`Choque de Horário Detectado!\n\n` +
                   `O professor já está ocupado com:\n` +
