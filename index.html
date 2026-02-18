@@ -363,59 +363,68 @@
                 <div class="help-layout">
 
                     <div class="help-main">
-                        <h2 style="border-bottom: 2px solid #2c3e50; padding-bottom: 10px;">Como usar o Gestor de Horários</h2>
+                        <h2 style="border-bottom: 2px solid #2c3e50; padding-bottom: 10px;">Guia de Uso & Regras de Negócio</h2>
 
                         <h3>1️⃣ Passo a Passo Básico</h3>
                         <ul style="list-style: none; padding: 0;">
                             <li style="margin-bottom: 15px;">
-                                <strong>1. Configure:</strong> No menu lateral esquerdo, selecione o <b>Curso</b> e a <b>Turma</b>.
+                                <strong>1. Configure:</strong> No menu lateral, selecione o <b>Curso</b>, a <b>Turma</b> e o <b>Turno</b> de trabalho.
                             </li>
                             <li style="margin-bottom: 15px;">
-                                <strong>2. Prepare a Aula:</strong> Escolha a <b>Disciplina</b> e <b>Cor</b>.
-                                <br><em>Novo: Marque "Múltiplos?" para adicionar até 4 professores.</em>
+                                <strong>2. Aloque Regulares:</strong> Selecione a disciplina e clique direto nos "quadradinhos" da grade semanal.
                             </li>
                             <li style="margin-bottom: 15px;">
-                                <strong>3. Aloque (Regular):</strong> Com a disciplina selecionada, <b>clique diretamente nos quadradinhos</b> da grade horária.
-                            </li>
-                            <li style="margin-bottom: 15px;">
-                                <strong>4. Aloque (Intensiva):</strong> Mude o "Tipo" para <b>Intensiva</b>. 
-                                <br>Todos os horários virão marcados. 
-                                <br><b>Para Híbrido:</b> Desmarque os horários que a disciplina NÃO ocupará.
-                                <br>Escolha a Data de Início e clique em <b>"Adicionar"</b>.
+                                <strong>3. Aloque Intensivas:</strong> 
+                                <br>• Mude o Tipo para "Intensiva".
+                                <br>• <b>Seleção de Slots:</b> Marque quais horários do dia a intensiva ocupará (ex: todos para Full, ou apenas alguns para Híbrido).
+                                <br>• Defina a data de início e clique em "Adicionar".
                             </li>
                         </ul>
 
                         <hr>
 
-                        <h3>2️⃣ Verificando Conflitos</h3>
-                        <p>Para resolver conflitos parciais (ex: choque em apenas 3 horários), utilize o modo <b>Intensivo</b> desmarcando os horários em conflito.</p>
+                        <h3>2️⃣ Regras de Conflito e Suspensão</h3>
+                        <div style="background: #eef2f3; padding: 15px; border-left: 5px solid #2980b9; border-radius: 4px; margin-bottom: 20px;">
+                            <strong>⚡ Soberania da Intensiva (Suspensão):</strong><br>
+                            Se você inserir uma disciplina Intensiva em uma sala/horário que já possui uma disciplina Regular (semanal), o sistema entende que a Regular foi <b>suspensa temporariamente</b> naquela data específica.
+                            <br><br>
+                            <em>Exemplo:</em> Se há "Bioquímica" toda terça-feira, mas você insere uma "Semana de Seminários" na mesma sala nesta data, a "Bioquímica" some do calendário neste dia, liberando o professor. A Regular retorna automaticamente na semana seguinte.
+                        </div>
+
+                        <div style="background: #fff3cd; padding: 15px; border-left: 5px solid #f1c40f; border-radius: 4px; margin-bottom: 20px;">
+                            <strong>📅 Coexistência no Mesmo Dia:</strong><br>
+                            <p>Tem Intensiva no dia? <b>Pode ter Regular no dia também, desde que haja horários livres.</b></p>
+                            <p>Se a Intensiva ocupa apenas os 3 últimos horários da manhã, os 2 primeiros horários continuam livres para receber aulas Regulares normalmente.</p>
+                        </div>
 
                         <hr>
 
-                        <h3>3️⃣ Imprimindo e Relatórios</h3>
-                        <p>Para gerar o PDF bonito para o mural:</p>
-                        <ul>
-                            <li>Vá na aba <b>Calendário da Turma</b> (ou Visão do Professor).</li>
-                            <li>Clique no botão <b>🖨️ Imprimir</b> no topo da página.</li>
-                            <li>Nas configurações de impressão do navegador, marque a opção <b>"Gráficos de Plano de Fundo"</b>.</li>
+                        <h3>3️⃣ Gerenciamento e Limpeza</h3>
+                        <ul style="padding-left: 20px;">
+                            <li><b>Correção de Erros:</b> Se inseriu algo errado, vá na aba <b>"Lista de Ofertas"</b> e clique no botão vermelho <b>"Excluir"</b> ao lado da disciplina.</li>
+                            <li><b>Atualização Rápida:</b> Ao tentar inserir a <i>mesma disciplina</i> na <i>mesma turma</i> em datas conflitantes, o sistema perguntará se você deseja <b>atualizar</b> a oferta antiga pela nova (útil para mudar de 5 slots para 3 slots, por exemplo).</li>
+                            <li><b>Limpar Tudo vs. Importar:</b>
+                                <ul>
+                                    <li>O botão <b>Limpar Tudo</b> (em vermelho) zera completamente o navegador. Use isso se quiser começar um planejamento do zero.</li>
+                                    <li>Ao <b>Importar</b>, você pode escolher "Mesclar" (juntar com o que já existe) ou "Substituir" (apagar o atual e carregar o novo).</li>
+                                </ul>
+                            </li>
                         </ul>
 
                     </div>
 
                     <aside class="help-side">
                         <div class="help-card help-card-tip">
-                            <strong>Dica Rápida:</strong>
+                            <strong>Dica de Impressão:</strong>
                             <div style="margin-top:6px;">
-                                O sistema salva seus dados automaticamente no seu navegador enquanto você trabalha. Mas para garantir,
-                                sempre clique em <b>Exportar (JSON)</b> antes de fechar a janela!
+                                Para o PDF sair colorido e bonito, ative a opção <b>"Gráficos de Plano de Fundo"</b> nas configurações de impressão do seu navegador.
                             </div>
                         </div>
 
                         <div class="help-card help-card-dev">
-                            <strong>Fale com o desenvolvedor:</strong>
+                            <strong>Nota ao Desenvolvedor:</strong>
                             <div style="margin-top:6px;">
-                                Prof. Dr. Evaldo Silva — se quiser solicitar uma implementação de nova funcionalidade neste programa web,
-                                corrigir algo, ou adicionar novos dados.
+                                A atualização dos dados base (professores, disciplinas) deve ser feita via arquivo Excel e script Python. Não altere os nomes das variáveis no JSON manualmente para evitar quebra de vínculos.
                             </div>
                         </div>
                     </aside>
