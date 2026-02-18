@@ -5,10 +5,21 @@ document.addEventListener('DOMContentLoaded', async () => {
   await store.loadData();
   initUI();
 
-  // Exportar
+  // Exportar com Nome Dinâmico: SIGLA_ANO_PERIODO (Ex: EP_2026_2P)
   document.getElementById('btn-export').onclick = () => {
-    const date = new Date().toISOString().slice(0, 10);
-    const fileName = `alocacoes_${date}.json`;
+    // 1. Obtém a Sigla do curso selecionado (ex: EP)
+    const sigla = store.selectedCurso || 'DADOS';
+    
+    // 2. Obtém o Ano (YYYY) da data de início definida nas configurações
+    let ano = '0000';
+    if (store.settings.termStart) {
+        ano = store.settings.termStart.split('-')[0];
+    }
+    
+    // 3. Obtém o Período selecionado (1P, 2P, 3P ou 4P)
+    const periodo = store.settings.periodo || '1P';
+
+    const fileName = `${sigla}_${ano}_${periodo}.json`;
 
     const dataStr =
       "data:text/json;charset=utf-8," +

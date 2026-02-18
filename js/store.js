@@ -11,6 +11,7 @@ class Store {
       termStart: '',
       termEnd: '',
       turnoOferta: '', // "Manhã" | "Tarde" | ...
+      periodo: '1P',   // NOVO: Persistência do Período (1P, 2P, 3P, 4P)
       lastCurso: '',   // PERSISTÊNCIA
       lastTurma: ''    // PERSISTÊNCIA
     };
@@ -50,6 +51,14 @@ class Store {
   setTurnoOferta(turno) {
     if (turno) this.settings.turnoOferta = turno;
     this.saveSettings();
+  }
+
+  // NOVO: Método para salvar o Período selecionado
+  setPeriodo(p) {
+    if (p) {
+      this.settings.periodo = p;
+      this.saveSettings();
+    }
   }
 
   // NOVO: Persistência de contexto

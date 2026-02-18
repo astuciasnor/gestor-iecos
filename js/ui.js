@@ -356,6 +356,7 @@ function getBlockedWeekdaysForTurma(turmaId) {
 function initPeriodoLetivoETurno() {
   const defaultStart = calStart && calStart.value ? calStart.value : '';
   const defaultEnd = calEnd && calEnd.value ? calEnd.value : '';
+  const selPeriodo = document.getElementById('sel-periodo-letivo');
 
   if (!store.settings.termStart && defaultStart) store.settings.termStart = defaultStart;
   if (!store.settings.termEnd && defaultEnd) store.settings.termEnd = defaultEnd;
@@ -365,6 +366,14 @@ function initPeriodoLetivoETurno() {
   if (inpTermStart && store.settings.termStart) inpTermStart.value = store.settings.termStart;
   if (inpTermEnd && store.settings.termEnd) inpTermEnd.value = store.settings.termEnd;
   if (selTurnoOferta) selTurnoOferta.value = store.settings.turnoOferta || 'Tarde';
+
+  // NOVO: Adiciona o listener para atualizar o período no store
+  if (selPeriodo) {
+      if (store.settings.periodo) selPeriodo.value = store.settings.periodo;
+      selPeriodo.addEventListener('change', () => {
+          store.setPeriodo(selPeriodo.value);
+      });
+  }
 
   if (calStart && store.settings.termStart) calStart.value = store.settings.termStart;
   if (calEnd && store.settings.termEnd) calEnd.value = store.settings.termEnd;
@@ -552,7 +561,7 @@ function onCursoChange() {
   store.setLastContext(cursoSigla, null); 
 
   selTurma.disabled = !cursoSigla;
-  selTurma.innerHTML = '<option value="">Selecione...</option>';
+  selTurma.innerHTML = '<option value="">Selecione uma Turma</option>';
 
   if (cursoSigla && store.rawData?.turmas) {
     const turmas = store.rawData.turmas.filter((t) => t.sigla === cursoSigla);
@@ -1215,24 +1224,26 @@ function generateCalendarGrid(container, turmaId, docenteName, start, end, title
             let content = '';
             let style = '';
 
+            // LÓGICA DE FILTRAGEM VISUAL PARA DIFERENTES ABAS
             if (isIntervalo) {
               content = '<span style="color:#7f8c8d; font-style:italic; font-size:0.85em;">Intervalo</span>';
               style = 'background:#e0e0e0;'; 
             } else if (eventsInSlot.length > 0) {
               const hasSpecificConflict = eventsInSlot.some(e => e.conflictsAt && e.conflictsAt.includes(slotTimeNorm));
               const implicitConflict = eventsInSlot.length > 1;
-              const isSuspended = eventsInSlot.some((e) => e.isSuspended);
+              const isSuspended = eventsInSlot.some((e) => e.type === 'suspended');
               
               if (docenteName) {
+                  // VISÃO PROFESSOR
                   if (hasSpecificConflict || implicitConflict) {
                     style = 'background: #c0392b; color: white; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight:bold;';
                     const conflictNames = eventsInSlot.map((e) => getDisciplinaInfo(e.disciplina).abrev).join(' <b style="color:#fff">x</b> ');
                     content = `<span title="Choque: ${conflictNames.replace(/<[^>]+>/g, '')}">⚠️ ${conflictNames}</span>`;
                   } else if (isSuspended) {
-                    // MUDANÇA VISUAL AQUI (PARA CORRESPONDER AO TÍTULO DO EVENTO)
-                    const suspendedEvent = eventsInSlot.find(e => e.isSuspended);
-                    // O estilo já é aplicado via classe .suspended-slot abaixo
-                    content = suspendedEvent.title; 
+                    const suspendedEvent = eventsInSlot.find(e => e.type === 'suspended');
+                    const info = getDisciplinaInfo(suspendedEvent.disciplina);
+                    // AJUSTE FIGURA 2: Abreviação + Suspensa
+                    content = `⛔ ${info.abrev} Suspensa`; 
                   } else {
                     const event = eventsInSlot[0];
                     const info = getDisciplinaInfo(event.disciplina);
@@ -1241,22 +1252,16 @@ function generateCalendarGrid(container, turmaId, docenteName, start, end, title
                   }
               } else {
                   // VISÃO TURMA
-                  const event = eventsInSlot[0];
+                  const activeEvent = eventsInSlot.find(e => e.type !== 'suspended');
                   
-                  // SE FOR SUSPENSO (TIPO NOVO)
-                  if (event.type === 'suspended') {
-                      content = event.title; // "⛔ Suspensa (Nome)"
-                      // A classe .suspended-slot já cuida do estilo, mas aplicamos inline para garantir override
-                      style = ''; // Limpa estilo inline para usar a classe
-                  } else {
-                      const info = getDisciplinaInfo(event.disciplina);
+                  if (activeEvent) {
+                      const info = getDisciplinaInfo(activeEvent.disciplina);
                       content = info.abrev;
-                      
-                      // Se for prioritária, dá um destaque visual
-                      if (event.isPriority) {
-                          style += 'border: 2px solid #8e44ad; font-weight:bold;';
-                      }
-                      style = `background:${event.cor || '#bdc3c7'}; color:black; ${style}`;
+                      style = `background:${activeEvent.cor || '#bdc3c7'}; color:black;`;
+                  } else {
+                      // Se só houver suspensos e nenhuma aula ativa na turma, o slot fica vazio (vago)
+                      content = '&nbsp;';
+                      style = 'background: #ecf0f1;';
                   }
               }
             } else {
@@ -1264,20 +1269,16 @@ function generateCalendarGrid(container, turmaId, docenteName, start, end, title
                style = 'background: #ecf0f1;'; 
             }
 
-            // === APLICAR CLASSE SUSPENDED SE NECESSÁRIO ===
-            // Verifica se tem algum evento suspenso na lista filtrada para este slot
-            const isSuspendedSlot = eventsInSlot.some(e => e.type === 'suspended');
-            
-            // Verifica se é um evento que está sobrepondo (usurpando) uma regular
-            const isOverridingSlot = eventsInSlot.some(e => e.isOverriding);
+            // Aplicar Classes CSS Dinâmicas
+            const hasSuspended = eventsInSlot.some(e => e.type === 'suspended');
+            const hasOverriding = eventsInSlot.some(e => (e.isIntensive || e.isPriority) && !docenteName);
 
             let className = 'cal-slot-content';
-            if (isSuspendedSlot) className += ' suspended-slot';
-            if (isOverridingSlot) className += ' overriding-event';
+            if (hasSuspended && docenteName) className += ' suspended-slot';
+            if (hasOverriding) className += ' overriding-event';
             
-            // Tooltip logic
             let tooltip = '';
-            if (isSuspendedSlot) {
+            if (hasSuspended && docenteName) {
                 const suspEvent = eventsInSlot.find(e => e.type === 'suspended');
                 tooltip = `title="${suspEvent.blockingReason || 'Suspenso'}"`;
             }
