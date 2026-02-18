@@ -1,6 +1,6 @@
 import { store } from './store.js';
 import { getCalendarEvents } from './calendar.js';
-import { countBusinessDays, countWeekdaysInPeriod, addBusinessDays } from './utils.js';
+import { countBusinessDays, countWeekdaysInPeriod, addBusinessDays, isDateOverlap } from './utils.js';
 
 // Elementos Globais
 const gridContainer = document.getElementById('weekly-grid');
@@ -36,7 +36,6 @@ let tempImportData = null;
 
 /**
  * ======= Auxiliar de Tempo =======
- * Converte "07:30" para minutos (450) para ordenar a grade corretamente.
  */
 function timeToMinutes(str) {
   if (!str) return 99999;
@@ -51,7 +50,6 @@ function timeToMinutes(str) {
 function setupClearButtonsSidebar() {
   addClearXToField(inputConfig.disciplina, 'inp-disciplina');
   addClearXToField(inputConfig.docente, 'inp-docente');
-  // Adiciona o botão de limpar também na visão do professor
   if (selViewDocente) {
     addClearXToField(selViewDocente, 'sel-view-docente');
   }
@@ -59,7 +57,6 @@ function setupClearButtonsSidebar() {
 
 function addClearXToField(inputEl, inputId) {
   if (!inputEl) return;
-
   const existing = document.querySelector(`[data-clear-for="${inputId}"]`);
   if (existing) return;
 
@@ -67,7 +64,6 @@ function addClearXToField(inputEl, inputId) {
   btn.type = 'button';
   btn.textContent = '×';
   btn.title = 'Limpar';
-  btn.setAttribute('aria-label', `Limpar ${inputId}`);
   btn.dataset.clearFor = inputId;
 
   // Estilo do botão X
@@ -92,7 +88,6 @@ function addClearXToField(inputEl, inputId) {
     e.preventDefault();
     e.stopPropagation();
     inputEl.value = '';
-    // Dispara eventos para atualizar a UI
     inputEl.dispatchEvent(new Event('input', { bubbles: true }));
     inputEl.dispatchEvent(new Event('change', { bubbles: true }));
     inputEl.focus();
@@ -102,14 +97,12 @@ function addClearXToField(inputEl, inputId) {
   inputEl.addEventListener('input', toggleVisibility);
   inputEl.addEventListener('change', toggleVisibility);
 
-  // Posicionamento relativo ao container do input
   const parent = inputEl.parentElement;
   if (parent) {
     const parentStyle = window.getComputedStyle(parent);
     if (parentStyle.position === 'static') {
         parent.style.position = 'relative';
     }
-
     btn.style.position = 'absolute';
     btn.style.right = '10px';
     btn.style.top = '70%'; 
@@ -119,15 +112,13 @@ function addClearXToField(inputEl, inputId) {
     if (currentPadding < 30) {
         inputEl.style.paddingRight = '35px';
     }
-
     parent.appendChild(btn);
   }
-
   toggleVisibility();
 }
 
 /**
- * Extrai apenas "HH:MM - HH:MM" se existir.
+ * Normalização e labels
  */
 function cleanHorarioLabel(s) {
   const str = (s ?? '').toString();
@@ -136,13 +127,9 @@ function cleanHorarioLabel(s) {
   return str;
 }
 
-/**
- * Garante "Intervalo" com capitalização consistente.
- */
 function formatIntervaloLabel(s) {
   const str = (s ?? '').toString().trim();
   if (!str) return str;
-
   if (str.toUpperCase().startsWith('INTERVALO')) {
     return 'Intervalo' + str.slice('INTERVALO'.length);
   }
@@ -152,10 +139,6 @@ function formatIntervaloLabel(s) {
   return str;
 }
 
-/**
- * Monta a lista final de horários que a UI vai renderizar.
- * MODO ESTRITO: Retorna apenas o que está no turno configurado na sidebar.
- */
 function buildHorariosForUI() {
   const horariosRaw = store.getHorariosTurma() || [];
   return horariosRaw
@@ -247,7 +230,6 @@ function setupMultiDocenteUI() {
     const containerMulti = document.getElementById('container-multi-docente');
     const btnAddRow = document.getElementById('btn-add-docente-row');
 
-    // Inicializa com 1 linha se estiver vazio
     if(containerMulti.querySelector('.teacher-row') === null) {
         addTeacherRow(); 
     }
@@ -283,22 +265,18 @@ function addTeacherRow(nome = '', ch = '') {
         <button type="button" class="btn-remove-row" title="Remover">×</button>
     `;
 
-    // Botão remover
     div.querySelector('.btn-remove-row').onclick = () => {
         if(list.querySelectorAll('.teacher-row').length > 1) {
             div.remove();
             updateTotalCHDisplay();
         } else {
-            // Se for o último, apenas limpa
             div.querySelector('.inp-multi-name').value = '';
             div.querySelector('.inp-multi-ch').value = '';
             updateTotalCHDisplay();
         }
     };
 
-    // Listener para atualizar total
     div.querySelector('.inp-multi-ch').addEventListener('input', updateTotalCHDisplay);
-
     list.appendChild(div);
 }
 
@@ -321,7 +299,6 @@ function getDocenteData() {
             docentesList: null
         };
     } else {
-        // Modo Multi
         const rows = document.querySelectorAll('.teacher-row');
         const list = [];
         let totalCH = 0;
@@ -335,16 +312,14 @@ function getDocenteData() {
             }
         });
 
-        // Validação básica
         if(list.length === 0) return { isValid: false };
 
-        // Nome composto para exibição
         const nomeComposto = list.map(d => d.nome.split(' ')[0]).join(' / ');
 
         return {
             mode: 'multi',
             isValid: true,
-            docente: nomeComposto + ' (Múltiplos)', // Label genérico
+            docente: nomeComposto + ' (Múltiplos)', 
             docentesList: list,
             totalCH: totalCH
         };
@@ -352,7 +327,7 @@ function getDocenteData() {
 }
 
 /**
- * ======= LÓGICA DE SLOTS INTENSIVA (Agora com seleção) =======
+ * ======= LÓGICA DE SLOTS INTENSIVA =======
  */
 function renderIntensiveSlots() {
     const container = document.getElementById('slots-checkboxes');
@@ -360,19 +335,16 @@ function renderIntensiveSlots() {
     container.innerHTML = '';
 
     const slots = buildHorariosForUI(); 
-    // Ordena cronologicamente para garantir que o grid preencha na ordem certa (via CSS)
     const validSlots = slots
         .filter(s => !s.toLowerCase().includes('intervalo'))
         .sort((a, b) => timeToMinutes(a) - timeToMinutes(b));
 
     validSlots.forEach((slotLabel, idx) => {
         const wrapper = document.createElement('label');
-        
         const checkbox = document.createElement('input');
         checkbox.type = 'checkbox';
         checkbox.value = slotLabel;
-        checkbox.checked = true; // PADRÃO: Marcado
-        
+        checkbox.checked = true; 
         wrapper.appendChild(checkbox);
         wrapper.appendChild(document.createTextNode(slotLabel));
         container.appendChild(wrapper);
@@ -447,8 +419,6 @@ function initPeriodoLetivoETurno() {
       store.setTurnoOferta(selTurnoOferta.value);
       renderWeeklyGrid();
       renderOfertasList();
-      
-      // Atualiza slots se estiver em modo intensiva
       if (inputConfig.tipo && inputConfig.tipo.value === 'intensiva') {
           renderIntensiveSlots();
       }
@@ -467,20 +437,15 @@ export function initUI() {
   setupClearButtonsSidebar();
   setupMultiDocenteUI(); 
 
-  // REMOVIDO Auto-Update de cor
-
-  // Listener unificado para Tipo
   if (inputConfig.tipo) {
     inputConfig.tipo.addEventListener('change', (e) => {
       const divData = document.getElementById('datas-intensiva');
       const divSlots = document.getElementById('container-slots-selection');
-      
       const isIntensive = (e.target.value === 'intensiva');
 
       if (isIntensive) {
         divData.classList.remove('hidden');
         divSlots.classList.remove('hidden');
-        // Renderiza e já marca todos
         renderIntensiveSlots();
         if (store.settings.termStart && inputConfig.inicio && !inputConfig.inicio.value) {
           inputConfig.inicio.value = store.settings.termStart;
@@ -502,15 +467,11 @@ export function initUI() {
   const btnGerarCal = document.getElementById('btn-gerar-cal');
   if (btnGerarCal) btnGerarCal.addEventListener('click', renderMonthlyCalendar);
 
-  // ======= Visão do Professor =======
   if (selViewDocente) {
-    // 1. Ao selecionar/mudar o nome, renderiza o calendário
     selViewDocente.addEventListener('change', () => {
         renderTeacherCalendar();
-        selViewDocente.blur(); // Tira o foco para melhorar UX em mobile
+        selViewDocente.blur();
     });
-
-    // 2. Se apagar o texto manualmente, limpa o calendário
     selViewDocente.addEventListener('input', () => {
         if (!selViewDocente.value) {
             document.getElementById('teacher-calendar-container').innerHTML = '';
@@ -518,7 +479,6 @@ export function initUI() {
     });
   }
 
-  // Import modal
   const inpImport = document.getElementById('inp-import');
   if (inpImport) inpImport.addEventListener('change', handleFileSelect);
 
@@ -585,9 +545,9 @@ function handleFileSelect(event) {
 function closeModal() {
   const modal = document.getElementById('import-modal');
   if (modal) modal.style.display = 'none';
-  tempImportData = null; // Limpa variável temporária
+  tempImportData = null; 
   const inp = document.getElementById('inp-import');
-  if (inp) inp.value = ''; // Limpa o input do browser
+  if (inp) inp.value = ''; 
 }
 
 /**
@@ -601,17 +561,16 @@ function populateCursos() {
     selCurso.innerHTML += `<option value="${c.sigla}">${c.curso}</option>`;
   });
   
-  // Persistência: Restaurar curso
   if (store.settings.lastCurso) {
       selCurso.value = store.settings.lastCurso;
-      onCursoChange(); // Isso vai chamar o onTurmaChange depois se tiver lastTurma
+      onCursoChange(); 
   }
 }
 
 function onCursoChange() {
   const cursoSigla = selCurso.value;
   store.selectedCurso = cursoSigla;
-  store.setLastContext(cursoSigla, null); // Salva
+  store.setLastContext(cursoSigla, null); 
 
   selTurma.disabled = !cursoSigla;
   selTurma.innerHTML = '<option value="">Selecione...</option>';
@@ -622,7 +581,6 @@ function onCursoChange() {
       selTurma.innerHTML += `<option value="${t.turma_id}">${t.turma_label}</option>`;
     });
     
-    // Persistência: Restaurar turma
     if (store.settings.lastTurma) {
         if (turmas.some(t => t.turma_id === store.settings.lastTurma)) {
              selTurma.value = store.settings.lastTurma;
@@ -654,11 +612,8 @@ function updateDisciplinaDatalist() {
 
 function populateDocentes() {
   if (!store.rawData?.docentes) return;
-
-  // 1. Pega nomes únicos e ordena
   const nomes = [...new Set(store.rawData.docentes.map((d) => d.docente))].sort();
 
-  // 2. Preenche lista da Sidebar
   if (listDocentes) {
     listDocentes.innerHTML = '';
     nomes.forEach((nome) => {
@@ -666,7 +621,6 @@ function populateDocentes() {
     });
   }
 
-  // 3. Preenche lista da Visão do Professor
   const listView = document.getElementById('list-view-docentes');
   if (listView) {
     listView.innerHTML = '';
@@ -678,23 +632,21 @@ function populateDocentes() {
 
 function onTurmaChange() {
   store.selectedTurma = selTurma.value;
-  store.setLastContext(store.selectedCurso, store.selectedTurma); // Salva
+  store.setLastContext(store.selectedCurso, store.selectedTurma); 
 
-  // Detecção Automática de Turno (Manhã vs Tarde):
   const alocacoesTurma = store.allocations.filter(a => String(a.turmaId) === String(store.selectedTurma));
   const primeiraAula = alocacoesTurma.find(a => a.tipo === 'regular' && a.horario);
   
   if (primeiraAula) {
       const hora = parseInt(primeiraAula.horario.split(':')[0]);
       if (hora < 12) store.setTurnoOferta('Manhã');
-      else store.setTurnoOferta('Tarde'); // Sem noturno
+      else store.setTurnoOferta('Tarde'); 
   } 
   else if (store.rawData?.turmas && store.selectedTurma) {
     const t = store.rawData.turmas.find(x => String(x.turma_id) === String(store.selectedTurma));
     if (t?.turno) store.setTurnoOferta(t.turno);
   }
 
-  // Ajuste de Datas
   const intensivas = alocacoesTurma.filter(a => a.tipo === 'intensiva' && a.dataInicio);
   if (intensivas.length > 0) {
       const datas = intensivas.map(a => a.dataInicio).sort();
@@ -717,12 +669,8 @@ function onTurmaChange() {
   renderOfertasList();
 }
 
-/**
- * ======= Disciplina info =======
- */
 function getDisciplinaInfo(nomeComponente) {
   if (!store.rawData?.componentes) return { abrev: nomeComponente, ch: 0 };
-
   const c =
     store.rawData.componentes.find(
       (x) => x.componente === nomeComponente && x.sigla === store.selectedCurso
@@ -732,20 +680,15 @@ function getDisciplinaInfo(nomeComponente) {
   return { abrev: nomeComponente, ch: 0 };
 }
 
-/**
- * ======= Weekly Grid =======
- */
 function renderWeeklyGrid() {
   if (!gridContainer) return;
   gridContainer.innerHTML = '';
 
-  // Grade da Turma é ESTRITA (só mostra o turno selecionado)
   const horariosUI = buildHorariosForUI();
   const dias = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
 
   if (!store.selectedTurma || horariosUI.length === 0) {
     const turnoAtual = store.settings?.turnoOferta || "Manhã";
-
     gridContainer.innerHTML = `
       <div style="grid-column: 1/-1; padding: 22px; background:#bdc3c7; border-radius: 6px;">
         <ul style="margin:0; padding-left: 20px; color:#2c3e50; font-size: 1.05rem; line-height: 1.55; text-align:left; width:100%; display:block; margin-left:0;">
@@ -765,14 +708,11 @@ function renderWeeklyGrid() {
   horariosUI.forEach((horarioStr) => {
     const isIntervalo = horarioStr.toUpperCase().includes('INTERVALO');
     const labelPrimeiraColuna = isIntervalo ? cleanHorarioLabel(horarioStr) : horarioStr;
-    
-    // === NOVA LÓGICA: SEPARADOR DE TURNO NO 12:00 ===
     const isSeparadorTurno = horarioStr.includes('12:00'); 
-    // Isso vai criar a linha preta abaixo do 12:00
 
     const hDiv = createCell(isIntervalo ? 'header interval-time' : 'header time', labelPrimeiraColuna);
     if (isIntervalo) hDiv.style.background = '#e0e0e0';
-    if (isSeparadorTurno) hDiv.style.borderBottom = '3px solid #000000'; // Borda cabeçalho
+    if (isSeparadorTurno) hDiv.style.borderBottom = '3px solid #000000'; 
     gridContainer.appendChild(hDiv);
 
     if (isIntervalo) {
@@ -788,7 +728,7 @@ function renderWeeklyGrid() {
         cell.dataset.dia = i;
         cell.dataset.horario = horarioStr;
         
-        if (isSeparadorTurno) cell.style.borderBottom = '3px solid #000000'; // Borda slots
+        if (isSeparadorTurno) cell.style.borderBottom = '3px solid #000000';
 
         const alloc = store.allocations.find(
           (a) =>
@@ -843,15 +783,12 @@ function checkTeacherConflict(docente, dia, horario) {
 function handleSlotClick(dia, horario) {
   if (!store.selectedTurma) return alert('Selecione uma turma.');
 
-  // Ler dados do componente
   const disciplina = (inputConfig.disciplina?.value ?? '').replace(/\s*\(\s*\d+\s*h\s*\)\s*$/i, '');
   if (!disciplina) return alert('Preencha a Disciplina.');
 
-  // Ler dados do docente (novo método)
   const docData = getDocenteData();
   if (!docData.isValid) return alert('Preencha o(s) Docente(s).');
 
-  // Validação de CH Máxima
   const info = getDisciplinaInfo(disciplina);
   const maxCH = info.ch || 0;
   
@@ -864,25 +801,23 @@ function handleSlotClick(dia, horario) {
   const tipo = inputConfig.tipo?.value ?? 'regular';
   if (tipo === 'intensiva') return alert('Para intensivas, configure as datas no menu e clique em "Adicionar à Grade".');
 
-  // Checagem de conflito (simples para o primeiro professor da lista ou o único)
   const mainProf = docData.mode === 'single' ? docData.docente : docData.docentesList[0].nome;
   const conflito = checkTeacherConflict(mainProf, dia, horario);
   if (conflito) {
     if (!confirm(`O professor ${mainProf} já ministra aula na turma ${conflito.turmaId} neste horário. Continuar?`)) return;
   }
 
-  // Cor selecionada ou padrão (sem auto-update)
   const corSelecionada = inputConfig.cor ? inputConfig.cor.value : store.getDisciplinaColor(disciplina);
 
   store.addAllocation({
     turmaId: store.selectedTurma,
     disciplina,
-    docente: docData.docente, // String para exibição simples
-    docentes: docData.docentesList, // Array estruturado
-    tipo: 'regular', // Clique na grade é sempre regular
+    docente: docData.docente, 
+    docentes: docData.docentesList, 
+    tipo: 'regular',
     diaSemana: dia,
     horario,
-    cor: corSelecionada // Salva a cor específica
+    cor: corSelecionada 
   });
 
   renderWeeklyGrid();
@@ -892,11 +827,9 @@ function handleSlotClick(dia, horario) {
 function handleAddManual() {
   if (!store.selectedTurma) return alert('Selecione uma turma.');
   
-  // Captura valores usando nova lógica de docente
   const docData = getDocenteData();
   if (!docData.isValid) return alert('Preencha o(s) Docente(s).');
 
-  // Input config auxiliar
   const disciplina = (inputConfig.disciplina?.value ?? '').replace(/\s*\(\s*\d+\s*h\s*\)\s*$/i, '');
   const tipo = inputConfig.tipo?.value ?? 'regular';
   const inicio = inputConfig.inicio?.value ?? '';
@@ -915,16 +848,11 @@ function handleAddManual() {
         return;
     }
 
-    // === LÓGICA UNIFICADA: Pega os slots marcados (seja todos ou alguns) ===
     let slotsIntensiva = getCheckedSlots();
-    
     if (slotsIntensiva.length === 0) return alert('Selecione pelo menos um horário para a intensiva.');
     
     let slotsCount = slotsIntensiva.length;
-
-    // === CÁLCULO DE DIAS (Regra 45h) ===
     let effectiveCH = ch;
-    // REGRA: Se 45h e 2 slots/dia, usa 46h para garantir 23 dias.
     if (ch === 45 && slotsCount === 2) {
         effectiveCH = 46;
     }
@@ -933,34 +861,79 @@ function handleAddManual() {
     const feriados = store.rawData?.feriados || [];
     const dataFimCalculada = addBusinessDays(inicio, diasNecessarios, feriados);
 
-    // Validação de choque com REINSERÇÃO (SOBRESCREVER)
-    const normalize = s => (s || '').replace(/\s/g, '');
+    // Helper de normalização
+    const normalize = s => (s || '').split(/\s/)[0].replace(/[^0-9:]/g, '');
+
+    // === VALIDAÇÃO DE CHOQUE COM LÓGICA DE SALA BLOQUEADA ===
     const conflitoIntensiva = store.allocations.find(a => {
-        if (a.turmaId !== store.selectedTurma) return false;
-        if (a.tipo !== 'intensiva') return false; 
-        
-        const overlapData = (inicio <= a.dataFim && dataFimCalculada >= a.dataInicio);
-        if (!overlapData) return false;
-        
-        if (!a.horariosOcupados || !Array.isArray(a.horariosOcupados)) return true;
-        
-        const overlapHorario = a.horariosOcupados.some(savedSlot => 
-            slotsIntensiva.some(newSlot => normalize(savedSlot) === normalize(newSlot))
-        );
-        return overlapHorario;
+        // Ignora a própria
+        if (String(a.turmaId) === String(store.selectedTurma) && a.disciplina === disciplina) return false;
+
+        // Verifica PROFESSOR em comum
+        const newTeachers = docData.mode === 'single' ? [docData.docente] : docData.docentesList.map(d=>d.nome);
+        const storedTeachers = a.docentes ? a.docentes.map(d=>d.nome) : [a.docente];
+        const hasCommonTeacher = newTeachers.some(nt => storedTeachers.includes(nt));
+        if (!hasCommonTeacher) return false;
+
+        // Verifica DATA
+        let isDateCollision = true;
+        if (a.tipo === 'intensiva') {
+            isDateCollision = isDateOverlap(inicio, dataFimCalculada, a.dataInicio, a.dataFim);
+        }
+        if (!isDateCollision) return false;
+
+        // Verifica HORÁRIO
+        let isTimeCollision = false;
+        const newSlotsNorm = slotsIntensiva.map(normalize);
+        let existingSlotsNorm = [];
+        if (a.horariosOcupados) {
+             existingSlotsNorm = a.horariosOcupados.map(normalize);
+        } else if (a.horario) {
+             existingSlotsNorm = [normalize(a.horario)];
+        }
+        isTimeCollision = newSlotsNorm.some(ns => existingSlotsNorm.includes(ns));
+        if (!isTimeCollision) return false;
+
+        // === SUPRESSÃO: A SALA DA REGULAR ESTÁ OCUPADA? ===
+        if (a.tipo === 'regular') {
+            // Se conflita com Regular X na Turma A...
+            // Procuramos se existe ALGUMA intensiva na Turma A, nesses mesmos dias e horários.
+            const intensivaBlockingRoom = store.allocations.find(i => {
+                if (i.tipo !== 'intensiva') return false;
+                if (String(i.turmaId) !== String(a.turmaId)) return false; // Deve ser na mesma turma da regular
+                
+                // Checa data da inserção X data da intensiva bloqueadora
+                if (!isDateOverlap(inicio, dataFimCalculada, i.dataInicio, i.dataFim)) return false;
+
+                // Checa horário da regular X horário da intensiva
+                const intSlots = (i.horariosOcupados || []).map(normalize);
+                return intSlots.includes(normalize(a.horario));
+            });
+
+            if (intensivaBlockingRoom) {
+                // A sala da regular está tomada. O professor da regular está, portanto, livre (ou dando a intensiva).
+                // Conflito Falso.
+                return false;
+            }
+        }
+
+        return true;
     });
 
     if (conflitoIntensiva) {
-        // Se for a mesma disciplina, permite atualizar
-        if (conflitoIntensiva.disciplina === disciplina) {
+        if (String(conflitoIntensiva.turmaId) === String(store.selectedTurma) && conflitoIntensiva.disciplina === disciplina) {
             if(confirm(`Já existe uma alocação para ${disciplina} neste período. Deseja atualizar os horários/slots?`)) {
                 store.removeAllocation(conflitoIntensiva.id);
-                // Segue o fluxo para adicionar a nova
             } else {
                 return;
             }
         } else {
-            alert(`Choque de horário com ${conflitoIntensiva.disciplina} (Data/Horário sobrepostos).`);
+            const tipoConflito = conflitoIntensiva.tipo === 'regular' ? 'Regular (Semanal)' : 'Intensiva';
+            alert(`Choque de Horário Detectado!\n\n` +
+                  `O professor já está ocupado com:\n` +
+                  `Disciplina: ${conflitoIntensiva.disciplina}\n` +
+                  `Turma ID: ${conflitoIntensiva.turmaId}\n` +
+                  `Tipo: ${tipoConflito}`);
             return;
         }
     }
@@ -980,9 +953,9 @@ function handleAddManual() {
     store.addAllocation({
       turmaId: store.selectedTurma,
       disciplina: disciplina,
-      docente: docData.docente, // String composta
-      docentes: docData.docentesList, // Lista real
-      tipo: 'intensiva', // Unificado como 'intensiva'
+      docente: docData.docente, 
+      docentes: docData.docentesList, 
+      tipo: 'intensiva', 
       dataInicio: inicio,
       dataFim: dataFimCalculada,
       modelo: 'Automático',
@@ -1125,7 +1098,6 @@ function renderMonthlyCalendar() {
   const start = calStart ? calStart.value : '2025-01-01';
   let end = calEnd ? calEnd.value : '2025-12-31';
 
-  // FIX: Estender até o fim do MÊS da data final selecionada
   if (end) {
       const dt = new Date(end + 'T12:00:00');
       const lastDay = new Date(dt.getFullYear(), dt.getMonth() + 1, 0); 
@@ -1152,7 +1124,6 @@ function renderTeacherCalendar() {
   const start = calStart ? calStart.value : '2025-01-01';
   let end = calEnd ? calEnd.value : '2025-12-31';
 
-  // FIX: Estender até o fim do MÊS da data final selecionada
   if (end) {
       const dt = new Date(end + 'T12:00:00');
       const lastDay = new Date(dt.getFullYear(), dt.getMonth() + 1, 0);
@@ -1176,21 +1147,15 @@ function generateCalendarGrid(container, turmaId, docenteName, start, end, title
   let slotsToRender = [];
 
   if (turmaId) {
-    // CASO 1: TURMA (ESTRITO)
-    // Mostra APENAS o turno selecionado na sidebar.
     slotsToRender = buildHorariosForUI();
   } 
   else if (docenteName) {
-    // CASO 2: PROFESSOR (ESQUELETO PADRÃO: MANHÃ + TARDE)
-    // Buscamos a estrutura oficial "Manhã" e "Tarde" em rawData.
     const hp = store.rawData?.horarios_por_turno || {};
     const skeleton = [];
 
-    // *** ALTERAÇÃO SOLICITADA 1: SEMPRE EXIBIR MANHÃ + TARDE PARA PROFESSOR ***
     if (hp['Manhã']) skeleton.push(...hp['Manhã']);
     if (hp['Tarde']) skeleton.push(...hp['Tarde']);
 
-    // Fallback: se não tiver config, varre alocações (mantido por segurança)
     if (skeleton.length === 0) {
         if (store.allocations) {
             store.allocations.forEach(a => {
@@ -1200,7 +1165,6 @@ function generateCalendarGrid(container, turmaId, docenteName, start, end, title
         }
     }
 
-    // Limpa, padroniza e ordena
     slotsToRender = [...new Set(skeleton)]
       .map(h => {
         const s = String(h ?? '');
@@ -1257,7 +1221,6 @@ function generateCalendarGrid(container, turmaId, docenteName, start, end, title
             const timeMatch = slotTime.match(/\d{2}:\d{2}/);
             const timeLabel = timeMatch ? timeMatch[0] : '';
 
-            // --- FILTRO ROBUSTO (SEM ESPAÇOS) ---
             const normalizeTime = (t) => (t || '').replace(/\s/g, '');
             const slotTimeNorm = normalizeTime(slotTime);
 
@@ -1272,15 +1235,13 @@ function generateCalendarGrid(container, turmaId, docenteName, start, end, title
 
             if (isIntervalo) {
               content = '<span style="color:#7f8c8d; font-style:italic; font-size:0.85em;">Intervalo</span>';
-              style = 'background:#e0e0e0;'; // Fundo do conteúdo do intervalo
+              style = 'background:#e0e0e0;'; 
             } else if (eventsInSlot.length > 0) {
-              // Verifica se HÁ conflito
               const hasSpecificConflict = eventsInSlot.some(e => e.conflictsAt && e.conflictsAt.includes(slotTimeNorm));
               const implicitConflict = eventsInSlot.length > 1;
               const isSuspended = eventsInSlot.some((e) => e.isSuspended);
               
               if (docenteName) {
-                  // VISÃO PROFESSOR
                   if (hasSpecificConflict || implicitConflict) {
                     style = 'background: #c0392b; color: white; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight:bold;';
                     const conflictNames = eventsInSlot.map((e) => getDisciplinaInfo(e.disciplina).abrev).join(' <b style="color:#fff">x</b> ');
@@ -1296,20 +1257,16 @@ function generateCalendarGrid(container, turmaId, docenteName, start, end, title
                     style = `background:${event.cor || '#bdc3c7'}; color:black;`;
                   }
               } else {
-                  // VISÃO TURMA
                   const event = eventsInSlot[0];
                   const info = getDisciplinaInfo(event.disciplina);
                   content = info.abrev;
                   style = `background:${event.cor || '#bdc3c7'}; color:black;`;
               }
             } else {
-               // *** ALTERAÇÃO SOLICITADA 2: LINHA VAZIA COM ESTRUTURA COMPLETA ***
-               // Mesmo sem aula, desenhamos o box com o horário na esquerda e fundo cinza claro na direita
-               content = '&nbsp;'; // Espaço vazio para manter altura
-               style = 'background: #ecf0f1;'; // Fundo cinza claro para slot vazio
+               content = '&nbsp;'; 
+               style = 'background: #ecf0f1;'; 
             }
 
-            // AQUI ESTÁ A MÁGICA VISUAL: Estrutura HTML fixa (Horário E Conteúdo)
             html += `
               <div class="cal-slot-row">
                 <div class="cal-slot-time">${timeLabel}</div>
@@ -1329,9 +1286,8 @@ function generateCalendarGrid(container, turmaId, docenteName, start, end, title
       grid.appendChild(cell);
     });
 
-    // === FIX: Preencher o restante da semana com células vazias para fechar a grade visualmente ===
     const lastDateObj = new Date(months[monthKey][months[monthKey].length - 1].date + 'T12:00:00');
-    const lastDow = lastDateObj.getDay(); // 0..6
+    const lastDow = lastDateObj.getDay(); 
     for (let i = lastDow + 1; i <= 6; i++) {
         grid.innerHTML += `<div class="day-cell empty" style="border-bottom: 2px solid #bdc3c7;"></div>`;
     }
