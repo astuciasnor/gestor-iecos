@@ -57,14 +57,29 @@ export function toLocalDateString(date) {
 }
 
 // --- FUNÇÕES DE CONTAGEM ---
-export function countBusinessDays(startDate, endDate) {
+
+/**
+ * Conta dias úteis, excluindo finais de semana, feriados E dias bloqueados (Prioritária).
+ * @param {string} startDate - YYYY-MM-DD
+ * @param {string} endDate - YYYY-MM-DD
+ * @param {Array} feriados - Lista de objetos ou strings de feriados
+ * @param {Array} blockedWeekdays - Array de inteiros (0-6) que devem ser pulados (ex: [1] para pular segundas)
+ */
+export function countBusinessDays(startDate, endDate, feriados = [], blockedWeekdays = []) {
     let count = 0;
     let curDate = parseLocalDate(startDate);
     const end = parseLocalDate(endDate);
     
     while (curDate <= end) {
         const dayOfWeek = curDate.getDay();
-        if (dayOfWeek !== 0 && dayOfWeek !== 6) { 
+        const dateStr = toLocalDateString(curDate);
+        
+        // Verifica feriado
+        const isHoliday = feriados.some(f => (f.data || f) === dateStr);
+        // Verifica bloqueio por dia da semana (Prioritária)
+        const isBlocked = blockedWeekdays.includes(dayOfWeek);
+
+        if (dayOfWeek !== 0 && dayOfWeek !== 6 && !isHoliday && !isBlocked) { 
              count++;
         }
         curDate.setDate(curDate.getDate() + 1);
@@ -76,7 +91,9 @@ export function countWeekdaysInPeriod(startDate, endDate, targetDayOfWeek, feria
     let count = 0;
     let curDate = parseLocalDate(startDate);
     const end = parseLocalDate(endDate);
-    const feriadosSet = new Set(feriados);
+    
+    // Simplificação de feriados para Set
+    const feriadosSet = new Set(feriados.map(f => (f.data || f)));
 
     while (curDate <= end) {
         if (curDate.getDay() === targetDayOfWeek) {
@@ -91,7 +108,7 @@ export function countWeekdaysInPeriod(startDate, endDate, targetDayOfWeek, feria
 }
 
 // --- NOVA FUNÇÃO: Adiciona dias úteis a uma data ---
-export function addBusinessDays(startDateStr, daysNeeded, feriados = []) {
+export function addBusinessDays(startDateStr, daysNeeded, feriados = [], blockedWeekdays = []) {
     let currentDate = new Date(startDateStr + "T12:00:00");
     let daysFound = 0;
     let lastValidDate = new Date(currentDate);
@@ -104,8 +121,11 @@ export function addBusinessDays(startDateStr, daysNeeded, feriados = []) {
         
         // Verifica feriado (seja string ou objeto)
         const isHoliday = feriados.some(f => (f.data || f) === dateStr);
+        
+        // Verifica bloqueio por dia da semana (ex: Prioritária na segunda [1])
+        const isBlocked = blockedWeekdays.includes(dayOfWeek);
 
-        if (dayOfWeek !== 0 && dayOfWeek !== 6 && !isHoliday) {
+        if (dayOfWeek !== 0 && dayOfWeek !== 6 && !isHoliday && !isBlocked) {
             daysFound++;
             lastValidDate = new Date(currentDate);
         }

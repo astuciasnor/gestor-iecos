@@ -9,23 +9,18 @@ const selTurma = document.getElementById('sel-turma');
 const listDisciplinas = document.getElementById('list-disciplinas');
 const listDocentes = document.getElementById('list-docentes');
 
-// ATENÇÃO: No seu HTML, certifique-se que o input da aba professor tenha id="sel-view-docente"
 const selViewDocente = document.getElementById('sel-view-docente');
 
-// Configurações persistentes (sidebar)
 const inpTermStart = document.getElementById('term-start');
 const inpTermEnd = document.getElementById('term-end');
-const selTurnoOferta =
-  document.getElementById('sel-turno_oferta') ||
-  document.getElementById('sel-turno-oferta');
+const selTurnoOferta = document.getElementById('sel-turno_oferta') || document.getElementById('sel-turno-oferta');
 
-// Controles de período (tabs)
 const calStart = document.getElementById('cal-start');
 const calEnd = document.getElementById('cal-end');
 
 const inputConfig = {
   disciplina: document.getElementById('inp-disciplina'),
-  cor: document.getElementById('inp-color'), // input de cor
+  cor: document.getElementById('inp-color'), 
   docente: document.getElementById('inp-docente'),
   tipo: document.getElementById('sel-tipo'),
   inicio: document.getElementById('inp-data-inicio'),
@@ -34,9 +29,8 @@ const inputConfig = {
 
 let tempImportData = null;
 
-/**
- * ======= Auxiliar de Tempo =======
- */
+// --- FUNÇÕES AUXILIARES DE UI (MANTIDAS) ---
+
 function timeToMinutes(str) {
   if (!str) return 99999;
   const match = str.match(/(\d{1,2}):(\d{2})/);
@@ -44,9 +38,6 @@ function timeToMinutes(str) {
   return parseInt(match[1]) * 60 + parseInt(match[2]);
 }
 
-/**
- * ======= Botão "×" para limpar inputs =======
- */
 function setupClearButtonsSidebar() {
   addClearXToField(inputConfig.disciplina, 'inp-disciplina');
   addClearXToField(inputConfig.docente, 'inp-docente');
@@ -65,8 +56,6 @@ function addClearXToField(inputEl, inputId) {
   btn.textContent = '×';
   btn.title = 'Limpar';
   btn.dataset.clearFor = inputId;
-
-  // Estilo do botão X
   btn.style.border = 'none';
   btn.style.background = 'transparent';
   btn.style.cursor = 'pointer';
@@ -117,9 +106,6 @@ function addClearXToField(inputEl, inputId) {
   toggleVisibility();
 }
 
-/**
- * Normalização e labels
- */
 function cleanHorarioLabel(s) {
   const str = (s ?? '').toString();
   const m = str.match(/\b\d{1,2}:\d{2}\s*[-–]\s*\d{1,2}:\d{2}\b/);
@@ -150,9 +136,6 @@ function buildHorariosForUI() {
     .filter((s) => s && s.trim().length > 0);
 }
 
-/**
- * ======= Ajuste de altura das linhas (Grade Semanal) =======
- */
 function applyWeeklyGridRowHeightScale(scaleNormal = 0.63, scaleHeaderAndInterval = 0.6) {
   if (!gridContainer) return;
 
@@ -221,9 +204,6 @@ function applyWeeklyGridRowHeightScale(scaleNormal = 0.63, scaleHeaderAndInterva
   });
 }
 
-/**
- * ======= LÓGICA DE MÚLTIPLOS DOCENTES =======
- */
 function setupMultiDocenteUI() {
     const chk = document.getElementById('chk-multi-docente');
     const containerSingle = document.getElementById('container-single-docente');
@@ -326,9 +306,6 @@ function getDocenteData() {
     }
 }
 
-/**
- * ======= LÓGICA DE SLOTS INTENSIVA =======
- */
 function renderIntensiveSlots() {
     const container = document.getElementById('slots-checkboxes');
     if (!container) return;
@@ -363,8 +340,19 @@ function getCheckedSlots() {
 }
 
 /**
- * ======= Período letivo + turno =======
+ * === Helper para identificar dias bloqueados por Regular Prioritária ===
  */
+function getBlockedWeekdaysForTurma(turmaId) {
+    if (!turmaId) return [];
+    const prioritaria = store.allocations.filter(a => 
+        String(a.turmaId) === String(turmaId) && 
+        a.tipo === 'regular_prioritaria'
+    );
+    // Retorna array de dias (inteiros) únicos. Ex: [1, 3] (Seg, Qua)
+    return [...new Set(prioritaria.map(a => parseInt(a.diaSemana)))];
+}
+
+// ... initPeriodoLetivoETurno, initUI, etc ... MANTIDAS IGUAIS
 function initPeriodoLetivoETurno() {
   const defaultStart = calStart && calStart.value ? calStart.value : '';
   const defaultEnd = calEnd && calEnd.value ? calEnd.value : '';
@@ -426,9 +414,6 @@ function initPeriodoLetivoETurno() {
   }
 }
 
-/**
- * ======= Init UI =======
- */
 export function initUI() {
   if (selCurso) selCurso.addEventListener('change', onCursoChange);
   if (selTurma) selTurma.addEventListener('change', onTurmaChange);
@@ -521,9 +506,6 @@ export function initUI() {
   populateDocentes();
 }
 
-/**
- * ======= Import =======
- */
 function handleFileSelect(event) {
   const file = event.target.files[0];
   if (!file) return;
@@ -550,9 +532,6 @@ function closeModal() {
   if (inp) inp.value = ''; 
 }
 
-/**
- * ======= Populate =======
- */
 function populateCursos() {
   if (!store.rawData || !selCurso) return;
 
@@ -733,7 +712,7 @@ function renderWeeklyGrid() {
         const alloc = store.allocations.find(
           (a) =>
             String(a.turmaId) === String(store.selectedTurma) &&
-            a.tipo === 'regular' &&
+            (a.tipo === 'regular' || a.tipo === 'regular_prioritaria') &&
             a.diaSemana == i &&
             a.horario === horarioStr
         );
@@ -760,10 +739,18 @@ function renderSlotContent(cell, alloc) {
   cell.style.backgroundColor = alloc.cor;
   const info = getDisciplinaInfo(alloc.disciplina);
 
+  let borderStyle = '';
+  if (alloc.tipo === 'regular_prioritaria') {
+      borderStyle = 'border: 3px solid #8e44ad;'; 
+  }
+
   cell.innerHTML = `
-    <div style="font-size:0.85em; font-weight:bold; line-height:1.2; margin-bottom:2px;">${info.abrev}</div>
-    <div style="font-size:0.75em; color:#444;">${(alloc.docente || '').split(' ')[0] || ''}</div>
-    <span class="remove-btn" style="color:red; font-weight:bold; font-size:0.8em; position:absolute; top:2px; right:2px;">×</span>
+    <div style="height:100%; width:100%; box-sizing:border-box; ${borderStyle}">
+        <div style="font-size:0.85em; font-weight:bold; line-height:1.2; margin-bottom:2px;">${info.abrev}</div>
+        <div style="font-size:0.75em; color:#444;">${(alloc.docente || '').split(' ')[0] || ''}</div>
+        <span class="remove-btn" style="color:red; font-weight:bold; font-size:0.8em; position:absolute; top:2px; right:2px;">×</span>
+        ${alloc.tipo === 'regular_prioritaria' ? '<span style="font-size:0.7em; color:#8e44ad; display:block; font-weight:bold;">★ Prioritária</span>' : ''}
+    </div>
   `;
 
   cell.querySelector('.remove-btn').onclick = (e) => {
@@ -814,7 +801,7 @@ function handleSlotClick(dia, horario) {
     disciplina,
     docente: docData.docente, 
     docentes: docData.docentesList, 
-    tipo: 'regular',
+    tipo: tipo, 
     diaSemana: dia,
     horario,
     cor: corSelecionada 
@@ -859,42 +846,34 @@ function handleAddManual() {
 
     const diasNecessarios = Math.ceil(effectiveCH / slotsCount);
     const feriados = store.rawData?.feriados || [];
-    const dataFimCalculada = addBusinessDays(inicio, diasNecessarios, feriados);
+    
+    // === ATUALIZAÇÃO 2.0: CÁLCULO DE DATA COM BLOQUEIO DE PRIORITÁRIA ===
+    const blockedWeekdays = getBlockedWeekdaysForTurma(store.selectedTurma);
+    const dataFimCalculada = addBusinessDays(inicio, diasNecessarios, feriados, blockedWeekdays);
 
-    // Helper de normalização
     const normalize = s => (s || '').split(/\s/)[0].replace(/[^0-9:]/g, '');
 
-    // === BUSCA DE CONFLITOS (COM SUPORTE A ATUALIZAÇÃO) ===
     const conflitoIntensiva = store.allocations.find(a => {
-        
-        // 1. VERIFICAÇÃO DE ATUALIZAÇÃO (Mesma Turma + Mesma Disciplina)
-        // Se encontrarmos a mesma disciplina na mesma turma...
         if (String(a.turmaId) === String(store.selectedTurma) && a.disciplina === disciplina) {
-            // ...e houver colisão de datas, consideramos um "encontro" para perguntar se quer substituir.
             if (a.tipo === 'intensiva') {
                 if (isDateOverlap(inicio, dataFimCalculada, a.dataInicio, a.dataFim)) return true;
             } else {
-                // Se for regular, também retorna true para perguntar se quer substituir a regular pela intensiva
                 return true; 
             }
-            // Se as datas não batem (ex: intensiva em outro mês), não é conflito.
             return false;
         }
 
-        // 2. Verifica PROFESSOR em comum
         const newTeachers = docData.mode === 'single' ? [docData.docente] : docData.docentesList.map(d=>d.nome);
         const storedTeachers = a.docentes ? a.docentes.map(d=>d.nome) : [a.docente];
         const hasCommonTeacher = newTeachers.some(nt => storedTeachers.includes(nt));
         if (!hasCommonTeacher) return false;
 
-        // 3. Verifica DATA
         let isDateCollision = true;
         if (a.tipo === 'intensiva') {
             isDateCollision = isDateOverlap(inicio, dataFimCalculada, a.dataInicio, a.dataFim);
         }
         if (!isDateCollision) return false;
 
-        // 4. Verifica HORÁRIO
         let isTimeCollision = false;
         const newSlotsNorm = slotsIntensiva.map(normalize);
         let existingSlotsNorm = [];
@@ -906,9 +885,6 @@ function handleAddManual() {
         isTimeCollision = newSlotsNorm.some(ns => existingSlotsNorm.includes(ns));
         if (!isTimeCollision) return false;
 
-        // 5. SUPRESSÃO (Soberania da Sala)
-        // Se chegou até aqui, é um choque de Professor/Horário. 
-        // Mas se 'a' for Regular, verificamos se a sala DELA já não está ocupada por outra Intensiva.
         if (a.tipo === 'regular') {
             const intensivaBlockingRoom = store.allocations.find(i => {
                 if (i.tipo !== 'intensiva') return false;
@@ -919,7 +895,6 @@ function handleAddManual() {
             });
 
             if (intensivaBlockingRoom) {
-                // Sala bloqueada -> Professor da regular livre -> Falso Positivo.
                 return false;
             }
         }
@@ -928,16 +903,13 @@ function handleAddManual() {
     });
 
     if (conflitoIntensiva) {
-        // Se for a PRÓPRIA disciplina (Atualização)
         if (String(conflitoIntensiva.turmaId) === String(store.selectedTurma) && conflitoIntensiva.disciplina === disciplina) {
             if(confirm(`Já existe uma alocação para ${disciplina} neste período. Deseja atualizar os horários/slots?`)) {
                 store.removeAllocation(conflitoIntensiva.id);
-                // O código segue abaixo para adicionar a nova versão...
             } else {
-                return; // Usuário cancelou
+                return;
             }
         } else {
-            // Choque real com outra disciplina/professor
             const tipoConflito = conflitoIntensiva.tipo === 'regular' ? 'Regular (Semanal)' : 'Intensiva';
             alert(`Choque de Horário Detectado!\n\n` +
                   `O professor já está ocupado com:\n` +
@@ -952,7 +924,7 @@ function handleAddManual() {
       !confirm(
         `Componente: ${disciplina} (${ch}h)\n` +
           `Tipo: Intensiva (${slotsCount} slots/dia)\n` +
-          `Duração: ${diasNecessarios} dias úteis.\n\n` +
+          `Duração: ${diasNecessarios} dias úteis (Excluindo dias bloqueados).\n\n` +
           `De: ${formatDateBR(inicio)}\nAté: ${formatDateBR(dataFimCalculada)}\n\nConfirmar alocação?`
       )
     )
@@ -989,9 +961,6 @@ function getInputValues() {
   };
 }
 
-/**
- * ======= Ofertas List =======
- */
 function renderOfertasList() {
   const tbody = document.querySelector('#ofertas-table tbody');
   if (!tbody) return;
@@ -1003,8 +972,8 @@ function renderOfertasList() {
   const semestreInicio = calStart ? calStart.value : '2025-01-01';
   const semestreFim = calEnd ? calEnd.value : '2025-12-31';
 
-  const regular = list.filter((a) => a.tipo === 'regular');
-  const intensivas = list.filter((a) => a.tipo !== 'regular');
+  const regular = list.filter((a) => a.tipo === 'regular' || a.tipo === 'regular_prioritaria');
+  const intensivas = list.filter((a) => a.tipo === 'intensiva');
 
   intensivas.sort((a, b) => (a.dataInicio || '').localeCompare(b.dataInicio || ''));
   regular.sort((a, b) => (a.disciplina || '').localeCompare(b.disciplina || ''));
@@ -1022,6 +991,9 @@ function renderOfertasList() {
     appendSeparator(nomeMes.toUpperCase());
   };
 
+  // Pega os dias bloqueados para cálculo correto de horas
+  const blockedWeekdays = getBlockedWeekdaysForTurma(store.selectedTurma);
+
   const appendRow = (a) => {
     const tr = document.createElement('tr');
     const info = getDisciplinaInfo(a.disciplina);
@@ -1029,12 +1001,13 @@ function renderOfertasList() {
     let totalHoras = 0;
     let details = '';
 
-    if (a.tipo === 'regular') {
+    if (a.tipo === 'regular' || a.tipo === 'regular_prioritaria') {
       const numAulas = countWeekdaysInPeriod(semestreInicio, semestreFim, parseInt(a.diaSemana), feriados);
       totalHoras = numAulas * 1;
       details = `${numAulas} aulas`;
     } else {
-      const diasUteis = countBusinessDays(a.dataInicio, a.dataFim);
+      // === ATUALIZAÇÃO 2.0: Contagem precisa descontando dias de Prioritária ===
+      const diasUteis = countBusinessDays(a.dataInicio, a.dataFim, feriados, blockedWeekdays);
       const slotsPorDia = a.horariosOcupados ? a.horariosOcupados.length : 5;
       totalHoras = diasUteis * slotsPorDia;
       details = `${diasUteis} dias`;
@@ -1048,15 +1021,17 @@ function renderOfertasList() {
     }
 
     const chInfo = `<b style="color:${color}">${totalHoras}</b> / ${chMax}h <small>(${details})</small>`;
-    const horarioTxt =
-      a.tipo === 'regular'
+    
+    const labelTipo = a.tipo === 'regular_prioritaria' ? '<b>Regular (Prioritária)</b>' : a.tipo;
+
+    const horarioTxt = (a.tipo === 'regular' || a.tipo === 'regular_prioritaria')
         ? `${['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab'][a.diaSemana]} ${a.horario}`
         : `${formatDateBR(a.dataInicio)} a ${formatDateBR(a.dataFim)}`;
 
     tr.innerHTML = `
       <td>${a.disciplina}</td>
       <td>${a.docente}</td>
-      <td>${a.tipo}</td>
+      <td>${labelTipo}</td>
       <td>${horarioTxt}</td>
       <td style="text-align:center;">${chInfo}</td>
       <td><button class="btn-danger" style="padding:4px; margin:0;">Excluir</button></td>
@@ -1086,7 +1061,7 @@ function renderOfertasList() {
   });
 
   if (regular.length > 0) {
-    appendSeparator('AULAS REGULARES (SEM DATA)');
+    appendSeparator('AULAS REGULARES (E PRIORITÁRIAS)');
     regular.forEach(appendRow);
   }
 
@@ -1097,9 +1072,7 @@ function renderOfertasList() {
   }
 }
 
-/**
- * ======= Monthly Calendar =======
- */
+// ... Restante das funções de calendário (MANTIDAS) ...
 function renderMonthlyCalendar() {
   const container = document.getElementById('monthly-container');
   if (!container) return;
@@ -1270,7 +1243,13 @@ function generateCalendarGrid(container, turmaId, docenteName, start, end, title
                   const event = eventsInSlot[0];
                   const info = getDisciplinaInfo(event.disciplina);
                   content = info.abrev;
-                  style = `background:${event.cor || '#bdc3c7'}; color:black;`;
+                  
+                  // Se for prioritária, dá um destaque visual
+                  if (event.isPriority) {
+                      style += 'border: 2px solid #8e44ad; font-weight:bold;';
+                  }
+
+                  style = `background:${event.cor || '#bdc3c7'}; color:black; ${style}`;
               }
             } else {
                content = '&nbsp;'; 
@@ -1307,9 +1286,6 @@ function generateCalendarGrid(container, turmaId, docenteName, start, end, title
   });
 }
 
-/**
- * ======= Utils =======
- */
 function formatDateBR(dateStr) {
   if (!dateStr) return '';
   return dateStr.split('-').reverse().join('/');
