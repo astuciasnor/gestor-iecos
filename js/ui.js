@@ -802,6 +802,25 @@ function handleSlotClick(dia, horario) {
   const tipo = inputConfig.tipo?.value ?? 'regular';
   if (tipo === 'intensiva') return alert('Para intensivas, configure as datas no menu e clique em "Adicionar à Grade".');
 
+  // === NOVA REGRA MEGA-INTENSIVA (5+ SLOTS) ===
+  const regularShift = timeToMinutes(horario) < 12 * 60 ? 'Manhã' : 'Tarde';
+  const megaConflictReg = store.allocations.find(a => {
+      if (String(a.turmaId) !== String(store.selectedTurma)) return false;
+      if (a.tipo !== 'intensiva') return false;
+      
+      const isExistingMega = (a.horariosOcupados || []).length >= 5;
+      if (!isExistingMega) return false;
+
+      const existingShifts = [...new Set((a.horariosOcupados || []).map(s => timeToMinutes(s) < 12 * 60 ? 'Manhã' : 'Tarde'))];
+      return existingShifts.includes(regularShift);
+  });
+
+  if (megaConflictReg) {
+      alert(`⚠️ TURNO BLOQUEADO!\n\nA turma possui uma Intensiva de 5+ horas (${megaConflictReg.disciplina}) no turno da ${regularShift}.\n\nPor regra pedagógica, não é permitido alocar componentes Regulares nos horários remanescentes deste turno para evitar sobrecarga.`);
+      return;
+  }
+  // === FIM NOVA REGRA ===
+
   const mainProf = docData.mode === 'single' ? docData.docente : docData.docentesList[0].nome;
   const conflito = checkTeacherConflict(mainProf, dia, horario);
   if (conflito) {
@@ -866,6 +885,31 @@ function handleAddManual() {
     const dataFimCalculada = addBusinessDays(inicio, diasNecessarios, feriados, blockedWeekdays);
 
     const normalize = s => (s || '').split(/\s/)[0].replace(/[^0-9:]/g, '');
+
+    // === NOVA REGRA MEGA-INTENSIVA (5+ SLOTS) ===
+    const newShifts = [...new Set(slotsIntensiva.map(s => timeToMinutes(s) < 12 * 60 ? 'Manhã' : 'Tarde'))];
+    const isNewMega = slotsIntensiva.length >= 5;
+
+    const megaConflictInt = store.allocations.find(a => {
+        if (String(a.turmaId) !== String(store.selectedTurma)) return false;
+        if (a.tipo !== 'intensiva') return false;
+        if (!isDateOverlap(inicio, dataFimCalculada, a.dataInicio, a.dataFim)) return false;
+
+        const existingShifts = [...new Set((a.horariosOcupados || []).map(s => timeToMinutes(s) < 12 * 60 ? 'Manhã' : 'Tarde'))];
+        const hasShiftOverlap = newShifts.some(shift => existingShifts.includes(shift));
+        
+        if (!hasShiftOverlap) return false;
+
+        const isExistingMega = (a.horariosOcupados || []).length >= 5;
+
+        return isNewMega || isExistingMega;
+    });
+
+    if (megaConflictInt) {
+        alert(`⚠️ TURNO BLOQUEADO!\n\nRegra Pedagógica: Há um bloqueio de turno devido a uma disciplina Intensiva de 5+ horas.\n\nConflito com: ${megaConflictInt.disciplina}\nFaixa de dias: ${formatDateBR(megaConflictInt.dataInicio)} a ${formatDateBR(megaConflictInt.dataFim)}\n\nNão é permitido alocar outras componentes no mesmo turno para preencher horários.`);
+        return;
+    }
+    // === FIM NOVA REGRA ===
 
     const conflitoIntensiva = store.allocations.find(a => {
         if (String(a.turmaId) === String(store.selectedTurma) && a.disciplina === disciplina) {
