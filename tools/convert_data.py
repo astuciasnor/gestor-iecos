@@ -270,16 +270,26 @@ def build_json_from_excel(xlsx_path: Path) -> Dict[str, Any]:
 
 
 def main() -> None:
+    # Captura a pasta atual do script (tools) e volta uma casa para a raiz
+    script_dir = Path(__file__).resolve().parent
+    root_dir = script_dir.parent
+    
+    # Caminhos padrões inteligentes baseados na nova estrutura
+    default_input = root_dir / "dados" / "planilha_base.xlsx"
+    default_output = root_dir / "dados_app.json"
+
     p = argparse.ArgumentParser(description="Converte Excel (.xlsx) em JSON para o app (IECOS).")
-    p.add_argument("--input", required=True, help="Caminho do .xlsx")
-    p.add_argument("--output", required=True, help="Caminho do .json de saída")
+    
+    # Agora input e output não são mais "required=True". Eles usam o fallback inteligente.
+    p.add_argument("--input", default=str(default_input), help="Caminho do .xlsx")
+    p.add_argument("--output", default=str(default_output), help="Caminho do .json de saída")
     args = p.parse_args()
 
     in_path = Path(args.input).expanduser().resolve()
     out_path = Path(args.output).expanduser().resolve()
 
     if not in_path.exists():
-        raise SystemExit(f"Arquivo não encontrado: {in_path}")
+        raise SystemExit(f"ERRO: Arquivo não encontrado: {in_path}\nColoque o arquivo na pasta 'dados/planilha_base.xlsx' ou especifique o caminho com --input")
 
     data = build_json_from_excel(in_path)
 

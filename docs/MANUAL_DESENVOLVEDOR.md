@@ -3,7 +3,7 @@
 **Versão do Sistema:** 2.0 (Release Final - Fevereiro 2026)  
 **Status do Projeto:** 🟢 Estável / Em Produção  
 **Responsável Técnico:** Prof. Dr. Evaldo Silva  
-**Tecnologia:** Vanilla JavaScript (ES6+), HTML5, CSS3 Grid/Flexbox
+**Tecnologia:** Vanilla JavaScript (ES6+), HTML5, CSS3 Grid/Flexbox, Python (ETL)
 
 ---
 
@@ -20,7 +20,7 @@ Este projeto foi concebido seguindo a filosofia de arquitetura **"Serverless & O
 
 2.  **Fonte de Dados Estática (Master Data):**
     * Toda a inteligência de Cursos, Turmas, Disciplinas, Cargas Horárias e Docentes provém de um arquivo estático: **`dados_app.json`**.
-    * Este JSON é gerado a partir de uma planilha Excel (`planilha_base.xlsx`) processada por um script Python (`convert_data.py`), garantindo que a secretaria possa gerenciar os dados em uma ferramenta familiar (Excel) antes de subir para o sistema.
+    * Este JSON é gerado a partir de uma planilha Excel (`dados/planilha_base.xlsx`) processada por um script Python (`tools/convert_data.py`), garantindo que a secretaria possa gerenciar os dados em uma ferramenta familiar (Excel) antes de subir para o sistema.
 
 3.  **Modularidade (ES6 Modules):**
     * O código JavaScript é dividido em módulos com responsabilidades únicas (`import`/`export`), facilitando a manutenção e a escalabilidade sem criar um "código espaguete".
@@ -63,8 +63,8 @@ Abaixo, detalhamos a função vital de cada arquivo no ecossistema do projeto:
 
 Entenda como a informação viaja dentro do sistema:
 
-1.  **Entrada (Excel):** A coordenação atualiza a `planilha_base.xlsx` com novos professores ou disciplinas.
-2.  **Transformação (Python):** O script `convert_data.py` é executado. Ele lê o Excel, valida os dados e "cospe" o arquivo `dados_app.json`.
+1.  **Entrada (Excel):** A coordenação atualiza a planilha base com novos professores ou disciplinas.
+2.  **Transformação (Python):** O script `convert_data.py` é executado. Ele lê o Excel, valida os dados e "cospe" o arquivo `dados_app.json` diretamente na raiz.
 3.  **Carregamento (Fetch):** Ao abrir o site, o `store.js` carrega o `dados_app.json` para a memória RAM.
 4.  **Interação (UI):** O usuário seleciona "Curso" -> "Turma" -> "Disciplina".
 5.  **Processamento:** O `ui.js` valida choques de horário e chama `store.addAllocation()`.
@@ -79,8 +79,8 @@ Esta versão introduziu conceitos avançados para lidar com a realidade acadêmi
 
 ### 4.1. 👑 Hierarquia de Soberania (Prioridades de Slot)
 O sistema não trata todas as aulas da mesma forma. Existe uma hierarquia visual e lógica para ocupação da sala:
-* 🥇 **Nível 1 - Regular Prioritária:** É a "dona" do horário. Bloqueia visualmente o slot com uma borda roxa e **impede** que intensivas sejam alocadas ali sem aviso.
-* 🥈 **Nível 2 - Intensiva (Blocada):** Tem poder de "usurpar" o espaço de uma Regular Comum. Se alocada sobre uma regular, a intensiva aparece na grade da turma (com borda tracejada) e a regular é "escondida" temporariamente.
+* 🥇 **Nível 1 - Regular Prioritária:** É a "dona" do horário. Bloqueia visualmente o slot com uma borda roxa/tracejada preta e **impede** que intensivas sejam alocadas ali sem aviso.
+* 🥈 **Nível 2 - Intensiva (Blocada):** Tem poder de "usurpar" o espaço de uma Regular Comum. Se alocada sobre uma regular, a intensiva aparece na grade da turma e a regular é "escondida" temporariamente.
 * 🥉 **Nível 3 - Regular Comum:** Ocupação padrão. Cede espaço automaticamente para Intensivas.
 
 ### 4.2. ⏳ Carga Horária com Deslocamento (Shift Logic)
@@ -118,28 +118,35 @@ Se no futuro for necessário adicionar, por exemplo, um filtro por "Semestre Par
 
 ## 6. 🗺️ Organização de Pastas do Projeto
 
-A estrutura de arquivos foi desenhada para ser limpa e intuitiva:
+A estrutura de arquivos foi desenhada para ser extremamente limpa, intuitiva e separar a lógica de processamento de dados (Backend) da interface visual (Frontend).
 
 ```text
 /gestor-iecos
 │
-├── index.html              (🏠 O Ponto de Entrada da Aplicação)
-├── dados_app.json          (💾 O Banco de Dados Estático)
-├── planilha_base.xlsx      (📊 A Fonte Editável para a Secretaria)
-├── convert_data.py         (⚙️ O Script Conversor Excel -> JSON)
+├── dados/
+│   └── planilha_base.xlsx       (📊 Arquivo mestre que o Prof. Evaldo edita)
 │
-├── css/
-│   └── style.css           (🎨 Estilos, Cores e Regras de Impressão)
+├── tools/
+│   ├── convert_data.py          (⚙️ O script conversor Python Excel -> JSON)
+│   ├── instalar_pacotes.py      (🚀 O script que automatiza a instalação)
+│   └── requirements.txt         (📄 A lista enxuta de pacotes: openpyxl)
 │
-├── js/                     (🧠 O Núcleo do Sistema)
-│   ├── main.js             (Inicialização e Exportação)
-│   ├── store.js            (Gerenciamento de Estado e Settings)
-│   ├── ui.js               (Interação com o Usuário e DOM)
-│   ├── calendar.js         (Lógica Complexa de Datas)
-│   └── utils.js            (Funções Auxiliares)
+├── js/                          (🧠 O Núcleo do Sistema Frontend)
+│   ├── main.js             
+│   ├── store.js            
+│   ├── ui.js               
+│   ├── calendar.js         
+│   └── utils.js            
 │
-├── img/                    (🖼️ Logos e Favicons)
+├── css/                         (🎨 Estilos, Cores e Regras de Impressão)
+│   └── style.css           
+│
+├── docs/                        (📚 Documentação Oficial)
+│   └── MANUAL_DESENVOLVEDOR.md
+│
+├── img/                         (🖼️ Logos e Favicons)
 │   └── logo_iecos.png
 │
-└── docs/                   (📚 Documentação)
-    └── MANUAL_DESENVOLVEDOR.md
+├── index.html                   (🏠 O Ponto de Entrada da Aplicação / App principal)
+├── README.md                    (📖 Apresentação Front-page)
+└── dados_app.json               (💾 O Banco de Dados estático gerado automaticamente)

@@ -6,7 +6,7 @@ Sistema web desenvolvido sob medida para a gestão, alocação e visualização 
 
 🔗 **Acesse o Sistema Online:** [CLIQUE AQUI PARA ACESSAR](https://astuciasnor.github.io/gestor-iecos/)
 
-📘 **Documentação Técnica:** [`docs/MANUAL_DESENVOLVEDOR.md`](docs/MANUAL_DESENVOLVEDOR.md)
+📘 **Documentação Técnica Oficial:** [`docs/MANUAL_DESENVOLVEDOR.md`](docs/MANUAL_DESENVOLVEDOR.md)
 
 ---
 
@@ -74,18 +74,10 @@ Para verificar choques de horário entre cursos diferentes (ex.: Biologia e Eng.
 
 ## 🛠️ Manutenção e Dados (Para Administrador)
 
-O sistema é alimentado por arquivos estáticos (`dados_app.json`) gerados a partir de uma planilha Excel mestre. Isso permite que a secretaria gerencie os dados em uma ferramenta familiar.
+O sistema é alimentado por arquivos estáticos (`dados_app.json`) gerados a partir de uma planilha Excel mestre. Isso permite que a secretaria gerencie os dados em uma ferramenta familiar. Na Versão 2.0, os dados brutos e scripts foram isolados em pastas próprias (`dados/` e `tools/`) para manter o projeto limpo.
 
-### ✅ Fluxo de Atualização: Excel → JSON
-Para adicionar novos professores, turmas ou feriados:
-
-1.  Edite a planilha base: `planilha_base.xlsx`.
-2.  Execute o script de conversão Python:
-    ```bash
-    # Certifique-se de estar no ambiente virtual (.venv)
-    python convert_data.py --input .\planilha_base.xlsx --output .\dados_app.json
-    ```
-3.  Faça o *commit* e *push* do novo arquivo `dados_app.json` para o repositório.
-
----
-*Desenvolvido e mantido por Prof. Dr. Evaldo Silva - IECOS/UFPA*
+### 📦 Configuração do Ambiente Python (Primeira Vez ou PC Novo)
+Para preparar o ambiente para processar a planilha, rode no terminal:
+1. Ative seu ambiente virtual:
+   ```bash
+   .venv\Scripts\activate
