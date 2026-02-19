@@ -1086,20 +1086,103 @@ function renderOfertasList() {
         ? `${['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab'][a.diaSemana]} ${a.horario}`
         : `${formatDateBR(a.dataInicio)} a ${formatDateBR(a.dataFim)}`;
 
+    // === INÍCIO DA LÓGICA DE EDIÇÃO ===
+    let btnHtml = `<button class="btn-danger btn-delete-row" style="padding:4px 8px; margin:0; font-size:0.85em; border-radius:3px; cursor:pointer;" title="Excluir">🗑️ Excluir</button>`;
+    
+    if (a.tipo === 'intensiva') {
+        btnHtml = `<button class="btn-primary btn-edit-row" style="padding:4px 8px; margin:0; font-size:0.85em; background-color:#2980b9; border:none; color:white; border-radius:3px; cursor:pointer;" title="Editar">✏️ Editar</button>` + btnHtml;
+    }
+
     tr.innerHTML = `
       <td>${a.disciplina}</td>
       <td>${a.docente}</td>
       <td>${labelTipo}</td>
       <td>${horarioTxt}</td>
       <td style="text-align:center;">${chInfo}</td>
-      <td><button class="btn-danger" style="padding:4px; margin:0;">Excluir</button></td>
+      <td style="white-space:nowrap;">
+        <div style="display:flex; gap:5px; justify-content:center; align-items:center;">
+          ${btnHtml}
+        </div>
+      </td>
     `;
 
-    tr.querySelector('button').onclick = () => {
-      store.removeAllocation(a.id);
-      renderWeeklyGrid();
-      renderOfertasList();
+    tr.querySelector('.btn-delete-row').onclick = () => {
+      if (confirm('Tem certeza que deseja excluir esta disciplina?')) {
+          store.removeAllocation(a.id);
+          renderWeeklyGrid();
+          renderOfertasList();
+      }
     };
+
+    const btnEdit = tr.querySelector('.btn-edit-row');
+    if (btnEdit) {
+        btnEdit.onclick = () => {
+            if (confirm('Deseja editar esta disciplina?\n\nOs dados serão carregados no menu lateral para ajuste e a oferta original será removida da grade.')) {
+                
+                // 1. Muda o tipo para Intensiva no seletor
+                if (inputConfig.tipo) {
+                    inputConfig.tipo.value = 'intensiva';
+                    inputConfig.tipo.dispatchEvent(new Event('change'));
+                }
+                
+                // 2. Preenche Disciplina e Cor
+                if (inputConfig.disciplina) {
+                    const chInfoLocal = getDisciplinaInfo(a.disciplina);
+                    inputConfig.disciplina.value = `${a.disciplina} (${chInfoLocal.ch}h)`;
+                    inputConfig.disciplina.dispatchEvent(new Event('input'));
+                }
+                if (inputConfig.cor && a.cor) {
+                    inputConfig.cor.value = a.cor;
+                }
+                
+                // 3. Preenche Data
+                if (inputConfig.inicio && a.dataInicio) {
+                    inputConfig.inicio.value = a.dataInicio;
+                }
+                
+                // 4. Preenche Horários (Slots)
+                if (a.horariosOcupados) {
+                    const containerSlots = document.getElementById('slots-checkboxes');
+                    if (containerSlots) {
+                        containerSlots.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+                            const normalize = s => (s || '').split(/\s/)[0].replace(/[^0-9:]/g, '');
+                            cb.checked = a.horariosOcupados.map(normalize).includes(normalize(cb.value));
+                        });
+                    }
+                }
+
+                // 5. Preenche Docentes
+                const isMulti = a.docentes && a.docentes.length > 0;
+                const chkMulti = document.getElementById('chk-multi-docente');
+                if (chkMulti) {
+                    chkMulti.checked = isMulti;
+                    chkMulti.dispatchEvent(new Event('change'));
+                }
+                
+                if (isMulti) {
+                    const listMulti = document.getElementById('multi-docente-list');
+                    if (listMulti) {
+                        listMulti.innerHTML = ''; // Limpa antes de preencher
+                        a.docentes.forEach(doc => {
+                            addTeacherRow(doc.nome, doc.ch);
+                        });
+                        updateTotalCHDisplay();
+                    }
+                } else {
+                    if (inputConfig.docente) {
+                        inputConfig.docente.value = a.docente;
+                        inputConfig.docente.dispatchEvent(new Event('input'));
+                    }
+                }
+
+                // 6. Remove a alocação atual da memória e atualiza a UI
+                store.removeAllocation(a.id);
+                renderWeeklyGrid();
+                renderOfertasList();
+            }
+        };
+    }
+    // === FIM DA LÓGICA DE EDIÇÃO ===
 
     tbody.appendChild(tr);
   };
