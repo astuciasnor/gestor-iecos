@@ -700,7 +700,7 @@ function renderWeeklyGrid() {
 
     const hDiv = createCell(isIntervalo ? 'header interval-time' : 'header time', labelPrimeiraColuna);
     if (isIntervalo) hDiv.style.background = '#e0e0e0';
-    if (isSeparadorTurno) hDiv.style.borderBottom = '3px solid #000000'; 
+    // LINHA REMOVIDA AQUI: if (isSeparadorTurno) hDiv.style.borderBottom = '3px solid #000000';
     gridContainer.appendChild(hDiv);
 
     if (isIntervalo) {
@@ -716,7 +716,7 @@ function renderWeeklyGrid() {
         cell.dataset.dia = i;
         cell.dataset.horario = horarioStr;
         
-        if (isSeparadorTurno) cell.style.borderBottom = '3px solid #000000';
+        // LINHA REMOVIDA AQUI: if (isSeparadorTurno) cell.style.borderBottom = '3px solid #000000';
 
         const alloc = store.allocations.find(
           (a) =>
@@ -748,13 +748,17 @@ function renderSlotContent(cell, alloc) {
   cell.style.backgroundColor = alloc.cor;
   const info = getDisciplinaInfo(alloc.disciplina);
 
-  let borderStyle = '';
+  // AJUSTE 1: Borda pontilhada preta NA CÉLULA (borda do slot)
   if (alloc.tipo === 'regular_prioritaria') {
-      borderStyle = 'border: 3px solid #8e44ad;'; 
+      cell.style.border = '2px dashed #000000'; 
+      cell.style.boxSizing = 'border-box'; 
+  } else {
+      cell.style.border = ''; // Limpa borda se não for prioritária
   }
 
+  // Removemos o borderStyle interno que estava aqui antes
   cell.innerHTML = `
-    <div style="height:100%; width:100%; box-sizing:border-box; ${borderStyle}">
+    <div style="height:100%; width:100%; box-sizing:border-box;">
         <div style="font-size:0.85em; font-weight:bold; line-height:1.2; margin-bottom:2px;">${info.abrev}</div>
         <div style="font-size:0.75em; color:#444;">${(alloc.docente || '').split(' ')[0] || ''}</div>
         <span class="remove-btn" style="color:red; font-weight:bold; font-size:0.8em; position:absolute; top:2px; right:2px;">×</span>
@@ -766,6 +770,7 @@ function renderSlotContent(cell, alloc) {
     e.stopPropagation();
     if (confirm('Remover esta aula?')) {
       store.removeAllocation(alloc.id);
+      cell.style.border = ''; // Garante limpeza visual ao remover
       renderWeeklyGrid();
       renderOfertasList();
     }
@@ -1283,8 +1288,14 @@ function generateCalendarGrid(container, turmaId, docenteName, start, end, title
                 tooltip = `title="${suspEvent.blockingReason || 'Suspenso'}"`;
             }
 
+            // --- AJUSTE 2: Borda pontilhada SUPERIOR no slot de 13:30 (divisão de turno limpa) ---
+            let rowStyle = '';
+            if (slotTime.includes('13:30')) {
+                rowStyle = 'border-top: 2px dashed #bdc3c7; margin-top: 2px; padding-top: 2px;';
+            }
+
             html += `
-              <div class="cal-slot-row">
+              <div class="cal-slot-row" style="${rowStyle}">
                 <div class="cal-slot-time">${timeLabel}</div>
                 <div class="${className}" style="${style}" ${tooltip}>${content}</div>
               </div>`;
