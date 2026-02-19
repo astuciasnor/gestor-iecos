@@ -11,8 +11,37 @@ const divAgenda = document.getElementById('resultado-agenda');
 
 // 1. Quando a página carregar, executamos isso:
 document.addEventListener('DOMContentLoaded', async () => {
-    // O store oficial já sabe carregar o dados_app.json e o localStorage do admin
+    // Carrega a estrutura base (Cursos e Turmas) do dados_app.json
     await store.loadData();
+
+    // ---------------------------------------------------------
+    // SPRINT 2: A MÁGICA DA PUBLICAÇÃO (ONLINE E OFFLINE)
+    // ---------------------------------------------------------
+    try {
+        // 1º Tenta puxar o arquivo do servidor (GitHub Pages)
+        const response = await fetch('alocacoes_publicas.json');
+        
+        if (response.ok) {
+            const dadosPublicos = await response.json();
+            store.allocations = dadosPublicos; 
+            console.log("Dados carregados do arquivo público (Online)");
+        } else {
+            // 2º Se o arquivo não existir, puxa da memória do seu PC (Offline)
+            console.warn('Arquivo alocacoes_publicas.json não encontrado. Carregando modo Offline (Local).');
+            store.loadAllocations(); 
+        }
+    } catch (error) {
+        // Se estiver sem internet ou rodando direto do arquivo (file://), cai aqui e funciona offline
+        console.warn('Sem conexão ou rodando local. Carregando modo Offline (Local).');
+        store.loadAllocations();
+    }
+
+    // AJUSTE CRUCIAL: O navegador do aluno é "limpo" e não tem as datas do semestre salvas.
+    // Se estiver vazio, definimos um padrão para a tela não quebrar.
+    if (!store.settings.termStart) store.settings.termStart = '2026-02-01';
+    if (!store.settings.termEnd) store.settings.termEnd = '2026-07-31';
+    // ---------------------------------------------------------
+
     configurarEventos();
     preencherCursos();
 });
@@ -84,7 +113,7 @@ function preencherMeses() {
         return;
     }
 
-    // Calcula os meses com base nas datas configuradas no store (painel admin)
+    // Calcula os meses com base nas datas configuradas no store (painel admin) ou no fallback
     const inicio = store.settings.termStart;
     const fim = store.settings.termEnd;
 
