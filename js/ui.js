@@ -802,24 +802,9 @@ function handleSlotClick(dia, horario) {
   const tipo = inputConfig.tipo?.value ?? 'regular';
   if (tipo === 'intensiva') return alert('Para intensivas, configure as datas no menu e clique em "Adicionar à Grade".');
 
-  // === NOVA REGRA MEGA-INTENSIVA (5+ SLOTS) ===
-  const regularShift = timeToMinutes(horario) < 12 * 60 ? 'Manhã' : 'Tarde';
-  const megaConflictReg = store.allocations.find(a => {
-      if (String(a.turmaId) !== String(store.selectedTurma)) return false;
-      if (a.tipo !== 'intensiva') return false;
-      
-      const isExistingMega = (a.horariosOcupados || []).length >= 5;
-      if (!isExistingMega) return false;
-
-      const existingShifts = [...new Set((a.horariosOcupados || []).map(s => timeToMinutes(s) < 12 * 60 ? 'Manhã' : 'Tarde'))];
-      return existingShifts.includes(regularShift);
-  });
-
-  if (megaConflictReg) {
-      alert(`⚠️ TURNO BLOQUEADO!\n\nA turma possui uma Intensiva de 5+ horas (${megaConflictReg.disciplina}) no turno da ${regularShift}.\n\nPor regra pedagógica, não é permitido alocar componentes Regulares nos horários remanescentes deste turno para evitar sobrecarga.`);
-      return;
-  }
-  // === FIM NOVA REGRA ===
+  // REGRA DE BLOQUEIO DE TURNO REMOVIDA DESTE LOCAL (handleSlotClick)!
+  // A Grade Semanal volta a ser livre para planejamento a longo prazo.
+  // A supressão das regulares pela intensiva será gerida de forma inteligente no Calendário.
 
   const mainProf = docData.mode === 'single' ? docData.docente : docData.docentesList[0].nome;
   const conflito = checkTeacherConflict(mainProf, dia, horario);
@@ -886,13 +871,14 @@ function handleAddManual() {
 
     const normalize = s => (s || '').split(/\s/)[0].replace(/[^0-9:]/g, '');
 
-    // === NOVA REGRA MEGA-INTENSIVA (5+ SLOTS) ===
+    // === REGRA MEGA-INTENSIVA (AJUSTADA PARA PERMITIR SOBRESCRITA DA MESMA DISCIPLINA) ===
     const newShifts = [...new Set(slotsIntensiva.map(s => timeToMinutes(s) < 12 * 60 ? 'Manhã' : 'Tarde'))];
     const isNewMega = slotsIntensiva.length >= 5;
 
     const megaConflictInt = store.allocations.find(a => {
         if (String(a.turmaId) !== String(store.selectedTurma)) return false;
         if (a.tipo !== 'intensiva') return false;
+        if (a.disciplina === disciplina) return false; // <-- NOVO: Ignora a si mesma na regra de trava!
         if (!isDateOverlap(inicio, dataFimCalculada, a.dataInicio, a.dataFim)) return false;
 
         const existingShifts = [...new Set((a.horariosOcupados || []).map(s => timeToMinutes(s) < 12 * 60 ? 'Manhã' : 'Tarde'))];
@@ -910,6 +896,8 @@ function handleAddManual() {
         return;
     }
     // === FIM NOVA REGRA ===
+
+    let idToRemove = null; // Guardamos para apagar depois silenciosamente
 
     const conflitoIntensiva = store.allocations.find(a => {
         if (String(a.turmaId) === String(store.selectedTurma) && a.disciplina === disciplina) {
@@ -962,11 +950,8 @@ function handleAddManual() {
 
     if (conflitoIntensiva) {
         if (String(conflitoIntensiva.turmaId) === String(store.selectedTurma) && conflitoIntensiva.disciplina === disciplina) {
-            if(confirm(`Já existe uma alocação para ${disciplina} neste período. Deseja atualizar os horários/slots?`)) {
-                store.removeAllocation(conflitoIntensiva.id);
-            } else {
-                return;
-            }
+            // Se for o MESMO curso, MESMA turma e MESMA disciplina, nós agendamos para sobrescrever
+            idToRemove = conflitoIntensiva.id;
         } else {
             const tipoConflito = conflitoIntensiva.tipo === 'regular' ? 'Regular (Semanal)' : 'Intensiva';
             alert(`Choque de Horário Detectado!\n\n` +
@@ -978,15 +963,21 @@ function handleAddManual() {
         }
     }
 
+    const actionText = idToRemove ? "Atualizar alocação existente?" : "Confirmar alocação?";
     if (
       !confirm(
         `Componente: ${disciplina} (${ch}h)\n` +
           `Tipo: Intensiva (${slotsCount} slots/dia)\n` +
           `Duração: ${diasNecessarios} dias úteis (Excluindo dias bloqueados).\n\n` +
-          `De: ${formatDateBR(inicio)}\nAté: ${formatDateBR(dataFimCalculada)}\n\nConfirmar alocação?`
+          `De: ${formatDateBR(inicio)}\nAté: ${formatDateBR(dataFimCalculada)}\n\n${actionText}`
       )
     )
       return;
+
+    // Se o usuário confirmou a edição, apaga a versão velha silenciosamente
+    if (idToRemove) {
+        store.removeAllocation(idToRemove);
+    }
 
     const corSelecionada = inputConfig.cor ? inputConfig.cor.value : store.getDisciplinaColor(disciplina);
 
@@ -1086,12 +1077,11 @@ function renderOfertasList() {
         ? `${['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab'][a.diaSemana]} ${a.horario}`
         : `${formatDateBR(a.dataInicio)} a ${formatDateBR(a.dataFim)}`;
 
-    // === INÍCIO DA LÓGICA DE EDIÇÃO ===
+    // === INÍCIO DA LÓGICA DE EDIÇÃO (Agora para todas as ofertas) ===
     let btnHtml = `<button class="btn-danger btn-delete-row" style="padding:4px 8px; margin:0; font-size:0.85em; border-radius:3px; cursor:pointer;" title="Excluir">🗑️ Excluir</button>`;
     
-    if (a.tipo === 'intensiva') {
-        btnHtml = `<button class="btn-primary btn-edit-row" style="padding:4px 8px; margin:0; font-size:0.85em; background-color:#2980b9; border:none; color:white; border-radius:3px; cursor:pointer;" title="Editar">✏️ Editar</button>` + btnHtml;
-    }
+    // Habilita o botão editar para TODAS (Intensiva, Regular, Regular Prioritária)
+    btnHtml = `<button class="btn-primary btn-edit-row" style="padding:4px 8px; margin:0; font-size:0.85em; background-color:#2980b9; border:none; color:white; border-radius:3px; cursor:pointer; margin-right:5px;" title="Editar">✏️ Editar</button>` + btnHtml;
 
     tr.innerHTML = `
       <td>${a.disciplina}</td>
@@ -1100,7 +1090,7 @@ function renderOfertasList() {
       <td>${horarioTxt}</td>
       <td style="text-align:center;">${chInfo}</td>
       <td style="white-space:nowrap;">
-        <div style="display:flex; gap:5px; justify-content:center; align-items:center;">
+        <div style="display:flex; justify-content:center; align-items:center;">
           ${btnHtml}
         </div>
       </td>
@@ -1117,41 +1107,49 @@ function renderOfertasList() {
     const btnEdit = tr.querySelector('.btn-edit-row');
     if (btnEdit) {
         btnEdit.onclick = () => {
-            if (confirm('Deseja editar esta disciplina?\n\nOs dados serão carregados no menu lateral para ajuste e a oferta original será removida da grade.')) {
+            let confirmMsg = a.tipo === 'intensiva' 
+                ? 'Deseja editar esta disciplina intensiva?\n\nOs dados serão carregados no menu lateral para ajuste. A oferta antiga será sobrescrita quando você salvar.'
+                : 'Deseja editar esta disciplina regular?\n\nOs dados serão carregados no menu lateral e a oferta antiga será removida. O sistema abrirá a Grade Semanal para você reposicioná-la.';
                 
-                // 1. Muda o tipo para Intensiva no seletor
+            if (confirm(confirmMsg)) {
+                
+                // 1. Muda o tipo no seletor baseado no tipo real da oferta clicada
                 if (inputConfig.tipo) {
-                    inputConfig.tipo.value = 'intensiva';
+                    inputConfig.tipo.value = a.tipo; 
                     inputConfig.tipo.dispatchEvent(new Event('change'));
                 }
                 
-                // 2. Preenche Disciplina e Cor
+                // 2. Limpa e Preenche Disciplina e Cor (Forçando Atualização Visual)
                 if (inputConfig.disciplina) {
+                    inputConfig.disciplina.value = ''; // Limpa antes
+                    inputConfig.disciplina.dispatchEvent(new Event('input'));
+                    
                     const chInfoLocal = getDisciplinaInfo(a.disciplina);
                     inputConfig.disciplina.value = `${a.disciplina} (${chInfoLocal.ch}h)`;
                     inputConfig.disciplina.dispatchEvent(new Event('input'));
+                    inputConfig.disciplina.focus(); // Simula atenção do usuário
                 }
                 if (inputConfig.cor && a.cor) {
                     inputConfig.cor.value = a.cor;
                 }
                 
-                // 3. Preenche Data
-                if (inputConfig.inicio && a.dataInicio) {
-                    inputConfig.inicio.value = a.dataInicio;
-                }
-                
-                // 4. Preenche Horários (Slots)
-                if (a.horariosOcupados) {
-                    const containerSlots = document.getElementById('slots-checkboxes');
-                    if (containerSlots) {
-                        containerSlots.querySelectorAll('input[type="checkbox"]').forEach(cb => {
-                            const normalize = s => (s || '').split(/\s/)[0].replace(/[^0-9:]/g, '');
-                            cb.checked = a.horariosOcupados.map(normalize).includes(normalize(cb.value));
-                        });
+                // 3. Preenche Data e Horários (SOMENTE SE FOR INTENSIVA)
+                if (a.tipo === 'intensiva') {
+                    if (inputConfig.inicio && a.dataInicio) {
+                        inputConfig.inicio.value = a.dataInicio;
+                    }
+                    if (a.horariosOcupados) {
+                        const containerSlots = document.getElementById('slots-checkboxes');
+                        if (containerSlots) {
+                            containerSlots.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+                                const normalize = s => (s || '').split(/\s/)[0].replace(/[^0-9:]/g, '');
+                                cb.checked = a.horariosOcupados.map(normalize).includes(normalize(cb.value));
+                            });
+                        }
                     }
                 }
 
-                // 5. Preenche Docentes
+                // 4. Preenche Docentes
                 const isMulti = a.docentes && a.docentes.length > 0;
                 const chkMulti = document.getElementById('chk-multi-docente');
                 if (chkMulti) {
@@ -1170,15 +1168,26 @@ function renderOfertasList() {
                     }
                 } else {
                     if (inputConfig.docente) {
+                        inputConfig.docente.value = ''; // Limpa antes
+                        inputConfig.docente.dispatchEvent(new Event('input'));
+                        
                         inputConfig.docente.value = a.docente;
                         inputConfig.docente.dispatchEvent(new Event('input'));
                     }
                 }
 
-                // 6. Remove a alocação atual da memória e atualiza a UI
-                store.removeAllocation(a.id);
-                renderWeeklyGrid();
-                renderOfertasList();
+                // 5. Ações finais baseadas no tipo (UX Perfeita)
+                if (a.tipo === 'intensiva') {
+                    // Se for intensiva, só rola pra cima no menu lateral. A exclusão acontece ao "Adicionar".
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                } else {
+                    // Se for Regular, remove a velha IMEDIATAMENTE, atualiza e muda para a aba da Grade Semanal
+                    store.removeAllocation(a.id);
+                    renderWeeklyGrid();
+                    renderOfertasList();
+                    switchTab('weekly'); 
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                }
             }
         };
     }

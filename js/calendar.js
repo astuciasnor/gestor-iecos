@@ -252,8 +252,46 @@ export function getCalendarEvents(turmaId, startDate, endDate, docenteFilter = n
       });
     });
 
+
     // =========================================================================================
-    // 3. PASSO C: RENDERIZAR REGULARES COMUNS (Respeitando bloqueios)
+    // PRÉ-PASSO C: DETECTAR QUAIS REGULARES SERÃO TOTALMENTE SUSPENSAS HOJE (TUDO OU NADA)
+    // =========================================================================================
+    const suspendedRegularDisciplinasInfo = {}; 
+
+    myRegulars.forEach(reg => {
+      if (store.settings.termEnd && dateStr > store.settings.termEnd) return;
+      
+      if (reg.diaSemana == dayOfWeek) {
+        const tId = String(reg.turmaId);
+        const hReg = normalizeTime(reg.horario);
+        
+        // Se este slot específico encostou num bloqueio...
+        if (blockedSlotsByTurma[tId] && blockedSlotsByTurma[tId].includes(hReg)) {
+            if (!suspendedRegularDisciplinasInfo[tId]) suspendedRegularDisciplinasInfo[tId] = {};
+            
+            // ... a disciplina inteira é listada para ser suspensa (em bloco) neste dia.
+            if (!suspendedRegularDisciplinasInfo[tId][reg.disciplina]) {
+                let blockerName = "Intensiva";
+                
+                const blockerPrio = activeGlobalPriority.find(p => String(p.turmaId) === tId && normalizeTime(p.horario) === hReg);
+                if (blockerPrio) {
+                    blockerName = blockerPrio.disciplina;
+                } else {
+                    const blockerInt = activeGlobalIntensives.find(i => {
+                        if (String(i.turmaId) !== tId) return false;
+                        return (i.horariosOcupados || []).map(normalizeTime).includes(hReg);
+                    });
+                    if (blockerInt) blockerName = blockerInt.disciplina;
+                }
+                
+                suspendedRegularDisciplinasInfo[tId][reg.disciplina] = blockerName;
+            }
+        }
+      }
+    });
+
+    // =========================================================================================
+    // 3. PASSO C: RENDERIZAR REGULARES COMUNS (Respeitando a Suspensão em Bloco)
     // =========================================================================================
     myRegulars.forEach(reg => {
       if (store.settings.termEnd && dateStr > store.settings.termEnd) return;
@@ -261,27 +299,12 @@ export function getCalendarEvents(turmaId, startDate, endDate, docenteFilter = n
       if (reg.diaSemana == dayOfWeek) {
         
         const tId = String(reg.turmaId);
-        const hReg = normalizeTime(reg.horario);
         
-        // Verifica se a SALA está bloqueada
-        if (blockedSlotsByTurma[tId] && blockedSlotsByTurma[tId].includes(hReg)) {
-            
-            // --- Lógica de Detecção do Bloqueador (Quem suspendeu?) ---
-            let blockerName = "Intensiva";
-            
-            // 1. Foi uma Prioritária?
-            const blockerPrio = activeGlobalPriority.find(p => String(p.turmaId) === tId && normalizeTime(p.horario) === hReg);
-            if (blockerPrio) {
-                blockerName = blockerPrio.disciplina;
-            } else {
-                // 2. Foi uma Intensiva?
-                const blockerInt = activeGlobalIntensives.find(i => {
-                    if (String(i.turmaId) !== tId) return false;
-                    return (i.horariosOcupados || []).map(normalizeTime).includes(hReg);
-                });
-                if (blockerInt) blockerName = blockerInt.disciplina;
-            }
+        // NOVA REGRA DE OURO: Verifica se a disciplina consta na lista de "totalmente suspensas hoje"
+        const blockerName = suspendedRegularDisciplinasInfo[tId]?.[reg.disciplina];
 
+        if (blockerName) {
+            
             // Exibir apenas se for o Dono da aula suspensa (Visão Professor)
             let isOwner = true;
             if (docenteFilter) {
@@ -297,14 +320,15 @@ export function getCalendarEvents(turmaId, startDate, endDate, docenteFilter = n
                     ...reg, // MANTÉM A COR ORIGINAL (IMPORTANTE PARA O CSS)
                     type: 'suspended',
                     title: `⛔ Suspensa (${blockerName})`, 
-                    blockingReason: `Aula regular suspensa devido à oferta da disciplina Intensiva/Especial "${blockerName}" nesta sala.`,
+                    blockingReason: `Aula regular totalmente suspensa neste dia devido a choque com a disciplina "${blockerName}".`,
                     priority: 0 
                 });
             }
 
-            return; // Sai sem contar horas
+            return; // Sai sem contar horas para NENHUM slot dessa disciplina hoje
         }
 
+        // Se a disciplina NÃO consta na lista de suspensas, ela é renderizada normalmente:
         const cursoSigla = turmaToCurso[reg.turmaId];
         let maxCH = 999;
 
