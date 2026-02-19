@@ -1,115 +1,145 @@
-# Manual Técnico do Desenvolvedor — Gestor Acadêmico IECOS
+# 📘 Manual Técnico do Desenvolvedor — Gestor Acadêmico IECOS
 
-**Versão:** 1.0 (Fevereiro 2026)  
-**Responsável:** Prof. Dr. Evaldo Silva
-
----
-
-## 1. Visão Geral da Arquitetura
-Este projeto segue a filosofia **"Serverless & Offline-First"**. Não há backend, banco de dados SQL ou instalação complexa. Todo o processamento ocorre no navegador do cliente (Client-Side) usando JavaScript puro (ES6 Modules).
-
-### Pilares Técnicos:
-1.  **Persistência:** `localStorage` do navegador. Os dados sobrevivem ao fechamento da aba.
-2.  **Fonte de Dados:** Arquivo estático `dados_app.json`, gerado a partir de uma planilha Excel (`planilha_base.xlsx`) via script Python.
-3.  **Portabilidade:** A pasta do projeto pode ser enviada por ZIP, Pendrive ou hospedada no GitHub Pages sem configuração extra.
+**Versão do Sistema:** 2.0 (Release Final - Fevereiro 2026)  
+**Status do Projeto:** 🟢 Estável / Em Produção  
+**Responsável Técnico:** Prof. Dr. Evaldo Silva  
+**Tecnologia:** Vanilla JavaScript (ES6+), HTML5, CSS3 Grid/Flexbox
 
 ---
 
-## 2. Estrutura de Arquivos e Responsabilidades
+## 1. 🌐 Visão Geral e Filosofia da Arquitetura
 
-* **`index.html`**: O esqueleto. Contém a Sidebar (configurações) e as Sections (abas) ocultas/exibidas via CSS.
-* **`css/style.css`**: Design visual. Uso extensivo de Grid CSS para a grade horária e Flexbox para layouts. Define as regras de impressão (`@media print`).
-* **`js/store.js`**: O "Banco de Dados" em memória.
-    * Gerencia o array `allocations` (onde ficam as aulas criadas).
-    * Gerencia o salvamento/carregamento no `localStorage`.
-    * Lida com a lógica de Importar/Exportar e Mesclar JSONs.
-* **`js/ui.js`**: O "Controlador" (Lógica de Tela).
-    * Escuta os cliques na grade e botões.
-    * Lida com a lógica de inserção manual (validação de formulário).
-    * Contém a **Lógica de Atualização Inteligente** (update vs insert).
-* **`js/calendar.js`**: O "Renderizador Lógico".
-    * Transforma as alocações abstratas em eventos de calendário reais (dia a dia).
-    * **Ponto Crítico:** É aqui que reside a lógica de "Soberania da Sala" (ver seção 4).
-* **`js/utils.js`**: Funções puras (cálculo de datas, dias úteis, contagem de feriados).
+Este projeto foi concebido seguindo a filosofia de arquitetura **"Serverless & Offline-First"**. Ao contrário de sistemas acadêmicos tradicionais que dependem de servidores pesados, bancos de dados SQL complexos e instalação de backends, o Gestor Acadêmico IECOS roda **100% no navegador do cliente (Client-Side)**.
 
----
+### 🚀 Pilares Técnicos Fundamentais:
 
-## 3. Fluxo de Dados (Data Pipeline)
+1.  **Persistência Local (Local Storage):**
+    * O "banco de dados" é o próprio navegador do usuário. Utilizamos a API `localStorage` para salvar o estado da aplicação (alocações, configurações de data, turno e período).
+    * **Vantagem:** Os dados sobrevivem ao fechamento da aba ou reinício do computador sem necessidade de login em nuvem.
+    * **Segurança:** Os dados ficam restritos ao dispositivo do usuário, garantindo privacidade e velocidade instantânea.
 
-1.  **Entrada:** O usuário edita `planilha_base.xlsx` (Excel).
-2.  **Processamento:** O script `convert_data.py` lê o Excel e cospe o `dados_app.json`.
-3.  **Consumo:** O `js/store.js` faz um `fetch('dados_app.json')` ao iniciar.
-4.  **Operação:** O usuário cria alocações. Elas são salvas no array `allocations` e persistidas no `localStorage`.
-5.  **Saída:** O usuário clica em "Exportar JSON" para gerar um backup ou enviar para a secretaria.
+2.  **Fonte de Dados Estática (Master Data):**
+    * Toda a inteligência de Cursos, Turmas, Disciplinas, Cargas Horárias e Docentes provém de um arquivo estático: **`dados_app.json`**.
+    * Este JSON é gerado a partir de uma planilha Excel (`planilha_base.xlsx`) processada por um script Python (`convert_data.py`), garantindo que a secretaria possa gerenciar os dados em uma ferramenta familiar (Excel) antes de subir para o sistema.
 
-> **Cuidado:** Se você mudar o nome de uma coluna no Excel, precisará atualizar o `convert_data.py`. Se mudar a estrutura do JSON, pode quebrar o `ui.js`.
+3.  **Modularidade (ES6 Modules):**
+    * O código JavaScript é dividido em módulos com responsabilidades únicas (`import`/`export`), facilitando a manutenção e a escalabilidade sem criar um "código espaguete".
 
 ---
 
-## 4. Lógicas Críticas (O "Pulo do Gato")
+## 2. 📂 Estrutura de Arquivos e Responsabilidades ("A Anatomia")
 
-### 4.1. Soberania da Sala (Supressão de Regulares)
-*Arquivo: `js/calendar.js`*
-Para evitar falsos positivos de choque, o sistema usa a regra: **"A Ocupação Física da Sala é Soberana"**.
-1.  Antes de desenhar as aulas do dia, o script varre todas as **Intensivas** ativas na data.
-2.  Ele cria um mapa de `blockedSlotsByTurma`.
-3.  Ao tentar desenhar uma aula **Regular**, ele checa: *"A sala desta turma está bloqueada neste horário por uma intensiva?"*
-4.  Se sim, a aula Regular **não é renderizada** (é suprimida).
-    * *Resultado:* O professor da regular aparece "livre" naquele dia, permitindo que ele pegue outra aula (ou dê a própria intensiva) sem gerar alerta de choque visual.
+Abaixo, detalhamos a função vital de cada arquivo no ecossistema do projeto:
 
-### 4.2. Atualização vs. Inserção
-*Arquivo: `js/ui.js` -> `handleAddManual`*
-Ao tentar inserir uma disciplina Intensiva:
-1.  O sistema busca conflitos.
-2.  Se encontrar um conflito com a **mesma disciplina** na **mesma turma**:
-    * Ele entende como uma intenção de **Edição**.
-    * Pergunta ao usuário: *"Deseja atualizar?"*.
-    * Se SIM: Remove a alocação antiga e insere a nova imediatamente. Isso facilita ajustes de carga horária (ex: mudar de 5 slots para 3 slots).
+### 🖥️ Camada de Interface (View)
+* **`index.html`**: O esqueleto da aplicação.
+    * Contém a estrutura das abas (Tabs), a barra lateral (Sidebar) com os seletores de **Período (1P-4P)**, e as áreas de renderização.
+    * Implementa o script de **Login de Sessão** (`sessionStorage`) para proteção básica de acesso.
+* **`css/style.css`**: A pele do projeto.
+    * Utiliza **CSS Grid** para desenhar a grade horária com precisão matemática.
+    * Define as regras de impressão (`@media print`) para garantir que os relatórios em PDF saiam limpos, coloridos e sem elementos de interface (botões, menus).
 
-### 4.3. Coexistência (Slots Livres)
-O sistema **não** bloqueia o dia inteiro por padrão.
-* Se uma Intensiva ocupa das 10:00 às 12:00.
-* Os horários das 07:30 às 10:00 **continuam livres** para receber aulas Regulares.
-* *Nota:* Se quiser mudar isso para "Bloqueio Total do Dia", a alteração deve ser feita no `calendar.js` (verificar presença de intensiva no dia e ignorar horário).
-
----
-
-## 5. Manutenção e Evolução
-
-### Como adicionar novos campos?
-1.  Adicione a coluna no Excel.
-2.  Edite o `convert_data.py` para ler essa coluna e incluí-la no JSON.
-3.  No `js/ui.js`, capture esse dado onde necessário (ex: renderização da tabela).
-
-### Cuidados ao Atualizar
-* **Limpar Tudo:** Sempre teste novas versões clicando em "Limpar Tudo" para garantir que não há lixo de versões anteriores no `localStorage`.
-* **IDs:** As alocações usam UUIDs gerados no frontend. Não tente criar IDs sequenciais manuais.
-
-### Lista de Tarefas Futuras (Roadmap v2.0 - Ideias)
-* [ ] Validação pedagógica: Impedir regular no mesmo dia de intensiva (Bloqueio Total).
-* [ ] Relatório de Carga Horária Docente consolidado.
-* [ ] Modo Escuro (Dark Mode).
+### 🧠 Camada de Lógica (Controller & Model)
+* **`js/store.js` (O "Cérebro"):**
+    * Atua como o **Gerenciador de Estado Global** (State Management).
+    * Mantém o array `allocations[]` com todas as aulas criadas.
+    * Gerencia o objeto `settings` (datas, turno, e o novo campo **período**).
+    * Contém a lógica de persistência (`saveAllocations`, `loadAllocations`).
+* **`js/ui.js` (O "Maestro"):**
+    * Faz a ponte entre o HTML e o JavaScript.
+    * Gerencia todos os **Event Listeners** (cliques, mudanças de input).
+    * Contém a lógica visual crítica de renderização da grade semanal (`renderWeeklyGrid`).
+    * Monitora o seletor de período para garantir que o arquivo exportado tenha o nome correto.
+* **`js/calendar.js` (O "Matemático"):**
+    * O motor de cálculo de datas. Transforma uma alocação abstrata ("Segunda-feira") em dias reais do calendário (ex: "14/02, 21/02").
+    * Calcula a Carga Horária Efetiva descontando feriados.
+* **`js/main.js` (O "Porteiro"):**
+    * Inicializa a aplicação (`DOMContentLoaded`).
+    * Gerencia a **Exportação Dinâmica** e a **Importação/Mesclagem** de arquivos JSON.
 
 ---
 
-## 6. Organização de Pastas Recomendada
+## 3. 🔄 Fluxo de Dados (Data Pipeline)
+
+Entenda como a informação viaja dentro do sistema:
+
+1.  **Entrada (Excel):** A coordenação atualiza a `planilha_base.xlsx` com novos professores ou disciplinas.
+2.  **Transformação (Python):** O script `convert_data.py` é executado. Ele lê o Excel, valida os dados e "cospe" o arquivo `dados_app.json`.
+3.  **Carregamento (Fetch):** Ao abrir o site, o `store.js` carrega o `dados_app.json` para a memória RAM.
+4.  **Interação (UI):** O usuário seleciona "Curso" -> "Turma" -> "Disciplina".
+5.  **Processamento:** O `ui.js` valida choques de horário e chama `store.addAllocation()`.
+6.  **Persistência:** O `store.js` salva o novo estado no `localStorage` instantaneamente.
+7.  **Saída (Export):** O usuário clica em "Exportar". O `main.js` lê a configuração atual (Sigla + Ano + Período) e gera um arquivo JSON (ex: `EP_2026_2P.json`) para backup ou compartilhamento.
+
+---
+
+## 4. 💎 Lógicas Críticas da Versão 2.0 (O "Pulo do Gato")
+
+Esta versão introduziu conceitos avançados para lidar com a realidade acadêmica complexa:
+
+### 4.1. 👑 Hierarquia de Soberania (Prioridades de Slot)
+O sistema não trata todas as aulas da mesma forma. Existe uma hierarquia visual e lógica para ocupação da sala:
+* 🥇 **Nível 1 - Regular Prioritária:** É a "dona" do horário. Bloqueia visualmente o slot com uma borda roxa e **impede** que intensivas sejam alocadas ali sem aviso.
+* 🥈 **Nível 2 - Intensiva (Blocada):** Tem poder de "usurpar" o espaço de uma Regular Comum. Se alocada sobre uma regular, a intensiva aparece na grade da turma (com borda tracejada) e a regular é "escondida" temporariamente.
+* 🥉 **Nível 3 - Regular Comum:** Ocupação padrão. Cede espaço automaticamente para Intensivas.
+
+### 4.2. ⏳ Carga Horária com Deslocamento (Shift Logic)
+Diferente da versão 1.0, onde uma aula suspensa era "perdida", a v2.0 é inteligente:
+* Se uma **Intensiva** suspende uma aula **Regular** no dia 15/03...
+* O sistema **não contabiliza** as horas dessa regular no dia 15/03.
+* Automaticamente, o sistema busca a próxima data disponível (ex: 22/03) e continua a contagem até atingir a Carga Horária total (ex: 60h). Isso garante que o planejamento pedagógico seja real.
+
+### 4.3. 👁️ Visão Dual (Contexto Turma vs. Contexto Professor)
+A interface se adapta dependendo de quem está olhando (Abas no `index.html`):
+* **Aba Grade/Calendário da Turma:** Foca na **Ocupação Física da Sala**. Mostra quem está dando aula *naquela sala*. Se houver conflito, mostra a Intensiva (soberana).
+* **Aba Visão do Professor:** Foca na **Agenda Pessoal**. Se a aula dele foi suspensa por uma intensiva de outro colega, o sistema exibe explicitamente um card cinza: `⛔ [Disciplina] Suspensa`. Isso avisa ao docente que ele está liberado naquele dia.
+
+---
+
+## 5. 🛠️ Guia de Manutenção e Evolução
+
+### Como adicionar um novo campo de configuração?
+Se no futuro for necessário adicionar, por exemplo, um filtro por "Semestre Par/Ímpar":
+
+1.  **HTML (`index.html`):** Adicione o `<select id="sel-semestre">...</select>` na Sidebar.
+2.  **Store (`js/store.js`):**
+    * No `constructor`, adicione `semestre: ''` dentro do objeto `this.settings`.
+    * Crie o método `setSemestre(val) { this.settings.semestre = val; this.saveSettings(); }`.
+3.  **UI (`js/ui.js`):**
+    * Na função `initPeriodoLetivoETurno`, capture o elemento: `const sel = document.getElementById('sel-semestre');`
+    * Adicione o listener: `sel.addEventListener('change', () => store.setSemestre(sel.value));`
+
+### Cuidados Críticos ⚠️
+* **IDs Únicos:** Nunca gere IDs manualmente. Use a função `generateUUID()` do `utils.js`.
+* **Formato de Data:** O sistema espera estritamente `YYYY-MM-DD`.
+* **Limpeza de Cache:** Ao subir uma nova versão crítica (ex: mudança na estrutura do JSON), instrua os usuários a clicarem no botão vermelho **"Limpar Tudo"** para evitar conflitos com dados antigos no cache do navegador.
+
+---
+
+## 6. 🗺️ Organização de Pastas do Projeto
+
+A estrutura de arquivos foi desenhada para ser limpa e intuitiva:
+
+```text
 /gestor-iecos
 │
-├── index.html          (App)
-├── dados_app.json      (Dados Compilados)
-├── planilha_base.xlsx  (Dados Brutos - Editável)
-├── convert_data.py     (Script Conversor)
+├── index.html              (🏠 O Ponto de Entrada da Aplicação)
+├── dados_app.json          (💾 O Banco de Dados Estático)
+├── planilha_base.xlsx      (📊 A Fonte Editável para a Secretaria)
+├── convert_data.py         (⚙️ O Script Conversor Excel -> JSON)
 │
 ├── css/
-│   └── style.css
+│   └── style.css           (🎨 Estilos, Cores e Regras de Impressão)
 │
-├── js/
-│   ├── main.js
-│   ├── ui.js
-│   ├── store.js
-│   ├── calendar.js
-│   └── utils.js
+├── js/                     (🧠 O Núcleo do Sistema)
+│   ├── main.js             (Inicialização e Exportação)
+│   ├── store.js            (Gerenciamento de Estado e Settings)
+│   ├── ui.js               (Interação com o Usuário e DOM)
+│   ├── calendar.js         (Lógica Complexa de Datas)
+│   └── utils.js            (Funções Auxiliares)
 │
-├── img/                (Logos)
-└── docs/
-   └── MANUAL_DESENVOLVEDOR.md
+├── img/                    (🖼️ Logos e Favicons)
+│   └── logo_iecos.png
+│
+└── docs/                   (📚 Documentação)
+    └── MANUAL_DESENVOLVEDOR.md
