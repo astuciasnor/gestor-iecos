@@ -1242,17 +1242,19 @@ function generateCalendarGrid(container, turmaId, docenteName, start, end, title
                   // VISÃO PROFESSOR
                   if (hasSpecificConflict || implicitConflict) {
                     style = 'background: #c0392b; color: white; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight:bold;';
-                    const conflictNames = eventsInSlot.map((e) => getDisciplinaInfo(e.disciplina).abrev).join(' <b style="color:#fff">x</b> ');
+                    // ADICIONADO A TURMA AQUI TAMBÉM NO CONFLITO
+                    const conflictNames = eventsInSlot.map((e) => `${getDisciplinaInfo(e.disciplina).abrev} - ${e.turmaId}`).join(' <b style="color:#fff">x</b> ');
                     content = `<span title="Choque: ${conflictNames.replace(/<[^>]+>/g, '')}">⚠️ ${conflictNames}</span>`;
                   } else if (isSuspended) {
                     const suspendedEvent = eventsInSlot.find(e => e.type === 'suspended');
                     const info = getDisciplinaInfo(suspendedEvent.disciplina);
-                    // AJUSTE FIGURA 2: Abreviação + Suspensa
-                    content = `⛔ ${info.abrev} Suspensa`; 
+                    // AJUSTE FIGURA 2: Abreviação + Turma + Suspensa
+                    content = `⛔ ${info.abrev} - ${suspendedEvent.turmaId} Suspensa`; 
                   } else {
                     const event = eventsInSlot[0];
                     const info = getDisciplinaInfo(event.disciplina);
-                    content = info.abrev;
+                    // AJUSTE PRINCIPAL: Abreviação - Turma
+                    content = `${info.abrev} - ${event.turmaId}`;
                     style = `background:${event.cor || '#bdc3c7'}; color:black;`;
                   }
               } else {
@@ -1304,7 +1306,8 @@ function generateCalendarGrid(container, turmaId, docenteName, start, end, title
           dayData.events.forEach((ev) => {
             const info = getDisciplinaInfo(ev.disciplina);
             const style = `background:${ev.cor || '#bdc3c7'}`;
-            html += `<div class="event-chip" style="${style}">${info.abrev}</div>`;
+            const displayLabel = docenteName ? `${info.abrev} - ${ev.turmaId}` : info.abrev;
+            html += `<div class="event-chip" style="${style}">${displayLabel}</div>`;
           });
         }
       }
