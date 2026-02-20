@@ -29,6 +29,31 @@ const inputConfig = {
 
 let tempImportData = null;
 
+// --- FUNÇÃO DE AVISO FLUTUANTE (NÃO TRAVA A TELA) ---
+function showToastWarning(message) {
+    const fb = document.getElementById('feedback-msg');
+    if (!fb) return;
+    fb.classList.remove('hidden');
+    fb.innerHTML = message;
+    fb.style.display = 'block';
+    fb.style.backgroundColor = '#e74c3c'; 
+    fb.style.color = '#fff';
+    fb.style.padding = '15px 20px';
+    fb.style.borderRadius = '6px';
+    fb.style.marginBottom = '15px';
+    fb.style.fontWeight = 'bold';
+    fb.style.boxShadow = '0 4px 10px rgba(0,0,0,0.3)';
+    fb.style.textAlign = 'center';
+    fb.style.fontSize = '1.1em';
+    fb.style.lineHeight = '1.4';
+
+    if (window.toastTimeout) clearTimeout(window.toastTimeout);
+    window.toastTimeout = setTimeout(() => {
+        fb.style.display = 'none';
+        fb.classList.add('hidden');
+    }, 7000); 
+}
+
 // --- FUNÇÕES AUXILIARES DE UI (MANTIDAS) ---
 
 function timeToMinutes(str) {
@@ -365,16 +390,12 @@ function getDisciplinaCHGlobal(disciplina, turmaId) {
     return 0;
 }
 
-// ======================================================================================
-// NOVO MOTOR DE SINCRONIZAÇÃO TOTAL (Curador Automático do Calendário)
-// Calcula as datas finais em bloco, processando suspensões e feriados simultaneamente
-// ======================================================================================
+// MOTOR DE SINCRONIZAÇÃO TOTAL (Cura todas as datas para repor horas suspensas)
 function syncAllRegularDates() {
     const termStart = store.settings.termStart || '2025-01-01';
     const termEnd = store.settings.termEnd || '2025-12-31';
     const feriadosSet = new Set((store.rawData?.feriados || []).map(f => f.data || f));
     
-    // Agrupa disciplinas por Turma + Nome da Disciplina
     const regularGroups = {};
     store.allocations.forEach(a => {
         if (a.tipo === 'regular' || a.tipo === 'regular_prioritaria') {
@@ -392,7 +413,6 @@ function syncAllRegularDates() {
         const maxCH = getDisciplinaCHGlobal(disciplina, turmaId);
         if (maxCH === 0) return;
         
-        // Acha a primeira aula para começar a simulação temporal
         let startDate = group.reduce((min, a) => {
             const s = a.dataInicio || termStart;
             return s < min ? s : min;
@@ -404,7 +424,6 @@ function syncAllRegularDates() {
         let lastValidDate = new Date(currentDate);
         let loops = 0;
         
-        // Caminha para o futuro até bater a meta de aulas (maxCH)
         while (classesFound < maxCH && loops < 365) {
             const dow = currentDate.getDay();
             const dStr = currentDate.toISOString().split('T')[0];
@@ -413,7 +432,6 @@ function syncAllRegularDates() {
             
             if (slotsToday.length > 0 && !feriadosSet.has(dStr)) {
                 slotsToday.forEach(slot => {
-                    // Verifica se HOJE essa aula levou uma rasteira de uma Intensiva
                     const isSuspended = store.allocations.some(other => {
                         if (String(other.turmaId) !== String(turmaId)) return false;
                         
@@ -429,7 +447,7 @@ function syncAllRegularDates() {
                     
                     if (!isSuspended) {
                         classesFound++;
-                        lastValidDate = new Date(currentDate); // Atualiza qual foi o dia da última aula dada
+                        lastValidDate = new Date(currentDate); 
                     }
                 });
             }
@@ -441,7 +459,6 @@ function syncAllRegularDates() {
         
         const finalEndStr = lastValidDate.toISOString().split('T')[0];
         
-        // Repassa a data milimetricamente calculada para todos os slots dessa disciplina
         group.forEach(a => {
             a.dataFim = finalEndStr;
         });
@@ -450,7 +467,6 @@ function syncAllRegularDates() {
     store.saveAllocations();
 }
 
-// Helper isolado (usado apenas em estimativas locais como overlaps e tabelas parciais)
 function getSuspendedDates(allocs, turmaId, diaSemana, horario, startDate) {
     if (!startDate) return [];
     const suspended = [];
@@ -919,7 +935,7 @@ function renderSlotContent(cell, allocs) {
             e.stopPropagation();
             if (confirm(`Remover alocação de ${alloc.disciplina}?`)) {
                 store.removeAllocation(alloc.id);
-                syncAllRegularDates(); // Aciona o curador central
+                syncAllRegularDates();
                 renderWeeklyGrid();
                 renderOfertasList();
             }
@@ -975,22 +991,12 @@ function handleSlotClick(dia, horario) {
       }
   }
 
-  // Estimativa Local Rápida de Overlap para bloquear antes de salvar
-  const slotsDestaDisciplina = store.allocations.filter(a => 
-      a.disciplina === disciplina && 
-      String(a.turmaId) === String(store.selectedTurma) &&
-      (a.tipo === 'regular' || a.tipo === 'regular_prioritaria')
-  );
-  
-  const numTotalAulasSemanais = slotsDestaDisciplina.length + 1;
-  const semanasNecessarias = Math.ceil(maxCH / numTotalAulasSemanais);
-  const suspendedEstimate = getSuspendedDates(store.allocations, store.selectedTurma, dia, horario, dataInicio);
-  const dataFimCalculada = calculateEndDateByWeekday(dataInicio, semanasNecessarias, dia, store.rawData?.feriados || [], suspendedEstimate);
-
   const overlap = existingInSlot.find(a => {
       const startA = a.dataInicio || store.settings.termStart;
       const endA = a.dataFim || store.settings.termEnd;
-      return isDateOverlap(dataInicio, dataFimCalculada, startA, endA);
+      const tempEnd = new Date(dataInicio + "T12:00:00");
+      tempEnd.setDate(tempEnd.getDate() + 7);
+      return isDateOverlap(dataInicio, tempEnd.toISOString().split('T')[0], startA, endA);
   });
 
   if (overlap) {
@@ -1004,14 +1010,16 @@ function handleSlotClick(dia, horario) {
       if (a.docente !== mainProf || a.diaSemana != dia || a.horario !== horario) return false;
       const startA = a.dataInicio || store.settings.termStart;
       const endA = a.dataFim || store.settings.termEnd;
-      return isDateOverlap(dataInicio, dataFimCalculada, startA, endA);
+      const tempEnd = new Date(dataInicio + "T12:00:00");
+      tempEnd.setDate(tempEnd.getDate() + 7);
+      return isDateOverlap(dataInicio, tempEnd.toISOString().split('T')[0], startA, endA);
   });
 
   if (conflitoDocente) {
     if (!confirm(`O professor ${mainProf} já está ocupado nesta faixa de datas. Continuar?`)) return;
   }
 
-  // Adiciona a disciplina na base de dados (o fim é temporário, será curado no milissegundo seguinte)
+  // Insere a alocação
   store.addAllocation({
     turmaId: store.selectedTurma,
     disciplina,
@@ -1021,13 +1029,25 @@ function handleSlotClick(dia, horario) {
     diaSemana: dia,
     horario,
     dataInicio: dataInicio,
-    dataFim: dataFimCalculada,
+    dataFim: dataInicio, 
     cor: inputConfig.cor ? inputConfig.cor.value : store.getDisciplinaColor(disciplina)
   });
 
-  syncAllRegularDates(); // Aciona o curador central
+  syncAllRegularDates();
   renderWeeklyGrid();
   renderOfertasList();
+
+  // AVISO FLUTUANTE COM PACIÊNCIA DE 5 SEGUNDOS
+  if (window.overlapWarningTimeout) clearTimeout(window.overlapWarningTimeout);
+
+  if (store.settings.termEnd) {
+      window.overlapWarningTimeout = setTimeout(() => {
+          const slotsDesta = store.allocations.filter(a => a.disciplina === disciplina && String(a.turmaId) === String(store.selectedTurma));
+          if (slotsDesta.length > 0 && slotsDesta[0].dataFim > store.settings.termEnd) {
+              showToastWarning(`⚠️ ATENÇÃO: A disciplina <b>${info.abrev}</b> terminará em <b>${formatDateBR(slotsDesta[0].dataFim)}</b>.<br>Isso ultrapassa o fim do semestre (${formatDateBR(store.settings.termEnd)}).<br>Insira mais horários na grade para reduzir esta data!`);
+          }
+      }, 5000); // 5000 milissegundos = 5 segundos de espera
+  }
 }
 
 function handleAddManual() {
@@ -1111,8 +1131,9 @@ function handleAddManual() {
       cor: inputConfig.cor ? inputConfig.cor.value : store.getDisciplinaColor(disciplina)
     });
 
-    syncAllRegularDates(); // Aciona o curador central para afastar as regulares
+    syncAllRegularDates();
     renderOfertasList();
+    
   } else {
     alert('Para regular, clique na grade.');
   }
@@ -1191,7 +1212,14 @@ function renderOfertasList() {
 
     const chInfo = `<b style="color:${color}">${totalHoras}</b> / ${chMax}h <small>(${details})</small>`;
     const labelTipo = a.tipo === 'regular_prioritaria' ? '<b>Regular (Prioritária)</b>' : a.tipo;
-    const horarioTxt = `${formatDateBR(start)} a ${formatDateBR(end)}<br><small>${['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab'][a.diaSemana] || 'Int.'} ${a.horario || ''}</small>`;
+    
+    // ALERTA VISUAL VERMELHO NA TABELA
+    let endFmt = formatDateBR(end);
+    if (store.settings.termEnd && end > store.settings.termEnd) {
+        endFmt = `<span style="color:#c0392b; font-weight:bold; font-size:1.1em;" title="Atenção: Esta data ultrapassa o fim oficial do semestre!">⚠️ ${endFmt}</span>`;
+    }
+    
+    const horarioTxt = `${formatDateBR(start)} a ${endFmt}<br><small>${['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab'][a.diaSemana] || 'Int.'} ${a.horario || ''}</small>`;
 
     let btnHtml = `<button class="btn-danger btn-delete-row" style="padding:4px 8px; margin:0; font-size:0.85em; border-radius:3px; cursor:pointer;" title="Excluir">🗑️ Excluir</button>`;
     btnHtml = `<button class="btn-primary btn-edit-row" style="padding:4px 8px; margin:0; font-size:0.85em; background-color:#2980b9; border:none; color:white; border-radius:3px; cursor:pointer; margin-right:5px;" title="Editar">✏️ Editar</button>` + btnHtml;
@@ -1208,7 +1236,7 @@ function renderOfertasList() {
     tr.querySelector('.btn-delete-row').onclick = () => {
       if (confirm('Remover esta oferta?')) {
           store.removeAllocation(a.id);
-          syncAllRegularDates(); // Aciona o curador central
+          syncAllRegularDates();
           renderWeeklyGrid();
           renderOfertasList();
       }
@@ -1393,11 +1421,16 @@ function generateCalendarGrid(container, turmaId, docenteName, start, end, title
       const dt = new Date(dayData.date + 'T12:00:00');
       if (dt.getDay() === 0 || dt.getDay() === 6) cell.classList.add('weekend');
 
+      const isOutOfBounds = store.settings.termEnd && dayData.date > store.settings.termEnd;
+      if (isOutOfBounds) {
+          cell.style.cssText += 'background-color: #ffebee !important; border-color: #ffcdd2 !important;'; 
+      }
+
       let html = `<span class="day-number">${dayData.date.split('-')[2]}</span>`;
       const holidayEvent = dayData.events.find((e) => e.type === 'holiday');
 
       if (holidayEvent) {
-        cell.style.background = '#f1f2f6';
+        cell.style.cssText += 'background-color: #f1f2f6 !important;';
         html += `<div style="text-align:center; color:#7f8c8d; font-style:italic; padding-top:10px; font-weight:bold; font-size:0.9em;">
           ${holidayEvent.title}
         </div>`;
@@ -1454,6 +1487,14 @@ function generateCalendarGrid(container, turmaId, docenteName, start, end, title
                       style = 'background: #ecf0f1;';
                   }
               }
+              
+              if (isOutOfBounds && !isSuspended) {
+                  style = 'background: #c0392b !important; color: white !important; font-weight: bold; border: 1px solid #900 !important;';
+                  if (!content.includes('⚠️')) {
+                      content = `⚠️ ${content}`;
+                  }
+              }
+
             } else {
                content = '&nbsp;'; 
                style = 'background: #ecf0f1;'; 
@@ -1470,6 +1511,8 @@ function generateCalendarGrid(container, turmaId, docenteName, start, end, title
             if (hasSuspended && docenteName) {
                 const suspEvent = eventsInSlot.find(e => e.type === 'suspended');
                 tooltip = `title="${suspEvent.blockingReason || 'Suspenso'}"`;
+            } else if (isOutOfBounds && eventsInSlot.length > 0 && !hasSuspended) {
+                tooltip = `title="ALERTA: Aula marcada fora do semestre letivo!"`;
             }
 
             let rowStyle = '';
@@ -1486,9 +1529,15 @@ function generateCalendarGrid(container, turmaId, docenteName, start, end, title
         } else {
           dayData.events.forEach((ev) => {
             const info = getDisciplinaInfo(ev.disciplina);
-            const style = `background:${ev.cor || '#bdc3c7'}`;
-            const displayLabel = docenteName ? `${info.abrev} - ${ev.turmaId}` : info.abrev;
-            html += `<div class="event-chip" style="${style}">${displayLabel}</div>`;
+            let style = `background:${ev.cor || '#bdc3c7'}`;
+            let displayLabel = docenteName ? `${info.abrev} - ${ev.turmaId}` : info.abrev;
+            
+            if (isOutOfBounds) {
+                style = `background: #c0392b !important; color: white !important; font-weight: bold; border: 1px solid #900 !important;`;
+                displayLabel = `⚠️ ${displayLabel}`;
+            }
+
+            html += `<div class="event-chip" style="${style}" title="${isOutOfBounds ? 'FORA DO SEMESTRE!' : ''}">${displayLabel}</div>`;
           });
         }
       }
