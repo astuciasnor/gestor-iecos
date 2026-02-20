@@ -351,36 +351,134 @@ function getBlockedWeekdaysForTurma(turmaId) {
     return [...new Set(prioritaria.map(a => parseInt(a.diaSemana)))];
 }
 
-// Função para processar e corrigir datas de dados importados ou legados
-function sanitizeAndCalculateAllDates(allocations) {
-    const feriados = store.rawData?.feriados || [];
-    const semestreInicio = store.settings.termStart;
-
-    const weekCounts = {};
-    allocations.forEach(a => {
-        if (a.tipo === 'regular' || a.tipo === 'regular_prioritaria') {
-            const key = `${a.turmaId}|${a.disciplina}`;
-            weekCounts[key] = (weekCounts[key] || 0) + 1;
-        }
-    });
-
-    return allocations.map(a => {
-        if (a.tipo === 'regular' || a.tipo === 'regular_prioritaria') {
-            const info = getDisciplinaInfo(a.disciplina);
-            const key = `${a.turmaId}|${a.disciplina}`;
-            const numAulasSemana = weekCounts[key];
-            
-            if (info.ch > 0 && numAulasSemana > 0) {
-                const semanasNecessarias = Math.ceil(info.ch / numAulasSemana);
-                const dInicio = a.dataInicio || semestreInicio;
-                const dFim = calculateEndDateByWeekday(dInicio, semanasNecessarias, a.diaSemana, feriados);
-                
-                return { ...a, dataInicio: dInicio, dataFim: dFim };
-            }
-        }
-        return a;
-    });
+function getDisciplinaCHGlobal(disciplina, turmaId) {
+    let sigla = '';
+    if (store.rawData?.turmas) {
+        const t = store.rawData.turmas.find(x => String(x.turma_id) === String(turmaId));
+        if (t) sigla = t.sigla;
+    }
+    if (store.rawData?.componentes) {
+        const comp = store.rawData.componentes.find(c => c.componente === disciplina && c.sigla === sigla) ||
+                     store.rawData.componentes.find(c => c.componente === disciplina);
+        if (comp) return parseInt(comp.ch) || 0;
+    }
+    return 0;
 }
+
+// ======================================================================================
+// NOVO MOTOR DE SINCRONIZAÇÃO TOTAL (Curador Automático do Calendário)
+// Calcula as datas finais em bloco, processando suspensões e feriados simultaneamente
+// ======================================================================================
+function syncAllRegularDates() {
+    const termStart = store.settings.termStart || '2025-01-01';
+    const termEnd = store.settings.termEnd || '2025-12-31';
+    const feriadosSet = new Set((store.rawData?.feriados || []).map(f => f.data || f));
+    
+    // Agrupa disciplinas por Turma + Nome da Disciplina
+    const regularGroups = {};
+    store.allocations.forEach(a => {
+        if (a.tipo === 'regular' || a.tipo === 'regular_prioritaria') {
+            const key = `${a.turmaId}|${a.disciplina}`;
+            if (!regularGroups[key]) regularGroups[key] = [];
+            regularGroups[key].push(a);
+        }
+    });
+    
+    Object.keys(regularGroups).forEach(key => {
+        const group = regularGroups[key];
+        const turmaId = group[0].turmaId;
+        const disciplina = group[0].disciplina;
+        
+        const maxCH = getDisciplinaCHGlobal(disciplina, turmaId);
+        if (maxCH === 0) return;
+        
+        // Acha a primeira aula para começar a simulação temporal
+        let startDate = group.reduce((min, a) => {
+            const s = a.dataInicio || termStart;
+            return s < min ? s : min;
+        }, "2099-12-31");
+        if (startDate === "2099-12-31") startDate = termStart;
+        
+        let classesFound = 0;
+        let currentDate = new Date(startDate + "T12:00:00");
+        let lastValidDate = new Date(currentDate);
+        let loops = 0;
+        
+        // Caminha para o futuro até bater a meta de aulas (maxCH)
+        while (classesFound < maxCH && loops < 365) {
+            const dow = currentDate.getDay();
+            const dStr = currentDate.toISOString().split('T')[0];
+            
+            const slotsToday = group.filter(a => parseInt(a.diaSemana) === dow);
+            
+            if (slotsToday.length > 0 && !feriadosSet.has(dStr)) {
+                slotsToday.forEach(slot => {
+                    // Verifica se HOJE essa aula levou uma rasteira de uma Intensiva
+                    const isSuspended = store.allocations.some(other => {
+                        if (String(other.turmaId) !== String(turmaId)) return false;
+                        
+                        const oStart = other.dataInicio || termStart;
+                        const oEnd = other.dataFim || termEnd;
+                        if (dStr < oStart || dStr > oEnd) return false;
+                        
+                        if (other.tipo === 'intensiva' && other.horariosOcupados && other.horariosOcupados.includes(slot.horario)) return true;
+                        if (other.tipo === 'regular_prioritaria' && parseInt(other.diaSemana) === dow && other.horario === slot.horario && other.id !== slot.id) return true;
+                        
+                        return false;
+                    });
+                    
+                    if (!isSuspended) {
+                        classesFound++;
+                        lastValidDate = new Date(currentDate); // Atualiza qual foi o dia da última aula dada
+                    }
+                });
+            }
+            
+            if (classesFound >= maxCH) break;
+            currentDate.setDate(currentDate.getDate() + 1);
+            loops++;
+        }
+        
+        const finalEndStr = lastValidDate.toISOString().split('T')[0];
+        
+        // Repassa a data milimetricamente calculada para todos os slots dessa disciplina
+        group.forEach(a => {
+            a.dataFim = finalEndStr;
+        });
+    });
+    
+    store.saveAllocations();
+}
+
+// Helper isolado (usado apenas em estimativas locais como overlaps e tabelas parciais)
+function getSuspendedDates(allocs, turmaId, diaSemana, horario, startDate) {
+    if (!startDate) return [];
+    const suspended = [];
+    const blockers = allocs.filter(a => {
+        if (String(a.turmaId) !== String(turmaId)) return false;
+        if (a.tipo === 'intensiva' && a.horariosOcupados && a.horariosOcupados.includes(horario)) return true;
+        if (a.tipo === 'regular_prioritaria' && parseInt(a.diaSemana) === parseInt(diaSemana) && a.horario === horario) return true;
+        return false;
+    });
+    
+    if (blockers.length === 0) return [];
+
+    let curDt = new Date(startDate + "T12:00:00");
+    for (let i = 0; i < 365; i++) {
+        if (curDt.getDay() === parseInt(diaSemana)) {
+            const dStr = curDt.toISOString().split('T')[0];
+            const isBlocked = blockers.some(b => {
+                const bStart = b.dataInicio || store.settings.termStart;
+                const bEnd = b.dataFim || store.settings.termEnd;
+                return dStr >= bStart && dStr <= bEnd;
+            });
+            if (isBlocked) suspended.push(dStr);
+        }
+        curDt.setDate(curDt.getDate() + 1);
+    }
+    return suspended;
+}
+
 
 function initPeriodoLetivoETurno() {
   const defaultStart = calStart && calStart.value ? calStart.value : '';
@@ -522,9 +620,8 @@ export function initUI() {
   if (btnReplace) {
     btnReplace.addEventListener('click', () => {
       if (tempImportData) {
-        const processed = sanitizeAndCalculateAllDates(tempImportData);
-        store.allocations = processed;
-        store.saveAllocations();
+        store.allocations = tempImportData;
+        syncAllRegularDates();
         alert('Dados importados com datas recalculadas com sucesso!');
         window.location.reload();
       }
@@ -536,8 +633,8 @@ export function initUI() {
   if (btnMerge) {
     btnMerge.addEventListener('click', () => {
       if (tempImportData) {
-        const processed = sanitizeAndCalculateAllDates(tempImportData);
-        const count = store.mergeAllocations(processed);
+        const count = store.mergeAllocations(tempImportData);
+        syncAllRegularDates();
         alert(`Mesclagem concluída! ${count} novas alocações adicionadas com datas corrigidas.`);
         renderWeeklyGrid();
         renderOfertasList();
@@ -822,16 +919,7 @@ function renderSlotContent(cell, allocs) {
             e.stopPropagation();
             if (confirm(`Remover alocação de ${alloc.disciplina}?`)) {
                 store.removeAllocation(alloc.id);
-                
-                const slotsRestantes = store.allocations.filter(a => a.disciplina === alloc.disciplina && String(a.turmaId) === String(store.selectedTurma));
-                if (slotsRestantes.length > 0) {
-                    const ch = getDisciplinaInfo(alloc.disciplina).ch;
-                    const dataInicioFixa = slotsRestantes[0].dataInicio || store.settings.termStart;
-                    const novasSemanas = Math.ceil(ch / slotsRestantes.length);
-                    const novoFim = calculateEndDateByWeekday(dataInicioFixa, novasSemanas, slotsRestantes[0].diaSemana, store.rawData?.feriados || []);
-                    slotsRestantes.forEach(s => s.dataFim = novoFim);
-                }
-
+                syncAllRegularDates(); // Aciona o curador central
                 renderWeeklyGrid();
                 renderOfertasList();
             }
@@ -857,7 +945,7 @@ function handleSlotClick(dia, horario) {
   if (!docData.isValid) return alert('Preencha o(s) Docente(s).');
 
   const info = getDisciplinaInfo(disciplina);
-  const maxCH = info.ch || 0;
+  const maxCH = parseInt(info.ch) || 0;
   
   if (docData.mode === 'multi' && docData.totalCH > maxCH) {
       return alert(`A soma das horas (${docData.totalCH}h) ultrapassa a carga horária da disciplina (${maxCH}h).`);
@@ -887,6 +975,7 @@ function handleSlotClick(dia, horario) {
       }
   }
 
+  // Estimativa Local Rápida de Overlap para bloquear antes de salvar
   const slotsDestaDisciplina = store.allocations.filter(a => 
       a.disciplina === disciplina && 
       String(a.turmaId) === String(store.selectedTurma) &&
@@ -895,7 +984,8 @@ function handleSlotClick(dia, horario) {
   
   const numTotalAulasSemanais = slotsDestaDisciplina.length + 1;
   const semanasNecessarias = Math.ceil(maxCH / numTotalAulasSemanais);
-  const dataFimCalculada = calculateEndDateByWeekday(dataInicio, semanasNecessarias, dia, store.rawData?.feriados || []);
+  const suspendedEstimate = getSuspendedDates(store.allocations, store.selectedTurma, dia, horario, dataInicio);
+  const dataFimCalculada = calculateEndDateByWeekday(dataInicio, semanasNecessarias, dia, store.rawData?.feriados || [], suspendedEstimate);
 
   const overlap = existingInSlot.find(a => {
       const startA = a.dataInicio || store.settings.termStart;
@@ -921,8 +1011,7 @@ function handleSlotClick(dia, horario) {
     if (!confirm(`O professor ${mainProf} já está ocupado nesta faixa de datas. Continuar?`)) return;
   }
 
-  // ALERTA REMOVIDO: O sistema não vai mais avisar sobre o cálculo inicial de data longa.
-
+  // Adiciona a disciplina na base de dados (o fim é temporário, será curado no milissegundo seguinte)
   store.addAllocation({
     turmaId: store.selectedTurma,
     disciplina,
@@ -936,10 +1025,7 @@ function handleSlotClick(dia, horario) {
     cor: inputConfig.cor ? inputConfig.cor.value : store.getDisciplinaColor(disciplina)
   });
 
-  slotsDestaDisciplina.forEach(s => {
-      s.dataFim = dataFimCalculada;
-  });
-
+  syncAllRegularDates(); // Aciona o curador central
   renderWeeklyGrid();
   renderOfertasList();
 }
@@ -1025,6 +1111,7 @@ function handleAddManual() {
       cor: inputConfig.cor ? inputConfig.cor.value : store.getDisciplinaColor(disciplina)
     });
 
+    syncAllRegularDates(); // Aciona o curador central para afastar as regulares
     renderOfertasList();
   } else {
     alert('Para regular, clique na grade.');
@@ -1084,7 +1171,8 @@ function renderOfertasList() {
     const end = a.dataFim || semestreFim;
 
     if (a.tipo === 'regular' || a.tipo === 'regular_prioritaria') {
-      const numAulas = countWeekdaysInPeriod(start, end, parseInt(a.diaSemana), feriados);
+      const suspended = getSuspendedDates(store.allocations, a.turmaId, a.diaSemana, a.horario, start);
+      const numAulas = countWeekdaysInPeriod(start, end, parseInt(a.diaSemana), feriados, suspended);
       totalHoras = numAulas * 1;
       details = `${numAulas} aulas`;
     } else {
@@ -1120,16 +1208,7 @@ function renderOfertasList() {
     tr.querySelector('.btn-delete-row').onclick = () => {
       if (confirm('Remover esta oferta?')) {
           store.removeAllocation(a.id);
-          
-          const slotsRestantes = store.allocations.filter(x => x.disciplina === a.disciplina && String(x.turmaId) === String(store.selectedTurma));
-          if (slotsRestantes.length > 0 && a.tipo.includes('regular')) {
-              const novaCH = getDisciplinaInfo(a.disciplina).ch;
-              const novaSemanas = Math.ceil(novaCH / slotsRestantes.length);
-              const dataInit = slotsRestantes[0].dataInicio || semestreInicio;
-              const newFim = calculateEndDateByWeekday(dataInit, novaSemanas, slotsRestantes[0].diaSemana, feriados);
-              slotsRestantes.forEach(s => s.dataFim = newFim);
-          }
-
+          syncAllRegularDates(); // Aciona o curador central
           renderWeeklyGrid();
           renderOfertasList();
       }
@@ -1160,6 +1239,7 @@ function renderOfertasList() {
                 }
 
                 store.removeAllocation(a.id);
+                syncAllRegularDates();
                 renderWeeklyGrid();
                 renderOfertasList();
                 if (a.tipo !== 'intensiva') switchTab('weekly');
@@ -1340,7 +1420,6 @@ function generateCalendarGrid(container, turmaId, docenteName, start, end, title
             let content = '';
             let style = '';
 
-            // LÓGICA DE FILTRAGEM VISUAL PARA DIFERENTES ABAS
             if (isIntervalo) {
               content = '<span style="color:#7f8c8d; font-style:italic; font-size:0.85em;">Intervalo</span>';
               style = 'background:#e0e0e0;'; 

@@ -87,18 +87,21 @@ export function countBusinessDays(startDate, endDate, feriados = [], blockedWeek
     return count;
 }
 
-export function countWeekdaysInPeriod(startDate, endDate, targetDayOfWeek, feriados = []) {
+// ATUALIZAÇÃO: Motor de Simulação passa a enxergar "Dias Suspensos" e não conta
+export function countWeekdaysInPeriod(startDate, endDate, targetDayOfWeek, feriados = [], suspendedDates = []) {
     let count = 0;
     let curDate = parseLocalDate(startDate);
     const end = parseLocalDate(endDate);
     
-    // Simplificação de feriados para Set
+    // Simplificação para Set ganha muita performance
     const feriadosSet = new Set(feriados.map(f => (f.data || f)));
+    const suspendedSet = new Set(suspendedDates || []);
 
     while (curDate <= end) {
-        if (curDate.getDay() === targetDayOfWeek) {
+        if (curDate.getDay() === parseInt(targetDayOfWeek)) {
             const dateStr = toLocalDateString(curDate);
-            if (!feriadosSet.has(dateStr)) {
+            // Conta a aula se NÃO for feriado e NÃO estiver suspensa por intensiva
+            if (!feriadosSet.has(dateStr) && !suspendedSet.has(dateStr)) {
                 count++;
             }
         }
@@ -135,8 +138,8 @@ export function addBusinessDays(startDateStr, daysNeeded, feriados = [], blocked
     return lastValidDate.toISOString().split('T')[0];
 }
 
-// --- NOVA FUNÇÃO: Calcula data fim para aulas regulares modulares ---
-export function calculateEndDateByWeekday(startDateStr, classesNeeded, targetDayOfWeek, feriados = []) {
+// --- NOVA FUNÇÃO: Calcula data fim para aulas regulares modulares com bloqueios ---
+export function calculateEndDateByWeekday(startDateStr, classesNeeded, targetDayOfWeek, feriados = [], suspendedDates = []) {
     if (classesNeeded <= 0) return startDateStr;
     
     let currentDate = new Date(startDateStr + "T12:00:00");
@@ -144,15 +147,19 @@ export function calculateEndDateByWeekday(startDateStr, classesNeeded, targetDay
     let lastValidDate = new Date(currentDate);
     
     const feriadosSet = new Set(feriados.map(f => (f.data || f)));
+    const suspendedSet = new Set(suspendedDates || []);
 
     // Limite de segurança para não rodar infinito caso haja algum erro de dados
-    let safetyMax = 365; 
+    let safetyMax = 400; 
     let loops = 0;
 
+    // MOTOR: Só para de andar pra frente quando bate a meta exata de classesNeeded
     while (classesFound < classesNeeded && loops < safetyMax) {
         if (currentDate.getDay() === parseInt(targetDayOfWeek)) {
             const dateStr = currentDate.toISOString().split('T')[0];
-            if (!feriadosSet.has(dateStr)) {
+            
+            // Só conta se NÃO for feriado e NÃO for suspensa
+            if (!feriadosSet.has(dateStr) && !suspendedSet.has(dateStr)) {
                 classesFound++;
                 lastValidDate = new Date(currentDate);
             }
