@@ -134,3 +134,32 @@ export function addBusinessDays(startDateStr, daysNeeded, feriados = [], blocked
 
     return lastValidDate.toISOString().split('T')[0];
 }
+
+// --- NOVA FUNÇÃO: Calcula data fim para aulas regulares modulares ---
+export function calculateEndDateByWeekday(startDateStr, classesNeeded, targetDayOfWeek, feriados = []) {
+    if (classesNeeded <= 0) return startDateStr;
+    
+    let currentDate = new Date(startDateStr + "T12:00:00");
+    let classesFound = 0;
+    let lastValidDate = new Date(currentDate);
+    
+    const feriadosSet = new Set(feriados.map(f => (f.data || f)));
+
+    // Limite de segurança para não rodar infinito caso haja algum erro de dados
+    let safetyMax = 365; 
+    let loops = 0;
+
+    while (classesFound < classesNeeded && loops < safetyMax) {
+        if (currentDate.getDay() === parseInt(targetDayOfWeek)) {
+            const dateStr = currentDate.toISOString().split('T')[0];
+            if (!feriadosSet.has(dateStr)) {
+                classesFound++;
+                lastValidDate = new Date(currentDate);
+            }
+        }
+        currentDate.setDate(currentDate.getDate() + 1);
+        loops++;
+    }
+
+    return lastValidDate.toISOString().split('T')[0];
+}

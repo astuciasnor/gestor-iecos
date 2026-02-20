@@ -1,6 +1,6 @@
 import { store } from './store.js';
 import { getCalendarEvents } from './calendar.js';
-import { countBusinessDays, countWeekdaysInPeriod, addBusinessDays, isDateOverlap } from './utils.js';
+import { countBusinessDays, countWeekdaysInPeriod, addBusinessDays, isDateOverlap, calculateEndDateByWeekday } from './utils.js';
 
 // Elementos Globais
 const gridContainer = document.getElementById('weekly-grid');
@@ -180,7 +180,10 @@ function applyWeeklyGridRowHeightScale(scaleNormal = 0.63, scaleHeaderAndInterva
     }
 
     styleEl.textContent = `
-      #weekly-grid .slot,
+      #weekly-grid .slot {
+        height: auto !important;
+        min-height: ${normalH}px !important;
+      }
       #weekly-grid .header.time {
         height: ${normalH}px !important;
         min-height: ${normalH}px !important;
@@ -339,20 +342,46 @@ function getCheckedSlots() {
     return checked;
 }
 
-/**
- * === Helper para identificar dias bloqueados por Regular Prioritária ===
- */
 function getBlockedWeekdaysForTurma(turmaId) {
     if (!turmaId) return [];
     const prioritaria = store.allocations.filter(a => 
         String(a.turmaId) === String(turmaId) && 
         a.tipo === 'regular_prioritaria'
     );
-    // Retorna array de dias (inteiros) únicos. Ex: [1, 3] (Seg, Qua)
     return [...new Set(prioritaria.map(a => parseInt(a.diaSemana)))];
 }
 
-// ... initPeriodoLetivoETurno, initUI, etc ... MANTIDAS IGUAIS
+// Função para processar e corrigir datas de dados importados ou legados
+function sanitizeAndCalculateAllDates(allocations) {
+    const feriados = store.rawData?.feriados || [];
+    const semestreInicio = store.settings.termStart;
+
+    const weekCounts = {};
+    allocations.forEach(a => {
+        if (a.tipo === 'regular' || a.tipo === 'regular_prioritaria') {
+            const key = `${a.turmaId}|${a.disciplina}`;
+            weekCounts[key] = (weekCounts[key] || 0) + 1;
+        }
+    });
+
+    return allocations.map(a => {
+        if (a.tipo === 'regular' || a.tipo === 'regular_prioritaria') {
+            const info = getDisciplinaInfo(a.disciplina);
+            const key = `${a.turmaId}|${a.disciplina}`;
+            const numAulasSemana = weekCounts[key];
+            
+            if (info.ch > 0 && numAulasSemana > 0) {
+                const semanasNecessarias = Math.ceil(info.ch / numAulasSemana);
+                const dInicio = a.dataInicio || semestreInicio;
+                const dFim = calculateEndDateByWeekday(dInicio, semanasNecessarias, a.diaSemana, feriados);
+                
+                return { ...a, dataInicio: dInicio, dataFim: dFim };
+            }
+        }
+        return a;
+    });
+}
+
 function initPeriodoLetivoETurno() {
   const defaultStart = calStart && calStart.value ? calStart.value : '';
   const defaultEnd = calEnd && calEnd.value ? calEnd.value : '';
@@ -367,7 +396,10 @@ function initPeriodoLetivoETurno() {
   if (inpTermEnd && store.settings.termEnd) inpTermEnd.value = store.settings.termEnd;
   if (selTurnoOferta) selTurnoOferta.value = store.settings.turnoOferta || 'Tarde';
 
-  // NOVO: Adiciona o listener para atualizar o período no store
+  if (inputConfig.inicio && store.settings.termStart && !inputConfig.inicio.value) {
+      inputConfig.inicio.value = store.settings.termStart;
+  }
+
   if (selPeriodo) {
       if (store.settings.periodo) selPeriodo.value = store.settings.periodo;
       selPeriodo.addEventListener('change', () => {
@@ -382,7 +414,7 @@ function initPeriodoLetivoETurno() {
     inpTermStart.addEventListener('change', () => {
       store.setTermDates(inpTermStart.value, store.settings.termEnd);
       if (calStart) calStart.value = inpTermStart.value;
-      if (inputConfig.inicio && !inputConfig.inicio.value) inputConfig.inicio.value = inpTermStart.value;
+      if (inputConfig.inicio) inputConfig.inicio.value = inpTermStart.value;
       renderOfertasList();
     });
   }
@@ -437,18 +469,28 @@ export function initUI() {
       const divSlots = document.getElementById('container-slots-selection');
       const isIntensive = (e.target.value === 'intensiva');
 
+      divData.classList.remove('hidden');
+
       if (isIntensive) {
-        divData.classList.remove('hidden');
         divSlots.classList.remove('hidden');
         renderIntensiveSlots();
-        if (store.settings.termStart && inputConfig.inicio && !inputConfig.inicio.value) {
-          inputConfig.inicio.value = store.settings.termStart;
-        }
       } else {
-        divData.classList.add('hidden');
         divSlots.classList.add('hidden');
       }
+
+      if (store.settings.termStart && inputConfig.inicio) {
+          inputConfig.inicio.value = store.settings.termStart;
+      }
     });
+  }
+
+  if (inputConfig.disciplina) {
+      inputConfig.disciplina.addEventListener('input', () => {
+          const termStartEl = document.getElementById('term-start');
+          if (inputConfig.inicio && !inputConfig.inicio.value && termStartEl && termStartEl.value) {
+              inputConfig.inicio.value = termStartEl.value;
+          }
+      });
   }
 
   const btnAdd = document.getElementById('btn-add-oferta');
@@ -480,9 +522,10 @@ export function initUI() {
   if (btnReplace) {
     btnReplace.addEventListener('click', () => {
       if (tempImportData) {
-        store.allocations = tempImportData;
+        const processed = sanitizeAndCalculateAllDates(tempImportData);
+        store.allocations = processed;
         store.saveAllocations();
-        alert('Dados substituídos com sucesso!');
+        alert('Dados importados com datas recalculadas com sucesso!');
         window.location.reload();
       }
       closeModal();
@@ -493,8 +536,9 @@ export function initUI() {
   if (btnMerge) {
     btnMerge.addEventListener('click', () => {
       if (tempImportData) {
-        const count = store.mergeAllocations(tempImportData);
-        alert(`Mesclagem concluída! ${count} novas alocações adicionadas.`);
+        const processed = sanitizeAndCalculateAllDates(tempImportData);
+        const count = store.mergeAllocations(processed);
+        alert(`Mesclagem concluída! ${count} novas alocações adicionadas com datas corrigidas.`);
         renderWeeklyGrid();
         renderOfertasList();
       }
@@ -579,6 +623,11 @@ function onCursoChange() {
     store.selectedTurma = '';
   }
   updateDisciplinaDatalist();
+  
+  if (inputConfig.inicio && store.settings.termStart) {
+      inputConfig.inicio.value = store.settings.termStart;
+  }
+  
   renderWeeklyGrid();
   renderOfertasList();
 }
@@ -653,6 +702,10 @@ function onTurmaChange() {
       selTurnoOferta.value = store.settings.turnoOferta || 'Tarde';
   }
 
+  if (inputConfig.inicio && store.settings.termStart) {
+      inputConfig.inicio.value = store.settings.termStart;
+  }
+
   renderWeeklyGrid();
   renderOfertasList();
 }
@@ -700,7 +753,6 @@ function renderWeeklyGrid() {
 
     const hDiv = createCell(isIntervalo ? 'header interval-time' : 'header time', labelPrimeiraColuna);
     if (isIntervalo) hDiv.style.background = '#e0e0e0';
-    // LINHA REMOVIDA AQUI: if (isSeparadorTurno) hDiv.style.borderBottom = '3px solid #000000';
     gridContainer.appendChild(hDiv);
 
     if (isIntervalo) {
@@ -716,9 +768,7 @@ function renderWeeklyGrid() {
         cell.dataset.dia = i;
         cell.dataset.horario = horarioStr;
         
-        // LINHA REMOVIDA AQUI: if (isSeparadorTurno) cell.style.borderBottom = '3px solid #000000';
-
-        const alloc = store.allocations.find(
+        const allocs = store.allocations.filter(
           (a) =>
             String(a.turmaId) === String(store.selectedTurma) &&
             (a.tipo === 'regular' || a.tipo === 'regular_prioritaria') &&
@@ -726,7 +776,7 @@ function renderWeeklyGrid() {
             a.horario === horarioStr
         );
 
-        if (alloc) renderSlotContent(cell, alloc);
+        if (allocs.length > 0) renderSlotContent(cell, allocs);
 
         cell.addEventListener('click', () => handleSlotClick(i, horarioStr));
         gridContainer.appendChild(cell);
@@ -744,37 +794,53 @@ function createCell(classNames, text) {
   return div;
 }
 
-function renderSlotContent(cell, alloc) {
-  cell.style.backgroundColor = alloc.cor;
-  const info = getDisciplinaInfo(alloc.disciplina);
+function renderSlotContent(cell, allocs) {
+    cell.innerHTML = '';
+    const container = document.createElement('div');
+    container.className = 'mini-card-container';
 
-  // AJUSTE 1: Borda pontilhada preta NA CÉLULA (borda do slot)
-  if (alloc.tipo === 'regular_prioritaria') {
-      cell.style.border = '2px dashed #000000'; 
-      cell.style.boxSizing = 'border-box'; 
-  } else {
-      cell.style.border = ''; // Limpa borda se não for prioritária
-  }
+    allocs.forEach(alloc => {
+        const info = getDisciplinaInfo(alloc.disciplina);
+        const card = document.createElement('div');
+        const docenteNome = (alloc.docente || '').split(' ')[0] || '';
+        
+        card.className = 'mini-card';
+        card.style.backgroundColor = alloc.cor;
+        if (alloc.tipo === 'regular_prioritaria') {
+            card.style.border = '2px dashed #000';
+        }
 
-  // Removemos o borderStyle interno que estava aqui antes
-  cell.innerHTML = `
-    <div style="height:100%; width:100%; box-sizing:border-box;">
-        <div style="font-size:0.85em; font-weight:bold; line-height:1.2; margin-bottom:2px;">${info.abrev}</div>
-        <div style="font-size:0.75em; color:#444;">${(alloc.docente || '').split(' ')[0] || ''}</div>
-        <span class="remove-btn" style="color:red; font-weight:bold; font-size:0.8em; position:absolute; top:2px; right:2px;">×</span>
-        ${alloc.tipo === 'regular_prioritaria' ? '<span style="font-size:0.7em; color:#8e44ad; display:block; font-weight:bold;">★ Prioritária</span>' : ''}
-    </div>
-  `;
+        // Layout horizontal para o texto
+        card.innerHTML = `
+            <div class="card-title" title="${alloc.disciplina}" style="display:inline;">
+                ${info.abrev} - <span class="card-docente" style="font-weight:normal;">${docenteNome}</span>
+            </div>
+            <span class="remove-btn" title="Remover">×</span>
+        `;
 
-  cell.querySelector('.remove-btn').onclick = (e) => {
-    e.stopPropagation();
-    if (confirm('Remover esta aula?')) {
-      store.removeAllocation(alloc.id);
-      cell.style.border = ''; // Garante limpeza visual ao remover
-      renderWeeklyGrid();
-      renderOfertasList();
-    }
-  };
+        card.querySelector('.remove-btn').onclick = (e) => {
+            e.stopPropagation();
+            if (confirm(`Remover alocação de ${alloc.disciplina}?`)) {
+                store.removeAllocation(alloc.id);
+                
+                const slotsRestantes = store.allocations.filter(a => a.disciplina === alloc.disciplina && String(a.turmaId) === String(store.selectedTurma));
+                if (slotsRestantes.length > 0) {
+                    const ch = getDisciplinaInfo(alloc.disciplina).ch;
+                    const dataInicioFixa = slotsRestantes[0].dataInicio || store.settings.termStart;
+                    const novasSemanas = Math.ceil(ch / slotsRestantes.length);
+                    const novoFim = calculateEndDateByWeekday(dataInicioFixa, novasSemanas, slotsRestantes[0].diaSemana, store.rawData?.feriados || []);
+                    slotsRestantes.forEach(s => s.dataFim = novoFim);
+                }
+
+                renderWeeklyGrid();
+                renderOfertasList();
+            }
+        };
+
+        container.appendChild(card);
+    });
+
+    cell.appendChild(container);
 }
 
 function checkTeacherConflict(docente, dia, horario) {
@@ -793,26 +859,69 @@ function handleSlotClick(dia, horario) {
   const info = getDisciplinaInfo(disciplina);
   const maxCH = info.ch || 0;
   
-  if (docData.mode === 'multi') {
-      if (docData.totalCH > maxCH) {
-          return alert(`A soma das horas (${docData.totalCH}h) ultrapassa a carga horária da disciplina (${maxCH}h).`);
-      }
+  if (docData.mode === 'multi' && docData.totalCH > maxCH) {
+      return alert(`A soma das horas (${docData.totalCH}h) ultrapassa a carga horária da disciplina (${maxCH}h).`);
   }
 
   const tipo = inputConfig.tipo?.value ?? 'regular';
   if (tipo === 'intensiva') return alert('Para intensivas, configure as datas no menu e clique em "Adicionar à Grade".');
 
-  // REGRA DE BLOQUEIO DE TURNO REMOVIDA DESTE LOCAL (handleSlotClick)!
-  // A Grade Semanal volta a ser livre para planejamento a longo prazo.
-  // A supressão das regulares pela intensiva será gerida de forma inteligente no Calendário.
+  const existingInSlot = store.allocations.filter(a => 
+    String(a.turmaId) === String(store.selectedTurma) && a.diaSemana == dia && a.horario === horario
+  );
 
-  const mainProf = docData.mode === 'single' ? docData.docente : docData.docentesList[0].nome;
-  const conflito = checkTeacherConflict(mainProf, dia, horario);
-  if (conflito) {
-    if (!confirm(`O professor ${mainProf} já ministra aula na turma ${conflito.turmaId} neste horário. Continuar?`)) return;
+  let dataInicio = inputConfig.inicio?.value;
+  
+  if (!dataInicio || dataInicio === store.settings.termStart) {
+      if (existingInSlot.length > 0) {
+          const latestEnd = existingInSlot.reduce((max, a) => {
+              const aEnd = a.dataFim || store.settings.termEnd;
+              return aEnd > max ? aEnd : max;
+          }, "2000-01-01");
+          
+          const nextDay = new Date(latestEnd + "T12:00:00");
+          nextDay.setDate(nextDay.getDate() + 1);
+          dataInicio = nextDay.toISOString().split('T')[0];
+      } else {
+          dataInicio = store.settings.termStart;
+      }
   }
 
-  const corSelecionada = inputConfig.cor ? inputConfig.cor.value : store.getDisciplinaColor(disciplina);
+  const slotsDestaDisciplina = store.allocations.filter(a => 
+      a.disciplina === disciplina && 
+      String(a.turmaId) === String(store.selectedTurma) &&
+      (a.tipo === 'regular' || a.tipo === 'regular_prioritaria')
+  );
+  
+  const numTotalAulasSemanais = slotsDestaDisciplina.length + 1;
+  const semanasNecessarias = Math.ceil(maxCH / numTotalAulasSemanais);
+  const dataFimCalculada = calculateEndDateByWeekday(dataInicio, semanasNecessarias, dia, store.rawData?.feriados || []);
+
+  const overlap = existingInSlot.find(a => {
+      const startA = a.dataInicio || store.settings.termStart;
+      const endA = a.dataFim || store.settings.termEnd;
+      return isDateOverlap(dataInicio, dataFimCalculada, startA, endA);
+  });
+
+  if (overlap) {
+      const msgInicio = overlap.dataInicio ? formatDateBR(overlap.dataInicio) : formatDateBR(store.settings.termStart);
+      const msgFim = overlap.dataFim ? formatDateBR(overlap.dataFim) : formatDateBR(store.settings.termEnd);
+      return alert(`Conflito de Datas!\n\nA disciplina "${overlap.disciplina}" já ocupa este slot no período de ${msgInicio} até ${msgFim}.`);
+  }
+
+  const mainProf = docData.mode === 'single' ? docData.docente : docData.docentesList[0].nome;
+  const conflitoDocente = store.allocations.find((a) => {
+      if (a.docente !== mainProf || a.diaSemana != dia || a.horario !== horario) return false;
+      const startA = a.dataInicio || store.settings.termStart;
+      const endA = a.dataFim || store.settings.termEnd;
+      return isDateOverlap(dataInicio, dataFimCalculada, startA, endA);
+  });
+
+  if (conflitoDocente) {
+    if (!confirm(`O professor ${mainProf} já está ocupado nesta faixa de datas. Continuar?`)) return;
+  }
+
+  // ALERTA REMOVIDO: O sistema não vai mais avisar sobre o cálculo inicial de data longa.
 
   store.addAllocation({
     turmaId: store.selectedTurma,
@@ -822,7 +931,13 @@ function handleSlotClick(dia, horario) {
     tipo: tipo, 
     diaSemana: dia,
     horario,
-    cor: corSelecionada 
+    dataInicio: dataInicio,
+    dataFim: dataFimCalculada,
+    cor: inputConfig.cor ? inputConfig.cor.value : store.getDisciplinaColor(disciplina)
+  });
+
+  slotsDestaDisciplina.forEach(s => {
+      s.dataFim = dataFimCalculada;
   });
 
   renderWeeklyGrid();
@@ -846,140 +961,56 @@ function handleAddManual() {
 
     const info = getDisciplinaInfo(disciplina);
     const ch = info.ch || 0;
-    if (ch === 0) return alert(`O componente "${disciplina}" tem CH 0 ou não foi encontrado.`);
+    if (ch === 0) return alert(`O componente "${disciplina}" tem CH 0.`);
 
     if(docData.mode === 'multi' && docData.totalCH > ch) {
-        alert(`Atenção: A soma das cargas horárias (${docData.totalCH}h) excede a CH da disciplina (${ch}h).`);
+        alert(`A soma das cargas horárias excede a CH da disciplina.`);
         return;
     }
 
     let slotsIntensiva = getCheckedSlots();
-    if (slotsIntensiva.length === 0) return alert('Selecione pelo menos um horário para a intensiva.');
+    if (slotsIntensiva.length === 0) return alert('Selecione pelo menos um horário.');
     
-    let slotsCount = slotsIntensiva.length;
-    let effectiveCH = ch;
-    if (ch === 45 && slotsCount === 2) {
-        effectiveCH = 46;
-    }
-
-    const diasNecessarios = Math.ceil(effectiveCH / slotsCount);
+    let effectiveCH = ch === 45 && slotsIntensiva.length === 2 ? 46 : ch;
+    const diasNecessarios = Math.ceil(effectiveCH / slotsIntensiva.length);
     const feriados = store.rawData?.feriados || [];
-    
-    // === ATUALIZAÇÃO 2.0: CÁLCULO DE DATA COM BLOQUEIO DE PRIORITÁRIA ===
     const blockedWeekdays = getBlockedWeekdaysForTurma(store.selectedTurma);
     const dataFimCalculada = addBusinessDays(inicio, diasNecessarios, feriados, blockedWeekdays);
 
     const normalize = s => (s || '').split(/\s/)[0].replace(/[^0-9:]/g, '');
 
-    // === REGRA MEGA-INTENSIVA (AJUSTADA PARA PERMITIR SOBRESCRITA DA MESMA DISCIPLINA) ===
-    const newShifts = [...new Set(slotsIntensiva.map(s => timeToMinutes(s) < 12 * 60 ? 'Manhã' : 'Tarde'))];
-    const isNewMega = slotsIntensiva.length >= 5;
-
     const megaConflictInt = store.allocations.find(a => {
         if (String(a.turmaId) !== String(store.selectedTurma)) return false;
-        if (a.tipo !== 'intensiva') return false;
-        if (a.disciplina === disciplina) return false; // <-- NOVO: Ignora a si mesma na regra de trava!
-        if (!isDateOverlap(inicio, dataFimCalculada, a.dataInicio, a.dataFim)) return false;
+        if (a.tipo !== 'intensiva' || a.disciplina === disciplina) return false; 
+        if (!isDateOverlap(inicio, dataFimCalculada, a.dataInicio || store.settings.termStart, a.dataFim || store.settings.termEnd)) return false;
 
+        const newShifts = [...new Set(slotsIntensiva.map(s => timeToMinutes(s) < 12 * 60 ? 'Manhã' : 'Tarde'))];
         const existingShifts = [...new Set((a.horariosOcupados || []).map(s => timeToMinutes(s) < 12 * 60 ? 'Manhã' : 'Tarde'))];
-        const hasShiftOverlap = newShifts.some(shift => existingShifts.includes(shift));
+        const hasOverlap = newShifts.some(shift => existingShifts.includes(shift));
         
-        if (!hasShiftOverlap) return false;
-
-        const isExistingMega = (a.horariosOcupados || []).length >= 5;
-
-        return isNewMega || isExistingMega;
+        return hasOverlap && (slotsIntensiva.length >= 5 || (a.horariosOcupados || []).length >= 5);
     });
 
     if (megaConflictInt) {
-        alert(`⚠️ TURNO BLOQUEADO!\n\nRegra Pedagógica: Há um bloqueio de turno devido a uma disciplina Intensiva de 5+ horas.\n\nConflito com: ${megaConflictInt.disciplina}\nFaixa de dias: ${formatDateBR(megaConflictInt.dataInicio)} a ${formatDateBR(megaConflictInt.dataFim)}\n\nNão é permitido alocar outras componentes no mesmo turno para preencher horários.`);
+        alert(`⚠️ TURNO BLOQUEADO por uma Intensiva de 5+ horas.`);
         return;
     }
-    // === FIM NOVA REGRA ===
 
-    let idToRemove = null; // Guardamos para apagar depois silenciosamente
-
+    let idToRemove = null;
     const conflitoIntensiva = store.allocations.find(a => {
         if (String(a.turmaId) === String(store.selectedTurma) && a.disciplina === disciplina) {
-            if (a.tipo === 'intensiva') {
-                if (isDateOverlap(inicio, dataFimCalculada, a.dataInicio, a.dataFim)) return true;
-            } else {
-                return true; 
-            }
-            return false;
+             if (a.tipo === 'intensiva' && isDateOverlap(inicio, dataFimCalculada, a.dataInicio || store.settings.termStart, a.dataFim || store.settings.termEnd)) return true;
+             return a.tipo !== 'intensiva';
         }
-
-        const newTeachers = docData.mode === 'single' ? [docData.docente] : docData.docentesList.map(d=>d.nome);
-        const storedTeachers = a.docentes ? a.docentes.map(d=>d.nome) : [a.docente];
-        const hasCommonTeacher = newTeachers.some(nt => storedTeachers.includes(nt));
-        if (!hasCommonTeacher) return false;
-
-        let isDateCollision = true;
-        if (a.tipo === 'intensiva') {
-            isDateCollision = isDateOverlap(inicio, dataFimCalculada, a.dataInicio, a.dataFim);
-        }
-        if (!isDateCollision) return false;
-
-        let isTimeCollision = false;
-        const newSlotsNorm = slotsIntensiva.map(normalize);
-        let existingSlotsNorm = [];
-        if (a.horariosOcupados) {
-             existingSlotsNorm = a.horariosOcupados.map(normalize);
-        } else if (a.horario) {
-             existingSlotsNorm = [normalize(a.horario)];
-        }
-        isTimeCollision = newSlotsNorm.some(ns => existingSlotsNorm.includes(ns));
-        if (!isTimeCollision) return false;
-
-        if (a.tipo === 'regular') {
-            const intensivaBlockingRoom = store.allocations.find(i => {
-                if (i.tipo !== 'intensiva') return false;
-                if (String(i.turmaId) !== String(a.turmaId)) return false; 
-                if (!isDateOverlap(inicio, dataFimCalculada, i.dataInicio, i.dataFim)) return false;
-                const intSlots = (i.horariosOcupados || []).map(normalize);
-                return intSlots.includes(normalize(a.horario));
-            });
-
-            if (intensivaBlockingRoom) {
-                return false;
-            }
-        }
-
-        return true;
+        return false;
     });
 
-    if (conflitoIntensiva) {
-        if (String(conflitoIntensiva.turmaId) === String(store.selectedTurma) && conflitoIntensiva.disciplina === disciplina) {
-            // Se for o MESMO curso, MESMA turma e MESMA disciplina, nós agendamos para sobrescrever
-            idToRemove = conflitoIntensiva.id;
-        } else {
-            const tipoConflito = conflitoIntensiva.tipo === 'regular' ? 'Regular (Semanal)' : 'Intensiva';
-            alert(`Choque de Horário Detectado!\n\n` +
-                  `O professor já está ocupado com:\n` +
-                  `Disciplina: ${conflitoIntensiva.disciplina}\n` +
-                  `Turma ID: ${conflitoIntensiva.turmaId}\n` +
-                  `Tipo: ${tipoConflito}`);
-            return;
-        }
-    }
+    if (conflitoIntensiva) idToRemove = conflitoIntensiva.id;
 
     const actionText = idToRemove ? "Atualizar alocação existente?" : "Confirmar alocação?";
-    if (
-      !confirm(
-        `Componente: ${disciplina} (${ch}h)\n` +
-          `Tipo: Intensiva (${slotsCount} slots/dia)\n` +
-          `Duração: ${diasNecessarios} dias úteis (Excluindo dias bloqueados).\n\n` +
-          `De: ${formatDateBR(inicio)}\nAté: ${formatDateBR(dataFimCalculada)}\n\n${actionText}`
-      )
-    )
-      return;
+    if (!confirm(`${disciplina} (${formatDateBR(inicio)} a ${formatDateBR(dataFimCalculada)})\n\n${actionText}`)) return;
 
-    // Se o usuário confirmou a edição, apaga a versão velha silenciosamente
-    if (idToRemove) {
-        store.removeAllocation(idToRemove);
-    }
-
-    const corSelecionada = inputConfig.cor ? inputConfig.cor.value : store.getDisciplinaColor(disciplina);
+    if (idToRemove) store.removeAllocation(idToRemove);
 
     store.addAllocation({
       turmaId: store.selectedTurma,
@@ -991,7 +1022,7 @@ function handleAddManual() {
       dataFim: dataFimCalculada,
       modelo: 'Automático',
       horariosOcupados: slotsIntensiva,
-      cor: corSelecionada
+      cor: inputConfig.cor ? inputConfig.cor.value : store.getDisciplinaColor(disciplina)
     });
 
     renderOfertasList();
@@ -1040,7 +1071,6 @@ function renderOfertasList() {
     appendSeparator(nomeMes.toUpperCase());
   };
 
-  // Pega os dias bloqueados para cálculo correto de horas
   const blockedWeekdays = getBlockedWeekdaysForTurma(store.selectedTurma);
 
   const appendRow = (a) => {
@@ -1050,13 +1080,15 @@ function renderOfertasList() {
     let totalHoras = 0;
     let details = '';
 
+    const start = a.dataInicio || semestreInicio;
+    const end = a.dataFim || semestreFim;
+
     if (a.tipo === 'regular' || a.tipo === 'regular_prioritaria') {
-      const numAulas = countWeekdaysInPeriod(semestreInicio, semestreFim, parseInt(a.diaSemana), feriados);
+      const numAulas = countWeekdaysInPeriod(start, end, parseInt(a.diaSemana), feriados);
       totalHoras = numAulas * 1;
       details = `${numAulas} aulas`;
     } else {
-      // === ATUALIZAÇÃO 2.0: Contagem precisa descontando dias de Prioritária ===
-      const diasUteis = countBusinessDays(a.dataInicio, a.dataFim, feriados, blockedWeekdays);
+      const diasUteis = countBusinessDays(start, end, feriados, blockedWeekdays);
       const slotsPorDia = a.horariosOcupados ? a.horariosOcupados.length : 5;
       totalHoras = diasUteis * slotsPorDia;
       details = `${diasUteis} dias`;
@@ -1070,17 +1102,10 @@ function renderOfertasList() {
     }
 
     const chInfo = `<b style="color:${color}">${totalHoras}</b> / ${chMax}h <small>(${details})</small>`;
-    
     const labelTipo = a.tipo === 'regular_prioritaria' ? '<b>Regular (Prioritária)</b>' : a.tipo;
+    const horarioTxt = `${formatDateBR(start)} a ${formatDateBR(end)}<br><small>${['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab'][a.diaSemana] || 'Int.'} ${a.horario || ''}</small>`;
 
-    const horarioTxt = (a.tipo === 'regular' || a.tipo === 'regular_prioritaria')
-        ? `${['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab'][a.diaSemana]} ${a.horario}`
-        : `${formatDateBR(a.dataInicio)} a ${formatDateBR(a.dataFim)}`;
-
-    // === INÍCIO DA LÓGICA DE EDIÇÃO (Agora para todas as ofertas) ===
     let btnHtml = `<button class="btn-danger btn-delete-row" style="padding:4px 8px; margin:0; font-size:0.85em; border-radius:3px; cursor:pointer;" title="Excluir">🗑️ Excluir</button>`;
-    
-    // Habilita o botão editar para TODAS (Intensiva, Regular, Regular Prioritária)
     btnHtml = `<button class="btn-primary btn-edit-row" style="padding:4px 8px; margin:0; font-size:0.85em; background-color:#2980b9; border:none; color:white; border-radius:3px; cursor:pointer; margin-right:5px;" title="Editar">✏️ Editar</button>` + btnHtml;
 
     tr.innerHTML = `
@@ -1089,16 +1114,22 @@ function renderOfertasList() {
       <td>${labelTipo}</td>
       <td>${horarioTxt}</td>
       <td style="text-align:center;">${chInfo}</td>
-      <td style="white-space:nowrap;">
-        <div style="display:flex; justify-content:center; align-items:center;">
-          ${btnHtml}
-        </div>
-      </td>
+      <td style="white-space:nowrap;"><div style="display:flex; justify-content:center;">${btnHtml}</div></td>
     `;
 
     tr.querySelector('.btn-delete-row').onclick = () => {
-      if (confirm('Tem certeza que deseja excluir esta disciplina?')) {
+      if (confirm('Remover esta oferta?')) {
           store.removeAllocation(a.id);
+          
+          const slotsRestantes = store.allocations.filter(x => x.disciplina === a.disciplina && String(x.turmaId) === String(store.selectedTurma));
+          if (slotsRestantes.length > 0 && a.tipo.includes('regular')) {
+              const novaCH = getDisciplinaInfo(a.disciplina).ch;
+              const novaSemanas = Math.ceil(novaCH / slotsRestantes.length);
+              const dataInit = slotsRestantes[0].dataInicio || semestreInicio;
+              const newFim = calculateEndDateByWeekday(dataInit, novaSemanas, slotsRestantes[0].diaSemana, feriados);
+              slotsRestantes.forEach(s => s.dataFim = newFim);
+          }
+
           renderWeeklyGrid();
           renderOfertasList();
       }
@@ -1107,91 +1138,35 @@ function renderOfertasList() {
     const btnEdit = tr.querySelector('.btn-edit-row');
     if (btnEdit) {
         btnEdit.onclick = () => {
-            let confirmMsg = a.tipo === 'intensiva' 
-                ? 'Deseja editar esta disciplina intensiva?\n\nOs dados serão carregados no menu lateral para ajuste. A oferta antiga será sobrescrita quando você salvar.'
-                : 'Deseja editar esta disciplina regular?\n\nOs dados serão carregados no menu lateral e a oferta antiga será removida. O sistema abrirá a Grade Semanal para você reposicioná-la.';
-                
-            if (confirm(confirmMsg)) {
-                
-                // 1. Muda o tipo no seletor baseado no tipo real da oferta clicada
+            if (confirm('Carregar para edição? A oferta antiga será removida.')) {
                 if (inputConfig.tipo) {
-                    inputConfig.tipo.value = a.tipo; 
+                    inputConfig.tipo.value = a.tipo;
                     inputConfig.tipo.dispatchEvent(new Event('change'));
                 }
-                
-                // 2. Limpa e Preenche Disciplina e Cor (Forçando Atualização Visual)
                 if (inputConfig.disciplina) {
-                    inputConfig.disciplina.value = ''; // Limpa antes
+                    inputConfig.disciplina.value = `${a.disciplina} (${info.ch}h)`;
                     inputConfig.disciplina.dispatchEvent(new Event('input'));
-                    
-                    const chInfoLocal = getDisciplinaInfo(a.disciplina);
-                    inputConfig.disciplina.value = `${a.disciplina} (${chInfoLocal.ch}h)`;
-                    inputConfig.disciplina.dispatchEvent(new Event('input'));
-                    inputConfig.disciplina.focus(); // Simula atenção do usuário
                 }
-                if (inputConfig.cor && a.cor) {
-                    inputConfig.cor.value = a.cor;
-                }
-                
-                // 3. Preenche Data e Horários (SOMENTE SE FOR INTENSIVA)
-                if (a.tipo === 'intensiva') {
-                    if (inputConfig.inicio && a.dataInicio) {
-                        inputConfig.inicio.value = a.dataInicio;
-                    }
-                    if (a.horariosOcupados) {
-                        const containerSlots = document.getElementById('slots-checkboxes');
-                        if (containerSlots) {
-                            containerSlots.querySelectorAll('input[type="checkbox"]').forEach(cb => {
-                                const normalize = s => (s || '').split(/\s/)[0].replace(/[^0-9:]/g, '');
-                                cb.checked = a.horariosOcupados.map(normalize).includes(normalize(cb.value));
-                            });
-                        }
-                    }
-                }
+                if (inputConfig.cor) inputConfig.cor.value = a.cor;
+                if (inputConfig.inicio && a.dataInicio) inputConfig.inicio.value = a.dataInicio;
 
-                // 4. Preenche Docentes
-                const isMulti = a.docentes && a.docentes.length > 0;
-                const chkMulti = document.getElementById('chk-multi-docente');
-                if (chkMulti) {
-                    chkMulti.checked = isMulti;
-                    chkMulti.dispatchEvent(new Event('change'));
-                }
-                
-                if (isMulti) {
-                    const listMulti = document.getElementById('multi-docente-list');
-                    if (listMulti) {
-                        listMulti.innerHTML = ''; // Limpa antes de preencher
-                        a.docentes.forEach(doc => {
-                            addTeacherRow(doc.nome, doc.ch);
+                if (a.horariosOcupados) {
+                    const containerSlots = document.getElementById('slots-checkboxes');
+                    if (containerSlots) {
+                        containerSlots.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+                            cb.checked = a.horariosOcupados.includes(cb.value);
                         });
-                        updateTotalCHDisplay();
-                    }
-                } else {
-                    if (inputConfig.docente) {
-                        inputConfig.docente.value = ''; // Limpa antes
-                        inputConfig.docente.dispatchEvent(new Event('input'));
-                        
-                        inputConfig.docente.value = a.docente;
-                        inputConfig.docente.dispatchEvent(new Event('input'));
                     }
                 }
 
-                // 5. Ações finais baseadas no tipo (UX Perfeita)
-                if (a.tipo === 'intensiva') {
-                    // Se for intensiva, só rola pra cima no menu lateral. A exclusão acontece ao "Adicionar".
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                } else {
-                    // Se for Regular, remove a velha IMEDIATAMENTE, atualiza e muda para a aba da Grade Semanal
-                    store.removeAllocation(a.id);
-                    renderWeeklyGrid();
-                    renderOfertasList();
-                    switchTab('weekly'); 
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                }
+                store.removeAllocation(a.id);
+                renderWeeklyGrid();
+                renderOfertasList();
+                if (a.tipo !== 'intensiva') switchTab('weekly');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
             }
         };
     }
-    // === FIM DA LÓGICA DE EDIÇÃO ===
 
     tbody.appendChild(tr);
   };
@@ -1375,34 +1350,27 @@ function generateCalendarGrid(container, turmaId, docenteName, start, end, title
               const isSuspended = eventsInSlot.some((e) => e.type === 'suspended');
               
               if (docenteName) {
-                  // VISÃO PROFESSOR
                   if (hasSpecificConflict || implicitConflict) {
                     style = 'background: #c0392b; color: white; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight:bold;';
-                    // ADICIONADO A TURMA AQUI TAMBÉM NO CONFLITO
                     const conflictNames = eventsInSlot.map((e) => `${getDisciplinaInfo(e.disciplina).abrev} - ${e.turmaId}`).join(' <b style="color:#fff">x</b> ');
                     content = `<span title="Choque: ${conflictNames.replace(/<[^>]+>/g, '')}">⚠️ ${conflictNames}</span>`;
                   } else if (isSuspended) {
                     const suspendedEvent = eventsInSlot.find(e => e.type === 'suspended');
                     const info = getDisciplinaInfo(suspendedEvent.disciplina);
-                    // AJUSTE FIGURA 2: Abreviação + Turma + Suspensa
                     content = `⛔ ${info.abrev} - ${suspendedEvent.turmaId} Suspensa`; 
                   } else {
                     const event = eventsInSlot[0];
                     const info = getDisciplinaInfo(event.disciplina);
-                    // AJUSTE PRINCIPAL: Abreviação - Turma
                     content = `${info.abrev} - ${event.turmaId}`;
                     style = `background:${event.cor || '#bdc3c7'}; color:black;`;
                   }
               } else {
-                  // VISÃO TURMA
                   const activeEvent = eventsInSlot.find(e => e.type !== 'suspended');
-                  
                   if (activeEvent) {
                       const info = getDisciplinaInfo(activeEvent.disciplina);
                       content = info.abrev;
                       style = `background:${activeEvent.cor || '#bdc3c7'}; color:black;`;
                   } else {
-                      // Se só houver suspensos e nenhuma aula ativa na turma, o slot fica vazio (vago)
                       content = '&nbsp;';
                       style = 'background: #ecf0f1;';
                   }
@@ -1412,7 +1380,6 @@ function generateCalendarGrid(container, turmaId, docenteName, start, end, title
                style = 'background: #ecf0f1;'; 
             }
 
-            // Aplicar Classes CSS Dinâmicas
             const hasSuspended = eventsInSlot.some(e => e.type === 'suspended');
             const hasOverriding = eventsInSlot.some(e => (e.isIntensive || e.isPriority) && !docenteName);
 
@@ -1426,7 +1393,6 @@ function generateCalendarGrid(container, turmaId, docenteName, start, end, title
                 tooltip = `title="${suspEvent.blockingReason || 'Suspenso'}"`;
             }
 
-            // --- AJUSTE 2: Borda pontilhada SUPERIOR no slot de 13:30 (divisão de turno limpa) ---
             let rowStyle = '';
             if (slotTime.includes('13:30')) {
                 rowStyle = 'border-top: 2px dashed #bdc3c7; margin-top: 2px; padding-top: 2px;';
