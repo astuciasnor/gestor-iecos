@@ -60,12 +60,11 @@ export function toLocalDateString(date) {
 
 /**
  * Conta dias úteis, excluindo finais de semana, feriados E dias bloqueados (Prioritária).
- * ATUALIZAÇÃO: Aceita Sábados através da flag includeSaturdays
  * @param {string} startDate - YYYY-MM-DD
  * @param {string} endDate - YYYY-MM-DD
  * @param {Array} feriados - Lista de objetos ou strings de feriados
  * @param {Array} blockedWeekdays - Array de inteiros (0-6) que devem ser pulados (ex: [1] para pular segundas)
- * @param {boolean} includeSaturdays - Se verdadeiro, contabiliza o sábado como dia útil
+ * @param {boolean} includeSaturdays - Se verdadeiro, permite contabilizar Sábados
  */
 export function countBusinessDays(startDate, endDate, feriados = [], blockedWeekdays = [], includeSaturdays = false) {
     let count = 0;
@@ -116,7 +115,6 @@ export function countWeekdaysInPeriod(startDate, endDate, targetDayOfWeek, feria
 }
 
 // --- NOVA FUNÇÃO: Adiciona dias úteis a uma data ---
-// ATUALIZAÇÃO: Aceita Sábados através da flag includeSaturdays
 export function addBusinessDays(startDateStr, daysNeeded, feriados = [], blockedWeekdays = [], includeSaturdays = false) {
     let currentDate = new Date(startDateStr + "T12:00:00");
     let daysFound = 0;

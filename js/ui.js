@@ -1366,7 +1366,7 @@ function renderOfertasList() {
             btnCopySigaa = `
             <div style="display:flex; align-items:center; justify-content:center; gap:6px;">
                 <span style="font-family:monospace; font-weight:bold; background:#ecf0f1; padding:2px 6px; border-radius:4px; font-size:0.9em; letter-spacing:1px;" id="sigaa-${a.id}">${sigaaCode}</span>
-                <button class="btn-sigaa-copy" data-code="${sigaaCode}" title="Copiar Código" style="background:transparent; color:var(--primary); border:1px solid #ccc; border-radius:4px; cursor:pointer; padding:2px 4px; font-size:0.9em;">📋</button>
+                <button class="btn-sigaa-copy" data-code="${sigaaCode}" title="Copiar Código" style="background:transparent; color:var(--primary); border:1px solid #ccc; border-radius:4px; cursor:pointer; padding:2px 6px; font-size:0.9em; transition: all 0.2s;">📋</button>
             </div>`;
         } else {
             btnCopySigaa = `<span style="color:#999;">-</span>`;
@@ -1396,15 +1396,48 @@ function renderOfertasList() {
             <td style="white-space:nowrap;"><div style="display:flex; justify-content:center;">${btnHtml}</div></td>
         `;
         
+        // --- NOVO BOTÃO VERDE DE COPIAR (ANTI-FALHA) ---
         const copyBtn = tr.querySelector('.btn-sigaa-copy');
         if (copyBtn) {
-            copyBtn.onclick = (e) => {
-                navigator.clipboard.writeText(e.currentTarget.dataset.code).then(() => {
-                    const b = e.currentTarget;
-                    const orig = b.innerHTML;
-                    b.innerHTML = '✅';
-                    setTimeout(() => { b.innerHTML = orig; }, 1500);
-                });
+            copyBtn.onclick = async (e) => {
+                const btn = e.currentTarget;
+                const textToCopy = btn.dataset.code;
+                const origHtml = btn.innerHTML;
+                const origBg = btn.style.backgroundColor;
+                const origColor = btn.style.color;
+                const origBorder = btn.style.borderColor;
+
+                try {
+                    // Estratégia dupla de cópia
+                    if (navigator.clipboard && window.isSecureContext) {
+                        await navigator.clipboard.writeText(textToCopy);
+                    } else {
+                        const textArea = document.createElement("textarea");
+                        textArea.value = textToCopy;
+                        textArea.style.position = "fixed";
+                        textArea.style.opacity = "0";
+                        document.body.appendChild(textArea);
+                        textArea.select();
+                        document.execCommand("copy");
+                        document.body.removeChild(textArea);
+                    }
+                    
+                    // Feedback Visual Forte (Verde)
+                    btn.innerHTML = '✅ Copiado';
+                    btn.style.backgroundColor = '#27ae60';
+                    btn.style.color = '#ffffff';
+                    btn.style.borderColor = '#27ae60';
+
+                    // Volta ao normal
+                    setTimeout(() => { 
+                        btn.innerHTML = origHtml; 
+                        btn.style.backgroundColor = origBg;
+                        btn.style.color = origColor;
+                        btn.style.borderColor = origBorder;
+                    }, 2000);
+                } catch (err) {
+                    console.error('Falha ao copiar', err);
+                }
             };
         }
 
