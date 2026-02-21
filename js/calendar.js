@@ -55,10 +55,12 @@ export function getCalendarEvents(turmaId, startDate, endDate, docenteFilter = n
       return match[0];
   };
 
-  function isBusinessDay(dStr) {
+  // ATUALIZAÇÃO 4D: Recebe a flag de Sábado para contar corretamente o histórico de horas
+  function isBusinessDay(dStr, includeSaturdays = false) {
       const d = new Date(dStr + 'T12:00:00');
       const day = d.getDay();
-      if (day === 0 || day === 6) return false;
+      if (day === 0) return false; // Domingo nunca é dia útil
+      if (day === 6 && !includeSaturdays) return false; // Sábado só se a flag autorizar
       if (feriadosList.some(f => f.data === dStr)) return false;
       return true;
   }
@@ -68,7 +70,8 @@ export function getCalendarEvents(turmaId, startDate, endDate, docenteFilter = n
     const dateStr = toLocalDateString(date);
     const dayOfWeek = date.getDay();
 
-    if (dayOfWeek === 0 || dayOfWeek === 6) {
+    // ATUALIZAÇÃO 4D: Libera o Sábado! Agora apenas o Domingo (0) é bloqueado incondicionalmente
+    if (dayOfWeek === 0) {
       calendarData[dateStr] = [];
       return;
     }
@@ -170,6 +173,9 @@ export function getCalendarEvents(turmaId, startDate, endDate, docenteFilter = n
     );
 
     activeGlobalIntensives.forEach(intensiva => {
+        // ATUALIZAÇÃO 4D: Se for sábado e essa intensiva não usa sábado, não processa bloqueios!
+        if (dayOfWeek === 6 && !intensiva.usaSabado) return;
+
         // Se a turma desta intensiva tem uma prioritária hoje, a intensiva é SUSPENSA.
         if (turmasWithPriorityToday.has(String(intensiva.turmaId))) return;
 
@@ -202,6 +208,9 @@ export function getCalendarEvents(turmaId, startDate, endDate, docenteFilter = n
 
 
     myActiveIntensives.forEach(intense => {
+      // ATUALIZAÇÃO 4D: Se for sábado e a intensiva NÃO permite sábado, pula!
+      if (dayOfWeek === 6 && !intense.usaSabado) return;
+
       // ** CHECK SUPRESSÃO VISUAL (HOJE) **
       if (turmasWithPriorityToday.has(String(intense.turmaId))) {
           return; 
@@ -225,7 +234,8 @@ export function getCalendarEvents(turmaId, startDate, endDate, docenteFilter = n
           const cStr = cursor.toISOString().split('T')[0];
           const dow = cursor.getDay();
           
-          if (isBusinessDay(cStr) && !blockedDaysForTurma.has(dow)) {
+          // ATUALIZAÇÃO 4D: Passa a flag do sábado para contar o histórico de horas perfeitamente
+          if (isBusinessDay(cStr, intense.usaSabado) && !blockedDaysForTurma.has(dow)) {
              hoursBeforeToday += slotsPerDay;
           }
           cursor.setDate(cursor.getDate() + 1);

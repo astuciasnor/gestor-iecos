@@ -18,12 +18,12 @@ const calStart = document.getElementById('cal-start');
 const calEnd = document.getElementById('cal-end');
 
 const inputConfig = {
-  disciplina: document.getElementById('inp-disciplina'),
-  cor: document.getElementById('inp-color'), 
-  docente: document.getElementById('inp-docente'),
-  tipo: document.getElementById('sel-tipo'),
-  inicio: document.getElementById('inp-data-inicio'),
-  fim: document.getElementById('inp-data-fim')
+    disciplina: document.getElementById('inp-disciplina'),
+    cor: document.getElementById('inp-color'), 
+    docente: document.getElementById('inp-docente'),
+    tipo: document.getElementById('sel-tipo'),
+    inicio: document.getElementById('inp-data-inicio'),
+    fim: document.getElementById('inp-data-fim')
 };
 
 let tempImportData = null;
@@ -511,9 +511,6 @@ function getSuspendedDates(allocs, turmaId, diaSemana, horario, startDate) {
     return suspended;
 }
 
-// =========================================================================
-// MOTOR SIGAA: Gerador do Código de Horário (ex: 2M456)
-// =========================================================================
 function getSigaaCode(allocsForClass) {
     const slotsMap = [
         {m: 450, s: 'M', sl: 1}, {m: 500, s: 'M', sl: 2}, {m: 550, s: 'M', sl: 3},
@@ -543,7 +540,11 @@ function getSigaaCode(allocsForClass) {
             let curDt = new Date(startDt);
             while(curDt <= endDt) {
                 const dSigaa = curDt.getDay() + 1; 
-                if (dSigaa >= 2 && dSigaa <= 7) { 
+                
+                // INCLUI SÁBADO NO CÁLCULO SE ESTIVER SALVO NA ALOCAÇÃO COMO TRUE
+                const aceitaDia = (dSigaa >= 2 && dSigaa <= 6) || (dSigaa === 7 && a.usaSabado);
+                
+                if (aceitaDia) { 
                     (a.horariosOcupados || []).forEach(h => {
                         const sInfo = getSlot(h);
                         if(sInfo) slotsList.push({ day: dSigaa, shift: sInfo.s, slot: sInfo.sl });
@@ -674,17 +675,35 @@ export function initUI() {
     setupClearButtonsSidebar();
     setupMultiDocenteUI(); 
 
+    // INJEÇÃO DA CAIXINHA DE SÁBADO AUTOMATICAMENTE NO MENU
+    const divData = document.getElementById('datas-intensiva');
+    if (divData && !document.getElementById('container-include-saturday')) {
+        const wrap = document.createElement('div');
+        wrap.className = 'form-group';
+        wrap.id = 'container-include-saturday';
+        wrap.style.marginTop = '15px';
+        wrap.innerHTML = `
+            <label style="display:flex; align-items:center; gap:8px; cursor:pointer; color:#2c3e50; font-weight:bold; font-size:0.95em; background:#f8f9fa; padding:10px; border-radius:6px; border:1px solid #bdc3c7;">
+                <input type="checkbox" id="chk-include-saturday" style="width:18px; height:18px; cursor:pointer; accent-color:#c0392b; margin:0;">
+                Permitir Sábados (Cálculo Intensiva)
+            </label>
+        `;
+        divData.appendChild(wrap);
+    }
+
     if (inputConfig.tipo) {
         inputConfig.tipo.addEventListener('change', (e) => {
-            const divData = document.getElementById('datas-intensiva');
+            const divDataEl = document.getElementById('datas-intensiva');
             const divSlots = document.getElementById('container-slots-selection');
             const isIntensive = (e.target.value === 'intensiva');
             
-            divData.classList.remove('hidden');
+            divDataEl.classList.remove('hidden');
             
             if (isIntensive) {
                 divSlots.classList.remove('hidden');
                 renderIntensiveSlots();
+                const chk = document.getElementById('chk-include-saturday');
+                if (chk) chk.checked = false; // Reset padrão ao abrir
             } else {
                 divSlots.classList.add('hidden');
             }
@@ -1211,7 +1230,13 @@ function handleAddManual() {
         const diasNecessarios = Math.ceil(effectiveCH / slotsIntensiva.length);
         const feriados = store.rawData?.feriados || [];
         const blockedWeekdays = getBlockedWeekdaysForTurma(store.selectedTurma);
-        const dataFimCalculada = addBusinessDays(inicio, diasNecessarios, feriados, blockedWeekdays);
+        
+        // RECUPERA A CHAVE DO SÁBADO
+        const chkSabado = document.getElementById('chk-include-saturday');
+        const usaSabado = chkSabado ? chkSabado.checked : false;
+
+        // CÁLCULO MÁGICO (PASSANDO A CHAVE DE SÁBADO)
+        const dataFimCalculada = addBusinessDays(inicio, diasNecessarios, feriados, blockedWeekdays, usaSabado);
 
         const megaConflictInt = store.allocations.find(a => {
             if (String(a.turmaId) !== String(store.selectedTurma)) return false;
@@ -1242,6 +1267,7 @@ function handleAddManual() {
 
         if (idToRemove) store.removeAllocation(idToRemove);
 
+        // SALVA A OPÇÃO usaSabado NA BASE DE DADOS
         store.addAllocation({ 
             turmaId: store.selectedTurma, 
             disciplina: disciplina, 
@@ -1251,7 +1277,8 @@ function handleAddManual() {
             dataInicio: inicio, 
             dataFim: dataFimCalculada, 
             modelo: 'Automático', 
-            horariosOcupados: slotsIntensiva, 
+            horariosOcupados: slotsIntensiva,
+            usaSabado: usaSabado, 
             cor: inputConfig.cor ? inputConfig.cor.value : store.getDisciplinaColor(disciplina) 
         });
         
@@ -1266,7 +1293,6 @@ function renderOfertasList() {
     const tbody = document.querySelector('#ofertas-table tbody');
     if (!tbody) return;
     
-    // Injeção segura da Coluna SIGAA no HTML
     const theadTr = document.querySelector('#ofertas-table thead tr');
     if (theadTr && !document.getElementById('th-sigaa')) {
         const thSigaa = document.createElement('th');
@@ -1318,7 +1344,8 @@ function renderOfertasList() {
             totalHoras = numAulas * 1; 
             details = `${numAulas} aulas`;
         } else {
-            const diasUteis = countBusinessDays(start, end, feriados, blockedWeekdays);
+            // RECUPERA A CHAVE DO SÁBADO PARA RECALCULAR A CARGA HORÁRIA EXIBIDA
+            const diasUteis = countBusinessDays(start, end, feriados, blockedWeekdays, a.usaSabado || false);
             const slotsPorDia = a.horariosOcupados ? a.horariosOcupados.length : 5;
             totalHoras = diasUteis * slotsPorDia; 
             details = `${diasUteis} dias`;
@@ -1331,7 +1358,6 @@ function renderOfertasList() {
             if (totalHoras > chMax) color = '#c0392b';
         }
 
-        // MOTOR SIGAA - Coleta os horários e gera a string
         const allocsDaDisciplina = store.allocations.filter(x => String(x.turmaId) === String(a.turmaId) && x.disciplina === a.disciplina);
         const sigaaCode = getSigaaCode(allocsDaDisciplina);
         
@@ -1346,7 +1372,8 @@ function renderOfertasList() {
             btnCopySigaa = `<span style="color:#999;">-</span>`;
         }
 
-        const chInfo = `<b style="color:${color}">${totalHoras}</b> / ${chMax}h <small>(${details})</small>`;
+        const sabadoLabel = a.usaSabado ? `<br><span style="color:#e67e22; font-weight:bold; font-size:0.8em;">(Inclui Sábados)</span>` : '';
+        const chInfo = `<b style="color:${color}">${totalHoras}</b> / ${chMax}h <small>(${details})</small>${sabadoLabel}`;
         const labelTipo = a.tipo === 'regular_prioritaria' ? '<b>Regular (Prioritária)</b>' : a.tipo;
         
         let endFmt = formatDateBR(end);
@@ -1408,6 +1435,12 @@ function renderOfertasList() {
                     }
                     if (inputConfig.inicio && a.dataInicio) {
                         inputConfig.inicio.value = a.dataInicio;
+                    }
+
+                    // RESTAURA A CHAVE NA CAIXINHA DE SÁBADO
+                    if (a.tipo === 'intensiva') {
+                        const chkSabado = document.getElementById('chk-include-saturday');
+                        if (chkSabado) chkSabado.checked = !!a.usaSabado;
                     }
 
                     const chkMulti = document.getElementById('chk-multi-docente');
