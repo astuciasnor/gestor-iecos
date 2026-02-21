@@ -32,17 +32,6 @@
             box-shadow: 0 4px 6px rgba(0,0,0,0.3);
             object-fit: contain;
         }
-    
-        /* ===== PDF/Impressão: meses em sequência + cabeçalho de mês colorido ===== */
-        .calendar-month > h3 {
-            margin: 18px 0 10px;
-            padding: 10px 14px;
-            border-radius: 10px;
-            background: var(--primary);
-            color: #fff;
-            letter-spacing: 0.08em;
-            font-size: 14px;
-        }
 
         /* Separador de mês na tabela "Ofertas Cadastradas" (visual tipo dataframe) */
         #ofertas-table tr.month-sep td {
@@ -86,32 +75,6 @@
             max-width: 180px;
         }
 
-
-        @media print {
-            /* NÃO forçar 1 mês por página (turma e professor) */
-            .calendar-month {
-                break-before: auto !important;
-                break-after: auto !important;
-                break-inside: auto !important;
-
-                page-break-before: auto !important;
-                page-break-after: auto !important;
-                page-break-inside: auto !important;
-
-                margin-bottom: 14mm;
-            }
-
-            /* garantir que fundos coloridos saiam no PDF */
-            .calendar-month > h3,
-            #ofertas-table tr.month-sep td {
-                -webkit-print-color-adjust: exact;
-                print-color-adjust: exact;
-            }
-
-            /* evitar quebra feia no meio de linha da tabela */
-            #ofertas-table tr { break-inside: avoid; page-break-inside: avoid; }
-        }
-
         /* Estilos adicionais para a nova aba de Ajuda */
         .tutorial-card {
             background: #fff;
@@ -123,6 +86,209 @@
         }
         .tutorial-card h4 { margin-top: 0; color: #2c3e50; }
         .badge-tip { background: #fff3cd; color: #856404; padding: 2px 6px; border-radius: 4px; font-size: 0.85em; font-weight: bold; }
+        
+        /* Estilos para Empilhamento na Grade Semanal */
+        .slot .mini-card-container {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            padding: 2px;
+            height: 100%;
+        }
+
+        .mini-card {
+            border-radius: 4px;
+            padding: 4px 6px;
+            color: #000;
+            position: relative;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+            border: 1px solid rgba(0,0,0,0.1);
+            transition: transform 0.1s;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            min-height: 35px;
+        }
+
+        .mini-card:hover {
+            transform: scale(1.02);
+            z-index: 5;
+        }
+
+        .mini-card .card-title {
+            font-size: 0.85rem;
+            font-weight: 800;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-right: 18px;
+            line-height: 1.2;
+        }
+
+        .mini-card .card-docente {
+            font-size: 0.75rem;
+            opacity: 0.85;
+            line-height: 1.1;
+        }
+
+        .mini-card .remove-btn {
+            position: absolute;
+            top: 2px;
+            right: 4px;
+            color: #c0392b;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 1.1rem;
+            line-height: 1;
+        }
+
+        /* ================================================================= */
+        /* ===== NOVO MOTOR DE IMPRESSÃO PROFISSIONAL (PDF IMPECÁVEL) ====== */
+        /* ================================================================= */
+        @media print {
+            @page {
+                size: A4 landscape; /* Força Paisagem automaticamente */
+                margin: 8mm; /* Margens perfeitas */
+            }
+
+            body, html {
+                background: #fff !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+
+            /* Esconde toda a interface inútil para o PDF */
+            .sidebar, .top-bar, .calendar-controls, .feedback, .actions, #login-screen, #import-modal {
+                display: none !important;
+            }
+
+            .app-container, .content {
+                display: block !important;
+                width: 100% !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                box-shadow: none !important;
+            }
+
+            /* Cabeçalho Bonito no PDF */
+            .print-header-container {
+                text-align: center;
+                margin-bottom: 20px;
+                border-bottom: 3px solid var(--primary);
+                padding-bottom: 10px;
+            }
+            .print-title-main { font-size: 26px; font-weight: 900; color: var(--primary); text-transform: uppercase; letter-spacing: 1px;}
+            .print-title-sub { font-size: 18px; color: #555; font-weight: bold; }
+
+            /* ===== A MÁGICA: SEMANAS NÃO QUEBRADAS ===== */
+            .calendar-month {
+                break-inside: avoid !important;
+                page-break-inside: avoid !important;
+                margin-bottom: 25px !important;
+                border: 2px solid #ccc;
+                border-radius: 8px;
+                padding: 10px;
+                background: #fafafa;
+            }
+
+            .calendar-month > h3 {
+                text-align: center;
+                margin: 0 0 10px 0;
+                padding: 8px 14px;
+                border-radius: 6px;
+                background: var(--primary) !important;
+                color: #fff !important;
+                letter-spacing: 0.1em;
+                font-size: 16px;
+                text-transform: uppercase;
+            }
+
+            /* Estrutura da Grade Limpa */
+            .month-grid {
+                display: grid;
+                grid-template-columns: repeat(7, 1fr);
+                border-top: 1px solid #ddd;
+                border-left: 1px solid #ddd;
+            }
+
+            .day-header {
+                background: #eee !important;
+                text-align: center;
+                font-weight: bold;
+                padding: 6px 0;
+                font-size: 13px;
+                border-right: 1px solid #ddd;
+                border-bottom: 1px solid #ddd;
+                color: #333;
+            }
+
+            .day-cell {
+                min-height: 85px; /* Altura ideal para paisagem */
+                padding: 4px;
+                border-right: 1px solid #ddd;
+                border-bottom: 1px solid #ddd;
+                display: flex;
+                flex-direction: column;
+                gap: 2px;
+                background: #fff;
+            }
+
+            .day-cell.empty { background: #f9f9f9 !important; }
+            .day-cell.weekend { background: #fdfdfd !important; }
+
+            .day-number {
+                font-weight: bold;
+                font-size: 13px;
+                color: #555;
+                text-align: right;
+                display: block;
+                margin-bottom: 4px;
+            }
+
+            /* Bloquinhos de Aula (Ajustados para leitura no papel) */
+            .cal-slot-row {
+                display: flex;
+                gap: 4px;
+                align-items: center;
+                font-size: 10px;
+                line-height: 1.1;
+                margin-bottom: 2px;
+            }
+
+            .cal-slot-time {
+                font-weight: bold;
+                color: #444;
+                min-width: 32px;
+            }
+
+            .cal-slot-content {
+                flex: 1;
+                padding: 3px 5px !important;
+                border-radius: 4px;
+                overflow: hidden;
+                white-space: nowrap;
+                text-overflow: ellipsis;
+                border: 1px solid rgba(0,0,0,0.15) !important;
+                font-weight: 600;
+                color: #000 !important;
+            }
+
+            .event-chip {
+                padding: 4px;
+                border-radius: 4px;
+                font-size: 10px;
+                font-weight: bold;
+                margin-bottom: 2px;
+                border: 1px solid rgba(0,0,0,0.15) !important;
+                color: #000 !important;
+            }
+
+            /* Tabela de Ofertas - Não quebrar linha no meio */
+            #ofertas-table tr { 
+                break-inside: avoid !important; 
+                page-break-inside: avoid !important; 
+            }
+        }
     </style>
 </head>
 <body>
@@ -291,13 +457,13 @@
                 <div id="slots-checkboxes" class="slots-selection-grid"></div>
             </div>
 
-            <div id="datas-intensiva" class="hidden">
+            <div id="datas-intensiva" class="form-group">
                 <div class="form-group">
-                    <label>Início</label>
+                    <label>Data de Início</label>
                     <input type="date" id="inp-data-inicio">
                 </div>
                 <small style="display:block; color:#bdc3c7; margin-top:5px; font-size:0.8em; line-height: 1.4;">
-                    * O sistema calculará a data final automaticamente baseada na CH e nos horários selecionados.
+                    * O sistema calculará a data final automaticamente baseada na CH e nos horários.
                 </small>
             </div>
 
@@ -321,6 +487,7 @@
                     <button class="tab-btn" data-tab="monthly">Calendário da Turma</button>
                     <button class="tab-btn" data-tab="teacher">Visão do Professor</button>
                     <button class="tab-btn" data-tab="list">Lista de Ofertas</button>
+                    <button class="tab-btn" data-tab="gantt">📊 Gráfico Gantt</button>
                     <button class="tab-btn" data-tab="tutorial" style="color: var(--accent);">❓ Ajuda</button>
                 </nav>
                 
@@ -371,6 +538,20 @@
                     </thead>
                     <tbody></tbody>
                 </table>
+            </section>
+
+            <section id="tab-gantt" class="tab-content">
+                <div class="calendar-controls no-print" style="margin-bottom: 20px;">
+                    <label style="color: var(--primary); font-weight: bold;">Professor para o Gráfico:</label>
+                    <input type="text" id="inp-gantt-docente" list="list-view-docentes" placeholder="Digite o nome..." style="padding: 8px; border: 1px solid #ccc; border-radius: 4px; width: 300px; font-size: 1rem;">
+                    <button id="btn-gerar-gantt" class="btn-secondary" style="background: var(--primary); color:white;">Gerar Gantt</button>
+                </div>
+                
+                <div id="gantt-container" class="gantt-wrapper">
+                    <div style="text-align: center; color: #7f8c8d; margin-top: 50px; font-size: 1.1em;">
+                        Busque um professor acima para visualizar o mapa de disciplinas no tempo.
+                    </div>
+                </div>
             </section>
 
             <section id="tab-tutorial" class="tab-content">
