@@ -390,7 +390,44 @@ function getDisciplinaCHGlobal(disciplina, turmaId) {
     return 0;
 }
 
-// MOTOR DE SINCRONIZAÇÃO TOTAL (Cura todas as datas para repor horas suspensas)
+// NOVA FUNÇÃO: Calcula a Carga Horária Total do Professor selecionado
+function calculateTeacherTotalCH(teacherName) {
+    if (!teacherName) return 0;
+    
+    let totalCH = 0;
+    const handledGroups = new Set();
+
+    store.allocations.forEach(a => {
+        const groupKey = `${a.turmaId}|${a.disciplina}`;
+        
+        // Garante que só vamos contar a Carga Horária da disciplina UMA vez,
+        // mesmo que ela tenha 4 horários ocupados na grade semanal
+        if (!handledGroups.has(groupKey)) {
+            let teacherCH = 0;
+            
+            // Verifica se a matéria tem múltiplos professores
+            if (a.docentes && a.docentes.length > 0) {
+                const tInfo = a.docentes.find(d => d.nome === teacherName);
+                if (tInfo) {
+                    teacherCH = parseInt(tInfo.ch) || 0;
+                }
+            } 
+            // Verifica se o professor assumiu a matéria toda sozinho
+            else if (a.docente === teacherName) {
+                teacherCH = getDisciplinaCHGlobal(a.disciplina, a.turmaId);
+            }
+
+            if (teacherCH > 0) {
+                totalCH += teacherCH;
+                handledGroups.add(groupKey);
+            }
+        }
+    });
+    
+    return totalCH;
+}
+
+// MOTOR DE SINCRONIZAÇÃO TOTAL 
 function syncAllRegularDates() {
     const termStart = store.settings.termStart || '2025-01-01';
     const termEnd = store.settings.termEnd || '2025-12-31';
@@ -616,6 +653,36 @@ export function initUI() {
 
   const btnGerarCal = document.getElementById('btn-gerar-cal');
   if (btnGerarCal) btnGerarCal.addEventListener('click', renderMonthlyCalendar);
+
+  // =========================================================================
+  // MAGIA DO NOME DO PDF: Altera o title antes de imprimir e restaura rápido
+  // =========================================================================
+  const btnPrint = document.querySelector('.btn-print');
+  if (btnPrint) {
+      btnPrint.removeAttribute('onclick'); 
+      btnPrint.addEventListener('click', () => {
+          const originalTitle = document.title;
+          
+          let turmaLabel = store.selectedTurma || 'GERAL';
+          if (store.rawData?.turmas) {
+              const t = store.rawData.turmas.find(x => String(x.turma_id) === String(store.selectedTurma));
+              if (t) turmaLabel = t.turma_label;
+          }
+          
+          const periodo = store.settings.periodo || '1P';
+          const activeTab = document.querySelector('.tab-btn.active')?.dataset.tab;
+          
+          if (activeTab === 'teacher' && selViewDocente && selViewDocente.value) {
+              document.title = `${selViewDocente.value}_${periodo}_Gestor_IECOS_Coordenacoes(v2.0 Dev)`;
+          } else {
+              document.title = `${turmaLabel}_${periodo}_Gestor_IECOS_Coordenacoes(v2.0 Dev)`;
+          }
+
+          window.print();
+
+          setTimeout(() => { document.title = originalTitle; }, 1000);
+      });
+  }
 
   if (selViewDocente) {
     selViewDocente.addEventListener('change', () => {
@@ -1019,7 +1086,6 @@ function handleSlotClick(dia, horario) {
     if (!confirm(`O professor ${mainProf} já está ocupado nesta faixa de datas. Continuar?`)) return;
   }
 
-  // Insere a alocação
   store.addAllocation({
     turmaId: store.selectedTurma,
     disciplina,
@@ -1037,7 +1103,6 @@ function handleSlotClick(dia, horario) {
   renderWeeklyGrid();
   renderOfertasList();
 
-  // AVISO FLUTUANTE COM PACIÊNCIA DE 5 SEGUNDOS
   if (window.overlapWarningTimeout) clearTimeout(window.overlapWarningTimeout);
 
   if (store.settings.termEnd) {
@@ -1046,7 +1111,7 @@ function handleSlotClick(dia, horario) {
           if (slotsDesta.length > 0 && slotsDesta[0].dataFim > store.settings.termEnd) {
               showToastWarning(`⚠️ ATENÇÃO: A disciplina <b>${info.abrev}</b> terminará em <b>${formatDateBR(slotsDesta[0].dataFim)}</b>.<br>Isso ultrapassa o fim do semestre (${formatDateBR(store.settings.termEnd)}).<br>Insira mais horários na grade para reduzir esta data!`);
           }
-      }, 5000); // 5000 milissegundos = 5 segundos de espera
+      }, 5000); 
   }
 }
 
@@ -1213,7 +1278,6 @@ function renderOfertasList() {
     const chInfo = `<b style="color:${color}">${totalHoras}</b> / ${chMax}h <small>(${details})</small>`;
     const labelTipo = a.tipo === 'regular_prioritaria' ? '<b>Regular (Prioritária)</b>' : a.tipo;
     
-    // ALERTA VISUAL VERMELHO NA TABELA
     let endFmt = formatDateBR(end);
     if (store.settings.termEnd && end > store.settings.termEnd) {
         endFmt = `<span style="color:#c0392b; font-weight:bold; font-size:1.1em;" title="Atenção: Esta data ultrapassa o fim oficial do semestre!">⚠️ ${endFmt}</span>`;
@@ -1246,16 +1310,50 @@ function renderOfertasList() {
     if (btnEdit) {
         btnEdit.onclick = () => {
             if (confirm('Carregar para edição? A oferta antiga será removida.')) {
+                
                 if (inputConfig.tipo) {
                     inputConfig.tipo.value = a.tipo;
                     inputConfig.tipo.dispatchEvent(new Event('change'));
                 }
+                
                 if (inputConfig.disciplina) {
                     inputConfig.disciplina.value = `${a.disciplina} (${info.ch}h)`;
-                    inputConfig.disciplina.dispatchEvent(new Event('input'));
+                    inputConfig.disciplina.dispatchEvent(new Event('input')); 
                 }
-                if (inputConfig.cor) inputConfig.cor.value = a.cor;
+                
+                if (inputConfig.cor && a.cor) {
+                    inputConfig.cor.value = a.cor;
+                    setTimeout(() => {
+                        inputConfig.cor.value = a.cor;
+                    }, 50);
+                }
+                
                 if (inputConfig.inicio && a.dataInicio) inputConfig.inicio.value = a.dataInicio;
+
+                const chkMulti = document.getElementById('chk-multi-docente');
+                if (a.docentes && a.docentes.length > 0) {
+                    if (chkMulti && !chkMulti.checked) {
+                        chkMulti.checked = true;
+                        chkMulti.dispatchEvent(new Event('change'));
+                    }
+                    const listMulti = document.getElementById('multi-docente-list');
+                    if (listMulti) {
+                        listMulti.innerHTML = ''; 
+                        a.docentes.forEach(d => {
+                            addTeacherRow(d.nome, d.ch);
+                        });
+                        updateTotalCHDisplay();
+                    }
+                } else {
+                    if (chkMulti && chkMulti.checked) {
+                        chkMulti.checked = false;
+                        chkMulti.dispatchEvent(new Event('change'));
+                    }
+                    if (inputConfig.docente) {
+                        inputConfig.docente.value = a.docente || '';
+                        inputConfig.docente.dispatchEvent(new Event('input')); 
+                    }
+                }
 
                 if (a.horariosOcupados) {
                     const containerSlots = document.getElementById('slots-checkboxes');
@@ -1345,7 +1443,11 @@ function renderTeacherCalendar() {
       end = lastDay.toISOString().split('T')[0];
   }
 
-  const title = `<span class="print-title-main">Cronograma Docente</span><br><span class="print-title-sub">${docente}</span>`;
+  // AQUI ENTRA A MÁGICA DA CARGA HORÁRIA TOTAL DO PROFESSOR!
+  const totalCH = calculateTeacherTotalCH(docente);
+  const docenteTitle = totalCH > 0 ? `${docente} (${totalCH}h)` : docente;
+
+  const title = `<span class="print-title-main">Cronograma Docente</span><br><span class="print-title-sub">${docenteTitle}</span>`;
   generateCalendarGrid(container, null, docente, start, end, title);
 }
 
