@@ -333,7 +333,6 @@ input[type="date"] { color-scheme: dark; }
     display: block; 
 }
 
-/* ===== FIX VISUAL DA LINHA DE HORÁRIO ===== */
 .cal-slot-row { 
     display: flex; 
     border-bottom: 1px solid white; 
@@ -371,13 +370,12 @@ input[type="date"] { color-scheme: dark; }
     font-weight: 600;
 }
 
-/* ===== NOVA CLASSE: Slot Suspenso (Aba Professor) ===== */
 .suspended-slot {
-    background: #ffffff !important; /* Fundo branco/transparente */
-    color: #c0392b !important; /* Vermelho escuro para o texto */
+    background: #ffffff !important; 
+    color: #c0392b !important; 
     font-style: italic;
     font-weight: 600 !important;
-    border: 1px dashed #bdc3c7; /* Borda cinza tracejada leve */
+    border: 1px dashed #bdc3c7; 
     
     font-size: 0.75em;
     justify-content: flex-start;
@@ -389,11 +387,8 @@ input[type="date"] { color-scheme: dark; }
     align-items: center;
 }
 
-/* ===== NOVA CLASSE: Intensiva Usurpadora (Aba Turma) ===== */
 .overriding-event {
-    /* Mantém a cor de fundo (definida inline no JS), mas adiciona a borda preta */
     border: 2px dashed #000000 !important; 
-    /* Opcional: aumentar a espessura da fonte para destacar */
     font-weight: 800 !important;
 }
 
@@ -572,7 +567,6 @@ input[type="date"] { color-scheme: dark; }
     .day-header { border: 1px solid #ccc !important; }
 }
 
-/* ===== Ajuda: layout em duas colunas (sem retângulo cinza) ===== */
 .help-layout{
   display: grid;
   grid-template-columns: 1fr 360px;
@@ -582,9 +576,7 @@ input[type="date"] { color-scheme: dark; }
   margin: 0 auto;
 }
 
-.help-main{
-  line-height: 1.6;
-}
+.help-main{ line-height: 1.6; }
 
 .help-side{
   position: sticky;
@@ -620,4 +612,88 @@ input[type="date"] { color-scheme: dark; }
 @media (max-width: 980px){
   .help-layout{ grid-template-columns: 1fr; }
   .help-side{ position: static; }
+}
+
+/* ================================================================= */
+/* ===== GRÁFICO DE GANTT (CORES DESCANSADAS) ====================== */
+/* ================================================================= */
+.gantt-wrapper {
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 20px;
+    overflow-x: auto;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    min-height: 400px;
+    margin-top: 10px;
+}
+
+.gantt-container {
+    min-width: 800px; 
+    position: relative;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.gantt-header-row {
+    display: flex;
+    border-bottom: 2px solid var(--primary);
+    padding: 10px 0;
+    background: transparent; 
+}
+
+.gantt-month-col {
+    flex: 1;
+    text-align: center;
+    font-weight: bold;
+    color: var(--primary);
+    background: transparent; 
+}
+
+.gantt-timeline {
+    flex: 1;
+    height: 100%;
+    background: transparent; 
+    position: relative;
+    border: none;
+}
+
+.gantt-grid-line-month {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    border-left: 2px solid #2c3e50; 
+    z-index: 0;
+    pointer-events: none;
+}
+
+.gantt-grid-line-week {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    border-left: 2px dotted rgba(0,0,0,0.25); 
+    z-index: 0;
+    pointer-events: none;
+}
+
+.gantt-bar {
+    position: absolute;
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    cursor: pointer;
+    z-index: 2; 
+    color: #000000; 
+}
+
+.gantt-bar:hover {
+    transform: scaleY(1.10);
+    z-index: 10;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+}
+
+.input-wrapper-gantt {
+    display: inline-block;
+    position: relative;
 }

@@ -2,7 +2,6 @@ import { store } from './store.js';
 import { getCalendarEvents } from './calendar.js';
 import { countBusinessDays, countWeekdaysInPeriod, addBusinessDays, isDateOverlap, calculateEndDateByWeekday } from './utils.js';
 
-// Elementos Globais
 const gridContainer = document.getElementById('weekly-grid');
 const selCurso = document.getElementById('sel-curso');
 const selTurma = document.getElementById('sel-turma');
@@ -29,7 +28,6 @@ const inputConfig = {
 
 let tempImportData = null;
 
-// --- FUNÇÃO DE AVISO FLUTUANTE (NÃO TRAVA A TELA) ---
 function showToastWarning(message) {
     const fb = document.getElementById('feedback-msg');
     if (!fb) return;
@@ -53,8 +51,6 @@ function showToastWarning(message) {
         fb.classList.add('hidden');
     }, 7000); 
 }
-
-// --- FUNÇÕES AUXILIARES DE UI (MANTIDAS) ---
 
 function timeToMinutes(str) {
   if (!str) return 99999;
@@ -119,7 +115,7 @@ function addClearXToField(inputEl, inputId) {
     }
     btn.style.position = 'absolute';
     btn.style.right = '10px';
-    btn.style.top = '70%'; 
+    btn.style.top = inputEl.id === 'inp-gantt-docente' ? '50%' : '70%'; 
     btn.style.transform = 'translateY(-50%)';
 
     const currentPadding = parseInt(window.getComputedStyle(inputEl).paddingRight || '0', 10);
@@ -163,36 +159,22 @@ function buildHorariosForUI() {
 
 function applyWeeklyGridRowHeightScale(scaleNormal = 0.63, scaleHeaderAndInterval = 0.6) {
   if (!gridContainer) return;
-
   requestAnimationFrame(() => {
     const styleId = 'weekly-grid-rowheight-style';
     let styleEl = document.getElementById(styleId);
-
     const hadStyle = !!styleEl;
     if (styleEl) styleEl.disabled = true;
 
-    const sample =
-      gridContainer.querySelector('.slot') ||
-      gridContainer.querySelector('.header.time') ||
-      gridContainer.querySelector('.header');
-
-    if (!sample) {
-      if (hadStyle && styleEl) styleEl.disabled = false;
-      return;
-    }
+    const sample = gridContainer.querySelector('.slot') || gridContainer.querySelector('.header.time') || gridContainer.querySelector('.header');
+    if (!sample) { if (hadStyle && styleEl) styleEl.disabled = false; return; }
 
     const rectH = sample.getBoundingClientRect().height;
     let base = rectH;
-
     if (!base || Number.isNaN(base)) {
       const cs = getComputedStyle(sample);
       base = parseFloat(cs.height);
     }
-    if (!base || Number.isNaN(base)) {
-      if (hadStyle && styleEl) styleEl.disabled = false;
-      return;
-    }
-
+    if (!base || Number.isNaN(base)) { if (hadStyle && styleEl) styleEl.disabled = false; return; }
     if (hadStyle && styleEl) styleEl.disabled = false;
 
     const normalH = Math.max(24, Math.round(base * scaleNormal));
@@ -203,31 +185,11 @@ function applyWeeklyGridRowHeightScale(scaleNormal = 0.63, scaleHeaderAndInterva
       styleEl.id = styleId;
       document.head.appendChild(styleEl);
     }
-
     styleEl.textContent = `
-      #weekly-grid .slot {
-        height: auto !important;
-        min-height: ${normalH}px !important;
-      }
-      #weekly-grid .header.time {
-        height: ${normalH}px !important;
-        min-height: ${normalH}px !important;
-      }
-      #weekly-grid .header.top-header {
-        height: ${smallH}px !important;
-        min-height: ${smallH}px !important;
-        line-height: 1.1 !important;
-        padding-top: 4px !important;
-        padding-bottom: 4px !important;
-      }
-      #weekly-grid .header.interval-time,
-      #weekly-grid .header.interval-merge {
-        height: ${smallH}px !important;
-        min-height: ${smallH}px !important;
-        line-height: 1.1 !important;
-        padding-top: 4px !important;
-        padding-bottom: 4px !important;
-      }
+      #weekly-grid .slot { height: auto !important; min-height: ${normalH}px !important; }
+      #weekly-grid .header.time { height: ${normalH}px !important; min-height: ${normalH}px !important; }
+      #weekly-grid .header.top-header { height: ${smallH}px !important; min-height: ${smallH}px !important; line-height: 1.1 !important; padding-top: 4px !important; padding-bottom: 4px !important; }
+      #weekly-grid .header.interval-time, #weekly-grid .header.interval-merge { height: ${smallH}px !important; min-height: ${smallH}px !important; line-height: 1.1 !important; padding-top: 4px !important; padding-bottom: 4px !important; }
     `;
   });
 }
@@ -238,9 +200,7 @@ function setupMultiDocenteUI() {
     const containerMulti = document.getElementById('container-multi-docente');
     const btnAddRow = document.getElementById('btn-add-docente-row');
 
-    if(containerMulti.querySelector('.teacher-row') === null) {
-        addTeacherRow(); 
-    }
+    if(containerMulti.querySelector('.teacher-row') === null) { addTeacherRow(); }
 
     chk.addEventListener('change', () => {
         if(chk.checked) {
@@ -254,10 +214,7 @@ function setupMultiDocenteUI() {
 
     btnAddRow.addEventListener('click', () => {
         const rows = containerMulti.querySelectorAll('.teacher-row');
-        if(rows.length >= 4) {
-            alert("Máximo de 4 professores permitidos.");
-            return;
-        }
+        if(rows.length >= 4) { alert("Máximo de 4 professores permitidos."); return; }
         addTeacherRow();
     });
 }
@@ -266,24 +223,18 @@ function addTeacherRow(nome = '', ch = '') {
     const list = document.getElementById('multi-docente-list');
     const div = document.createElement('div');
     div.className = 'teacher-row';
-
     div.innerHTML = `
         <input type="text" class="inp-multi-name" list="list-docentes" placeholder="Nome" value="${nome}">
         <input type="number" class="inp-multi-ch" placeholder="CH" min="1" value="${ch}">
         <button type="button" class="btn-remove-row" title="Remover">×</button>
     `;
-
     div.querySelector('.btn-remove-row').onclick = () => {
         if(list.querySelectorAll('.teacher-row').length > 1) {
-            div.remove();
-            updateTotalCHDisplay();
+            div.remove(); updateTotalCHDisplay();
         } else {
-            div.querySelector('.inp-multi-name').value = '';
-            div.querySelector('.inp-multi-ch').value = '';
-            updateTotalCHDisplay();
+            div.querySelector('.inp-multi-name').value = ''; div.querySelector('.inp-multi-ch').value = ''; updateTotalCHDisplay();
         }
     };
-
     div.querySelector('.inp-multi-ch').addEventListener('input', updateTotalCHDisplay);
     list.appendChild(div);
 }
@@ -297,40 +248,20 @@ function updateTotalCHDisplay() {
 
 function getDocenteData() {
     const isMulti = document.getElementById('chk-multi-docente').checked;
-    
     if (!isMulti) {
         const nome = inputConfig.docente.value.trim();
-        return {
-            mode: 'single',
-            isValid: !!nome,
-            docente: nome,
-            docentesList: null
-        };
+        return { mode: 'single', isValid: !!nome, docente: nome, docentesList: null };
     } else {
         const rows = document.querySelectorAll('.teacher-row');
-        const list = [];
-        let totalCH = 0;
-
+        const list = []; let totalCH = 0;
         rows.forEach(r => {
             const nome = r.querySelector('.inp-multi-name').value.trim();
             const ch = parseInt(r.querySelector('.inp-multi-ch').value || 0);
-            if(nome && ch > 0) {
-                list.push({ nome, ch });
-                totalCH += ch;
-            }
+            if(nome && ch > 0) { list.push({ nome, ch }); totalCH += ch; }
         });
-
         if(list.length === 0) return { isValid: false };
-
         const nomeComposto = list.map(d => d.nome.split(' ')[0]).join(' / ');
-
-        return {
-            mode: 'multi',
-            isValid: true,
-            docente: nomeComposto + ' (Múltiplos)', 
-            docentesList: list,
-            totalCH: totalCH
-        };
+        return { mode: 'multi', isValid: true, docente: nomeComposto + ' (Múltiplos)', docentesList: list, totalCH: totalCH };
     }
 }
 
@@ -338,13 +269,9 @@ function renderIntensiveSlots() {
     const container = document.getElementById('slots-checkboxes');
     if (!container) return;
     container.innerHTML = '';
-
     const slots = buildHorariosForUI(); 
-    const validSlots = slots
-        .filter(s => !s.toLowerCase().includes('intervalo'))
-        .sort((a, b) => timeToMinutes(a) - timeToMinutes(b));
-
-    validSlots.forEach((slotLabel, idx) => {
+    const validSlots = slots.filter(s => !s.toLowerCase().includes('intervalo')).sort((a, b) => timeToMinutes(a) - timeToMinutes(b));
+    validSlots.forEach((slotLabel) => {
         const wrapper = document.createElement('label');
         const checkbox = document.createElement('input');
         checkbox.type = 'checkbox';
@@ -359,20 +286,14 @@ function renderIntensiveSlots() {
 function getCheckedSlots() {
     const container = document.getElementById('slots-checkboxes');
     if (!container) return [];
-    
     const checked = [];
-    container.querySelectorAll('input[type="checkbox"]:checked').forEach(cb => {
-        checked.push(cb.value);
-    });
+    container.querySelectorAll('input[type="checkbox"]:checked').forEach(cb => { checked.push(cb.value); });
     return checked;
 }
 
 function getBlockedWeekdaysForTurma(turmaId) {
     if (!turmaId) return [];
-    const prioritaria = store.allocations.filter(a => 
-        String(a.turmaId) === String(turmaId) && 
-        a.tipo === 'regular_prioritaria'
-    );
+    const prioritaria = store.allocations.filter(a => String(a.turmaId) === String(turmaId) && a.tipo === 'regular_prioritaria');
     return [...new Set(prioritaria.map(a => parseInt(a.diaSemana)))];
 }
 
@@ -390,49 +311,38 @@ function getDisciplinaCHGlobal(disciplina, turmaId) {
     return 0;
 }
 
-// NOVA FUNÇÃO: Calcula a Carga Horária Total do Professor selecionado
+function getTurmaLabel(turmaId) {
+    if (store.rawData?.turmas) {
+        const t = store.rawData.turmas.find(x => String(x.turma_id) === String(turmaId));
+        if (t) return t.turma_label;
+    }
+    return turmaId;
+}
+
 function calculateTeacherTotalCH(teacherName) {
     if (!teacherName) return 0;
-    
     let totalCH = 0;
     const handledGroups = new Set();
-
     store.allocations.forEach(a => {
         const groupKey = `${a.turmaId}|${a.disciplina}`;
-        
-        // Garante que só vamos contar a Carga Horária da disciplina UMA vez,
-        // mesmo que ela tenha 4 horários ocupados na grade semanal
         if (!handledGroups.has(groupKey)) {
             let teacherCH = 0;
-            
-            // Verifica se a matéria tem múltiplos professores
             if (a.docentes && a.docentes.length > 0) {
                 const tInfo = a.docentes.find(d => d.nome === teacherName);
-                if (tInfo) {
-                    teacherCH = parseInt(tInfo.ch) || 0;
-                }
-            } 
-            // Verifica se o professor assumiu a matéria toda sozinho
-            else if (a.docente === teacherName) {
+                if (tInfo) { teacherCH = parseInt(tInfo.ch) || 0; }
+            } else if (a.docente === teacherName) {
                 teacherCH = getDisciplinaCHGlobal(a.disciplina, a.turmaId);
             }
-
-            if (teacherCH > 0) {
-                totalCH += teacherCH;
-                handledGroups.add(groupKey);
-            }
+            if (teacherCH > 0) { totalCH += teacherCH; handledGroups.add(groupKey); }
         }
     });
-    
     return totalCH;
 }
 
-// MOTOR DE SINCRONIZAÇÃO TOTAL 
 function syncAllRegularDates() {
     const termStart = store.settings.termStart || '2025-01-01';
     const termEnd = store.settings.termEnd || '2025-12-31';
     const feriadosSet = new Set((store.rawData?.feriados || []).map(f => f.data || f));
-    
     const regularGroups = {};
     store.allocations.forEach(a => {
         if (a.tipo === 'regular' || a.tipo === 'regular_prioritaria') {
@@ -441,21 +351,14 @@ function syncAllRegularDates() {
             regularGroups[key].push(a);
         }
     });
-    
     Object.keys(regularGroups).forEach(key => {
         const group = regularGroups[key];
         const turmaId = group[0].turmaId;
         const disciplina = group[0].disciplina;
-        
         const maxCH = getDisciplinaCHGlobal(disciplina, turmaId);
         if (maxCH === 0) return;
-        
-        let startDate = group.reduce((min, a) => {
-            const s = a.dataInicio || termStart;
-            return s < min ? s : min;
-        }, "2099-12-31");
+        let startDate = group.reduce((min, a) => { const s = a.dataInicio || termStart; return s < min ? s : min; }, "2099-12-31");
         if (startDate === "2099-12-31") startDate = termStart;
-        
         let classesFound = 0;
         let currentDate = new Date(startDate + "T12:00:00");
         let lastValidDate = new Date(currentDate);
@@ -464,43 +367,28 @@ function syncAllRegularDates() {
         while (classesFound < maxCH && loops < 365) {
             const dow = currentDate.getDay();
             const dStr = currentDate.toISOString().split('T')[0];
-            
             const slotsToday = group.filter(a => parseInt(a.diaSemana) === dow);
-            
             if (slotsToday.length > 0 && !feriadosSet.has(dStr)) {
                 slotsToday.forEach(slot => {
                     const isSuspended = store.allocations.some(other => {
                         if (String(other.turmaId) !== String(turmaId)) return false;
-                        
                         const oStart = other.dataInicio || termStart;
                         const oEnd = other.dataFim || termEnd;
                         if (dStr < oStart || dStr > oEnd) return false;
-                        
                         if (other.tipo === 'intensiva' && other.horariosOcupados && other.horariosOcupados.includes(slot.horario)) return true;
                         if (other.tipo === 'regular_prioritaria' && parseInt(other.diaSemana) === dow && other.horario === slot.horario && other.id !== slot.id) return true;
-                        
                         return false;
                     });
-                    
-                    if (!isSuspended) {
-                        classesFound++;
-                        lastValidDate = new Date(currentDate); 
-                    }
+                    if (!isSuspended) { classesFound++; lastValidDate = new Date(currentDate); }
                 });
             }
-            
             if (classesFound >= maxCH) break;
             currentDate.setDate(currentDate.getDate() + 1);
             loops++;
         }
-        
         const finalEndStr = lastValidDate.toISOString().split('T')[0];
-        
-        group.forEach(a => {
-            a.dataFim = finalEndStr;
-        });
+        group.forEach(a => { a.dataFim = finalEndStr; });
     });
-    
     store.saveAllocations();
 }
 
@@ -513,9 +401,7 @@ function getSuspendedDates(allocs, turmaId, diaSemana, horario, startDate) {
         if (a.tipo === 'regular_prioritaria' && parseInt(a.diaSemana) === parseInt(diaSemana) && a.horario === horario) return true;
         return false;
     });
-    
     if (blockers.length === 0) return [];
-
     let curDt = new Date(startDate + "T12:00:00");
     for (let i = 0; i < 365; i++) {
         if (curDt.getDay() === parseInt(diaSemana)) {
@@ -553,9 +439,7 @@ function initPeriodoLetivoETurno() {
 
   if (selPeriodo) {
       if (store.settings.periodo) selPeriodo.value = store.settings.periodo;
-      selPeriodo.addEventListener('change', () => {
-          store.setPeriodo(selPeriodo.value);
-      });
+      selPeriodo.addEventListener('change', () => { store.setPeriodo(selPeriodo.value); });
   }
 
   if (calStart && store.settings.termStart) calStart.value = store.settings.termStart;
@@ -569,7 +453,6 @@ function initPeriodoLetivoETurno() {
       renderOfertasList();
     });
   }
-
   if (inpTermEnd) {
     inpTermEnd.addEventListener('change', () => {
       store.setTermDates(store.settings.termStart, inpTermEnd.value);
@@ -577,7 +460,6 @@ function initPeriodoLetivoETurno() {
       renderOfertasList();
     });
   }
-
   if (calStart) {
     calStart.addEventListener('change', () => {
       store.setTermDates(calStart.value, store.settings.termEnd || (calEnd ? calEnd.value : ''));
@@ -585,7 +467,6 @@ function initPeriodoLetivoETurno() {
       renderOfertasList();
     });
   }
-
   if (calEnd) {
     calEnd.addEventListener('change', () => {
       store.setTermDates(store.settings.termStart || (calStart ? calStart.value : ''), calEnd.value);
@@ -593,15 +474,12 @@ function initPeriodoLetivoETurno() {
       renderOfertasList();
     });
   }
-
   if (selTurnoOferta) {
     selTurnoOferta.addEventListener('change', () => {
       store.setTurnoOferta(selTurnoOferta.value);
       renderWeeklyGrid();
       renderOfertasList();
-      if (inputConfig.tipo && inputConfig.tipo.value === 'intensiva') {
-          renderIntensiveSlots();
-      }
+      if (inputConfig.tipo && inputConfig.tipo.value === 'intensiva') { renderIntensiveSlots(); }
     });
   }
 }
@@ -619,19 +497,14 @@ export function initUI() {
       const divData = document.getElementById('datas-intensiva');
       const divSlots = document.getElementById('container-slots-selection');
       const isIntensive = (e.target.value === 'intensiva');
-
       divData.classList.remove('hidden');
-
       if (isIntensive) {
         divSlots.classList.remove('hidden');
         renderIntensiveSlots();
       } else {
         divSlots.classList.add('hidden');
       }
-
-      if (store.settings.termStart && inputConfig.inicio) {
-          inputConfig.inicio.value = store.settings.termStart;
-      }
+      if (store.settings.termStart && inputConfig.inicio) { inputConfig.inicio.value = store.settings.termStart; }
     });
   }
 
@@ -654,46 +527,55 @@ export function initUI() {
   const btnGerarCal = document.getElementById('btn-gerar-cal');
   if (btnGerarCal) btnGerarCal.addEventListener('click', renderMonthlyCalendar);
 
-  // =========================================================================
-  // MAGIA DO NOME DO PDF: Altera o title antes de imprimir e restaura rápido
-  // =========================================================================
+  const btnGantt = document.getElementById('btn-gerar-gantt');
+  if (btnGantt) { btnGantt.addEventListener('click', renderGanttChart); }
+
   const btnPrint = document.querySelector('.btn-print');
   if (btnPrint) {
       btnPrint.removeAttribute('onclick'); 
       btnPrint.addEventListener('click', () => {
           const originalTitle = document.title;
-          
           let turmaLabel = store.selectedTurma || 'GERAL';
           if (store.rawData?.turmas) {
               const t = store.rawData.turmas.find(x => String(x.turma_id) === String(store.selectedTurma));
               if (t) turmaLabel = t.turma_label;
           }
-          
           const periodo = store.settings.periodo || '1P';
           const activeTab = document.querySelector('.tab-btn.active')?.dataset.tab;
           
           if (activeTab === 'teacher' && selViewDocente && selViewDocente.value) {
               document.title = `${selViewDocente.value}_${periodo}_Gestor_IECOS_Coordenacoes(v2.0 Dev)`;
+          } else if (activeTab === 'gantt') {
+              const ganttProf = document.getElementById('inp-gantt-docente')?.value || 'Gantt';
+              document.title = `Gantt_${ganttProf}_${periodo}_Gestor_IECOS`;
           } else {
               document.title = `${turmaLabel}_${periodo}_Gestor_IECOS_Coordenacoes(v2.0 Dev)`;
           }
-
           window.print();
-
           setTimeout(() => { document.title = originalTitle; }, 1000);
       });
   }
 
   if (selViewDocente) {
-    selViewDocente.addEventListener('change', () => {
-        renderTeacherCalendar();
-        selViewDocente.blur();
-    });
-    selViewDocente.addEventListener('input', () => {
-        if (!selViewDocente.value) {
-            document.getElementById('teacher-calendar-container').innerHTML = '';
-        }
-    });
+    selViewDocente.addEventListener('change', () => { renderTeacherCalendar(); selViewDocente.blur(); });
+    selViewDocente.addEventListener('input', () => { if (!selViewDocente.value) { document.getElementById('teacher-calendar-container').innerHTML = ''; } });
+  }
+
+  const inpGanttDocente = document.getElementById('inp-gantt-docente');
+  if (inpGanttDocente) {
+      if (!inpGanttDocente.parentNode.classList.contains('input-wrapper-gantt')) {
+          const wrapper = document.createElement('div');
+          wrapper.className = 'input-wrapper-gantt';
+          wrapper.style.position = 'relative';
+          wrapper.style.display = 'inline-block';
+          inpGanttDocente.parentNode.insertBefore(wrapper, inpGanttDocente);
+          wrapper.appendChild(inpGanttDocente);
+      }
+      addClearXToField(inpGanttDocente, 'inp-gantt-docente');
+  }
+
+  if (selViewDocente && inpGanttDocente) {
+      selViewDocente.addEventListener('change', () => { inpGanttDocente.value = selViewDocente.value; });
   }
 
   const inpImport = document.getElementById('inp-import');
@@ -727,13 +609,7 @@ export function initUI() {
   }
 
   const btnCancel = document.getElementById('btn-modal-cancel');
-  if (btnCancel) {
-    btnCancel.addEventListener('click', () => {
-      tempImportData = null;
-      if (inpImport) inpImport.value = '';
-      closeModal();
-    });
-  }
+  if (btnCancel) { btnCancel.addEventListener('click', () => { tempImportData = null; if (inpImport) inpImport.value = ''; closeModal(); }); }
 
   populateCursos();
   populateDocentes();
@@ -742,7 +618,6 @@ export function initUI() {
 function handleFileSelect(event) {
   const file = event.target.files[0];
   if (!file) return;
-
   const reader = new FileReader();
   reader.onload = function (e) {
     try {
@@ -751,7 +626,6 @@ function handleFileSelect(event) {
       if (modal) modal.style.display = 'flex';
     } catch (err) {
       alert('Erro ao ler arquivo JSON. Verifique o formato.');
-      console.error(err);
     }
   };
   reader.readAsText(file);
@@ -767,12 +641,10 @@ function closeModal() {
 
 function populateCursos() {
   if (!store.rawData || !selCurso) return;
-
   selCurso.innerHTML = '<option value="">Selecione...</option>';
   (store.rawData.cursos || []).forEach((c) => {
     selCurso.innerHTML += `<option value="${c.sigla}">${c.curso}</option>`;
   });
-  
   if (store.settings.lastCurso) {
       selCurso.value = store.settings.lastCurso;
       onCursoChange(); 
@@ -783,16 +655,12 @@ function onCursoChange() {
   const cursoSigla = selCurso.value;
   store.selectedCurso = cursoSigla;
   store.setLastContext(cursoSigla, null); 
-
   selTurma.disabled = !cursoSigla;
   selTurma.innerHTML = '<option value="">Selecione uma Turma</option>';
 
   if (cursoSigla && store.rawData?.turmas) {
     const turmas = store.rawData.turmas.filter((t) => t.sigla === cursoSigla);
-    turmas.forEach((t) => {
-      selTurma.innerHTML += `<option value="${t.turma_id}">${t.turma_label}</option>`;
-    });
-    
+    turmas.forEach((t) => { selTurma.innerHTML += `<option value="${t.turma_id}">${t.turma_label}</option>`; });
     if (store.settings.lastTurma) {
         if (turmas.some(t => t.turma_id === store.settings.lastTurma)) {
              selTurma.value = store.settings.lastTurma;
@@ -803,11 +671,7 @@ function onCursoChange() {
     store.selectedTurma = '';
   }
   updateDisciplinaDatalist();
-  
-  if (inputConfig.inicio && store.settings.termStart) {
-      inputConfig.inicio.value = store.settings.termStart;
-  }
-  
+  if (inputConfig.inicio && store.settings.termStart) { inputConfig.inicio.value = store.settings.termStart; }
   renderWeeklyGrid();
   renderOfertasList();
 }
@@ -816,7 +680,6 @@ function updateDisciplinaDatalist() {
   if (!listDisciplinas) return;
   listDisciplinas.innerHTML = '';
   if (!store.selectedCurso || !store.rawData?.componentes) return;
-
   const comps = store.rawData.componentes.filter((c) => c.sigla === store.selectedCurso);
   comps.forEach((c) => {
     const opt = document.createElement('option');
@@ -830,20 +693,14 @@ function updateDisciplinaDatalist() {
 function populateDocentes() {
   if (!store.rawData?.docentes) return;
   const nomes = [...new Set(store.rawData.docentes.map((d) => d.docente))].sort();
-
   if (listDocentes) {
     listDocentes.innerHTML = '';
-    nomes.forEach((nome) => {
-      listDocentes.appendChild(new Option(nome, nome));
-    });
+    nomes.forEach((nome) => { listDocentes.appendChild(new Option(nome, nome)); });
   }
-
   const listView = document.getElementById('list-view-docentes');
   if (listView) {
     listView.innerHTML = '';
-    nomes.forEach((nome) => {
-      listView.appendChild(new Option(nome, nome));
-    });
+    nomes.forEach((nome) => { listView.appendChild(new Option(nome, nome)); });
   }
 }
 
@@ -856,7 +713,7 @@ function onTurmaChange() {
   
   if (primeiraAula) {
       const hora = parseInt(primeiraAula.horario.split(':')[0]);
-      if (hora < 12) store.setTurnoOferta('Manhã');
+      if (hora < 13) store.setTurnoOferta('Manhã');
       else store.setTurnoOferta('Tarde'); 
   } 
   else if (store.rawData?.turmas && store.selectedTurma) {
@@ -867,24 +724,13 @@ function onTurmaChange() {
   const intensivas = alocacoesTurma.filter(a => a.tipo === 'intensiva' && a.dataInicio);
   if (intensivas.length > 0) {
       const datas = intensivas.map(a => a.dataInicio).sort();
-      if (calStart && datas[0] < calStart.value) {
-          calStart.value = datas[0];
-          calStart.dispatchEvent(new Event('change')); 
-      }
+      if (calStart && datas[0] < calStart.value) { calStart.value = datas[0]; calStart.dispatchEvent(new Event('change')); }
       const dataFim = intensivas.map(a => a.dataFim).sort().pop();
-      if (calEnd && dataFim > calEnd.value) {
-          calEnd.value = dataFim;
-          calEnd.dispatchEvent(new Event('change'));
-      }
+      if (calEnd && dataFim > calEnd.value) { calEnd.value = dataFim; calEnd.dispatchEvent(new Event('change')); }
   }
 
-  if (selTurnoOferta) {
-      selTurnoOferta.value = store.settings.turnoOferta || 'Tarde';
-  }
-
-  if (inputConfig.inicio && store.settings.termStart) {
-      inputConfig.inicio.value = store.settings.termStart;
-  }
+  if (selTurnoOferta) { selTurnoOferta.value = store.settings.turnoOferta || 'Tarde'; }
+  if (inputConfig.inicio && store.settings.termStart) { inputConfig.inicio.value = store.settings.termStart; }
 
   renderWeeklyGrid();
   renderOfertasList();
@@ -892,11 +738,7 @@ function onTurmaChange() {
 
 function getDisciplinaInfo(nomeComponente) {
   if (!store.rawData?.componentes) return { abrev: nomeComponente, ch: 0 };
-  const c =
-    store.rawData.componentes.find(
-      (x) => x.componente === nomeComponente && x.sigla === store.selectedCurso
-    ) || store.rawData.componentes.find((x) => x.componente === nomeComponente);
-
+  const c = store.rawData.componentes.find((x) => x.componente === nomeComponente && x.sigla === store.selectedCurso) || store.rawData.componentes.find((x) => x.componente === nomeComponente);
   if (c) return { abrev: c.abreviacao || c.componente, ch: c.ch || 0 };
   return { abrev: nomeComponente, ch: 0 };
 }
@@ -904,7 +746,6 @@ function getDisciplinaInfo(nomeComponente) {
 function renderWeeklyGrid() {
   if (!gridContainer) return;
   gridContainer.innerHTML = '';
-
   const horariosUI = buildHorariosForUI();
   const dias = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
 
@@ -929,8 +770,6 @@ function renderWeeklyGrid() {
   horariosUI.forEach((horarioStr) => {
     const isIntervalo = horarioStr.toUpperCase().includes('INTERVALO');
     const labelPrimeiraColuna = isIntervalo ? cleanHorarioLabel(horarioStr) : horarioStr;
-    const isSeparadorTurno = horarioStr.includes('12:00'); 
-
     const hDiv = createCell(isIntervalo ? 'header interval-time' : 'header time', labelPrimeiraColuna);
     if (isIntervalo) hDiv.style.background = '#e0e0e0';
     gridContainer.appendChild(hDiv);
@@ -948,22 +787,13 @@ function renderWeeklyGrid() {
         cell.dataset.dia = i;
         cell.dataset.horario = horarioStr;
         
-        const allocs = store.allocations.filter(
-          (a) =>
-            String(a.turmaId) === String(store.selectedTurma) &&
-            (a.tipo === 'regular' || a.tipo === 'regular_prioritaria') &&
-            a.diaSemana == i &&
-            a.horario === horarioStr
-        );
-
+        const allocs = store.allocations.filter((a) => String(a.turmaId) === String(store.selectedTurma) && (a.tipo === 'regular' || a.tipo === 'regular_prioritaria') && a.diaSemana == i && a.horario === horarioStr);
         if (allocs.length > 0) renderSlotContent(cell, allocs);
-
         cell.addEventListener('click', () => handleSlotClick(i, horarioStr));
         gridContainer.appendChild(cell);
       }
     }
   });
-
   applyWeeklyGridRowHeightScale(0.63, 0.6);
 }
 
@@ -978,80 +808,49 @@ function renderSlotContent(cell, allocs) {
     cell.innerHTML = '';
     const container = document.createElement('div');
     container.className = 'mini-card-container';
-
     allocs.forEach(alloc => {
         const info = getDisciplinaInfo(alloc.disciplina);
         const card = document.createElement('div');
         const docenteNome = (alloc.docente || '').split(' ')[0] || '';
-        
         card.className = 'mini-card';
         card.style.backgroundColor = alloc.cor;
-        if (alloc.tipo === 'regular_prioritaria') {
-            card.style.border = '2px dashed #000';
-        }
-
-        // Layout horizontal para o texto
+        if (alloc.tipo === 'regular_prioritaria') { card.style.border = '2px dashed #000'; }
         card.innerHTML = `
             <div class="card-title" title="${alloc.disciplina}" style="display:inline;">
                 ${info.abrev} - <span class="card-docente" style="font-weight:normal;">${docenteNome}</span>
             </div>
             <span class="remove-btn" title="Remover">×</span>
         `;
-
         card.querySelector('.remove-btn').onclick = (e) => {
             e.stopPropagation();
-            if (confirm(`Remover alocação de ${alloc.disciplina}?`)) {
-                store.removeAllocation(alloc.id);
-                syncAllRegularDates();
-                renderWeeklyGrid();
-                renderOfertasList();
-            }
+            if (confirm(`Remover alocação de ${alloc.disciplina}?`)) { store.removeAllocation(alloc.id); syncAllRegularDates(); renderWeeklyGrid(); renderOfertasList(); }
         };
-
         container.appendChild(card);
     });
-
     cell.appendChild(container);
-}
-
-function checkTeacherConflict(docente, dia, horario) {
-  return store.allocations.find((a) => a.docente === docente && a.diaSemana == dia && a.horario === horario);
 }
 
 function handleSlotClick(dia, horario) {
   if (!store.selectedTurma) return alert('Selecione uma turma.');
-
   const disciplina = (inputConfig.disciplina?.value ?? '').replace(/\s*\(\s*\d+\s*h\s*\)\s*$/i, '');
   if (!disciplina) return alert('Preencha a Disciplina.');
-
   const docData = getDocenteData();
   if (!docData.isValid) return alert('Preencha o(s) Docente(s).');
-
   const info = getDisciplinaInfo(disciplina);
   const maxCH = parseInt(info.ch) || 0;
   
-  if (docData.mode === 'multi' && docData.totalCH > maxCH) {
-      return alert(`A soma das horas (${docData.totalCH}h) ultrapassa a carga horária da disciplina (${maxCH}h).`);
-  }
+  if (docData.mode === 'multi' && docData.totalCH > maxCH) { return alert(`A soma das horas (${docData.totalCH}h) ultrapassa a carga horária da disciplina (${maxCH}h).`); }
 
   const tipo = inputConfig.tipo?.value ?? 'regular';
   if (tipo === 'intensiva') return alert('Para intensivas, configure as datas no menu e clique em "Adicionar à Grade".');
 
-  const existingInSlot = store.allocations.filter(a => 
-    String(a.turmaId) === String(store.selectedTurma) && a.diaSemana == dia && a.horario === horario
-  );
-
+  const existingInSlot = store.allocations.filter(a => String(a.turmaId) === String(store.selectedTurma) && a.diaSemana == dia && a.horario === horario);
   let dataInicio = inputConfig.inicio?.value;
   
   if (!dataInicio || dataInicio === store.settings.termStart) {
       if (existingInSlot.length > 0) {
-          const latestEnd = existingInSlot.reduce((max, a) => {
-              const aEnd = a.dataFim || store.settings.termEnd;
-              return aEnd > max ? aEnd : max;
-          }, "2000-01-01");
-          
-          const nextDay = new Date(latestEnd + "T12:00:00");
-          nextDay.setDate(nextDay.getDate() + 1);
+          const latestEnd = existingInSlot.reduce((max, a) => { const aEnd = a.dataFim || store.settings.termEnd; return aEnd > max ? aEnd : max; }, "2000-01-01");
+          const nextDay = new Date(latestEnd + "T12:00:00"); nextDay.setDate(nextDay.getDate() + 1);
           dataInicio = nextDay.toISOString().split('T')[0];
       } else {
           dataInicio = store.settings.termStart;
@@ -1061,8 +860,7 @@ function handleSlotClick(dia, horario) {
   const overlap = existingInSlot.find(a => {
       const startA = a.dataInicio || store.settings.termStart;
       const endA = a.dataFim || store.settings.termEnd;
-      const tempEnd = new Date(dataInicio + "T12:00:00");
-      tempEnd.setDate(tempEnd.getDate() + 7);
+      const tempEnd = new Date(dataInicio + "T12:00:00"); tempEnd.setDate(tempEnd.getDate() + 7);
       return isDateOverlap(dataInicio, tempEnd.toISOString().split('T')[0], startA, endA);
   });
 
@@ -1077,34 +875,16 @@ function handleSlotClick(dia, horario) {
       if (a.docente !== mainProf || a.diaSemana != dia || a.horario !== horario) return false;
       const startA = a.dataInicio || store.settings.termStart;
       const endA = a.dataFim || store.settings.termEnd;
-      const tempEnd = new Date(dataInicio + "T12:00:00");
-      tempEnd.setDate(tempEnd.getDate() + 7);
+      const tempEnd = new Date(dataInicio + "T12:00:00"); tempEnd.setDate(tempEnd.getDate() + 7);
       return isDateOverlap(dataInicio, tempEnd.toISOString().split('T')[0], startA, endA);
   });
 
-  if (conflitoDocente) {
-    if (!confirm(`O professor ${mainProf} já está ocupado nesta faixa de datas. Continuar?`)) return;
-  }
+  if (conflitoDocente) { if (!confirm(`O professor ${mainProf} já está ocupado nesta faixa de datas. Continuar?`)) return; }
 
-  store.addAllocation({
-    turmaId: store.selectedTurma,
-    disciplina,
-    docente: docData.docente, 
-    docentes: docData.docentesList, 
-    tipo: tipo, 
-    diaSemana: dia,
-    horario,
-    dataInicio: dataInicio,
-    dataFim: dataInicio, 
-    cor: inputConfig.cor ? inputConfig.cor.value : store.getDisciplinaColor(disciplina)
-  });
-
-  syncAllRegularDates();
-  renderWeeklyGrid();
-  renderOfertasList();
+  store.addAllocation({ turmaId: store.selectedTurma, disciplina, docente: docData.docente, docentes: docData.docentesList, tipo: tipo, diaSemana: dia, horario, dataInicio: dataInicio, dataFim: dataInicio, cor: inputConfig.cor ? inputConfig.cor.value : store.getDisciplinaColor(disciplina) });
+  syncAllRegularDates(); renderWeeklyGrid(); renderOfertasList();
 
   if (window.overlapWarningTimeout) clearTimeout(window.overlapWarningTimeout);
-
   if (store.settings.termEnd) {
       window.overlapWarningTimeout = setTimeout(() => {
           const slotsDesta = store.allocations.filter(a => a.disciplina === disciplina && String(a.turmaId) === String(store.selectedTurma));
@@ -1117,10 +897,8 @@ function handleSlotClick(dia, horario) {
 
 function handleAddManual() {
   if (!store.selectedTurma) return alert('Selecione uma turma.');
-  
   const docData = getDocenteData();
   if (!docData.isValid) return alert('Preencha o(s) Docente(s).');
-
   const disciplina = (inputConfig.disciplina?.value ?? '').replace(/\s*\(\s*\d+\s*h\s*\)\s*$/i, '');
   const tipo = inputConfig.tipo?.value ?? 'regular';
   const inicio = inputConfig.inicio?.value ?? '';
@@ -1129,15 +907,10 @@ function handleAddManual() {
 
   if (tipo === 'intensiva') {
     if (!inicio) return alert('Defina a data de início.');
-
     const info = getDisciplinaInfo(disciplina);
     const ch = info.ch || 0;
     if (ch === 0) return alert(`O componente "${disciplina}" tem CH 0.`);
-
-    if(docData.mode === 'multi' && docData.totalCH > ch) {
-        alert(`A soma das cargas horárias excede a CH da disciplina.`);
-        return;
-    }
+    if(docData.mode === 'multi' && docData.totalCH > ch) { return alert(`A soma das cargas horárias excede a CH da disciplina.`); }
 
     let slotsIntensiva = getCheckedSlots();
     if (slotsIntensiva.length === 0) return alert('Selecione pelo menos um horário.');
@@ -1147,7 +920,6 @@ function handleAddManual() {
     const feriados = store.rawData?.feriados || [];
     const blockedWeekdays = getBlockedWeekdaysForTurma(store.selectedTurma);
     const dataFimCalculada = addBusinessDays(inicio, diasNecessarios, feriados, blockedWeekdays);
-
     const normalize = s => (s || '').split(/\s/)[0].replace(/[^0-9:]/g, '');
 
     const megaConflictInt = store.allocations.find(a => {
@@ -1155,17 +927,13 @@ function handleAddManual() {
         if (a.tipo !== 'intensiva' || a.disciplina === disciplina) return false; 
         if (!isDateOverlap(inicio, dataFimCalculada, a.dataInicio || store.settings.termStart, a.dataFim || store.settings.termEnd)) return false;
 
-        const newShifts = [...new Set(slotsIntensiva.map(s => timeToMinutes(s) < 12 * 60 ? 'Manhã' : 'Tarde'))];
-        const existingShifts = [...new Set((a.horariosOcupados || []).map(s => timeToMinutes(s) < 12 * 60 ? 'Manhã' : 'Tarde'))];
+        const newShifts = [...new Set(slotsIntensiva.map(s => timeToMinutes(s) < 780 ? 'Manhã' : 'Tarde'))];
+        const existingShifts = [...new Set((a.horariosOcupados || []).map(s => timeToMinutes(s) < 780 ? 'Manhã' : 'Tarde'))];
         const hasOverlap = newShifts.some(shift => existingShifts.includes(shift));
-        
         return hasOverlap && (slotsIntensiva.length >= 5 || (a.horariosOcupados || []).length >= 5);
     });
 
-    if (megaConflictInt) {
-        alert(`⚠️ TURNO BLOQUEADO por uma Intensiva de 5+ horas.`);
-        return;
-    }
+    if (megaConflictInt) return alert(`⚠️ TURNO BLOQUEADO por uma Intensiva de 5+ horas.`);
 
     let idToRemove = null;
     const conflitoIntensiva = store.allocations.find(a => {
@@ -1177,95 +945,53 @@ function handleAddManual() {
     });
 
     if (conflitoIntensiva) idToRemove = conflitoIntensiva.id;
-
     const actionText = idToRemove ? "Atualizar alocação existente?" : "Confirmar alocação?";
     if (!confirm(`${disciplina} (${formatDateBR(inicio)} a ${formatDateBR(dataFimCalculada)})\n\n${actionText}`)) return;
 
     if (idToRemove) store.removeAllocation(idToRemove);
 
-    store.addAllocation({
-      turmaId: store.selectedTurma,
-      disciplina: disciplina,
-      docente: docData.docente, 
-      docentes: docData.docentesList, 
-      tipo: 'intensiva', 
-      dataInicio: inicio,
-      dataFim: dataFimCalculada,
-      modelo: 'Automático',
-      horariosOcupados: slotsIntensiva,
-      cor: inputConfig.cor ? inputConfig.cor.value : store.getDisciplinaColor(disciplina)
-    });
-
-    syncAllRegularDates();
-    renderOfertasList();
-    
+    store.addAllocation({ turmaId: store.selectedTurma, disciplina: disciplina, docente: docData.docente, docentes: docData.docentesList, tipo: 'intensiva', dataInicio: inicio, dataFim: dataFimCalculada, modelo: 'Automático', horariosOcupados: slotsIntensiva, cor: inputConfig.cor ? inputConfig.cor.value : store.getDisciplinaColor(disciplina) });
+    syncAllRegularDates(); renderOfertasList();
   } else {
     alert('Para regular, clique na grade.');
   }
 }
 
-function getInputValues() {
-  return {
-    disciplina: (inputConfig.disciplina?.value ?? '').replace(/\s*\(\s*\d+\s*h\s*\)\s*$/i, ''),
-    docente: inputConfig.docente?.value ?? '',
-    tipo: inputConfig.tipo?.value ?? 'regular',
-    inicio: inputConfig.inicio?.value ?? '',
-    fim: inputConfig.fim?.value ?? ''
-  };
-}
-
 function renderOfertasList() {
   const tbody = document.querySelector('#ofertas-table tbody');
   if (!tbody) return;
-
   tbody.innerHTML = '';
   const list = store.allocations.filter((a) => String(a.turmaId) === String(store.selectedTurma));
-
   const feriados = store.rawData?.feriados ? store.rawData.feriados.map((f) => f.data) : [];
   const semestreInicio = calStart ? calStart.value : '2025-01-01';
   const semestreFim = calEnd ? calEnd.value : '2025-12-31';
-
   const regular = list.filter((a) => a.tipo === 'regular' || a.tipo === 'regular_prioritaria');
   const intensivas = list.filter((a) => a.tipo === 'intensiva');
 
   intensivas.sort((a, b) => (a.dataInicio || '').localeCompare(b.dataInicio || ''));
   regular.sort((a, b) => (a.disciplina || '').localeCompare(b.disciplina || ''));
 
-  const appendSeparator = (label) => {
-    const tr = document.createElement('tr');
-    tr.className = 'month-sep';
-    tr.innerHTML = `<td colspan="6">${label}</td>`;
-    tbody.appendChild(tr);
-  };
-
-  const appendMonthSeparator = (monthKey) => {
-    const [y, m] = monthKey.split('-').map((n) => parseInt(n, 10));
-    const nomeMes = new Date(y, m - 1, 2).toLocaleString('pt-BR', { month: 'long', year: 'numeric' });
-    appendSeparator(nomeMes.toUpperCase());
-  };
+  const appendSeparator = (label) => { const tr = document.createElement('tr'); tr.className = 'month-sep'; tr.innerHTML = `<td colspan="6">${label}</td>`; tbody.appendChild(tr); };
+  const appendMonthSeparator = (monthKey) => { const [y, m] = monthKey.split('-').map((n) => parseInt(n, 10)); const nomeMes = new Date(y, m - 1, 2).toLocaleString('pt-BR', { month: 'long', year: 'numeric' }); appendSeparator(nomeMes.toUpperCase()); };
 
   const blockedWeekdays = getBlockedWeekdaysForTurma(store.selectedTurma);
+  let currentMonth = null;
 
   const appendRow = (a) => {
     const tr = document.createElement('tr');
     const info = getDisciplinaInfo(a.disciplina);
     const chMax = info.ch;
-    let totalHoras = 0;
-    let details = '';
-
-    const start = a.dataInicio || semestreInicio;
-    const end = a.dataFim || semestreFim;
+    let totalHoras = 0, details = '';
+    const start = a.dataInicio || semestreInicio, end = a.dataFim || semestreFim;
 
     if (a.tipo === 'regular' || a.tipo === 'regular_prioritaria') {
       const suspended = getSuspendedDates(store.allocations, a.turmaId, a.diaSemana, a.horario, start);
       const numAulas = countWeekdaysInPeriod(start, end, parseInt(a.diaSemana), feriados, suspended);
-      totalHoras = numAulas * 1;
-      details = `${numAulas} aulas`;
+      totalHoras = numAulas * 1; details = `${numAulas} aulas`;
     } else {
       const diasUteis = countBusinessDays(start, end, feriados, blockedWeekdays);
       const slotsPorDia = a.horariosOcupados ? a.horariosOcupados.length : 5;
-      totalHoras = diasUteis * slotsPorDia;
-      details = `${diasUteis} dias`;
+      totalHoras = diasUteis * slotsPorDia; details = `${diasUteis} dias`;
     }
 
     let color = '#2c3e50';
@@ -1277,129 +1003,57 @@ function renderOfertasList() {
 
     const chInfo = `<b style="color:${color}">${totalHoras}</b> / ${chMax}h <small>(${details})</small>`;
     const labelTipo = a.tipo === 'regular_prioritaria' ? '<b>Regular (Prioritária)</b>' : a.tipo;
-    
     let endFmt = formatDateBR(end);
-    if (store.settings.termEnd && end > store.settings.termEnd) {
-        endFmt = `<span style="color:#c0392b; font-weight:bold; font-size:1.1em;" title="Atenção: Esta data ultrapassa o fim oficial do semestre!">⚠️ ${endFmt}</span>`;
-    }
+    if (store.settings.termEnd && end > store.settings.termEnd) { endFmt = `<span style="color:#c0392b; font-weight:bold; font-size:1.1em;" title="Atenção: Esta data ultrapassa o fim oficial do semestre!">⚠️ ${endFmt}</span>`; }
     
     const horarioTxt = `${formatDateBR(start)} a ${endFmt}<br><small>${['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab'][a.diaSemana] || 'Int.'} ${a.horario || ''}</small>`;
-
     let btnHtml = `<button class="btn-danger btn-delete-row" style="padding:4px 8px; margin:0; font-size:0.85em; border-radius:3px; cursor:pointer;" title="Excluir">🗑️ Excluir</button>`;
     btnHtml = `<button class="btn-primary btn-edit-row" style="padding:4px 8px; margin:0; font-size:0.85em; background-color:#2980b9; border:none; color:white; border-radius:3px; cursor:pointer; margin-right:5px;" title="Editar">✏️ Editar</button>` + btnHtml;
 
-    tr.innerHTML = `
-      <td>${a.disciplina}</td>
-      <td>${a.docente}</td>
-      <td>${labelTipo}</td>
-      <td>${horarioTxt}</td>
-      <td style="text-align:center;">${chInfo}</td>
-      <td style="white-space:nowrap;"><div style="display:flex; justify-content:center;">${btnHtml}</div></td>
-    `;
-
-    tr.querySelector('.btn-delete-row').onclick = () => {
-      if (confirm('Remover esta oferta?')) {
-          store.removeAllocation(a.id);
-          syncAllRegularDates();
-          renderWeeklyGrid();
-          renderOfertasList();
-      }
-    };
-
+    tr.innerHTML = `<td>${a.disciplina}</td><td>${a.docente}</td><td>${labelTipo}</td><td>${horarioTxt}</td><td style="text-align:center;">${chInfo}</td><td style="white-space:nowrap;"><div style="display:flex; justify-content:center;">${btnHtml}</div></td>`;
+    tr.querySelector('.btn-delete-row').onclick = () => { if (confirm('Remover esta oferta?')) { store.removeAllocation(a.id); syncAllRegularDates(); renderWeeklyGrid(); renderOfertasList(); } };
     const btnEdit = tr.querySelector('.btn-edit-row');
     if (btnEdit) {
         btnEdit.onclick = () => {
             if (confirm('Carregar para edição? A oferta antiga será removida.')) {
-                
-                if (inputConfig.tipo) {
-                    inputConfig.tipo.value = a.tipo;
-                    inputConfig.tipo.dispatchEvent(new Event('change'));
-                }
-                
-                if (inputConfig.disciplina) {
-                    inputConfig.disciplina.value = `${a.disciplina} (${info.ch}h)`;
-                    inputConfig.disciplina.dispatchEvent(new Event('input')); 
-                }
-                
-                if (inputConfig.cor && a.cor) {
-                    inputConfig.cor.value = a.cor;
-                    setTimeout(() => {
-                        inputConfig.cor.value = a.cor;
-                    }, 50);
-                }
-                
+                if (inputConfig.tipo) { inputConfig.tipo.value = a.tipo; inputConfig.tipo.dispatchEvent(new Event('change')); }
+                if (inputConfig.disciplina) { inputConfig.disciplina.value = `${a.disciplina} (${info.ch}h)`; inputConfig.disciplina.dispatchEvent(new Event('input')); }
+                if (inputConfig.cor && a.cor) { inputConfig.cor.value = a.cor; setTimeout(() => { inputConfig.cor.value = a.cor; }, 50); }
                 if (inputConfig.inicio && a.dataInicio) inputConfig.inicio.value = a.dataInicio;
 
                 const chkMulti = document.getElementById('chk-multi-docente');
                 if (a.docentes && a.docentes.length > 0) {
-                    if (chkMulti && !chkMulti.checked) {
-                        chkMulti.checked = true;
-                        chkMulti.dispatchEvent(new Event('change'));
-                    }
+                    if (chkMulti && !chkMulti.checked) { chkMulti.checked = true; chkMulti.dispatchEvent(new Event('change')); }
                     const listMulti = document.getElementById('multi-docente-list');
-                    if (listMulti) {
-                        listMulti.innerHTML = ''; 
-                        a.docentes.forEach(d => {
-                            addTeacherRow(d.nome, d.ch);
-                        });
-                        updateTotalCHDisplay();
-                    }
+                    if (listMulti) { listMulti.innerHTML = ''; a.docentes.forEach(d => { addTeacherRow(d.nome, d.ch); }); updateTotalCHDisplay(); }
                 } else {
-                    if (chkMulti && chkMulti.checked) {
-                        chkMulti.checked = false;
-                        chkMulti.dispatchEvent(new Event('change'));
-                    }
-                    if (inputConfig.docente) {
-                        inputConfig.docente.value = a.docente || '';
-                        inputConfig.docente.dispatchEvent(new Event('input')); 
-                    }
+                    if (chkMulti && chkMulti.checked) { chkMulti.checked = false; chkMulti.dispatchEvent(new Event('change')); }
+                    if (inputConfig.docente) { inputConfig.docente.value = a.docente || ''; inputConfig.docente.dispatchEvent(new Event('input')); }
                 }
 
                 if (a.horariosOcupados) {
                     const containerSlots = document.getElementById('slots-checkboxes');
-                    if (containerSlots) {
-                        containerSlots.querySelectorAll('input[type="checkbox"]').forEach(cb => {
-                            cb.checked = a.horariosOcupados.includes(cb.value);
-                        });
-                    }
+                    if (containerSlots) { containerSlots.querySelectorAll('input[type="checkbox"]').forEach(cb => { cb.checked = a.horariosOcupados.includes(cb.value); }); }
                 }
-
-                store.removeAllocation(a.id);
-                syncAllRegularDates();
-                renderWeeklyGrid();
-                renderOfertasList();
+                store.removeAllocation(a.id); syncAllRegularDates(); renderWeeklyGrid(); renderOfertasList();
                 if (a.tipo !== 'intensiva') switchTab('weekly');
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             }
         };
     }
-
     tbody.appendChild(tr);
   };
 
-  let currentMonth = null;
   intensivas.forEach((a) => {
     const monthKey = a.dataInicio ? a.dataInicio.substring(0, 7) : '';
-    if (monthKey && monthKey !== currentMonth) {
-      appendMonthSeparator(monthKey);
-      currentMonth = monthKey;
-    }
-    if (!monthKey && currentMonth !== 'SEM DATA') {
-      appendSeparator('SEM DATA');
-      currentMonth = 'SEM DATA';
-    }
+    if (monthKey && monthKey !== currentMonth) { appendMonthSeparator(monthKey); currentMonth = monthKey; }
+    if (!monthKey && currentMonth !== 'SEM DATA') { appendSeparator('SEM DATA'); currentMonth = 'SEM DATA'; }
     appendRow(a);
   });
 
-  if (regular.length > 0) {
-    appendSeparator('AULAS REGULARES (E PRIORITÁRIAS)');
-    regular.forEach(appendRow);
-  }
-
+  if (regular.length > 0) { appendSeparator('AULAS REGULARES (E PRIORITÁRIAS)'); regular.forEach(appendRow); }
   if (intensivas.length === 0 && regular.length === 0) {
-    const tr = document.createElement('tr');
-    tr.innerHTML = `<td colspan="6" style="text-align:center; color:#666;">Nenhuma oferta cadastrada.</td>`;
-    tbody.appendChild(tr);
+    const tr = document.createElement('tr'); tr.innerHTML = `<td colspan="6" style="text-align:center; color:#666;">Nenhuma oferta cadastrada.</td>`; tbody.appendChild(tr);
   }
 }
 
@@ -1410,18 +1064,10 @@ function renderMonthlyCalendar() {
 
   const start = calStart ? calStart.value : '2025-01-01';
   let end = calEnd ? calEnd.value : '2025-12-31';
-
-  if (end) {
-      const dt = new Date(end + 'T12:00:00');
-      const lastDay = new Date(dt.getFullYear(), dt.getMonth() + 1, 0); 
-      end = lastDay.toISOString().split('T')[0];
-  }
+  if (end) { const dt = new Date(end + 'T12:00:00'); const lastDay = new Date(dt.getFullYear(), dt.getMonth() + 1, 0); end = lastDay.toISOString().split('T')[0]; }
 
   let turmaLabel = store.selectedTurma;
-  if (store.rawData?.turmas) {
-    const t = store.rawData.turmas.find((x) => String(x.turma_id) === String(store.selectedTurma));
-    if (t) turmaLabel = t.turma_label;
-  }
+  if (store.rawData?.turmas) { const t = store.rawData.turmas.find((x) => String(x.turma_id) === String(store.selectedTurma)); if (t) turmaLabel = t.turma_label; }
 
   const title = `<span class="print-title-main">Calendário Acadêmico</span><br><span class="print-title-sub">${turmaLabel}</span>`;
   generateCalendarGrid(container, store.selectedTurma, null, start, end, title);
@@ -1430,25 +1076,402 @@ function renderMonthlyCalendar() {
 function renderTeacherCalendar() {
   const container = document.getElementById('teacher-calendar-container');
   if (!container || !selViewDocente) return;
-
   const docente = selViewDocente.value;
   if (!docente) return (container.innerHTML = '<p>Selecione um professor.</p>');
 
   const start = calStart ? calStart.value : '2025-01-01';
   let end = calEnd ? calEnd.value : '2025-12-31';
+  if (end) { const dt = new Date(end + 'T12:00:00'); const lastDay = new Date(dt.getFullYear(), dt.getMonth() + 1, 0); end = lastDay.toISOString().split('T')[0]; }
 
-  if (end) {
-      const dt = new Date(end + 'T12:00:00');
-      const lastDay = new Date(dt.getFullYear(), dt.getMonth() + 1, 0);
-      end = lastDay.toISOString().split('T')[0];
-  }
-
-  // AQUI ENTRA A MÁGICA DA CARGA HORÁRIA TOTAL DO PROFESSOR!
   const totalCH = calculateTeacherTotalCH(docente);
   const docenteTitle = totalCH > 0 ? `${docente} (${totalCH}h)` : docente;
-
   const title = `<span class="print-title-main">Cronograma Docente</span><br><span class="print-title-sub">${docenteTitle}</span>`;
   generateCalendarGrid(container, null, docente, start, end, title);
+}
+
+function getShiftTimeRangeStr(timeRanges, shiftCode) {
+    if (!timeRanges || timeRanges.length === 0) return '';
+    const times = [];
+    timeRanges.forEach(tr => {
+        if (!tr) return;
+        const matches = String(tr).match(/\d{1,2}:\d{2}/g);
+        if (matches) times.push(...matches);
+    });
+    const filteredTimes = times.filter(t => {
+        const m = timeToMinutes(t);
+        return shiftCode === 'M' ? m < 780 : m >= 780;
+    });
+    if (filteredTimes.length === 0) return '';
+    filteredTimes.sort((a,b) => timeToMinutes(a) - timeToMinutes(b));
+    return ` - De ${filteredTimes[0]} às ${filteredTimes[filteredTimes.length - 1]}`;
+}
+
+
+// =========================================================================
+// MÁGICA VISUAL: GANTT CHART MOTOR FINAL
+// =========================================================================
+function renderGanttChart() {
+    const container = document.getElementById('gantt-container');
+    const inputDocente = document.getElementById('inp-gantt-docente');
+    if (!container || !inputDocente) return;
+
+    const docenteName = inputDocente.value.trim();
+    if (!docenteName) {
+        container.innerHTML = '<div style="text-align: center; color: #7f8c8d; margin-top: 50px; font-size: 1.1em;">Por favor, digite o nome de um professor.</div>';
+        return;
+    }
+
+    const allocs = store.allocations.filter(a => {
+        if (a.docente === docenteName) return true;
+        if (a.docentes && a.docentes.some(d => d.nome === docenteName)) return true;
+        return false;
+    });
+
+    if (allocs.length === 0) {
+        container.innerHTML = `<div style="text-align: center; color: #7f8c8d; margin-top: 50px; font-size: 1.1em;">Nenhuma disciplina encontrada para <b>${docenteName}</b>.</div>`;
+        return;
+    }
+
+    const totalCH = calculateTeacherTotalCH(docenteName);
+
+    let minDateStr = store.settings.termStart || '2025-01-01';
+    let maxDateStr = store.settings.termEnd || '2025-12-31';
+
+    allocs.forEach(a => {
+        if (a.dataInicio && a.dataInicio < minDateStr) minDateStr = a.dataInicio;
+        if (a.dataFim && a.dataFim > maxDateStr) maxDateStr = a.dataFim;
+    });
+
+    const minTime = new Date(minDateStr + "T12:00:00").getTime();
+    const maxTime = new Date(maxDateStr + "T12:00:00").getTime();
+    const totalTime = maxTime - minTime || 1; 
+
+    const weekLines = [];
+    let weekWalker = new Date(minTime);
+    while (weekWalker.getDay() !== 1) { weekWalker.setDate(weekWalker.getDate() + 1); }
+    while (weekWalker.getTime() <= maxTime) {
+        let leftPct = ((weekWalker.getTime() - minTime) / totalTime) * 100;
+        if(leftPct >= 0 && leftPct <= 100) { weekLines.push(leftPct); }
+        weekWalker.setDate(weekWalker.getDate() + 7);
+    }
+    const timelineLinesHtml = weekLines.map(pct => `<div class="gantt-grid-line-week" style="left: ${pct}%;"></div>`).join('');
+
+    const monthLines = [];
+    let curMonthWalker = new Date(minTime);
+    curMonthWalker.setDate(1); 
+    while (curMonthWalker.getTime() <= maxTime) {
+        if (curMonthWalker.getTime() >= minTime) {
+            let leftPct = ((curMonthWalker.getTime() - minTime) / totalTime) * 100;
+            monthLines.push(leftPct);
+        }
+        curMonthWalker = new Date(curMonthWalker.getFullYear(), curMonthWalker.getMonth() + 1, 1, 12, 0, 0);
+    }
+    const monthLinesHtml = monthLines.map(pct => `<div class="gantt-grid-line-month" style="left: ${pct}%;"></div>`).join('');
+
+    let html = `
+        <div style="margin-bottom: 20px; text-align: center;">
+            <h3 style="color: var(--primary); margin: 0; font-size: 1.4em; text-transform: uppercase;">Cronograma: ${docenteName} (${totalCH}h)</h3>
+        </div>
+        <div class="gantt-container" style="position: relative; border: 1px solid #ddd; border-radius: 6px; overflow: hidden; background: #f0f3f5;">
+            
+            <div style="position: absolute; top: 0; bottom: 0; left: 80px; right: 0; pointer-events: none; z-index: 0;">
+                ${timelineLinesHtml}
+                ${monthLinesHtml}
+            </div>
+    `;
+
+    html += '<div class="gantt-header-row" style="display: flex; border-bottom: 2px solid var(--primary); padding: 10px 0; background: #e2e8f0; margin: 0; position: relative; z-index: 1;">'; 
+    html += '<div style="width: 80px; flex-shrink: 0;"></div>'; 
+    
+    let cur = new Date(minTime);
+    cur.setDate(1); 
+    const months = [];
+    while (cur.getTime() <= maxTime || (cur.getFullYear() === new Date(maxTime).getFullYear() && cur.getMonth() === new Date(maxTime).getMonth())) {
+        const mesNome = cur.toLocaleString('pt-BR', { month: 'short', year: '2-digit' }).toUpperCase();
+        let startOfMonth = Math.max(cur.getTime(), minTime);
+        let nextM = new Date(cur.getFullYear(), cur.getMonth() + 1, 1, 12, 0, 0);
+        let endOfMonth = Math.min(nextM.getTime() - 1, maxTime);
+        let wPct = ((endOfMonth - startOfMonth) / totalTime) * 100;
+        if (wPct > 0) { months.push({ name: mesNome, width: wPct }); }
+        cur = nextM;
+    }
+
+    months.forEach(m => {
+        html += `<div class="gantt-month-col" style="width: ${m.width}%; flex: none; background: transparent;">${m.name}</div>`;
+    });
+    html += '</div>';
+
+    const weekDays = [
+        { id: 1, name: 'SEG' },
+        { id: 2, name: 'TER' },
+        { id: 3, name: 'QUA' },
+        { id: 4, name: 'QUI' },
+        { id: 5, name: 'SEX' },
+        { id: 6, name: 'SÁB' }
+    ];
+
+    weekDays.forEach(d => {
+        let dayItemsMap = {}; 
+        
+        allocs.forEach(a => {
+            let add = false;
+            let shift = '';
+            let slotsToAdd = 1;
+            
+            if (a.tipo === 'regular' || a.tipo === 'regular_prioritaria') {
+                if (parseInt(a.diaSemana) === d.id) {
+                    add = true;
+                    shift = timeToMinutes(a.horario) < 780 ? 'M' : 'T';
+                    slotsToAdd = 1; 
+                }
+            } 
+            else if (a.tipo === 'intensiva') {
+                let curDt = new Date((a.dataInicio || minDateStr) + "T12:00:00");
+                const endDt = new Date((a.dataFim || maxDateStr) + "T12:00:00");
+                let hasThisDay = false;
+                while(curDt <= endDt) {
+                    if (curDt.getDay() === d.id) { hasThisDay = true; break; }
+                    curDt.setDate(curDt.getDate() + 1);
+                }
+                
+                if (hasThisDay) {
+                    add = true;
+                    const occs = a.horariosOcupados || [];
+                    const isM = occs.some(h => timeToMinutes(h) < 780);
+                    const isT = occs.some(h => timeToMinutes(h) >= 780);
+                    shift = (isM && isT) ? 'M/T' : (isM ? 'M' : 'T');
+                    slotsToAdd = occs.length > 0 ? occs.length : 5; 
+                }
+            }
+
+            if (add) {
+                const key = `${a.turmaId}|${a.disciplina}|${shift}|${a.tipo}`;
+                if (!dayItemsMap[key]) {
+                    let chProf = 0;
+                    const chTotal = getDisciplinaCHGlobal(a.disciplina, a.turmaId);
+                    if (a.docentes && a.docentes.length > 0) {
+                        const doc = a.docentes.find(doc => doc.nome === docenteName);
+                        if (doc) chProf = parseInt(doc.ch) || 0;
+                    } else {
+                        chProf = chTotal;
+                    }
+
+                    dayItemsMap[key] = {
+                        ...a,
+                        shift: shift,
+                        chTotal: chTotal,
+                        chProf: chProf,
+                        dataInicio: a.dataInicio || minDateStr,
+                        dataFim: a.dataFim || maxDateStr,
+                        slotCount: slotsToAdd,
+                        timeRanges: a.tipo === 'intensiva' ? [...(a.horariosOcupados || [])] : [a.horario]
+                    };
+                } else {
+                    if (a.tipo !== 'intensiva') { dayItemsMap[key].slotCount += slotsToAdd; }
+                    if (a.dataInicio && a.dataInicio < dayItemsMap[key].dataInicio) dayItemsMap[key].dataInicio = a.dataInicio;
+                    if (a.dataFim && a.dataFim > dayItemsMap[key].dataFim) dayItemsMap[key].dataFim = a.dataFim;
+                    
+                    if (a.tipo === 'intensiva') {
+                        dayItemsMap[key].timeRanges.push(...(a.horariosOcupados || []));
+                    } else {
+                        dayItemsMap[key].timeRanges.push(a.horario);
+                    }
+                }
+            }
+        });
+
+        let dayItems = Object.values(dayItemsMap);
+
+        let mItems = dayItems.filter(i => i.shift === 'M' || i.shift === 'M/T');
+        let tItems = dayItems.filter(i => i.shift === 'T' || i.shift === 'M/T');
+
+        let currentTopM = 4;
+        let mBarsHtml = '';
+        mItems.forEach((item) => {
+            const startT = new Date(item.dataInicio + "T12:00:00").getTime();
+            const endT = new Date(item.dataFim + "T12:00:00").getTime();
+            const timeSpan = endT - startT;
+            let leftPct = ((startT - minTime) / totalTime) * 100;
+            let widthPct = (timeSpan / totalTime) * 100;
+            if (leftPct < 0) leftPct = 0;
+            if (widthPct < 1) widthPct = 1; 
+            
+            const turmaNome = getTurmaLabel(item.turmaId);
+            const info = getDisciplinaInfo(item.disciplina);
+            const isOutOfBounds = store.settings.termEnd && item.dataFim > store.settings.termEnd;
+            let boxBorder = isOutOfBounds ? 'border: 2px solid #900;' : `border: 1px solid ${item.cor || '#ccc'};`;
+
+            let cappedSlots = Math.min(item.slotCount, 5);
+            let barHeight = 24 + ((cappedSlots - 1) * 8); 
+            
+            const timeRangeStr = getShiftTimeRangeStr(item.timeRanges, 'M');
+
+            let segmentsHtml = '';
+            let currentSegmentT = startT;
+            const docentesList = (item.docentes && item.docentes.length > 0) ? item.docentes : [{nome: item.docente, ch: item.chTotal}];
+
+            docentesList.forEach((d, idx) => {
+                const isTarget = d.nome === docenteName;
+                let segStartT = currentSegmentT;
+                let segEndT = currentSegmentT + (timeSpan * (d.ch / item.chTotal));
+                let sDate = new Date(segStartT).toISOString().split('T')[0];
+                let eDate = new Date(segEndT).toISOString().split('T')[0];
+                if (idx === 0) sDate = item.dataInicio;
+                if (idx === docentesList.length - 1) eDate = item.dataFim;
+                
+                const fmtStart = sDate.split('-').reverse().slice(0,2).join('/'); 
+                const fmtEnd = eDate.split('-').reverse().slice(0,2).join('/');
+                
+                const bgColor = isTarget ? (item.cor || '#3498db') : '#ffffff';
+                const txtColor = isTarget ? '#000000' : '#666666'; 
+                const borderStyle = isTarget ? 'none' : `1px dashed ${item.cor || '#ccc'}`;
+                const zIndex = isTarget ? '2' : '1';
+                
+                let content = '';
+                if (isTarget) {
+                    content = `
+                        <div style="display:flex; justify-content:space-between; align-items:center; width:100%; padding:0 4px;">
+                            <span style="font-size:0.75em; opacity:0.9; flex-shrink:0; letter-spacing: -0.5px;">${fmtStart}</span>
+                            <span style="font-weight:bold; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; padding:0 4px; font-size: 0.9em;">
+                                ${turmaNome} ${info.abrev} (${d.ch}h)${timeRangeStr}
+                            </span>
+                            <span style="font-size:0.75em; opacity:0.9; flex-shrink:0; letter-spacing: -0.5px;">${fmtEnd}</span>
+                        </div>
+                    `;
+                } else {
+                    content = `<span style="font-size:0.85em; font-weight:normal; opacity:0.8">${d.nome.split(' ')[0]} (${d.ch}h)</span>`;
+                }
+                    
+                segmentsHtml += `
+                    <div style="flex: ${d.ch}; background-color: ${bgColor}; color: ${txtColor}; border-right: ${borderStyle}; border-left: ${borderStyle}; height: 100%; display: flex; align-items: center; justify-content: center; overflow: hidden; box-sizing: border-box; z-index: ${zIndex};">
+                        ${content}
+                    </div>
+                `;
+                currentSegmentT = segEndT;
+            });
+
+            mBarsHtml += `
+                    <div class="gantt-bar" 
+                         style="left: ${leftPct}%; width: ${widthPct}%; top: ${currentTopM}px; height: ${barHeight}px; padding: 0; display: flex; flex-direction: row; ${boxBorder}"
+                         title="${item.disciplina}\nTurma: ${turmaNome}\nTurno: Manhã\nPeríodo Geral: ${formatDateBR(item.dataInicio)} a ${formatDateBR(item.dataFim)}\nAulas no Dia: ${item.slotCount}">
+                        ${segmentsHtml}
+                    </div>
+            `;
+            currentTopM += barHeight + 6; 
+        });
+
+        const laneMHeight = Math.max(30, currentTopM);
+
+        let currentTopT = 4; 
+        let tBarsHtml = '';
+        tItems.forEach((item) => {
+            const startT = new Date(item.dataInicio + "T12:00:00").getTime();
+            const endT = new Date(item.dataFim + "T12:00:00").getTime();
+            const timeSpan = endT - startT;
+            let leftPct = ((startT - minTime) / totalTime) * 100;
+            let widthPct = (timeSpan / totalTime) * 100;
+            if (leftPct < 0) leftPct = 0;
+            if (widthPct < 1) widthPct = 1; 
+            
+            const turmaNome = getTurmaLabel(item.turmaId);
+            const info = getDisciplinaInfo(item.disciplina);
+            const isOutOfBounds = store.settings.termEnd && item.dataFim > store.settings.termEnd;
+            let boxBorder = isOutOfBounds ? 'border: 2px solid #900;' : `border: 1px solid ${item.cor || '#ccc'};`;
+
+            let cappedSlots = Math.min(item.slotCount, 5);
+            let barHeight = 24 + ((cappedSlots - 1) * 8); 
+            
+            const timeRangeStr = getShiftTimeRangeStr(item.timeRanges, 'T');
+
+            let segmentsHtml = '';
+            let currentSegmentT = startT;
+            const docentesList = (item.docentes && item.docentes.length > 0) ? item.docentes : [{nome: item.docente, ch: item.chTotal}];
+
+            docentesList.forEach((d, idx) => {
+                const isTarget = d.nome === docenteName;
+                let segStartT = currentSegmentT;
+                let segEndT = currentSegmentT + (timeSpan * (d.ch / item.chTotal));
+                let sDate = new Date(segStartT).toISOString().split('T')[0];
+                let eDate = new Date(segEndT).toISOString().split('T')[0];
+                if (idx === 0) sDate = item.dataInicio;
+                if (idx === docentesList.length - 1) eDate = item.dataFim;
+                
+                const fmtStart = sDate.split('-').reverse().slice(0,2).join('/'); 
+                const fmtEnd = eDate.split('-').reverse().slice(0,2).join('/');
+                
+                const bgColor = isTarget ? (item.cor || '#3498db') : '#ffffff';
+                const txtColor = isTarget ? '#000000' : '#666666'; 
+                const borderStyle = isTarget ? 'none' : `1px dashed ${item.cor || '#ccc'}`;
+                const zIndex = isTarget ? '2' : '1';
+                
+                let content = '';
+                if (isTarget) {
+                    content = `
+                        <div style="display:flex; justify-content:space-between; align-items:center; width:100%; padding:0 4px;">
+                            <span style="font-size:0.75em; opacity:0.9; flex-shrink:0; letter-spacing: -0.5px;">${fmtStart}</span>
+                            <span style="font-weight:bold; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; padding:0 4px; font-size: 0.9em;">
+                                ${turmaNome} ${info.abrev} (${d.ch}h)${timeRangeStr}
+                            </span>
+                            <span style="font-size:0.75em; opacity:0.9; flex-shrink:0; letter-spacing: -0.5px;">${fmtEnd}</span>
+                        </div>
+                    `;
+                } else {
+                    content = `<span style="font-size:0.85em; font-weight:normal; opacity:0.8">${d.nome.split(' ')[0]} (${d.ch}h)</span>`;
+                }
+                    
+                segmentsHtml += `
+                    <div style="flex: ${d.ch}; background-color: ${bgColor}; color: ${txtColor}; border-right: ${borderStyle}; border-left: ${borderStyle}; height: 100%; display: flex; align-items: center; justify-content: center; overflow: hidden; box-sizing: border-box; z-index: ${zIndex};">
+                        ${content}
+                    </div>
+                `;
+                currentSegmentT = segEndT;
+            });
+
+            tBarsHtml += `
+                    <div class="gantt-bar" 
+                         style="left: ${leftPct}%; width: ${widthPct}%; top: ${currentTopT}px; height: ${barHeight}px; padding: 0; display: flex; flex-direction: row; ${boxBorder}"
+                         title="${item.disciplina}\nTurma: ${turmaNome}\nTurno: Tarde\nPeríodo Geral: ${formatDateBR(item.dataInicio)} a ${formatDateBR(item.dataFim)}\nAulas no Dia: ${item.slotCount}">
+                        ${segmentsHtml}
+                    </div>
+            `;
+            currentTopT += barHeight + 6; 
+        });
+
+        const laneTHeight = Math.max(30, currentTopT);
+        const totalRowHeight = laneMHeight + laneTHeight;
+
+        html += `
+            <div class="gantt-row" style="display: flex; border-bottom: 1px solid #ddd; margin: 0; padding: 0; min-height: ${totalRowHeight}px; position: relative; z-index: 1;">
+                <div style="width: 50px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.9em; color: var(--primary); background: #e2e8f0; border-right: 1px solid #cbd5e1; flex-shrink: 0;">
+                    ${d.name}
+                </div>
+                <div style="flex: 1; display: flex; flex-direction: column;">
+                    
+                    <div style="display: flex; height: ${laneMHeight}px; border-bottom: 1px dashed #cbd5e1; position: relative;">
+                        <div style="width: 30px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 0.8em; color: #64748b; border-right: 1px solid #cbd5e1; background: #e2e8f0; flex-shrink: 0;">
+                            M
+                        </div>
+                        <div class="gantt-timeline" style="flex: 1; position: relative; background: transparent; border: none;">
+                            ${mBarsHtml}
+                        </div>
+                    </div>
+
+                    <div style="display: flex; height: ${laneTHeight}px; position: relative;">
+                        <div style="width: 30px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 0.8em; color: #64748b; border-right: 1px solid #cbd5e1; background: #e2e8f0; flex-shrink: 0;">
+                            T
+                        </div>
+                        <div class="gantt-timeline" style="flex: 1; position: relative; background: transparent; border: none;">
+                            ${tBarsHtml}
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        `;
+    });
+
+    html += '</div>';
+    container.innerHTML = html;
 }
 
 function generateCalendarGrid(container, turmaId, docenteName, start, end, titleHTML) {

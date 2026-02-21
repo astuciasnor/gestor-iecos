@@ -487,6 +487,7 @@
                     <button class="tab-btn" data-tab="monthly">Calendário da Turma</button>
                     <button class="tab-btn" data-tab="teacher">Visão do Professor</button>
                     <button class="tab-btn" data-tab="list">Lista de Ofertas</button>
+                    <button class="tab-btn" data-tab="gantt">📊 Gráfico Gantt</button>
                     <button class="tab-btn" data-tab="tutorial" style="color: var(--accent);">❓ Ajuda</button>
                 </nav>
                 
@@ -537,6 +538,20 @@
                     </thead>
                     <tbody></tbody>
                 </table>
+            </section>
+
+            <section id="tab-gantt" class="tab-content">
+                <div class="calendar-controls no-print" style="margin-bottom: 20px;">
+                    <label style="color: var(--primary); font-weight: bold;">Professor para o Gráfico:</label>
+                    <input type="text" id="inp-gantt-docente" list="list-view-docentes" placeholder="Digite o nome..." style="padding: 8px; border: 1px solid #ccc; border-radius: 4px; width: 300px; font-size: 1rem;">
+                    <button id="btn-gerar-gantt" class="btn-secondary" style="background: var(--primary); color:white;">Gerar Gantt</button>
+                </div>
+                
+                <div id="gantt-container" class="gantt-wrapper">
+                    <div style="text-align: center; color: #7f8c8d; margin-top: 50px; font-size: 1.1em;">
+                        Busque um professor acima para visualizar o mapa de disciplinas no tempo.
+                    </div>
+                </div>
             </section>
 
             <section id="tab-tutorial" class="tab-content">
