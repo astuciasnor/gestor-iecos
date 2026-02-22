@@ -2003,6 +2003,9 @@ function renderGanttChart() {
     container.innerHTML = html;
 }
 
+// ============================================================================
+// NOVO MOTOR DE CALENDÁRIO: RENDERIZAÇÃO SEM DOMINGOS (GANHO DE ESPAÇO)
+// ============================================================================
 function generateCalendarGrid(container, turmaId, docenteName, start, end, titleHTML) {
   container.innerHTML = '';
 
@@ -2053,6 +2056,11 @@ function generateCalendarGrid(container, turmaId, docenteName, start, end, title
       months[k].push({ date: dateStr, events: eventsByDate[dateStr] });
     });
 
+  // ------------------------------------------------------------------------
+  // CHAVE MESTRA: ALterne para 'true' se um dia quiser o Domingo de volta.
+  const EXIBIR_DOMINGO = false; 
+  // ------------------------------------------------------------------------
+
   Object.keys(months).forEach((monthKey) => {
     const monthDiv = document.createElement('div');
     monthDiv.className = 'calendar-month';
@@ -2063,17 +2071,44 @@ function generateCalendarGrid(container, turmaId, docenteName, start, end, title
 
     const grid = document.createElement('div');
     grid.className = 'month-grid';
-    ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'].forEach((d) => (grid.innerHTML += `<div class="day-header">${d}</div>`));
+    
+    // Ajusta o CSS Grid para 6 colunas se o Domingo for ocultado
+    if (!EXIBIR_DOMINGO) {
+        grid.style.gridTemplateColumns = 'repeat(6, 1fr)';
+    }
+
+    // Desenha o Cabeçalho da Semana
+    const diasCabecalho = EXIBIR_DOMINGO ? ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'] : ['S', 'T', 'Q', 'Q', 'S', 'S'];
+    diasCabecalho.forEach((d) => (grid.innerHTML += `<div class="day-header">${d}</div>`));
 
     const firstDate = months[monthKey][0].date;
     const startDow = new Date(firstDate + 'T12:00:00').getDay();
-    for (let i = 0; i < startDow; i++) grid.innerHTML += `<div class="day-cell empty"></div>`;
+    
+    // Calcula quantas células vazias precisamos colocar no início do mês
+    let prefixEmptyCells = 0;
+    if (EXIBIR_DOMINGO) {
+        prefixEmptyCells = startDow;
+    } else {
+        // Como o calendário começa na Segunda (1), se o dia 1 cair no Domingo (0),
+        // ele será pulado pelo loop, e a Segunda (dia 2) precisa ficar na coluna 0.
+        prefixEmptyCells = startDow === 0 ? 0 : startDow - 1;
+    }
+
+    for (let i = 0; i < prefixEmptyCells; i++) {
+        grid.innerHTML += `<div class="day-cell empty"></div>`;
+    }
 
     months[monthKey].forEach((dayData) => {
+      const dt = new Date(dayData.date + 'T12:00:00');
+      const dayOfWeek = dt.getDay();
+
+      // MÁGICA: Se não for para exibir domingo e hoje for domingo, ignora completamente!
+      if (!EXIBIR_DOMINGO && dayOfWeek === 0) return;
+
       const cell = document.createElement('div');
       cell.className = 'day-cell';
-      const dt = new Date(dayData.date + 'T12:00:00');
-      if (dt.getDay() === 0 || dt.getDay() === 6) cell.classList.add('weekend');
+      
+      if (dayOfWeek === 0 || dayOfWeek === 6) cell.classList.add('weekend');
 
       const isOutOfBounds = store.settings.termEnd && dayData.date > store.settings.termEnd;
       if (isOutOfBounds) {
@@ -2202,7 +2237,17 @@ function generateCalendarGrid(container, turmaId, docenteName, start, end, title
 
     const lastDateObj = new Date(months[monthKey][months[monthKey].length - 1].date + 'T12:00:00');
     const lastDow = lastDateObj.getDay(); 
-    for (let i = lastDow + 1; i <= 6; i++) {
+    
+    // Completa a última linha do grid para manter as bordas bonitas
+    let emptySuffix = 0;
+    if (EXIBIR_DOMINGO) {
+        emptySuffix = 6 - lastDow;
+    } else {
+        if (lastDow === 0) emptySuffix = 0; // Se o último dia do mês for Domingo, já foi pulado, parou no sábado.
+        else emptySuffix = 6 - lastDow; 
+    }
+
+    for (let i = 0; i < emptySuffix; i++) {
         grid.innerHTML += `<div class="day-cell empty" style="border-bottom: 2px solid #bdc3c7;"></div>`;
     }
 
