@@ -1611,7 +1611,7 @@ function getShiftTimeRangeStr(timeRanges, shiftCode) {
     if (filteredTimes.length === 0) return '';
     
     filteredTimes.sort((a,b) => timeToMinutes(a) - timeToMinutes(b));
-    return ` - De ${filteredTimes[0]} às ${filteredTimes[filteredTimes.length - 1]}`;
+    return ` : ${filteredTimes[0]} - ${filteredTimes[filteredTimes.length - 1]}`;
 }
 
 
@@ -1673,48 +1673,65 @@ function renderGanttChart() {
     while (curMonthWalker.getTime() <= maxTime) {
         if (curMonthWalker.getTime() >= minTime) {
             let leftPct = ((curMonthWalker.getTime() - minTime) / totalTime) * 100;
-            monthLines.push(leftPct);
+            // Só adiciona a linha se não for o início absoluto (evita linha sumindo na borda esquerda)
+            if (leftPct > 0.1) {
+                monthLines.push(leftPct);
+            }
         }
         curMonthWalker = new Date(curMonthWalker.getFullYear(), curMonthWalker.getMonth() + 1, 1, 12, 0, 0);
     }
-    const monthLinesHtml = monthLines.map(pct => `<div class="gantt-grid-line-month" style="left: ${pct}%;"></div>`).join('');
+    
+    // --- LINHAS VERTICAIS QUE SOBEM ATÉ O CABEÇALHO ---
+    // Aumentamos o z-index para 10 e a espessura para garantir que a linha cubra o cabeçalho perfeitamente
+    const monthOverlaysHtml = monthLines.map(pct => `
+        <div style="position: absolute; left: ${pct}%; top: 0; bottom: 0; border-left: 2px solid #2c3e50; z-index: 10; pointer-events: none;"></div>
+    `).join('');
+    // ---------------------------------------------------------------
 
     let html = `
         <div style="margin-bottom: 20px; text-align: center;">
             <h3 style="color: var(--primary); margin: 0; font-size: 1.4em; text-transform: uppercase;">Cronograma: ${docenteName} (${totalCH}h)</h3>
         </div>
+        
         <div class="gantt-container" style="position: relative; border: 1px solid #ddd; border-radius: 6px; overflow: hidden; background: #f0f3f5;">
             
             <div style="position: absolute; top: 0; bottom: 0; left: 80px; right: 0; pointer-events: none; z-index: 0;">
                 ${timelineLinesHtml}
-                ${monthLinesHtml}
+            </div>
+
+            <div style="position: absolute; top: 0; bottom: 0; left: 80px; right: 0; pointer-events: none; z-index: 10;">
+                ${monthOverlaysHtml}
             </div>
     `;
 
-    html += '<div class="gantt-header-row" style="display: flex; border-bottom: 2px solid var(--primary); padding: 10px 0; background: #e2e8f0; margin: 0; position: relative; z-index: 1;">'; 
+    // --- CABEÇALHO DOS MESES ---
+    html += '<div class="gantt-header-row" style="display: flex; border-bottom: 2px solid var(--primary); padding: 10px 0; background: #e2e8f0; margin: 0; position: relative; z-index: 6;">'; 
     html += '<div style="width: 80px; flex-shrink: 0;"></div>'; 
+    
+    // ENVELOPE FLEX PARA ALINHAR A LARGURA EXATAMENTE COM AS LINHAS (100% - 80px) E CENTRALIZAR O TEXTO
+    html += '<div style="flex: 1; display: flex; position: relative;">';
     
     let cur = new Date(minTime);
     cur.setDate(1); 
-    const months = [];
     
     while (cur.getTime() <= maxTime || (cur.getFullYear() === new Date(maxTime).getFullYear() && cur.getMonth() === new Date(maxTime).getMonth())) {
-        const mesNome = cur.toLocaleString('pt-BR', { month: 'short', year: '2-digit' }).toUpperCase();
+        // --- FORMATAÇÃO ELEGANTE: Mar/26 ---
+        let nomeCurto = cur.toLocaleString('pt-BR', { month: 'short' }).replace('.', '');
+        const mesNome = nomeCurto.charAt(0).toUpperCase() + nomeCurto.slice(1) + '/' + String(cur.getFullYear()).slice(-2);
+        // -------------------------------------
+        
         let startOfMonth = Math.max(cur.getTime(), minTime);
         let nextM = new Date(cur.getFullYear(), cur.getMonth() + 1, 1, 12, 0, 0);
         let endOfMonth = Math.min(nextM.getTime() - 1, maxTime);
         let wPct = ((endOfMonth - startOfMonth) / totalTime) * 100;
         
         if (wPct > 0) { 
-            months.push({ name: mesNome, width: wPct }); 
+            // Centraliza o texto do cabeçalho
+            html += `<div class="gantt-month-col" style="width: ${wPct}%; flex: none; background: transparent; text-align: center; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.1em; color: var(--primary); border: none;">${mesNome}</div>`;
         }
         cur = nextM;
     }
-
-    months.forEach(m => {
-        html += `<div class="gantt-month-col" style="width: ${m.width}%; flex: none; background: transparent;">${m.name}</div>`;
-    });
-    html += '</div>';
+    html += '</div></div>';
 
     const weekDays = [
         { id: 1, name: 'SEG' },
@@ -1827,12 +1844,17 @@ function renderGanttChart() {
             const isOutOfBounds = store.settings.termEnd && item.dataFim > store.settings.termEnd;
             let boxBorder = isOutOfBounds ? 'border: 2px solid #900;' : `border: 1px solid ${item.cor || '#ccc'};`;
 
-            let cappedSlots = Math.min(item.slotCount, 5);
-            let barHeight = 24 + ((cappedSlots - 1) * 8); 
+            // MÁGICA 4D: Barras de intensivas são finas (24px fixo). Regulares crescem conforme as horas.
+            let barHeight = 24;
+            if (item.tipo !== 'intensiva') {
+                let cappedSlots = Math.min(item.slotCount, 5);
+                barHeight = 24 + ((cappedSlots - 1) * 8); 
+            }
             
             const timeRangeStr = getShiftTimeRangeStr(item.timeRanges, 'M');
 
             let segmentsHtml = '';
+            let externalLabelsHtml = ''; // Variável para o texto flutuante
             let currentSegmentT = startT;
             const docentesList = (item.docentes && item.docentes.length > 0) ? item.docentes : [{nome: item.docente, ch: item.chTotal}];
 
@@ -1855,18 +1877,41 @@ function renderGanttChart() {
                 const zIndex = isTarget ? '2' : '1';
                 
                 let content = '';
-                if (isTarget) {
-                    content = `
-                        <div style="display:flex; justify-content:space-between; align-items:center; width:100%; padding:0 4px;">
-                            <span style="font-size:0.75em; opacity:0.9; flex-shrink:0; letter-spacing: -0.5px;">${fmtStart}</span>
-                            <span style="font-weight:bold; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; padding:0 4px; font-size: 0.9em;">
-                                ${turmaNome} ${info.abrev} (${d.ch}h)${timeRangeStr}
-                            </span>
-                            <span style="font-size:0.75em; opacity:0.9; flex-shrink:0; letter-spacing: -0.5px;">${fmtEnd}</span>
-                        </div>
-                    `;
+                
+                if (item.tipo === 'intensiva') {
+                    // DESIGN INTENSIVA: Texto Fora da Barra
+                    if (isTarget) {
+                        content = `<span style="font-size:0.75em; font-weight:800; letter-spacing:-0.5px; padding:0 2px;">${fmtStart} - ${fmtEnd}</span>`;
+                        
+                        // Joga pra esquerda ou pra direita baseado no espaço disponível na tela
+                        let textPos = (leftPct + widthPct > 75) 
+                            ? `right: calc(100% - ${leftPct}% + 6px);` 
+                            : `left: calc(${leftPct + widthPct}% + 6px);`;
+                            
+                        let textColor = item.cor || '#3498db';
+                        externalLabelsHtml += `
+                            <div style="position: absolute; top: ${currentTopM}px; height: ${barHeight}px; display: flex; align-items: center; ${textPos} color: ${textColor}; font-weight: 900; font-size: 0.85em; white-space: nowrap; z-index: 10; text-shadow: 1px 1px 0px #fff, -1px -1px 0px #fff, 1px -1px 0px #fff, -1px 1px 0px #fff, 0px 2px 4px rgba(0,0,0,0.15);">
+                                ${turmaNome} ${info.abrev} (${d.ch}h)
+                            </div>
+                        `;
+                    } else {
+                        content = `<span style="font-size:0.85em; font-weight:normal; opacity:0.8">${d.nome.split(' ')[0]}</span>`;
+                    }
                 } else {
-                    content = `<span style="font-size:0.85em; font-weight:normal; opacity:0.8">${d.nome.split(' ')[0]} (${d.ch}h)</span>`;
+                    // DESIGN REGULAR: Ajuste de padding, font-size e letter-spacing para caber melhor na barra
+                    if (isTarget) {
+                        content = `
+                            <div style="display:flex; justify-content:space-between; align-items:center; width:100%; padding:0 2px;">
+                                <span style="font-size:0.7em; opacity:0.9; flex-shrink:0; letter-spacing: -0.5px;">${fmtStart}</span>
+                                <span style="font-weight:bold; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; padding:0 4px; font-size: 0.8em; letter-spacing: -0.4px;">
+                                    ${turmaNome} ${info.abrev} (${d.ch}h)${timeRangeStr}
+                                </span>
+                                <span style="font-size:0.7em; opacity:0.9; flex-shrink:0; letter-spacing: -0.5px;">${fmtEnd}</span>
+                            </div>
+                        `;
+                    } else {
+                        content = `<span style="font-size:0.8em; font-weight:normal; opacity:0.8; letter-spacing: -0.3px;">${d.nome.split(' ')[0]} (${d.ch}h)</span>`;
+                    }
                 }
                     
                 segmentsHtml += `
@@ -1883,6 +1928,7 @@ function renderGanttChart() {
                          title="${item.disciplina}\nTurma: ${turmaNome}\nTurno: Manhã\nPeríodo Geral: ${formatDateBR(item.dataInicio)} a ${formatDateBR(item.dataFim)}\nAulas no Dia: ${item.slotCount}">
                         ${segmentsHtml}
                     </div>
+                    ${externalLabelsHtml}
             `;
             currentTopM += barHeight + 6; 
         });
@@ -1906,12 +1952,17 @@ function renderGanttChart() {
             const isOutOfBounds = store.settings.termEnd && item.dataFim > store.settings.termEnd;
             let boxBorder = isOutOfBounds ? 'border: 2px solid #900;' : `border: 1px solid ${item.cor || '#ccc'};`;
 
-            let cappedSlots = Math.min(item.slotCount, 5);
-            let barHeight = 24 + ((cappedSlots - 1) * 8); 
+            // MÁGICA 4D: Barras de intensivas são finas (24px fixo). Regulares crescem conforme as horas.
+            let barHeight = 24;
+            if (item.tipo !== 'intensiva') {
+                let cappedSlots = Math.min(item.slotCount, 5);
+                barHeight = 24 + ((cappedSlots - 1) * 8); 
+            }
             
             const timeRangeStr = getShiftTimeRangeStr(item.timeRanges, 'T');
 
             let segmentsHtml = '';
+            let externalLabelsHtml = '';
             let currentSegmentT = startT;
             const docentesList = (item.docentes && item.docentes.length > 0) ? item.docentes : [{nome: item.docente, ch: item.chTotal}];
 
@@ -1934,18 +1985,40 @@ function renderGanttChart() {
                 const zIndex = isTarget ? '2' : '1';
                 
                 let content = '';
-                if (isTarget) {
-                    content = `
-                        <div style="display:flex; justify-content:space-between; align-items:center; width:100%; padding:0 4px;">
-                            <span style="font-size:0.75em; opacity:0.9; flex-shrink:0; letter-spacing: -0.5px;">${fmtStart}</span>
-                            <span style="font-weight:bold; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; padding:0 4px; font-size: 0.9em;">
-                                ${turmaNome} ${info.abrev} (${d.ch}h)${timeRangeStr}
-                            </span>
-                            <span style="font-size:0.75em; opacity:0.9; flex-shrink:0; letter-spacing: -0.5px;">${fmtEnd}</span>
-                        </div>
-                    `;
+                
+                if (item.tipo === 'intensiva') {
+                    // DESIGN INTENSIVA: Texto Fora da Barra
+                    if (isTarget) {
+                        content = `<span style="font-size:0.75em; font-weight:800; letter-spacing:-0.5px; padding:0 2px;">${fmtStart} - ${fmtEnd}</span>`;
+                        
+                        let textPos = (leftPct + widthPct > 75) 
+                            ? `right: calc(100% - ${leftPct}% + 6px);` 
+                            : `left: calc(${leftPct + widthPct}% + 6px);`;
+                            
+                        let textColor = item.cor || '#3498db';
+                        externalLabelsHtml += `
+                            <div style="position: absolute; top: ${currentTopT}px; height: ${barHeight}px; display: flex; align-items: center; ${textPos} color: ${textColor}; font-weight: 900; font-size: 0.85em; white-space: nowrap; z-index: 10; text-shadow: 1px 1px 0px #fff, -1px -1px 0px #fff, 1px -1px 0px #fff, -1px 1px 0px #fff, 0px 2px 4px rgba(0,0,0,0.15);">
+                                ${turmaNome} ${info.abrev} (${d.ch}h)
+                            </div>
+                        `;
+                    } else {
+                        content = `<span style="font-size:0.85em; font-weight:normal; opacity:0.8">${d.nome.split(' ')[0]}</span>`;
+                    }
                 } else {
-                    content = `<span style="font-size:0.85em; font-weight:normal; opacity:0.8">${d.nome.split(' ')[0]} (${d.ch}h)</span>`;
+                    // DESIGN REGULAR: Ajuste de padding, font-size e letter-spacing para caber melhor na barra
+                    if (isTarget) {
+                        content = `
+                            <div style="display:flex; justify-content:space-between; align-items:center; width:100%; padding:0 2px;">
+                                <span style="font-size:0.7em; opacity:0.9; flex-shrink:0; letter-spacing: -0.5px;">${fmtStart}</span>
+                                <span style="font-weight:bold; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; padding:0 4px; font-size: 0.8em; letter-spacing: -0.4px;">
+                                    ${turmaNome} ${info.abrev} (${d.ch}h)${timeRangeStr}
+                                </span>
+                                <span style="font-size:0.7em; opacity:0.9; flex-shrink:0; letter-spacing: -0.5px;">${fmtEnd}</span>
+                            </div>
+                        `;
+                    } else {
+                        content = `<span style="font-size:0.8em; font-weight:normal; opacity:0.8; letter-spacing: -0.3px;">${d.nome.split(' ')[0]} (${d.ch}h)</span>`;
+                    }
                 }
                     
                 segmentsHtml += `
@@ -1962,6 +2035,7 @@ function renderGanttChart() {
                          title="${item.disciplina}\nTurma: ${turmaNome}\nTurno: Tarde\nPeríodo Geral: ${formatDateBR(item.dataInicio)} a ${formatDateBR(item.dataFim)}\nAulas no Dia: ${item.slotCount}">
                         ${segmentsHtml}
                     </div>
+                    ${externalLabelsHtml}
             `;
             currentTopT += barHeight + 6; 
         });
@@ -1969,14 +2043,15 @@ function renderGanttChart() {
         const laneTHeight = Math.max(30, currentTopT);
         const totalRowHeight = laneMHeight + laneTHeight;
 
+        // --- LINHA HORIZONTAL ENTRE OS DIAS (1px) ---
         html += `
-            <div class="gantt-row" style="display: flex; border-bottom: 1px solid #ddd; margin: 0; padding: 0; min-height: ${totalRowHeight}px; position: relative; z-index: 1;">
+            <div class="gantt-row" style="display: flex; border-bottom: 1px solid #2c3e50; margin: 0; padding: 0; min-height: ${totalRowHeight}px; position: relative; z-index: 1;">
                 <div style="width: 50px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.9em; color: var(--primary); background: #e2e8f0; border-right: 1px solid #cbd5e1; flex-shrink: 0;">
                     ${d.name}
                 </div>
                 <div style="flex: 1; display: flex; flex-direction: column;">
                     
-                    <div style="display: flex; height: ${laneMHeight}px; border-bottom: 1px dashed #cbd5e1; position: relative;">
+                    <div style="display: flex; height: ${laneMHeight}px; border-bottom: 2px dashed #cbd5e1; position: relative;">
                         <div style="width: 30px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 0.8em; color: #64748b; border-right: 1px solid #cbd5e1; background: #e2e8f0; flex-shrink: 0;">
                             M
                         </div>
