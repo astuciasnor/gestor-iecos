@@ -409,9 +409,6 @@ function calculateTeacherTotalCH(teacherName) {
     return totalCH;
 }
 
-// =====================================================================
-// ATUALIZAÇÃO MÁGICA: Suspensão de Bloco no Cálculo Matemático
-// =====================================================================
 function syncAllRegularDates() {
     const termStart = store.settings.termStart || '2025-01-01';
     const termEnd = store.settings.termEnd || '2025-12-31';
@@ -450,12 +447,10 @@ function syncAllRegularDates() {
             const dow = currentDate.getDay();
             const dStr = currentDate.toISOString().split('T')[0];
             
-            // Pega TODOS os slots que essa Regular tem nesse dia
             const slotsToday = group.filter(a => parseInt(a.diaSemana) === dow);
             
             if (slotsToday.length > 0 && !feriadosSet.has(dStr)) {
                 
-                // MÁGICA: Se UMA intensiva trombar com QUALQUER slot de hoje, suspende o BLOCO TODO.
                 const dayIsSuspended = store.allocations.some(other => {
                     if (String(other.turmaId) !== String(turmaId)) return false;
                     
@@ -474,7 +469,6 @@ function syncAllRegularDates() {
                 });
                 
                 if (!dayIsSuspended) { 
-                    // Soma TODOS os horários juntos, já que o bloco do dia inteiro está livre
                     classesFound += slotsToday.length; 
                     lastValidDate = new Date(currentDate); 
                 }
@@ -494,14 +488,10 @@ function syncAllRegularDates() {
     store.saveAllocations();
 }
 
-// =====================================================================
-// ATUALIZAÇÃO MÁGICA: getSuspendedDates agora suporta a Suspensão em Bloco
-// =====================================================================
 function getSuspendedDates(allocs, turmaId, diaSemana, disciplina, startDate) {
     if (!startDate) return [];
     const suspended = [];
     
-    // Lista todos os horários dessa mesma regular no dia da semana
     const mySlots = allocs
         .filter(a => String(a.turmaId) === String(turmaId) && a.disciplina === disciplina && parseInt(a.diaSemana) === parseInt(diaSemana) && (a.tipo === 'regular' || a.tipo === 'regular_prioritaria'))
         .map(a => a.horario);
@@ -513,7 +503,6 @@ function getSuspendedDates(allocs, turmaId, diaSemana, disciplina, startDate) {
         if (curDt.getDay() === parseInt(diaSemana)) {
             const dStr = curDt.toISOString().split('T')[0];
             
-            // Suspende se esbarrar em QUALQUER um dos meus slots
             const isBlocked = allocs.some(b => {
                 if (String(b.turmaId) !== String(turmaId)) return false;
                 const bStart = b.dataInicio || store.settings.termStart;
@@ -693,6 +682,53 @@ function initPeriodoLetivoETurno() {
     }
 }
 
+// ==== NOVA FUNÇÃO: IMPORTAÇÃO DE BLOCO ====
+function handleImportBloco() {
+    if (!store.selectedCurso || !store.selectedTurma) return alert('Selecione um Curso e uma Turma primeiro.');
+    
+    const comps = store.rawData?.componentes?.filter(c => c.sigla === store.selectedCurso) || [];
+    if (comps.length === 0) return alert('Nenhum componente encontrado para este curso no arquivo mestre.');
+    
+    const periodos = [...new Set(comps.map(c => c.periodo).filter(Boolean))].sort();
+    if (periodos.length === 0) return alert('Os componentes deste curso não possuem períodos cadastrados.');
+    
+    const p = prompt(`✨ INICIANDO IMPORTAÇÃO RÁPIDA\nTurma alvo: ${getTurmaLabel(store.selectedTurma)}\n\nDigite o NOME DO PERÍODO que deseja importar:\n(Opções disponíveis: ${periodos.join(', ')})`);
+    
+    if (!p) return;
+    
+    const periodoSelecionado = p.trim().toUpperCase();
+    const compsToImport = comps.filter(c => String(c.periodo).toUpperCase() === periodoSelecionado);
+    
+    if (compsToImport.length === 0) return alert(`Nenhuma disciplina encontrada no período "${periodoSelecionado}".`);
+    
+    let addedCount = 0;
+    compsToImport.forEach(c => {
+        const exists = store.allocations.some(a => String(a.turmaId) === String(store.selectedTurma) && a.disciplina === c.componente);
+        if (!exists) {
+            store.addAllocation({
+                turmaId: store.selectedTurma,
+                disciplina: c.componente,
+                docente: 'A definir',
+                tipo: 'pendente', // Status Especial
+                cor: c.cor || '#bdc3c7',
+                dataInicio: store.settings.termStart,
+                dataFim: store.settings.termEnd
+            });
+            addedCount++;
+        }
+    });
+    
+    if (addedCount > 0) {
+        showToastWarning(`📥 Sucesso! ${addedCount} disciplinas do Período ${periodoSelecionado} foram importadas. Vá na aba "Lista de Ofertas" para alocá-las na grade.`, 'success');
+        store.saveAllocations();
+        renderOfertasList();
+        switchTab('list'); // Já joga o usuário para a aba certa
+    } else {
+        alert('Todas as disciplinas deste bloco já estão na grade (ou pendentes) para esta turma.');
+    }
+}
+
+
 export function initUI() {
     if (selCurso) selCurso.addEventListener('change', onCursoChange);
     if (selTurma) selTurma.addEventListener('change', onTurmaChange);
@@ -700,6 +736,10 @@ export function initUI() {
     initPeriodoLetivoETurno();
     setupClearButtonsSidebar();
     setupMultiDocenteUI(); 
+
+    // Botão de Importar Bloco
+    const btnImportBloco = document.getElementById('btn-import-bloco');
+    if (btnImportBloco) btnImportBloco.addEventListener('click', handleImportBloco);
 
     // INJEÇÃO DA CAIXINHA DE SÁBADO AUTOMATICAMENTE NO MENU
     const divData = document.getElementById('datas-intensiva');
@@ -972,6 +1012,12 @@ function populateDocentes() {
 function onTurmaChange() {
     store.selectedTurma = selTurma.value;
     store.setLastContext(store.selectedCurso, store.selectedTurma); 
+
+    // Mostra o botão de Importar Bloco
+    const btnImportBloco = document.getElementById('btn-import-bloco');
+    if (btnImportBloco) {
+        btnImportBloco.style.display = store.selectedTurma ? 'block' : 'none';
+    }
 
     const alocacoesTurma = store.allocations.filter(a => String(a.turmaId) === String(store.selectedTurma));
     const primeiraAula = alocacoesTurma.find(a => a.tipo === 'regular' && a.horario);
@@ -1377,6 +1423,7 @@ function renderOfertasList() {
     
     const regular = list.filter((a) => a.tipo === 'regular' || a.tipo === 'regular_prioritaria');
     const intensivas = list.filter((a) => a.tipo === 'intensiva');
+    const pendentes = list.filter((a) => a.tipo === 'pendente'); // NOVO GRUPO
 
     intensivas.sort((a, b) => (a.dataInicio || '').localeCompare(b.dataInicio || ''));
     regular.sort((a, b) => (a.disciplina || '').localeCompare(b.disciplina || ''));
@@ -1405,13 +1452,14 @@ function renderOfertasList() {
         const start = a.dataInicio || semestreInicio;
         const end = a.dataFim || semestreFim;
 
-        if (a.tipo === 'regular' || a.tipo === 'regular_prioritaria') {
+        if (a.tipo === 'pendente') {
+            details = `Aguardando grade`;
+        } else if (a.tipo === 'regular' || a.tipo === 'regular_prioritaria') {
             const suspended = getSuspendedDates(store.allocations, a.turmaId, a.diaSemana, a.disciplina, start);
             const numAulas = countWeekdaysInPeriod(start, end, parseInt(a.diaSemana), feriados, suspended);
             totalHoras = numAulas * 1; 
             details = `${numAulas} aulas`;
         } else {
-            // RECUPERA A CHAVE DO SÁBADO PARA RECALCULAR A CARGA HORÁRIA EXIBIDA
             const diasUteis = countBusinessDays(start, end, feriados, blockedWeekdays, a.usaSabado || false);
             const slotsPorDia = a.horariosOcupados ? a.horariosOcupados.length : 5;
             totalHoras = diasUteis * slotsPorDia; 
@@ -1425,8 +1473,8 @@ function renderOfertasList() {
             if (totalHoras > chMax) color = '#c0392b';
         }
 
-        const allocsDaDisciplina = store.allocations.filter(x => String(x.turmaId) === String(a.turmaId) && x.disciplina === a.disciplina);
-        const sigaaCode = getSigaaCode(allocsDaDisciplina);
+        const allocsDaDisciplina = store.allocations.filter(x => String(x.turmaId) === String(a.turmaId) && x.disciplina === a.disciplina && x.tipo !== 'pendente');
+        const sigaaCode = allocsDaDisciplina.length > 0 ? getSigaaCode(allocsDaDisciplina) : '-';
         
         let btnCopySigaa = '';
         if (sigaaCode !== '-') {
@@ -1440,15 +1488,22 @@ function renderOfertasList() {
         }
 
         const sabadoLabel = a.usaSabado ? `<br><span style="color:#e67e22; font-weight:bold; font-size:0.8em;">(Inclui Sábados)</span>` : '';
-        const chInfo = `<b style="color:${color}">${totalHoras}</b> / ${chMax}h <small>(${details})</small>${sabadoLabel}`;
-        const labelTipo = a.tipo === 'regular_prioritaria' ? '<b>Regular (Prioritária)</b>' : a.tipo;
+        const chInfo = a.tipo === 'pendente' ? `<span style="color:#7f8c8d;">--- / ${chMax}h</span>` : `<b style="color:${color}">${totalHoras}</b> / ${chMax}h <small>(${details})</small>${sabadoLabel}`;
         
-        let endFmt = formatDateBR(end);
-        if (store.settings.termEnd && end > store.settings.termEnd) { 
-            endFmt = `<span style="color:#c0392b; font-weight:bold; font-size:1.1em;" title="Atenção: Esta data ultrapassa o fim oficial do semestre!">⚠️ ${endFmt}</span>`; 
+        let labelTipo = a.tipo;
+        if (a.tipo === 'regular_prioritaria') labelTipo = '<b>Regular (Prioritária)</b>';
+        if (a.tipo === 'pendente') labelTipo = '<span style="background:#f1c40f; color:#000; padding:2px 6px; border-radius:4px; font-size:0.85em; font-weight:bold;">Pendente</span>';
+        
+        let horarioTxt = '';
+        if (a.tipo === 'pendente') {
+            horarioTxt = '<span style="color:#e67e22; font-style:italic; font-weight:bold;">Sem horário definido</span>';
+        } else {
+            let endFmt = formatDateBR(end);
+            if (store.settings.termEnd && end > store.settings.termEnd) { 
+                endFmt = `<span style="color:#c0392b; font-weight:bold; font-size:1.1em;" title="Atenção: Esta data ultrapassa o fim oficial do semestre!">⚠️ ${endFmt}</span>`; 
+            }
+            horarioTxt = `${formatDateBR(start)} a ${endFmt}<br><small>${['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab'][a.diaSemana] || 'Int.'} ${a.horario || ''}</small>`;
         }
-        
-        const horarioTxt = `${formatDateBR(start)} a ${endFmt}<br><small>${['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab'][a.diaSemana] || 'Int.'} ${a.horario || ''}</small>`;
         
         let btnHtml = `<button class="btn-danger btn-delete-row" style="padding:4px 8px; margin:0; font-size:0.85em; border-radius:3px; cursor:pointer;" title="Excluir">🗑️ Excluir</button>`;
         btnHtml = `<button class="btn-primary btn-edit-row" style="padding:4px 8px; margin:0; font-size:0.85em; background-color:#2980b9; border:none; color:white; border-radius:3px; cursor:pointer; margin-right:5px;" title="Editar">✏️ Editar</button>` + btnHtml;
@@ -1463,7 +1518,6 @@ function renderOfertasList() {
             <td style="white-space:nowrap;"><div style="display:flex; justify-content:center;">${btnHtml}</div></td>
         `;
         
-        // --- NOVO BOTÃO VERDE DE COPIAR (ANTI-FALHA) ---
         const copyBtn = tr.querySelector('.btn-sigaa-copy');
         if (copyBtn) {
             copyBtn.onclick = async (e) => {
@@ -1475,7 +1529,6 @@ function renderOfertasList() {
                 const origBorder = btn.style.borderColor;
 
                 try {
-                    // Estratégia dupla de cópia
                     if (navigator.clipboard && window.isSecureContext) {
                         await navigator.clipboard.writeText(textToCopy);
                     } else {
@@ -1489,13 +1542,11 @@ function renderOfertasList() {
                         document.body.removeChild(textArea);
                     }
                     
-                    // Feedback Visual Forte (Verde)
                     btn.innerHTML = '✅ Copiado';
                     btn.style.backgroundColor = '#27ae60';
                     btn.style.color = '#ffffff';
                     btn.style.borderColor = '#27ae60';
 
-                    // Volta ao normal
                     setTimeout(() => { 
                         btn.innerHTML = origHtml; 
                         btn.style.backgroundColor = origBg;
@@ -1520,11 +1571,7 @@ function renderOfertasList() {
         const btnEdit = tr.querySelector('.btn-edit-row');
         if (btnEdit) {
             btnEdit.onclick = () => {
-                if (confirm('Carregar para edição? A oferta antiga será removida.')) {
-                    if (inputConfig.tipo) { 
-                        inputConfig.tipo.value = a.tipo; 
-                        inputConfig.tipo.dispatchEvent(new Event('change')); 
-                    }
+                if (confirm('Carregar para edição? A oferta antiga será removida e você deverá clicar na grade para posicioná-la.')) {
                     if (inputConfig.disciplina) { 
                         inputConfig.disciplina.value = `${a.disciplina} (${info.ch}h)`; 
                         inputConfig.disciplina.dispatchEvent(new Event('input')); 
@@ -1533,11 +1580,14 @@ function renderOfertasList() {
                         inputConfig.cor.value = a.cor; 
                         setTimeout(() => { inputConfig.cor.value = a.cor; }, 50); 
                     }
+                    if (inputConfig.tipo) { 
+                        inputConfig.tipo.value = a.tipo === 'pendente' ? 'regular' : a.tipo; 
+                        inputConfig.tipo.dispatchEvent(new Event('change')); 
+                    }
                     if (inputConfig.inicio && a.dataInicio) {
                         inputConfig.inicio.value = a.dataInicio;
                     }
 
-                    // RESTAURA A CHAVE NA CAIXINHA DE SÁBADO
                     if (a.tipo === 'intensiva') {
                         const chkSabado = document.getElementById('chk-include-saturday');
                         if (chkSabado) chkSabado.checked = !!a.usaSabado;
@@ -1563,7 +1613,7 @@ function renderOfertasList() {
                             chkMulti.dispatchEvent(new Event('change')); 
                         }
                         if (inputConfig.docente) { 
-                            inputConfig.docente.value = a.docente || ''; 
+                            inputConfig.docente.value = a.docente === 'A definir' ? '' : (a.docente || ''); 
                             inputConfig.docente.dispatchEvent(new Event('input')); 
                         }
                     }
@@ -1589,6 +1639,7 @@ function renderOfertasList() {
         tbody.appendChild(tr);
     };
 
+    // Renderiza as Intensivas
     intensivas.forEach((a) => {
         const monthKey = a.dataInicio ? a.dataInicio.substring(0, 7) : '';
         if (monthKey && monthKey !== currentMonth) { 
@@ -1602,12 +1653,19 @@ function renderOfertasList() {
         appendRow(a);
     });
 
+    // Renderiza as Regulares
     if (regular.length > 0) { 
         appendSeparator('AULAS REGULARES (E PRIORITÁRIAS)'); 
         regular.forEach(appendRow); 
     }
     
-    if (intensivas.length === 0 && regular.length === 0) {
+    // Renderiza as Pendentes (Importadas do PPC)
+    if (pendentes.length > 0) {
+        appendSeparator('AGUARDANDO ALOCAÇÃO NA GRADE (PENDENTES)');
+        pendentes.forEach(appendRow);
+    }
+    
+    if (intensivas.length === 0 && regular.length === 0 && pendentes.length === 0) {
         const tr = document.createElement('tr'); 
         tr.innerHTML = `<td colspan="7" style="text-align:center; color:#666;">Nenhuma oferta cadastrada.</td>`; 
         tbody.appendChild(tr);
