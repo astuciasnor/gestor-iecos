@@ -222,6 +222,114 @@
             transform: scale(0.9);
             background-color: var(--primary-light);
         }
+
+        /* ============================================================== */
+        /* ===== NOVO DESIGN: GRADE SEMANAL E BOTTOM SHEET (OPÇÃO C) ==== */
+        /* ============================================================== */
+        
+        .semana-block {
+            margin-bottom: 25px;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+            overflow: hidden;
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        .semana-header {
+            background: var(--primary);
+            color: white;
+            padding: 8px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .grade-semana {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr); /* 6 colunas (Seg a Sáb) */
+            gap: 1px;
+            background: #e0e0e0; /* Cor da borda entre colunas */
+        }
+
+        .grade-dia {
+            background: #fff;
+            display: flex;
+            flex-direction: column;
+            min-height: 90px;
+        }
+
+        .grade-dia-header {
+            text-align: center;
+            padding: 6px 0;
+            border-bottom: 1px solid #f0f0f0;
+            background: #fafafa;
+        }
+
+        .grade-dia-header .nome-dia { font-size: 0.7rem; font-weight: bold; color: #7f8c8d; text-transform: uppercase;}
+        .grade-dia-header .num-dia { font-size: 0.95rem; font-weight: 800; color: #2c3e50; }
+
+        .grade-slots {
+            padding: 4px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            flex: 1;
+        }
+
+        /* O Quadradinho Mágico (Chip) */
+        .mini-chip {
+            color: white;
+            border-radius: 4px;
+            padding: 4px 2px;
+            text-align: center;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            transition: transform 0.1s;
+        }
+        .mini-chip:active { transform: scale(0.92); }
+        
+        .chip-hora { font-size: 0.55rem; opacity: 0.9; line-height: 1.2; font-weight: bold;}
+        .chip-sigla { font-size: 0.75rem; font-weight: 900; line-height: 1.2; letter-spacing: 0.5px;}
+
+        .feriado-chip {
+            background: #fdf0ed; color: #e74c3c; font-size: 0.65rem; padding: 6px 2px; 
+            text-align: center; border-radius: 4px; font-weight: bold; border: 1px dashed #e74c3c;
+        }
+
+        /* ===== BOTTOM SHEET MODAL (Janela que sobe) ===== */
+        .sheet-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6); z-index: 2000;
+            opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
+        }
+        .sheet-overlay.active { opacity: 1; pointer-events: auto; }
+
+        .bottom-sheet {
+            position: fixed; bottom: -100%; left: 0; width: 100%;
+            background: #fff; border-radius: 20px 20px 0 0; z-index: 2001;
+            transition: bottom 0.3s cubic-bezier(0.1, 0.8, 0.2, 1);
+            box-shadow: 0 -5px 20px rgba(0,0,0,0.2);
+            padding: 20px; max-height: 85vh; overflow-y: auto;
+            text-align: left;
+        }
+        .bottom-sheet.active { bottom: 0; }
+
+        .sheet-handle { width: 50px; height: 5px; background: #ddd; border-radius: 5px; margin: 0 auto 20px auto; }
+        .sheet-title { font-size: 1.3rem; font-weight: 900; margin-bottom: 5px; line-height: 1.2; }
+        .sheet-tipo { font-size: 0.8rem; text-transform: uppercase; font-weight: bold; color: #7f8c8d; margin-bottom: 20px; display: inline-block; padding: 3px 8px; background: #f1f2f6; border-radius: 4px;}
+        
+        .sheet-info-row { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 15px; font-size: 1rem; color: #2c3e50; font-weight: 600;}
+        .sheet-info-icon { font-size: 1.3rem; }
+        
+        .sheet-btn-fechar {
+            display: block; width: 100%; padding: 14px; background: #f1f2f6;
+            border: none; border-radius: 8px; font-weight: bold; color: #555;
+            font-size: 1.05rem; margin-top: 25px; cursor: pointer; transition: background 0.2s;
+        }
+        .sheet-btn-fechar:active { background: #e1e2e6; }
     </style>
 </head>
 <body>
@@ -258,6 +366,28 @@
     <div id="resultado-agenda"></div>
 
     <button id="btn-topo" class="btn-topo" title="Voltar ao topo">⬆️</button>
+
+    <div id="sheet-overlay" class="sheet-overlay"></div>
+    <div id="bottom-sheet" class="bottom-sheet">
+        <div class="sheet-handle"></div>
+        <h3 id="sheet-title" class="sheet-title">NOME DA DISCIPLINA</h3>
+        <div id="sheet-tipo" class="sheet-tipo">Tipo de Aula</div>
+        
+        <div class="sheet-info-row">
+            <span class="sheet-info-icon">👨‍🏫</span>
+            <span id="sheet-docente">Nome do Professor</span>
+        </div>
+        <div class="sheet-info-row">
+            <span class="sheet-info-icon">⏰</span>
+            <span id="sheet-horario">00:00 - 00:00</span>
+        </div>
+        <div class="sheet-info-row">
+            <span class="sheet-info-icon">📅</span>
+            <span id="sheet-data">00/00/0000</span>
+        </div>
+        
+        <button id="btn-fechar-sheet" class="sheet-btn-fechar">Fechar</button>
+    </div>
 
     <script type="module" src="js/consulta.js"></script>
 
