@@ -8,7 +8,7 @@ const selCurso = document.getElementById('public-sel-curso');
 const selTurma = document.getElementById('public-sel-turma');
 const selMes = document.getElementById('public-sel-mes');
 const divAgenda = document.getElementById('resultado-agenda');
-const btnTopo = document.getElementById('btn-topo'); // NOVO: Captura o botão
+const btnTopo = document.getElementById('btn-topo'); 
 
 // 1. Quando a página carregar, executamos isso:
 document.addEventListener('DOMContentLoaded', async () => {
@@ -16,24 +16,33 @@ document.addEventListener('DOMContentLoaded', async () => {
     await store.loadData();
 
     try {
-        // 1º Tenta puxar o arquivo do servidor (GitHub Pages)
         const response = await fetch('alocacoes_publicas.json');
         
         if (response.ok) {
             const dadosPublicos = await response.json();
-            store.allocations = dadosPublicos; 
+            
+            // Verifica se é o formato novo (Objeto) ou o antigo (Array)
+            if (Array.isArray(dadosPublicos)) {
+                store.allocations = dadosPublicos;
+            } else {
+                store.allocations = dadosPublicos.allocations || [];
+                // Lê dinamicamente as datas do semestre salvas pelo Coordenador
+                if (dadosPublicos.settings) {
+                    store.settings.termStart = dadosPublicos.settings.termStart;
+                    store.settings.termEnd = dadosPublicos.settings.termEnd;
+                }
+            }
             console.log("Dados carregados do arquivo público (Online)");
         } else {
-            // 2º Se o arquivo não existir, puxa da memória do seu PC (Offline)
             console.warn('Arquivo alocacoes_publicas.json não encontrado. Carregando modo Offline (Local).');
             store.loadAllocations(); 
         }
     } catch (error) {
-        // Se estiver sem internet ou rodando direto do arquivo (file://), cai aqui e funciona offline
         console.warn('Sem conexão ou rodando local. Carregando modo Offline (Local).');
         store.loadAllocations();
     }
 
+    // Fallback de segurança (caso o coordenador tenha esquecido de definir datas no painel)
     if (!store.settings.termStart) store.settings.termStart = '2026-02-01';
     if (!store.settings.termEnd) store.settings.termEnd = '2026-07-31';
 
@@ -59,20 +68,20 @@ function configurarEventos() {
         renderizarAgenda();
     });
 
-    // NOVO: Lógica do botão Voltar ao Topo
+    // Lógica do botão Voltar ao Topo
     window.addEventListener('scroll', () => {
         if (window.scrollY > 300) {
-            btnTopo.style.display = 'flex'; // Mostra o botão após rolar 300px
+            btnTopo.style.display = 'flex'; 
         } else {
-            btnTopo.style.display = 'none'; // Esconde se estiver no topo
+            btnTopo.style.display = 'none'; 
         }
     });
 
-    // NOVO: Ação de clique no botão
+    // Ação de clique no botão
     btnTopo.addEventListener('click', () => {
         window.scrollTo({
             top: 0,
-            behavior: 'smooth' // Rolagem suave
+            behavior: 'smooth' 
         });
     });
 }
@@ -159,14 +168,14 @@ function renderizarAgenda() {
     
     if (!turmaId || !mesSelecionado) return;
 
-    // NOVO: Mensagem de carregamento animada!
+    // Mensagem de carregamento animada
     divAgenda.innerHTML = `
         <div class="loading-msg">
             ⏳ A preparar a agenda da turma...
         </div>
     `;
 
-    // Damos um pequeno atraso de meio segundo (500ms) só para o aluno ver a animação e sentir que o sistema está a trabalhar
+    // Atraso de 500ms para a animação
     setTimeout(() => {
         const [ano, mes] = mesSelecionado.split('-');
         const dataInicio = `${ano}-${mes}-01`;

@@ -33,16 +33,24 @@ document.addEventListener('DOMContentLoaded', async () => {
     a.remove();
   };
 
-  // NOVO: Exportar para o Portal Público (Nome Fixo)
+  // NOVO: Exportar para o Portal Público (Nome Fixo + Datas do Semestre)
   const btnExportPublic = document.getElementById('btn-export-public');
   if (btnExportPublic) {
     btnExportPublic.onclick = () => {
-      // Força o nome do arquivo a ser exatamente o que o Portal do Aluno espera
       const fileName = 'alocacoes_publicas.json';
+      
+      // MÁGICA DA OPÇÃO C: Agrupamos as alocações E as configurações do semestre
+      const exportData = {
+          allocations: store.allocations,
+          settings: {
+              termStart: store.settings.termStart,
+              termEnd: store.settings.termEnd
+          }
+      };
       
       const dataStr =
         "data:text/json;charset=utf-8," +
-        encodeURIComponent(JSON.stringify(store.allocations));
+        encodeURIComponent(JSON.stringify(exportData));
 
       const a = document.createElement('a');
       a.setAttribute('href', dataStr);
@@ -64,24 +72,27 @@ document.addEventListener('DOMContentLoaded', async () => {
     reader.onload = (event) => {
       try {
         const json = JSON.parse(event.target.result);
+        
+        // Verifica se é o formato antigo de backup (Array) ou o novo do portal público (Objeto)
+        const dataToImport = Array.isArray(json) ? json : (json.allocations ? json.allocations : null);
 
-        if (Array.isArray(json)) {
+        if (dataToImport && Array.isArray(dataToImport)) {
           const mode = confirm(
             "Deseja MESCLAR estes dados com os atuais?\n\n[OK] = MESCLAR\n[CANCELAR] = SUBSTITUIR"
           );
 
           if (mode) {
-            const count = store.mergeAllocations(json);
+            const count = store.mergeAllocations(dataToImport);
             alert(`Processo concluído! ${count} novas alocações foram adicionadas.`);
           } else {
-            store.allocations = json;
+            store.allocations = dataToImport;
             store.saveAllocations();
             alert("Dados substituídos com sucesso!");
           }
 
           window.location.reload();
         } else {
-          alert("Arquivo inválido. O formato deve ser uma lista JSON.");
+          alert("Arquivo inválido. O formato não é suportado.");
         }
       } catch (err) {
         console.error(err);
