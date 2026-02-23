@@ -1,6 +1,6 @@
 import { store } from './store.js';
 import { getCalendarEvents } from './calendar.js';
-import { countBusinessDays, countWeekdaysInPeriod, addBusinessDays, isDateOverlap, calculateEndDateByWeekday } from './utils.js';
+import { countBusinessDays, countWeekdaysInPeriod, addBusinessDays, isDateOverlap, calculateEndDateByWeekday, hasIntensiveSlotConflict } from './utils.js';
 
 const gridContainer = document.getElementById('weekly-grid');
 const selCurso = document.getElementById('sel-curso');
@@ -28,14 +28,15 @@ const inputConfig = {
 
 let tempImportData = null;
 
-function showToastWarning(message) {
+// ATUALIZAÇÃO: Suporte a alertas verdes amigáveis
+function showToastWarning(message, type = 'error') {
     const fb = document.getElementById('feedback-msg');
     if (!fb) return;
     
     fb.classList.remove('hidden');
     fb.innerHTML = message;
     fb.style.display = 'block';
-    fb.style.backgroundColor = '#e74c3c'; 
+    fb.style.backgroundColor = type === 'success' ? '#27ae60' : '#e74c3c'; 
     fb.style.color = '#fff';
     fb.style.padding = '15px 20px';
     fb.style.borderRadius = '6px';
@@ -46,11 +47,12 @@ function showToastWarning(message) {
     fb.style.fontSize = '1.1em';
     fb.style.lineHeight = '1.4';
 
+    const duration = type === 'success' ? 4500 : 7000;
     if (window.toastTimeout) clearTimeout(window.toastTimeout);
     window.toastTimeout = setTimeout(() => {
         fb.style.display = 'none';
         fb.classList.add('hidden');
-    }, 7000); 
+    }, duration); 
 }
 
 function timeToMinutes(str) {
@@ -407,6 +409,9 @@ function calculateTeacherTotalCH(teacherName) {
     return totalCH;
 }
 
+// =====================================================================
+// ATUALIZAÇÃO MÁGICA: Suspensão de Bloco no Cálculo Matemático
+// =====================================================================
 function syncAllRegularDates() {
     const termStart = store.settings.termStart || '2025-01-01';
     const termEnd = store.settings.termEnd || '2025-12-31';
@@ -444,28 +449,35 @@ function syncAllRegularDates() {
         while (classesFound < maxCH && loops < 365) {
             const dow = currentDate.getDay();
             const dStr = currentDate.toISOString().split('T')[0];
+            
+            // Pega TODOS os slots que essa Regular tem nesse dia
             const slotsToday = group.filter(a => parseInt(a.diaSemana) === dow);
             
             if (slotsToday.length > 0 && !feriadosSet.has(dStr)) {
-                slotsToday.forEach(slot => {
-                    const isSuspended = store.allocations.some(other => {
-                        if (String(other.turmaId) !== String(turmaId)) return false;
-                        
-                        const oStart = other.dataInicio || termStart;
-                        const oEnd = other.dataFim || termEnd;
-                        
-                        if (dStr < oStart || dStr > oEnd) return false;
-                        if (other.tipo === 'intensiva' && other.horariosOcupados && other.horariosOcupados.includes(slot.horario)) return true;
-                        if (other.tipo === 'regular_prioritaria' && parseInt(other.diaSemana) === dow && other.horario === slot.horario && other.id !== slot.id) return true;
-                        
-                        return false;
-                    });
+                
+                // MÁGICA: Se UMA intensiva trombar com QUALQUER slot de hoje, suspende o BLOCO TODO.
+                const dayIsSuspended = store.allocations.some(other => {
+                    if (String(other.turmaId) !== String(turmaId)) return false;
                     
-                    if (!isSuspended) { 
-                        classesFound++; 
-                        lastValidDate = new Date(currentDate); 
+                    const oStart = other.dataInicio || termStart;
+                    const oEnd = other.dataFim || termEnd;
+                    
+                    if (dStr >= oStart && dStr <= oEnd) {
+                        if (other.tipo === 'intensiva' && other.horariosOcupados) {
+                            return slotsToday.some(slot => other.horariosOcupados.includes(slot.horario));
+                        }
+                        if (other.tipo === 'regular_prioritaria' && parseInt(other.diaSemana) === dow && other.disciplina !== disciplina) {
+                            return slotsToday.some(slot => other.horario === slot.horario);
+                        }
                     }
+                    return false;
                 });
+                
+                if (!dayIsSuspended) { 
+                    // Soma TODOS os horários juntos, já que o bloco do dia inteiro está livre
+                    classesFound += slotsToday.length; 
+                    lastValidDate = new Date(currentDate); 
+                }
             }
             
             if (classesFound >= maxCH) break;
@@ -482,26 +494,40 @@ function syncAllRegularDates() {
     store.saveAllocations();
 }
 
-function getSuspendedDates(allocs, turmaId, diaSemana, horario, startDate) {
+// =====================================================================
+// ATUALIZAÇÃO MÁGICA: getSuspendedDates agora suporta a Suspensão em Bloco
+// =====================================================================
+function getSuspendedDates(allocs, turmaId, diaSemana, disciplina, startDate) {
     if (!startDate) return [];
     const suspended = [];
-    const blockers = allocs.filter(a => {
-        if (String(a.turmaId) !== String(turmaId)) return false;
-        if (a.tipo === 'intensiva' && a.horariosOcupados && a.horariosOcupados.includes(horario)) return true;
-        if (a.tipo === 'regular_prioritaria' && parseInt(a.diaSemana) === parseInt(diaSemana) && a.horario === horario) return true;
-        return false;
-    });
     
-    if (blockers.length === 0) return [];
+    // Lista todos os horários dessa mesma regular no dia da semana
+    const mySlots = allocs
+        .filter(a => String(a.turmaId) === String(turmaId) && a.disciplina === disciplina && parseInt(a.diaSemana) === parseInt(diaSemana) && (a.tipo === 'regular' || a.tipo === 'regular_prioritaria'))
+        .map(a => a.horario);
+
+    if (mySlots.length === 0) return [];
     
     let curDt = new Date(startDate + "T12:00:00");
     for (let i = 0; i < 365; i++) {
         if (curDt.getDay() === parseInt(diaSemana)) {
             const dStr = curDt.toISOString().split('T')[0];
-            const isBlocked = blockers.some(b => {
+            
+            // Suspende se esbarrar em QUALQUER um dos meus slots
+            const isBlocked = allocs.some(b => {
+                if (String(b.turmaId) !== String(turmaId)) return false;
                 const bStart = b.dataInicio || store.settings.termStart;
                 const bEnd = b.dataFim || store.settings.termEnd;
-                return dStr >= bStart && dStr <= bEnd;
+                
+                if (dStr >= bStart && dStr <= bEnd) {
+                    if (b.tipo === 'intensiva' && b.horariosOcupados) {
+                        return mySlots.some(s => b.horariosOcupados.includes(s));
+                    }
+                    if (b.tipo === 'regular_prioritaria' && parseInt(b.diaSemana) === parseInt(diaSemana)) {
+                        return mySlots.some(s => b.horario === s && b.disciplina !== disciplina);
+                    }
+                }
+                return false;
             });
             if (isBlocked) suspended.push(dStr);
         }
@@ -1173,6 +1199,21 @@ function handleSlotClick(dia, horario) {
         if (!confirm(`O professor ${mainProf} já está ocupado nesta faixa de datas. Continuar?`)) return; 
     }
 
+    // Identifica se há intensivas que irão suspender essa nova aula regular
+    const blockingIntensivas = store.allocations.filter(a => {
+        if (String(a.turmaId) !== String(store.selectedTurma)) return false;
+        if (a.tipo !== 'intensiva') return false;
+        
+        // Verifica overlap das datas gerais (nova regular é semestral)
+        const aStart = a.dataInicio || store.settings.termStart;
+        const aEnd = a.dataFim || store.settings.termEnd;
+        const rStart = dataInicio;
+        const rEnd = store.settings.termEnd || '2099-12-31'; 
+        
+        if (!isDateOverlap(rStart, rEnd, aStart, aEnd)) return false;
+        return a.horariosOcupados && a.horariosOcupados.includes(horario);
+    });
+
     store.addAllocation({ 
         turmaId: store.selectedTurma, 
         disciplina, 
@@ -1190,13 +1231,17 @@ function handleSlotClick(dia, horario) {
     renderWeeklyGrid(); 
     renderOfertasList();
 
-    if (window.overlapWarningTimeout) clearTimeout(window.overlapWarningTimeout);
-    
-    if (store.settings.termEnd) {
+    // NOTIFICAÇÃO 1: Avisa se uma intensiva engoliu essa nova regular
+    if (blockingIntensivas.length > 0) {
+        const nomes = [...new Set(blockingIntensivas.map(i => i.disciplina))].join(', ');
+        showToastWarning(`💡 <b>Ajuste Automático:</b> A disciplina <b>${info.abrev}</b> iniciará com aulas suspensas nos dias da Intensiva de <b>${nomes}</b>. A data final foi compensada!`, 'success');
+    } else if (store.settings.termEnd) {
+        // Alerta padrão de fora de semestre (mantido)
+        if (window.overlapWarningTimeout) clearTimeout(window.overlapWarningTimeout);
         window.overlapWarningTimeout = setTimeout(() => {
             const slotsDesta = store.allocations.filter(a => a.disciplina === disciplina && String(a.turmaId) === String(store.selectedTurma));
             if (slotsDesta.length > 0 && slotsDesta[0].dataFim > store.settings.termEnd) {
-                showToastWarning(`⚠️ ATENÇÃO: A disciplina <b>${info.abrev}</b> terminará em <b>${formatDateBR(slotsDesta[0].dataFim)}</b>.<br>Isso ultrapassa o fim do semestre (${formatDateBR(store.settings.termEnd)}).<br>Insira mais horários na grade para reduzir esta data!`);
+                showToastWarning(`⚠️ ATENÇÃO: A disciplina <b>${info.abrev}</b> terminará em <b>${formatDateBR(slotsDesta[0].dataFim)}</b>.<br>Isso ultrapassa o fim do semestre (${formatDateBR(store.settings.termEnd)}).<br>Insira mais horários na grade para reduzir esta data!`, 'error');
             }
         }, 5000); 
     }
@@ -1235,21 +1280,19 @@ function handleAddManual() {
         const chkSabado = document.getElementById('chk-include-saturday');
         const usaSabado = chkSabado ? chkSabado.checked : false;
 
-        // CÁLCULO MÁGICO (PASSANDO A CHAVE DE SÁBADO)
+        // CÁLCULO MÁGICO
         const dataFimCalculada = addBusinessDays(inicio, diasNecessarios, feriados, blockedWeekdays, usaSabado);
 
-        const megaConflictInt = store.allocations.find(a => {
+        // NOVA REGRA (TOLERÂNCIA ZERO PARA INTENSIVA X INTENSIVA)
+        const intensiveConflict = store.allocations.find(a => {
             if (String(a.turmaId) !== String(store.selectedTurma)) return false;
             if (a.tipo !== 'intensiva' || a.disciplina === disciplina) return false; 
-            if (!isDateOverlap(inicio, dataFimCalculada, a.dataInicio || store.settings.termStart, a.dataFim || store.settings.termEnd)) return false;
-
-            const newShifts = [...new Set(slotsIntensiva.map(s => timeToMinutes(s) < 780 ? 'Manhã' : 'Tarde'))];
-            const existingShifts = [...new Set((a.horariosOcupados || []).map(s => timeToMinutes(s) < 780 ? 'Manhã' : 'Tarde'))];
-            const hasOverlap = newShifts.some(shift => existingShifts.includes(shift));
-            return hasOverlap && (slotsIntensiva.length >= 5 || (a.horariosOcupados || []).length >= 5);
+            return hasIntensiveSlotConflict(inicio, dataFimCalculada, slotsIntensiva, a.dataInicio || store.settings.termStart, a.dataFim || store.settings.termEnd, a.horariosOcupados);
         });
 
-        if (megaConflictInt) return alert(`⚠️ TURNO BLOQUEADO por uma Intensiva de 5+ horas.`);
+        if (intensiveConflict) {
+            return alert(`❌ CHOQUE DE HORÁRIO!\n\nA Intensiva de "${intensiveConflict.disciplina}" já está utilizando este(s) horário(s) no mesmo período. A ação foi bloqueada.`);
+        }
 
         let idToRemove = null;
         const conflitoIntensiva = store.allocations.find(a => {
@@ -1267,7 +1310,24 @@ function handleAddManual() {
 
         if (idToRemove) store.removeAllocation(idToRemove);
 
-        // SALVA A OPÇÃO usaSabado NA BASE DE DADOS
+        // VERIFICA QUAIS REGULARES SERÃO AFETADAS PELA NOVA INTENSIVA
+        const affectedRegulars = [];
+        store.allocations.forEach(a => {
+            if (String(a.turmaId) !== String(store.selectedTurma)) return;
+            if (a.tipo !== 'regular' && a.tipo !== 'regular_prioritaria') return;
+            
+            const sReg = a.dataInicio || store.settings.termStart;
+            const eReg = a.dataFim || store.settings.termEnd;
+            
+            if (isDateOverlap(inicio, dataFimCalculada, sReg, eReg)) {
+                if (slotsIntensiva.includes(a.horario)) {
+                    if (!affectedRegulars.includes(a.disciplina)) {
+                        affectedRegulars.push(a.disciplina);
+                    }
+                }
+            }
+        });
+
         store.addAllocation({ 
             turmaId: store.selectedTurma, 
             disciplina: disciplina, 
@@ -1284,6 +1344,13 @@ function handleAddManual() {
         
         syncAllRegularDates(); 
         renderOfertasList();
+
+        // NOTIFICAÇÃO 2: Avisa se esta nova intensiva empurrou aulas regulares
+        if (affectedRegulars.length > 0) {
+            const nomes = affectedRegulars.join(', ');
+            showToastWarning(`💡 <b>Ajuste Automático:</b> A(s) disciplina(s) <b>${nomes}</b> teve/tiveram aulas suspensas e a data final foi empurrada para frente!`, 'success');
+        }
+
     } else {
         alert('Para regular, clique na grade.');
     }
@@ -1339,7 +1406,7 @@ function renderOfertasList() {
         const end = a.dataFim || semestreFim;
 
         if (a.tipo === 'regular' || a.tipo === 'regular_prioritaria') {
-            const suspended = getSuspendedDates(store.allocations, a.turmaId, a.diaSemana, a.horario, start);
+            const suspended = getSuspendedDates(store.allocations, a.turmaId, a.diaSemana, a.disciplina, start);
             const numAulas = countWeekdaysInPeriod(start, end, parseInt(a.diaSemana), feriados, suspended);
             totalHoras = numAulas * 1; 
             details = `${numAulas} aulas`;

@@ -177,3 +177,16 @@ export function calculateEndDateByWeekday(startDateStr, classesNeeded, targetDay
 
     return lastValidDate.toISOString().split('T')[0];
 }
+
+// --- NOVA FUNÇÃO: Checagem de Tolerância Zero para Intensivas ---
+// Verifica se duas intensivas compartilham alguma data E algum horário na grade
+export function hasIntensiveSlotConflict(startA, endA, slotsA, startB, endB, slotsB) {
+    // 1. Checa se o período de datas se cruza no calendário
+    const datesOverlap = isDateOverlap(startA, endA, startB, endB);
+    
+    // 2. Checa se pelo menos UM horário selecionado é igual entre as duas
+    const slotsOverlap = (slotsA || []).some(slot => (slotsB || []).includes(slot));
+    
+    // Só é choque se as datas baterem E os horários baterem
+    return datesOverlap && slotsOverlap;
+}

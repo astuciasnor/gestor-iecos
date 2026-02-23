@@ -234,7 +234,7 @@ export function getCalendarEvents(turmaId, startDate, endDate, docenteFilter = n
           const cStr = cursor.toISOString().split('T')[0];
           const dow = cursor.getDay();
           
-          // ATUALIZAÇÃO 4D: Passa a flag do sábado para contar o histórico de horas perfeitamente
+          // ATUALIZAÇÃO 4D: Passa a flag do sábado para countar o histórico de horas perfeitamente
           if (isBusinessDay(cStr, intense.usaSabado) && !blockedDaysForTurma.has(dow)) {
              hoursBeforeToday += slotsPerDay;
           }
