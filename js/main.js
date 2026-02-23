@@ -33,6 +33,28 @@ document.addEventListener('DOMContentLoaded', async () => {
     a.remove();
   };
 
+  // NOVO: Exportar para o Portal Público (Nome Fixo)
+  const btnExportPublic = document.getElementById('btn-export-public');
+  if (btnExportPublic) {
+    btnExportPublic.onclick = () => {
+      // Força o nome do arquivo a ser exatamente o que o Portal do Aluno espera
+      const fileName = 'alocacoes_publicas.json';
+      
+      const dataStr =
+        "data:text/json;charset=utf-8," +
+        encodeURIComponent(JSON.stringify(store.allocations));
+
+      const a = document.createElement('a');
+      a.setAttribute('href', dataStr);
+      a.setAttribute('download', fileName);
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      
+      alert("Arquivo '" + fileName + "' gerado com sucesso!\n\nFaça o upload deste arquivo no GitHub para atualizar a grade de todos os alunos instantaneamente.");
+    };
+  }
+
   // Importar (Mesclar/Substituir)
   document.getElementById('inp-import').onchange = (e) => {
     const file = e.target.files[0];
