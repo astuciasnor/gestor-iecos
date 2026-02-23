@@ -8,15 +8,13 @@ const selCurso = document.getElementById('public-sel-curso');
 const selTurma = document.getElementById('public-sel-turma');
 const selMes = document.getElementById('public-sel-mes');
 const divAgenda = document.getElementById('resultado-agenda');
+const btnTopo = document.getElementById('btn-topo'); // NOVO: Captura o botão
 
 // 1. Quando a página carregar, executamos isso:
 document.addEventListener('DOMContentLoaded', async () => {
     // Carrega a estrutura base (Cursos e Turmas) do dados_app.json
     await store.loadData();
 
-    // ---------------------------------------------------------
-    // SPRINT 2: A MÁGICA DA PUBLICAÇÃO (ONLINE E OFFLINE)
-    // ---------------------------------------------------------
     try {
         // 1º Tenta puxar o arquivo do servidor (GitHub Pages)
         const response = await fetch('alocacoes_publicas.json');
@@ -36,11 +34,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         store.loadAllocations();
     }
 
-    // AJUSTE CRUCIAL: O navegador do aluno é "limpo" e não tem as datas do semestre salvas.
-    // Se estiver vazio, definimos um padrão para a tela não quebrar.
     if (!store.settings.termStart) store.settings.termStart = '2026-02-01';
     if (!store.settings.termEnd) store.settings.termEnd = '2026-07-31';
-    // ---------------------------------------------------------
 
     configurarEventos();
     preencherCursos();
@@ -48,23 +43,37 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 // 2. O que acontece quando o usuário interage com os selects
 function configurarEventos() {
-    // Quando escolhe o curso -> Libera as turmas
     selCurso.addEventListener('change', () => {
         preencherTurmas(selCurso.value);
         selMes.innerHTML = '<option value="">Aguardando turma...</option>';
         selMes.disabled = true;
-        divAgenda.innerHTML = ''; // Limpa a agenda se trocar o curso
+        divAgenda.innerHTML = ''; 
     });
 
-    // Quando escolhe a turma -> Libera os meses
     selTurma.addEventListener('change', () => {
         preencherMeses();
-        divAgenda.innerHTML = ''; // Limpa a agenda se trocar a turma
+        divAgenda.innerHTML = ''; 
     });
     
-    // Quando escolhe o mês -> Desenha os cartões
     selMes.addEventListener('change', () => {
         renderizarAgenda();
+    });
+
+    // NOVO: Lógica do botão Voltar ao Topo
+    window.addEventListener('scroll', () => {
+        if (window.scrollY > 300) {
+            btnTopo.style.display = 'flex'; // Mostra o botão após rolar 300px
+        } else {
+            btnTopo.style.display = 'none'; // Esconde se estiver no topo
+        }
+    });
+
+    // NOVO: Ação de clique no botão
+    btnTopo.addEventListener('click', () => {
+        window.scrollTo({
+            top: 0,
+            behavior: 'smooth' // Rolagem suave
+        });
     });
 }
 
@@ -113,32 +122,28 @@ function preencherMeses() {
         return;
     }
 
-    // Calcula os meses com base nas datas configuradas no store (painel admin) ou no fallback
     const inicio = store.settings.termStart;
     const fim = store.settings.termEnd;
 
     if (inicio && fim) {
-        let dataAtual = new Date(inicio + 'T12:00:00'); // T12 previne bugs de fuso horário
+        let dataAtual = new Date(inicio + 'T12:00:00'); 
         const dataFim = new Date(fim + 'T12:00:00');
         const mesesAdicionados = new Set();
 
         while (dataAtual <= dataFim) {
             const ano = dataAtual.getFullYear();
             const mes = String(dataAtual.getMonth() + 1).padStart(2, '0');
-            const mesAno = `${ano}-${mes}`; // Fica no formato "2026-02"
+            const mesAno = `${ano}-${mes}`; 
             
             if (!mesesAdicionados.has(mesAno)) {
                 mesesAdicionados.add(mesAno);
-                // Gera o nome bonito em português (ex: "fevereiro de 2026")
                 const nomeMes = dataAtual.toLocaleString('pt-BR', { month: 'long', year: 'numeric' });
                 
                 const opt = document.createElement('option');
                 opt.value = mesAno;
-                // Deixa a primeira letra maiúscula
                 opt.textContent = nomeMes.charAt(0).toUpperCase() + nomeMes.slice(1);
                 selMes.appendChild(opt);
             }
-            // Pula para o próximo mês
             dataAtual.setMonth(dataAtual.getMonth() + 1);
         }
         selMes.disabled = false;
@@ -154,18 +159,23 @@ function renderizarAgenda() {
     
     if (!turmaId || !mesSelecionado) return;
 
-    divAgenda.innerHTML = '<p style="text-align:center; color:#7f8c8d; font-weight:bold; margin-top:20px;">Gerando agenda...</p>';
+    // NOVO: Mensagem de carregamento animada!
+    divAgenda.innerHTML = `
+        <div class="loading-msg">
+            ⏳ A preparar a agenda da turma...
+        </div>
+    `;
 
-    // Calculamos o primeiro e o último dia do mês escolhido
-    const [ano, mes] = mesSelecionado.split('-');
-    const dataInicio = `${ano}-${mes}-01`;
-    const ultimoDia = new Date(ano, mes, 0).getDate();
-    const dataFim = `${ano}-${mes}-${ultimoDia}`;
+    // Damos um pequeno atraso de meio segundo (500ms) só para o aluno ver a animação e sentir que o sistema está a trabalhar
+    setTimeout(() => {
+        const [ano, mes] = mesSelecionado.split('-');
+        const dataInicio = `${ano}-${mes}-01`;
+        const ultimoDia = new Date(ano, mes, 0).getDate();
+        const dataFim = `${ano}-${mes}-${ultimoDia}`;
 
-    // A MÁGICA ACONTECE AQUI: Chama o motor do calendário original!
-    const calendarData = getCalendarEvents(turmaId, dataInicio, dataFim);
-    
-    gerarCartoesHTML(calendarData);
+        const calendarData = getCalendarEvents(turmaId, dataInicio, dataFim);
+        gerarCartoesHTML(calendarData);
+    }, 500); 
 }
 
 function gerarCartoesHTML(calendarData) {
@@ -177,10 +187,8 @@ function gerarCartoesHTML(calendarData) {
     datas.forEach(dataStr => {
         const eventos = calendarData[dataStr];
         
-        // Se o dia não tem nenhum evento programado, pulamos (limpa a tela do aluno)
         if (!eventos || eventos.length === 0) return;
         
-        // Verifica se há aulas ativas ou feriados (ignora dias que só têm aulas suspensas)
         const eventosAtivos = eventos.filter(e => e.type !== 'suspended');
         if (eventosAtivos.length === 0) return;
 
