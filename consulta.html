@@ -87,6 +87,60 @@
             opacity: 0.7;
         }
 
+        /* ===== NOVOS ESTILOS: BOTÕES (PÍLULAS) ===== */
+        .botoes-wrapper {
+            background: #f4f7f5;
+            border: 1px solid #e5ebe8;
+            padding: 15px;
+            border-radius: 12px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            min-height: 60px;
+            align-items: center;
+        }
+
+        .msg-vazio {
+            color: #95a5a6;
+            font-size: 0.95rem;
+            font-style: italic;
+            width: 100%;
+            text-align: center;
+        }
+
+        .btn-seletor {
+            background: #ffffff;
+            border: 2px solid #dde4e0;
+            color: #2c3e50;
+            padding: 10px 16px;
+            border-radius: 20px;
+            font-size: 0.95rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.03);
+            flex: 1 1 auto;
+            text-align: center;
+        }
+
+        .btn-seletor:hover {
+            border-color: #bdc3c7;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.08);
+        }
+
+        .btn-seletor:active {
+            transform: translateY(0);
+        }
+
+        .btn-seletor.active {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: #ffffff;
+            box-shadow: 0 4px 12px rgba(0, 78, 40, 0.3);
+            transform: scale(1.02);
+        }
+
         /* Área onde o calendário/agenda vai aparecer depois */
         #resultado-agenda {
             margin-top: 30px;
@@ -349,15 +403,21 @@
         </div>
 
         <div class="seletor-grupo">
-            <label for="public-sel-turma">2. Selecione a Turma</label>
-            <select id="public-sel-turma" disabled>
+            <label>2. Selecione a Turma</label>
+            <div id="container-turmas" class="botoes-wrapper">
+                <span class="msg-vazio">Aguardando curso...</span>
+            </div>
+            <select id="public-sel-turma" style="display:none;" disabled>
                 <option value="">Aguardando curso...</option>
             </select>
         </div>
 
         <div class="seletor-grupo">
-            <label for="public-sel-mes">3. Mês da Aula</label>
-            <select id="public-sel-mes" disabled>
+            <label>3. Mês da Aula</label>
+            <div id="container-meses" class="botoes-wrapper">
+                <span class="msg-vazio">Aguardando turma...</span>
+            </div>
+            <select id="public-sel-mes" style="display:none;" disabled>
                 <option value="">Aguardando turma...</option>
             </select>
         </div>

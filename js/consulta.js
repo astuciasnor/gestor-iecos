@@ -3,12 +3,17 @@
 import { store } from './store.js';
 import { getCalendarEvents } from './calendar.js';
 
-// Capturando os elementos do HTML
+// Capturando os elementos do HTML (Inclui os novos containers dos botões)
 const selCurso = document.getElementById('public-sel-curso');
-const selTurma = document.getElementById('public-sel-turma');
-const selMes = document.getElementById('public-sel-mes');
+const selTurma = document.getElementById('public-sel-turma'); // Mantido oculto
+const selMes = document.getElementById('public-sel-mes'); // Mantido oculto
+const containerTurmas = document.getElementById('container-turmas');
+const containerMeses = document.getElementById('container-meses');
 const divAgenda = document.getElementById('resultado-agenda');
 const btnTopo = document.getElementById('btn-topo'); 
+
+let turmaIdSelecionada = '';
+let mesSelecionadoAtual = '';
 
 // 1. Quando a página carregar, executamos isso:
 document.addEventListener('DOMContentLoaded', async () => {
@@ -42,7 +47,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         store.loadAllocations();
     }
 
-    // Fallback de segurança
+    // Fallback de segurança (caso o coordenador tenha esquecido de definir datas no painel)
     if (!store.settings.termStart) store.settings.termStart = '2026-02-01';
     if (!store.settings.termEnd) store.settings.termEnd = '2026-07-31';
 
@@ -50,22 +55,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     preencherCursos();
 });
 
-// 2. O que acontece quando o usuário interage com os selects
+// 2. O que acontece quando o usuário interage
 function configurarEventos() {
     selCurso.addEventListener('change', () => {
+        turmaIdSelecionada = '';
+        mesSelecionadoAtual = '';
         preencherTurmas(selCurso.value);
-        selMes.innerHTML = '<option value="">Aguardando turma...</option>';
-        selMes.disabled = true;
+        containerMeses.innerHTML = '<span class="msg-vazio">Aguardando turma...</span>';
         divAgenda.innerHTML = ''; 
-    });
-
-    selTurma.addEventListener('change', () => {
-        preencherMeses();
-        divAgenda.innerHTML = ''; 
-    });
-    
-    selMes.addEventListener('change', () => {
-        renderizarAgenda();
     });
 
     // Lógica do botão Voltar ao Topo
@@ -86,7 +83,7 @@ function configurarEventos() {
     });
 }
 
-// 3. Preenchendo as caixas de seleção
+// 3. Preenchendo os seletores
 function preencherCursos() {
     selCurso.innerHTML = '<option value="">Selecione um curso...</option>';
     if (store.rawData && store.rawData.cursos) {
@@ -99,10 +96,12 @@ function preencherCursos() {
     }
 }
 
+// LÓGICA ATUALIZADA: Desenhar botões para turmas
 function preencherTurmas(cursoSigla) {
-    selTurma.innerHTML = '<option value="">Selecione a turma...</option>';
+    containerTurmas.innerHTML = '';
+    
     if (!cursoSigla || !store.rawData.turmas) {
-        selTurma.disabled = true;
+        containerTurmas.innerHTML = '<span class="msg-vazio">Aguardando curso...</span>';
         return;
     }
 
@@ -110,24 +109,34 @@ function preencherTurmas(cursoSigla) {
     
     if (turmasDoCurso.length > 0) {
         turmasDoCurso.forEach(t => {
-            const opt = document.createElement('option');
-            opt.value = t.turma_id;
-            opt.textContent = t.turma_label;
-            selTurma.appendChild(opt);
+            const btn = document.createElement('button');
+            btn.className = 'btn-seletor';
+            btn.textContent = t.turma_label;
+            
+            btn.addEventListener('click', () => {
+                Array.from(containerTurmas.children).forEach(filho => filho.classList.remove('active'));
+                btn.classList.add('active');
+                
+                turmaIdSelecionada = t.turma_id;
+                mesSelecionadoAtual = ''; 
+                divAgenda.innerHTML = ''; 
+                
+                preencherMeses();
+            });
+            
+            containerTurmas.appendChild(btn);
         });
-        selTurma.disabled = false;
     } else {
-        selTurma.innerHTML = '<option value="">Nenhuma turma encontrada</option>';
-        selTurma.disabled = true;
+        containerTurmas.innerHTML = '<span class="msg-vazio">Nenhuma turma encontrada</span>';
     }
 }
 
+// LÓGICA ATUALIZADA: Desenhar botões para meses
 function preencherMeses() {
-    selMes.innerHTML = '<option value="">Selecione o mês...</option>';
-    const turmaId = selTurma.value;
+    containerMeses.innerHTML = '';
     
-    if (!turmaId) {
-        selMes.disabled = true;
+    if (!turmaIdSelecionada) {
+        containerMeses.innerHTML = '<span class="msg-vazio">Aguardando turma...</span>';
         return;
     }
 
@@ -138,6 +147,7 @@ function preencherMeses() {
         let dataAtual = new Date(inicio + 'T12:00:00'); 
         const dataFim = new Date(fim + 'T12:00:00');
         const mesesAdicionados = new Set();
+        let encontrouMeses = false;
 
         while (dataAtual <= dataFim) {
             const ano = dataAtual.getFullYear();
@@ -146,47 +156,61 @@ function preencherMeses() {
             
             if (!mesesAdicionados.has(mesAno)) {
                 mesesAdicionados.add(mesAno);
-                const nomeMes = dataAtual.toLocaleString('pt-BR', { month: 'long', year: 'numeric' });
+                encontrouMeses = true;
                 
-                const opt = document.createElement('option');
-                opt.value = mesAno;
-                opt.textContent = nomeMes.charAt(0).toUpperCase() + nomeMes.slice(1);
-                selMes.appendChild(opt);
+                const nomeMes = dataAtual.toLocaleString('pt-BR', { month: 'long' });
+                
+                const btn = document.createElement('button');
+                btn.className = 'btn-seletor';
+                btn.textContent = nomeMes.charAt(0).toUpperCase() + nomeMes.slice(1);
+                
+                btn.addEventListener('click', () => {
+                    Array.from(containerMeses.children).forEach(filho => filho.classList.remove('active'));
+                    btn.classList.add('active');
+                    
+                    mesSelecionadoAtual = mesAno;
+                    renderizarAgenda();
+                });
+                
+                containerMeses.appendChild(btn);
             }
             dataAtual.setMonth(dataAtual.getMonth() + 1);
         }
-        selMes.disabled = false;
+        
+        if (!encontrouMeses) {
+            containerMeses.innerHTML = '<span class="msg-vazio">Nenhum mês letivo configurado</span>';
+        }
     } else {
-        selMes.innerHTML = '<option value="">Semestre não configurado no painel admin</option>';
+        containerMeses.innerHTML = '<span class="msg-vazio">Semestre não configurado no painel</span>';
     }
 }
 
 // 4. Renderizando os Cartões da Agenda
 function renderizarAgenda() {
-    const turmaId = selTurma.value;
-    const mesSelecionado = selMes.value;
-    
-    if (!turmaId || !mesSelecionado) return;
+    if (!turmaIdSelecionada || !mesSelecionadoAtual) return;
 
+    // Mensagem de carregamento animada
     divAgenda.innerHTML = `
         <div class="loading-msg">
             ⏳ A desenhar a grade semanal...
         </div>
     `;
 
+    // Atraso de 500ms para a animação
     setTimeout(() => {
-        const [ano, mes] = mesSelecionado.split('-');
+        const [ano, mes] = mesSelecionadoAtual.split('-');
         const dataInicio = `${ano}-${mes}-01`;
         const ultimoDia = new Date(ano, mes, 0).getDate();
         const dataFim = `${ano}-${mes}-${ultimoDia}`;
 
-        const calendarData = getCalendarEvents(turmaId, dataInicio, dataFim);
+        const calendarData = getCalendarEvents(turmaIdSelecionada, dataInicio, dataFim);
         
+        // Chamada da Grade Semanal em vez dos cartões
         gerarGradeSemanalHTML(calendarData, ano, mes);
     }, 500); 
 }
 
-// MANTIDO: O código original antigo intacto como backup/legado
+// FUNÇÃO ANTIGA MANTIDA COMO BACKUP
 function gerarCartoesHTML(calendarData) {
     let html = '';
     const diasDaSemana = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
@@ -254,10 +278,10 @@ function gerarCartoesHTML(calendarData) {
 }
 
 // =========================================================================
-// ==================== NOVAS FUNÇÕES DA OPÇÃO C ===========================
+// ==================== VISÃO EM GRADE SEMANAL COM CORREÇÕES ===============
 // =========================================================================
 
-// 5. NOVA VISÃO: Grade Semanal (Seg a Sáb) com Travas de Data
+// 5. NOVA VISÃO: Grade Semanal (Seg a Sáb)
 function gerarGradeSemanalHTML(calendarData, ano, mes) {
     let html = '';
     
@@ -266,39 +290,38 @@ function gerarGradeSemanalHTML(calendarData, ano, mes) {
     
     let dataAtual = new Date(primeiroDiaMes);
     
-    let diaSemana = dataAtual.getDay(); // 0=Dom, 1=Seg, 6=Sáb
+    let diaSemana = dataAtual.getDay(); 
     let diff = diaSemana === 0 ? -6 : 1 - diaSemana; 
     dataAtual.setDate(dataAtual.getDate() + diff); 
     
     const diasNomes = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
     let temAulaNoMes = false;
 
-    // Converte os limites do semestre para comparar
+    // Converte datas de início e fim para validação da TRAVA
     const inicioSemestre = new Date(store.settings.termStart + 'T12:00:00');
     const fimSemestre = new Date(store.settings.termEnd + 'T12:00:00');
 
-    // Loop pelas semanas até o mês acabar
     while (dataAtual <= ultimoDiaMes || dataAtual.getDay() !== 1) { 
         if (dataAtual > ultimoDiaMes && dataAtual.getDay() === 1) break;
 
         // SEGUNDA-FEIRA: Abre o bloco da semana
         if (dataAtual.getDay() === 1) {
-            const sabadoDaSemana = new Date(dataAtual);
-            sabadoDaSemana.setDate(sabadoDaSemana.getDate() + 5); 
+            const dataFimSemana = new Date(dataAtual);
+            dataFimSemana.setDate(dataFimSemana.getDate() + 5); 
             
-            // CORREÇÃO 1: Se o Sábado desta semana for antes do início do semestre, PULA!
-            if (sabadoDaSemana < inicioSemestre) {
+            // TRAVA 1: Pular semana caso inteira ocorra antes do início do calendário
+            if (dataFimSemana < inicioSemestre) {
                 dataAtual.setDate(dataAtual.getDate() + 7);
                 continue; 
             }
             
-            // CORREÇÃO 1: Se a Segunda desta semana já for depois do fim do semestre, PARA!
+            // TRAVA 2: Pular semana caso inteira ocorra depois do fim do calendário
             if (dataAtual > fimSemestre) {
                 break; 
             }
 
             const strInicio = `${String(dataAtual.getDate()).padStart(2,'0')}/${String(dataAtual.getMonth()+1).padStart(2,'0')}`;
-            const strFim = `${String(sabadoDaSemana.getDate()).padStart(2,'0')}/${String(sabadoDaSemana.getMonth()+1).padStart(2,'0')}`;
+            const strFim = `${String(dataFimSemana.getDate()).padStart(2,'0')}/${String(dataFimSemana.getMonth()+1).padStart(2,'0')}`;
             
             html += `
             <div class="semana-block">
@@ -337,17 +360,20 @@ function gerarGradeSemanalHTML(calendarData, ano, mes) {
                     const titulo = ev.title || ev.disciplina;
                     const cor = ev.cor || '#2c3e50';
                     const tipo = ev.tipo || 'regular';
-
-                    // CORREÇÃO 2: Mostrar todos os professores envolvidos
+                    
+                    // CORREÇÃO: Mostra TODOS os docentes envolvidos nesta alocação
                     let docente = ev.docente || 'A definir';
                     if (ev.docentes && Array.isArray(ev.docentes) && ev.docentes.length > 0) {
                         docente = ev.docentes.map(d => d.nome || d).join(' / ');
                     }
 
+                    // Pega as 3 primeiras letras
                     const sigla = titulo.substring(0, 3).toUpperCase();
+                    // Pega só a hora de início para economizar espaço
                     const horaCurta = horario.split(':')[0] + 'h'; 
                     const dataExibicao = `${diaFormatado}/${String(dataAtual.getMonth()+1).padStart(2,'0')}/${dataAtual.getFullYear()}`;
 
+                    // O QUADRADINHO MÁGICO COM DADOS EMBUTIDOS
                     html += `
                         <div class="mini-chip" style="background-color: ${cor}"
                              data-titulo="${titulo.replace(/"/g, '&quot;')}"
@@ -376,11 +402,11 @@ function gerarGradeSemanalHTML(calendarData, ano, mes) {
     }
 
     if (!temAulaNoMes) {
-        html = '<div class="sem-aulas">⛱️ Nenhuma aula ou evento programado para esta turma nesta parte do semestre.</div>';
+        html = '<div class="sem-aulas">⛱️ Nenhuma aula ou evento programado para esta turma neste período.</div>';
     }
 
     divAgenda.innerHTML = html;
-    ativarInteracaoChips(); 
+    ativarInteracaoChips(); // Liga o Bottom Sheet
 }
 
 // 6. Controla a janela que sobe ao clicar nos quadradinhos (Bottom Sheet)
@@ -392,6 +418,7 @@ function ativarInteracaoChips() {
 
     chips.forEach(chip => {
         chip.addEventListener('click', () => {
+            // Pega os dados escondidos no HTML do quadradinho
             const titulo = chip.getAttribute('data-titulo');
             const docente = chip.getAttribute('data-docente');
             const horario = chip.getAttribute('data-horario');
@@ -399,6 +426,7 @@ function ativarInteracaoChips() {
             const tipo = chip.getAttribute('data-tipo');
             const cor = chip.getAttribute('data-cor');
 
+            // Preenche o Bottom Sheet
             const elTitle = document.getElementById('sheet-title');
             elTitle.textContent = titulo;
             elTitle.style.color = cor;
@@ -412,11 +440,13 @@ function ativarInteracaoChips() {
             if(tipo === 'regular_prioritaria') tipoTexto = 'Regular Prioritária';
             document.getElementById('sheet-tipo').textContent = tipoTexto;
 
+            // Mostra o Modal com animação suave
             overlay.classList.add('active');
             sheet.classList.add('active');
         });
     });
 
+    // Fechar o Modal
     const fecharModal = () => {
         overlay.classList.remove('active');
         sheet.classList.remove('active');
