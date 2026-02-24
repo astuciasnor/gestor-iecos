@@ -367,8 +367,14 @@ function gerarGradeSemanalHTML(calendarData, ano, mes) {
                         docente = ev.docentes.map(d => d.nome || d).join(' / ');
                     }
 
-                    // Pega as 3 primeiras letras
-                    const sigla = titulo.substring(0, 3).toUpperCase();
+                    // ====== NOVIDADE AQUI: LÓGICA DE 4 LETRAS E REMOÇÃO DO (I) ======
+                    // Remove a marcação "(I) " ou similares do início para a sigla não quebrar
+                    let tituloLimpo = titulo.replace(/^\([a-zA-Z]\)\s*/, '').trim();
+                    
+                    // Pega as 4 primeiras letras do nome limpo
+                    const sigla = tituloLimpo.substring(0, 4).toUpperCase();
+                    // ================================================================
+
                     // Pega só a hora de início para economizar espaço
                     const horaCurta = horario.split(':')[0] + 'h'; 
                     const dataExibicao = `${diaFormatado}/${String(dataAtual.getMonth()+1).padStart(2,'0')}/${dataAtual.getFullYear()}`;
