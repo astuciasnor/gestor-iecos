@@ -42,7 +42,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         store.loadAllocations();
     }
 
-    // Fallback de segurança (caso o coordenador tenha esquecido de definir datas no painel)
+    // Fallback de segurança
     if (!store.settings.termStart) store.settings.termStart = '2026-02-01';
     if (!store.settings.termEnd) store.settings.termEnd = '2026-07-31';
 
@@ -168,14 +168,12 @@ function renderizarAgenda() {
     
     if (!turmaId || !mesSelecionado) return;
 
-    // Mensagem de carregamento animada
     divAgenda.innerHTML = `
         <div class="loading-msg">
             ⏳ A desenhar a grade semanal...
         </div>
     `;
 
-    // Atraso de 500ms para a animação
     setTimeout(() => {
         const [ano, mes] = mesSelecionado.split('-');
         const dataInicio = `${ano}-${mes}-01`;
@@ -184,7 +182,6 @@ function renderizarAgenda() {
 
         const calendarData = getCalendarEvents(turmaId, dataInicio, dataFim);
         
-        // MUDANÇA AQUI: Em vez de chamar o gerarCartoesHTML antigo, chama a grade nova!
         gerarGradeSemanalHTML(calendarData, ano, mes);
     }, 500); 
 }
@@ -260,7 +257,7 @@ function gerarCartoesHTML(calendarData) {
 // ==================== NOVAS FUNÇÕES DA OPÇÃO C ===========================
 // =========================================================================
 
-// 5. NOVA VISÃO: Grade Semanal (Seg a Sáb)
+// 5. NOVA VISÃO: Grade Semanal (Seg a Sáb) com Travas de Data
 function gerarGradeSemanalHTML(calendarData, ano, mes) {
     let html = '';
     
@@ -269,7 +266,6 @@ function gerarGradeSemanalHTML(calendarData, ano, mes) {
     
     let dataAtual = new Date(primeiroDiaMes);
     
-    // Recuar para a Segunda-feira da primeira semana do mês
     let diaSemana = dataAtual.getDay(); // 0=Dom, 1=Seg, 6=Sáb
     let diff = diaSemana === 0 ? -6 : 1 - diaSemana; 
     dataAtual.setDate(dataAtual.getDate() + diff); 
@@ -277,17 +273,32 @@ function gerarGradeSemanalHTML(calendarData, ano, mes) {
     const diasNomes = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
     let temAulaNoMes = false;
 
+    // Converte os limites do semestre para comparar
+    const inicioSemestre = new Date(store.settings.termStart + 'T12:00:00');
+    const fimSemestre = new Date(store.settings.termEnd + 'T12:00:00');
+
     // Loop pelas semanas até o mês acabar
     while (dataAtual <= ultimoDiaMes || dataAtual.getDay() !== 1) { 
         if (dataAtual > ultimoDiaMes && dataAtual.getDay() === 1) break;
 
         // SEGUNDA-FEIRA: Abre o bloco da semana
         if (dataAtual.getDay() === 1) {
-            const dataFimSemana = new Date(dataAtual);
-            dataFimSemana.setDate(dataFimSemana.getDate() + 5); // Sábado
+            const sabadoDaSemana = new Date(dataAtual);
+            sabadoDaSemana.setDate(sabadoDaSemana.getDate() + 5); 
             
+            // CORREÇÃO 1: Se o Sábado desta semana for antes do início do semestre, PULA!
+            if (sabadoDaSemana < inicioSemestre) {
+                dataAtual.setDate(dataAtual.getDate() + 7);
+                continue; 
+            }
+            
+            // CORREÇÃO 1: Se a Segunda desta semana já for depois do fim do semestre, PARA!
+            if (dataAtual > fimSemestre) {
+                break; 
+            }
+
             const strInicio = `${String(dataAtual.getDate()).padStart(2,'0')}/${String(dataAtual.getMonth()+1).padStart(2,'0')}`;
-            const strFim = `${String(dataFimSemana.getDate()).padStart(2,'0')}/${String(dataFimSemana.getMonth()+1).padStart(2,'0')}`;
+            const strFim = `${String(sabadoDaSemana.getDate()).padStart(2,'0')}/${String(sabadoDaSemana.getMonth()+1).padStart(2,'0')}`;
             
             html += `
             <div class="semana-block">
@@ -324,17 +335,19 @@ function gerarGradeSemanalHTML(calendarData, ano, mes) {
                 eventosAtivos.forEach(ev => {
                     const horario = ev.horario || (ev.horariosOcupados ? ev.horariosOcupados[0] : '--:--');
                     const titulo = ev.title || ev.disciplina;
-                    const docente = ev.docente || 'A definir';
                     const cor = ev.cor || '#2c3e50';
                     const tipo = ev.tipo || 'regular';
 
-                    // Pega as 3 primeiras letras
+                    // CORREÇÃO 2: Mostrar todos os professores envolvidos
+                    let docente = ev.docente || 'A definir';
+                    if (ev.docentes && Array.isArray(ev.docentes) && ev.docentes.length > 0) {
+                        docente = ev.docentes.map(d => d.nome || d).join(' / ');
+                    }
+
                     const sigla = titulo.substring(0, 3).toUpperCase();
-                    // Pega só a hora de início para economizar espaço
                     const horaCurta = horario.split(':')[0] + 'h'; 
                     const dataExibicao = `${diaFormatado}/${String(dataAtual.getMonth()+1).padStart(2,'0')}/${dataAtual.getFullYear()}`;
 
-                    // O QUADRADINHO MÁGICO COM DADOS EMBUTIDOS
                     html += `
                         <div class="mini-chip" style="background-color: ${cor}"
                              data-titulo="${titulo.replace(/"/g, '&quot;')}"
@@ -350,12 +363,12 @@ function gerarGradeSemanalHTML(calendarData, ano, mes) {
                 });
             }
 
-            html += `</div></div>`; // Fecha grade-slots e grade-dia
+            html += `</div></div>`; 
         }
 
         // SÁBADO: Fecha o bloco da semana
         if (dataAtual.getDay() === 6) {
-            html += `</div></div>`; // Fecha grade-semana e semana-block
+            html += `</div></div>`; 
         }
 
         // Avança um dia
@@ -363,11 +376,11 @@ function gerarGradeSemanalHTML(calendarData, ano, mes) {
     }
 
     if (!temAulaNoMes) {
-        html = '<div class="sem-aulas">⛱️ Nenhuma aula ou evento programado para esta turma neste mês.</div>';
+        html = '<div class="sem-aulas">⛱️ Nenhuma aula ou evento programado para esta turma nesta parte do semestre.</div>';
     }
 
     divAgenda.innerHTML = html;
-    ativarInteracaoChips(); // Liga o Bottom Sheet
+    ativarInteracaoChips(); 
 }
 
 // 6. Controla a janela que sobe ao clicar nos quadradinhos (Bottom Sheet)
@@ -379,7 +392,6 @@ function ativarInteracaoChips() {
 
     chips.forEach(chip => {
         chip.addEventListener('click', () => {
-            // Pega os dados escondidos no HTML do quadradinho
             const titulo = chip.getAttribute('data-titulo');
             const docente = chip.getAttribute('data-docente');
             const horario = chip.getAttribute('data-horario');
@@ -387,7 +399,6 @@ function ativarInteracaoChips() {
             const tipo = chip.getAttribute('data-tipo');
             const cor = chip.getAttribute('data-cor');
 
-            // Preenche o Bottom Sheet
             const elTitle = document.getElementById('sheet-title');
             elTitle.textContent = titulo;
             elTitle.style.color = cor;
@@ -401,13 +412,11 @@ function ativarInteracaoChips() {
             if(tipo === 'regular_prioritaria') tipoTexto = 'Regular Prioritária';
             document.getElementById('sheet-tipo').textContent = tipoTexto;
 
-            // Mostra o Modal com animação suave
             overlay.classList.add('active');
             sheet.classList.add('active');
         });
     });
 
-    // Fechar o Modal
     const fecharModal = () => {
         overlay.classList.remove('active');
         sheet.classList.remove('active');
