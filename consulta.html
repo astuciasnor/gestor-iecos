@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Consulta Acadêmica - IECOS/UFPA</title>
-    <link rel="stylesheet" href="css/style.css?v=2.0">
+    <link rel="stylesheet" href="css/style.css?v=2.1">
     <style>
         /* Estilos específicos para a página de consulta pública, focados em Mobile */
         body {
@@ -89,8 +89,11 @@
 
         /* ===== NOVOS ESTILOS: BOTÕES (PÍLULAS) ===== */
         .botoes-wrapper {
-            background: #ffffff; /* Fundo mais limpo e elegante */
-            border: 1px solid #e2e8f0;
+            /* MUDANÇA AQUI: Fundo Menta Gelo suave e fresco */
+            background: #f0f7f4; 
+            /* Ajuste da cor da borda para combinar com o novo fundo */
+            border: 1px solid #dcebe6;
+            
             padding: 15px;
             border-radius: 12px;
             display: flex;
@@ -98,7 +101,8 @@
             gap: 10px;
             min-height: 60px;
             align-items: center;
-            box-shadow: inset 0 2px 4px rgba(0,0,0,0.02); /* Sombra interna para dar profundidade harmoniosa */
+            /* Sombra interna subtil mantida para profundidade */
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.02); 
         }
 
         .msg-vazio {
@@ -138,6 +142,7 @@
             background: var(--primary);
             border-color: var(--primary);
             color: #ffffff;
+            /* Sombra mantida para destacar o botão selecionado no novo fundo */
             box-shadow: 0 4px 12px rgba(0, 78, 40, 0.3);
             transform: scale(1.02);
         }
@@ -348,7 +353,7 @@
         
         .chip-hora { font-size: 0.55rem; opacity: 0.9; line-height: 1.2; font-weight: bold;}
         
-        /* AQUI FOI AJUSTADO O TAMANHO DA FONTE PARA CABER 4 LETRAS */
+        /* Tamanho da fonte ajustado para 4 letras */
         .chip-sigla { font-size: 0.65rem; font-weight: 900; line-height: 1.2; letter-spacing: 0.2px;}
 
         .feriado-chip {
