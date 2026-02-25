@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestor Acadêmico - Coordenação (v2.0 Dev)</title>
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/style.css?v=3.8">
     
     <style>
         :root {
@@ -142,13 +142,38 @@
             line-height: 1;
         }
 
+        /* ESTILOS PARA OS BOTÕES LADO A LADO */
+        .btn-duplo-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .btn-duplo-container button, 
+        .btn-duplo-container label {
+            flex: 1;
+            text-align: center;
+            padding: 12px 0; 
+            font-weight: bold;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+            box-sizing: border-box; 
+            display: inline-block;
+        }
+
+        .btn-duplo-container button:hover, 
+        .btn-duplo-container label:hover {
+            filter: brightness(1.1);
+            transform: translateY(-1px);
+        }
+
         /* ================================================================= */
         /* ===== NOVO MOTOR DE IMPRESSÃO PROFISSIONAL (PDF IMPECÁVEL) ====== */
         /* ================================================================= */
         @media print {
             @page {
                 size: A4 landscape;
-                margin: 5mm; /* Margem reduzida para aproveitar ao máximo o papel */
+                margin: 5mm; 
             }
 
             body, html {
@@ -222,7 +247,7 @@
             }
 
             .day-cell {
-                min-height: 95px; /* Altura ajustada para formar blocos melhores na A4 */
+                min-height: 95px; 
                 padding: 3px;
                 border-right: 1px solid #ddd;
                 border-bottom: 1px solid #ddd;
@@ -248,7 +273,7 @@
             .cal-slot-row {
                 display: flex;
                 gap: 4px;
-                align-items: flex-start; /* Alinha no topo caso o texto quebre linha */
+                align-items: flex-start; 
                 font-size: 9px;
                 line-height: 1.1;
                 margin-bottom: 2px;
@@ -266,7 +291,7 @@
                 padding: 2px 4px !important;
                 border-radius: 3px;
                 overflow: hidden;
-                white-space: normal !important; /* MÁGICA: Quebra a linha em vez de usar "..." */
+                white-space: normal !important; 
                 word-wrap: break-word;
                 border: 1px solid rgba(0,0,0,0.15) !important;
                 font-weight: 700;
@@ -363,23 +388,7 @@
                 </h1>
             </div>
 
-            <h2>Configuração</h2>
-            
-            <div class="form-group">
-                <label>Curso</label>
-                <select id="sel-curso"><option value="">Selecione...</option></select>
-            </div>
-
-            <div class="form-group">
-                <label>Turma</label>
-                <select id="sel-turma" disabled><option value="">Selecione um curso...</option></select>
-            </div>
-
-            <button id="btn-import-bloco" class="btn-secondary" style="width:100%; margin-bottom:15px; display:none; background:#8e44ad; color:white; border:none; font-weight:bold; box-shadow: 0 2px 5px rgba(0,0,0,0.2); cursor:pointer;">
-                📥 Importar Bloco (PPC)
-            </button>
-
-            <h3>Período Letivo</h3>
+            <h3 style="margin-top: 20px; margin-bottom: 10px; text-transform: uppercase; font-size: 0.9em;">Período Letivo</h3>
 
             <div class="compact-row">
                 <div class="form-group">
@@ -403,6 +412,16 @@
                 </select>
             </div>
 
+            <div class="form-group" style="margin-top: 15px;">
+                <label>Curso</label>
+                <select id="sel-curso"><option value="">Selecione...</option></select>
+            </div>
+
+            <div class="form-group">
+                <label>Turma</label>
+                <select id="sel-turma" disabled><option value="">Selecione um curso...</option></select>
+            </div>
+
             <div class="inline-control">
                 <label for="sel-turno-oferta">Turno:</label>
                 <select id="sel-turno-oferta">
@@ -411,79 +430,108 @@
                 </select>
             </div>
 
-            <hr>
+            <div style="height: 3px; background: rgba(255,255,255,0.2); margin: 30px 0;"></div>
 
-            <h3>Oferta de Disciplina</h3>
+            <h3 style="text-transform: uppercase; letter-spacing: 1px; margin-bottom: 15px;">OFERTA DE DISCIPLINA</h3>
             
-            <div class="form-group">
-                <label>Disciplina</label>
-                <div class="input-row-color">
-                    <input type="color" id="inp-color" value="#e91e63" title="Escolha a cor da disciplina">
-                    <input type="text" id="inp-disciplina" list="list-disciplinas" placeholder="Busque a disciplina...">
-                </div>
-                <datalist id="list-disciplinas"></datalist>
-            </div>
-
-            <div class="form-group">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
-                    <label style="margin:0;">Docente(s)</label>
-                    <div style="font-size:0.85em; display:flex; align-items:center; gap:5px;">
-                        <input type="checkbox" id="chk-multi-docente" style="width:auto; transform: scale(1.2);">
-                        <label for="chk-multi-docente" style="margin:0; font-weight:normal; cursor:pointer; color:#feffcc;">Múltiplos?</label>
-                    </div>
-                </div>
-
-                <div id="container-single-docente">
-                    <input type="text" id="inp-docente" list="list-docentes" placeholder="Busque o docente...">
-                </div>
-
-                <div id="container-multi-docente" class="hidden">
-                    <div id="multi-docente-list"></div>
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:5px;">
-                        <span id="total-ch-display" style="font-size:0.8em; color:#feffcc;">Total: 0h</span>
-                        <button id="btn-add-docente-row" type="button" class="btn-secondary" style="padding:4px 10px; font-size:0.8em;">+ Adicionar</button>
-                    </div>
-                </div>
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; color: #fff; font-weight: 700; font-size: 0.95rem; margin-bottom: 8px;">
+                    1. Oferta em bloco:
+                </label>
                 
-                <datalist id="list-docentes"></datalist>
-            </div>
-
-            <div class="form-group">
-                <label>Tipo</label>
-                <select id="sel-tipo">
-                    <option value="regular">Regular (Semanal)</option>
-                    <option value="regular_prioritaria">Regular (Prioritária)</option>
-                    <option value="intensiva">Intensiva (Blocada)</option>
-                </select>
-            </div>
-
-            <div id="container-slots-selection" class="hidden form-group">
-                <label style="margin-bottom: 8px; color: #fff;">Horários (Desmarque para Híbrido):</label>
-                <div id="slots-checkboxes" class="slots-selection-grid"></div>
-            </div>
-
-            <div id="datas-intensiva" class="form-group">
-                <div class="form-group">
-                    <label>Data de Início</label>
-                    <input type="date" id="inp-data-inicio">
-                </div>
+                <button id="btn-import-bloco" style="width:100%; display:none; background: #f8f9fa; color:#2c3e50; border:1px solid #ced4da; padding: 8px 10px; border-radius: 6px; cursor:pointer; font-weight:bold; font-size: 0.85rem; transition: all 0.2s ease; text-align: center; white-space: nowrap; overflow: hidden; box-shadow: 0 1px 2px rgba(0,0,0,0.1);">
+                    📥 Importar Componentes do Bloco
+                </button>
+                
                 <small style="display:block; color:#bdc3c7; margin-top:5px; font-size:0.8em; line-height: 1.4;">
-                    * O sistema calculará a data final automaticamente baseada na CH e nos horários.
+                    * Após importar, edite cada componente pendente indo na aba Lista de Ofertas
                 </small>
             </div>
 
-            <button id="btn-add-oferta" class="btn-primary">Adicionar à Grade</button>
+            <div>
+                <label style="display: block; color: #fff; font-weight: 700; font-size: 0.95rem; margin-bottom: 12px;">
+                    2. Oferta Individual:
+                </label>
+
+                <div class="form-group">
+                    <label>Disciplina</label>
+                    <div class="input-row-color">
+                        <input type="color" id="inp-color" value="#e91e63" title="Escolha a cor da disciplina">
+                        <input type="text" id="inp-disciplina" list="list-disciplinas" placeholder="Busque a disciplina...">
+                    </div>
+                    <datalist id="list-disciplinas"></datalist>
+                </div>
+
+                <div class="form-group">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
+                        <label style="margin:0;">Docente(s)</label>
+                        <div style="font-size:0.85em; display:flex; align-items:center; gap:5px;">
+                            <input type="checkbox" id="chk-multi-docente" style="width:auto; transform: scale(1.2);">
+                            <label for="chk-multi-docente" style="margin:0; font-weight:normal; cursor:pointer; color:#feffcc;">Múltiplos?</label>
+                        </div>
+                    </div>
+
+                    <div id="container-single-docente">
+                        <input type="text" id="inp-docente" list="list-docentes" placeholder="Busque o docente...">
+                    </div>
+
+                    <div id="container-multi-docente" class="hidden">
+                        <div id="multi-docente-list"></div>
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:5px;">
+                            <span id="total-ch-display" style="font-size:0.8em; color:#feffcc;">Total: 0h</span>
+                            <button id="btn-add-docente-row" type="button" class="btn-secondary" style="padding:4px 10px; font-size:0.8em;">+ Adicionar</button>
+                        </div>
+                    </div>
+                    
+                    <datalist id="list-docentes"></datalist>
+                </div>
+
+                <div class="form-group">
+                    <label>Tipo</label>
+                    <select id="sel-tipo">
+                        <option value="regular">Regular (Semanal)</option>
+                        <option value="regular_prioritaria">Regular (Prioritária)</option>
+                        <option value="intensiva">Intensiva (Blocada)</option>
+                    </select>
+                </div>
+
+                <div id="container-slots-selection" class="hidden form-group">
+                    <label style="margin-bottom: 8px; color: #fff;">Horários (Desmarque para Híbrido):</label>
+                    <div id="slots-checkboxes" class="slots-selection-grid"></div>
+                </div>
+
+                <div id="datas-intensiva" class="form-group">
+                    <div class="form-group">
+                        <label>Data de Início</label>
+                        <input type="date" id="inp-data-inicio">
+                    </div>
+                    <small style="display:block; color:#bdc3c7; margin-top:5px; font-size:0.8em; line-height: 1.4;">
+                        * O sistema calculará a data final automaticamente baseada na CH e nos horários.
+                    </small>
+
+                    <label for="chk-sabados" style="background-color: #ffffff; border: 1px solid #ced4da; border-radius: 6px; padding: 12px 15px; display: flex; align-items: center; justify-content: flex-start; gap: 10px; margin-top: 15px; width: 100%; box-sizing: border-box; cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,0.05); transition: background 0.2s;">
+                        <input type="checkbox" id="chk-sabados" style="width: 17px; height: 17px; cursor: pointer; margin: 0; accent-color: var(--primary); flex-shrink: 0;">
+                        <span style="color: #1a252f; font-weight: 800; font-size: 0.95rem; white-space: nowrap; user-select: none; letter-spacing: -0.3px;">Permitir Sábados</span>
+                    </label>
+                </div>
+
+                <button id="btn-add-oferta" class="btn-primary" style="background-color: #c0392b; border-color: #c0392b; margin-top: 5px; width: 100%;">Adicionar Intensiva à Grade</button>
+            </div>
             
-            <hr>
+            <div style="height: 3px; background: rgba(255,255,255,0.2); margin: 30px 0;"></div>
             
+            <h3 style="text-transform: uppercase; letter-spacing: 1px; margin-bottom: 15px;">GERENCIANDO ARQUIVOS</h3>
+
             <div class="actions">
-                <button id="btn-export" class="btn-secondary" title="Exportar backup do curso">Exportar (JSON)</button>
-                <label for="inp-import" class="btn-secondary" style="cursor:pointer">Importar</label>
-                <input type="file" id="inp-import" accept=".json,.csv" style="display:none">
+                <div class="btn-duplo-container">
+                    <button id="btn-export" class="btn-secondary" title="Exportar backup do curso" style="background: #2c3e50; color: white; border: none;">Exportar (JSON)</button>
+                    <label for="inp-import" class="btn-secondary" style="cursor:pointer; margin:0; line-height: inherit; display:flex; align-items:center; justify-content:center; background: #2c3e50; color: white; border: none;">Importar (JSON)</label>
+                    <input type="file" id="inp-import" accept=".json,.csv" style="display:none">
+                </div>
                 
-                <button id="btn-export-public" class="btn-primary" style="background-color: #27ae60; margin-top: 15px;">🌐 Exportar Portal Público</button>
+                <button id="btn-export-public" class="btn-primary" style="background-color: #27ae60; font-size: 1.05rem; padding: 12px; margin-bottom: 15px; width: 100%;">🌐 Publicar Grade Online</button>
                 
-                <button id="btn-clear" class="btn-danger">Limpar Tudo</button>
+                <button id="btn-clear" class="btn-danger" style="padding: 12px; width: 100%;">Limpar Tudo</button>
             </div>
         </aside>
 
