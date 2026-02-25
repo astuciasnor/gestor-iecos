@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Consulta Acadêmica - IECOS/UFPA</title>
-    <link rel="stylesheet" href="css/style.css?v=2.2">
+    <link rel="stylesheet" href="css/style.css?v=2.1">
     <style>
         /* Estilos específicos para a página de consulta pública, focados em Mobile */
         body {
@@ -22,15 +22,11 @@
         .consulta-container {
             width: 100%;
             max-width: 600px; /* Num notebook não fica gigante, no celular ocupa 100% */
-            
-            /* MUDANÇA AQUI: Fundo "Gelo Suave" para requinte e leveza, tirando o branco puro */
-            background: #f2f6f4; 
-            
-            border-radius: 12px; /* Bordas um pouco mais arredondadas para suavidade */
-            box-shadow: 0 8px 25px rgba(0,0,0,0.08); /* Sombra mais difusa para elegância */
-            padding: 35px 25px;
+            background: var(--bg-panel);
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            padding: 30px 20px;
             text-align: center;
-            border: 1px solid #eef2f0; /* Uma borda muito sutil para definição */
         }
 
         .header-publico img {
@@ -40,53 +36,49 @@
 
         .header-publico h1 {
             color: var(--primary);
-            font-size: 1.6rem; /* Aumentado ligeiramente para destaque */
-            margin: 0 0 8px 0;
-            font-weight: 800;
+            font-size: 1.5rem;
+            margin: 0 0 5px 0;
         }
 
         .header-publico p {
             color: var(--text-muted);
-            font-size: 1rem;
-            margin-bottom: 30px;
-            line-height: 1.4;
+            font-size: 0.95rem;
+            margin-bottom: 25px;
         }
 
         /* Estilo dos seletores para ficarem grandes e fáceis de tocar no celular */
         .seletor-grupo {
             text-align: left;
-            margin-bottom: 25px; /* Mais espaço para respirar */
+            margin-bottom: 20px;
         }
 
         .seletor-grupo label {
             display: block;
-            color: #34495e; /* Texto um pouco mais escuro para contraste */
-            font-weight: 700;
-            margin-bottom: 10px;
-            font-size: 1rem;
+            color: var(--text-main);
+            font-weight: bold;
+            margin-bottom: 8px;
+            font-size: 0.95rem;
         }
 
         .seletor-grupo select {
             width: 100%;
             padding: 14px;
-            border: 2px solid #dcebe6; /* Borda combinando com o tema suave */
-            border-radius: 10px;
+            border: 2px solid var(--border);
+            border-radius: 8px;
             font-size: 1rem;
             background-color: #fff;
             color: var(--text-main);
-            transition: all 0.3s;
+            transition: border-color 0.3s;
             appearance: none;
             background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23004e28%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
             background-repeat: no-repeat;
             background-position: right 15px top 50%;
             background-size: 12px auto;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.02);
         }
 
         .seletor-grupo select:focus {
             border-color: var(--primary);
             outline: none;
-            box-shadow: 0 0 0 3px rgba(0, 78, 40, 0.1);
         }
 
         .seletor-grupo select:disabled {
@@ -97,7 +89,7 @@
 
         /* ===== NOVOS ESTILOS: BOTÕES (PÍLULAS) ===== */
         .botoes-wrapper {
-            /* Fundo interno Menta Gelo suave e fresco */
+            /* MUDANÇA AQUI: Fundo Menta Gelo suave e fresco */
             background: #f0f7f4; 
             /* Ajuste da cor da borda para combinar com o novo fundo */
             border: 1px solid #dcebe6;
@@ -126,7 +118,7 @@
             border: 2px solid #dde4e0;
             color: #2c3e50;
             padding: 10px 16px;
-            border-radius: 25px; /* Mais arredondado */
+            border-radius: 20px;
             font-size: 0.95rem;
             font-weight: 700;
             cursor: pointer;
@@ -298,20 +290,19 @@
         .semana-block {
             margin-bottom: 25px;
             background: #fff;
-            border-radius: 12px; /* Mais arredondado */
-            box-shadow: 0 4px 15px rgba(0,0,0,0.06);
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.08);
             overflow: hidden;
             animation: fadeIn 0.4s ease-out;
-            border: 1px solid #f0f0f0;
         }
 
         .semana-header {
             background: var(--primary);
             color: white;
-            padding: 10px;
+            padding: 8px;
             text-align: center;
-            font-weight: 800;
-            font-size: 0.9rem;
+            font-weight: bold;
+            font-size: 0.85rem;
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
@@ -320,54 +311,54 @@
             display: grid;
             grid-template-columns: repeat(6, 1fr); /* 6 colunas (Seg a Sáb) */
             gap: 1px;
-            background: #e5e5e5; /* Cor da borda entre colunas */
+            background: #e0e0e0; /* Cor da borda entre colunas */
         }
 
         .grade-dia {
             background: #fff;
             display: flex;
             flex-direction: column;
-            min-height: 100px;
+            min-height: 90px;
         }
 
         .grade-dia-header {
             text-align: center;
-            padding: 8px 0;
+            padding: 6px 0;
             border-bottom: 1px solid #f0f0f0;
-            background: #fdfdfd;
+            background: #fafafa;
         }
 
         .grade-dia-header .nome-dia { font-size: 0.7rem; font-weight: bold; color: #7f8c8d; text-transform: uppercase;}
-        .grade-dia-header .num-dia { font-size: 1rem; font-weight: 800; color: #2c3e50; }
+        .grade-dia-header .num-dia { font-size: 0.95rem; font-weight: 800; color: #2c3e50; }
 
         .grade-slots {
-            padding: 5px;
+            padding: 4px;
             display: flex;
             flex-direction: column;
-            gap: 5px;
+            gap: 4px;
             flex: 1;
         }
 
         /* O Quadradinho Mágico (Chip) */
         .mini-chip {
             color: white;
-            border-radius: 6px;
-            padding: 5px 3px;
+            border-radius: 4px;
+            padding: 4px 2px;
             text-align: center;
             cursor: pointer;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.15);
-            transition: transform 0.1s, box-shadow 0.1s;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            transition: transform 0.1s;
         }
-        .mini-chip:active { transform: scale(0.95); box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
+        .mini-chip:active { transform: scale(0.92); }
         
-        .chip-hora { font-size: 0.6rem; opacity: 0.95; line-height: 1.1; font-weight: bold; margin-bottom: 1px;}
+        .chip-hora { font-size: 0.55rem; opacity: 0.9; line-height: 1.2; font-weight: bold;}
         
         /* Tamanho da fonte ajustado para 4 letras */
-        .chip-sigla { font-size: 0.7rem; font-weight: 900; line-height: 1.1; letter-spacing: 0.3px;}
+        .chip-sigla { font-size: 0.65rem; font-weight: 900; line-height: 1.2; letter-spacing: 0.2px;}
 
         .feriado-chip {
-            background: #fff5f5; color: #c0392b; font-size: 0.65rem; padding: 6px 2px; 
-            text-align: center; border-radius: 4px; font-weight: bold; border: 1px solid #e74c3c;
+            background: #fdf0ed; color: #e74c3c; font-size: 0.65rem; padding: 6px 2px; 
+            text-align: center; border-radius: 4px; font-weight: bold; border: 1px dashed #e74c3c;
         }
 
         /* ===== BOTTOM SHEET MODAL (Janela que sobe) ===== */
@@ -375,33 +366,32 @@
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.6); z-index: 2000;
             opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
-            backdrop-filter: blur(2px);
         }
         .sheet-overlay.active { opacity: 1; pointer-events: auto; }
 
         .bottom-sheet {
             position: fixed; bottom: -100%; left: 0; width: 100%;
-            background: #fff; border-radius: 25px 25px 0 0; z-index: 2001;
+            background: #fff; border-radius: 20px 20px 0 0; z-index: 2001;
             transition: bottom 0.3s cubic-bezier(0.1, 0.8, 0.2, 1);
-            box-shadow: 0 -10px 30px rgba(0,0,0,0.15);
-            padding: 25px; max-height: 85vh; overflow-y: auto;
+            box-shadow: 0 -5px 20px rgba(0,0,0,0.2);
+            padding: 20px; max-height: 85vh; overflow-y: auto;
             text-align: left;
         }
         .bottom-sheet.active { bottom: 0; }
 
-        .sheet-handle { width: 40px; height: 4px; background: #e0e0e0; border-radius: 10px; margin: 0 auto 20px auto; }
-        .sheet-title { font-size: 1.4rem; font-weight: 900; margin-bottom: 8px; line-height: 1.2; color: var(--primary);}
-        .sheet-tipo { font-size: 0.85rem; text-transform: uppercase; font-weight: bold; color: #7f8c8d; margin-bottom: 25px; display: inline-block; padding: 4px 10px; background: #f1f2f6; border-radius: 6px;}
+        .sheet-handle { width: 50px; height: 5px; background: #ddd; border-radius: 5px; margin: 0 auto 20px auto; }
+        .sheet-title { font-size: 1.3rem; font-weight: 900; margin-bottom: 5px; line-height: 1.2; }
+        .sheet-tipo { font-size: 0.8rem; text-transform: uppercase; font-weight: bold; color: #7f8c8d; margin-bottom: 20px; display: inline-block; padding: 3px 8px; background: #f1f2f6; border-radius: 4px;}
         
-        .sheet-info-row { display: flex; align-items: flex-start; gap: 15px; margin-bottom: 18px; font-size: 1.05rem; color: #2c3e50; font-weight: 600;}
-        .sheet-info-icon { font-size: 1.4rem; opacity: 0.8; }
+        .sheet-info-row { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 15px; font-size: 1rem; color: #2c3e50; font-weight: 600;}
+        .sheet-info-icon { font-size: 1.3rem; }
         
         .sheet-btn-fechar {
-            display: block; width: 100%; padding: 16px; background: #f1f2f6;
-            border: none; border-radius: 12px; font-weight: 800; color: #555;
-            font-size: 1.1rem; margin-top: 30px; cursor: pointer; transition: background 0.2s, transform 0.1s;
+            display: block; width: 100%; padding: 14px; background: #f1f2f6;
+            border: none; border-radius: 8px; font-weight: bold; color: #555;
+            font-size: 1.05rem; margin-top: 25px; cursor: pointer; transition: background 0.2s;
         }
-        .sheet-btn-fechar:active { background: #e1e2e6; transform: scale(0.98); }
+        .sheet-btn-fechar:active { background: #e1e2e6; }
     </style>
 </head>
 <body>
@@ -467,7 +457,7 @@
         <button id="btn-fechar-sheet" class="sheet-btn-fechar">Fechar</button>
     </div>
 
-    <script type="module" src="js/consulta.js?v=2.2"></script>
+    <script type="module" src="js/consulta.js?v=2.1"></script>
 
 </body>
 </html>
