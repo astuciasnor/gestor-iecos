@@ -682,7 +682,7 @@ function initPeriodoLetivoETurno() {
     }
 }
 
-// ==== NOVA FUNÇÃO: IMPORTAÇÃO DE BLOCO ====
+// ==== IMPORTAÇÃO DE BLOCO ====
 function handleImportBloco() {
     if (!store.selectedCurso || !store.selectedTurma) return alert('Selecione um Curso e uma Turma primeiro.');
     
@@ -741,8 +741,6 @@ export function initUI() {
     const btnImportBloco = document.getElementById('btn-import-bloco');
     if (btnImportBloco) btnImportBloco.addEventListener('click', handleImportBloco);
 
-    // REMOVIDA A INJEÇÃO AUTOMÁTICA QUE CAUSAVA DUPLICAÇÃO
-
     if (inputConfig.tipo) {
         inputConfig.tipo.addEventListener('change', (e) => {
             const divDataEl = document.getElementById('datas-intensiva');
@@ -754,8 +752,8 @@ export function initUI() {
             if (isIntensive) {
                 divSlots.classList.remove('hidden');
                 renderIntensiveSlots();
-                const chk = document.getElementById('chk-sabados'); // SINCRONIZADO COM O ID DO SEU HTML
-                if (chk) chk.checked = false; 
+                const chk = document.getElementById('chk-sabados');
+                if (chk) chk.checked = false; // Reset padrão ao abrir
             } else {
                 divSlots.classList.add('hidden');
             }
@@ -835,7 +833,7 @@ export function initUI() {
             wrapper.className = 'input-wrapper-gantt';
             wrapper.style.position = 'relative';
             wrapper.style.display = 'inline-block';
-            wrapper.style.width = '100%';
+            wrapper.style.width = 'fit-content';
             inpGanttDocente.parentNode.insertBefore(wrapper, inpGanttDocente);
             wrapper.appendChild(inpGanttDocente);
         }
@@ -999,7 +997,6 @@ function onTurmaChange() {
     store.selectedTurma = selTurma.value;
     store.setLastContext(store.selectedCurso, store.selectedTurma); 
 
-    // Mostra o botão de Importar Bloco
     const btnImportBloco = document.getElementById('btn-import-bloco');
     if (btnImportBloco) {
         btnImportBloco.style.display = store.selectedTurma ? 'block' : 'none';
@@ -1231,12 +1228,10 @@ function handleSlotClick(dia, horario) {
         if (!confirm(`O professor ${mainProf} já está ocupado nesta faixa de datas. Continuar?`)) return; 
     }
 
-    // Identifica se há intensivas que irão suspender essa nova aula regular
     const blockingIntensivas = store.allocations.filter(a => {
         if (String(a.turmaId) !== String(store.selectedTurma)) return false;
         if (a.tipo !== 'intensiva') return false;
         
-        // Verifica overlap das datas gerais (nova regular é semestral)
         const aStart = a.dataInicio || store.settings.termStart;
         const aEnd = a.dataFim || store.settings.termEnd;
         const rStart = dataInicio;
@@ -1263,12 +1258,10 @@ function handleSlotClick(dia, horario) {
     renderWeeklyGrid(); 
     renderOfertasList();
 
-    // NOTIFICAÇÃO 1: Avisa se uma intensiva engoliu essa nova regular
     if (blockingIntensivas.length > 0) {
         const nomes = [...new Set(blockingIntensivas.map(i => i.disciplina))].join(', ');
         showToastWarning(`💡 <b>Ajuste Automático:</b> A disciplina <b>${info.abrev}</b> iniciará com aulas suspensas nos dias da Intensiva de <b>${nomes}</b>. A data final foi compensada!`, 'success');
     } else if (store.settings.termEnd) {
-        // Alerta padrão de fora de semestre (mantido)
         if (window.overlapWarningTimeout) clearTimeout(window.overlapWarningTimeout);
         window.overlapWarningTimeout = setTimeout(() => {
             const slotsDesta = store.allocations.filter(a => a.disciplina === disciplina && String(a.turmaId) === String(store.selectedTurma));
@@ -1308,14 +1301,11 @@ function handleAddManual() {
         const feriados = store.rawData?.feriados || [];
         const blockedWeekdays = getBlockedWeekdaysForTurma(store.selectedTurma);
         
-        // RECUPERA A CHAVE DO SÁBADO (SINCRONIZADO COM O ID DO HTML)
         const chkSabado = document.getElementById('chk-sabados'); 
         const usaSabado = chkSabado ? chkSabado.checked : false;
 
-        // CÁLCULO MÁGICO
         const dataFimCalculada = addBusinessDays(inicio, diasNecessarios, feriados, blockedWeekdays, usaSabado);
 
-        // NOVA REGRA (TOLERÂNCIA ZERO PARA INTENSIVA X INTENSIVA)
         const intensiveConflict = store.allocations.find(a => {
             if (String(a.turmaId) !== String(store.selectedTurma)) return false;
             if (a.tipo !== 'intensiva' || a.disciplina === disciplina) return false; 
@@ -1342,7 +1332,6 @@ function handleAddManual() {
 
         if (idToRemove) store.removeAllocation(idToRemove);
 
-        // VERIFICA QUAIS REGULARES SERÃO AFETADAS PELA NOVA INTENSIVA
         const affectedRegulars = [];
         store.allocations.forEach(a => {
             if (String(a.turmaId) !== String(store.selectedTurma)) return;
@@ -1377,7 +1366,6 @@ function handleAddManual() {
         syncAllRegularDates(); 
         renderOfertasList();
 
-        // NOTIFICAÇÃO 2: Avisa se esta nova intensiva empurrou aulas regulares
         if (affectedRegulars.length > 0) {
             const nomes = affectedRegulars.join(', ');
             showToastWarning(`💡 <b>Ajuste Automático:</b> A(s) disciplina(s) <b>${nomes}</b> teve/tiveram aulas suspensas e a data final foi empurrada para frente!`, 'success');
@@ -1575,7 +1563,7 @@ function renderOfertasList() {
                     }
 
                     if (a.tipo === 'intensiva') {
-                        const chkSabado = document.getElementById('chk-sabados'); // ID CORRIGIDO
+                        const chkSabado = document.getElementById('chk-sabados');
                         if (chkSabado) chkSabado.checked = !!a.usaSabado;
                     }
 
@@ -1659,18 +1647,22 @@ function renderMonthlyCalendar() {
     const container = document.getElementById('monthly-container');
     if (!container) return;
     if (!store.selectedTurma) return (container.innerHTML = '<p>Selecione uma turma.</p>');
+
     const start = calStart ? calStart.value : '2025-01-01';
     let end = calEnd ? calEnd.value : '2025-12-31';
+    
     if (end) { 
         const dt = new Date(end + 'T12:00:00'); 
         const lastDay = new Date(dt.getFullYear(), dt.getMonth() + 1, 0); 
         end = lastDay.toISOString().split('T')[0]; 
     }
+
     let turmaLabel = store.selectedTurma;
     if (store.rawData?.turmas) { 
         const t = store.rawData.turmas.find((x) => String(x.turma_id) === String(store.selectedTurma)); 
         if (t) turmaLabel = t.turma_label; 
     }
+
     const title = `<span class="print-title-main">Calendário Acadêmico</span><br><span class="print-title-sub">${turmaLabel}</span>`;
     generateCalendarGrid(container, store.selectedTurma, null, start, end, title);
 }
@@ -1678,15 +1670,19 @@ function renderMonthlyCalendar() {
 function renderTeacherCalendar() {
     const container = document.getElementById('teacher-calendar-container');
     if (!container || !selViewDocente) return;
+    
     const docente = selViewDocente.value;
     if (!docente) return (container.innerHTML = '<p>Selecione um professor.</p>');
+
     const start = calStart ? calStart.value : '2025-01-01';
     let end = calEnd ? calEnd.value : '2025-12-31';
+    
     if (end) { 
         const dt = new Date(end + 'T12:00:00'); 
         const lastDay = new Date(dt.getFullYear(), dt.getMonth() + 1, 0); 
         end = lastDay.toISOString().split('T')[0]; 
     }
+
     const totalCH = calculateTeacherTotalCH(docente);
     const docenteTitle = totalCH > 0 ? `${docente} (${totalCH}h)` : docente;
     const title = `<span class="print-title-main">Cronograma Docente</span><br><span class="print-title-sub">${docenteTitle}</span>`;
@@ -1696,260 +1692,738 @@ function renderTeacherCalendar() {
 function getShiftTimeRangeStr(timeRanges, shiftCode) {
     if (!timeRanges || timeRanges.length === 0) return '';
     const times = [];
+    
     timeRanges.forEach(tr => {
         if (!tr) return;
         const matches = String(tr).match(/\d{1,2}:\d{2}/g);
         if (matches) times.push(...matches);
     });
+    
     const filteredTimes = times.filter(t => {
         const m = timeToMinutes(t);
         return shiftCode === 'M' ? m < 780 : m >= 780;
     });
+    
     if (filteredTimes.length === 0) return '';
+    
     filteredTimes.sort((a,b) => timeToMinutes(a) - timeToMinutes(b));
     return ` : ${filteredTimes[0]} - ${filteredTimes[filteredTimes.length - 1]}`;
 }
+
 
 function renderGanttChart() {
     const container = document.getElementById('gantt-container');
     const inputDocente = document.getElementById('inp-gantt-docente');
     if (!container || !inputDocente) return;
+
     const docenteName = inputDocente.value.trim();
     if (!docenteName) {
         container.innerHTML = '<div style="text-align: center; color: #7f8c8d; margin-top: 50px; font-size: 1.1em;">Por favor, digite o nome de um professor.</div>';
         return;
     }
+
     const allocs = store.allocations.filter(a => {
         if (a.docente === docenteName) return true;
         if (a.docentes && a.docentes.some(d => d.nome === docenteName)) return true;
         return false;
     });
+
     if (allocs.length === 0) {
-        container.innerHTML = `<div style="text-align: center; color: #7f8c8d; margin-top: 50px; font-size: 1.1em;">Nenhuma disciplina encontrada.</div>`;
+        container.innerHTML = `<div style="text-align: center; color: #7f8c8d; margin-top: 50px; font-size: 1.1em;">Nenhuma disciplina encontrada para <b>${docenteName}</b>.</div>`;
         return;
     }
+
     const totalCH = calculateTeacherTotalCH(docenteName);
+
     let minDateStr = store.settings.termStart || '2025-01-01';
     let maxDateStr = store.settings.termEnd || '2025-12-31';
+
     allocs.forEach(a => {
         if (a.dataInicio && a.dataInicio < minDateStr) minDateStr = a.dataInicio;
         if (a.dataFim && a.dataFim > maxDateStr) maxDateStr = a.dataFim;
     });
+
     const minTime = new Date(minDateStr + "T12:00:00").getTime();
     const maxTime = new Date(maxDateStr + "T12:00:00").getTime();
     const totalTime = maxTime - minTime || 1; 
+
     const weekLines = [];
     let weekWalker = new Date(minTime);
-    while (weekWalker.getDay() !== 1) weekWalker.setDate(weekWalker.getDate() + 1); 
+    while (weekWalker.getDay() !== 1) { 
+        weekWalker.setDate(weekWalker.getDate() + 1); 
+    }
+    
     while (weekWalker.getTime() <= maxTime) {
         let leftPct = ((weekWalker.getTime() - minTime) / totalTime) * 100;
-        if(leftPct >= 0 && leftPct <= 100) weekLines.push(leftPct); 
+        if(leftPct >= 0 && leftPct <= 100) { 
+            weekLines.push(leftPct); 
+        }
         weekWalker.setDate(weekWalker.getDate() + 7);
     }
     const timelineLinesHtml = weekLines.map(pct => `<div class="gantt-grid-line-week" style="left: ${pct}%;"></div>`).join('');
+
     const monthLines = [];
     let curMonthWalker = new Date(minTime);
     curMonthWalker.setDate(1); 
+    
     while (curMonthWalker.getTime() <= maxTime) {
         if (curMonthWalker.getTime() >= minTime) {
             let leftPct = ((curMonthWalker.getTime() - minTime) / totalTime) * 100;
-            if (leftPct > 0.1) monthLines.push(leftPct);
+            if (leftPct > 0.1) {
+                monthLines.push(leftPct);
+            }
         }
         curMonthWalker = new Date(curMonthWalker.getFullYear(), curMonthWalker.getMonth() + 1, 1, 12, 0, 0);
     }
-    const monthOverlaysHtml = monthLines.map(pct => `<div style="position: absolute; left: ${pct}%; top: 0; bottom: 0; border-left: 2px solid #2c3e50; z-index: 10; pointer-events: none;"></div>`).join('');
-    let html = `<div style="margin-bottom: 20px; text-align: center;"><h3 style="color: var(--primary); margin: 0; font-size: 1.4em; text-transform: uppercase;">Cronograma: ${docenteName} (${totalCH}h)</h3></div><div class="gantt-container" style="position: relative; border: 1px solid #ddd; border-radius: 6px; overflow: hidden; background: #f0f3f5;"><div style="position: absolute; top: 0; bottom: 0; left: 80px; right: 0; pointer-events: none; z-index: 0;">${timelineLinesHtml}</div><div style="position: absolute; top: 0; bottom: 0; left: 80px; right: 0; pointer-events: none; z-index: 10;">${monthOverlaysHtml}</div>`;
-    html += '<div class="gantt-header-row" style="display: flex; border-bottom: 2px solid var(--primary); padding: 10px 0; background: #e2e8f0; margin: 0; position: relative; z-index: 6;"><div style="width: 80px; flex-shrink: 0;"></div><div style="flex: 1; display: flex; position: relative;">';
+    
+    const monthOverlaysHtml = monthLines.map(pct => `
+        <div style="position: absolute; left: ${pct}%; top: 0; bottom: 0; border-left: 2px solid #2c3e50; z-index: 10; pointer-events: none;"></div>
+    `).join('');
+
+    let html = `
+        <div style="margin-bottom: 20px; text-align: center;">
+            <h3 style="color: var(--primary); margin: 0; font-size: 1.4em; text-transform: uppercase;">Cronograma: ${docenteName} (${totalCH}h)</h3>
+        </div>
+        
+        <div class="gantt-container" style="position: relative; border: 1px solid #ddd; border-radius: 6px; overflow: hidden; background: #f0f3f5;">
+            
+            <div style="position: absolute; top: 0; bottom: 0; left: 80px; right: 0; pointer-events: none; z-index: 0;">
+                ${timelineLinesHtml}
+            </div>
+
+            <div style="position: absolute; top: 0; bottom: 0; left: 80px; right: 0; pointer-events: none; z-index: 10;">
+                ${monthOverlaysHtml}
+            </div>
+    `;
+
+    html += '<div class="gantt-header-row" style="display: flex; border-bottom: 2px solid var(--primary); padding: 10px 0; background: #e2e8f0; margin: 0; position: relative; z-index: 6;">'; 
+    html += '<div style="width: 80px; flex-shrink: 0;"></div>'; 
+    
+    html += '<div style="flex: 1; display: flex; position: relative;">';
+    
     let cur = new Date(minTime);
     cur.setDate(1); 
+    
     while (cur.getTime() <= maxTime || (cur.getFullYear() === new Date(maxTime).getFullYear() && cur.getMonth() === new Date(maxTime).getMonth())) {
         let nomeCurto = cur.toLocaleString('pt-BR', { month: 'short' }).replace('.', '');
         const mesNome = nomeCurto.charAt(0).toUpperCase() + nomeCurto.slice(1) + '/' + String(cur.getFullYear()).slice(-2);
+        
         let startOfMonth = Math.max(cur.getTime(), minTime);
         let nextM = new Date(cur.getFullYear(), cur.getMonth() + 1, 1, 12, 0, 0);
         let endOfMonth = Math.min(nextM.getTime() - 1, maxTime);
         let wPct = ((endOfMonth - startOfMonth) / totalTime) * 100;
-        if (wPct > 0) html += `<div class="gantt-month-col" style="width: ${wPct}%; flex: none; background: transparent; text-align: center; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.1em; color: var(--primary); border: none;">${mesNome}</div>`;
+        
+        if (wPct > 0) { 
+            html += `<div class="gantt-month-col" style="width: ${wPct}%; flex: none; background: transparent; text-align: center; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.1em; color: var(--primary); border: none;">${mesNome}</div>`;
+        }
         cur = nextM;
     }
     html += '</div></div>';
-    const weekDays = [{ id: 1, name: 'SEG' }, { id: 2, name: 'TER' }, { id: 3, name: 'QUA' }, { id: 4, name: 'QUI' }, { id: 5, name: 'SEX' }, { id: 6, name: 'SÁB' }];
+
+    const weekDays = [
+        { id: 1, name: 'SEG' },
+        { id: 2, name: 'TER' },
+        { id: 3, name: 'QUA' },
+        { id: 4, name: 'QUI' },
+        { id: 5, name: 'SEX' },
+        { id: 6, name: 'SÁB' }
+    ];
+
     weekDays.forEach(d => {
         let dayItemsMap = {}; 
+        
         allocs.forEach(a => {
             let add = false;
             let shift = '';
             let slotsToAdd = 1;
+            
             if (a.tipo === 'regular' || a.tipo === 'regular_prioritaria') {
-                if (parseInt(a.diaSemana) === d.id) { add = true; shift = timeToMinutes(a.horario) < 780 ? 'M' : 'T'; slotsToAdd = 1; }
+                if (parseInt(a.diaSemana) === d.id) {
+                    add = true;
+                    shift = timeToMinutes(a.horario) < 780 ? 'M' : 'T';
+                    slotsToAdd = 1; 
+                }
             } 
             else if (a.tipo === 'intensiva') {
                 let curDt = new Date((a.dataInicio || minDateStr) + "T12:00:00");
                 const endDt = new Date((a.dataFim || maxDateStr) + "T12:00:00");
                 let hasThisDay = false;
-                while(curDt <= endDt) { if (curDt.getDay() === d.id) { hasThisDay = true; break; } curDt.setDate(curDt.getDate() + 1); }
-                if (hasThisDay) { add = true; const occs = a.horariosOcupados || []; const isM = occs.some(h => timeToMinutes(h) < 780); const isT = occs.some(h => timeToMinutes(h) >= 780); shift = (isM && isT) ? 'M/T' : (isM ? 'M' : 'T'); slotsToAdd = occs.length > 0 ? occs.length : 5; }
+                
+                while(curDt <= endDt) {
+                    if (curDt.getDay() === d.id) { 
+                        hasThisDay = true; 
+                        break; 
+                    }
+                    curDt.setDate(curDt.getDate() + 1);
+                }
+                
+                if (hasThisDay) {
+                    add = true;
+                    const occs = a.horariosOcupados || [];
+                    const isM = occs.some(h => timeToMinutes(h) < 780);
+                    const isT = occs.some(h => timeToMinutes(h) >= 780);
+                    shift = (isM && isT) ? 'M/T' : (isM ? 'M' : 'T');
+                    slotsToAdd = occs.length > 0 ? occs.length : 5; 
+                }
             }
+
             if (add) {
                 const key = `${a.turmaId}|${a.disciplina}|${shift}|${a.tipo}`;
                 if (!dayItemsMap[key]) {
                     let chProf = 0;
                     const chTotal = getDisciplinaCHGlobal(a.disciplina, a.turmaId);
-                    if (a.docentes && a.docentes.length > 0) { const doc = a.docentes.find(doc => doc.nome === docenteName); if (doc) chProf = parseInt(doc.ch) || 0; } else chProf = chTotal;
-                    dayItemsMap[key] = { ...a, shift: shift, chTotal: chTotal, chProf: chProf, dataInicio: a.dataInicio || minDateStr, dataFim: a.dataFim || maxDateStr, slotCount: slotsToAdd, timeRanges: a.tipo === 'intensiva' ? [...(a.horariosOcupados || [])] : [a.horario] };
+                    if (a.docentes && a.docentes.length > 0) {
+                        const doc = a.docentes.find(doc => doc.nome === docenteName);
+                        if (doc) chProf = parseInt(doc.ch) || 0;
+                    } else {
+                        chProf = chTotal;
+                    }
+
+                    dayItemsMap[key] = {
+                        ...a,
+                        shift: shift,
+                        chTotal: chTotal,
+                        chProf: chProf,
+                        dataInicio: a.dataInicio || minDateStr,
+                        dataFim: a.dataFim || maxDateStr,
+                        slotCount: slotsToAdd,
+                        timeRanges: a.tipo === 'intensiva' ? [...(a.horariosOcupados || [])] : [a.horario]
+                    };
                 } else {
-                    if (a.tipo !== 'intensiva') dayItemsMap[key].slotCount += slotsToAdd; 
-                    if (a.dataInicio && a.dataInicio < dayItemsMap[key].dataInicio) dayItemsMap[key].dataInicio = a.dataInicio;
-                    if (a.dataFim && a.dataFim > dayItemsMap[key].dataFim) dayItemsMap[key].dataFim = a.dataFim;
-                    if (a.tipo === 'intensiva') dayItemsMap[key].timeRanges.push(...(a.horariosOcupados || [])); else dayItemsMap[key].timeRanges.push(a.horario);
+                    if (a.tipo !== 'intensiva') { 
+                        dayItemsMap[key].slotCount += slotsToAdd; 
+                    }
+                    if (a.dataInicio && a.dataInicio < dayItemsMap[key].dataInicio) {
+                        dayItemsMap[key].dataInicio = a.dataInicio;
+                    }
+                    if (a.dataFim && a.dataFim > dayItemsMap[key].dataFim) {
+                        dayItemsMap[key].dataFim = a.dataFim;
+                    }
+                    
+                    if (a.tipo === 'intensiva') {
+                        dayItemsMap[key].timeRanges.push(...(a.horariosOcupados || []));
+                    } else {
+                        dayItemsMap[key].timeRanges.push(a.horario);
+                    }
                 }
             }
         });
+
         let dayItems = Object.values(dayItemsMap);
+
         let mItems = dayItems.filter(i => i.shift === 'M' || i.shift === 'M/T');
         let tItems = dayItems.filter(i => i.shift === 'T' || i.shift === 'M/T');
+
         let currentTopM = 4;
         let mBarsHtml = '';
+        
         mItems.forEach((item) => {
             const startT = new Date(item.dataInicio + "T12:00:00").getTime();
             const endT = new Date(item.dataFim + "T12:00:00").getTime();
             const timeSpan = endT - startT;
             let leftPct = ((startT - minTime) / totalTime) * 100;
             let widthPct = (timeSpan / totalTime) * 100;
-            if (leftPct < 0) leftPct = 0; if (widthPct < 1) widthPct = 1; 
+            if (leftPct < 0) leftPct = 0;
+            if (widthPct < 1) widthPct = 1; 
+            
             const turmaNome = getTurmaLabel(item.turmaId);
             const info = getDisciplinaInfo(item.disciplina);
             const isOutOfBounds = store.settings.termEnd && item.dataFim > store.settings.termEnd;
             let boxBorder = isOutOfBounds ? 'border: 2px solid #900;' : `border: 1px solid ${item.cor || '#ccc'};`;
-            let barHeight = 24; if (item.tipo !== 'intensiva') barHeight = 24 + ((Math.min(item.slotCount, 5) - 1) * 8); 
+
+            let barHeight = 24;
+            if (item.tipo !== 'intensiva') {
+                let cappedSlots = Math.min(item.slotCount, 5);
+                barHeight = 24 + ((cappedSlots - 1) * 8); 
+            }
+            
             const timeRangeStr = getShiftTimeRangeStr(item.timeRanges, 'M');
-            let segmentsHtml = ''; let externalLabelsHtml = ''; let currentSegmentT = startT;
+
+            let segmentsHtml = '';
+            let externalLabelsHtml = ''; 
+            let currentSegmentT = startT;
             const docentesList = (item.docentes && item.docentes.length > 0) ? item.docentes : [{nome: item.docente, ch: item.chTotal}];
+
             docentesList.forEach((d, idx) => {
                 const isTarget = d.nome === docenteName;
+                let segStartT = currentSegmentT;
                 let segEndT = currentSegmentT + (timeSpan * (d.ch / item.chTotal));
-                let sDate = new Date(currentSegmentT).toISOString().split('T')[0];
+                let sDate = new Date(segStartT).toISOString().split('T')[0];
                 let eDate = new Date(segEndT).toISOString().split('T')[0];
-                const fmtStart = sDate.split('-').reverse().slice(0,2).join('/'); const fmtEnd = eDate.split('-').reverse().slice(0,2).join('/');
-                const bgColor = isTarget ? (item.cor || '#3498db') : '#ffffff'; const txtColor = isTarget ? '#000000' : '#666666'; 
+                
+                if (idx === 0) sDate = item.dataInicio;
+                if (idx === docentesList.length - 1) eDate = item.dataFim;
+                
+                const fmtStart = sDate.split('-').reverse().slice(0,2).join('/'); 
+                const fmtEnd = eDate.split('-').reverse().slice(0,2).join('/');
+                
+                const bgColor = isTarget ? (item.cor || '#3498db') : '#ffffff';
+                const txtColor = isTarget ? '#000000' : '#666666'; 
                 const borderStyle = isTarget ? 'none' : `1px dashed ${item.cor || '#ccc'}`;
+                const zIndex = isTarget ? '2' : '1';
+                
                 let content = '';
-                if (item.tipo === 'intensiva') { if (isTarget) { content = `<span style="font-size:0.75em; font-weight:800; letter-spacing:-0.5px;">${fmtStart}-${fmtEnd}</span>`; let textPos = (leftPct + widthPct > 75) ? `right: calc(100% - ${leftPct}% + 6px);` : `left: calc(${leftPct + widthPct}% + 6px);`; externalLabelsHtml += `<div style="position: absolute; top: ${currentTopM}px; height: ${barHeight}px; display: flex; align-items: center; ${textPos} color: ${item.cor}; font-weight: 900; font-size: 0.85em; white-space: nowrap; z-index: 10; text-shadow: 1px 1px 0px #fff, -1px -1px 0px #fff, 1px -1px 0px #fff, -1px 1px 0px #fff, 0px 2px 4px rgba(0,0,0,0.15);">${turmaNome} ${info.abrev} (${d.ch}h)</div>`; } else content = `<span style="font-size:0.85em; opacity:0.8">${d.nome.split(' ')[0]}</span>`; }
-                else { if (isTarget) content = `<div style="display:flex; justify-content:space-between; align-items:center; width:100%; padding:0 2px;"><span style="font-size:0.7em;">${fmtStart}</span><span style="font-weight:bold; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; padding:0 4px; font-size: 0.8em;">${turmaNome} ${info.abrev} (${d.ch}h)${timeRangeStr}</span><span style="font-size:0.7em;">${fmtEnd}</span></div>`; else content = `<span style="font-size:0.8em; opacity:0.8;">${d.nome.split(' ')[0]} (${d.ch}h)</span>`; }
-                segmentsHtml += `<div style="flex: ${d.ch}; background-color: ${bgColor}; color: ${txtColor}; border-right: ${borderStyle}; border-left: ${borderStyle}; height: 100%; display: flex; align-items: center; justify-content: center; overflow: hidden; z-index: ${isTarget ? '2' : '1'};">${content}</div>`;
+                
+                if (item.tipo === 'intensiva') {
+                    if (isTarget) {
+                        content = `<span style="font-size:0.75em; font-weight:800; letter-spacing:-0.5px; padding:0 2px;">${fmtStart} - ${fmtEnd}</span>`;
+                        
+                        let textPos = (leftPct + widthPct > 75) 
+                            ? `right: calc(100% - ${leftPct}% + 6px);` 
+                            : `left: calc(${leftPct + widthPct}% + 6px);`;
+                            
+                        let textColor = item.cor || '#3498db';
+                        externalLabelsHtml += `
+                            <div style="position: absolute; top: ${currentTopM}px; height: ${barHeight}px; display: flex; align-items: center; ${textPos} color: ${textColor}; font-weight: 900; font-size: 0.85em; white-space: nowrap; z-index: 10; text-shadow: 1px 1px 0px #fff, -1px -1px 0px #fff, 1px -1px 0px #fff, -1px 1px 0px #fff, 0px 2px 4px rgba(0,0,0,0.15);">
+                                ${turmaNome} ${info.abrev} (${d.ch}h)
+                            </div>
+                        `;
+                    } else {
+                        content = `<span style="font-size:0.85em; font-weight:normal; opacity:0.8">${d.nome.split(' ')[0]}</span>`;
+                    }
+                } else {
+                    if (isTarget) {
+                        content = `
+                            <div style="display:flex; justify-content:space-between; align-items:center; width:100%; padding:0 2px;">
+                                <span style="font-size:0.7em; opacity:0.9; flex-shrink:0; letter-spacing: -0.5px;">${fmtStart}</span>
+                                <span style="font-weight:bold; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; padding:0 4px; font-size: 0.8em; letter-spacing: -0.4px;">
+                                    ${turmaNome} ${info.abrev} (${d.ch}h)${timeRangeStr}
+                                </span>
+                                <span style="font-size:0.7em; opacity:0.9; flex-shrink:0; letter-spacing: -0.5px;">${fmtEnd}</span>
+                            </div>
+                        `;
+                    } else {
+                        content = `<span style="font-size:0.8em; font-weight:normal; opacity:0.8; letter-spacing: -0.3px;">${d.nome.split(' ')[0]} (${d.ch}h)</span>`;
+                    }
+                }
+                    
+                segmentsHtml += `
+                    <div style="flex: ${d.ch}; background-color: ${bgColor}; color: ${txtColor}; border-right: ${borderStyle}; border-left: ${borderStyle}; height: 100%; display: flex; align-items: center; justify-content: center; overflow: hidden; box-sizing: border-box; z-index: ${zIndex};">
+                        ${content}
+                    </div>
+                `;
                 currentSegmentT = segEndT;
             });
-            mBarsHtml += `<div class="gantt-bar" style="left: ${leftPct}%; width: ${widthPct}%; top: ${currentTopM}px; height: ${barHeight}px; padding: 0; display: flex; flex-direction: row; ${boxBorder}">${segmentsHtml}</div>${externalLabelsHtml}`;
+
+            mBarsHtml += `
+                    <div class="gantt-bar" 
+                         style="left: ${leftPct}%; width: ${widthPct}%; top: ${currentTopM}px; height: ${barHeight}px; padding: 0; display: flex; flex-direction: row; ${boxBorder}"
+                         title="${item.disciplina}\nTurma: ${turmaNome}\nTurno: Manhã\nPeríodo Geral: ${formatDateBR(item.dataInicio)} a ${formatDateBR(item.dataFim)}\nAulas no Dia: ${item.slotCount}">
+                        ${segmentsHtml}
+                    </div>
+                    ${externalLabelsHtml}
+            `;
             currentTopM += barHeight + 6; 
         });
+
         const laneMHeight = Math.max(30, currentTopM);
-        let currentTopT = 4; let tBarsHtml = '';
+
+        let currentTopT = 4; 
+        let tBarsHtml = '';
+        
         tItems.forEach((item) => {
             const startT = new Date(item.dataInicio + "T12:00:00").getTime();
             const endT = new Date(item.dataFim + "T12:00:00").getTime();
             const timeSpan = endT - startT;
             let leftPct = ((startT - minTime) / totalTime) * 100;
             let widthPct = (timeSpan / totalTime) * 100;
-            if (leftPct < 0) leftPct = 0; if (widthPct < 1) widthPct = 1; 
+            if (leftPct < 0) leftPct = 0;
+            if (widthPct < 1) widthPct = 1; 
+            
             const turmaNome = getTurmaLabel(item.turmaId);
             const info = getDisciplinaInfo(item.disciplina);
             const isOutOfBounds = store.settings.termEnd && item.dataFim > store.settings.termEnd;
             let boxBorder = isOutOfBounds ? 'border: 2px solid #900;' : `border: 1px solid ${item.cor || '#ccc'};`;
-            let barHeight = 24; if (item.tipo !== 'intensiva') barHeight = 24 + ((Math.min(item.slotCount, 5) - 1) * 8); 
+
+            let barHeight = 24;
+            if (item.tipo !== 'intensiva') {
+                let cappedSlots = Math.min(item.slotCount, 5);
+                barHeight = 24 + ((cappedSlots - 1) * 8); 
+            }
+            
             const timeRangeStr = getShiftTimeRangeStr(item.timeRanges, 'T');
-            let segmentsHtml = ''; let externalLabelsHtml = ''; let currentSegmentT = startT;
+
+            let segmentsHtml = '';
+            let externalLabelsHtml = '';
+            let currentSegmentT = startT;
             const docentesList = (item.docentes && item.docentes.length > 0) ? item.docentes : [{nome: item.docente, ch: item.chTotal}];
+
             docentesList.forEach((d, idx) => {
                 const isTarget = d.nome === docenteName;
+                let segStartT = currentSegmentT;
                 let segEndT = currentSegmentT + (timeSpan * (d.ch / item.chTotal));
-                let sDate = new Date(currentSegmentT).toISOString().split('T')[0];
+                let sDate = new Date(segStartT).toISOString().split('T')[0];
                 let eDate = new Date(segEndT).toISOString().split('T')[0];
-                const fmtStart = sDate.split('-').reverse().slice(0,2).join('/'); const fmtEnd = eDate.split('-').reverse().slice(0,2).join('/');
-                const bgColor = isTarget ? (item.cor || '#3498db') : '#ffffff'; const txtColor = isTarget ? '#000000' : '#666666'; 
+                
+                if (idx === 0) sDate = item.dataInicio;
+                if (idx === docentesList.length - 1) eDate = item.dataFim;
+                
+                const fmtStart = sDate.split('-').reverse().slice(0,2).join('/'); 
+                const fmtEnd = eDate.split('-').reverse().slice(0,2).join('/');
+                
+                const bgColor = isTarget ? (item.cor || '#3498db') : '#ffffff';
+                const txtColor = isTarget ? '#000000' : '#666666'; 
                 const borderStyle = isTarget ? 'none' : `1px dashed ${item.cor || '#ccc'}`;
+                const zIndex = isTarget ? '2' : '1';
+                
                 let content = '';
-                if (item.tipo === 'intensiva') { if (isTarget) { content = `<span style="font-size:0.75em; font-weight:800; letter-spacing:-0.5px;">${fmtStart}-${fmtEnd}</span>`; let textPos = (leftPct + widthPct > 75) ? `right: calc(100% - ${leftPct}% + 6px);` : `left: calc(${leftPct + widthPct}% + 6px);`; externalLabelsHtml += `<div style="position: absolute; top: ${currentTopT}px; height: ${barHeight}px; display: flex; align-items: center; ${textPos} color: ${item.cor}; font-weight: 900; font-size: 0.85em; white-space: nowrap; z-index: 10; text-shadow: 1px 1px 0px #fff, -1px -1px 0px #fff, 1px -1px 0px #fff, -1px 1px 0px #fff, 0px 2px 4px rgba(0,0,0,0.15);">${turmaNome} ${info.abrev} (${d.ch}h)</div>`; } else content = `<span style="font-size:0.85em; opacity:0.8">${d.nome.split(' ')[0]}</span>`; }
-                else { if (isTarget) content = `<div style="display:flex; justify-content:space-between; align-items:center; width:100%; padding:0 2px;"><span style="font-size:0.7em;">${fmtStart}</span><span style="font-weight:bold; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; padding:0 4px; font-size: 0.8em;">${turmaNome} ${info.abrev} (${d.ch}h)${timeRangeStr}</span><span style="font-size:0.7em;">${fmtEnd}</span></div>`; else content = `<span style="font-size:0.8em; opacity:0.8;">${d.nome.split(' ')[0]} (${d.ch}h)</span>`; }
-                segmentsHtml += `<div style="flex: ${d.ch}; background-color: ${bgColor}; color: ${txtColor}; border-right: ${borderStyle}; border-left: ${borderStyle}; height: 100%; display: flex; align-items: center; justify-content: center; overflow: hidden; z-index: ${isTarget ? '2' : '1'};">${content}</div>`;
+                
+                if (item.tipo === 'intensiva') {
+                    if (isTarget) {
+                        content = `<span style="font-size:0.75em; font-weight:800; letter-spacing:-0.5px; padding:0 2px;">${fmtStart} - ${fmtEnd}</span>`;
+                        
+                        let textPos = (leftPct + widthPct > 75) 
+                            ? `right: calc(100% - ${leftPct}% + 6px);` 
+                            : `left: calc(${leftPct + widthPct}% + 6px);`;
+                            
+                        let textColor = item.cor || '#3498db';
+                        externalLabelsHtml += `
+                            <div style="position: absolute; top: ${currentTopT}px; height: ${barHeight}px; display: flex; align-items: center; ${textPos} color: ${textColor}; font-weight: 900; font-size: 0.85em; white-space: nowrap; z-index: 10; text-shadow: 1px 1px 0px #fff, -1px -1px 0px #fff, 1px -1px 0px #fff, -1px 1px 0px #fff, 0px 2px 4px rgba(0,0,0,0.15);">
+                                ${turmaNome} ${info.abrev} (${d.ch}h)
+                            </div>
+                        `;
+                    } else {
+                        content = `<span style="font-size:0.85em; font-weight:normal; opacity:0.8">${d.nome.split(' ')[0]}</span>`;
+                    }
+                } else {
+                    if (isTarget) {
+                        content = `
+                            <div style="display:flex; justify-content:space-between; align-items:center; width:100%; padding:0 2px;">
+                                <span style="font-size:0.7em; opacity:0.9; flex-shrink:0; letter-spacing: -0.5px;">${fmtStart}</span>
+                                <span style="font-weight:bold; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; padding:0 4px; font-size: 0.8em; letter-spacing: -0.4px;">
+                                    ${turmaNome} ${info.abrev} (${d.ch}h)${timeRangeStr}
+                                </span>
+                                <span style="font-size:0.7em; opacity:0.9; flex-shrink:0; letter-spacing: -0.5px;">${fmtEnd}</span>
+                            </div>
+                        `;
+                    } else {
+                        content = `<span style="font-size:0.8em; font-weight:normal; opacity:0.8; letter-spacing: -0.3px;">${d.nome.split(' ')[0]} (${d.ch}h)</span>`;
+                    }
+                }
+                    
+                segmentsHtml += `
+                    <div style="flex: ${d.ch}; background-color: ${bgColor}; color: ${txtColor}; border-right: ${borderStyle}; border-left: ${borderStyle}; height: 100%; display: flex; align-items: center; justify-content: center; overflow: hidden; box-sizing: border-box; z-index: ${zIndex};">
+                        ${content}
+                    </div>
+                `;
                 currentSegmentT = segEndT;
             });
-            tBarsHtml += `<div class="gantt-bar" style="left: ${leftPct}%; width: ${widthPct}%; top: ${currentTopT}px; height: ${barHeight}px; padding: 0; display: flex; flex-direction: row; ${boxBorder}">${segmentsHtml}</div>${externalLabelsHtml}`;
+
+            tBarsHtml += `
+                    <div class="gantt-bar" 
+                         style="left: ${leftPct}%; width: ${widthPct}%; top: ${currentTopT}px; height: ${barHeight}px; padding: 0; display: flex; flex-direction: row; ${boxBorder}"
+                         title="${item.disciplina}\nTurma: ${turmaNome}\nTurno: Tarde\nPeríodo Geral: ${formatDateBR(item.dataInicio)} a ${formatDateBR(item.dataFim)}\nAulas no Dia: ${item.slotCount}">
+                        ${segmentsHtml}
+                    </div>
+                    ${externalLabelsHtml}
+            `;
             currentTopT += barHeight + 6; 
         });
+
         const laneTHeight = Math.max(30, currentTopT);
-        html += `<div class="gantt-row" style="display: flex; border-bottom: 1px solid #2c3e50; min-height: ${laneMHeight + laneTHeight}px;"><div style="width: 50px; display: flex; align-items: center; justify-content: center; font-weight: 800; color: var(--primary); background: #e2e8f0; border-right: 1px solid #cbd5e1;">${d.name}</div><div style="flex: 1; display: flex; flex-direction: column;"><div style="display: flex; height: ${laneMHeight}px; border-bottom: 2px dashed #cbd5e1; position: relative;"><div style="width: 30px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 0.8em; color: #64748b; background: #e2e8f0;">M</div><div class="gantt-timeline" style="flex: 1; position: relative;">${mBarsHtml}</div></div><div style="display: flex; height: ${laneTHeight}px; position: relative;"><div style="width: 30px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 0.8em; color: #64748b; background: #e2e8f0;">T</div><div class="gantt-timeline" style="flex: 1; position: relative;">${tBarsHtml}</div></div></div></div>`;
+        const totalRowHeight = laneMHeight + laneTHeight;
+
+        html += `
+            <div class="gantt-row" style="display: flex; border-bottom: 1px solid #2c3e50; margin: 0; padding: 0; min-height: ${totalRowHeight}px; position: relative; z-index: 1;">
+                <div style="width: 50px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.9em; color: var(--primary); background: #e2e8f0; border-right: 1px solid #cbd5e1; flex-shrink: 0;">
+                    ${d.name}
+                </div>
+                <div style="flex: 1; display: flex; flex-direction: column;">
+                    
+                    <div style="display: flex; height: ${laneMHeight}px; border-bottom: 2px dashed #cbd5e1; position: relative;">
+                        <div style="width: 30px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 0.8em; color: #64748b; border-right: 1px solid #cbd5e1; background: #e2e8f0; flex-shrink: 0;">
+                            M
+                        </div>
+                        <div class="gantt-timeline" style="flex: 1; position: relative; background: transparent; border: none;">
+                            ${mBarsHtml}
+                        </div>
+                    </div>
+
+                    <div style="display: flex; height: ${laneTHeight}px; position: relative;">
+                        <div style="width: 30px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 0.8em; color: #64748b; border-right: 1px solid #cbd5e1; background: #e2e8f0; flex-shrink: 0;">
+                            T
+                        </div>
+                        <div class="gantt-timeline" style="flex: 1; position: relative; background: transparent; border: none;">
+                            ${tBarsHtml}
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        `;
     });
+
     html += '</div>';
     container.innerHTML = html;
 }
 
+// ============================================================================
+// NOVO MOTOR DE CALENDÁRIO: RENDERIZAÇÃO SEM DOMINGOS (GANHO DE ESPAÇO)
+// ============================================================================
 function generateCalendarGrid(container, turmaId, docenteName, start, end, titleHTML) {
   container.innerHTML = '';
+
   const header = document.createElement('div');
   header.className = 'print-only print-header-container';
   header.innerHTML = titleHTML;
   container.appendChild(header);
+
   const eventsByDate = getCalendarEvents(turmaId, start, end, docenteName);
-  let slotsToRender = turmaId ? buildHorariosForUI() : [];
+
+  let slotsToRender = [];
+
+  if (turmaId) {
+    slotsToRender = buildHorariosForUI();
+  } 
+  else if (docenteName) {
+    const hp = store.rawData?.horarios_por_turno || {};
+    const skeleton = [];
+
+    if (hp['Manhã']) skeleton.push(...hp['Manhã']);
+    if (hp['Tarde']) skeleton.push(...hp['Tarde']);
+
+    if (skeleton.length === 0) {
+        if (store.allocations) {
+            store.allocations.forEach(a => {
+                if (a.horario) skeleton.push(a.horario);
+                if (a.horariosOcupados) a.horariosOcupados.forEach(h => skeleton.push(h));
+            });
+        }
+    }
+
+    slotsToRender = [...new Set(skeleton)]
+      .map(h => {
+        const s = String(h ?? '');
+        if (s.toUpperCase().includes('INTERVALO')) return formatIntervaloLabel(s);
+        return cleanHorarioLabel(s);
+      })
+      .filter(s => s && s.trim().length > 0)
+      .sort((a, b) => timeToMinutes(a) - timeToMinutes(b));
+  }
+
   const months = {};
-  Object.keys(eventsByDate).sort().forEach((dateStr) => {
+  Object.keys(eventsByDate)
+    .sort()
+    .forEach((dateStr) => {
       const k = dateStr.substring(0, 7);
       if (!months[k]) months[k] = [];
       months[k].push({ date: dateStr, events: eventsByDate[dateStr] });
-  });
+    });
+
+  // ------------------------------------------------------------------------
+  // CHAVE MESTRA: ALterne para 'true' se um dia quiser o Domingo de volta.
   const EXIBIR_DOMINGO = false; 
+  // ------------------------------------------------------------------------
+
   Object.keys(months).forEach((monthKey) => {
     const monthDiv = document.createElement('div');
     monthDiv.className = 'calendar-month';
+
     const [y, m] = monthKey.split('-');
     const nomeMes = new Date(y, m - 1, 2).toLocaleString('pt-BR', { month: 'long', year: 'numeric' });
     monthDiv.innerHTML = `<h3>${nomeMes.toUpperCase()}</h3>`;
+
     const grid = document.createElement('div');
     grid.className = 'month-grid';
-    if (!EXIBIR_DOMINGO) grid.style.gridTemplateColumns = 'repeat(6, 1fr)';
+    
+    // Ajusta o CSS Grid para 6 colunas se o Domingo for ocultado
+    if (!EXIBIR_DOMINGO) {
+        grid.style.gridTemplateColumns = 'repeat(6, 1fr)';
+    }
+
+    // Desenha o Cabeçalho da Semana
     const diasCabecalho = EXIBIR_DOMINGO ? ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'] : ['S', 'T', 'Q', 'Q', 'S', 'S'];
     diasCabecalho.forEach((d) => (grid.innerHTML += `<div class="day-header">${d}</div>`));
+
     const firstDate = months[monthKey][0].date;
     const startDow = new Date(firstDate + 'T12:00:00').getDay();
-    let prefixEmptyCells = EXIBIR_DOMINGO ? startDow : (startDow === 0 ? 0 : startDow - 1);
-    for (let i = 0; i < prefixEmptyCells; i++) grid.innerHTML += `<div class="day-cell empty"></div>`;
+    
+    // Calcula quantas células vazias precisamos colocar no início do mês
+    let prefixEmptyCells = 0;
+    if (EXIBIR_DOMINGO) {
+        prefixEmptyCells = startDow;
+    } else {
+        // Como o calendário começa na Segunda (1), se o dia 1 cair no Domingo (0),
+        // ele será pulado pelo loop, e a Segunda (dia 2) precisa ficar na coluna 0.
+        prefixEmptyCells = startDow === 0 ? 0 : startDow - 1;
+    }
+
+    for (let i = 0; i < prefixEmptyCells; i++) {
+        grid.innerHTML += `<div class="day-cell empty"></div>`;
+    }
+
     months[monthKey].forEach((dayData) => {
       const dt = new Date(dayData.date + 'T12:00:00');
       const dayOfWeek = dt.getDay();
+
+      // MÁGICA: Se não for para exibir domingo e hoje for domingo, ignora completamente!
       if (!EXIBIR_DOMINGO && dayOfWeek === 0) return;
+
       const cell = document.createElement('div');
       cell.className = 'day-cell';
+      
       if (dayOfWeek === 0 || dayOfWeek === 6) cell.classList.add('weekend');
+
       const isOutOfBounds = store.settings.termEnd && dayData.date > store.settings.termEnd;
+      if (isOutOfBounds) {
+          cell.style.cssText += 'background-color: #ffebee !important; border-color: #ffcdd2 !important;'; 
+      }
+
       let html = `<span class="day-number">${dayData.date.split('-')[2]}</span>`;
       const holidayEvent = dayData.events.find((e) => e.type === 'holiday');
-      if (holidayEvent) html += `<div style="text-align:center; color:#7f8c8d; font-style:italic; padding-top:10px; font-weight:bold;">${holidayEvent.title}</div>`;
-      else {
-        slotsToRender.forEach((slotTime) => {
-            const timeLabel = (slotTime.match(/\d{2}:\d{2}/) || [''])[0];
-            const eventsInSlot = dayData.events.filter(e => (e.horario && e.horario.replace(/\s/g, '') === slotTime.replace(/\s/g, '')) || (e.horariosOcupados && e.horariosOcupados.some(h => h.replace(/\s/g, '') === slotTime.replace(/\s/g, ''))));
-            let content = eventsInSlot.length > 0 ? getDisciplinaInfo(eventsInSlot[0].disciplina).abrev : '&nbsp;';
-            let style = eventsInSlot.length > 0 ? `background:${eventsInSlot[0].cor}; color:black;` : 'background: #ecf0f1;';
-            html += `<div class="cal-slot-row"><div class="cal-slot-time">${timeLabel}</div><div class="cal-slot-content" style="${style}">${content}</div></div>`;
-        });
+
+      if (holidayEvent) {
+        cell.style.cssText += 'background-color: #f1f2f6 !important;';
+        html += `<div style="text-align:center; color:#7f8c8d; font-style:italic; padding-top:10px; font-weight:bold; font-size:0.9em;">
+          ${holidayEvent.title}
+        </div>`;
+      } else {
+        if (slotsToRender.length > 0) {
+          slotsToRender.forEach((slotTime) => {
+            const isIntervalo = slotTime.toUpperCase().includes('INTERVALO');
+            const timeMatch = slotTime.match(/\d{2}:\d{2}/);
+            const timeLabel = timeMatch ? timeMatch[0] : '';
+
+            const normalizeTime = (t) => (t || '').replace(/\s/g, '');
+            const slotTimeNorm = normalizeTime(slotTime);
+
+            const eventsInSlot = dayData.events.filter(e => {
+                if (e.horario && normalizeTime(e.horario) === slotTimeNorm) return true;
+                if (e.horariosOcupados && e.horariosOcupados.some(h => normalizeTime(h) === slotTimeNorm)) return true;
+                return false;
+            });
+
+            let content = '';
+            let style = '';
+
+            if (isIntervalo) {
+              content = '<span style="color:#7f8c8d; font-style:italic; font-size:0.85em;">Intervalo</span>';
+              style = 'background:#e0e0e0;'; 
+            } else if (eventsInSlot.length > 0) {
+              const hasSpecificConflict = eventsInSlot.some(e => e.conflictsAt && e.conflictsAt.includes(slotTimeNorm));
+              const implicitConflict = eventsInSlot.length > 1;
+              const isSuspended = eventsInSlot.some((e) => e.type === 'suspended');
+              
+              if (docenteName) {
+                  if (hasSpecificConflict || implicitConflict) {
+                    style = 'background: #c0392b; color: white; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight:bold;';
+                    const conflictNames = eventsInSlot.map((e) => `${getDisciplinaInfo(e.disciplina).abrev} - ${e.turmaId}`).join(' <b style="color:#fff">x</b> ');
+                    content = `<span title="Choque: ${conflictNames.replace(/<[^>]+>/g, '')}">⚠️ ${conflictNames}</span>`;
+                  } else if (isSuspended) {
+                    const suspendedEvent = eventsInSlot.find(e => e.type === 'suspended');
+                    const info = getDisciplinaInfo(suspendedEvent.disciplina);
+                    content = `⛔ ${info.abrev} - ${suspendedEvent.turmaId} Suspensa`; 
+                  } else {
+                    const event = eventsInSlot[0];
+                    const info = getDisciplinaInfo(event.disciplina);
+                    content = `${info.abrev} - ${event.turmaId}`;
+                    style = `background:${event.cor || '#bdc3c7'}; color:black;`;
+                  }
+              } else {
+                  const activeEvent = eventsInSlot.find(e => e.type !== 'suspended');
+                  if (activeEvent) {
+                      const info = getDisciplinaInfo(activeEvent.disciplina);
+                      content = info.abrev;
+                      style = `background:${activeEvent.cor || '#bdc3c7'}; color:black;`;
+                  } else {
+                      content = '&nbsp;';
+                      style = 'background: #ecf0f1;';
+                  }
+              }
+              
+              if (isOutOfBounds && !isSuspended) {
+                  style = 'background: #c0392b !important; color: white !important; font-weight: bold; border: 1px solid #900 !important;';
+                  if (!content.includes('⚠️')) {
+                      content = `⚠️ ${content}`;
+                  }
+              }
+
+            } else {
+               content = '&nbsp;'; 
+               style = 'background: #ecf0f1;'; 
+            }
+
+            const hasSuspended = eventsInSlot.some(e => e.type === 'suspended');
+            const hasOverriding = eventsInSlot.some(e => (e.isIntensive || e.isPriority) && !docenteName);
+
+            let className = 'cal-slot-content';
+            if (hasSuspended && docenteName) className += ' suspended-slot';
+            if (hasOverriding) className += ' overriding-event';
+            
+            let tooltip = '';
+            if (hasSuspended && docenteName) {
+                const suspEvent = eventsInSlot.find(e => e.type === 'suspended');
+                tooltip = `title="${suspEvent.blockingReason || 'Suspenso'}"`;
+            } else if (isOutOfBounds && eventsInSlot.length > 0 && !hasSuspended) {
+                tooltip = `title="ALERTA: Aula marcada fora do semestre letivo!"`;
+            }
+
+            let rowStyle = '';
+            if (slotTime.includes('13:30')) {
+                rowStyle = 'border-top: 2px dashed #bdc3c7; margin-top: 2px; padding-top: 2px;';
+            }
+
+            html += `
+              <div class="cal-slot-row" style="${rowStyle}">
+                <div class="cal-slot-time">${timeLabel}</div>
+                <div class="${className}" style="${style}" ${tooltip}>${content}</div>
+              </div>`;
+          });
+        } else {
+          dayData.events.forEach((ev) => {
+            const info = getDisciplinaInfo(ev.disciplina);
+            let style = `background:${ev.cor || '#bdc3c7'}`;
+            let displayLabel = docenteName ? `${info.abrev} - ${ev.turmaId}` : info.abrev;
+            
+            if (isOutOfBounds) {
+                style = `background: #c0392b !important; color: white !important; font-weight: bold; border: 1px solid #900 !important;`;
+                displayLabel = `⚠️ ${displayLabel}`;
+            }
+
+            html += `<div class="event-chip" style="${style}" title="${isOutOfBounds ? 'FORA DO SEMESTRE!' : ''}">${displayLabel}</div>`;
+          });
+        }
       }
+
       cell.innerHTML = html;
       grid.appendChild(cell);
     });
+
+    const lastDateObj = new Date(months[monthKey][months[monthKey].length - 1].date + 'T12:00:00');
+    const lastDow = lastDateObj.getDay(); 
+    
+    // Completa a última linha do grid para manter as bordas bonitas
+    let emptySuffix = 0;
+    if (EXIBIR_DOMINGO) {
+        emptySuffix = 6 - lastDow;
+    } else {
+        if (lastDow === 0) emptySuffix = 0; // Se o último dia do mês for Domingo, já foi pulado, parou no sábado.
+        else emptySuffix = 6 - lastDow; 
+    }
+
+    for (let i = 0; i < emptySuffix; i++) {
+        grid.innerHTML += `<div class="day-cell empty" style="border-bottom: 2px solid #bdc3c7;"></div>`;
+    }
+
     monthDiv.appendChild(grid);
     container.appendChild(monthDiv);
   });
 }
 
-function formatDateBR(dateStr) { if (!dateStr) return ''; return dateStr.split('-').reverse().join('/'); }
+function formatDateBR(dateStr) {
+  if (!dateStr) return '';
+  return dateStr.split('-').reverse().join('/');
+}
 
 function switchTab(tabId) {
-    document.querySelectorAll('.tab-content').forEach((c) => c.classList.remove('active'));
-    document.querySelectorAll('.tab-btn').forEach((b) => b.classList.remove('active'));
-    const tabEl = document.getElementById(`tab-${tabId}`);
-    if (tabEl) tabEl.classList.add('active');
-    const btn = document.querySelector(`button[data-tab="${tabId}"]`);
-    if (btn) btn.classList.add('active');
+  document.querySelectorAll('.tab-content').forEach((c) => c.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach((b) => b.classList.remove('active'));
+
+  const tabEl = document.getElementById(`tab-${tabId}`);
+  if (tabEl) tabEl.classList.add('active');
+
+  const btn = document.querySelector(`button[data-tab="${tabId}"]`);
+  if (btn) btn.classList.add('active');
 }
 
 export { renderWeeklyGrid, renderOfertasList, renderMonthlyCalendar, renderTeacherCalendar };
