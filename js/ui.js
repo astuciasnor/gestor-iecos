@@ -28,8 +28,8 @@ const inputConfig = {
 
 let tempImportData = null;
 
-// ATUALIZAÇÃO: Suporte a alertas verdes amigáveis
-function showToastWarning(message, type = 'error') {
+// ATUALIZAÇÃO: Suporte a tempo customizado de tela para o balão
+function showToastWarning(message, type = 'error', customDuration = null) {
     const fb = document.getElementById('feedback-msg');
     if (!fb) return;
     
@@ -47,7 +47,7 @@ function showToastWarning(message, type = 'error') {
     fb.style.fontSize = '1.1em';
     fb.style.lineHeight = '1.4';
 
-    const duration = type === 'success' ? 4500 : 7000;
+    const duration = customDuration || (type === 'success' ? 4500 : 7000);
     if (window.toastTimeout) clearTimeout(window.toastTimeout);
     window.toastTimeout = setTimeout(() => {
         fb.style.display = 'none';
@@ -117,7 +117,7 @@ function addClearXToField(inputEl, inputId) {
             parent.style.position = 'relative';
         }
         btn.style.position = 'absolute';
-        btn.style.right = '10px';
+        btn.style.right = inputEl.id === 'inp-gantt-docente' ? '25px' : '10px';
         btn.style.top = inputEl.id === 'inp-gantt-docente' ? '50%' : '70%'; 
         btn.style.transform = 'translateY(-50%)';
 
@@ -833,7 +833,7 @@ export function initUI() {
             wrapper.className = 'input-wrapper-gantt';
             wrapper.style.position = 'relative';
             wrapper.style.display = 'inline-block';
-            wrapper.style.width = 'fit-content';
+            wrapper.style.width = 'fit-content'; 
             inpGanttDocente.parentNode.insertBefore(wrapper, inpGanttDocente);
             wrapper.appendChild(inpGanttDocente);
         }
@@ -1214,19 +1214,47 @@ function handleSlotClick(dia, horario) {
         return alert(`Conflito de Datas!\n\nA disciplina "${overlap.disciplina}" já ocupa este slot no período de ${msgInicio} até ${msgFim}.`);
     }
 
-    const mainProf = docData.mode === 'single' ? docData.docente : docData.docentesList[0].nome;
-    const conflitoDocente = store.allocations.find((a) => {
-        if (a.docente !== mainProf || a.diaSemana != dia || a.horario !== horario) return false;
-        const startA = a.dataInicio || store.settings.termStart;
-        const endA = a.dataFim || store.settings.termEnd;
-        const tempEnd = new Date(dataInicio + "T12:00:00"); 
-        tempEnd.setDate(tempEnd.getDate() + 7);
-        return isDateOverlap(dataInicio, tempEnd.toISOString().split('T')[0], startA, endA);
-    });
+    // ==== BARREIRA GLOBAL DO PROFESSOR (REGULAR) ====
+    const teachersToCheck = (docData.mode === 'single' ? [docData.docente] : docData.docentesList.map(d => d.nome)).filter(n => n && n.trim().toUpperCase() !== 'A DEFINIR');
+    
+    if (teachersToCheck.length > 0) {
+        const conflitoDocenteGlobal = store.allocations.find((a) => {
+            if (String(a.turmaId) === String(store.selectedTurma)) return false; 
+            
+            let hasTeacherConflict = false;
+            if (a.docentes && a.docentes.length > 0) {
+                hasTeacherConflict = a.docentes.some(d => teachersToCheck.includes(d.nome));
+            } else {
+                hasTeacherConflict = teachersToCheck.includes(a.docente);
+            }
+            if (!hasTeacherConflict) return false;
 
-    if (conflitoDocente) { 
-        if (!confirm(`O professor ${mainProf} já está ocupado nesta faixa de datas. Continuar?`)) return; 
+            const startA = a.dataInicio || store.settings.termStart;
+            const endA = a.dataFim || store.settings.termEnd;
+            const tempEnd = new Date(dataInicio + "T12:00:00"); 
+            tempEnd.setDate(tempEnd.getDate() + 7);
+            
+            if (!isDateOverlap(dataInicio, tempEnd.toISOString().split('T')[0], startA, endA)) return false;
+
+            if (a.tipo === 'intensiva') {
+                if (a.horariosOcupados && a.horariosOcupados.includes(horario)) {
+                    if (dia == 6 && !a.usaSabado) return false; 
+                    return true;
+                }
+                return false;
+            } else {
+                return parseInt(a.diaSemana) == dia && a.horario === horario;
+            }
+        });
+
+        if (conflitoDocenteGlobal) { 
+            const turmaNomeConflito = getTurmaLabel(conflitoDocenteGlobal.turmaId);
+            const profNomes = teachersToCheck.join(', ');
+            showToastWarning(`⚠️ <b>Professor indisponível!</b><br><b>${profNomes}</b> já tem aula de <b>${conflitoDocenteGlobal.disciplina}</b> na turma <b>${turmaNomeConflito}</b> neste dia e horário.`, 'error', 3500);
+            return; 
+        }
     }
+    // ==================================================
 
     const blockingIntensivas = store.allocations.filter(a => {
         if (String(a.turmaId) !== String(store.selectedTurma)) return false;
@@ -1315,6 +1343,45 @@ function handleAddManual() {
         if (intensiveConflict) {
             return alert(`❌ CHOQUE DE HORÁRIO!\n\nA Intensiva de "${intensiveConflict.disciplina}" já está utilizando este(s) horário(s) no mesmo período. A ação foi bloqueada.`);
         }
+
+        // ==== BARREIRA GLOBAL DO PROFESSOR (INTENSIVA) ====
+        const teachersToCheck = (docData.mode === 'single' ? [docData.docente] : docData.docentesList.map(d => d.nome)).filter(n => n && n.trim().toUpperCase() !== 'A DEFINIR');
+
+        if (teachersToCheck.length > 0) {
+            const teacherConflictGlobal = store.allocations.find(a => {
+                if (String(a.turmaId) === String(store.selectedTurma)) return false; 
+
+                let hasTeacherConflict = false;
+                if (a.docentes && a.docentes.length > 0) {
+                    hasTeacherConflict = a.docentes.some(d => teachersToCheck.includes(d.nome));
+                } else {
+                    hasTeacherConflict = teachersToCheck.includes(a.docente);
+                }
+                if (!hasTeacherConflict) return false;
+
+                const aStart = a.dataInicio || store.settings.termStart;
+                const aEnd = a.dataFim || store.settings.termEnd;
+                if (!isDateOverlap(inicio, dataFimCalculada, aStart, aEnd)) return false;
+
+                if (a.tipo === 'intensiva') {
+                    return hasIntensiveSlotConflict(inicio, dataFimCalculada, slotsIntensiva, aStart, aEnd, a.horariosOcupados);
+                } else {
+                    if (slotsIntensiva.includes(a.horario)) {
+                        if (parseInt(a.diaSemana) === 6 && !usaSabado) return false;
+                        return true;
+                    }
+                    return false;
+                }
+            });
+
+            if (teacherConflictGlobal) {
+                const turmaNomeConflito = getTurmaLabel(teacherConflictGlobal.turmaId);
+                const profNomes = teachersToCheck.join(', ');
+                showToastWarning(`⚠️ <b>Professor indisponível!</b><br><b>${profNomes}</b> já tem aula de <b>${teacherConflictGlobal.disciplina}</b> na turma <b>${turmaNomeConflito}</b> nestas datas.`, 'error', 3500);
+                return;
+            }
+        }
+        // ===================================================
 
         let idToRemove = null;
         const conflitoIntensiva = store.allocations.find(a => {
@@ -2157,9 +2224,98 @@ function renderGanttChart() {
     container.innerHTML = html;
 }
 
-// ============================================================================
-// NOVO MOTOR DE CALENDÁRIO: RENDERIZAÇÃO SEM DOMINGOS (GANHO DE ESPAÇO)
-// ============================================================================
+// ==== NOVO MOTOR: AUDITORIA GLOBAL DE PROFESSORES ====
+function detectGlobalTeacherConflicts() {
+    const conflicts = new Set();
+    const allocs = store.allocations;
+
+    function getInvolvedTeachers(alloc) {
+        if (alloc.docentes && alloc.docentes.length > 0) return alloc.docentes.map(d => d.nome).filter(n => n && n.toUpperCase() !== 'A DEFINIR');
+        if (alloc.docente && alloc.docente.toUpperCase() !== 'A DEFINIR') return [alloc.docente];
+        return [];
+    }
+
+    for (let i = 0; i < allocs.length; i++) {
+        for (let j = i + 1; j < allocs.length; j++) {
+            const a = allocs[i];
+            const b = allocs[j];
+
+            if (String(a.turmaId) === String(b.turmaId) && a.disciplina === b.disciplina && a.tipo === b.tipo) continue;
+
+            const teachersA = getInvolvedTeachers(a);
+            const teachersB = getInvolvedTeachers(b);
+            const sharedTeachers = teachersA.filter(t => teachersB.includes(t));
+
+            if (sharedTeachers.length === 0) continue;
+
+            const startA = a.dataInicio || store.settings.termStart;
+            const endA = a.dataFim || store.settings.termEnd;
+            const startB = b.dataInicio || store.settings.termStart;
+            const endB = b.dataFim || store.settings.termEnd;
+
+            if (!isDateOverlap(startA, endA, startB, endB)) continue;
+
+            let isSlotConflict = false;
+
+            if (a.tipo !== 'intensiva' && b.tipo !== 'intensiva') {
+                if (parseInt(a.diaSemana) === parseInt(b.diaSemana) && a.horario === b.horario) isSlotConflict = true;
+            } else if (a.tipo === 'intensiva' && b.tipo === 'intensiva') {
+                if (a.horariosOcupados && b.horariosOcupados) {
+                    isSlotConflict = a.horariosOcupados.some(h => b.horariosOcupados.includes(h));
+                }
+            } else {
+                const intAlloc = a.tipo === 'intensiva' ? a : b;
+                const regAlloc = a.tipo === 'intensiva' ? b : a;
+                const regDay = parseInt(regAlloc.diaSemana);
+                
+                const isIntDayActive = (regDay >= 1 && regDay <= 5) || (regDay === 6 && intAlloc.usaSabado);
+
+                if (isIntDayActive && intAlloc.horariosOcupados && intAlloc.horariosOcupados.includes(regAlloc.horario)) {
+                    isSlotConflict = true;
+                }
+            }
+
+            if (isSlotConflict) {
+                sharedTeachers.forEach(t => conflicts.add(t));
+            }
+        }
+    }
+    return Array.from(conflicts);
+}
+
+function updateGlobalConflictsUI() {
+    const tabTeacher = document.getElementById('tab-teacher');
+    if (!tabTeacher) return;
+
+    let warningDiv = document.getElementById('global-conflict-warning');
+    if (!warningDiv) {
+        warningDiv = document.createElement('div');
+        warningDiv.id = 'global-conflict-warning';
+        tabTeacher.insertBefore(warningDiv, tabTeacher.firstChild);
+    }
+
+    const conflictingTeachers = detectGlobalTeacherConflicts();
+
+    if (conflictingTeachers.length > 0) {
+        warningDiv.innerHTML = `
+            <div style="background-color: #e74c3c; color: white; padding: 15px; border-radius: 6px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                <h4 style="margin: 0 0 10px 0; display: flex; align-items: center; gap: 8px;">
+                    ⚠️ ALERTA: CONFLITO GLOBAL NA GRADE
+                </h4>
+                <p style="margin: 0; font-size: 0.95em; line-height: 1.4;">
+                    Foi detectado que o(s) seguinte(s) professor(es) está(ão) alocado(s) em mais de uma disciplina no mesmo dia e horário:<br>
+                    <b>${conflictingTeachers.join(', ')}</b><br><br>
+                    <small><i>Selecione o professor abaixo para visualizar a grade e identificar o choque (o slot ficará destacado em vermelho escuro).</i></small>
+                </p>
+            </div>
+        `;
+        warningDiv.style.display = 'block';
+    } else {
+        warningDiv.style.display = 'none';
+    }
+}
+// ========================================================
+
 function generateCalendarGrid(container, turmaId, docenteName, start, end, titleHTML) {
   container.innerHTML = '';
 
@@ -2210,10 +2366,7 @@ function generateCalendarGrid(container, turmaId, docenteName, start, end, title
       months[k].push({ date: dateStr, events: eventsByDate[dateStr] });
     });
 
-  // ------------------------------------------------------------------------
-  // CHAVE MESTRA: ALterne para 'true' se um dia quiser o Domingo de volta.
   const EXIBIR_DOMINGO = false; 
-  // ------------------------------------------------------------------------
 
   Object.keys(months).forEach((monthKey) => {
     const monthDiv = document.createElement('div');
@@ -2226,25 +2379,20 @@ function generateCalendarGrid(container, turmaId, docenteName, start, end, title
     const grid = document.createElement('div');
     grid.className = 'month-grid';
     
-    // Ajusta o CSS Grid para 6 colunas se o Domingo for ocultado
     if (!EXIBIR_DOMINGO) {
         grid.style.gridTemplateColumns = 'repeat(6, 1fr)';
     }
 
-    // Desenha o Cabeçalho da Semana
     const diasCabecalho = EXIBIR_DOMINGO ? ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'] : ['S', 'T', 'Q', 'Q', 'S', 'S'];
     diasCabecalho.forEach((d) => (grid.innerHTML += `<div class="day-header">${d}</div>`));
 
     const firstDate = months[monthKey][0].date;
     const startDow = new Date(firstDate + 'T12:00:00').getDay();
     
-    // Calcula quantas células vazias precisamos colocar no início do mês
     let prefixEmptyCells = 0;
     if (EXIBIR_DOMINGO) {
         prefixEmptyCells = startDow;
     } else {
-        // Como o calendário começa na Segunda (1), se o dia 1 cair no Domingo (0),
-        // ele será pulado pelo loop, e a Segunda (dia 2) precisa ficar na coluna 0.
         prefixEmptyCells = startDow === 0 ? 0 : startDow - 1;
     }
 
@@ -2256,7 +2404,6 @@ function generateCalendarGrid(container, turmaId, docenteName, start, end, title
       const dt = new Date(dayData.date + 'T12:00:00');
       const dayOfWeek = dt.getDay();
 
-      // MÁGICA: Se não for para exibir domingo e hoje for domingo, ignora completamente!
       if (!EXIBIR_DOMINGO && dayOfWeek === 0) return;
 
       const cell = document.createElement('div');
@@ -2392,12 +2539,11 @@ function generateCalendarGrid(container, turmaId, docenteName, start, end, title
     const lastDateObj = new Date(months[monthKey][months[monthKey].length - 1].date + 'T12:00:00');
     const lastDow = lastDateObj.getDay(); 
     
-    // Completa a última linha do grid para manter as bordas bonitas
     let emptySuffix = 0;
     if (EXIBIR_DOMINGO) {
         emptySuffix = 6 - lastDow;
     } else {
-        if (lastDow === 0) emptySuffix = 0; // Se o último dia do mês for Domingo, já foi pulado, parou no sábado.
+        if (lastDow === 0) emptySuffix = 0; 
         else emptySuffix = 6 - lastDow; 
     }
 
@@ -2424,6 +2570,11 @@ function switchTab(tabId) {
 
   const btn = document.querySelector(`button[data-tab="${tabId}"]`);
   if (btn) btn.classList.add('active');
+
+  // Atualiza o auditor de professores toda vez que a aba "teacher" for aberta
+  if (tabId === 'teacher') {
+      updateGlobalConflictsUI();
+  }
 }
 
 export { renderWeeklyGrid, renderOfertasList, renderMonthlyCalendar, renderTeacherCalendar };
