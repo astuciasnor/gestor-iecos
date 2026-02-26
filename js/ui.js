@@ -684,7 +684,8 @@ function syncAllRegularDates() {
                     const oEnd = other.dataFim || termEnd;
 
                     if (dStr >= oStart && dStr <= oEnd) {
-                        if (other.tipo === 'intensiva' && other.horariosOcupados) {
+                        // Prioritárias ignoram bloqueios de Intensivas (a Intensiva é quem é suspensa)
+                        if (other.tipo === 'intensiva' && other.horariosOcupados && group[0].tipo !== 'regular_prioritaria') {
                             if (dStr === other.dataFim && other.horariosUltimoDia) {
                                 return slotsToday.some(slot => other.horariosUltimoDia.includes(slot.horario));
                             }
@@ -1537,7 +1538,7 @@ function handleSlotClick(dia, horario) {
     renderWeeklyGrid();
     renderOfertasList();
 
-    if (blockingIntensivas.length > 0) {
+    if (blockingIntensivas.length > 0 && tipo !== 'regular_prioritaria') {
         const nomes = [...new Set(blockingIntensivas.map(i => i.disciplina))].join(', ');
         showToastWarning(`💡 <b>Ajuste Automático:</b> A disciplina <b>${info.abrev}</b> iniciará com aulas suspensas nos dias da Intensiva de <b>${nomes}</b>. A data final foi compensada!`, 'success');
     } else if (store.settings.termEnd) {
