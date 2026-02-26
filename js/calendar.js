@@ -234,9 +234,21 @@ export function getCalendarEvents(turmaId, startDate, endDate, docenteFilter = n
         const cStr = cursor.toISOString().split('T')[0];
         const dow = cursor.getDay();
 
-        // ATUALIZAÇÃO 4D: Passa a flag do sábado para countar o histórico de horas perfeitamente
-        if (isBusinessDay(cStr, intense.usaSabado) && !blockedDaysForTurma.has(dow)) {
-          hoursBeforeToday += slotsPerDay;
+        if (isBusinessDay(cStr, intense.usaSabado)) {
+          // Verifica quais Prioritárias estavam ativas NESTE dia específico
+          const activePrioOnDay = allPriorityRegulars.filter(p =>
+            String(p.turmaId) === String(intense.turmaId) &&
+            parseInt(p.diaSemana) === dow &&
+            cStr >= (p.dataInicio || '') &&
+            cStr <= (p.dataFim || '')
+          );
+
+          // Filtra slots da intensiva que não foram tomados por Prioritárias
+          const availableSlots = slots.filter(s =>
+            !activePrioOnDay.some(p => normalizeTime(p.horario) === normalizeTime(s))
+          );
+
+          hoursBeforeToday += availableSlots.length;
         }
         cursor.setDate(cursor.getDate() + 1);
       }
