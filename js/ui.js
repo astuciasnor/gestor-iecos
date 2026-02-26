@@ -1339,12 +1339,22 @@ function renderWeeklyGrid() {
                 cell.dataset.dia = i;
                 cell.dataset.horario = horarioStr;
 
-                const allocs = store.allocations.filter((a) =>
-                    String(a.turmaId) === String(store.selectedTurma) &&
-                    (a.tipo === 'regular' || a.tipo === 'regular_prioritaria') &&
-                    a.diaSemana == i &&
-                    a.horario === horarioStr
-                );
+                const allocs = store.allocations.filter((a) => {
+                    const isValidTypeAndSlot = String(a.turmaId) === String(store.selectedTurma) &&
+                        (a.tipo === 'regular' || a.tipo === 'regular_prioritaria') &&
+                        a.diaSemana == i &&
+                        a.horario === horarioStr;
+
+                    if (!isValidTypeAndSlot) return false;
+
+                    // Bloqueio Visual para disciplinas de carga horária ímpar alocadas num dia/bloco de slots par.
+                    // O horárioStr atual DEVE estar dentro do mapeamento da linha horariosUltimoDia se existir.
+                    if (a.horariosUltimoDia && a.horariosUltimoDia.length > 0) {
+                        return a.horariosUltimoDia.includes(horarioStr);
+                    }
+
+                    return true;
+                });
 
                 if (allocs.length > 0) renderSlotContent(cell, allocs);
 
@@ -1568,7 +1578,7 @@ function handleAddManual() {
         let slotsIntensiva = getCheckedSlots();
         if (slotsIntensiva.length === 0) return alert('Selecione pelo menos um horário.');
 
-        let effectiveCH = ch === 45 && slotsIntensiva.length === 2 ? 46 : ch;
+        let effectiveCH = ch;
         const diasNecessarios = Math.ceil(effectiveCH / slotsIntensiva.length);
         const feriados = store.rawData?.feriados || [];
         const blockedWeekdays = getBlockedWeekdaysForTurma(store.selectedTurma);
