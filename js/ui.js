@@ -695,8 +695,25 @@ function syncAllRegularDates() {
                 });
 
                 if (!dayIsSuspended) {
-                    classesFound += slotsToday.length;
-                    lastValidDate = new Date(currentDate);
+                    const chRestante = maxCH - classesFound;
+
+                    if (chRestante > 0 && slotsToday.length <= chRestante) {
+                        classesFound += slotsToday.length;
+                        lastValidDate = new Date(currentDate);
+                    } else if (chRestante > 0 && slotsToday.length > chRestante) {
+                        // É o último dia e sobra menos CH do que os slots mapeados.
+                        classesFound += chRestante;
+                        lastValidDate = new Date(currentDate);
+
+                        // Separar os primeiros 'chRestante' slots para que eles sejam os válidos
+                        // (Isso reflete diretamente a necessidade de não desenhar horas extras impares na UI)
+                        const partialSlotsForLastDay = slotsToday.slice(0, chRestante).map(s => s.horario);
+                        group.forEach(a => {
+                            if (parseInt(a.diaSemana) === dow) {
+                                a.horariosUltimoDia = partialSlotsForLastDay;
+                            }
+                        });
+                    }
                 }
             }
 
@@ -1735,9 +1752,26 @@ function renderOfertasList() {
             details = `Aguardando grade`;
         } else if (a.tipo === 'regular' || a.tipo === 'regular_prioritaria') {
             const suspended = getSuspendedDates(store.allocations, a.turmaId, a.diaSemana, a.disciplina, start);
-            const numAulas = countWeekdaysInPeriod(start, end, parseInt(a.diaSemana), feriados, suspended);
-            totalHoras = numAulas * 1;
-            details = `${numAulas} aulas`;
+            const numAulasBase = countWeekdaysInPeriod(start, end, parseInt(a.diaSemana), feriados, suspended);
+
+            // Subtrair slots fantasmas do último dia se limitamos a carga matemática
+            // Cada dia base na lista vale 1 slot. Precisamos achar quantos slots esse bloco tem hoje.
+            const slotsDesseDia = store.allocations.filter(all => String(all.turmaId) === String(a.turmaId) && all.disciplina === a.disciplina && parseInt(all.diaSemana) === parseInt(a.diaSemana)).length;
+
+            totalHoras = numAulasBase * 1;
+
+            if (a.horariosUltimoDia && a.horariosUltimoDia.length > 0 && slotsDesseDia > 0) {
+                // Se no último dia o sistema cortou slots pra não estourar, a gente compensa na UI visual subtraindo
+                // o que não foi dado se for o loop responsável pelo fim do slot.
+                const removedSlots = slotsDesseDia - a.horariosUltimoDia.length;
+                // O ui.js chama na DOM 1 linha inteira por slot, então totalHoras de cada 'linha visual' 
+                // representa 1 hora diária para numAulasBase. Se esse for o slot cortado, ele reduz sua cota.
+                if (!a.horariosUltimoDia.includes(a.horario) && numAulasBase > 0) {
+                    totalHoras -= 1;
+                }
+            }
+
+            details = `${numAulasBase} semanas`;
         } else {
             const diasUteis = countBusinessDays(start, end, feriados, blockedWeekdays, a.usaSabado || false);
             const slotsPorDia = a.horariosOcupados ? a.horariosOcupados.length : 5;
