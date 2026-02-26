@@ -245,7 +245,6 @@ function wrapGanttInput() {
                 renderGanttChart();
                 btnRefreshGantt.style.transform = `rotate(${btnRefreshGantt.dataset.rot || 360}deg)`;
                 btnRefreshGantt.dataset.rot = parseInt(btnRefreshGantt.dataset.rot || 360) + 360;
-                showToastWarning(`Gráfico de Gantt atualizado com sucesso!`, 'success', 1800);
             } else {
                 alert('Digite o nome de um professor primeiro para atualizar o gráfico.');
             }
