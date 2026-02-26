@@ -1787,7 +1787,7 @@ function renderOfertasList() {
             const slotsPorDia = a.horariosOcupados ? a.horariosOcupados.length : 5;
 
             // NOVO: CALCULA HORAS DA INTENSIVA DE FORMA EXATA COM O ÚLTIMO DIA
-            if (a.horariosUltimoDia && a.horariosUltimoDia.length > 0 && a.horariosUltimoDia.length < slotsPorDia) {
+            if (a.horariosUltimoDia && a.horariosUltimoDia.length > 0 && a.horariosUltimoDia.length <= slotsPorDia) {
                 totalHoras = ((diasUteis - 1) * slotsPorDia) + a.horariosUltimoDia.length;
                 details = `${diasUteis} dias (parcial no final)`;
             } else {
