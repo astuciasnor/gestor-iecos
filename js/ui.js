@@ -736,12 +736,13 @@ function syncAllRegularDates() {
 }
 
 /**
- * Nova Função: Sincroniza as datas de todas as Intensivas da turma atual,
- * considerando feriados, dias bloqueados e suspensões por Disciplinas Prioritárias.
+ * Sincroniza as datas de TODAS as Intensivas da turma atual.
+ * Robusto e genérico para qualquer CH e combinação de horários.
  */
 function syncAllIntensiveDates() {
-    const termStart = store.settings.termStart || '2025-01-01';
-    const termEnd = store.settings.termEnd || '2025-12-31';
+    // Normaliza para "HH:MM" - resolve incompatibilidades de formato entre slots
+    const normT = (t) => { const m = (t || '').match(/\d{1,2}:\d{2}/); return m ? m[0] : ''; };
+
     const feriadosSet = new Set((store.rawData?.feriados || []).map(f => f.data || f));
 
     // Filtra todas as intensivas da turma selecionada
@@ -758,11 +759,10 @@ function syncAllIntensiveDates() {
         const totalCH = intense.ch || 0;
         if (totalCH === 0) return;
 
-        const slots = intense.horariosOcupados || [];
+        const slots = (intense.horariosOcupados || []).map(normT); // Normaliza slots
         if (slots.length === 0) return;
 
-        const blockedWeekdays = getBlockedWeekdaysForTurma(intense.turmaId);
-        const usaSabado = intense.usaSabado;
+        const usaSabado = intense.usaSabado || false;
 
         let classesFound = 0;
         let currentDate = new Date(intense.dataInicio + 'T12:00:00');
@@ -782,25 +782,28 @@ function syncAllIntensiveDates() {
             if (dow === 6 && !usaSabado) isBusiness = false;
             if (feriadosSet.has(dStr)) isBusiness = false;
             if (isBusiness) {
-                // Checa conflitos com Prioritárias neste dia e nestes slots
-                const activePriorityToday = priorityRegulars.filter(p => {
-                    if (parseInt(p.diaSemana) !== dow) return false;
-                    const pStart = p.dataInicio || termStart;
-                    const pEnd = p.dataFim || pStart; // Usa o início como fim se dataFim for nula
-                    return dStr >= pStart && dStr <= pEnd;
-                });
+                // Slots bloqueados pela Prioritária NESTE dia específico (normalizado)
+                const prioSlotsToday = priorityRegulars
+                    .filter(p =>
+                        parseInt(p.diaSemana) === dow &&
+                        dStr >= (p.dataInicio || '') &&
+                        dStr <= (p.dataFim || '')
+                    )
+                    .map(p => normT(p.horario));
 
-                const availableSlotsToday = slots.filter(s => {
-                    return !activePriorityToday.some(p => p.horario === s);
-                });
+                // Slots livres = slots da intensiva menos os bloqueados pela Prioritária
+                const freeSlots = slots.filter(s => !prioSlotsToday.includes(s));
 
-                if (availableSlotsToday.length > 0) {
-                    const chRestante = totalCH - classesFound;
-                    if (availableSlotsToday.length <= chRestante) {
-                        classesFound += availableSlotsToday.length;
+                if (freeSlots.length > 0) {
+                    const remaining = totalCH - classesFound;
+                    if (freeSlots.length <= remaining) {
+                        classesFound += freeSlots.length;
                     } else {
-                        intense.horariosUltimoDia = availableSlotsToday.slice(0, chRestante);
-                        classesFound += chRestante;
+                        // Último dia parcial: mapeia de volta para o formato original
+                        const origSlots = intense.horariosOcupados || [];
+                        intense.horariosUltimoDia = origSlots
+                            .filter(s => freeSlots.slice(0, remaining).includes(normT(s)));
+                        classesFound += remaining;
                     }
                     lastValidDate = new Date(currentDate);
                 }
