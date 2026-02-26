@@ -201,6 +201,24 @@ function wrapGanttInput() {
         inputWrapper.parentNode.insertBefore(flexContainer, inputWrapper);
         flexContainer.appendChild(inputWrapper);
 
+        // Move e estiliza o botão "Gerar Gantt" do HTML para bater lado a lado com o Refresh
+        const btnGerarGantt = document.getElementById('btn-gerar-gantt');
+        if (btnGerarGantt) {
+            btnGerarGantt.style.display = 'inline-block';
+            btnGerarGantt.style.background = '#27ae60';
+            btnGerarGantt.style.color = '#fff';
+            btnGerarGantt.style.border = 'none';
+            btnGerarGantt.style.borderRadius = '4px';
+            btnGerarGantt.style.padding = '6px 12px';
+            btnGerarGantt.style.cursor = 'pointer';
+            btnGerarGantt.style.fontWeight = 'bold';
+            btnGerarGantt.style.fontSize = '0.95em';
+            btnGerarGantt.style.transition = 'background 0.2s';
+            btnGerarGantt.onmouseover = () => btnGerarGantt.style.background = '#219653';
+            btnGerarGantt.onmouseout = () => btnGerarGantt.style.background = '#27ae60';
+            flexContainer.appendChild(btnGerarGantt);
+        }
+
         // Botão Refresh do Gantt
         const btnRefreshGantt = document.createElement('button');
         btnRefreshGantt.id = 'btn-refresh-gantt';
