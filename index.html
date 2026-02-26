@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestor Acadêmico - Coordenação (v2.0 Dev)</title>
+    <title>Gestor Acadêmico - Coordenação (v3.1 Final)</title>
     <link rel="stylesheet" href="css/style.css?v=3.8">
     
     <style>
@@ -430,8 +430,6 @@
                 </select>
             </div>
 
-            <div style="height: 3px; background: rgba(255,255,255,0.2); margin: 30px 0;"></div>
-
             <h3 style="text-transform: uppercase; letter-spacing: 1px; margin-bottom: 15px;">OFERTA DE DISCIPLINA</h3>
             
             <div style="margin-bottom: 20px;">
@@ -518,8 +516,6 @@
                 <button id="btn-add-oferta" class="btn-primary" style="background-color: #c0392b; border-color: #c0392b; margin-top: 5px; width: 100%;">Adicionar Intensiva à Grade</button>
             </div>
             
-            <div style="height: 3px; background: rgba(255,255,255,0.2); margin: 30px 0;"></div>
-            
             <h3 style="text-transform: uppercase; letter-spacing: 1px; margin-bottom: 15px;">GERENCIANDO ARQUIVOS</h3>
 
             <div class="actions">
@@ -565,9 +561,9 @@
                     <label>Período de Visualização:</label>
                     <input type="date" id="cal-start" value="2025-10-13"> a 
                     <input type="date" id="cal-end" value="2026-02-27">
-                    <button id="btn-gerar-cal" class="btn-secondary" style="position: fixed; top: 85px; right: 30px; z-index: 999; background: var(--primary); color: white; padding: 12px 24px; border-radius: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); font-weight: bold; font-size: 1rem; cursor: pointer;">
-    🔄 Atualizar
-</button>
+                    <button id="btn-gerar-cal" class="btn-secondary" style="position: fixed; top: 85px; right: 30px; z-index: 999; background: var(--primary); color: white; padding: 12px 24px; border-radius: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); font-weight: bold; font-size: 1rem; cursor: pointer; transition: transform 0.2s;">
+                        🔄 Atualizar
+                    </button>
                 </div>
                 <div id="monthly-container"></div>
             </section>
@@ -602,7 +598,7 @@
                 <div class="calendar-controls no-print" style="margin-bottom: 20px;">
                     <label style="color: var(--primary); font-weight: bold;">Professor para o Gráfico:</label>
                     <input type="text" id="inp-gantt-docente" list="list-view-docentes" placeholder="Digite o nome..." style="padding: 8px; border: 1px solid #ccc; border-radius: 4px; width: 300px; font-size: 1rem;">
-                    <button id="btn-gerar-gantt" class="btn-secondary" style="background: var(--primary); color:white;">Gerar Gantt</button>
+                    <button id="btn-gerar-gantt" class="btn-secondary" style="background: var(--primary); color:white; display:none;">Gerar Gantt</button>
                 </div>
                 
                 <div id="gantt-container" class="gantt-wrapper">
@@ -621,27 +617,32 @@
                         <div class="tutorial-card">
                             <h4>🚀 Começando Agora</h4>
                             <ul style="padding-left: 20px; line-height: 1.6; list-style-type: none;">
-                                <li style="margin-bottom: 10px;"><strong>1. Configuração Inicial:</strong> Selecione o <b>Curso</b> e a <b>Turma</b> no menu lateral.</li>
-                                <li style="margin-bottom: 10px;"><strong>2. Limites do Semestre:</strong> Insira as datas de <b>Início</b> e <b>Fim</b> do período letivo.</li>
-                                <li style="margin-bottom: 10px;"><strong>3. Ajuste de Visualização:</strong> Defina o <b>Período Letivo</b> (1P a 4P) e o <b>Turno</b> (Manhã ou Tarde) para preparar a grade.</li>
-                                <li style="margin-bottom: 10px;"><strong>4. Identidade Visual:</strong> Clique na <b>bolinha colorida</b> para definir a cor de fundo da disciplina.</li>
-                                <li style="margin-bottom: 10px;"><strong>5. Professores:</strong> Se a disciplina for dividida, marque <b>"Múltiplos?"</b> e adicione os docentes com suas respectivas Cargas Horárias.</li>
-                                <li style="margin-bottom: 10px;"><strong>6. Tipo de Oferta:</strong> Escolha o modelo da disciplina: <b>Intensiva (Blocada)</b>, <b>Regular Comum</b> ou <b>Regular Prioritária</b>.</li>
-                                <li><strong>7. Conclusão:</strong> Para <i>Intensivas</i>, clique em <b>"Adicionar à Grade"</b>. Para <i>Regulares</i>, clique diretamente nos <b>horários da grade</b>.</li>
+                                <li style="margin-bottom: 10px;"><strong>1. Configuração Inicial:</strong> Defina primeiro o <b>Período Letivo</b> (1P a 4P) e o <b>Turno</b>. Só depois, selecione o <b>Curso</b> e a <b>Turma</b> no menu lateral.</li>
+                                <li style="margin-bottom: 10px;"><strong>2. Limites do Semestre:</strong> Insira as datas de <b>Início</b> e <b>Fim</b> do calendário geral da universidade.</li>
+                                <li style="margin-bottom: 10px;"><strong>3. Identidade Visual:</strong> Clique na <b>bolinha colorida</b> para definir a cor de fundo da disciplina.</li>
+                                <li style="margin-bottom: 10px;"><strong>4. Professores:</strong> Se a disciplina for dividida, marque <b>"Múltiplos?"</b> e adicione os docentes com suas respectivas Cargas Horárias parciais.</li>
+                                <li style="margin-bottom: 10px;"><strong>5. Tipo de Oferta:</strong> Escolha o modelo da disciplina: <b>Intensiva (Blocada)</b>, <b>Regular Comum</b> ou <b>Regular Prioritária</b> (usada para horários fixos inegociáveis, como laboratórios. O sistema impedirá que aulas normais a sobrescrevam).</li>
+                                <li style="margin-bottom: 10px;"><strong>6. Alocação Manual:</strong> Para <i>Intensivas</i>, configure as datas e clique em <b>"Adicionar à Grade"</b>. Para <i>Regulares</i>, clique diretamente nos <b>quadradinhos da grade</b> semanal.</li>
+                                <li style="margin-bottom: 10px;"><strong>7. Importação em Bloco (PPC):</strong> Ao usar a opção de <b>"Importar Componentes"</b>, é <b>obrigatório</b> ir na aba <b>Lista de Ofertas</b> e editar o horário/data de cada componente pendente para alocá-los na grade corretamente.</li>
+                                <li><strong>8. Mesclagem de Calendários:</strong> Você pode usar a ferramenta de Importação (JSON) para carregar o trabalho salvo de outro diretor de curso e checar se há choques.</li>
                             </ul>
                         </div>
 
-                        <h3 style="margin-top:25px;">⚡ Regras Inteligentes (O "Pulo do Gato")</h3>
+                        <h3 style="margin-top:25px;">⚡ Regras Inteligentes e Auditoria (O "Pulo do Gato")</h3>
                         
                         <div class="tutorial-card" style="background-color: #f8f9fa; border-left-color: #27ae60;">
-                            <h4>1. Prioridade da Intensiva</h4>
-                            <p>Se você colocar uma disciplina Intensiva num dia que já tinha uma Regular, o sistema <b>suspende a Regular automaticamente</b> apenas naquele dia.</p>
-                            <p><em>Resultado:</em> O professor da Regular fica livre nesse dia e a aula volta ao normal na semana seguinte.</p>
+                            <h4>1. Suspensão Automática (Intensiva vs Regular)</h4>
+                            <p>Se você colocar uma disciplina Intensiva num dia que já tinha uma Regular, o sistema <b>suspende a Regular automaticamente</b> naqueles dias de choque e empurra a data final da Regular para frente, garantindo que o professor não perca nenhuma carga horária.</p>
                         </div>
 
                         <div class="tutorial-card" style="background-color: #f8f9fa; border-left-color: #8e44ad;">
-                            <h4>2. Dias Mistos (Híbridos)</h4>
-                            <p>É possível ter aula Regular num horário (ex: 07:30) e Intensiva em outro (ex: 09:20) no mesmo dia. O sistema gerencia isso sozinho!</p>
+                            <h4>2. Semanas Híbridas e Dias Mistos</h4>
+                            <p>É perfeitamente possível ter uma aula Regular num horário (ex: 07:30) e uma Intensiva em outro (ex: 09:20) no mesmo dia, ou turmas que operam em semanas alternadas. O sistema calcula a carga horária fracionada e entrega as horas exatas no último dia de aula.</p>
+                        </div>
+
+                        <div class="tutorial-card" style="background-color: #f8f9fa; border-left-color: #e74c3c;">
+                            <h4>3. Auditoria Pós-Importação de Conflitos Globais</h4>
+                            <p>O sistema protege a agenda física dos professores contra falhas humanas. Se você importar a grade de outro diretor, clique na aba <b>Visão do Professor</b>. O sistema fará um Raio-X global automático e exibirá um <b>alerta vermelho no topo da tela</b> caso algum professor tenha sido acidentalmente alocado em duas turmas diferentes no mesmo horário (choque cross-course).</p>
                         </div>
 
                     </div>
@@ -650,22 +651,22 @@
                         <div class="help-card help-card-tip" style="background: #e1f5fe; border: 1px solid #b3e5fc; padding:15px; border-radius:8px; margin-bottom:15px;">
                             <h4 style="margin-top:0; color:#0277bd;">🛠️ Ferramentas Úteis</h4>
                             <ul style="padding-left: 20px; font-size: 0.9em;">
-                                <li style="margin-bottom:8px;">❌ <strong>Errou algo?</strong><br>Vá na aba "Lista de Ofertas" e clique no botão vermelho "Excluir".</li>
-                                <li style="margin-bottom:8px;">💾 <strong>Salvar Backup:</strong><br>Use o botão <b>Exportar (JSON)</b> para salvar seu trabalho no computador.</li>
-                                <li style="margin-bottom:8px;">🔄 <strong>Restaurar:</strong><br>Use o botão <b>Importar</b> para carregar um arquivo salvo anteriormente.</li>
-                                <li style="margin-bottom:8px;">📅 <strong>Calendário da Turma:</strong><br>Clique em <b>"Atualizar Calendário"</b> para visualizar o mês. Use <b>"Imprimir"</b> para gerar PDF para os alunos.</li>
-                                <li>👨‍🏫 <strong>Visão do Professor:</strong><br>Busque pelo nome do docente para ver sua agenda pessoal completa e identificar conflitos.</li>
+                                <li style="margin-bottom:8px;">❌ <strong>Errou algo?</strong><br>Vá na aba "Lista de Ofertas" e clique no botão de "Editar" ou "Excluir".</li>
+                                <li style="margin-bottom:8px;">💾 <strong>Salvar Backup:</strong><br>Use o botão <b>Exportar (JSON)</b> para salvar sua grade no computador de forma segura.</li>
+                                <li style="margin-bottom:8px;">🔄 <strong>Restaurar e Mesclar:</strong><br>Use o botão <b>Importar (JSON)</b> para carregar o arquivo de outro curso e juntá-lo à sua grade para verificar choques globais.</li>
+                                <li style="margin-bottom:8px;">📅 <strong>Botões Refresh:</strong><br>Nas abas de Calendário (Turma/Professor) e Gráfico Gantt, use os botões azuis <b>🔄 Atualizar</b> sempre que fizer uma mudança, para renderizar as novidades imediatamente.</li>
+                                <li>🌐 <strong>Publicação:</strong><br>O botão verde <b>"Publicar Grade Online"</b> salva o arquivo final (`alocacoes_publicas.json`). Ele é de uso <b>exclusivo do mantenedor do sistema</b> para atualizar o mural público dos alunos.</li>
                             </ul>
                         </div>
 
                         <div class="help-card help-card-tip" style="background: #fff3cd; border: 1px solid #ffeeba; padding:15px; border-radius:8px;">
-                            <h4 style="margin-top:0; color:#856404;">🔄 Atualização de Dados</h4>
-                            <p style="font-size: 0.9em; margin-bottom:0;">Para atualizar professores ou disciplinas, fale com o mantenedor:</p>
+                            <h4 style="margin-top:0; color:#856404;">🔧 Atualização de Dados (PPC)</h4>
+                            <p style="font-size: 0.9em; margin-bottom:0;">Para inserir novos professores, novas disciplinas de PPC ou calendários de feriados, fale com o administrador de infraestrutura do sistema:</p>
                             <p style="font-weight: bold; color: #2c3e50; margin-top: 5px;">👨‍💻 Prof. Evaldo Silva</p>
                         </div>
                         
                         <div style="margin-top: 20px; font-size: 0.8em; color: #999; text-align: center;">
-                            <p>Nota Técnica: Dados base (professores/disciplinas) são atualizados via suporte técnico (Excel).</p>
+                            <p>Nota Técnica: Os dados base operam via pipeline Python. Não limpe o cache de navegação antes de exportar seu trabalho diário (JSON).</p>
                         </div>
                     </aside>
                 </div>

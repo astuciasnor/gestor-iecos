@@ -28,6 +28,212 @@ const inputConfig = {
 
 let tempImportData = null;
 
+// ==========================================
+// AJUSTES VISUAIS DA BARRA LATERAL (SIDEBAR)
+// ==========================================
+function applySidebarLayoutFixes() {
+    if (!document.getElementById('iecos-layout-fixes')) {
+        const style = document.createElement('style');
+        style.id = 'iecos-layout-fixes';
+        style.textContent = `
+            /* Compactação Global da Sidebar */
+            .sidebar .form-group { margin-bottom: 6px !important; }
+            .sidebar h2, .sidebar h3, .sidebar h4 { margin-top: 4px !important; margin-bottom: 4px !important; }
+            
+            hr { 
+                border: none !important; 
+                border-top: 3px solid #95a5a6 !important; 
+                margin: 8px 0 !important; 
+            }
+            .custom-thick-hr {
+                border: none !important;
+                border-top: 3px solid #95a5a6 !important;
+                margin: 8px 0 !important;
+                width: 100%;
+            }
+            .custom-thick-hr.tight {
+                margin: 4px 0 !important;
+            }
+        `;
+        document.head.appendChild(style);
+    }
+
+    const allNodes = Array.from(document.querySelectorAll('*'));
+    for (let el of allNodes) {
+        
+        // PERÍODO LETIVO (Aproxima do título superior)
+        if (el.textContent && el.textContent.trim().toUpperCase() === 'PERÍODO LETIVO' && el.children.length === 0) {
+            el.style.marginTop = '2px';
+        }
+
+        // OFERTA DE DISCIPLINA (Aproxima do Turno)
+        if (el.textContent && el.textContent.trim().toUpperCase() === 'OFERTA DE DISCIPLINA' && el.children.length === 0) {
+            el.style.marginTop = '2px'; 
+            el.style.marginBottom = '2px'; 
+            
+            if (!el.previousElementSibling || el.previousElementSibling.tagName !== 'HR') {
+                const hr = document.createElement('hr');
+                hr.className = 'custom-thick-hr tight'; 
+                el.parentNode.insertBefore(hr, el);
+            } else {
+                el.previousElementSibling.className = 'custom-thick-hr tight';
+            }
+        }
+
+        // GERENCIANDO ARQUIVOS (Aproxima da Intensiva e insere linha)
+        if (el.textContent && el.textContent.trim().toUpperCase() === 'GERENCIANDO ARQUIVOS' && el.children.length === 0) {
+            el.style.marginTop = '2px';
+            el.style.marginBottom = '2px';
+            
+            if (!el.previousElementSibling || el.previousElementSibling.tagName !== 'HR') {
+                const hr = document.createElement('hr');
+                hr.className = 'custom-thick-hr tight';
+                el.parentNode.insertBefore(hr, el);
+            } else {
+                el.previousElementSibling.className = 'custom-thick-hr tight';
+            }
+        }
+    }
+
+    // Remove espaçamento inútil após o seletor de turno
+    const selTurno = document.getElementById('sel-turno_oferta') || document.getElementById('sel-turno-oferta');
+    if (selTurno) {
+        const formGroup = selTurno.closest('div');
+        if (formGroup) formGroup.style.marginBottom = '2px';
+    }
+
+    // Tira os espaços brancos (<br>) depois do botão Adicionar Intensiva
+    const btnAddIntensiva = document.getElementById('btn-add-oferta');
+    if (btnAddIntensiva) {
+        btnAddIntensiva.style.marginBottom = '2px';
+        let next = btnAddIntensiva.nextSibling;
+        while(next && (next.tagName === 'BR' || (next.nodeType === 3 && next.textContent.trim() === ''))) {
+            const toRemove = next;
+            next = next.nextSibling;
+            toRemove.remove();
+        }
+    }
+}
+
+// ==========================================
+// EMBALAGEM SEGURA PARA O REFRESH DO PROFESSOR E GANTT
+// ==========================================
+function wrapTeacherSelect() {
+    if (selViewDocente && !document.getElementById('btn-refresh-teacher')) {
+        const wrapper = document.createElement('div');
+        wrapper.style.display = 'flex';
+        wrapper.style.alignItems = 'center';
+        wrapper.style.gap = '8px';
+        wrapper.style.width = '100%';
+        
+        const selectContainer = document.createElement('div');
+        selectContainer.style.position = 'relative';
+        selectContainer.style.flex = '1';
+        
+        selViewDocente.parentNode.insertBefore(wrapper, selViewDocente);
+        wrapper.appendChild(selectContainer);
+        selectContainer.appendChild(selViewDocente);
+        selViewDocente.style.width = '100%';
+        selViewDocente.style.boxSizing = 'border-box';
+        selViewDocente.style.margin = '0';
+        
+        const btnRefresh = document.createElement('button');
+        btnRefresh.id = 'btn-refresh-teacher';
+        btnRefresh.innerHTML = '🔄';
+        btnRefresh.title = 'Atualizar calendário deste professor';
+        btnRefresh.style.background = '#3498db';
+        btnRefresh.style.color = '#fff';
+        btnRefresh.style.border = 'none';
+        btnRefresh.style.borderRadius = '4px';
+        btnRefresh.style.padding = '6px 10px';
+        btnRefresh.style.cursor = 'pointer';
+        btnRefresh.style.fontSize = '1.1em';
+        btnRefresh.style.transition = 'transform 0.3s ease, background 0.2s';
+        btnRefresh.style.flexShrink = '0';
+        
+        btnRefresh.onmouseover = () => btnRefresh.style.background = '#2980b9';
+        btnRefresh.onmouseout = () => btnRefresh.style.background = '#3498db';
+        
+        wrapper.appendChild(btnRefresh);
+
+        btnRefresh.addEventListener('click', (e) => {
+            e.preventDefault();
+            if (selViewDocente.value) {
+                renderTeacherCalendar();
+                btnRefresh.style.transform = `rotate(${btnRefresh.dataset.rot || 360}deg)`;
+                btnRefresh.dataset.rot = parseInt(btnRefresh.dataset.rot || 360) + 360;
+                showToastWarning(`Calendário de <b>${selViewDocente.value.split(' ')[0]}</b> atualizado com sucesso!`, 'success', 1800);
+            } else {
+                alert('Selecione um professor primeiro para atualizar a grade.');
+            }
+        });
+    }
+}
+
+function wrapGanttInput() {
+    const inpGanttDocente = document.getElementById('inp-gantt-docente');
+    if (inpGanttDocente && !document.getElementById('btn-refresh-gantt')) {
+        let inputWrapper = inpGanttDocente.parentNode;
+        
+        // Garantir o wrapper do Input + X
+        if (!inputWrapper.classList.contains('input-wrapper-gantt')) {
+            inputWrapper = document.createElement('div');
+            inputWrapper.className = 'input-wrapper-gantt';
+            inputWrapper.style.position = 'relative';
+            inputWrapper.style.display = 'inline-block';
+            inputWrapper.style.width = 'fit-content';
+            
+            inpGanttDocente.parentNode.insertBefore(inputWrapper, inpGanttDocente);
+            inputWrapper.appendChild(inpGanttDocente);
+            inpGanttDocente.style.margin = '0';
+        }
+        
+        // Renderiza o X dentro do wrapper apertadinho
+        addClearXToField(inpGanttDocente, 'inp-gantt-docente');
+
+        // Cria o Flex Container para colocar o Botão Refresh ao lado
+        const flexContainer = document.createElement('div');
+        flexContainer.style.display = 'inline-flex';
+        flexContainer.style.alignItems = 'center';
+        flexContainer.style.gap = '8px';
+        
+        inputWrapper.parentNode.insertBefore(flexContainer, inputWrapper);
+        flexContainer.appendChild(inputWrapper);
+
+        // Botão Refresh do Gantt
+        const btnRefreshGantt = document.createElement('button');
+        btnRefreshGantt.id = 'btn-refresh-gantt';
+        btnRefreshGantt.innerHTML = '🔄';
+        btnRefreshGantt.title = 'Atualizar Gráfico de Gantt';
+        btnRefreshGantt.style.background = '#3498db';
+        btnRefreshGantt.style.color = '#fff';
+        btnRefreshGantt.style.border = 'none';
+        btnRefreshGantt.style.borderRadius = '4px';
+        btnRefreshGantt.style.padding = '6px 10px';
+        btnRefreshGantt.style.cursor = 'pointer';
+        btnRefreshGantt.style.fontSize = '1.1em';
+        btnRefreshGantt.style.transition = 'transform 0.3s ease, background 0.2s';
+        btnRefreshGantt.style.flexShrink = '0';
+        
+        btnRefreshGantt.onmouseover = () => btnRefreshGantt.style.background = '#2980b9';
+        btnRefreshGantt.onmouseout = () => btnRefreshGantt.style.background = '#3498db';
+        
+        flexContainer.appendChild(btnRefreshGantt);
+
+        btnRefreshGantt.addEventListener('click', (e) => {
+            e.preventDefault();
+            if (inpGanttDocente.value.trim()) {
+                renderGanttChart();
+                btnRefreshGantt.style.transform = `rotate(${btnRefreshGantt.dataset.rot || 360}deg)`;
+                btnRefreshGantt.dataset.rot = parseInt(btnRefreshGantt.dataset.rot || 360) + 360;
+                showToastWarning(`Gráfico de Gantt atualizado com sucesso!`, 'success', 1800);
+            } else {
+                alert('Digite o nome de um professor primeiro para atualizar o gráfico.');
+            }
+        });
+    }
+}
+
 // ATUALIZAÇÃO: Suporte a tempo customizado de tela para o balão
 function showToastWarning(message, type = 'error', customDuration = null) {
     const fb = document.getElementById('feedback-msg');
@@ -117,8 +323,8 @@ function addClearXToField(inputEl, inputId) {
             parent.style.position = 'relative';
         }
         btn.style.position = 'absolute';
-        btn.style.right = inputEl.id === 'inp-gantt-docente' ? '25px' : '10px';
-        btn.style.top = inputEl.id === 'inp-gantt-docente' ? '50%' : '70%'; 
+        btn.style.right = '8px'; // Distância segura e padronizada da borda
+        btn.style.top = '50%'; // Centraliza perfeitamente no eixo Y
         btn.style.transform = 'translateY(-50%)';
 
         const currentPadding = parseInt(window.getComputedStyle(inputEl).paddingRight || '0', 10);
@@ -459,6 +665,9 @@ function syncAllRegularDates() {
                     
                     if (dStr >= oStart && dStr <= oEnd) {
                         if (other.tipo === 'intensiva' && other.horariosOcupados) {
+                            if (dStr === other.dataFim && other.horariosUltimoDia) {
+                                return slotsToday.some(slot => other.horariosUltimoDia.includes(slot.horario));
+                            }
                             return slotsToday.some(slot => other.horariosOcupados.includes(slot.horario));
                         }
                         if (other.tipo === 'regular_prioritaria' && parseInt(other.diaSemana) === dow && other.disciplina !== disciplina) {
@@ -510,6 +719,9 @@ function getSuspendedDates(allocs, turmaId, diaSemana, disciplina, startDate) {
                 
                 if (dStr >= bStart && dStr <= bEnd) {
                     if (b.tipo === 'intensiva' && b.horariosOcupados) {
+                        if (dStr === b.dataFim && b.horariosUltimoDia) {
+                            return mySlots.some(s => b.horariosUltimoDia.includes(s));
+                        }
                         return mySlots.some(s => b.horariosOcupados.includes(s));
                     }
                     if (b.tipo === 'regular_prioritaria' && parseInt(b.diaSemana) === parseInt(diaSemana)) {
@@ -555,12 +767,15 @@ function getSigaaCode(allocsForClass) {
             let curDt = new Date(startDt);
             while(curDt <= endDt) {
                 const dSigaa = curDt.getDay() + 1; 
-                
-                // INCLUI SÁBADO NO CÁLCULO SE ESTIVER SALVO NA ALOCAÇÃO COMO TRUE
                 const aceitaDia = (dSigaa >= 2 && dSigaa <= 6) || (dSigaa === 7 && a.usaSabado);
                 
                 if (aceitaDia) { 
-                    (a.horariosOcupados || []).forEach(h => {
+                    let slotsToUse = a.horariosOcupados || [];
+                    if (curDt.toISOString().split('T')[0] === a.dataFim && a.horariosUltimoDia) {
+                        slotsToUse = a.horariosUltimoDia;
+                    }
+
+                    slotsToUse.forEach(h => {
                         const sInfo = getSlot(h);
                         if(sInfo) slotsList.push({ day: dSigaa, shift: sInfo.s, slot: sInfo.sl });
                     });
@@ -734,6 +949,13 @@ export function initUI() {
     if (selTurma) selTurma.addEventListener('change', onTurmaChange);
 
     initPeriodoLetivoETurno();
+    
+    // ORDEM IMPORTANTE: Primeiro conserta o layout e encapsula os selects
+    applySidebarLayoutFixes();
+    wrapTeacherSelect();
+    wrapGanttInput();
+
+    // Depois aplica os botões X
     setupClearButtonsSidebar();
     setupMultiDocenteUI(); 
 
@@ -826,20 +1048,8 @@ export function initUI() {
         });
     }
 
+    // A ligação do Gantt (input -> X e change -> select)
     const inpGanttDocente = document.getElementById('inp-gantt-docente');
-    if (inpGanttDocente) {
-        if (!inpGanttDocente.parentNode.classList.contains('input-wrapper-gantt')) {
-            const wrapper = document.createElement('div');
-            wrapper.className = 'input-wrapper-gantt';
-            wrapper.style.position = 'relative';
-            wrapper.style.display = 'inline-block';
-            wrapper.style.width = 'fit-content'; 
-            inpGanttDocente.parentNode.insertBefore(wrapper, inpGanttDocente);
-            wrapper.appendChild(inpGanttDocente);
-        }
-        addClearXToField(inpGanttDocente, 'inp-gantt-docente');
-    }
-
     if (selViewDocente && inpGanttDocente) {
         selViewDocente.addEventListener('change', () => { 
             inpGanttDocente.value = selViewDocente.value; 
@@ -1334,6 +1544,16 @@ function handleAddManual() {
 
         const dataFimCalculada = addBusinessDays(inicio, diasNecessarios, feriados, blockedWeekdays, usaSabado);
 
+        // ==========================================
+        // NOVO: CALCULA EXATAMENTE OS SLOTS DO ÚLTIMO DIA
+        // ==========================================
+        const slotsNoUltimoDia = effectiveCH % slotsIntensiva.length;
+        let horariosUltimoDia = slotsIntensiva; 
+        if (slotsNoUltimoDia !== 0) {
+            horariosUltimoDia = slotsIntensiva.slice(0, slotsNoUltimoDia);
+        }
+        // ==========================================
+
         const intensiveConflict = store.allocations.find(a => {
             if (String(a.turmaId) !== String(store.selectedTurma)) return false;
             if (a.tipo !== 'intensiva' || a.disciplina === disciplina) return false; 
@@ -1426,6 +1646,7 @@ function handleAddManual() {
             dataFim: dataFimCalculada, 
             modelo: 'Automático', 
             horariosOcupados: slotsIntensiva,
+            horariosUltimoDia: horariosUltimoDia, // <--- SALVANDO A LISTA PARCIAL DO ÚLTIMO DIA
             usaSabado: usaSabado, 
             cor: inputConfig.cor ? inputConfig.cor.value : store.getDisciplinaColor(disciplina) 
         });
@@ -1503,8 +1724,15 @@ function renderOfertasList() {
         } else {
             const diasUteis = countBusinessDays(start, end, feriados, blockedWeekdays, a.usaSabado || false);
             const slotsPorDia = a.horariosOcupados ? a.horariosOcupados.length : 5;
-            totalHoras = diasUteis * slotsPorDia; 
-            details = `${diasUteis} dias`;
+            
+            // NOVO: CALCULA HORAS DA INTENSIVA DE FORMA EXATA COM O ÚLTIMO DIA
+            if (a.horariosUltimoDia && a.horariosUltimoDia.length > 0 && a.horariosUltimoDia.length < slotsPorDia) {
+                totalHoras = ((diasUteis - 1) * slotsPorDia) + a.horariosUltimoDia.length;
+                details = `${diasUteis} dias (parcial no final)`;
+            } else {
+                totalHoras = diasUteis * slotsPorDia; 
+                details = `${diasUteis} dias`;
+            }
         }
 
         let color = '#2c3e50';
@@ -2436,6 +2664,12 @@ function generateCalendarGrid(container, turmaId, docenteName, start, end, title
 
             const eventsInSlot = dayData.events.filter(e => {
                 if (e.horario && normalizeTime(e.horario) === slotTimeNorm) return true;
+                
+                // NOVO: RESPEITA OS SLOTS LIMITADOS NO ÚLTIMO DIA DA INTENSIVA
+                if (e.tipo === 'intensiva' && e.dataFim === dayData.date && e.horariosUltimoDia) {
+                     return e.horariosUltimoDia.some(h => normalizeTime(h) === slotTimeNorm);
+                }
+                
                 if (e.horariosOcupados && e.horariosOcupados.some(h => normalizeTime(h) === slotTimeNorm)) return true;
                 return false;
             });
