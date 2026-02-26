@@ -254,12 +254,16 @@ export function getCalendarEvents(turmaId, startDate, endDate, docenteFilter = n
       }
 
       slots.forEach((slotTime, slotIndex) => {
-        // SE ESTE SLOT NÃO PERTENCE À CARGA RESIDUAL ÍMPAR QUE SOBROU NO ÚLTIMO DIA, PULAR. (ex: 2ª aula do dia após a conta de 45h fechar no 1º)
+        // SE ESTE SLOT NÃO PERTENCE À CARGA RESIDUAL ÍMPAR QUE SOBROU NO ÚLTIMO DIA, PULAR.
         if (intense.horariosUltimoDia && intense.horariosUltimoDia.length > 0 && dateStr === intense.dataFim) {
           if (!intense.horariosUltimoDia.includes(slotTime)) return;
         }
 
         const currentHourNum = hoursBeforeToday + slotIndex + 1;
+
+        // CAP DE CARGA HORÁRIA: Não pintar slots além da CH real da disciplina
+        if (intense.ch && currentHourNum > intense.ch) return;
+
         let slotDocente = intense.docente;
 
         if (intense.docentes && intense.docentes.length > 0) {
