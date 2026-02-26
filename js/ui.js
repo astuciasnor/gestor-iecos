@@ -816,6 +816,10 @@ function syncAllIntensiveDates() {
         intense.dataFim = lastValidDate.toISOString().split('T')[0];
     });
 
+    // REAÇÃO EM CADEIA: Após ajustar as Intensivas, 
+    // precisamos ajustar as Regulares que podem ter sido empurradas por elas.
+    syncAllRegularDates();
+
     store.saveAllocations();
 }
 
@@ -1768,7 +1772,8 @@ function handleAddManual() {
         const affectedRegulars = [];
         store.allocations.forEach(a => {
             if (String(a.turmaId) !== String(store.selectedTurma)) return;
-            if (a.tipo !== 'regular' && a.tipo !== 'regular_prioritaria') return;
+            // A Intensiva NÃO afeta/empurra Disciplinas Prioritárias (Chefonas)
+            if (a.tipo !== 'regular') return;
 
             const sReg = a.dataInicio || store.settings.termStart;
             const eReg = a.dataFim || store.settings.termEnd;
