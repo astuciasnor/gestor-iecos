@@ -735,6 +735,90 @@ function syncAllRegularDates() {
     store.saveAllocations();
 }
 
+/**
+ * Nova Função: Sincroniza as datas de todas as Intensivas da turma atual,
+ * considerando feriados, dias bloqueados e suspensões por Disciplinas Prioritárias.
+ */
+function syncAllIntensiveDates() {
+    const termStart = store.settings.termStart || '2025-01-01';
+    const termEnd = store.settings.termEnd || '2025-12-31';
+    const feriadosSet = new Set((store.rawData?.feriados || []).map(f => f.data || f));
+
+    // Filtra todas as intensivas da turma selecionada
+    const intensivas = store.allocations.filter(a =>
+        String(a.turmaId) === String(store.selectedTurma) && a.tipo === 'intensiva'
+    );
+
+    // Filtra as prioritárias (as "chefonas") que causam suspensão
+    const priorityRegulars = store.allocations.filter(a =>
+        String(a.turmaId) === String(store.selectedTurma) && a.tipo === 'regular_prioritaria'
+    );
+
+    intensivas.forEach(intense => {
+        const totalCH = intense.ch || 0;
+        if (totalCH === 0) return;
+
+        const slots = intense.horariosOcupados || [];
+        if (slots.length === 0) return;
+
+        const blockedWeekdays = getBlockedWeekdaysForTurma(intense.turmaId);
+        const usaSabado = intense.usaSabado;
+
+        let classesFound = 0;
+        let currentDate = new Date(intense.dataInicio + 'T12:00:00');
+        let lastValidDate = new Date(currentDate);
+        let loops = 0;
+
+        // Limpa cache residual
+        delete intense.horariosUltimoDia;
+
+        while (classesFound < totalCH && loops < 500) {
+            const dStr = currentDate.toISOString().split('T')[0];
+            const dow = currentDate.getDay();
+
+            // Dia útil?
+            let isBusiness = true;
+            if (dow === 0) isBusiness = false;
+            if (dow === 6 && !usaSabado) isBusiness = false;
+            if (feriadosSet.has(dStr)) isBusiness = false;
+            if (blockedWeekdays.includes(dow)) isBusiness = false;
+
+            if (isBusiness) {
+                // Checa conflitos com Prioritárias neste dia e nestes slots
+                const activePriorityToday = priorityRegulars.filter(p => {
+                    if (parseInt(p.diaSemana) !== dow) return false;
+                    const pStart = p.dataInicio || termStart;
+                    const pEnd = p.dataFim || termEnd;
+                    return dStr >= pStart && dStr <= pEnd;
+                });
+
+                const availableSlotsToday = slots.filter(s => {
+                    return !activePriorityToday.some(p => p.horario === s);
+                });
+
+                if (availableSlotsToday.length > 0) {
+                    const chRestante = totalCH - classesFound;
+                    if (availableSlotsToday.length <= chRestante) {
+                        classesFound += availableSlotsToday.length;
+                    } else {
+                        intense.horariosUltimoDia = availableSlotsToday.slice(0, chRestante);
+                        classesFound += chRestante;
+                    }
+                    lastValidDate = new Date(currentDate);
+                }
+            }
+
+            if (classesFound >= totalCH) break;
+            currentDate.setDate(currentDate.getDate() + 1);
+            loops++;
+        }
+
+        intense.dataFim = lastValidDate.toISOString().split('T')[0];
+    });
+
+    store.saveAllocations();
+}
+
 function getSuspendedDates(allocs, turmaId, diaSemana, disciplina, startDate) {
     if (!startDate) return [];
     const suspended = [];
@@ -1400,6 +1484,7 @@ function renderSlotContent(cell, allocs) {
             if (confirm(`Remover alocação de ${alloc.disciplina}?`)) {
                 store.removeAllocation(alloc.id);
                 syncAllRegularDates();
+                syncAllIntensiveDates();
                 renderWeeklyGrid();
                 renderOfertasList();
             }
@@ -1521,6 +1606,10 @@ function handleSlotClick(dia, horario) {
         return a.horariosOcupados && a.horariosOcupados.includes(horario);
     });
 
+    const intensivasAntes = store.allocations
+        .filter(a => String(a.turmaId) === String(store.selectedTurma) && a.tipo === 'intensiva')
+        .map(a => ({ id: a.id, end: a.dataFim }));
+
     store.addAllocation({
         turmaId: store.selectedTurma,
         disciplina,
@@ -1535,8 +1624,23 @@ function handleSlotClick(dia, horario) {
     });
 
     syncAllRegularDates();
+    syncAllIntensiveDates();
     renderWeeklyGrid();
     renderOfertasList();
+
+    // Notificação Reversa: Prioritária empurra Intensiva
+    if (tipo === 'regular_prioritaria') {
+        const intensivasDepois = store.allocations.filter(a => String(a.turmaId) === String(store.selectedTurma) && a.tipo === 'intensiva');
+        const empurradas = intensivasDepois.filter(d => {
+            const antes = intensivasAntes.find(ant => ant.id === d.id);
+            return antes && d.dataFim > antes.end;
+        });
+
+        if (empurradas.length > 0) {
+            const nomes = [...new Set(empurradas.map(e => e.disciplina))].join(', ');
+            showToastWarning(`👑 <b>A Chefona chegou!</b><br>A Intensiva de <b>${nomes}</b> teve aulas suspensas e a data final foi empurrada para garantir a carga horária!`, 'success', 5000);
+        }
+    }
 
     if (blockingIntensivas.length > 0 && tipo !== 'regular_prioritaria') {
         const nomes = [...new Set(blockingIntensivas.map(i => i.disciplina))].join(', ');
@@ -1684,16 +1788,18 @@ function handleAddManual() {
             docente: docData.docente,
             docentes: docData.docentesList,
             tipo: 'intensiva',
+            ch: effectiveCH,
             dataInicio: inicio,
             dataFim: dataFimCalculada,
             modelo: 'Automático',
             horariosOcupados: slotsIntensiva,
-            horariosUltimoDia: horariosUltimoDia, // <--- SALVANDO A LISTA PARCIAL DO ÚLTIMO DIA
+            horariosUltimoDia: horariosUltimoDia,
             usaSabado: usaSabado,
             cor: inputConfig.cor ? inputConfig.cor.value : store.getDisciplinaColor(disciplina)
         });
 
         syncAllRegularDates();
+        syncAllIntensiveDates();
         renderOfertasList();
 
         if (affectedRegulars.length > 0) {
@@ -1751,7 +1857,7 @@ function renderOfertasList() {
     const appendRow = (a) => {
         const tr = document.createElement('tr');
         const info = getDisciplinaInfo(a.disciplina);
-        const chMax = info.ch;
+        const chMax = a.ch || info.ch;
         let totalHoras = 0, details = '';
         const start = a.dataInicio || semestreInicio;
         const end = a.dataFim || semestreFim;
@@ -1891,6 +1997,7 @@ function renderOfertasList() {
             if (confirm('Remover esta oferta?')) {
                 store.removeAllocation(a.id);
                 syncAllRegularDates();
+                syncAllIntensiveDates();
                 renderWeeklyGrid();
                 renderOfertasList();
             }
