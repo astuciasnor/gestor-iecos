@@ -1293,6 +1293,10 @@ function onCursoChange() {
         inputConfig.inicio.value = store.settings.termStart;
     }
 
+    // Recalcula datas ao carregar (corrige dados antigos do localStorage)
+    syncAllRegularDates();
+    syncAllIntensiveDates();
+
     renderWeeklyGrid();
     renderOfertasList();
 }
