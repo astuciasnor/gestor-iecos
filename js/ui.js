@@ -844,7 +844,9 @@ function getSuspendedDates(allocs, turmaId, diaSemana, disciplina, startDate) {
                 const bEnd = b.dataFim || store.settings.termEnd;
 
                 if (dStr >= bStart && dStr <= bEnd) {
-                    if (b.tipo === 'intensiva' && b.horariosOcupados) {
+                    const originalIsPrio = allocs.some(a => a.disciplina === disciplina && String(a.turmaId) === String(turmaId) && a.tipo === 'regular_prioritaria');
+
+                    if (b.tipo === 'intensiva' && b.horariosOcupados && !originalIsPrio) {
                         if (dStr === b.dataFim && b.horariosUltimoDia) {
                             return mySlots.some(s => b.horariosUltimoDia.includes(s));
                         }
@@ -1892,17 +1894,62 @@ function renderOfertasList() {
 
             details = `${numAulasBase} semanas`;
         } else {
-            const diasUteis = countBusinessDays(start, end, feriados, blockedWeekdays, a.usaSabado || false);
-            const slotsPorDia = a.horariosOcupados ? a.horariosOcupados.length : 5;
+            // CÁLCULO DINÂMICO DE HORAS (INTENSIVA): 
+            // Varre o período e soma slots reais, respeitando suspensões por Prioritárias.
+            let totalHorasIntensiva = 0;
+            let current = new Date(start + 'T12:00:00');
+            const endObj = new Date(end + 'T12:00:00');
+            const feriadosSet = new Set(feriados.map(f => (f.data || f)));
+            const slots = a.horariosOcupados || [];
+            const priorityRegulars = list.filter(p => p.tipo === 'regular_prioritaria');
 
-            // NOVO: CALCULA HORAS DA INTENSIVA DE FORMA EXATA COM O ÚLTIMO DIA
-            if (a.horariosUltimoDia && a.horariosUltimoDia.length > 0 && a.horariosUltimoDia.length <= slotsPorDia) {
-                totalHoras = ((diasUteis - 1) * slotsPorDia) + a.horariosUltimoDia.length;
-                details = `${diasUteis} dias (parcial no final)`;
-            } else {
-                totalHoras = diasUteis * slotsPorDia;
-                details = `${diasUteis} dias`;
+            let dayCount = 0;
+            while (current <= endObj) {
+                const dStr = current.toISOString().split('T')[0];
+                const dow = current.getDay();
+
+                // Verifica utilidade básica do dia
+                let isBus = true;
+                if (dow === 0) isBus = false;
+                if (dow === 6 && !a.usaSabado) isBus = false;
+                if (feriadosSet.has(dStr)) isBus = false;
+                if (blockedWeekdays.includes(dow)) {
+                    // Verificação Modular: Se o dia está bloqueado, checamos se há Prioritária NESTE período específico
+                    const hasPrioToday = priorityRegulars.some(p => {
+                        if (parseInt(p.diaSemana) !== dow) return false;
+                        const pS = p.dataInicio || store.settings.termStart;
+                        const pE = p.dataFim || store.settings.termEnd;
+                        return dStr >= pS && dStr <= pE;
+                    });
+                    // Se não houver prioritária HOJE (apesar de haver na semana), o dia é útil para a intensiva.
+                    // Porém, para o cálculo de slots, a lógica abaixo já tratará suspensões parciais.
+                }
+
+                if (isBus) {
+                    const activePrioToday = priorityRegulars.filter(p => {
+                        if (parseInt(p.diaSemana) !== dow) return false;
+                        const pS = p.dataInicio || store.settings.termStart;
+                        const pE = p.dataFim || store.settings.termEnd;
+                        return dStr >= pS && dStr <= pE;
+                    });
+
+                    // Quais slots da intensiva estão livres hoje?
+                    const availableSlots = slots.filter(s => !activePrioToday.some(p => p.horario === s));
+
+                    if (availableSlots.length > 0) {
+                        dayCount++;
+                        if (dStr === end && a.horariosUltimoDia && a.horariosUltimoDia.length > 0) {
+                            totalHorasIntensiva += a.horariosUltimoDia.length;
+                        } else {
+                            totalHorasIntensiva += availableSlots.length;
+                        }
+                    }
+                }
+                current.setDate(current.getDate() + 1);
             }
+
+            totalHoras = totalHorasIntensiva;
+            details = `${dayCount} dias`;
         }
 
         let color = '#2c3e50';
