@@ -654,6 +654,9 @@ function syncAllRegularDates() {
         const maxCH = getDisciplinaCHGlobal(disciplina, turmaId);
         if (maxCH === 0) return;
 
+        // Limpa resíduos de cálculos ímpares anteriores do último dia antes de recalcular a nova distribuição
+        group.forEach(a => delete a.horariosUltimoDia);
+
         let startDate = group.reduce((min, a) => {
             const s = a.dataInicio || termStart;
             return s < min ? s : min;
@@ -1346,12 +1349,6 @@ function renderWeeklyGrid() {
                         a.horario === horarioStr;
 
                     if (!isValidTypeAndSlot) return false;
-
-                    // Bloqueio Visual para disciplinas de carga horária ímpar alocadas num dia/bloco de slots par.
-                    // O horárioStr atual DEVE estar dentro do mapeamento da linha horariosUltimoDia se existir.
-                    if (a.horariosUltimoDia && a.horariosUltimoDia.length > 0) {
-                        return a.horariosUltimoDia.includes(horarioStr);
-                    }
 
                     return true;
                 });
