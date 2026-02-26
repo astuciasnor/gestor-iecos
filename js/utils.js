@@ -1,11 +1,11 @@
 export function formatDate(dateStr) {
-    if(!dateStr) return '';
+    if (!dateStr) return '';
     const [y, m, d] = dateStr.split('-');
     return `${d}/${m}/${y}`;
 }
 
 export function generateUUID() {
-    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
         var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
         return v.toString(16);
     });
@@ -18,7 +18,7 @@ export function isDateOverlap(startA, endA, startB, endB) {
 // --- FUNÇÕES DE TEMPO E CONFLITO ---
 export function parseTime(timeStr) {
     // "08:00" -> 480 minutes
-    if(!timeStr) return 0;
+    if (!timeStr) return 0;
     const [h, m] = timeStr.split(':').map(Number);
     return h * 60 + m;
 }
@@ -70,21 +70,18 @@ export function countBusinessDays(startDate, endDate, feriados = [], blockedWeek
     let count = 0;
     let curDate = parseLocalDate(startDate);
     const end = parseLocalDate(endDate);
-    
+
     while (curDate <= end) {
         const dayOfWeek = curDate.getDay();
         const dateStr = toLocalDateString(curDate);
-        
+
         // Verifica feriado
         const isHoliday = feriados.some(f => (f.data || f) === dateStr);
-        // Verifica bloqueio por dia da semana (Prioritária)
-        const isBlocked = blockedWeekdays.includes(dayOfWeek);
-
         // O Domingo (0) é sempre ignorado. O Sábado (6) depende da caixa de seleção.
         const isWeekend = dayOfWeek === 0 || (dayOfWeek === 6 && !includeSaturdays);
 
-        if (!isWeekend && !isHoliday && !isBlocked) { 
-             count++;
+        if (!isWeekend && !isHoliday) {
+            count++;
         }
         curDate.setDate(curDate.getDate() + 1);
     }
@@ -96,7 +93,7 @@ export function countWeekdaysInPeriod(startDate, endDate, targetDayOfWeek, feria
     let count = 0;
     let curDate = parseLocalDate(startDate);
     const end = parseLocalDate(endDate);
-    
+
     // Simplificação para Set ganha muita performance
     const feriadosSet = new Set(feriados.map(f => (f.data || f)));
     const suspendedSet = new Set(suspendedDates || []);
@@ -125,17 +122,14 @@ export function addBusinessDays(startDateStr, daysNeeded, feriados = [], blocked
     while (daysFound < daysNeeded) {
         const dayOfWeek = currentDate.getDay(); // 0=Dom, 6=Sab
         const dateStr = currentDate.toISOString().split('T')[0];
-        
+
         // Verifica feriado (seja string ou objeto)
         const isHoliday = feriados.some(f => (f.data || f) === dateStr);
-        
-        // Verifica bloqueio por dia da semana (ex: Prioritária na segunda [1])
-        const isBlocked = blockedWeekdays.includes(dayOfWeek);
 
         // O Domingo (0) é sempre ignorado. O Sábado (6) depende da caixa de seleção.
         const isWeekend = dayOfWeek === 0 || (dayOfWeek === 6 && !includeSaturdays);
 
-        if (!isWeekend && !isHoliday && !isBlocked) {
+        if (!isWeekend && !isHoliday) {
             daysFound++;
             lastValidDate = new Date(currentDate);
         }
@@ -148,23 +142,23 @@ export function addBusinessDays(startDateStr, daysNeeded, feriados = [], blocked
 // --- NOVA FUNÇÃO: Calcula data fim para aulas regulares modulares com bloqueios ---
 export function calculateEndDateByWeekday(startDateStr, classesNeeded, targetDayOfWeek, feriados = [], suspendedDates = []) {
     if (classesNeeded <= 0) return startDateStr;
-    
+
     let currentDate = new Date(startDateStr + "T12:00:00");
     let classesFound = 0;
     let lastValidDate = new Date(currentDate);
-    
+
     const feriadosSet = new Set(feriados.map(f => (f.data || f)));
     const suspendedSet = new Set(suspendedDates || []);
 
     // Limite de segurança para não rodar infinito caso haja algum erro de dados
-    let safetyMax = 400; 
+    let safetyMax = 400;
     let loops = 0;
 
     // MOTOR: Só para de andar pra frente quando bate a meta exata de classesNeeded
     while (classesFound < classesNeeded && loops < safetyMax) {
         if (currentDate.getDay() === parseInt(targetDayOfWeek)) {
             const dateStr = currentDate.toISOString().split('T')[0];
-            
+
             // Só conta se NÃO for feriado e NÃO for suspensa
             if (!feriadosSet.has(dateStr) && !suspendedSet.has(dateStr)) {
                 classesFound++;
@@ -183,10 +177,10 @@ export function calculateEndDateByWeekday(startDateStr, classesNeeded, targetDay
 export function hasIntensiveSlotConflict(startA, endA, slotsA, startB, endB, slotsB) {
     // 1. Checa se o período de datas se cruza no calendário
     const datesOverlap = isDateOverlap(startA, endA, startB, endB);
-    
+
     // 2. Checa se pelo menos UM horário selecionado é igual entre as duas
     const slotsOverlap = (slotsA || []).some(slot => (slotsB || []).includes(slot));
-    
+
     // Só é choque se as datas baterem E os horários baterem
     return datesOverlap && slotsOverlap;
 }

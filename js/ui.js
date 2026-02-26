@@ -781,8 +781,6 @@ function syncAllIntensiveDates() {
             if (dow === 0) isBusiness = false;
             if (dow === 6 && !usaSabado) isBusiness = false;
             if (feriadosSet.has(dStr)) isBusiness = false;
-            if (blockedWeekdays.includes(dow)) isBusiness = false;
-
             if (isBusiness) {
                 // Checa conflitos com Prioritárias neste dia e nestes slots
                 const activePriorityToday = priorityRegulars.filter(p => {
@@ -1913,17 +1911,6 @@ function renderOfertasList() {
                 if (dow === 0) isBus = false;
                 if (dow === 6 && !a.usaSabado) isBus = false;
                 if (feriadosSet.has(dStr)) isBus = false;
-                if (blockedWeekdays.includes(dow)) {
-                    // Verificação Modular: Se o dia está bloqueado, checamos se há Prioritária NESTE período específico
-                    const hasPrioToday = priorityRegulars.some(p => {
-                        if (parseInt(p.diaSemana) !== dow) return false;
-                        const pS = p.dataInicio || store.settings.termStart;
-                        const pE = p.dataFim || store.settings.termEnd;
-                        return dStr >= pS && dStr <= pE;
-                    });
-                    // Se não houver prioritária HOJE (apesar de haver na semana), o dia é útil para a intensiva.
-                    // Porém, para o cálculo de slots, a lógica abaixo já tratará suspensões parciais.
-                }
 
                 if (isBus) {
                     const activePrioToday = priorityRegulars.filter(p => {
