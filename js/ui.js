@@ -163,7 +163,6 @@ function wrapTeacherSelect() {
                 renderTeacherCalendar();
                 btnRefresh.style.transform = `rotate(${btnRefresh.dataset.rot || 360}deg)`;
                 btnRefresh.dataset.rot = parseInt(btnRefresh.dataset.rot || 360) + 360;
-                showToastWarning(`Calendário de <b>${selViewDocente.value.split(' ')[0]}</b> atualizado com sucesso!`, 'success', 1800);
             } else {
                 alert('Selecione um professor primeiro para atualizar a grade.');
             }
