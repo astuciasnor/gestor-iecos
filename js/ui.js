@@ -786,7 +786,7 @@ function syncAllIntensiveDates() {
                 const activePriorityToday = priorityRegulars.filter(p => {
                     if (parseInt(p.diaSemana) !== dow) return false;
                     const pStart = p.dataInicio || termStart;
-                    const pEnd = p.dataFim || termEnd;
+                    const pEnd = p.dataFim || pStart; // Usa o início como fim se dataFim for nula
                     return dStr >= pStart && dStr <= pEnd;
                 });
 
@@ -1923,12 +1923,13 @@ function renderOfertasList() {
                     // Quais slots da intensiva estão livres hoje?
                     const availableSlots = slots.filter(s => !activePrioToday.some(p => p.horario === s));
 
-                    if (availableSlots.length > 0) {
+                    if (availableSlots.length > 0 && totalHorasIntensiva < chMax) {
                         dayCount++;
+                        const diff = chMax - totalHorasIntensiva;
                         if (dStr === end && a.horariosUltimoDia && a.horariosUltimoDia.length > 0) {
-                            totalHorasIntensiva += a.horariosUltimoDia.length;
+                            totalHorasIntensiva += Math.min(a.horariosUltimoDia.length, diff);
                         } else {
-                            totalHorasIntensiva += availableSlots.length;
+                            totalHorasIntensiva += Math.min(availableSlots.length, diff);
                         }
                     }
                 }
