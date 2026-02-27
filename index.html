@@ -802,11 +802,52 @@
                         </div>
 
                         <div class="tutorial-card" style="background-color: #fdf2f8; border-left-color: #8e44ad;">
-                            <h4 style="font-size:1.05em;">📊 5. Gantt com ✕ nos Segmentos de Outros Docentes</h4>
-                            <p style="font-size:0.97em;">No <strong>Gráfico de Gantt</strong>, quando a disciplina está
-                                dividida entre professores e o período pertence a <em>outro</em> docente, a caixa agora
-                                exibe um <strong>✕</strong> colorido com o nome do outro professor abaixo. Isso deixa
-                                instantaneamente claro quem leciona em cada fatia de tempo.</p>
+                            <h4 style="font-size:1.05em;">📊 5. Gráfico de Gantt por Docente</h4>
+                            <p style="font-size:0.97em;">O <strong>Gráfico de Gantt</strong> exibe a carga de cada
+                                professor em ordem cronológica. Cada barra mostra:</p>
+                            <ul style="padding-left:20px; font-size:0.95em; line-height:1.8;">
+                                <li><strong>Turma + Código + Abreviação</strong>: ex.
+                                    <code>EP2026 EP05003 LabInfo (30h)</code></li>
+                                <li>Quando a disciplina é <strong>subdividida em sub-turmas</strong>, aparece o prefixo:
+                                    <code>[T01]</code> ou <code>[T02]</code> antes do nome.</li>
+                                <li>Quando a disciplina é <strong>compartilhada entre docentes</strong>, a fatia do
+                                    outro professor mostra o nome e CH dele.</li>
+                            </ul>
+                        </div>
+
+                        <div class="tutorial-card" style="background-color: #e8f8f5; border-left-color: #1abc9c;">
+                            <h4 style="font-size:1.05em;">🏷️ 6. Identificação Automática de Turmas por Bloco</h4>
+                            <p style="font-size:0.97em;">A caixa de seleção de turmas exibe automaticamente o
+                                <strong>Bloco Curricular</strong> com base no <strong>Período Letivo</strong>
+                                selecionado:</p>
+                            <ul style="padding-left:20px; font-size:0.95em; line-height:1.8;">
+                                <li><strong>2P → Blocos Ímpares</strong> (BL1, BL3, BL5...)</li>
+                                <li><strong>4P → Blocos Pares</strong> (BL2, BL4, BL6...)</li>
+                                <li>1P e 3P → turma exibida sem bloco (períodos curtos)</li>
+                            </ul>
+                            <p style="font-size:0.92em; background:#d1f2eb; padding:8px; border-radius:6px;">
+                                📌 Exemplo: <code>EP2026</code> no <strong>2P</strong> de 2026 aparece como
+                                <strong>EP2026_BL1</strong>. A turma <code>EP2025</code> no mesmo período aparece como
+                                <strong>EP2025_BL3</strong>.
+                            </p>
+                        </div>
+
+                        <div class="tutorial-card" style="background-color: #fef9e7; border-left-color: #f1c40f;">
+                            <h4 style="font-size:1.05em;">👥 7. Sub-turmas para Laboratórios</h4>
+                            <p style="font-size:0.97em;">Quando uma disciplina (ex: laboratório) precisar ser ministrada
+                                em dois grupos separados:</p>
+                            <ol style="padding-left:20px; font-size:0.95em; line-height:1.8;">
+                                <li>Selecione a disciplina no formulário. O sistema detecta a duplicata e <strong>exibe
+                                        um aviso de confirmação</strong>.</li>
+                                <li>Confirme e preencha o campo <strong>"Identificador do Sub-grupo"</strong> com:
+                                    <code>BL1_T01</code> (grupo 1) ou <code>BL1_T02</code> (grupo 2).</li>
+                                <li>O rótulo final na grade será <code>EP2026_BL1_T01</code> e
+                                    <code>EP2026_BL1_T02</code>.</li>
+                            </ol>
+                            <p style="font-size:0.92em; background:#fef3cd; padding:8px; border-radius:6px;">
+                                💡 Ao usar <em>Importar Componentes em Bloco</em>, o identificador <code>BL1</code> já é
+                                atribuído automaticamente a todas as disciplinas importadas.
+                            </p>
                         </div>
 
                     </div>

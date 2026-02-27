@@ -1,6 +1,6 @@
-# 📘 Manual Técnico do Desenvolvedor — Gestor Acadêmico IECOS
+# 📘 Manual Técnico do Desenvolvedor — Cardume – Planejador Acadêmico (IECOS)
 
-**Versão do Sistema:** 3.1 (Release Avançado - Fevereiro 2026)  
+**Versão do Sistema:** 3.2 (Release Fevereiro 2026 — Identificação de Turmas por Bloco)  
 **Status do Projeto:** 🟢 Estável / Em Produção  
 **Responsável Técnico:** Prof. Dr. Evaldo Silva  
 **Tecnologia:** Vanilla JavaScript (ES6+), HTML5, CSS3 Grid/Flexbox, Python (ETL)
@@ -108,9 +108,57 @@ Componentes intensivos nem sempre cravam um número múltiplo exato de horários
 * O `handleAddManual()` processa a Carga Horária através de módulo: `effectiveCH % slotsIntensiva.length`.
 * Se houver resto da divisão, ele recorta o vetor de horários (`slice`) salvando na chave `horariosUltimoDia`. O `calendar.js` intercepta a leitura final renderizando as aulas apenas nas primeiras horas da manhã e liberando o docente no restante daquele dia específico.
 
+### 4.4. 🏷️ Identificação Automática de Turmas por Bloco Curricular
+
+A partir da v3.2, a nomenclatura de turma exibida na UI incorpora o **bloco curricular do PPC** de forma automática.
+
+#### Regra de Derivação (`derivarBloco`)
+
+A função `derivarBloco(turmaId, periodo, termStart)` em `ui.js` calcula o bloco usando:
+
+```
+anoEntrada = últimos 4 dígitos do turmaId (ex: EP2026 → 2026)
+anoRef     = ano extraído de termStart (ex: 2026-02-27 → 2026)
+anosDecorridos = anoRef - anoEntrada
+
+periodo = '2P': bloco = (2 × anosDecorridos) + 1  → BL1, BL3, BL5... (ímpares)
+periodo = '4P': bloco = (2 × anosDecorridos) + 2  → BL2, BL4, BL6... (pares)
+periodo = '1P' ou '3P': retorna '' (sem bloco — períodos curtos)
+```
+
+**Exemplos (ano de referência 2026):**
+
+| Turma | Período | Bloco | Exibido como |
+|-------|---------|-------|--------|
+| EP2026 | 2P | BL1 | `EP2026_BL1` |
+| EP2026 | 4P | BL2 | `EP2026_BL2` |
+| EP2025 | 2P | BL3 | `EP2025_BL3` |
+| CB2024 | 2P | BL5 | `CB2024_BL5` |
+
+#### Sub-grupos de Turma (`subGrupo`)
+
+O campo `subGrupo` é salvo em cada alocação (`store.allocations[]`) para identificar grupos menores:
+
+- **Bloco simples:** `BL1` → rótulo `EP2026_BL1`
+- **Sub-turma de laboratório:** `BL1_T01` ou `BL1_T02` → rótulos `EP2026_BL1_T01` / `EP2026_BL1_T02`
+
+`getTurmaLabel(turmaId, subGrupo)` usa o `subGrupo` explícito com prioridade; caso vazio, aplica `derivarBloco` como fallback automático.
+
+#### No Gráfico de Gantt
+
+- **Label compacto:** `EP2026 EP05003 Ecologia (60h)` — sem BL, economiza espaço
+- **Com sub-turma:** `EP2026 [T01] EP05003 LabInfo (30h)` — prefixo `[T01]` aparece só quando `subGrupo` contém `_T##`
+- **Tooltip (hover):** exibe o rótulo completo `EP2026_BL1_T01`
+
+Detecção do sufixo T: regex `/_?(T\d+)$/i`
+
+#### Importação em Bloco
+
+Ao usar **"Importar Componentes em Bloco"**, o sistema extrai o número do período e atribui `subGrupo = 'BLx'` automaticamente a todas as disciplinas importadas. Ex: período `2` → `subGrupo = 'BL2'`.
+
 ---
 
-## 5. 🛠️ Guia de Manutenção de Dados (ETL e Deploy)
+ 🛠️ Guia de Manutenção de Dados (ETL e Deploy)
 
 Como mantenedor, você precisará preparar o sistema a cada virada de semestre ou ingresso de novos professores concursados. Siga o roteiro:
 
