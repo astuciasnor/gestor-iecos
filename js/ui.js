@@ -2487,12 +2487,7 @@ function renderGanttChart() {
                             </div>
                         `;
                     } else {
-                        content = `
-                            <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; gap:1px;">
-                                <span style="font-size:1em; font-weight:900; color:${item.cor || '#aaa'}; opacity:0.6; line-height:1;">✕</span>
-                                <span style="font-size:0.65em; font-weight:normal; opacity:0.6; letter-spacing:-0.3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:90%;">${d.nome.split(' ')[0]}</span>
-                            </div>
-                        `;
+                        content = `<span style="font-size:0.85em; font-weight:normal; opacity:0.8">${d.nome.split(' ')[0]}</span>`;
                     }
                 } else {
                     if (isTarget) {
@@ -2506,12 +2501,7 @@ function renderGanttChart() {
                             </div>
                         `;
                     } else {
-                        content = `
-                            <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; gap:1px;">
-                                <span style="font-size:1em; font-weight:900; color:${item.cor || '#aaa'}; opacity:0.6; line-height:1;">✕</span>
-                                <span style="font-size:0.65em; font-weight:normal; opacity:0.6; letter-spacing:-0.3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:90%;">${d.nome.split(' ')[0]} (${d.ch}h)</span>
-                            </div>
-                        `;
+                        content = `<span style="font-size:0.8em; font-weight:normal; opacity:0.8; letter-spacing: -0.3px;">${d.nome.split(' ')[0]} (${d.ch}h)</span>`;
                     }
                 }
 
