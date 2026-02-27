@@ -2658,6 +2658,9 @@ function renderGanttChart() {
                 if (widthPct < 1) widthPct = 1;
 
                 const turmaNome = getTurmaLabel(item.turmaId, item.subGrupo);
+                const baseLabel = store.rawData?.turmas?.find(x => String(x.turma_id) === String(item.turmaId))?.turma_label || item.turmaId;
+                const tMatch = (item.subGrupo || '').match(/_?(T\d+)$/i);
+                const tPrefix = tMatch ? `[${tMatch[1]}] ` : '';
                 const info = getDisciplinaInfo(item.disciplina);
                 const isOutOfBounds = store.settings.termEnd && item.dataFim > store.settings.termEnd;
                 let boxBorder = isOutOfBounds ? 'border: 2px solid #900;' : `border: 1px solid ${item.cor || '#ccc'};`;
