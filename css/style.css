@@ -26,6 +26,8 @@ body {
 
 .sidebar {
     width: var(--sidebar-width);
+    min-width: var(--sidebar-width);
+    flex-shrink: 0;
     background: var(--primary);
     color: #ecf0f1;
     padding: 20px;
