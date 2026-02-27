@@ -5,25 +5,39 @@ document.addEventListener('DOMContentLoaded', async () => {
   await store.loadData();
   initUI();
 
-  // Exportar com Nome Dinâmico: SIGLA_ANO_PERIODO (Ex: EP_2026_2P)
+  // Exportar: opção de curso atual ou todos os cursos
   document.getElementById('btn-export').onclick = () => {
-    // 1. Obtém a Sigla do curso selecionado (ex: EP)
     const sigla = store.selectedCurso || 'DADOS';
-    
-    // 2. Obtém o Ano (YYYY) da data de início definida nas configurações
     let ano = '0000';
-    if (store.settings.termStart) {
-        ano = store.settings.termStart.split('-')[0];
-    }
-    
-    // 3. Obtém o Período selecionado (1P, 2P, 3P ou 4P)
+    if (store.settings.termStart) ano = store.settings.termStart.split('-')[0];
     const periodo = store.settings.periodo || '1P';
 
-    const fileName = `${sigla}_${ano}_${periodo}.json`;
+    // Descobre o nome completo do curso a partir dos dados carregados
+    const cursoObj = (store.rawData?.cursos || []).find(c => c.sigla === sigla);
+    const cursoNome = cursoObj?.nome || sigla;
+
+    const escolha = confirm(
+      `Escolha o escopo da exportação:\n\n` +
+      `[OK]       → Salvar apenas as turmas do curso ${sigla}\n` +
+      `[Cancelar] → Salvar todas as turmas dos Cursos do IECOS`
+    );
+
+    let dadosExportar;
+    let fileName;
+
+    if (escolha) {
+      // Filtra somente alocações do curso selecionado
+      dadosExportar = store.allocations.filter(a => String(a.cursoId) === String(sigla) || String(a.cursoSigla) === String(sigla));
+      fileName = `${sigla}_${ano}_${periodo}.json`;
+    } else {
+      // Exporta tudo
+      dadosExportar = store.allocations;
+      fileName = `IECOS_TODOS_${ano}_${periodo}.json`;
+    }
 
     const dataStr =
       "data:text/json;charset=utf-8," +
-      encodeURIComponent(JSON.stringify(store.allocations));
+      encodeURIComponent(JSON.stringify(dadosExportar, null, 2));
 
     const a = document.createElement('a');
     a.setAttribute('href', dataStr);
@@ -33,21 +47,22 @@ document.addEventListener('DOMContentLoaded', async () => {
     a.remove();
   };
 
+
   // NOVO: Exportar para o Portal Público (Nome Fixo + Datas do Semestre)
   const btnExportPublic = document.getElementById('btn-export-public');
   if (btnExportPublic) {
     btnExportPublic.onclick = () => {
       const fileName = 'alocacoes_publicas.json';
-      
+
       // MÁGICA DA OPÇÃO C: Agrupamos as alocações E as configurações do semestre
       const exportData = {
-          allocations: store.allocations,
-          settings: {
-              termStart: store.settings.termStart,
-              termEnd: store.settings.termEnd
-          }
+        allocations: store.allocations,
+        settings: {
+          termStart: store.settings.termStart,
+          termEnd: store.settings.termEnd
+        }
       };
-      
+
       const dataStr =
         "data:text/json;charset=utf-8," +
         encodeURIComponent(JSON.stringify(exportData));
@@ -58,7 +73,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       document.body.appendChild(a);
       a.click();
       a.remove();
-      
+
       alert("Arquivo '" + fileName + "' gerado com sucesso!\n\nFaça o upload deste arquivo no GitHub para atualizar a grade de todos os alunos instantaneamente.");
     };
   }
@@ -72,7 +87,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     reader.onload = (event) => {
       try {
         const json = JSON.parse(event.target.result);
-        
+
         // Verifica se é o formato antigo de backup (Array) ou o novo do portal público (Objeto)
         const dataToImport = Array.isArray(json) ? json : (json.allocations ? json.allocations : null);
 
