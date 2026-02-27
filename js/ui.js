@@ -601,10 +601,9 @@ function getTurmaLabel(turmaId, subGrupo) {
         const t = store.rawData.turmas.find(x => String(x.turma_id) === String(turmaId));
         if (t) base = t.turma_label;
     }
-    // Sub-grupo: quando informado, formata como EP2026_2P-01
+    // Sub-grupo: EP2026 + BL1 → EP2026_BL1 | EP2026 + BL1_T01 → EP2026_BL1_T01
     if (subGrupo && String(subGrupo).trim()) {
-        const periodo = store.settings.periodo || '1P';
-        return `${base}_${periodo}-${String(subGrupo).trim()}`;
+        return `${base}_${String(subGrupo).trim()}`;
     }
     return base;
 }
@@ -1160,18 +1159,24 @@ export function initUI() {
                 );
 
                 if (!confirmou) {
-                    // Limpa o campo e aborta
                     inputConfig.disciplina.value = '';
                     containerSub.classList.add('hidden');
                     inpSub.value = '';
                     return;
                 }
 
-                // Sugere o próximo número de sub-grupo
-                const usados = existing.map(a => parseInt(a.subGrupo || '0')).filter(n => !isNaN(n));
-                const proximo = (Math.max(0, ...usados) + 1).toString().padStart(2, '0');
+                // Sugere próximo sub-grupo: se já existe BL1_T01, sugere BL1_T02; senão deixa vazio
+                const ultimoSub = existing[existing.length - 1]?.subGrupo || '';
+                const matchT = ultimoSub.match(/^(.+_T)(\d+)$/);
+                if (matchT) {
+                    inpSub.value = `${matchT[1]}${String(parseInt(matchT[2]) + 1).padStart(2, '0')}`;
+                } else if (ultimoSub) {
+                    inpSub.value = ultimoSub + '_T02';
+                } else {
+                    inpSub.value = '';
+                    inpSub.placeholder = 'Ex: BL1 ou BL1_T01';
+                }
                 containerSub.classList.remove('hidden');
-                if (!inpSub.value) inpSub.value = proximo;
             } else {
                 containerSub.classList.add('hidden');
                 inpSub.value = '';
