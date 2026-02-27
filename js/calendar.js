@@ -147,7 +147,7 @@ export function getCalendarEvents(turmaId, startDate, endDate, docenteFilter = n
             }
           }
         }
-        if (docenteFilter && slotDocente !== docenteFilter) return;
+        if (docenteFilter && (slotDocente || '').trim() !== docenteFilter) return;
 
         events.push({
           ...reg,
@@ -281,7 +281,7 @@ export function getCalendarEvents(turmaId, startDate, endDate, docenteFilter = n
           }
         }
 
-        if (docenteFilter && slotDocente !== docenteFilter) return;
+        if (docenteFilter && (slotDocente || '').trim() !== docenteFilter) return;
 
         const isOverriding = myRegularsTodaySlots.has(normalizeTime(slotTime));
 
@@ -399,7 +399,7 @@ export function getCalendarEvents(turmaId, startDate, endDate, docenteFilter = n
             }
           }
 
-          if (docenteFilter && slotDocente !== docenteFilter) return;
+          if (docenteFilter && (slotDocente || '').trim() !== docenteFilter) return;
 
           events.push({
             ...reg,

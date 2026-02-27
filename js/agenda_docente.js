@@ -267,20 +267,22 @@ function calcularExibirTotalHoras(calendarData) {
     Object.values(calendarData).forEach(eventosDia => {
         eventosDia.forEach(ev => {
             if (ev.type !== 'suspended' && ev.type !== 'holiday') {
-                // Acha a duração real pelas horas de inicio e fim (Assumindo formato HH:MM)
-                let duracaoHoras = 2; // default
+                // Acha a duração em minutos e converte para Horas-Aula (blocos de 50 min)
+                let qtdHorasAula = 2; // default
                 if (ev.horario && ev.horario.includes(' - ')) {
                     const [hIni, hFim] = ev.horario.split(' - ');
                     const [hi, mi] = hIni.split(':').map(Number);
                     const [hf, mf] = hFim.split(':').map(Number);
-                    duracaoHoras = (hf + mf / 60) - (hi + mi / 60);
+
+                    const minutosTotais = (hf * 60 + mf) - (hi * 60 + mi);
+                    qtdHorasAula = Math.round(minutosTotais / 50);
                 }
-                totalCargaMensal += duracaoHoras;
+                totalCargaMensal += qtdHorasAula;
             }
         });
     });
 
-    lblTotalDocente.textContent = `Aulas neste mês: ${totalCargaMensal} horas`;
+    lblTotalDocente.textContent = `Aulas neste mês: ${totalCargaMensal} horas-aula`;
     wrapperTotalDocente.style.display = 'block';
 }
 
