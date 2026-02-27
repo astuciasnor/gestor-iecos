@@ -12,25 +12,31 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (store.settings.termStart) ano = store.settings.termStart.split('-')[0];
     const periodo = store.settings.periodo || '1P';
 
-    // Descobre o nome completo do curso a partir dos dados carregados
+    // Monta mapa turmaId → sigla a partir dos dados de turmas
+    const turmaParaCurso = {};
+    (store.rawData?.turmas || []).forEach(t => {
+      if (t.turma_id && t.sigla) turmaParaCurso[String(t.turma_id)] = String(t.sigla);
+    });
+
+    // Nome legível do curso para exibir no diálogo
     const cursoObj = (store.rawData?.cursos || []).find(c => c.sigla === sigla);
-    const cursoNome = cursoObj?.nome || sigla;
+    const cursoNome = cursoObj?.nome ? `${sigla} – ${cursoObj.nome}` : sigla;
 
     const escolha = confirm(
       `Escolha o escopo da exportação:\n\n` +
-      `[OK]       → Salvar apenas as turmas do curso ${sigla}\n` +
+      `[OK]       → Salvar apenas as turmas do curso ${cursoNome}\n` +
       `[Cancelar] → Salvar todas as turmas dos Cursos do IECOS`
     );
 
-    let dadosExportar;
-    let fileName;
+    let dadosExportar, fileName;
 
     if (escolha) {
-      // Filtra somente alocações do curso selecionado
-      dadosExportar = store.allocations.filter(a => String(a.cursoId) === String(sigla) || String(a.cursoSigla) === String(sigla));
+      // Filtra alocações cujo turmaId pertence ao curso selecionado
+      dadosExportar = store.allocations.filter(a =>
+        turmaParaCurso[String(a.turmaId)] === sigla
+      );
       fileName = `${sigla}_${ano}_${periodo}.json`;
     } else {
-      // Exporta tudo
       dadosExportar = store.allocations;
       fileName = `IECOS_TODOS_${ano}_${periodo}.json`;
     }
