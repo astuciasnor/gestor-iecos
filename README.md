@@ -1,8 +1,8 @@
-# Gestor de Alocação de Carga Horária - IECOS/UFPA
+# 🐟 Cardume – Planejador Acadêmico | IECOS/UFPA
 
 ![Capa do Projeto](img/capa_projeto.png)
 
-Sistema web desenvolvido sob medida para a gestão, alocação e visualização de grades horárias acadêmicas. Ferramenta essencial para facilitar o trabalho dos diretores de faculdade e da secretaria acadêmica do IECOS/UFPA na montagem e cruzamento de horários dos semestres letivos.
+Sistema web desenvolvido sob medida para a gestão, alocação e visualização de grades horárias acadêmicas do IECOS/UFPA. Ferramenta essencial para diretores de curso e secretaria acadêmica na montagem e cruzamento de horários dos semestres letivos.
 
 🔗 **Acesse o Sistema Online:** [CLIQUE AQUI PARA ACESSAR](https://astuciasnor.github.io/gestor-iecos/)
 

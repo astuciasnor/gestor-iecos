@@ -595,12 +595,18 @@ function getDisciplinaCHGlobal(disciplina, turmaId) {
     return 0;
 }
 
-function getTurmaLabel(turmaId) {
+function getTurmaLabel(turmaId, subGrupo) {
+    let base = turmaId;
     if (store.rawData?.turmas) {
         const t = store.rawData.turmas.find(x => String(x.turma_id) === String(turmaId));
-        if (t) return t.turma_label;
+        if (t) base = t.turma_label;
     }
-    return turmaId;
+    // Sub-grupo: quando informado, formata como EP2026_2P-01
+    if (subGrupo && String(subGrupo).trim()) {
+        const periodo = store.settings.periodo || '1P';
+        return `${base}_${periodo}-${String(subGrupo).trim()}`;
+    }
+    return base;
 }
 
 function calculateTeacherTotalCH(teacherName) {
@@ -1631,6 +1637,7 @@ function handleSlotClick(dia, horario) {
         horario,
         dataInicio: dataInicio,
         dataFim: dataInicio,
+        subGrupo: (document.getElementById('inp-sub-turma')?.value ?? '').trim() || null,
         cor: inputConfig.cor ? inputConfig.cor.value : store.getDisciplinaColor(disciplina)
     });
 
@@ -1675,6 +1682,8 @@ function handleAddManual() {
     const disciplina = (inputConfig.disciplina?.value ?? '').replace(/\s*\(\s*\d+\s*h\s*\)\s*$/i, '');
     const tipo = inputConfig.tipo?.value ?? 'regular';
     const inicio = inputConfig.inicio?.value ?? '';
+    const subGrupo = (document.getElementById('inp-sub-turma')?.value ?? '').trim();
+
 
     if (!disciplina) return alert('Preencha o componente.');
 
@@ -1807,6 +1816,7 @@ function handleAddManual() {
             horariosOcupados: slotsIntensiva,
             horariosUltimoDia: horariosUltimoDia,
             usaSabado: usaSabado,
+            subGrupo: subGrupo || null,   // Sub-grupo da turma (ex: '01', '02')
             cor: inputConfig.cor ? inputConfig.cor.value : store.getDisciplinaColor(disciplina)
         });
 

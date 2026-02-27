@@ -1,9 +1,10 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Consulta Acadêmica - IECOS/UFPA</title>
+    <title>Cardume – Planejador Acadêmico | IECOS</title>
     <link rel="stylesheet" href="css/style.css?v=2.1">
     <style>
         /* Estilos específicos para a página de consulta pública, focados em Mobile */
@@ -13,7 +14,7 @@
             flex-direction: column;
             align-items: center;
             padding: 20px 10px;
-            
+
             /* AS DUAS LINHAS NOVAS PARA LIBERAR O SCROLL */
             overflow-y: auto !important;
             height: auto !important;
@@ -21,10 +22,11 @@
 
         .consulta-container {
             width: 100%;
-            max-width: 600px; /* Num notebook não fica gigante, no celular ocupa 100% */
+            max-width: 600px;
+            /* Num notebook não fica gigante, no celular ocupa 100% */
             background: var(--bg-panel);
             border-radius: 8px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
             padding: 30px 20px;
             text-align: center;
         }
@@ -90,10 +92,10 @@
         /* ===== NOVOS ESTILOS: BOTÕES (PÍLULAS) ===== */
         .botoes-wrapper {
             /* MUDANÇA AQUI: Fundo Menta Gelo suave e fresco */
-            background: #f0f7f4; 
+            background: #f0f7f4;
             /* Ajuste da cor da borda para combinar com o novo fundo */
             border: 1px solid #dcebe6;
-            
+
             padding: 15px;
             border-radius: 12px;
             display: flex;
@@ -102,7 +104,7 @@
             min-height: 60px;
             align-items: center;
             /* Sombra interna subtil mantida para profundidade */
-            box-shadow: inset 0 2px 4px rgba(0,0,0,0.02); 
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.02);
         }
 
         .msg-vazio {
@@ -123,7 +125,7 @@
             font-weight: 700;
             cursor: pointer;
             transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
-            box-shadow: 0 2px 5px rgba(0,0,0,0.03);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.03);
             flex: 1 1 auto;
             text-align: center;
         }
@@ -131,7 +133,7 @@
         .btn-seletor:hover {
             border-color: #bdc3c7;
             transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.08);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
         }
 
         .btn-seletor:active {
@@ -158,7 +160,7 @@
         .dia-card {
             background: #fff;
             border-radius: 8px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
             margin-bottom: 25px;
             overflow: hidden;
             text-align: left;
@@ -166,8 +168,15 @@
         }
 
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .dia-header {
@@ -180,19 +189,32 @@
             font-weight: bold;
         }
 
-        .dia-numero { font-size: 1.2rem; letter-spacing: 1px; }
-        .dia-semana { font-size: 0.95rem; opacity: 0.9; text-transform: uppercase; }
-        
-        .dia-body { padding: 5px 15px; }
-        
+        .dia-numero {
+            font-size: 1.2rem;
+            letter-spacing: 1px;
+        }
+
+        .dia-semana {
+            font-size: 0.95rem;
+            opacity: 0.9;
+            text-transform: uppercase;
+        }
+
+        .dia-body {
+            padding: 5px 15px;
+        }
+
         .aula-item {
             display: flex;
             align-items: center;
             padding: 15px 0;
             border-bottom: 1px solid #f0f0f0;
         }
-        .aula-item:last-child { border-bottom: none; }
-        
+
+        .aula-item:last-child {
+            border-bottom: none;
+        }
+
         .aula-horario {
             font-weight: 800;
             color: #2c3e50;
@@ -201,11 +223,25 @@
             font-size: 1.05rem;
             font-family: monospace;
         }
-        
-        .aula-info { flex-grow: 1; padding-left: 12px; }
-        .aula-titulo { font-weight: 800; color: var(--primary-light); font-size: 1.1rem; margin-bottom: 5px; }
-        .aula-docente { color: var(--text-muted); font-size: 0.9rem; font-weight: 600; }
-        
+
+        .aula-info {
+            flex-grow: 1;
+            padding-left: 12px;
+        }
+
+        .aula-titulo {
+            font-weight: 800;
+            color: var(--primary-light);
+            font-size: 1.1rem;
+            margin-bottom: 5px;
+        }
+
+        .aula-docente {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
         .badge {
             font-size: 0.7rem;
             padding: 3px 6px;
@@ -216,9 +252,15 @@
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
-        .badge.intensiva { background: #e67e22; }
-        .badge.prioritaria { background: #8e44ad; }
-        
+
+        .badge.intensiva {
+            background: #e67e22;
+        }
+
+        .badge.prioritaria {
+            background: #8e44ad;
+        }
+
         .evento-feriado {
             padding: 20px;
             text-align: center;
@@ -227,13 +269,13 @@
             background: #fdf0ed;
             font-size: 1.1rem;
         }
-        
+
         .sem-aulas {
             padding: 40px 20px;
             background: #fff;
             border-radius: 8px;
             color: var(--text-muted);
-            box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
             font-weight: bold;
             font-size: 1.1rem;
             text-align: center;
@@ -245,7 +287,7 @@
             padding: 40px 20px;
             background: #fff;
             border-radius: 8px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
             color: var(--primary);
             font-weight: bold;
             font-size: 1.1rem;
@@ -253,9 +295,20 @@
         }
 
         @keyframes pulse {
-            0% { opacity: 0.6; transform: scale(0.98); }
-            50% { opacity: 1; transform: scale(1); }
-            100% { opacity: 0.6; transform: scale(0.98); }
+            0% {
+                opacity: 0.6;
+                transform: scale(0.98);
+            }
+
+            50% {
+                opacity: 1;
+                transform: scale(1);
+            }
+
+            100% {
+                opacity: 0.6;
+                transform: scale(0.98);
+            }
         }
 
         .btn-topo {
@@ -269,9 +322,10 @@
             width: 55px;
             height: 55px;
             font-size: 24px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
             cursor: pointer;
-            display: none; /* Escondido por padrão, o JS vai mostrar */
+            display: none;
+            /* Escondido por padrão, o JS vai mostrar */
             justify-content: center;
             align-items: center;
             z-index: 1000;
@@ -286,12 +340,12 @@
         /* ============================================================== */
         /* ===== NOVO DESIGN: GRADE SEMANAL E BOTTOM SHEET (OPÇÃO C) ==== */
         /* ============================================================== */
-        
+
         .semana-block {
             margin-bottom: 25px;
             background: #fff;
             border-radius: 8px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
             overflow: hidden;
             animation: fadeIn 0.4s ease-out;
         }
@@ -309,9 +363,11 @@
 
         .grade-semana {
             display: grid;
-            grid-template-columns: repeat(6, 1fr); /* 6 colunas (Seg a Sáb) */
+            grid-template-columns: repeat(6, 1fr);
+            /* 6 colunas (Seg a Sáb) */
             gap: 1px;
-            background: #e0e0e0; /* Cor da borda entre colunas */
+            background: #e0e0e0;
+            /* Cor da borda entre colunas */
         }
 
         .grade-dia {
@@ -328,8 +384,18 @@
             background: #fafafa;
         }
 
-        .grade-dia-header .nome-dia { font-size: 0.7rem; font-weight: bold; color: #7f8c8d; text-transform: uppercase;}
-        .grade-dia-header .num-dia { font-size: 0.95rem; font-weight: 800; color: #2c3e50; }
+        .grade-dia-header .nome-dia {
+            font-size: 0.7rem;
+            font-weight: bold;
+            color: #7f8c8d;
+            text-transform: uppercase;
+        }
+
+        .grade-dia-header .num-dia {
+            font-size: 0.95rem;
+            font-weight: 800;
+            color: #2c3e50;
+        }
 
         .grade-slots {
             padding: 4px;
@@ -346,60 +412,147 @@
             padding: 4px 2px;
             text-align: center;
             cursor: pointer;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
             transition: transform 0.1s;
         }
-        .mini-chip:active { transform: scale(0.92); }
-        
-        .chip-hora { font-size: 0.55rem; opacity: 0.9; line-height: 1.2; font-weight: bold;}
-        
+
+        .mini-chip:active {
+            transform: scale(0.92);
+        }
+
+        .chip-hora {
+            font-size: 0.55rem;
+            opacity: 0.9;
+            line-height: 1.2;
+            font-weight: bold;
+        }
+
         /* Tamanho da fonte ajustado para 4 letras */
-        .chip-sigla { font-size: 0.65rem; font-weight: 900; line-height: 1.2; letter-spacing: 0.2px;}
+        .chip-sigla {
+            font-size: 0.65rem;
+            font-weight: 900;
+            line-height: 1.2;
+            letter-spacing: 0.2px;
+        }
 
         .feriado-chip {
-            background: #fdf0ed; color: #e74c3c; font-size: 0.65rem; padding: 6px 2px; 
-            text-align: center; border-radius: 4px; font-weight: bold; border: 1px dashed #e74c3c;
+            background: #fdf0ed;
+            color: #e74c3c;
+            font-size: 0.65rem;
+            padding: 6px 2px;
+            text-align: center;
+            border-radius: 4px;
+            font-weight: bold;
+            border: 1px dashed #e74c3c;
         }
 
         /* ===== BOTTOM SHEET MODAL (Janela que sobe) ===== */
         .sheet-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.6); z-index: 2000;
-            opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 2000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
         }
-        .sheet-overlay.active { opacity: 1; pointer-events: auto; }
+
+        .sheet-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
 
         .bottom-sheet {
-            position: fixed; bottom: -100%; left: 0; width: 100%;
-            background: #fff; border-radius: 20px 20px 0 0; z-index: 2001;
+            position: fixed;
+            bottom: -100%;
+            left: 0;
+            width: 100%;
+            background: #fff;
+            border-radius: 20px 20px 0 0;
+            z-index: 2001;
             transition: bottom 0.3s cubic-bezier(0.1, 0.8, 0.2, 1);
-            box-shadow: 0 -5px 20px rgba(0,0,0,0.2);
-            padding: 20px; max-height: 85vh; overflow-y: auto;
+            box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.2);
+            padding: 20px;
+            max-height: 85vh;
+            overflow-y: auto;
             text-align: left;
         }
-        .bottom-sheet.active { bottom: 0; }
 
-        .sheet-handle { width: 50px; height: 5px; background: #ddd; border-radius: 5px; margin: 0 auto 20px auto; }
-        .sheet-title { font-size: 1.3rem; font-weight: 900; margin-bottom: 5px; line-height: 1.2; }
-        .sheet-tipo { font-size: 0.8rem; text-transform: uppercase; font-weight: bold; color: #7f8c8d; margin-bottom: 20px; display: inline-block; padding: 3px 8px; background: #f1f2f6; border-radius: 4px;}
-        
-        .sheet-info-row { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 15px; font-size: 1rem; color: #2c3e50; font-weight: 600;}
-        .sheet-info-icon { font-size: 1.3rem; }
-        
-        .sheet-btn-fechar {
-            display: block; width: 100%; padding: 14px; background: #f1f2f6;
-            border: none; border-radius: 8px; font-weight: bold; color: #555;
-            font-size: 1.05rem; margin-top: 25px; cursor: pointer; transition: background 0.2s;
+        .bottom-sheet.active {
+            bottom: 0;
         }
-        .sheet-btn-fechar:active { background: #e1e2e6; }
+
+        .sheet-handle {
+            width: 50px;
+            height: 5px;
+            background: #ddd;
+            border-radius: 5px;
+            margin: 0 auto 20px auto;
+        }
+
+        .sheet-title {
+            font-size: 1.3rem;
+            font-weight: 900;
+            margin-bottom: 5px;
+            line-height: 1.2;
+        }
+
+        .sheet-tipo {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            font-weight: bold;
+            color: #7f8c8d;
+            margin-bottom: 20px;
+            display: inline-block;
+            padding: 3px 8px;
+            background: #f1f2f6;
+            border-radius: 4px;
+        }
+
+        .sheet-info-row {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            margin-bottom: 15px;
+            font-size: 1rem;
+            color: #2c3e50;
+            font-weight: 600;
+        }
+
+        .sheet-info-icon {
+            font-size: 1.3rem;
+        }
+
+        .sheet-btn-fechar {
+            display: block;
+            width: 100%;
+            padding: 14px;
+            background: #f1f2f6;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            color: #555;
+            font-size: 1.05rem;
+            margin-top: 25px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .sheet-btn-fechar:active {
+            background: #e1e2e6;
+        }
     </style>
 </head>
+
 <body>
 
     <div class="consulta-container">
         <header class="header-publico">
             <img src="img/logo_iecos.png" alt="Logo IECOS">
-            <h1>Calendário de Aulas</h1>
+            <h1>Cardume – Planejador Acadêmico</h1>
             <p>Consulte as alocações e horários do seu curso</p>
         </header>
 
@@ -440,7 +593,7 @@
         <div class="sheet-handle"></div>
         <h3 id="sheet-title" class="sheet-title">NOME DA DISCIPLINA</h3>
         <div id="sheet-tipo" class="sheet-tipo">Tipo de Aula</div>
-        
+
         <div class="sheet-info-row">
             <span class="sheet-info-icon">👨‍🏫</span>
             <span id="sheet-docente">Nome do Professor</span>
@@ -453,11 +606,12 @@
             <span class="sheet-info-icon">📅</span>
             <span id="sheet-data">00/00/0000</span>
         </div>
-        
+
         <button id="btn-fechar-sheet" class="sheet-btn-fechar">Fechar</button>
     </div>
 
     <script type="module" src="js/consulta.js?v=2.1"></script>
 
 </body>
+
 </html>

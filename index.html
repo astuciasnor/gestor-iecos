@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🐟 Cardume – Gestor de Calendários | IECOS</title>
+    <title>Cardume – Planejador Acadêmico | IECOS</title>
     <link rel="stylesheet" href="css/style.css?v=3.8">
 
     <style>
@@ -554,6 +554,22 @@
                         <option value="intensiva">Intensiva (Blocada)</option>
                     </select>
                 </div>
+
+                <!-- Campo de Sub-grupo: aparece automaticamente quando a mesma disciplina já existe na turma -->
+                <div id="container-sub-turma" class="form-group hidden">
+                    <label style="color: #feffcc;">
+                        🔢 Sub-grupo da Turma
+                        <small
+                            style="font-weight:normal; display:block; color:#bdc3c7; font-size:0.78em; margin-top:2px;">
+                            Preencha quando a disciplina for ofertada em mais de um grupo (ex: 01, 02).
+                        </small>
+                    </label>
+                    <input type="text" id="inp-sub-turma" maxlength="5" placeholder="Ex: 01"
+                        style="text-align:center; font-weight:700; letter-spacing:2px;">
+                    <small id="preview-sub-turma"
+                        style="display:block; color:#a8e6cf; margin-top:4px; font-size:0.82em;"></small>
+                </div>
+
 
                 <div id="container-slots-selection" class="hidden form-group">
                     <label style="margin-bottom: 8px; color: #fff;">Horários (Desmarque para Híbrido):</label>
