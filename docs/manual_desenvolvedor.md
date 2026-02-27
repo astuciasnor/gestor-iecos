@@ -53,8 +53,8 @@ A estrutura de arquivos foi desenhada para separar a lógica de processamento de
 │   └── logo_iecos.png
 │
 ├── js/                          (🧠 O Núcleo do Sistema Frontend)
-│   ├── calendar.js              (Motor matemático de datas e slots)
 │   ├── agenda_discente.js       (Lógica da página pública de alunos)
+│   ├── agenda_docente.js        (Lógica da página pública de professores)
 │   ├── main.js                  (Inicialização e exportação)
 │   ├── store.js                 (Gerenciamento de Estado e LocalStorage)
 │   ├── ui.js                    (Auditor Global e renderização da interface)
@@ -67,7 +67,8 @@ A estrutura de arquivos foi desenhada para separar a lógica de processamento de
 │
 ├── .gitignore                   (Regras de ignorar pastas de ambiente)
 ├── alocacoes_publicas.json      (💾 Arquivo final gerado via "Publicar Grade Online")
-├── agenda_discente.html         (🌐 Página de portal para os alunos/professores visualizarem)
+├── agenda_discente.html         (🌐 Página de portal para os alunos visualizarem)
+├── agenda_docente.html          (👨‍🏫 Página de portal para os professores visualizarem)
 ├── dados_app.json               (💾 O Banco de Dados estático gerado via Python)
 ├── index.html                   (🏠 App principal de Coordenação Restrito)
 └── README.md                    (📖 Apresentação Front-page GitHub)
