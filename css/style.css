@@ -575,6 +575,17 @@ input[type="date"] { color-scheme: dark; }
   width: 100%;
 }
 
+/* Sidebar recolhível: some com transição suave quando a aba Ajuda está ativa */
+.sidebar {
+  transition: width 0.3s ease, padding 0.3s ease, min-width 0.3s ease;
+  overflow: hidden;
+}
+.help-active .sidebar {
+  width: 0 !important;
+  min-width: 0 !important;
+  padding: 0 !important;
+}
+
 .help-main{ line-height: 1.6; }
 
 .help-side{
