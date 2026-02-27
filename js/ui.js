@@ -1493,11 +1493,11 @@ function onTurmaChange() {
 }
 
 function getDisciplinaInfo(nomeComponente) {
-    if (!store.rawData?.componentes) return { abrev: nomeComponente, ch: 0 };
+    if (!store.rawData?.componentes) return { abrev: nomeComponente, ch: 0, codigo: '' };
     const c = store.rawData.componentes.find((x) => x.componente === nomeComponente && x.sigla === store.selectedCurso) ||
         store.rawData.componentes.find((x) => x.componente === nomeComponente);
-    if (c) return { abrev: c.abreviacao || c.componente, ch: c.ch || 0 };
-    return { abrev: nomeComponente, ch: 0 };
+    if (c) return { abrev: c.abreviacao || c.componente, ch: c.ch || 0, codigo: c.codigo || '' };
+    return { abrev: nomeComponente, ch: 0, codigo: '' };
 }
 
 function renderWeeklyGrid() {
@@ -2599,7 +2599,7 @@ function renderGanttChart() {
                         let textColor = item.cor || '#3498db';
                         externalLabelsHtml += `
                             <div style="position: absolute; top: ${currentTopM}px; height: ${barHeight}px; display: flex; align-items: center; ${textPos} color: ${textColor}; font-weight: 900; font-size: 0.85em; white-space: nowrap; z-index: 10; text-shadow: 1px 1px 0px #fff, -1px -1px 0px #fff, 1px -1px 0px #fff, -1px 1px 0px #fff, 0px 2px 4px rgba(0,0,0,0.15);">
-                                ${baseLabel} ${tPrefix}${info.abrev} (${d.ch}h)
+                                ${baseLabel} ${tPrefix}${info.codigo ? info.codigo + ' ' : ''}${info.abrev} (${d.ch}h)
                             </div>
                         `;
                     } else {
@@ -2611,7 +2611,7 @@ function renderGanttChart() {
                             <div style="display:flex; justify-content:space-between; align-items:center; width:100%; padding:0 2px;">
                                 <span style="font-size:0.7em; opacity:0.9; flex-shrink:0; letter-spacing: -0.5px;">${fmtStart}</span>
                                 <span style="font-weight:bold; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; padding:0 4px; font-size: 0.8em; letter-spacing: -0.4px;">
-                                    ${baseLabel} ${tPrefix}${info.abrev} (${d.ch}h)${timeRangeStr}
+                                    ${baseLabel} ${tPrefix}${info.codigo ? info.codigo + ' ' : ''}${info.abrev} (${d.ch}h)${timeRangeStr}
                                 </span>
                                 <span style="font-size:0.7em; opacity:0.9; flex-shrink:0; letter-spacing: -0.5px;">${fmtEnd}</span>
                             </div>
@@ -2703,7 +2703,7 @@ function renderGanttChart() {
                         let textColor = item.cor || '#3498db';
                         externalLabelsHtml += `
                             <div style="position: absolute; top: ${currentTopT}px; height: ${barHeight}px; display: flex; align-items: center; ${textPos} color: ${textColor}; font-weight: 900; font-size: 0.85em; white-space: nowrap; z-index: 10; text-shadow: 1px 1px 0px #fff, -1px -1px 0px #fff, 1px -1px 0px #fff, -1px 1px 0px #fff, 0px 2px 4px rgba(0,0,0,0.15);">
-                                ${baseLabel} ${tPrefix}${info.abrev} (${d.ch}h)
+                                ${baseLabel} ${tPrefix}${info.codigo ? info.codigo + ' ' : ''}${info.abrev} (${d.ch}h)
                             </div>
                         `;
                     } else {
@@ -2715,7 +2715,7 @@ function renderGanttChart() {
                             <div style="display:flex; justify-content:space-between; align-items:center; width:100%; padding:0 2px;">
                                 <span style="font-size:0.7em; opacity:0.9; flex-shrink:0; letter-spacing: -0.5px;">${fmtStart}</span>
                                 <span style="font-weight:bold; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; padding:0 4px; font-size: 0.8em; letter-spacing: -0.4px;">
-                                    ${baseLabel} ${tPrefix}${info.abrev} (${d.ch}h)${timeRangeStr}
+                                    ${baseLabel} ${tPrefix}${info.codigo ? info.codigo + ' ' : ''}${info.abrev} (${d.ch}h)${timeRangeStr}
                                 </span>
                                 <span style="font-size:0.7em; opacity:0.9; flex-shrink:0; letter-spacing: -0.5px;">${fmtEnd}</span>
                             </div>
