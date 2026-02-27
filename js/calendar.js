@@ -73,6 +73,81 @@ export function getCalendarEvents(turmaId, startDate, endDate, docenteFilter = n
     return true;
   }
 
+  // ====================================================================
+  // PRÉ-CÁLCULO: Acumula executionCount desde o início do semestre
+  // até a véspera do range solicitado, para que a rotação de docentes
+  // em disciplinas compartilhadas funcione corretamente em qualquer mês.
+  // ====================================================================
+  const termStartStr = store.settings.termStart || startDate;
+  if (termStartStr < startDate) {
+    let preCursor = new Date(termStartStr + 'T12:00:00');
+    const preEnd = new Date(startDate + 'T12:00:00');
+
+    while (preCursor < preEnd) {
+      const preDateStr = preCursor.toISOString().split('T')[0];
+      const preDow = preCursor.getDay();
+
+      // Pula domingos e feriados
+      if (preDow !== 0 && !feriadosList.some(f => f.data === preDateStr)) {
+        // Simula contagem de Prioritárias
+        myPriorityRegulars.forEach(reg => {
+          if (reg.diaSemana != preDow) return;
+          if (reg.dataInicio && preDateStr < reg.dataInicio) return;
+          if (!reg.dataFim && store.settings.termEnd && preDateStr > store.settings.termEnd) return;
+          if (reg.dataFim && preDateStr > reg.dataFim) return;
+
+          const cursoSigla = turmaToCurso[reg.turmaId];
+          let maxCH = 999;
+          if (cursoSigla && cursoRules[cursoSigla] && cursoRules[cursoSigla][reg.disciplina]) {
+            maxCH = cursoRules[cursoSigla][reg.disciplina];
+          }
+          const key = `${reg.turmaId}|${reg.disciplina}`;
+          const currentCount = executionCount[key] || 0;
+          if (currentCount < maxCH) {
+            executionCount[key] = currentCount + 1;
+          }
+        });
+
+        // Simula contagem de Regulares comuns
+        myRegulars.forEach(reg => {
+          const regStart = reg.dataInicio || store.settings.termStart;
+          const regEnd = reg.dataFim || store.settings.termEnd;
+          if (preDateStr < regStart || preDateStr > regEnd) return;
+          if (reg.diaSemana != preDow) return;
+
+          // Verifica se está bloqueada por intensiva neste dia
+          const tId = String(reg.turmaId);
+          const hReg = normalizeTime(reg.horario);
+          // Checa intensivas globais ativas nesse dia
+          const intensivasAtivas = allIntensives.filter(
+            i => preDateStr >= i.dataInicio && preDateStr <= i.dataFim
+          );
+          let bloqueada = false;
+          intensivasAtivas.forEach(intensiva => {
+            if (String(intensiva.turmaId) === tId) {
+              if (intensiva.horariosOcupados && intensiva.horariosOcupados.some(s => normalizeTime(s) === hReg)) {
+                bloqueada = true;
+              }
+            }
+          });
+          if (bloqueada) return;
+
+          const cursoSigla = turmaToCurso[reg.turmaId];
+          let maxCH = 999;
+          if (cursoSigla && cursoRules[cursoSigla] && cursoRules[cursoSigla][reg.disciplina]) {
+            maxCH = cursoRules[cursoSigla][reg.disciplina];
+          }
+          const key = `${reg.turmaId}|${reg.disciplina}`;
+          const currentCount = executionCount[key] || 0;
+          if (currentCount < maxCH) {
+            executionCount[key] = currentCount + 1;
+          }
+        });
+      }
+      preCursor.setDate(preCursor.getDate() + 1);
+    }
+  }
+
   // --- Loop ---
   days.forEach(date => {
     const dateStr = toLocalDateString(date);
