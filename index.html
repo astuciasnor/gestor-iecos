@@ -728,30 +728,69 @@
                             </ul>
                         </div>
 
-                        <h3 style="margin-top:25px;">⚡ Regras Inteligentes e Auditoria (O "Pulo do Gato")</h3>
+                        <h3 style="margin-top:25px; font-size:1.15em;">⚡ Regras Inteligentes e Auditoria</h3>
 
-                        <div class="tutorial-card" style="background-color: #f8f9fa; border-left-color: #27ae60;">
-                            <h4>1. Suspensão Automática (Intensiva vs Regular)</h4>
-                            <p>Se você colocar uma disciplina Intensiva num dia que já tinha uma Regular, o sistema
-                                <b>suspende a Regular automaticamente</b> naqueles dias de choque e empurra a data final
-                                da Regular para frente, garantindo que o professor não perca nenhuma carga horária.
+                        <div class="tutorial-card" style="background-color: #f0fff4; border-left-color: #27ae60;">
+                            <h4 style="font-size:1.05em;">👑 1. Hierarquia de Prioridades (A "Chefona" Manda)</h4>
+                            <p style="font-size:0.97em;">O sistema segue uma <strong>hierarquia clara</strong> de
+                                precedência:</p>
+                            <ol style="padding-left:20px; font-size:0.95em; line-height:1.8;">
+                                <li><strong>🔴 Regular Prioritária</strong> — tem prioridade máxima. Nenhuma outra
+                                    disciplina a sobrescreve.</li>
+                                <li><strong>🟡 Intensiva</strong> — cede espaço para a Prioritária, mas <em>tem sua
+                                        carga horária preservada</em> por extensão automática da data final.</li>
+                                <li><strong>⚪ Regular Comum</strong> — é suspensa e empurrada automaticamente quando há
+                                    conflito.</li>
+                            </ol>
+                            <p
+                                style="font-size:0.92em; margin-top:8px; background:#d4edda; padding:8px; border-radius:6px;">
+                                💡 <strong>Dica:</strong> Para fixar um horário inegociável (laboratório, etc.),
+                                cadastre-o como <strong>Regular Prioritária</strong>.
                             </p>
                         </div>
 
-                        <div class="tutorial-card" style="background-color: #f8f9fa; border-left-color: #8e44ad;">
-                            <h4>2. Semanas Híbridas e Dias Mistos</h4>
-                            <p>É perfeitamente possível ter uma aula Regular num horário (ex: 07:30) e uma Intensiva em
-                                outro (ex: 09:20) no mesmo dia, ou turmas que operam em semanas alternadas. O sistema
-                                calcula a carga horária fracionada e entrega as horas exatas no último dia de aula.</p>
+                        <div class="tutorial-card" style="background-color: #fff8e1; border-left-color: #f39c12;">
+                            <h4 style="font-size:1.05em;">🌊 2. Efeito Cascata Automático</h4>
+                            <p style="font-size:0.97em;">Quando uma <strong>Prioritária empurra uma Intensiva</strong>,
+                                essa Intensiva pode — por sua vez — empurrar uma <strong>Regular Comum</strong>, que
+                                pode colidir com outra Intensiva, e assim por diante. O sistema resolve toda a cadeia de
+                                forma automática e notifica cada deslocamento.</p>
+                            <p style="font-size:0.92em; background:#fff3cd; padding:8px; border-radius:6px;">
+                                📣 Um <strong>aviso em tempo real</strong> aparece na tela descrevendo quais disciplinas
+                                foram deslocadas e por quê.
+                            </p>
                         </div>
 
                         <div class="tutorial-card" style="background-color: #f8f9fa; border-left-color: #e74c3c;">
-                            <h4>3. Auditoria Pós-Importação de Conflitos Globais</h4>
-                            <p>O sistema protege a agenda física dos professores contra falhas humanas. Se você importar
-                                a grade de outro diretor, clique na aba <b>Visão do Professor</b>. O sistema fará um
-                                Raio-X global automático e exibirá um <b>alerta vermelho no topo da tela</b> caso algum
-                                professor tenha sido acidentalmente alocado em duas turmas diferentes no mesmo horário
-                                (choque cross-course).</p>
+                            <h4 style="font-size:1.05em;">🔍 3. Auditoria Global de Conflitos de Professor</h4>
+                            <p style="font-size:0.97em;">O sistema protege a agenda dos professores contra falhas
+                                humanas. Ao importar a grade de outro diretor, vá na aba <strong>Visão do
+                                    Professor</strong>. Um <strong>alerta vermelho</strong> aparecerá automaticamente
+                                caso algum professor esteja alocado em dois lugares ao mesmo tempo.</p>
+                        </div>
+
+                        <div class="tutorial-card" style="background-color: #f0f4ff; border-left-color: #3498db;">
+                            <h4 style="font-size:1.05em;">📤 4. Exportação por Escopo</h4>
+                            <p style="font-size:0.97em;">Ao clicar em <strong>Exportar</strong>, o sistema pergunta qual
+                                escopo você deseja:</p>
+                            <ul style="padding-left:20px; font-size:0.95em; line-height:1.8;">
+                                <li>✅ <strong>[OK]</strong> → Exporta somente as turmas do <strong>curso atual</strong>
+                                    (ex: EP). Ideal para o diretor de cada curso.</li>
+                                <li>🌐 <strong>[Cancelar]</strong> → Exporta <strong>todos os cursos</strong> do IECOS.
+                                    Ideal para a coordenação geral.</li>
+                            </ul>
+                            <p style="font-size:0.92em; background:#dbe9ff; padding:8px; border-radius:6px;">
+                                📁 O nome do arquivo gerado reflete o escopo: <code>EP_2026_1P.json</code> ou
+                                <code>IECOS_TODOS_2026_1P.json</code>.
+                            </p>
+                        </div>
+
+                        <div class="tutorial-card" style="background-color: #fdf2f8; border-left-color: #8e44ad;">
+                            <h4 style="font-size:1.05em;">📊 5. Gantt com ✕ nos Segmentos de Outros Docentes</h4>
+                            <p style="font-size:0.97em;">No <strong>Gráfico de Gantt</strong>, quando a disciplina está
+                                dividida entre professores e o período pertence a <em>outro</em> docente, a caixa agora
+                                exibe um <strong>✕</strong> colorido com o nome do outro professor abaixo. Isso deixa
+                                instantaneamente claro quem leciona em cada fatia de tempo.</p>
                         </div>
 
                     </div>
