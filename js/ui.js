@@ -1128,6 +1128,51 @@ export function initUI() {
                 inputConfig.inicio.value = termStartEl.value;
             }
         });
+
+        // Detecção de duplicata: mostra o campo sub-grupo quando a mesma disciplina já existe na turma
+        inputConfig.disciplina.addEventListener('change', () => {
+            const discNome = (inputConfig.disciplina.value || '').replace(/\s*\(\s*\d+\s*h\s*\)\s*$/i, '').trim();
+            const containerSub = document.getElementById('container-sub-turma');
+            const inpSub = document.getElementById('inp-sub-turma');
+            const preview = document.getElementById('preview-sub-turma');
+            if (!containerSub || !inpSub) return;
+
+            if (!discNome || !store.selectedTurma) {
+                containerSub.classList.add('hidden');
+                inpSub.value = '';
+                return;
+            }
+
+            // Conta quantas vezes a disciplina já existe na turma atual
+            const existing = store.allocations.filter(a =>
+                String(a.turmaId) === String(store.selectedTurma) && a.disciplina === discNome
+            );
+
+            if (existing.length > 0) {
+                // Sugere o próximo número de sub-grupo
+                const usados = existing.map(a => parseInt(a.subGrupo || '0')).filter(n => !isNaN(n));
+                const proximo = (Math.max(0, ...usados) + 1).toString().padStart(2, '0');
+                containerSub.classList.remove('hidden');
+                if (!inpSub.value) inpSub.value = proximo;
+            } else {
+                containerSub.classList.add('hidden');
+                inpSub.value = '';
+            }
+
+            // Preview do rótulo gerado
+            const updatePreview = () => {
+                const sg = inpSub.value.trim();
+                if (sg && store.selectedTurma) {
+                    const label = getTurmaLabel(store.selectedTurma, sg);
+                    preview.textContent = `→ Rótulo: ${label}`;
+                } else {
+                    preview.textContent = '';
+                }
+            };
+            inpSub.removeEventListener('input', updatePreview);
+            inpSub.addEventListener('input', updatePreview);
+            updatePreview();
+        });
     }
 
     const btnAdd = document.getElementById('btn-add-oferta');
@@ -2444,7 +2489,7 @@ function renderGanttChart() {
             if (leftPct < 0) leftPct = 0;
             if (widthPct < 1) widthPct = 1;
 
-            const turmaNome = getTurmaLabel(item.turmaId);
+            const turmaNome = getTurmaLabel(item.turmaId, item.subGrupo);
             const info = getDisciplinaInfo(item.disciplina);
             const isOutOfBounds = store.settings.termEnd && item.dataFim > store.settings.termEnd;
             let boxBorder = isOutOfBounds ? 'border: 2px solid #900;' : `border: 1px solid ${item.cor || '#ccc'};`;
@@ -2548,7 +2593,7 @@ function renderGanttChart() {
             if (leftPct < 0) leftPct = 0;
             if (widthPct < 1) widthPct = 1;
 
-            const turmaNome = getTurmaLabel(item.turmaId);
+            const turmaNome = getTurmaLabel(item.turmaId, item.subGrupo);
             const info = getDisciplinaInfo(item.disciplina);
             const isOutOfBounds = store.settings.termEnd && item.dataFim > store.settings.termEnd;
             let boxBorder = isOutOfBounds ? 'border: 2px solid #900;' : `border: 1px solid ${item.cor || '#ccc'};`;
