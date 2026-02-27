@@ -36,9 +36,13 @@ export function getCalendarEvents(turmaId, startDate, endDate, docenteFilter = n
     if (turmaId && a.turmaId !== turmaId) return false;
 
     if (docenteFilter) {
-      if (a.docente === docenteFilter) return true;
+      if (typeof a.docente === 'string' && a.docente.trim() === docenteFilter) return true;
+      if (a.docente && a.docente.nome && a.docente.nome.trim() === docenteFilter) return true;
       if (a.docentes && Array.isArray(a.docentes)) {
-        return a.docentes.some(d => (d.nome || d) === docenteFilter);
+        return a.docentes.some(d => {
+          const nome = d.nome || d;
+          return (nome || '').trim() === docenteFilter;
+        });
       }
       return false;
     }
