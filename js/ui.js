@@ -2547,6 +2547,10 @@ function renderGanttChart() {
             if (widthPct < 1) widthPct = 1;
 
             const turmaNome = getTurmaLabel(item.turmaId, item.subGrupo);
+            // Label compacto para as barras: base sem bloco + prefixo [T01] apenas se subdividido
+            const baseLabel = store.rawData?.turmas?.find(x => String(x.turma_id) === String(item.turmaId))?.turma_label || item.turmaId;
+            const tMatch = (item.subGrupo || '').match(/_?(T\d+)$/i);
+            const tPrefix = tMatch ? `[${tMatch[1]}] ` : '';
             const info = getDisciplinaInfo(item.disciplina);
             const isOutOfBounds = store.settings.termEnd && item.dataFim > store.settings.termEnd;
             let boxBorder = isOutOfBounds ? 'border: 2px solid #900;' : `border: 1px solid ${item.cor || '#ccc'};`;
@@ -2595,7 +2599,7 @@ function renderGanttChart() {
                         let textColor = item.cor || '#3498db';
                         externalLabelsHtml += `
                             <div style="position: absolute; top: ${currentTopM}px; height: ${barHeight}px; display: flex; align-items: center; ${textPos} color: ${textColor}; font-weight: 900; font-size: 0.85em; white-space: nowrap; z-index: 10; text-shadow: 1px 1px 0px #fff, -1px -1px 0px #fff, 1px -1px 0px #fff, -1px 1px 0px #fff, 0px 2px 4px rgba(0,0,0,0.15);">
-                                ${turmaNome} ${info.abrev} (${d.ch}h)
+                                ${baseLabel} ${tPrefix}${info.abrev} (${d.ch}h)
                             </div>
                         `;
                     } else {
@@ -2607,7 +2611,7 @@ function renderGanttChart() {
                             <div style="display:flex; justify-content:space-between; align-items:center; width:100%; padding:0 2px;">
                                 <span style="font-size:0.7em; opacity:0.9; flex-shrink:0; letter-spacing: -0.5px;">${fmtStart}</span>
                                 <span style="font-weight:bold; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; padding:0 4px; font-size: 0.8em; letter-spacing: -0.4px;">
-                                    ${turmaNome} ${info.abrev} (${d.ch}h)${timeRangeStr}
+                                    ${baseLabel} ${tPrefix}${info.abrev} (${d.ch}h)${timeRangeStr}
                                 </span>
                                 <span style="font-size:0.7em; opacity:0.9; flex-shrink:0; letter-spacing: -0.5px;">${fmtEnd}</span>
                             </div>
@@ -2699,7 +2703,7 @@ function renderGanttChart() {
                         let textColor = item.cor || '#3498db';
                         externalLabelsHtml += `
                             <div style="position: absolute; top: ${currentTopT}px; height: ${barHeight}px; display: flex; align-items: center; ${textPos} color: ${textColor}; font-weight: 900; font-size: 0.85em; white-space: nowrap; z-index: 10; text-shadow: 1px 1px 0px #fff, -1px -1px 0px #fff, 1px -1px 0px #fff, -1px 1px 0px #fff, 0px 2px 4px rgba(0,0,0,0.15);">
-                                ${turmaNome} ${info.abrev} (${d.ch}h)
+                                ${baseLabel} ${tPrefix}${info.abrev} (${d.ch}h)
                             </div>
                         `;
                     } else {
@@ -2711,7 +2715,7 @@ function renderGanttChart() {
                             <div style="display:flex; justify-content:space-between; align-items:center; width:100%; padding:0 2px;">
                                 <span style="font-size:0.7em; opacity:0.9; flex-shrink:0; letter-spacing: -0.5px;">${fmtStart}</span>
                                 <span style="font-weight:bold; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; padding:0 4px; font-size: 0.8em; letter-spacing: -0.4px;">
-                                    ${turmaNome} ${info.abrev} (${d.ch}h)${timeRangeStr}
+                                    ${baseLabel} ${tPrefix}${info.abrev} (${d.ch}h)${timeRangeStr}
                                 </span>
                                 <span style="font-size:0.7em; opacity:0.9; flex-shrink:0; letter-spacing: -0.5px;">${fmtEnd}</span>
                             </div>
