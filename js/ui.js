@@ -1289,6 +1289,8 @@ export function initUI() {
     if (selViewDocente && inpGanttDocente) {
         selViewDocente.addEventListener('change', () => {
             inpGanttDocente.value = selViewDocente.value;
+            // Dispara 'input' para que o botão X apareça quando o valor é copiado programaticamente
+            inpGanttDocente.dispatchEvent(new Event('input', { bubbles: true }));
         });
     }
 
