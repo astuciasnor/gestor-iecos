@@ -32,15 +32,19 @@ export function getCalendarEvents(turmaId, startDate, endDate, docenteFilter = n
 
   // --- Filtros para EXIBIÇÃO ---
   let myAllocations = store.allocations.filter(a => {
+    // Se turmaId for passado, trava para aquela turma específica (Modo Aluno)
     if (turmaId && a.turmaId !== turmaId) return false;
+
     if (docenteFilter) {
       if (a.docente === docenteFilter) return true;
       if (a.docentes && Array.isArray(a.docentes)) {
-        return a.docentes.some(d => d.nome === docenteFilter);
+        return a.docentes.some(d => (d.nome || d) === docenteFilter);
       }
       return false;
     }
-    return true;
+
+    // Se não passou docenteFilter e passou turmaId, exibe tudo daquela turma
+    return turmaId ? true : false;
   });
 
   const myIntensives = myAllocations.filter(a => a.tipo === 'intensiva');
