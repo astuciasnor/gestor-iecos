@@ -1149,6 +1149,24 @@ export function initUI() {
             );
 
             if (existing.length > 0) {
+                const turmaNome = getTurmaLabel(store.selectedTurma);
+                const confirmou = confirm(
+                    `⚠️ Atenção!\n\n` +
+                    `Você está criando uma SEGUNDA alocação de:\n` +
+                    `📚 "${discNome}"\n` +
+                    `👥 para a turma ${turmaNome}\n\n` +
+                    `Isso indica que a turma será SUBDIVIDIDA em grupos (ex: laboratório).\n\n` +
+                    `Deseja continuar e definir o sub-grupo?`
+                );
+
+                if (!confirmou) {
+                    // Limpa o campo e aborta
+                    inputConfig.disciplina.value = '';
+                    containerSub.classList.add('hidden');
+                    inpSub.value = '';
+                    return;
+                }
+
                 // Sugere o próximo número de sub-grupo
                 const usados = existing.map(a => parseInt(a.subGrupo || '0')).filter(n => !isNaN(n));
                 const proximo = (Math.max(0, ...usados) + 1).toString().padStart(2, '0');
@@ -1158,6 +1176,7 @@ export function initUI() {
                 containerSub.classList.add('hidden');
                 inpSub.value = '';
             }
+
 
             // Preview do rótulo gerado
             const updatePreview = () => {
