@@ -3134,10 +3134,6 @@ function switchTab(tabId) {
     const btn = document.querySelector(`button[data-tab="${tabId}"]`);
     if (btn) btn.classList.add('active');
 
-    // Recolhe a sidebar quando na aba Ajuda (mais espaço para leitura)
-    const appContainer = document.querySelector('.app-container');
-    if (appContainer) appContainer.classList.toggle('help-active', tabId === 'help');
-
     if (tabId === 'teacher') {
         updateGlobalConflictsUI();
     }
