@@ -1050,6 +1050,10 @@ function handleImportBloco() {
 
     if (compsToImport.length === 0) return alert(`Nenhuma disciplina encontrada no período "${periodoSelecionado}".`);
 
+    // Deriva o identificador de bloco: "1" → "BL1", "BLOCO 2" → "BL2", "2" → "BL2"
+    const numBloco = periodoSelecionado.match(/\d+/)?.[0] || periodoSelecionado;
+    const blocoId = `BL${numBloco}`;
+
     let addedCount = 0;
     compsToImport.forEach(c => {
         const exists = store.allocations.some(a => String(a.turmaId) === String(store.selectedTurma) && a.disciplina === c.componente);
@@ -1061,17 +1065,19 @@ function handleImportBloco() {
                 tipo: 'pendente', // Status Especial
                 cor: c.cor || '#bdc3c7',
                 dataInicio: store.settings.termStart,
-                dataFim: store.settings.termEnd
+                dataFim: store.settings.termEnd,
+                subGrupo: blocoId   // Ex: BL1, BL2 → rótulo EP2026_BL1
             });
             addedCount++;
         }
     });
 
     if (addedCount > 0) {
-        showToastWarning(`📥 Sucesso! ${addedCount} disciplinas do Período ${periodoSelecionado} foram importadas. Vá na aba "Lista de Ofertas" para alocá-las na grade.`, 'success');
+        const turmaNome = getTurmaLabel(store.selectedTurma, blocoId);
+        showToastWarning(`📥 Sucesso! ${addedCount} disciplinas importadas como ${turmaNome}. Vá em "Lista de Ofertas" para alocar na grade.`, 'success');
         store.saveAllocations();
         renderOfertasList();
-        switchTab('list'); // Já joga o usuário para a aba certa
+        switchTab('list');
     } else {
         alert('Todas as disciplinas deste bloco já estão na grade (ou pendentes) para esta turma.');
     }
