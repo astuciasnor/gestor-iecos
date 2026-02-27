@@ -595,17 +595,43 @@ function getDisciplinaCHGlobal(disciplina, turmaId) {
     return 0;
 }
 
+/**
+ * Deriva o bloco curricular automaticamente a partir do turmaId e do período letivo.
+ * @param {string} turmaId - Ex: 'EP2026', 'CB2024'
+ * @param {string} periodo - '1P', '2P', '3P' ou '4P'
+ * @param {string} termStart - Data de início do semestre (YYYY-MM-DD), usada para obter o ano de referência
+ * @returns {string} - Ex: 'BL1', 'BL5', ou '' para 1P/3P
+ */
+function derivarBloco(turmaId, periodo, termStart) {
+    const p = (periodo || '').toUpperCase();
+    if (p !== '2P' && p !== '4P') return '';  // 1P e 3P nao usam blocos
+
+    const anoEntrada = parseInt(String(turmaId).slice(-4));
+    const anoRef = parseInt((termStart || String(new Date().getFullYear())).slice(0, 4));
+    if (isNaN(anoEntrada) || isNaN(anoRef)) return '';
+
+    const anosDecorridos = anoRef - anoEntrada;
+    if (anosDecorridos < 0) return '';  // turma do futuro: sem bloco
+
+    const numBloco = p === '2P'
+        ? 2 * anosDecorridos + 1   // BL1, BL3, BL5 ... (impares)
+        : 2 * anosDecorridos + 2;  // BL2, BL4, BL6 ... (pares)
+
+    return `BL${numBloco}`;
+}
+
 function getTurmaLabel(turmaId, subGrupo) {
     let base = turmaId;
     if (store.rawData?.turmas) {
         const t = store.rawData.turmas.find(x => String(x.turma_id) === String(turmaId));
         if (t) base = t.turma_label;
     }
-    // Sub-grupo: EP2026 + BL1 → EP2026_BL1 | EP2026 + BL1_T01 → EP2026_BL1_T01
-    if (subGrupo && String(subGrupo).trim()) {
-        return `${base}_${String(subGrupo).trim()}`;
-    }
-    return base;
+    // Sub-grupo explícito tem prioridade (ex: BL1_T01 digitado pelo usuário)
+    const sg = subGrupo && String(subGrupo).trim()
+        ? String(subGrupo).trim()
+        : derivarBloco(turmaId, store.settings.periodo, store.settings.termStart);
+
+    return sg ? `${base}_${sg}` : base;
 }
 
 function calculateTeacherTotalCH(teacherName) {
@@ -1355,7 +1381,8 @@ function onCursoChange() {
     if (cursoSigla && store.rawData?.turmas) {
         const turmas = store.rawData.turmas.filter((t) => t.sigla === cursoSigla);
         turmas.forEach((t) => {
-            selTurma.innerHTML += `<option value="${t.turma_id}">${t.turma_label}</option>`;
+            const blocoLabel = getTurmaLabel(t.turma_id);
+            selTurma.innerHTML += `<option value="${t.turma_id}">${blocoLabel}</option>`;
         });
 
         if (store.settings.lastTurma) {
