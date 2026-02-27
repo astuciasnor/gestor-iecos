@@ -502,6 +502,32 @@
         .autocomplete-lista li:last-child {
             border-bottom: none;
         }
+
+        .btn-limpar-docente {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #ccc;
+            border: none;
+            border-radius: 50%;
+            width: 28px;
+            height: 28px;
+            font-size: 16px;
+            font-weight: bold;
+            color: #fff;
+            cursor: pointer;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            line-height: 1;
+            z-index: 10;
+            transition: background 0.2s;
+        }
+
+        .btn-limpar-docente:active {
+            background: #999;
+        }
     </style>
 </head>
 
@@ -517,7 +543,10 @@
         <div class="seletor-grupo">
             <label for="inp-docente">1. Digite e Selecione seu Nome</label>
             <div class="autocomplete-wrapper">
-                <input type="text" id="inp-docente" placeholder="Busque o professor..." autocomplete="off">
+                <input type="text" id="inp-docente" placeholder="Busque o professor..." autocomplete="off"
+                    style="padding-right: 42px;">
+                <button type="button" id="btn-limpar-docente" class="btn-limpar-docente"
+                    title="Limpar seleção">✕</button>
                 <ul id="lista-sugestoes" class="autocomplete-lista" style="display: none;"></ul>
             </div>
         </div>

@@ -12,6 +12,7 @@ const divAgenda = document.getElementById('resultado-agenda');
 const btnTopo = document.getElementById('btn-topo');
 const wrapperTotalDocente = document.getElementById('wrapper-total-docente');
 const lblTotalDocente = document.getElementById('lbl-total-docente');
+const btnLimpar = document.getElementById('btn-limpar-docente');
 
 let docenteSelecionadoAtual = '';
 let mesSelecionadoAtual = '';
@@ -138,6 +139,12 @@ function selecionarProfessor(nomeProfessor) {
     wrapperTotalDocente.style.display = 'none';
     grupoMes.style.display = 'block';
     preencherMeses();
+
+    // Recolhe o teclado do celular
+    inpDocente.blur();
+
+    // Mostra o botão X para limpar
+    if (btnLimpar) btnLimpar.style.display = 'flex';
 }
 
 function configurarEventos() {
@@ -152,7 +159,11 @@ function configurarEventos() {
             containerMeses.innerHTML = '<span class="msg-vazio">Aguardando professor...</span>';
             divAgenda.innerHTML = '';
             wrapperTotalDocente.style.display = 'none';
+            if (btnLimpar) btnLimpar.style.display = 'none';
         }
+
+        // Mostra/esconde o X conforme haja texto
+        if (btnLimpar) btnLimpar.style.display = valorDigitado ? 'flex' : 'none';
 
         renderizarSugestoes(valorDigitado);
     });
@@ -169,6 +180,22 @@ function configurarEventos() {
     inpDocente.addEventListener('focus', () => {
         renderizarSugestoes(inpDocente.value.trim());
     });
+
+    // Botão X para limpar a seleção do professor
+    if (btnLimpar) {
+        btnLimpar.addEventListener('click', () => {
+            inpDocente.value = '';
+            docenteSelecionadoAtual = '';
+            mesSelecionadoAtual = '';
+            grupoMes.style.display = 'none';
+            containerMeses.innerHTML = '<span class="msg-vazio">Aguardando professor...</span>';
+            divAgenda.innerHTML = '';
+            wrapperTotalDocente.style.display = 'none';
+            btnLimpar.style.display = 'none';
+            if (listaSugestoes) listaSugestoes.style.display = 'none';
+            inpDocente.focus();
+        });
+    }
 
     // Lógica do botão Voltar ao Topo
     window.addEventListener('scroll', () => {
