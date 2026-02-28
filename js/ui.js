@@ -2007,7 +2007,6 @@ function renderOfertasList() {
         appendSeparator(nomeMes.toUpperCase());
     };
 
-    const blockedWeekdays = getBlockedWeekdaysForTurma(store.selectedTurma);
     let currentMonth = null;
 
     const appendRow = (a) => {
@@ -2071,16 +2070,16 @@ function renderOfertasList() {
                         return dStr >= pS && dStr <= pE;
                     });
 
-                    // Quais slots da intensiva estão livres hoje?
-                    const availableSlots = slots.filter(s => !activePrioToday.some(p => p.horario === s));
-
-                    if (availableSlots.length > 0 && totalHorasIntensiva < chMax) {
-                        dayCount++;
-                        const diff = chMax - totalHorasIntensiva;
-                        if (dStr === end && a.horariosUltimoDia && a.horariosUltimoDia.length > 0) {
-                            totalHorasIntensiva += Math.min(a.horariosUltimoDia.length, diff);
-                        } else {
-                            totalHorasIntensiva += Math.min(availableSlots.length, diff);
+                    // Tolerância Zero: Se tem Prioritária ativa no dia, a intensiva não contabiliza horas!
+                    if (activePrioToday.length === 0) {
+                        if (slots.length > 0 && totalHorasIntensiva < chMax) {
+                            dayCount++;
+                            const diff = chMax - totalHorasIntensiva;
+                            if (dStr === end && a.horariosUltimoDia && a.horariosUltimoDia.length > 0) {
+                                totalHorasIntensiva += Math.min(a.horariosUltimoDia.length, diff);
+                            } else {
+                                totalHorasIntensiva += Math.min(slots.length, diff);
+                            }
                         }
                     }
                 }
