@@ -259,7 +259,7 @@ function showToastWarning(message, type = 'error', customDuration = null) {
     fb.classList.remove('hidden');
     fb.innerHTML = message;
     fb.style.display = 'block';
-    fb.style.backgroundColor = type === 'success' ? '#27ae60' : '#e74c3c';
+    fb.style.backgroundColor = type === 'success' ? '#27ae60' : (type === 'warning' ? '#f39c12' : '#e74c3c');
     fb.style.color = '#fff';
     fb.style.padding = '15px 20px';
     fb.style.borderRadius = '6px';
@@ -1715,7 +1715,7 @@ function handleSlotClick(dia, horario) {
         if (conflitoDocenteGlobal) {
             const turmaNomeConflito = getTurmaLabel(conflitoDocenteGlobal.turmaId);
             const profNomes = teachersToCheck.join(', ');
-            showToastWarning(`⚠️ <b>Professor indisponível!</b><br><b>${profNomes}</b> já tem aula de <b>${conflitoDocenteGlobal.disciplina}</b> na turma <b>${turmaNomeConflito}</b> neste dia e horário.`, 'error', 3500);
+            showToastWarning(`⚠️ <b>Professor indisponível!</b><br><b>${profNomes}</b> já tem aula de <b>${conflitoDocenteGlobal.disciplina}</b> na turma <b>${turmaNomeConflito}</b> neste dia e horário.`, 'warning', 4500);
             return;
         }
     }
@@ -1907,7 +1907,7 @@ function handleAddManual() {
             if (teacherConflictGlobal) {
                 const turmaNomeConflito = getTurmaLabel(teacherConflictGlobal.turmaId);
                 const profNomes = teachersToCheck.join(', ');
-                showToastWarning(`⚠️ <b>Professor indisponível!</b><br><b>${profNomes}</b> já tem aula de <b>${teacherConflictGlobal.disciplina}</b> na turma <b>${turmaNomeConflito}</b> nestas datas.`, 'error', 3500);
+                showToastWarning(`⚠️ <b>Professor indisponível!</b><br><b>${profNomes}</b> já tem aula de <b>${teacherConflictGlobal.disciplina}</b> na turma <b>${turmaNomeConflito}</b> nestas datas.`, 'warning', 4500);
                 return;
             }
         }
@@ -2881,7 +2881,11 @@ function detectGlobalTeacherConflicts() {
                 const intAlloc = a.tipo === 'intensiva' ? a : b;
                 const regAlloc = a.tipo === 'intensiva' ? b : a;
                 const regDay = parseInt(regAlloc.diaSemana);
-                const isIntDayActive = (regDay >= 1 && regDay <= 5) || (regDay === 6 && intAlloc.usaSabado);
+
+                // Fallback de retrocompatibilidade
+                const diasPermitidos = Array.isArray(intAlloc.diasMarcados) ? intAlloc.diasMarcados : (intAlloc.usaSabado ? [1, 2, 3, 4, 5, 6] : [1, 2, 3, 4, 5, 6]);
+
+                const isIntDayActive = diasPermitidos.includes(regDay);
                 if (isIntDayActive && intAlloc.horariosOcupados && intAlloc.horariosOcupados.includes(regAlloc.horario)) {
                     isSlotConflict = true;
                     diaConflito = diasNomes[regDay] || regDay;
