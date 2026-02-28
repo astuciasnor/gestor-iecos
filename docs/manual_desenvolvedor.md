@@ -97,11 +97,16 @@ Diferente de sistemas básicos, o IECOS v3 trata conflitos internos de turma de 
 * O sistema chama a função `getSuspendedDates()`. Ao cruzar as datas e notar interseção, a data daquela Regular entra no vetor de `suspended`.
 * O loop principal `syncAllRegularDates()` ignora os dias suspensos e **estende a data de encerramento** (`dataFim`) da aula Regular para compensar. Nenhuma carga horária é perdida.
 
-### 4.2. 🛡️ Barreiras de Conflito Global (Cross-Course Overlap)
-A física proíbe o professor de estar em dois cursos ao mesmo tempo. Criamos duas barreiras para evitar isso:
+### 4.1.1. 👑 Regular Prioritária (A Chefona)
+Diferente da Regular comum, a **Regular Prioritária** possui precedência absoluta *dentro da sua própria turma*:
+- **Inversão de Suspensão**: Ela **não pode ser suspensa** por disciplinas Intensivas. Se houver sobreposição no mesmo horário, a Intensiva é quem tem as aulas suspensas naquele dia.
+- **Visual**: Aparece com uma **borda preta tracejada** na grade semanal.
 
-* **Barreira Input (Inserção Manual):** Quando o usuário tenta agendar uma aula (via clique na grade ou formulário), o `ui.js` roda um `isDateOverlap()` varrendo todo o IECOS (todas as turmas não selecionadas). Se o professor já estiver ocupado (seja em módulo ou semanal), a requisição morre com um alerta vermelho.
-* **Barreira de Auditoria (Pós-Importação):** Se um choque ocorrer sorrateiramente após mesclar JSONs de outros diretores (pois os dados entram via backend), o sistema usa um Hook na aba Visão do Professor. O método `detectGlobalTeacherConflicts()` varre todos os arrays de docentes para localizar duplicação de horários e avisa a direção através de um Banner de Alerta Crítico.
+### 4.2. 🛡️ Barreiras de Conflito Global (Escudo do Docente)
+O sistema aplica a "Lei da Física": um professor não pode estar em dois lugares ao mesmo tempo, mesmo que uma das aulas seja "Prioritária".
+
+1. **Barreira de Inserção (Real-time):** Ao tentar clicar na grade ou adicionar uma Intensiva, o sistema varre **todas as turmas de todos os cursos** no banco de dados local. Se o professor já tiver qualquer alocação no mesmo dia/horário/período, o sistema **barra a inserção** com um alerta vermelho. O status de "Prioritária" ajuda contra conflitos internos, mas **não anula** este Escudo Global.
+2. **Barreira de Auditoria (Pós-Importação):** Se um choque ocorrer após mesclar JSONs de outros diretores, o sistema usa o Hook na aba **Visão do Professor** (`detectGlobalTeacherConflicts()`) para localizar duplicações e avisar a direção através de um Banner de Alerta Crítico.
 
 ### 4.3. 🧮 Amputação Cirúrgica do Último Dia (Intensivas)
 Componentes intensivos nem sempre cravam um número múltiplo exato de horários. (Ex: 17h, 5 aulas/dia = 3 dias cheios + 1 dia com apenas 2 slots).
