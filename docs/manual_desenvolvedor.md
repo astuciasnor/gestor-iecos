@@ -98,8 +98,11 @@ Diferente de sistemas básicos, o IECOS v3 trata conflitos internos de turma de 
 * O loop principal `syncAllRegularDates()` ignora os dias suspensos e **estende a data de encerramento** (`dataFim`) da aula Regular para compensar. Nenhuma carga horária é perdida.
 
 ### 4.1.1. 👑 Regular Prioritária (A Chefona)
+
+> **⚠️ NOTA DE DESENVOLVIMENTO (Fev/2026):** A pedido da direção, a opção "Regular Prioritária" foi temporariamente ocultada da interface de seleção (HTML) para simplificar a operação e reduzir a complexidade das regras de colisão, evitando efeitos colaterais imprevistos nas outras visões do sistema. A lógica interna profunda (Tolerância Zero, bloqueio de dia inteiro e deslocamento de slots em `calendar.js` e `ui.js`) permanece 100% preservada no código-fonte. O objetivo é reativar na tela a funcionalidade no início do próximo semestre, quando o fluxo estiver consolidado.
+
 Diferente da Regular comum, a **Regular Prioritária** possui precedência absoluta *dentro da sua própria turma*:
-- **Inversão de Suspensão**: Ela **não pode ser suspensa** por disciplinas Intensivas. Se houver sobreposição no mesmo horário, a Intensiva é quem tem as aulas suspensas naquele dia.
+- **Inversão de Suspensão**: Ela **não pode ser suspensa** por disciplinas Intensivas. Se houver sobreposição no mesmo dia, a Intensiva sofre "Tolerância Zero" e é quem tem as aulas suspensas integralmente naquele dia, empurrando as horas para a frente.
 - **Visual**: Aparece com uma **borda preta tracejada** na grade semanal.
 
 ### 4.2. 🛡️ Barreiras de Conflito Global (Escudo do Docente)

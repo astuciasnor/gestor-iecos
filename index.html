@@ -550,7 +550,7 @@
                     <label>Tipo</label>
                     <select id="sel-tipo">
                         <option value="regular">Regular (Semanal)</option>
-                        <option value="regular_prioritaria">Regular (Prioritária)</option>
+                        <!-- <option value="regular_prioritaria">Regular (Prioritária)</option> -->
                         <option value="intensiva">Intensiva (Blocada)</option>
                     </select>
                 </div>
@@ -807,9 +807,11 @@
                                 professor em ordem cronológica. Cada barra mostra:</p>
                             <ul style="padding-left:20px; font-size:0.95em; line-height:1.8;">
                                 <li><strong>Turma + Código + Abreviação</strong>: ex.
-                                    <code>EP2026 EP05003 LabInfo (30h)</code></li>
+                                    <code>EP2026 EP05003 LabInfo (30h)</code>
+                                </li>
                                 <li>Quando a disciplina é <strong>subdividida em sub-turmas</strong>, aparece o prefixo:
-                                    <code>[T01]</code> ou <code>[T02]</code> antes do nome.</li>
+                                    <code>[T01]</code> ou <code>[T02]</code> antes do nome.
+                                </li>
                                 <li>Quando a disciplina é <strong>compartilhada entre docentes</strong>, a fatia do
                                     outro professor mostra o nome e CH dele.</li>
                             </ul>
@@ -819,7 +821,8 @@
                             <h4 style="font-size:1.05em;">🏷️ 6. Identificação Automática de Turmas por Bloco</h4>
                             <p style="font-size:0.97em;">A caixa de seleção de turmas exibe automaticamente o
                                 <strong>Bloco Curricular</strong> com base no <strong>Período Letivo</strong>
-                                selecionado:</p>
+                                selecionado:
+                            </p>
                             <ul style="padding-left:20px; font-size:0.95em; line-height:1.8;">
                                 <li><strong>2P → Blocos Ímpares</strong> (BL1, BL3, BL5...)</li>
                                 <li><strong>4P → Blocos Pares</strong> (BL2, BL4, BL6...)</li>
@@ -840,9 +843,11 @@
                                 <li>Selecione a disciplina no formulário. O sistema detecta a duplicata e <strong>exibe
                                         um aviso de confirmação</strong>.</li>
                                 <li>Confirme e preencha o campo <strong>"Identificador do Sub-grupo"</strong> com:
-                                    <code>BL1_T01</code> (grupo 1) ou <code>BL1_T02</code> (grupo 2).</li>
+                                    <code>BL1_T01</code> (grupo 1) ou <code>BL1_T02</code> (grupo 2).
+                                </li>
                                 <li>O rótulo final na grade será <code>EP2026_BL1_T01</code> e
-                                    <code>EP2026_BL1_T02</code>.</li>
+                                    <code>EP2026_BL1_T02</code>.
+                                </li>
                             </ol>
                             <p style="font-size:0.92em; background:#fef3cd; padding:8px; border-radius:6px;">
                                 💡 Ao usar <em>Importar Componentes em Bloco</em>, o identificador <code>BL1</code> já é
