@@ -300,13 +300,10 @@ export function getCalendarEvents(turmaId, startDate, endDate, docenteFilter = n
       const slots = intense.horariosOcupados || [];
       const slotsPerDay = slots.length;
 
-      // === CÁLCULO DE HORAS ACUMULADAS ===
-      const blockedDaysForTurma = new Set(
-        allPriorityRegulars
-          .filter(p => String(p.turmaId) === String(intense.turmaId))
-          .map(p => parseInt(p.diaSemana))
-      );
+      // Retaguarda para alocações antigas:
+      const diasPermitidos = Array.isArray(intense.diasMarcados) ? intense.diasMarcados : (intense.usaSabado ? [1, 2, 3, 4, 5, 6] : [1, 2, 3, 4, 5, 6]);
 
+      // === CÁLCULO DE HORAS ACUMULADAS ===
       let hoursBeforeToday = 0;
       let cursor = new Date(intense.dataInicio + 'T12:00:00');
       const targetDate = new Date(dateStr + 'T12:00:00');
@@ -314,28 +311,19 @@ export function getCalendarEvents(turmaId, startDate, endDate, docenteFilter = n
       while (cursor < targetDate) {
         const cStr = cursor.toISOString().split('T')[0];
         const dow = cursor.getDay();
+        const isHolidayObj = store.rawData?.feriados?.some(f => (f.data || f) === cStr);
 
-        if (isBusinessDay(cStr, intense.usaSabado)) {
-          // Verifica quais Prioritárias estavam ativas NESTE dia específico
-          const activePrioOnDay = allPriorityRegulars.filter(p => {
-            if (String(p.turmaId) !== String(intense.turmaId)) return false;
-            if (parseInt(p.diaSemana) !== dow) return false;
-            const pStart = p.dataInicio || store.settings.termStart || '0000-00-00';
-            const pEnd = p.dataFim || store.settings.termEnd || '2099-12-31';
-            return cStr >= pStart && cStr <= pEnd;
-          });
-
-          // TOLERÂNCIA ZERO: Se tiver QUALQUER prioritária neste dia (para a mesma turma), a intensiva não contabiliza horas
-          if (activePrioOnDay.length === 0) {
-            hoursBeforeToday += slots.length;
-          }
+        // Se o dia não for feriado E estiver marcado no array do usuário:
+        if (!isHolidayObj && diasPermitidos.includes(dow)) {
+          hoursBeforeToday += slots.length;
         }
         cursor.setDate(cursor.getDate() + 1);
       }
 
-      // TOLERÂNCIA ZERO: Se houver prioritária ativa HOJE para esta turma, não pisar no tapete da Chefona. Oculta todos os slots da Intensiva neste dia.
-      const priorityHojeParaTurma = activeGlobalPriority.filter(p => String(p.turmaId) === String(intense.turmaId));
-      if (priorityHojeParaTurma.length > 0) return;
+      // Se HOJE (dateStr) não estiver nos dias permitidos ou for feriado, não desenha NADA.
+      const currentDow = new Date(dateStr + 'T12:00:00').getDay();
+      const currentIsHoliday = store.rawData?.feriados?.some(f => (f.data || f) === dateStr);
+      if (currentIsHoliday || !diasPermitidos.includes(currentDow)) return;
 
       slots.forEach((slotTime, slotIndex) => {
         // SE ESTE SLOT NÃO PERTENCE À CARGA RESIDUAL ÍMPAR QUE SOBROU NO ÚLTIMO DIA, PULAR.

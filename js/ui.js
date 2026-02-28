@@ -1132,10 +1132,25 @@ export function initUI() {
             if (isIntensive) {
                 divSlots.classList.remove('hidden');
                 renderIntensiveSlots();
-                const chk = document.getElementById('chk-sabados');
-                if (chk) chk.checked = false; // Reset padrão ao abrir
+
+                // Mostrar container dos dias da semana
+                const containerDias = document.getElementById('container-dias-semana-intensiva');
+                if (containerDias) containerDias.style.display = 'block';
+
+                // Reset Padrão: Seg a Sex marcados, Sab desmarcado
+                for (let i = 1; i <= 5; i++) {
+                    const chk = document.getElementById(`chk-dia-${i}`);
+                    if (chk) chk.checked = true;
+                }
+                const chkSaber = document.getElementById('chk-dia-6');
+                if (chkSaber) chkSaber.checked = false;
+
             } else {
                 divSlots.classList.add('hidden');
+
+                // Ocultar container dos dias da semana
+                const containerDias = document.getElementById('container-dias-semana-intensiva');
+                if (containerDias) containerDias.style.display = 'none';
             }
 
             if (store.settings.termStart && inputConfig.inicio) {
@@ -1798,16 +1813,26 @@ function handleAddManual() {
 
         let effectiveCH = ch;
         // ==========================================
-        // NOVO: CALCULAR DATA FIM ITERANDO SLOT A SLOT PARA TOLERÂNCIA ZERO DA PRIORITÁRIA
+        // NOVO: CALCULAR DATA FIM ITERANDO PELOS DIAS MARCADOS MANUALMENTE (Ignora Prioritárias)
         // ==========================================
+
+        let diasMarcados = [];
+        for (let i = 1; i <= 6; i++) {
+            const chk = document.getElementById(`chk-dia-${i}`);
+            if (chk && chk.checked) diasMarcados.push(i);
+        }
+
+        if (diasMarcados.length === 0) {
+            return alert('Selecione pelo menos um dia da semana permitido para a Intensiva!');
+        }
+
         let hoursAccumulated = 0;
         let currentDateStr = inicio;
         let currentCursor = new Date(inicio + "T12:00:00");
+
         let lastValidDateStr = inicio;
         // Obter feriados padrão
         const feriados = store.rawData?.feriados || [];
-        const chkSabado = document.getElementById('chk-sabados');
-        const usaSabado = chkSabado ? chkSabado.checked : false;
 
         let remainingSlotsOnLastDay = slotsIntensiva.length;
         let iterationLimit = 365;
@@ -1819,31 +1844,16 @@ function handleAddManual() {
             const dow = currentCursor.getDay();
 
             const isHolidayObj = feriados.some(f => (f.data || f) === currentDateStr);
-            const isWeekend = dow === 0 || (dow === 6 && !usaSabado);
 
-            if (!isHolidayObj && !isWeekend) {
-                // Descobre se há QUALQUER PRIORITÁRIA para essa turma NESTE DIA (Regra de Tolerância Zero)
-                let hasPriorityToday = false;
-                for (let i = 0; i < store.allocations.length; i++) {
-                    const a = store.allocations[i];
-                    if (String(a.turmaId) === String(store.selectedTurma) && a.tipo === 'regular_prioritaria' && parseInt(a.diaSemana) === dow) {
-                        const aStart = a.dataInicio || store.settings.termStart || '0000-00-00';
-                        const aEnd = a.dataFim || store.settings.termEnd || '2099-12-31';
-                        if (currentDateStr >= aStart && currentDateStr <= aEnd) {
-                            hasPriorityToday = true;
-                            break;
-                        }
-                    }
-                }
+            // Um dia só conta se NÃO for feriado E se o dia da semana foi MARCADO pelo usuário
+            if (!isHolidayObj && diasMarcados.includes(dow)) {
 
-                if (!hasPriorityToday) {
-                    // Dia livre da Chefona! Conta todos os slots que a Intensiva puder colocar aqui.
-                    const slotsToGive = Math.min(slotsIntensiva.length, effectiveCH - hoursAccumulated);
-                    hoursAccumulated += slotsToGive;
-                    remainingSlotsOnLastDay = slotsToGive;
-                    horariosUltimoDia = slotsIntensiva.slice(0, slotsToGive);
-                    lastValidDateStr = currentDateStr;
-                }
+                const slotsToGive = Math.min(slotsIntensiva.length, effectiveCH - hoursAccumulated);
+                hoursAccumulated += slotsToGive;
+                remainingSlotsOnLastDay = slotsToGive;
+                horariosUltimoDia = slotsIntensiva.slice(0, slotsToGive);
+                lastValidDateStr = currentDateStr;
+
             }
 
             if (hoursAccumulated < effectiveCH) {
@@ -1949,7 +1959,7 @@ function handleAddManual() {
             modelo: 'Automático',
             horariosOcupados: slotsIntensiva,
             horariosUltimoDia: horariosUltimoDia,
-            usaSabado: usaSabado,
+            diasMarcados: diasMarcados,   // Array de dias da semana explícitos [1,2,3,4,5]
             subGrupo: subGrupo || null,   // Sub-grupo da turma (ex: '01', '02')
             cor: inputConfig.cor ? inputConfig.cor.value : store.getDisciplinaColor(disciplina)
         });
@@ -2052,34 +2062,24 @@ function renderOfertasList() {
             const priorityRegulars = list.filter(p => p.tipo === 'regular_prioritaria');
 
             let dayCount = 0;
+            // Retaguarda de segurança: se for grade antiga sem 'diasMarcados', permite uso de Sabado pela flag antiga ou default Seg-Sáb
+            const diasPermitidos = Array.isArray(a.diasMarcados) ? a.diasMarcados : (a.usaSabado ? [1, 2, 3, 4, 5, 6] : [1, 2, 3, 4, 5, 6]);
+
             while (current <= endObj) {
                 const dStr = current.toISOString().split('T')[0];
                 const dow = current.getDay();
 
-                // Verifica utilidade básica do dia
-                let isBus = true;
-                if (dow === 0) isBus = false;
-                if (dow === 6 && !a.usaSabado) isBus = false;
-                if (feriadosSet.has(dStr)) isBus = false;
+                const isHoliday = feriadosSet.has(dStr);
 
-                if (isBus) {
-                    const activePrioToday = priorityRegulars.filter(p => {
-                        if (parseInt(p.diaSemana) !== dow) return false;
-                        const pS = p.dataInicio || store.settings.termStart;
-                        const pE = p.dataFim || store.settings.termEnd;
-                        return dStr >= pS && dStr <= pE;
-                    });
-
-                    // Tolerância Zero: Se tem Prioritária ativa no dia, a intensiva não contabiliza horas!
-                    if (activePrioToday.length === 0) {
-                        if (slots.length > 0 && totalHorasIntensiva < chMax) {
-                            dayCount++;
-                            const diff = chMax - totalHorasIntensiva;
-                            if (dStr === end && a.horariosUltimoDia && a.horariosUltimoDia.length > 0) {
-                                totalHorasIntensiva += Math.min(a.horariosUltimoDia.length, diff);
-                            } else {
-                                totalHorasIntensiva += Math.min(slots.length, diff);
-                            }
+                // O dia só é válido se não for feriado E estiver marcado no array diasPermitidos da disciplina
+                if (!isHoliday && diasPermitidos.includes(dow)) {
+                    if (slots.length > 0 && totalHorasIntensiva < chMax) {
+                        dayCount++;
+                        const diff = chMax - totalHorasIntensiva;
+                        if (dStr === end && a.horariosUltimoDia && a.horariosUltimoDia.length > 0) {
+                            totalHorasIntensiva += Math.min(a.horariosUltimoDia.length, diff);
+                        } else {
+                            totalHorasIntensiva += Math.min(slots.length, diff);
                         }
                     }
                 }

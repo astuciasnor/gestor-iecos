@@ -585,14 +585,41 @@
                         * O sistema calculará a data final automaticamente baseada na CH e nos horários.
                     </small>
 
-                    <label for="chk-sabados"
-                        style="background-color: #ffffff; border: 1px solid #ced4da; border-radius: 6px; padding: 12px 15px; display: flex; align-items: center; justify-content: flex-start; gap: 10px; margin-top: 15px; width: 100%; box-sizing: border-box; cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,0.05); transition: background 0.2s;">
-                        <input type="checkbox" id="chk-sabados"
-                            style="width: 17px; height: 17px; cursor: pointer; margin: 0; accent-color: var(--primary); flex-shrink: 0;">
-                        <span
-                            style="color: #1a252f; font-weight: 800; font-size: 0.95rem; white-space: nowrap; user-select: none; letter-spacing: -0.3px;">Permitir
-                            Sábados</span>
-                    </label>
+                    <div id="container-dias-semana-intensiva" style="margin-top: 15px;">
+                        <label style="margin-bottom: 8px; color: #fff;">Dias da Semana Permitidos:</label>
+                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px;">
+                            <label
+                                style="background-color: #ffffff; border: 1px solid #ced4da; border-radius: 6px; padding: 8px; display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                                <input type="checkbox" id="chk-dia-1" value="1" checked style="margin: 0;"> <span
+                                    style="color: #1a252f; font-weight: 600; font-size: 0.9rem;">Segunda</span>
+                            </label>
+                            <label
+                                style="background-color: #ffffff; border: 1px solid #ced4da; border-radius: 6px; padding: 8px; display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                                <input type="checkbox" id="chk-dia-2" value="2" checked style="margin: 0;"> <span
+                                    style="color: #1a252f; font-weight: 600; font-size: 0.9rem;">Terça</span>
+                            </label>
+                            <label
+                                style="background-color: #ffffff; border: 1px solid #ced4da; border-radius: 6px; padding: 8px; display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                                <input type="checkbox" id="chk-dia-3" value="3" checked style="margin: 0;"> <span
+                                    style="color: #1a252f; font-weight: 600; font-size: 0.9rem;">Quarta</span>
+                            </label>
+                            <label
+                                style="background-color: #ffffff; border: 1px solid #ced4da; border-radius: 6px; padding: 8px; display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                                <input type="checkbox" id="chk-dia-4" value="4" checked style="margin: 0;"> <span
+                                    style="color: #1a252f; font-weight: 600; font-size: 0.9rem;">Quinta</span>
+                            </label>
+                            <label
+                                style="background-color: #ffffff; border: 1px solid #ced4da; border-radius: 6px; padding: 8px; display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                                <input type="checkbox" id="chk-dia-5" value="5" checked style="margin: 0;"> <span
+                                    style="color: #1a252f; font-weight: 600; font-size: 0.9rem;">Sexta</span>
+                            </label>
+                            <label
+                                style="background-color: #ffffff; border: 1px solid #ced4da; border-radius: 6px; padding: 8px; display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                                <input type="checkbox" id="chk-dia-6" value="6" style="margin: 0;"> <span
+                                    style="color: #1a252f; font-weight: 600; font-size: 0.9rem;">Sábado</span>
+                            </label>
+                        </div>
+                    </div>
                 </div>
 
                 <button id="btn-add-oferta" class="btn-primary"
