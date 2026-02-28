@@ -295,8 +295,13 @@ export function getCalendarEvents(turmaId, startDate, endDate, docenteFilter = n
       if (dayOfWeek === 6 && !intense.usaSabado) return;
 
       // ** CHECK SUPRESSÃO VISUAL (HOJE) **
-      if (turmasWithPriorityToday.has(String(intense.turmaId))) {
-        return;
+      // Só suspende a Intensiva se ela disputar o horário com a Prioritária (não bloqueia horários vazios do dia)
+      const slotsIntense = intense.horariosOcupados || [];
+      const priorityHojeParaTurma = activeGlobalPriority.filter(p => String(p.turmaId) === String(intense.turmaId));
+      const hasSlotOverlap = priorityHojeParaTurma.some(p => slotsIntense.includes(normalizeTime(p.horario)));
+
+      if (hasSlotOverlap) {
+        return; // Suspende O DIA TODO pois há sobreposição com a Chefona (não deixa migalhas)
       }
 
       const slots = intense.horariosOcupados || [];
@@ -326,12 +331,12 @@ export function getCalendarEvents(turmaId, startDate, endDate, docenteFilter = n
             cStr <= (p.dataFim || '')
           );
 
-          // Filtra slots da intensiva que não foram tomados por Prioritárias
-          const availableSlots = slots.filter(s =>
-            !activePrioOnDay.some(p => normalizeTime(p.horario) === normalizeTime(s))
-          );
+          // Se a Prioritária tiver QUALQUER interseção de slot, suspende a intensiva o dia inteiro (nada é contado/dado)
+          const hasAnyOverlapOnDay = activePrioOnDay.some(p => slots.includes(normalizeTime(p.horario)));
 
-          hoursBeforeToday += availableSlots.length;
+          if (!hasAnyOverlapOnDay) {
+            hoursBeforeToday += slots.length;
+          }
         }
         cursor.setDate(cursor.getDate() + 1);
       }
