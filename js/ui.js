@@ -1812,7 +1812,34 @@ function handleAddManual() {
         const chkSabado = document.getElementById('chk-sabados');
         const usaSabado = chkSabado ? chkSabado.checked : false;
 
-        const dataFimCalculada = addBusinessDays(inicio, diasNecessarios, feriados, blockedWeekdays, usaSabado);
+        // ==========================================
+        // ==========================================
+        const priorityHolidays = [];
+        store.allocations.forEach(a => {
+            if (String(a.turmaId) === String(store.selectedTurma) && a.tipo === 'regular_prioritaria') {
+                // A prioritária "rouba" o dia apenas se a intensiva for usar os mesmos horários que ela
+                const conflitoHorario = slotsIntensiva.includes(a.horario);
+                if (conflitoHorario) {
+                    // Nós não sabemos exatamente quantos dias a Intensiva vai durar ainda, 
+                    // então projetamos as datas da Prioritária para os próximos 6 meses (ou até o fim do semestre) limitando loops soltos.
+                    let tempDate = new Date((a.dataInicio || store.settings.termStart) + 'T12:00:00');
+                    const endDate = new Date((a.dataFim || store.settings.termEnd || '2099-12-31') + 'T12:00:00');
+                    // Limite de segurança: 180 dias
+                    let limit = 180;
+                    while (tempDate <= endDate && limit > 0) {
+                        if (tempDate.getDay() === parseInt(a.diaSemana)) {
+                            priorityHolidays.push(tempDate.toISOString().split('T')[0]);
+                        }
+                        tempDate.setDate(tempDate.getDate() + 1);
+                        limit--;
+                    }
+                }
+            }
+        });
+
+        // Junta os feriados oficiais com os "feriados artificiais" (dias das Chefonas)
+        const allHolidays = [...feriados, ...priorityHolidays];
+        const dataFimCalculada = addBusinessDays(inicio, diasNecessarios, allHolidays, blockedWeekdays, usaSabado);
 
         // ==========================================
         // NOVO: CALCULA EXATAMENTE OS SLOTS DO ÚLTIMO DIA
