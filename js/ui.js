@@ -1805,164 +1805,184 @@ function handleAddManual() {
         if (slotsIntensiva.length === 0) return alert('Selecione pelo menos um horário.');
 
         let effectiveCH = ch;
-        const diasNecessarios = Math.ceil(effectiveCH / slotsIntensiva.length);
+        // ==========================================
+        // NOVO: CALCULAR DATA FIM ITERANDO SLOT A SLOT PARA TOLERÂNCIA ZERO DA PRIORITÁRIA
+        // ==========================================
+        let hoursAccumulated = 0;
+        let currentDateStr = inicio;
+        let currentCursor = new Date(inicio + "T12:00:00");
+        let lastValidDateStr = inicio;
+        // Obter feriados padrão
         const feriados = store.rawData?.feriados || [];
         const blockedWeekdays = getBlockedWeekdaysForTurma(store.selectedTurma);
-
         const chkSabado = document.getElementById('chk-sabados');
         const usaSabado = chkSabado ? chkSabado.checked : false;
 
-        // ==========================================
-        // ==========================================
+        // Pré-calcular feriados dinâmicos (Regular Prioritária da Turma - Tolerância Zero: o dia inteiro é bloqueado)
         const priorityHolidays = [];
         store.allocations.forEach(a => {
             if (String(a.turmaId) === String(store.selectedTurma) && a.tipo === 'regular_prioritaria') {
-                // A prioritária "rouba" o dia apenas se a intensiva for usar os mesmos horários que ela
-                const conflitoHorario = slotsIntensiva.includes(a.horario);
-                if (conflitoHorario) {
-                    // Nós não sabemos exatamente quantos dias a Intensiva vai durar ainda, 
-                    // então projetamos as datas da Prioritária para os próximos 6 meses (ou até o fim do semestre) limitando loops soltos.
-                    let tempDate = new Date((a.dataInicio || store.settings.termStart) + 'T12:00:00');
-                    const endDate = new Date((a.dataFim || store.settings.termEnd || '2099-12-31') + 'T12:00:00');
-                    // Limite de segurança: 180 dias
-                    let limit = 180;
-                    while (tempDate <= endDate && limit > 0) {
-                        if (tempDate.getDay() === parseInt(a.diaSemana)) {
-                            priorityHolidays.push(tempDate.toISOString().split('T')[0]);
-                        }
-                        tempDate.setDate(tempDate.getDate() + 1);
-                        limit--;
+                let tempDate = new Date((a.dataInicio || store.settings.termStart) + 'T12:00:00');
+                const endDate = new Date((a.dataFim || store.settings.termEnd || '2099-12-31') + 'T12:00:00');
+                let limit = 180;
+                while (tempDate <= endDate && limit > 0) {
+                    if (tempDate.getDay() === parseInt(a.diaSemana)) {
+                        priorityHolidays.push(tempDate.toISOString().split('T')[0]);
                     }
+                    tempDate.setDate(tempDate.getDate() + 1);
+                    limit--;
                 }
             }
         });
 
-        // Junta os feriados oficiais com os "feriados artificiais" (dias das Chefonas)
         const allHolidays = [...feriados, ...priorityHolidays];
-        const dataFimCalculada = addBusinessDays(inicio, diasNecessarios, allHolidays, blockedWeekdays, usaSabado);
+        let remainingSlotsOnLastDay = slotsIntensiva.length;
+        let iterationLimit = 365;
+
+        // Itera de dia em dia até a carga horária ser preenchida
+        while (hoursAccumulated < effectiveCH && iterationLimit > 0) {
+            currentDateStr = currentCursor.toISOString().split('T')[0];
+            const dow = currentCursor.getDay();
+
+            const isHolidayObj = allHolidays.some(f => (f.data || f) === currentDateStr);
+            const isWeekend = dow === 0 || (dow === 6 && !usaSabado);
+            const isBlockedWeekday = blockedWeekdays.includes(dow);
+
+            if (!isHolidayObj && !isWeekend && !isBlockedWeekday) {
+                // Dia útil! Conta quantos slots a Intensiva consegue colocar aqui.
+                const slotsToGive = Math.min(slotsIntensiva.length, effectiveCH - hoursAccumulated);
+                hoursAccumulated += slotsToGive;
+                remainingSlotsOnLastDay = slotsToGive;
+                lastValidDateStr = currentDateStr;
+            }
+
+            currentCursor.setDate(currentCursor.getDate() + 1);
+            iterationLimit--;
+        }
+
+        const dataFimCalculada = lastValidDateStr;
 
         // ==========================================
-        // NOVO: CALCULA EXATAMENTE OS SLOTS DO ÚLTIMO DIA
+        // NOVO: DEFINE EXATAMENTE OS SLOTS DO ÚLTIMO DIA
         // ==========================================
-        const slotsNoUltimoDia = effectiveCH % slotsIntensiva.length;
         let horariosUltimoDia = slotsIntensiva;
-        if (slotsNoUltimoDia !== 0) {
-            horariosUltimoDia = slotsIntensiva.slice(0, slotsNoUltimoDia);
+        if (remainingSlotsOnLastDay < slotsIntensiva.length && remainingSlotsOnLastDay > 0) {
+            horariosUltimoDia = slotsIntensiva.slice(0, remainingSlotsOnLastDay);
         }
-        // ==========================================
-
-        const intensiveConflict = store.allocations.find(a => {
-            if (String(a.turmaId) !== String(store.selectedTurma)) return false;
-            if (a.tipo !== 'intensiva' || a.disciplina === disciplina) return false;
-            return hasIntensiveSlotConflict(inicio, dataFimCalculada, slotsIntensiva, a.dataInicio || store.settings.termStart, a.dataFim || store.settings.termEnd, a.horariosOcupados);
-        });
-
-        if (intensiveConflict) {
-            return alert(`❌ CHOQUE DE HORÁRIO!\n\nA Intensiva de "${intensiveConflict.disciplina}" já está utilizando este(s) horário(s) no mesmo período. A ação foi bloqueada.`);
-        }
-
-        // ==== BARREIRA GLOBAL DO PROFESSOR (INTENSIVA) ====
-        const teachersToCheck = (docData.mode === 'single' ? [docData.docente] : docData.docentesList.map(d => d.nome)).filter(n => n && n.trim().toUpperCase() !== 'A DEFINIR');
-
-        if (teachersToCheck.length > 0) {
-            const teacherConflictGlobal = store.allocations.find(a => {
-                if (String(a.turmaId) === String(store.selectedTurma)) return false;
-
-                let hasTeacherConflict = false;
-                if (a.docentes && a.docentes.length > 0) {
-                    hasTeacherConflict = a.docentes.some(d => teachersToCheck.includes(d.nome));
-                } else {
-                    hasTeacherConflict = teachersToCheck.includes(a.docente);
-                }
-                if (!hasTeacherConflict) return false;
-
-                const aStart = a.dataInicio || store.settings.termStart;
-                const aEnd = a.dataFim || store.settings.termEnd;
-                if (!isDateOverlap(inicio, dataFimCalculada, aStart, aEnd)) return false;
-
-                if (a.tipo === 'intensiva') {
-                    return hasIntensiveSlotConflict(inicio, dataFimCalculada, slotsIntensiva, aStart, aEnd, a.horariosOcupados);
-                } else {
-                    if (slotsIntensiva.includes(a.horario)) {
-                        if (parseInt(a.diaSemana) === 6 && !usaSabado) return false;
-                        return true;
-                    }
-                    return false;
-                }
-            });
-
-            if (teacherConflictGlobal) {
-                const turmaNomeConflito = getTurmaLabel(teacherConflictGlobal.turmaId);
-                const profNomes = teachersToCheck.join(', ');
-                showToastWarning(`⚠️ <b>Professor indisponível!</b><br><b>${profNomes}</b> já tem aula de <b>${teacherConflictGlobal.disciplina}</b> na turma <b>${turmaNomeConflito}</b> nestas datas.`, 'error', 3500);
-                return;
-            }
-        }
-        // ===================================================
-
-        let idToRemove = null;
-        const conflitoIntensiva = store.allocations.find(a => {
-            if (String(a.turmaId) === String(store.selectedTurma) && a.disciplina === disciplina) {
-                if (a.tipo === 'intensiva' && isDateOverlap(inicio, dataFimCalculada, a.dataInicio || store.settings.termStart, a.dataFim || store.settings.termEnd)) return true;
-                return a.tipo !== 'intensiva';
-            }
-            return false;
-        });
-
-        if (conflitoIntensiva) idToRemove = conflitoIntensiva.id;
-
-        const actionText = idToRemove ? "Atualizar alocação existente?" : "Confirmar alocação?";
-        if (!confirm(`${disciplina} (${formatDateBR(inicio)} a ${formatDateBR(dataFimCalculada)})\n\n${actionText}`)) return;
-
-        if (idToRemove) store.removeAllocation(idToRemove);
-
-        const affectedRegulars = [];
-        store.allocations.forEach(a => {
-            if (String(a.turmaId) !== String(store.selectedTurma)) return;
-            // A Intensiva NÃO afeta/empurra Disciplinas Prioritárias (Chefonas)
-            if (a.tipo !== 'regular') return;
-
-            const sReg = a.dataInicio || store.settings.termStart;
-            const eReg = a.dataFim || store.settings.termEnd;
-
-            if (isDateOverlap(inicio, dataFimCalculada, sReg, eReg)) {
-                if (slotsIntensiva.includes(a.horario)) {
-                    if (!affectedRegulars.includes(a.disciplina)) {
-                        affectedRegulars.push(a.disciplina);
-                    }
-                }
-            }
-        });
-
-        store.addAllocation({
-            turmaId: store.selectedTurma,
-            disciplina: disciplina,
-            docente: docData.docente,
-            docentes: docData.docentesList,
-            tipo: 'intensiva',
-            ch: effectiveCH,
-            dataInicio: inicio,
-            dataFim: dataFimCalculada,
-            modelo: 'Automático',
-            horariosOcupados: slotsIntensiva,
-            horariosUltimoDia: horariosUltimoDia,
-            usaSabado: usaSabado,
-            subGrupo: subGrupo || null,   // Sub-grupo da turma (ex: '01', '02')
-            cor: inputConfig.cor ? inputConfig.cor.value : store.getDisciplinaColor(disciplina)
-        });
-
-        syncAllRegularDates();
-        syncAllIntensiveDates();
-        renderOfertasList();
-
-        if (affectedRegulars.length > 0) {
-            const nomes = affectedRegulars.join(', ');
-            showToastWarning(`💡 <b>Ajuste Automático:</b> A(s) disciplina(s) <b>${nomes}</b> teve/tiveram aulas suspensas e a data final foi empurrada para frente!`, 'success');
-        }
-
-    } else {
-        alert('Para regular, clique na grade.');
     }
+    // ==========================================
+
+    const intensiveConflict = store.allocations.find(a => {
+        if (String(a.turmaId) !== String(store.selectedTurma)) return false;
+        if (a.tipo !== 'intensiva' || a.disciplina === disciplina) return false;
+        return hasIntensiveSlotConflict(inicio, dataFimCalculada, slotsIntensiva, a.dataInicio || store.settings.termStart, a.dataFim || store.settings.termEnd, a.horariosOcupados);
+    });
+
+    if (intensiveConflict) {
+        return alert(`❌ CHOQUE DE HORÁRIO!\n\nA Intensiva de "${intensiveConflict.disciplina}" já está utilizando este(s) horário(s) no mesmo período. A ação foi bloqueada.`);
+    }
+
+    // ==== BARREIRA GLOBAL DO PROFESSOR (INTENSIVA) ====
+    const teachersToCheck = (docData.mode === 'single' ? [docData.docente] : docData.docentesList.map(d => d.nome)).filter(n => n && n.trim().toUpperCase() !== 'A DEFINIR');
+
+    if (teachersToCheck.length > 0) {
+        const teacherConflictGlobal = store.allocations.find(a => {
+            if (String(a.turmaId) === String(store.selectedTurma)) return false;
+
+            let hasTeacherConflict = false;
+            if (a.docentes && a.docentes.length > 0) {
+                hasTeacherConflict = a.docentes.some(d => teachersToCheck.includes(d.nome));
+            } else {
+                hasTeacherConflict = teachersToCheck.includes(a.docente);
+            }
+            if (!hasTeacherConflict) return false;
+
+            const aStart = a.dataInicio || store.settings.termStart;
+            const aEnd = a.dataFim || store.settings.termEnd;
+            if (!isDateOverlap(inicio, dataFimCalculada, aStart, aEnd)) return false;
+
+            if (a.tipo === 'intensiva') {
+                return hasIntensiveSlotConflict(inicio, dataFimCalculada, slotsIntensiva, aStart, aEnd, a.horariosOcupados);
+            } else {
+                if (slotsIntensiva.includes(a.horario)) {
+                    if (parseInt(a.diaSemana) === 6 && !usaSabado) return false;
+                    return true;
+                }
+                return false;
+            }
+        });
+
+        if (teacherConflictGlobal) {
+            const turmaNomeConflito = getTurmaLabel(teacherConflictGlobal.turmaId);
+            const profNomes = teachersToCheck.join(', ');
+            showToastWarning(`⚠️ <b>Professor indisponível!</b><br><b>${profNomes}</b> já tem aula de <b>${teacherConflictGlobal.disciplina}</b> na turma <b>${turmaNomeConflito}</b> nestas datas.`, 'error', 3500);
+            return;
+        }
+    }
+    // ===================================================
+
+    let idToRemove = null;
+    const conflitoIntensiva = store.allocations.find(a => {
+        if (String(a.turmaId) === String(store.selectedTurma) && a.disciplina === disciplina) {
+            if (a.tipo === 'intensiva' && isDateOverlap(inicio, dataFimCalculada, a.dataInicio || store.settings.termStart, a.dataFim || store.settings.termEnd)) return true;
+            return a.tipo !== 'intensiva';
+        }
+        return false;
+    });
+
+    if (conflitoIntensiva) idToRemove = conflitoIntensiva.id;
+
+    const actionText = idToRemove ? "Atualizar alocação existente?" : "Confirmar alocação?";
+    if (!confirm(`${disciplina} (${formatDateBR(inicio)} a ${formatDateBR(dataFimCalculada)})\n\n${actionText}`)) return;
+
+    if (idToRemove) store.removeAllocation(idToRemove);
+
+    const affectedRegulars = [];
+    store.allocations.forEach(a => {
+        if (String(a.turmaId) !== String(store.selectedTurma)) return;
+        // A Intensiva NÃO afeta/empurra Disciplinas Prioritárias (Chefonas)
+        if (a.tipo !== 'regular') return;
+
+        const sReg = a.dataInicio || store.settings.termStart;
+        const eReg = a.dataFim || store.settings.termEnd;
+
+        if (isDateOverlap(inicio, dataFimCalculada, sReg, eReg)) {
+            if (slotsIntensiva.includes(a.horario)) {
+                if (!affectedRegulars.includes(a.disciplina)) {
+                    affectedRegulars.push(a.disciplina);
+                }
+            }
+        }
+    });
+
+    store.addAllocation({
+        turmaId: store.selectedTurma,
+        disciplina: disciplina,
+        docente: docData.docente,
+        docentes: docData.docentesList,
+        tipo: 'intensiva',
+        ch: effectiveCH,
+        dataInicio: inicio,
+        dataFim: dataFimCalculada,
+        modelo: 'Automático',
+        horariosOcupados: slotsIntensiva,
+        horariosUltimoDia: horariosUltimoDia,
+        usaSabado: usaSabado,
+        subGrupo: subGrupo || null,   // Sub-grupo da turma (ex: '01', '02')
+        cor: inputConfig.cor ? inputConfig.cor.value : store.getDisciplinaColor(disciplina)
+    });
+
+    syncAllRegularDates();
+    syncAllIntensiveDates();
+    renderOfertasList();
+
+    if (affectedRegulars.length > 0) {
+        const nomes = affectedRegulars.join(', ');
+        showToastWarning(`💡 <b>Ajuste Automático:</b> A(s) disciplina(s) <b>${nomes}</b> teve/tiveram aulas suspensas e a data final foi empurrada para frente!`, 'success');
+    }
+
+} else {
+    alert('Para regular, clique na grade.');
 }
 
 function renderOfertasList() {
