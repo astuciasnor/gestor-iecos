@@ -176,8 +176,8 @@ export function getCalendarEvents(turmaId, startDate, endDate, docenteFilter = n
     // Identifica quais turmas têm prioritária HOJE (Contexto Global para Bloqueio)
     const activeGlobalPriority = allPriorityRegulars.filter(a => {
       if (a.diaSemana != dayOfWeek) return false;
-      const start = a.dataInicio || store.settings.termStart;
-      const end = a.dataFim || store.settings.termEnd;
+      const start = a.dataInicio || store.settings.termStart || '0000-00-00';
+      const end = a.dataFim || store.settings.termEnd || '2099-12-31';
       return dateStr >= start && dateStr <= end;
     });
 
@@ -189,8 +189,8 @@ export function getCalendarEvents(turmaId, startDate, endDate, docenteFilter = n
     // Renderiza Minhas Prioritárias (Respeitando datas modulares)
     const myActivePriority = myPriorityRegulars.filter(a => {
       if (a.diaSemana != dayOfWeek) return false;
-      const start = a.dataInicio || store.settings.termStart;
-      const end = a.dataFim || store.settings.termEnd;
+      const start = a.dataInicio || store.settings.termStart || '0000-00-00';
+      const end = a.dataFim || store.settings.termEnd || '2099-12-31';
       return dateStr >= start && dateStr <= end;
     });
 
@@ -295,13 +295,9 @@ export function getCalendarEvents(turmaId, startDate, endDate, docenteFilter = n
       if (dayOfWeek === 6 && !intense.usaSabado) return;
 
       // ** CHECK SUPRESSÃO VISUAL (HOJE) **
-      // Só suspende a Intensiva se ela disputar o horário com a Prioritária (não bloqueia horários vazios do dia)
-      const slotsIntense = intense.horariosOcupados || [];
-      const priorityHojeParaTurma = activeGlobalPriority.filter(p => String(p.turmaId) === String(intense.turmaId));
-      const hasSlotOverlap = priorityHojeParaTurma.some(p => slotsIntense.includes(normalizeTime(p.horario)));
-
-      if (hasSlotOverlap) {
-        return; // Suspende O DIA TODO pois há sobreposição com a Chefona (não deixa migalhas)
+      // Se houver QUALQUER prioritária para esta turma hoje, a intensiva é suspensa o dia todo (TOLERÂNCIA ZERO)
+      if (turmasWithPriorityToday.has(String(intense.turmaId))) {
+        return;
       }
 
       const slots = intense.horariosOcupados || [];
@@ -318,23 +314,26 @@ export function getCalendarEvents(turmaId, startDate, endDate, docenteFilter = n
       let cursor = new Date(intense.dataInicio + 'T12:00:00');
       const targetDate = new Date(dateStr + 'T12:00:00');
 
+      // Descobre dias da semana bloqueados por padrão na turma
+      const blockedWeekdaysForTurmaSet = new Set(getBlockedWeekdaysForTurma(intense.turmaId));
+
       while (cursor < targetDate) {
         const cStr = cursor.toISOString().split('T')[0];
         const dow = cursor.getDay();
+        const isBlockedWeekday = blockedWeekdaysForTurmaSet.has(dow);
 
-        if (isBusinessDay(cStr, intense.usaSabado)) {
+        if (isBusinessDay(cStr, intense.usaSabado) && !isBlockedWeekday) {
           // Verifica quais Prioritárias estavam ativas NESTE dia específico
-          const activePrioOnDay = allPriorityRegulars.filter(p =>
-            String(p.turmaId) === String(intense.turmaId) &&
-            parseInt(p.diaSemana) === dow &&
-            cStr >= (p.dataInicio || '') &&
-            cStr <= (p.dataFim || '')
-          );
+          const activePrioOnDay = allPriorityRegulars.filter(p => {
+            if (String(p.turmaId) !== String(intense.turmaId)) return false;
+            if (parseInt(p.diaSemana) !== dow) return false;
+            const pStart = p.dataInicio || store.settings.termStart || '0000-00-00';
+            const pEnd = p.dataFim || store.settings.termEnd || '2099-12-31';
+            return cStr >= pStart && cStr <= pEnd;
+          });
 
-          // Se a Prioritária tiver QUALQUER interseção de slot, suspende a intensiva o dia inteiro (nada é contado/dado)
-          const hasAnyOverlapOnDay = activePrioOnDay.some(p => slots.includes(normalizeTime(p.horario)));
-
-          if (!hasAnyOverlapOnDay) {
+          // Se tiver QUALQUER prioritária neste dia (para a mesma turma), a intensiva não contabiliza horas
+          if (activePrioOnDay.length === 0) {
             hoursBeforeToday += slots.length;
           }
         }
