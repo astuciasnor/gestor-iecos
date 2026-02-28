@@ -1822,26 +1822,26 @@ function handleAddManual() {
             const isWeekend = dow === 0 || (dow === 6 && !usaSabado);
 
             if (!isHolidayObj && !isWeekend) {
-                // Descobre quais slots de Prioritárias existem para essa turma NESTE DIA
-                const blockedSlotsToday = [];
-                store.allocations.forEach(a => {
+                // Descobre se há QUALQUER PRIORITÁRIA para essa turma NESTE DIA (Regra de Tolerância Zero)
+                let hasPriorityToday = false;
+                for (let i = 0; i < store.allocations.length; i++) {
+                    const a = store.allocations[i];
                     if (String(a.turmaId) === String(store.selectedTurma) && a.tipo === 'regular_prioritaria' && parseInt(a.diaSemana) === dow) {
                         const aStart = a.dataInicio || store.settings.termStart || '0000-00-00';
                         const aEnd = a.dataFim || store.settings.termEnd || '2099-12-31';
                         if (currentDateStr >= aStart && currentDateStr <= aEnd) {
-                            blockedSlotsToday.push(a.horario);
+                            hasPriorityToday = true;
+                            break;
                         }
                     }
-                });
+                }
 
-                // Slots que a intensiva pode usar hoje (aqueles que não conflitam com prioritária)
-                const availableSlotsToday = slotsIntensiva.filter(s => !blockedSlotsToday.includes(s));
-
-                if (availableSlotsToday.length > 0) {
-                    const slotsToGive = Math.min(availableSlotsToday.length, effectiveCH - hoursAccumulated);
+                if (!hasPriorityToday) {
+                    // Dia livre da Chefona! Conta todos os slots que a Intensiva puder colocar aqui.
+                    const slotsToGive = Math.min(slotsIntensiva.length, effectiveCH - hoursAccumulated);
                     hoursAccumulated += slotsToGive;
                     remainingSlotsOnLastDay = slotsToGive;
-                    horariosUltimoDia = availableSlotsToday.slice(0, slotsToGive);
+                    horariosUltimoDia = slotsIntensiva.slice(0, slotsToGive);
                     lastValidDateStr = currentDateStr;
                 }
             }

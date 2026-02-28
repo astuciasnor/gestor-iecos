@@ -325,23 +325,19 @@ export function getCalendarEvents(turmaId, startDate, endDate, docenteFilter = n
             return cStr >= pStart && cStr <= pEnd;
           });
 
-          // Apenas slots livres (que não colidem com Prioritárias NESTE dia) contam horas
-          const blockedSlotsOnDay = activePrioOnDay.map(p => normalizeTime(p.horario));
-          const availableSlotsOnDay = slots.filter(s => !blockedSlotsOnDay.includes(s));
-
-          hoursBeforeToday += availableSlotsOnDay.length;
+          // TOLERÂNCIA ZERO: Se tiver QUALQUER prioritária neste dia (para a mesma turma), a intensiva não contabiliza horas
+          if (activePrioOnDay.length === 0) {
+            hoursBeforeToday += slots.length;
+          }
         }
         cursor.setDate(cursor.getDate() + 1);
       }
 
-      // Descobre quais slots estão bloqueados HOJE pela Prioritária
+      // TOLERÂNCIA ZERO: Se houver prioritária ativa HOJE para esta turma, não pisar no tapete da Chefona. Oculta todos os slots da Intensiva neste dia.
       const priorityHojeParaTurma = activeGlobalPriority.filter(p => String(p.turmaId) === String(intense.turmaId));
-      const blockedSlotsHoje = priorityHojeParaTurma.map(p => normalizeTime(p.horario));
+      if (priorityHojeParaTurma.length > 0) return;
 
-      // Filtra os slots exatos que a intensiva PODE pintar hoje
-      const availableSlotsHoje = slots.filter(s => !blockedSlotsHoje.includes(s));
-
-      availableSlotsHoje.forEach((slotTime, slotIndex) => {
+      slots.forEach((slotTime, slotIndex) => {
         // SE ESTE SLOT NÃO PERTENCE À CARGA RESIDUAL ÍMPAR QUE SOBROU NO ÚLTIMO DIA, PULAR.
         if (intense.horariosUltimoDia && intense.horariosUltimoDia.length > 0 && dateStr === intense.dataFim) {
           if (!intense.horariosUltimoDia.includes(slotTime)) return;
