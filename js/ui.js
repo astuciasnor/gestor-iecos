@@ -572,14 +572,6 @@ function getCheckedSlots() {
     return checked;
 }
 
-function getBlockedWeekdaysForTurma(turmaId) {
-    if (!turmaId) return [];
-    const prioritaria = store.allocations.filter(a =>
-        String(a.turmaId) === String(turmaId) &&
-        a.tipo === 'regular_prioritaria'
-    );
-    return [...new Set(prioritaria.map(a => parseInt(a.diaSemana)))];
-}
 
 function getDisciplinaCHGlobal(disciplina, turmaId) {
     let sigla = '';
@@ -1814,7 +1806,6 @@ function handleAddManual() {
         let lastValidDateStr = inicio;
         // Obter feriados padrão
         const feriados = store.rawData?.feriados || [];
-        const blockedWeekdays = getBlockedWeekdaysForTurma(store.selectedTurma);
         const chkSabado = document.getElementById('chk-sabados');
         const usaSabado = chkSabado ? chkSabado.checked : false;
 
@@ -1846,9 +1837,8 @@ function handleAddManual() {
 
             const isHolidayObj = allHolidays.some(f => (f.data || f) === currentDateStr);
             const isWeekend = dow === 0 || (dow === 6 && !usaSabado);
-            const isBlockedWeekday = blockedWeekdays.includes(dow);
 
-            if (!isHolidayObj && !isWeekend && !isBlockedWeekday) {
+            if (!isHolidayObj && !isWeekend) {
                 // Dia útil! Conta quantos slots a Intensiva consegue colocar aqui.
                 const slotsToGive = Math.min(slotsIntensiva.length, effectiveCH - hoursAccumulated);
                 hoursAccumulated += slotsToGive;

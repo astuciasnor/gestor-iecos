@@ -314,15 +314,11 @@ export function getCalendarEvents(turmaId, startDate, endDate, docenteFilter = n
       let cursor = new Date(intense.dataInicio + 'T12:00:00');
       const targetDate = new Date(dateStr + 'T12:00:00');
 
-      // Descobre dias da semana bloqueados por padrão na turma
-      const blockedWeekdaysForTurmaSet = new Set(getBlockedWeekdaysForTurma(intense.turmaId));
-
       while (cursor < targetDate) {
         const cStr = cursor.toISOString().split('T')[0];
         const dow = cursor.getDay();
-        const isBlockedWeekday = blockedWeekdaysForTurmaSet.has(dow);
 
-        if (isBusinessDay(cStr, intense.usaSabado) && !isBlockedWeekday) {
+        if (isBusinessDay(cStr, intense.usaSabado)) {
           // Verifica quais Prioritárias estavam ativas NESTE dia específico
           const activePrioOnDay = allPriorityRegulars.filter(p => {
             if (String(p.turmaId) !== String(intense.turmaId)) return false;
