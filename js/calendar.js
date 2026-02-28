@@ -294,11 +294,8 @@ export function getCalendarEvents(turmaId, startDate, endDate, docenteFilter = n
       // ATUALIZAÇÃO 4D: Se for sábado e a intensiva NÃO permite sábado, pula!
       if (dayOfWeek === 6 && !intense.usaSabado) return;
 
-      // ** CHECK SUPRESSÃO VISUAL (HOJE) **
-      // Se houver QUALQUER prioritária para esta turma hoje, a intensiva é suspensa o dia todo (TOLERÂNCIA ZERO)
-      if (turmasWithPriorityToday.has(String(intense.turmaId))) {
-        return;
-      }
+      // ** REMOVIDO SUPRESSÃO VISUAL DO DIA INTEIRO **
+      // A Intensiva pode pintar hoje, mas APENAS os slots que não batem com a Prioritária.
 
       const slots = intense.horariosOcupados || [];
       const slotsPerDay = slots.length;
@@ -328,15 +325,23 @@ export function getCalendarEvents(turmaId, startDate, endDate, docenteFilter = n
             return cStr >= pStart && cStr <= pEnd;
           });
 
-          // Se tiver QUALQUER prioritária neste dia (para a mesma turma), a intensiva não contabiliza horas
-          if (activePrioOnDay.length === 0) {
-            hoursBeforeToday += slots.length;
-          }
+          // Apenas slots livres (que não colidem com Prioritárias NESTE dia) contam horas
+          const blockedSlotsOnDay = activePrioOnDay.map(p => normalizeTime(p.horario));
+          const availableSlotsOnDay = slots.filter(s => !blockedSlotsOnDay.includes(s));
+
+          hoursBeforeToday += availableSlotsOnDay.length;
         }
         cursor.setDate(cursor.getDate() + 1);
       }
 
-      slots.forEach((slotTime, slotIndex) => {
+      // Descobre quais slots estão bloqueados HOJE pela Prioritária
+      const priorityHojeParaTurma = activeGlobalPriority.filter(p => String(p.turmaId) === String(intense.turmaId));
+      const blockedSlotsHoje = priorityHojeParaTurma.map(p => normalizeTime(p.horario));
+
+      // Filtra os slots exatos que a intensiva PODE pintar hoje
+      const availableSlotsHoje = slots.filter(s => !blockedSlotsHoje.includes(s));
+
+      availableSlotsHoje.forEach((slotTime, slotIndex) => {
         // SE ESTE SLOT NÃO PERTENCE À CARGA RESIDUAL ÍMPAR QUE SOBROU NO ÚLTIMO DIA, PULAR.
         if (intense.horariosUltimoDia && intense.horariosUltimoDia.length > 0 && dateStr === intense.dataFim) {
           if (!intense.horariosUltimoDia.includes(slotTime)) return;

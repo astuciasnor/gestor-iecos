@@ -1809,57 +1809,50 @@ function handleAddManual() {
         const chkSabado = document.getElementById('chk-sabados');
         const usaSabado = chkSabado ? chkSabado.checked : false;
 
-        // Pré-calcular feriados dinâmicos (Regular Prioritária da Turma - Tolerância Zero: o dia inteiro é bloqueado)
-        const priorityHolidays = [];
-        store.allocations.forEach(a => {
-            if (String(a.turmaId) === String(store.selectedTurma) && a.tipo === 'regular_prioritaria') {
-                let tempDate = new Date((a.dataInicio || store.settings.termStart) + 'T12:00:00');
-                const endDate = new Date((a.dataFim || store.settings.termEnd || '2099-12-31') + 'T12:00:00');
-                let limit = 180;
-                while (tempDate <= endDate && limit > 0) {
-                    if (tempDate.getDay() === parseInt(a.diaSemana)) {
-                        priorityHolidays.push(tempDate.toISOString().split('T')[0]);
-                    }
-                    tempDate.setDate(tempDate.getDate() + 1);
-                    limit--;
-                }
-            }
-        });
-
-        const allHolidays = [...feriados, ...priorityHolidays];
         let remainingSlotsOnLastDay = slotsIntensiva.length;
         let iterationLimit = 365;
+        let horariosUltimoDia = [];
 
         // Itera de dia em dia até a carga horária ser preenchida
         while (hoursAccumulated < effectiveCH && iterationLimit > 0) {
             currentDateStr = currentCursor.toISOString().split('T')[0];
             const dow = currentCursor.getDay();
 
-            const isHolidayObj = allHolidays.some(f => (f.data || f) === currentDateStr);
+            const isHolidayObj = feriados.some(f => (f.data || f) === currentDateStr);
             const isWeekend = dow === 0 || (dow === 6 && !usaSabado);
 
             if (!isHolidayObj && !isWeekend) {
-                // Dia útil! Conta quantos slots a Intensiva consegue colocar aqui.
-                const slotsToGive = Math.min(slotsIntensiva.length, effectiveCH - hoursAccumulated);
-                hoursAccumulated += slotsToGive;
-                remainingSlotsOnLastDay = slotsToGive;
-                lastValidDateStr = currentDateStr;
+                // Descobre quais slots de Prioritárias existem para essa turma NESTE DIA
+                const blockedSlotsToday = [];
+                store.allocations.forEach(a => {
+                    if (String(a.turmaId) === String(store.selectedTurma) && a.tipo === 'regular_prioritaria' && parseInt(a.diaSemana) === dow) {
+                        const aStart = a.dataInicio || store.settings.termStart || '0000-00-00';
+                        const aEnd = a.dataFim || store.settings.termEnd || '2099-12-31';
+                        if (currentDateStr >= aStart && currentDateStr <= aEnd) {
+                            blockedSlotsToday.push(a.horario);
+                        }
+                    }
+                });
+
+                // Slots que a intensiva pode usar hoje (aqueles que não conflitam com prioritária)
+                const availableSlotsToday = slotsIntensiva.filter(s => !blockedSlotsToday.includes(s));
+
+                if (availableSlotsToday.length > 0) {
+                    const slotsToGive = Math.min(availableSlotsToday.length, effectiveCH - hoursAccumulated);
+                    hoursAccumulated += slotsToGive;
+                    remainingSlotsOnLastDay = slotsToGive;
+                    horariosUltimoDia = availableSlotsToday.slice(0, slotsToGive);
+                    lastValidDateStr = currentDateStr;
+                }
             }
 
-            currentCursor.setDate(currentCursor.getDate() + 1);
-            iterationLimit--;
+            if (hoursAccumulated < effectiveCH) {
+                currentCursor.setDate(currentCursor.getDate() + 1);
+                iterationLimit--;
+            }
         }
 
         const dataFimCalculada = lastValidDateStr;
-
-        // ==========================================
-        // NOVO: DEFINE EXATAMENTE OS SLOTS DO ÚLTIMO DIA
-        // ==========================================
-        let horariosUltimoDia = slotsIntensiva;
-        if (remainingSlotsOnLastDay < slotsIntensiva.length && remainingSlotsOnLastDay > 0) {
-            horariosUltimoDia = slotsIntensiva.slice(0, remainingSlotsOnLastDay);
-        }
-        // ==========================================
 
         const intensiveConflict = store.allocations.find(a => {
             if (String(a.turmaId) !== String(store.selectedTurma)) return false;
