@@ -537,39 +537,39 @@ function getDocenteData() {
     }
 }
 
-function renderIntensiveSlots() {
-    const container = document.getElementById('slots-checkboxes');
-    if (!container) return;
+// ==========================================
+// INTERACTIVE DRAWING MODE (FAIXAS)
+// ==========================================
+window.isDrawingFaixa = null; // null or 1, 2, 3
+window.drawnFaixas = {
+    1: [], // Array of objects: { dia: 1..6, slot: '07h30' }
+    2: [],
+    3: []
+};
 
-    container.innerHTML = '';
+function activateDrawingMode(faixaIndex) {
+    window.isDrawingFaixa = faixaIndex;
+    document.getElementById('drawing-faixa-name').textContent = `Faixa ${faixaIndex}`;
+    document.getElementById('drawing-toolbar').classList.remove('hidden');
 
-    const slots = buildHorariosForUI();
-    const validSlots = slots
-        .filter(s => !s.toLowerCase().includes('intervalo'))
-        .sort((a, b) => timeToMinutes(a) - timeToMinutes(b));
+    // Switch to weekly tab automatically
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+    document.querySelector('.tab-btn[data-tab="weekly"]').classList.add('active');
+    document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+    document.getElementById('tab-weekly').classList.add('active');
 
-    validSlots.forEach((slotLabel) => {
-        const wrapper = document.createElement('label');
-        const checkbox = document.createElement('input');
-        checkbox.type = 'checkbox';
-        checkbox.value = slotLabel;
-        checkbox.checked = true;
-        wrapper.appendChild(checkbox);
-        wrapper.appendChild(document.createTextNode(slotLabel));
-        container.appendChild(wrapper);
-    });
+    // Force re-render of the weekly grid to show drawing hitboxes
+    renderWeeklyGrid();
+
+    showToastInfo(`Modo Desenho Ativo: Pinte a Faixa ${faixaIndex} na grade abaixo.`);
 }
 
-function getCheckedSlots() {
-    const container = document.getElementById('slots-checkboxes');
-    if (!container) return [];
+function deactivateDrawingMode() {
+    window.isDrawingFaixa = null;
+    document.getElementById('drawing-toolbar').classList.add('hidden');
 
-    const checked = [];
-    container.querySelectorAll('input[type="checkbox"]:checked').forEach(cb => {
-        checked.push(cb.value);
-    });
-
-    return checked;
+    // Force re-render to clean up hitboxes
+    renderWeeklyGrid();
 }
 
 
@@ -1123,39 +1123,110 @@ export function initUI() {
 
     if (inputConfig.tipo) {
         inputConfig.tipo.addEventListener('change', (e) => {
-            const divDataEl = document.getElementById('datas-intensiva');
-            const divSlots = document.getElementById('container-slots-selection');
+            const faixasContainer = document.getElementById('container-faixas-intensiva');
             const isIntensive = (e.target.value === 'intensiva');
 
-            divDataEl.classList.remove('hidden');
-
             if (isIntensive) {
-                divSlots.classList.remove('hidden');
+                if (faixasContainer) faixasContainer.classList.remove('hidden');
                 renderIntensiveSlots();
 
-                // Mostrar container dos dias da semana
-                const containerDias = document.getElementById('container-dias-semana-intensiva');
-                if (containerDias) containerDias.style.display = 'block';
-
-                // Reset Padrão: Seg a Sex marcados, Sab desmarcado
+                // Reset Faixa 1 Padrão: Seg a Sex marcados, Sab desmarcado
                 for (let i = 1; i <= 5; i++) {
-                    const chk = document.getElementById(`chk-dia-${i}`);
+                    const chk = document.getElementById(`chk-dia-f1-${i}`);
                     if (chk) chk.checked = true;
                 }
-                const chkSaber = document.getElementById('chk-dia-6');
+                const chkSaber = document.getElementById('chk-dia-f1-6');
                 if (chkSaber) chkSaber.checked = false;
 
+                // Ocultar faixas extras
+                document.getElementById('faixa-2')?.classList.add('hidden');
+                document.getElementById('faixa-3')?.classList.add('hidden');
             } else {
-                divSlots.classList.add('hidden');
-
-                // Ocultar container dos dias da semana
-                const containerDias = document.getElementById('container-dias-semana-intensiva');
-                if (containerDias) containerDias.style.display = 'none';
+                if (faixasContainer) faixasContainer.classList.add('hidden');
             }
 
-            if (store.settings.termStart && inputConfig.inicio) {
-                inputConfig.inicio.value = store.settings.termStart;
+            const inpInicioF1 = document.getElementById('inp-data-inicio-f1');
+            if (store.settings.termStart && inpInicioF1) {
+                inpInicioF1.value = store.settings.termStart;
             }
+        });
+    }
+
+    // Lógica para Adicionar e Remover Faixas
+    const btnAddFaixa = document.getElementById('btn-add-faixa');
+    if (btnAddFaixa) {
+        btnAddFaixa.addEventListener('click', () => {
+            const f2 = document.getElementById('faixa-2');
+            const f3 = document.getElementById('faixa-3');
+            if (f2 && f2.classList.contains('hidden')) {
+                f2.classList.remove('hidden');
+                document.getElementById('inp-data-inicio-f2').focus();
+            } else if (f3 && f3.classList.contains('hidden')) {
+                f3.classList.remove('hidden');
+                document.getElementById('inp-data-inicio-f3').focus();
+            } else {
+                showToastWarning('⚠️ <b>Limite atingido:</b> O máximo permitido são 3 faixas.', 'warning', 3000);
+            }
+        });
+    }
+
+    document.querySelectorAll('.btn-remove-faixa').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const targetId = e.target.getAttribute('data-target');
+            const faixa = document.getElementById(targetId);
+            if (faixa) {
+                faixa.classList.add('hidden');
+                document.getElementById(`inp-data-inicio-${targetId.replace('faixa-', 'f')}`).value = '';
+            }
+        });
+    });
+
+    // ==========================================
+    // INICIAR DESENHADORES DA GRADE (FAIXAS)
+    // ==========================================
+    document.querySelectorAll('.btn-draw-faixa').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            // Se o usuário não definiu curso e turma, avisar
+            if (!store.selectedTurma) {
+                showToastWarning('Selecione um curso e turma antes de desenhar na grade.', 'warning');
+                return;
+            }
+            const fIndex = parseInt(e.currentTarget.getAttribute('data-faixa'));
+            activateDrawingMode(fIndex);
+        });
+    });
+
+    const btnCancelDraw = document.getElementById('btn-cancel-draw');
+    if (btnCancelDraw) {
+        btnCancelDraw.addEventListener('click', () => {
+            // Restore previous drawn state or clear if unsaved? We'll just deactivate for now.
+            deactivateDrawingMode();
+        });
+    }
+
+    const btnSaveDraw = document.getElementById('btn-save-draw');
+    if (btnSaveDraw) {
+        btnSaveDraw.addEventListener('click', () => {
+            if (!window.isDrawingFaixa) return;
+
+            const fIndex = window.isDrawingFaixa;
+            const blockCount = window.drawnFaixas[fIndex]?.length || 0;
+
+            // Atualizar o texto na sidebar
+            const labelEl = document.getElementById(`status-draw-f${fIndex}`);
+            if (labelEl) {
+                labelEl.textContent = `${blockCount} horários definidos`;
+                labelEl.style.color = blockCount > 0 ? '#27ae60' : '#e74c3c';
+            }
+
+            showToastSuccess(`Grade da Faixa ${fIndex} salva com sucesso!`);
+            deactivateDrawingMode();
+
+            // Return to tab-home (General form)
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelector('.tab-btn[data-tab="tab-home"]').classList.add('active');
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            document.getElementById('tab-home').classList.add('active');
         });
     }
 
@@ -1568,7 +1639,46 @@ function renderWeeklyGrid() {
 
                 if (allocs.length > 0) renderSlotContent(cell, allocs);
 
-                cell.addEventListener('click', () => handleSlotClick(i, horarioStr));
+                // If drawing mode is active, handle drawing logic instead of normal slot click
+                if (window.isDrawingFaixa) {
+                    const fIndex = window.isDrawingFaixa;
+                    const drawnArray = window.drawnFaixas[fIndex];
+                    const isAlreadyDrawn = drawnArray.some(s => s.dia === i && s.slot === horarioStr);
+
+                    if (isAlreadyDrawn) {
+                        cell.style.background = '#f39c12'; // Highlight drawn cell
+                        cell.style.border = '2px dashed #d35400';
+                    }
+
+                    if (allocs.length === 0) { // Only allow drawing on empty slots
+                        cell.style.cursor = 'pointer';
+                        cell.title = "Clique para desenhar/apagar este horário na Faixa " + fIndex;
+                        cell.onmousedown = (e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            console.log('Drawing click detected on', i, horarioStr);
+                            const indexExists = drawnArray.findIndex(s => s.dia === i && s.slot === horarioStr);
+                            if (indexExists >= 0) {
+                                // Apagar
+                                drawnArray.splice(indexExists, 1);
+                                cell.style.background = '';
+                                cell.style.border = '';
+                            } else {
+                                // Desenhar
+                                drawnArray.push({ dia: i, slot: horarioStr });
+                                cell.style.background = '#f39c12';
+                                cell.style.border = '2px dashed #d35400';
+                            }
+                        };
+                    } else {
+                        cell.style.opacity = '0.5'; // Lockboxes (semi-transparent) for busy slots
+                        cell.style.pointerEvents = 'none';
+                    }
+                } else {
+                    // Normal clicking behavior
+                    cell.addEventListener('click', () => handleSlotClick(i, horarioStr));
+                }
+
                 gridContainer.appendChild(cell);
             }
         }
@@ -1625,6 +1735,9 @@ function renderSlotContent(cell, allocs) {
 }
 
 function handleSlotClick(dia, horario) {
+    // 🛡️ Prevenção absoluta: se estiver desenhando, JAMAIS permitir que o clique gere lógicas regulares
+    if (window.isDrawingFaixa) return;
+
     if (!store.selectedTurma) return alert('Selecione uma turma.');
 
     const disciplina = (inputConfig.disciplina?.value ?? '').replace(/\s*\(\s*\d+\s*h\s*\)\s*$/i, '');
@@ -1641,7 +1754,9 @@ function handleSlotClick(dia, horario) {
     }
 
     const tipo = inputConfig.tipo?.value ?? 'regular';
-    if (tipo === 'intensiva') return alert('Para intensivas, configure as datas no menu e clique em "Adicionar à Grade".');
+    if (tipo === 'intensiva') {
+        return alert('Para alocar Intensivas: \n\n1. Informe a Data Inicial na "Faixa 1" \n2. Clique no botão azul "🖌️ Desenhar Padrão..." \n3. Pinte diretamente os horários vazios na grade!');
+    }
 
     const existingInSlot = store.allocations.filter(a =>
         String(a.turmaId) === String(store.selectedTurma) &&
@@ -1790,7 +1905,8 @@ function handleAddManual() {
     const docData = getDocenteData();
     if (!docData.isValid) return alert('Preencha o(s) Docente(s).');
 
-    const disciplina = (inputConfig.disciplina?.value ?? '').replace(/\s*\(\s*\d+\s*h\s*\)\s*$/i, '');
+    // Remove the '(XXh)' and any trailing characters that might accidentally be typed/appended
+    const disciplina = (inputConfig.disciplina?.value ?? '').replace(/\s*\(\s*\d+\s*h\s*\).*$/i, '').trim();
     const tipo = inputConfig.tipo?.value ?? 'regular';
     const inicio = inputConfig.inicio?.value ?? '';
     const subGrupo = (document.getElementById('inp-sub-turma')?.value ?? '').trim();
@@ -1799,8 +1915,6 @@ function handleAddManual() {
     if (!disciplina) return alert('Preencha o componente.');
 
     if (tipo === 'intensiva') {
-        if (!inicio) return alert('Defina a data de início.');
-
         const info = getDisciplinaInfo(disciplina);
         const ch = info.ch || 0;
         if (ch === 0) return alert(`O componente "${disciplina}" tem CH 0.`);
@@ -1808,70 +1922,127 @@ function handleAddManual() {
             return alert(`A soma das cargas horárias excede a CH da disciplina.`);
         }
 
-        let slotsIntensiva = getCheckedSlots();
-        if (slotsIntensiva.length === 0) return alert('Selecione pelo menos um horário.');
+        const faixasData = [];
+        for (let f = 1; f <= 3; f++) {
+            const elFaixa = document.getElementById(`faixa-${f}`);
+            if (elFaixa && !elFaixa.classList.contains('hidden')) {
+                const fInicio = document.getElementById(`inp-data-inicio-f${f}`)?.value;
+                if (!fInicio) return alert(`Defina a data de início da Faixa ${f}.`);
 
+                const drawnItems = window.drawnFaixas[f] || [];
+                if (drawnItems.length === 0) return alert(`A Faixa ${f} não possui horários desenhados na Grade. Clique no botão "Desenhar Padrão" e selecione os horários.`);
+
+                const fDiasSet = new Set();
+                const fSlotsSet = new Set();
+                const drawnSlotsByDay = {};
+
+                drawnItems.forEach(item => {
+                    fDiasSet.add(item.dia);
+                    fSlotsSet.add(item.slot);
+
+                    if (!drawnSlotsByDay[item.dia]) {
+                        drawnSlotsByDay[item.dia] = [];
+                    }
+                    drawnSlotsByDay[item.dia].push(item.slot);
+                });
+
+                const fDias = Array.from(fDiasSet).sort((a, b) => a - b);
+                const fSlots = Array.from(fSlotsSet).sort((a, b) => timeToMinutes(a) - timeToMinutes(b));
+
+                Object.keys(drawnSlotsByDay).forEach(dia => {
+                    drawnSlotsByDay[dia].sort((a, b) => timeToMinutes(a) - timeToMinutes(b));
+                });
+
+                faixasData.push({
+                    inicio: fInicio,
+                    slots: fSlots,
+                    dias: fDias,
+                    drawnSlotsByDay: drawnSlotsByDay
+                });
+            }
+        }
+
+        if (faixasData.length === 0) return alert('Nenhuma faixa configurada para a disciplina Intensiva.');
+
+        // Ordenar faixas cronologicamente (básico)
+        faixasData.sort((a, b) => a.inicio.localeCompare(b.inicio));
+
+        const dataInicioReal = faixasData[0].inicio;
         let effectiveCH = ch;
-        // ==========================================
-        // NOVO: CALCULAR DATA FIM ITERANDO PELOS DIAS MARCADOS MANUALMENTE (Ignora Prioritárias)
-        // ==========================================
-
-        let diasMarcados = [];
-        for (let i = 1; i <= 6; i++) {
-            const chk = document.getElementById(`chk-dia-${i}`);
-            if (chk && chk.checked) diasMarcados.push(i);
-        }
-
-        if (diasMarcados.length === 0) {
-            return alert('Selecione pelo menos um dia da semana permitido para a Intensiva!');
-        }
 
         let hoursAccumulated = 0;
-        let currentDateStr = inicio;
-        let currentCursor = new Date(inicio + "T12:00:00");
+        let currentDateStr = dataInicioReal;
+        let currentCursor = new Date(dataInicioReal + "T12:00:00");
 
-        let lastValidDateStr = inicio;
-        // Obter feriados padrão
+        let lastValidDateStr = dataInicioReal;
         const feriados = store.rawData?.feriados || [];
 
-        let remainingSlotsOnLastDay = slotsIntensiva.length;
-        let iterationLimit = 365;
+        let currentFaixaIndex = 0;
+        let activeFaixa = faixasData[0];
+        let remainingSlotsOnLastDay = activeFaixa.slots.length;
         let horariosUltimoDia = [];
+        let iterationLimit = 365;
 
-        // Itera de dia em dia até a carga horária ser preenchida
+        console.log(`[DEBUG GEN] Starting calculation for CH: ${effectiveCH}. F1 starts: ${faixasData[0].inicio}`);
+        if (faixasData[1]) console.log(`[DEBUG GEN] F2 starts: ${faixasData[1].inicio}`);
+
+        // Motor Quântico de Avanço de Faixas
         while (hoursAccumulated < effectiveCH && iterationLimit > 0) {
             currentDateStr = currentCursor.toISOString().split('T')[0];
-            const dow = currentCursor.getDay();
 
+            let prevFaixaIdx = currentFaixaIndex;
+
+            // Muda de marcha se cruzou a data da próxima faixa
+            while (currentFaixaIndex + 1 < faixasData.length && currentDateStr >= faixasData[currentFaixaIndex + 1].inicio) {
+                currentFaixaIndex++;
+                activeFaixa = faixasData[currentFaixaIndex];
+            }
+
+            const dow = currentCursor.getDay();
             const isHolidayObj = feriados.some(f => (f.data || f) === currentDateStr);
 
-            // Um dia só conta se NÃO for feriado E se o dia da semana foi MARCADO pelo usuário
-            if (!isHolidayObj && diasMarcados.includes(dow)) {
+            if (!isHolidayObj && activeFaixa.dias.includes(dow)) {
+                // Get exactly the slots drawn for THIS specific day, fallback to general slots for backwards compatibility
+                const slotsOfToday = activeFaixa.drawnSlotsByDay ? (activeFaixa.drawnSlotsByDay[dow] || []) : activeFaixa.slots;
+                const slotsToGive = Math.min(slotsOfToday.length, effectiveCH - hoursAccumulated);
 
-                const slotsToGive = Math.min(slotsIntensiva.length, effectiveCH - hoursAccumulated);
-                hoursAccumulated += slotsToGive;
-                remainingSlotsOnLastDay = slotsToGive;
-                horariosUltimoDia = slotsIntensiva.slice(0, slotsToGive);
-                lastValidDateStr = currentDateStr;
+                console.log(`[DEBUG GEN] ${currentDateStr} (Dow ${dow}) -> F${currentFaixaIndex + 1} active. slotsOfToday len: ${slotsOfToday.length}. Giving: ${slotsToGive}. Acc: ${hoursAccumulated + slotsToGive}`);
 
+                if (slotsToGive > 0) {
+                    hoursAccumulated += slotsToGive;
+                    remainingSlotsOnLastDay = slotsToGive;
+                    horariosUltimoDia = slotsOfToday.slice(0, slotsToGive);
+                    lastValidDateStr = currentDateStr;
+                }
+            } else {
+                console.log(`[DEBUG GEN] ${currentDateStr} (Dow ${dow}) -> F${currentFaixaIndex + 1} SKIP! include? ${activeFaixa.dias.includes(dow)} hol? ${isHolidayObj}`);
             }
 
             if (hoursAccumulated < effectiveCH) {
                 currentCursor.setDate(currentCursor.getDate() + 1);
                 iterationLimit--;
+            } else {
+                console.log(`[DEBUG GEN] Finished accumulating! Accumulated: ${hoursAccumulated} >= ${effectiveCH}`);
             }
         }
 
+        console.log(`[DEBUG GEN] Final lastValidDateStr = ${lastValidDateStr}, Acc: ${hoursAccumulated}`);
+
         const dataFimCalculada = lastValidDateStr;
+
+        // Para retrocompatibilidade pontual na função addManual
+        const allUsedSlots = [...new Set(faixasData.map(f => f.slots).flat())];
+        const allUsedDias = [...new Set(faixasData.map(f => f.dias).flat())];
 
         const intensiveConflict = store.allocations.find(a => {
             if (String(a.turmaId) !== String(store.selectedTurma)) return false;
             if (a.tipo !== 'intensiva' || a.disciplina === disciplina) return false;
-            return hasIntensiveSlotConflict(inicio, dataFimCalculada, slotsIntensiva, a.dataInicio || store.settings.termStart, a.dataFim || store.settings.termEnd, a.horariosOcupados);
+            // Verificação Simplificada de Choque entre intensivas
+            return hasIntensiveSlotConflict(dataInicioReal, dataFimCalculada, allUsedSlots, a.dataInicio || store.settings.termStart, a.dataFim || store.settings.termEnd, a.horariosOcupados || []);
         });
 
         if (intensiveConflict) {
-            return alert(`❌ CHOQUE DE HORÁRIO!\n\nA Intensiva de "${intensiveConflict.disciplina}" já está utilizando este(s) horário(s) no mesmo período. A ação foi bloqueada.`);
+            return alert(`❌ CHOQUE DE HORÁRIO!\n\nA Intensiva de "${intensiveConflict.disciplina}" utiliza faixas conflitantes neste período. A ação foi bloqueada.`);
         }
 
         // ==== BARREIRA GLOBAL DO PROFESSOR (INTENSIVA) ====
@@ -1891,13 +2062,13 @@ function handleAddManual() {
 
                 const aStart = a.dataInicio || store.settings.termStart;
                 const aEnd = a.dataFim || store.settings.termEnd;
-                if (!isDateOverlap(inicio, dataFimCalculada, aStart, aEnd)) return false;
+                if (!isDateOverlap(dataInicioReal, dataFimCalculada, aStart, aEnd)) return false;
 
                 if (a.tipo === 'intensiva') {
-                    return hasIntensiveSlotConflict(inicio, dataFimCalculada, slotsIntensiva, aStart, aEnd, a.horariosOcupados);
+                    return hasIntensiveSlotConflict(dataInicioReal, dataFimCalculada, allUsedSlots, aStart, aEnd, a.horariosOcupados || []);
                 } else {
-                    if (slotsIntensiva.includes(a.horario)) {
-                        if (parseInt(a.diaSemana) === 6 && !usaSabado) return false;
+                    if (allUsedSlots.includes(a.horario)) {
+                        if (parseInt(a.diaSemana) === 6 && !allUsedDias.includes(6)) return false;
                         return true;
                     }
                     return false;
@@ -1916,7 +2087,7 @@ function handleAddManual() {
         let idToRemove = null;
         const conflitoIntensiva = store.allocations.find(a => {
             if (String(a.turmaId) === String(store.selectedTurma) && a.disciplina === disciplina) {
-                if (a.tipo === 'intensiva' && isDateOverlap(inicio, dataFimCalculada, a.dataInicio || store.settings.termStart, a.dataFim || store.settings.termEnd)) return true;
+                if (a.tipo === 'intensiva' && isDateOverlap(dataInicioReal, dataFimCalculada, a.dataInicio || store.settings.termStart, a.dataFim || store.settings.termEnd)) return true;
                 return a.tipo !== 'intensiva';
             }
             return false;
@@ -1925,21 +2096,20 @@ function handleAddManual() {
         if (conflitoIntensiva) idToRemove = conflitoIntensiva.id;
 
         const actionText = idToRemove ? "Atualizar alocação existente?" : "Confirmar alocação?";
-        if (!confirm(`${disciplina} (${formatDateBR(inicio)} a ${formatDateBR(dataFimCalculada)})\n\n${actionText}`)) return;
+        if (!confirm(`${disciplina} (${formatDateBR(dataInicioReal)} a ${formatDateBR(dataFimCalculada)})\n\n${actionText}`)) return;
 
         if (idToRemove) store.removeAllocation(idToRemove);
 
         const affectedRegulars = [];
         store.allocations.forEach(a => {
             if (String(a.turmaId) !== String(store.selectedTurma)) return;
-            // A Intensiva NÃO afeta/empurra Disciplinas Prioritárias (Chefonas)
             if (a.tipo !== 'regular') return;
 
             const sReg = a.dataInicio || store.settings.termStart;
             const eReg = a.dataFim || store.settings.termEnd;
 
-            if (isDateOverlap(inicio, dataFimCalculada, sReg, eReg)) {
-                if (slotsIntensiva.includes(a.horario)) {
+            if (isDateOverlap(dataInicioReal, dataFimCalculada, sReg, eReg)) {
+                if (allUsedSlots.includes(a.horario)) {
                     if (!affectedRegulars.includes(a.disciplina)) {
                         affectedRegulars.push(a.disciplina);
                     }
@@ -1954,13 +2124,14 @@ function handleAddManual() {
             docentes: docData.docentesList,
             tipo: 'intensiva',
             ch: effectiveCH,
-            dataInicio: inicio,
+            dataInicio: dataInicioReal,
             dataFim: dataFimCalculada,
             modelo: 'Automático',
-            horariosOcupados: slotsIntensiva,
+            horariosOcupados: allUsedSlots,
             horariosUltimoDia: horariosUltimoDia,
-            diasMarcados: diasMarcados,   // Array de dias da semana explícitos [1,2,3,4,5]
-            subGrupo: subGrupo || null,   // Sub-grupo da turma (ex: '01', '02')
+            diasMarcados: allUsedDias,
+            faixas: faixasData, // NOVO: Matriz de faixas injetada permanentemente
+            subGrupo: subGrupo || null,
             cor: inputConfig.cor ? inputConfig.cor.value : store.getDisciplinaColor(disciplina)
         });
 
@@ -2053,33 +2224,52 @@ function renderOfertasList() {
             details = `${numAulasBase} semanas`;
         } else {
             // CÁLCULO DINÂMICO DE HORAS (INTENSIVA): 
-            // Varre o período e soma slots reais, respeitando suspensões por Prioritárias.
             let totalHorasIntensiva = 0;
             let current = new Date(start + 'T12:00:00');
             const endObj = new Date(end + 'T12:00:00');
             const feriadosSet = new Set(feriados.map(f => (f.data || f)));
-            const slots = a.horariosOcupados || [];
-            const priorityRegulars = list.filter(p => p.tipo === 'regular_prioritaria');
 
             let dayCount = 0;
-            // Retaguarda de segurança: se for grade antiga sem 'diasMarcados', permite uso de Sabado pela flag antiga ou default Seg-Sáb
-            const diasPermitidos = Array.isArray(a.diasMarcados) ? a.diasMarcados : (a.usaSabado ? [1, 2, 3, 4, 5, 6] : [1, 2, 3, 4, 5, 6]);
+
+            // Retrocompatibilidade para disciplinas velhas
+            let faixasToUse = [];
+            if (a.faixas && a.faixas.length > 0) {
+                faixasToUse = [...a.faixas].sort((x, y) => x.inicio.localeCompare(y.inicio));
+            } else {
+                const diasFallback = Array.isArray(a.diasMarcados) ? a.diasMarcados : (a.usaSabado ? [1, 2, 3, 4, 5, 6] : [1, 2, 3, 4, 5, 6]);
+                faixasToUse = [{
+                    inicio: start,
+                    slots: a.horariosOcupados || [],
+                    dias: diasFallback
+                }];
+            }
+
+            let currentFaixaIndex = 0;
+            let activeFaixa = faixasToUse[0];
 
             while (current <= endObj) {
                 const dStr = current.toISOString().split('T')[0];
-                const dow = current.getDay();
 
+                // Mudar marcha na Faixa baseando no dia iterado
+                while (currentFaixaIndex + 1 < faixasToUse.length && dStr >= faixasToUse[currentFaixaIndex + 1].inicio) {
+                    currentFaixaIndex++;
+                    activeFaixa = faixasToUse[currentFaixaIndex];
+                }
+
+                const dow = current.getDay();
                 const isHoliday = feriadosSet.has(dStr);
 
-                // O dia só é válido se não for feriado E estiver marcado no array diasPermitidos da disciplina
-                if (!isHoliday && diasPermitidos.includes(dow)) {
-                    if (slots.length > 0 && totalHorasIntensiva < chMax) {
-                        dayCount++;
-                        const diff = chMax - totalHorasIntensiva;
-                        if (dStr === end && a.horariosUltimoDia && a.horariosUltimoDia.length > 0) {
-                            totalHorasIntensiva += Math.min(a.horariosUltimoDia.length, diff);
-                        } else {
-                            totalHorasIntensiva += Math.min(slots.length, diff);
+                if (!isHoliday && activeFaixa.dias.includes(dow)) {
+                    const dowSlots = activeFaixa.drawnSlotsByDay ? (activeFaixa.drawnSlotsByDay[dow] || []) : activeFaixa.slots;
+                    if (dowSlots.length > 0) {
+                        if (totalHorasIntensiva < chMax) {
+                            dayCount++;
+                            const diff = chMax - totalHorasIntensiva;
+                            if (dStr === end && a.horariosUltimoDia && a.horariosUltimoDia.length > 0) {
+                                totalHorasIntensiva += Math.min(a.horariosUltimoDia.length, diff);
+                            } else {
+                                totalHorasIntensiva += Math.min(dowSlots.length, diff);
+                            }
                         }
                     }
                 }
@@ -2216,6 +2406,41 @@ function renderOfertasList() {
                     if (a.tipo === 'intensiva') {
                         const chkSabado = document.getElementById('chk-sabados');
                         if (chkSabado) chkSabado.checked = !!a.usaSabado;
+
+                        if (a.faixas && a.faixas.length > 0) {
+                            window.drawnFaixas = { 1: [], 2: [], 3: [] };
+                            a.faixas.forEach((fData, index) => {
+                                const f = index + 1;
+                                if (f > 3) return;
+
+                                const elFaixa = document.getElementById(`faixa-${f}`);
+                                if (elFaixa) elFaixa.classList.remove('hidden');
+
+                                const inpInicio = document.getElementById(`inp-data-inicio-f${f}`);
+                                if (inpInicio) inpInicio.value = fData.inicio;
+
+                                const restoredSlots = [];
+                                if (fData.drawnSlotsByDay) {
+                                    Object.keys(fData.drawnSlotsByDay).forEach(dia => {
+                                        fData.drawnSlotsByDay[dia].forEach(slot => {
+                                            restoredSlots.push({ dia: parseInt(dia), slot: slot });
+                                        });
+                                    });
+                                } else if (fData.slots && fData.dias) {
+                                    fData.dias.forEach(dia => {
+                                        fData.slots.forEach(slot => {
+                                            restoredSlots.push({ dia: parseInt(dia), slot: slot });
+                                        });
+                                    });
+                                }
+                                window.drawnFaixas[f] = restoredSlots;
+                            });
+
+                            const btnAddFaixa = document.getElementById('btn-add-faixa');
+                            if (btnAddFaixa && a.faixas.length >= 3) {
+                                btnAddFaixa.classList.add('hidden');
+                            }
+                        }
                     }
 
                     const chkMulti = document.getElementById('chk-multi-docente');
@@ -2882,11 +3107,30 @@ function detectGlobalTeacherConflicts() {
                 const regAlloc = a.tipo === 'intensiva' ? b : a;
                 const regDay = parseInt(regAlloc.diaSemana);
 
-                // Fallback de retrocompatibilidade
-                const diasPermitidos = Array.isArray(intAlloc.diasMarcados) ? intAlloc.diasMarcados : (intAlloc.usaSabado ? [1, 2, 3, 4, 5, 6] : [1, 2, 3, 4, 5, 6]);
+                const getActiveFaixaForDate = (intensivaObj, dStr) => {
+                    if (!intensivaObj.faixas || intensivaObj.faixas.length === 0) {
+                        const fallbackDias = Array.isArray(intensivaObj.diasMarcados) ? intensivaObj.diasMarcados : (intensivaObj.usaSabado ? [1, 2, 3, 4, 5, 6] : [1, 2, 3, 4, 5, 6]);
+                        // Mock drawnSlotsByDay applying to all dias
+                        const mockDrawnSlotsByDay = {};
+                        fallbackDias.forEach(d => mockDrawnSlotsByDay[d] = intensivaObj.horariosOcupados || []);
+                        return { inicio: intensivaObj.dataInicio, slots: intensivaObj.horariosOcupados || [], dias: fallbackDias, drawnSlotsByDay: mockDrawnSlotsByDay };
+                    }
+                    const faixasOrdem = [...intensivaObj.faixas].sort((a, b) => a.inicio.localeCompare(b.inicio));
+                    let active = faixasOrdem[0];
+                    for (let f of faixasOrdem) {
+                        if (dStr >= f.inicio) active = f;
+                        else break;
+                    }
+                    return active;
+                };
 
-                const isIntDayActive = diasPermitidos.includes(regDay);
-                if (isIntDayActive && intAlloc.horariosOcupados && intAlloc.horariosOcupados.includes(regAlloc.horario)) {
+                const activeFaixa = getActiveFaixaForDate(intAlloc, dataConflito);
+                const isIntDayActive = activeFaixa.dias.includes(regDay);
+
+                // Use the precise slots for the current day if drawnSlotsByDay exists, otherwise fallback to slots
+                const activeSlotsToday = activeFaixa.drawnSlotsByDay ? (activeFaixa.drawnSlotsByDay[regDay] || []) : activeFaixa.slots;
+
+                if (isIntDayActive && activeSlotsToday && activeSlotsToday.includes(regAlloc.horario)) {
                     isSlotConflict = true;
                     diaConflito = diasNomes[regDay] || regDay;
                     horarioConflito = regAlloc.horario;
