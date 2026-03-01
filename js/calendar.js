@@ -309,35 +309,46 @@ export function getCalendarEvents(turmaId, startDate, endDate, docenteFilter = n
 
 
     myActiveIntensives.forEach(intense => {
-      const activeFaixa = getActiveFaixaForDate(intense, dateStr);
-      if (!activeFaixa.dias.includes(dayOfWeek)) return;
-
-      const slotsToday = activeFaixa.drawnSlotsByDay ? (activeFaixa.drawnSlotsByDay[dayOfWeek] || []) : (activeFaixa.slots || []);
-      const slotsPerDay = slotsToday.length;
-
       // === CÁLCULO DE HORAS ACUMULADAS ===
       let hoursBeforeToday = 0;
       let cursor = new Date(intense.dataInicio + 'T12:00:00');
       const targetDate = new Date(dateStr + 'T12:00:00');
 
+      let faixasDataList = [{ inicio: intense.dataInicio, slots: intense.horariosOcupados || [], dias: intense.usaSabado ? [1, 2, 3, 4, 5, 6] : [1, 2, 3, 4, 5, 6] }];
+      if (intense.faixas && intense.faixas.length > 0) {
+        faixasDataList = [...intense.faixas].sort((a, b) => a.inicio.localeCompare(b.inicio));
+      }
+
+      let currentFaixaIdxCal = 0;
+      let activeFaixaCal = faixasDataList[0];
+
       while (cursor < targetDate) {
         const cStr = cursor.toISOString().split('T')[0];
+        if (currentFaixaIdxCal + 1 < faixasDataList.length && cStr >= faixasDataList[currentFaixaIdxCal + 1].inicio) {
+          currentFaixaIdxCal++;
+          activeFaixaCal = faixasDataList[currentFaixaIdxCal];
+        }
         const dow = cursor.getDay();
         const isHolidayObj = store.rawData?.feriados?.some(f => (f.data || f) === cStr);
-        const activeFaixaPrCursor = getActiveFaixaForDate(intense, cStr);
-
-        // Se o dia não for feriado E estiver marcado na Faixa ativa pra aquele dia:
-        if (!isHolidayObj && activeFaixaPrCursor.dias.includes(dow)) {
-          const pastSlotsToday = activeFaixaPrCursor.drawnSlotsByDay ? (activeFaixaPrCursor.drawnSlotsByDay[dow] || []) : (activeFaixaPrCursor.slots || []);
+        if (!isHolidayObj && activeFaixaCal.dias.includes(dow)) {
+          const pastSlotsToday = activeFaixaCal.drawnSlotsByDay ? (activeFaixaCal.drawnSlotsByDay[dow] || []) : (activeFaixaCal.slots || []);
           hoursBeforeToday += pastSlotsToday.length;
         }
         cursor.setDate(cursor.getDate() + 1);
       }
 
-      // Se HOJE (dateStr) não estiver nos dias permitidos ou for feriado, não desenha NADA.
+      // Determinar a faixa ativa para HOJE (dateStr)
+      let activeFaixaForToday = faixasDataList[0];
+      for (const f of faixasDataList) {
+        if (dateStr >= f.inicio) activeFaixaForToday = f;
+      }
+
       const currentDow = new Date(dateStr + 'T12:00:00').getDay();
       const currentIsHoliday = store.rawData?.feriados?.some(f => (f.data || f) === dateStr);
-      if (currentIsHoliday || !activeFaixa.dias.includes(currentDow)) return;
+      if (currentIsHoliday || !activeFaixaForToday.dias.includes(currentDow)) return;
+
+      const slotsToday = activeFaixaForToday.drawnSlotsByDay ? (activeFaixaForToday.drawnSlotsByDay[currentDow] || []) : (activeFaixaForToday.slots || []);
+      const slotsPerDay = slotsToday.length;
 
       slotsToday.forEach((slotTime, slotIndex) => {
         // SE ESTE SLOT NÃO PERTENCE À CARGA RESIDUAL ÍMPAR QUE SOBROU NO ÚLTIMO DIA, PULAR.

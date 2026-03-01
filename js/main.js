@@ -1,7 +1,8 @@
 import { store } from './store.js';
 import { initUI } from './ui.js';
 
-document.addEventListener('DOMContentLoaded', async () => {
+// Executar imediatamente (scripts type="module" já são diferidos e o DOM já deve estar pronto)
+(async () => {
   await store.loadData();
   initUI();
 
@@ -126,4 +127,4 @@ document.addEventListener('DOMContentLoaded', async () => {
   };
 
   document.getElementById('btn-clear').onclick = () => store.clearData();
-});
+})();

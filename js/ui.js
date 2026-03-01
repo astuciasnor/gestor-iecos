@@ -2,6 +2,16 @@ import { store } from './store.js';
 import { getCalendarEvents } from './calendar.js';
 import { countBusinessDays, countWeekdaysInPeriod, addBusinessDays, isDateOverlap, calculateEndDateByWeekday, hasIntensiveSlotConflict } from './utils.js';
 
+// ==========================================
+// VARIÁVEIS GLOBAIS
+// ==========================================
+let activeFaixaIndex = 1;
+let faixasPatterns = { 
+    1: [], 
+    2: [], 
+    3: [] 
+};
+
 const gridContainer = document.getElementById('weekly-grid');
 const selCurso = document.getElementById('sel-curso');
 const selTurma = document.getElementById('sel-turma');
@@ -541,7 +551,7 @@ function getDocenteData() {
 // INTERACTIVE DRAWING MODE (FAIXAS)
 // ==========================================
 window.isDrawingFaixa = null; // null or 1, 2, 3
-window.drawnFaixas = {
+faixasPatterns = {
     1: [], // Array of objects: { dia: 1..6, slot: '07h30' }
     2: [],
     3: []
@@ -980,6 +990,55 @@ function getSigaaCode(allocsForClass) {
 }
 
 
+
+function setupFaixaControls() {
+    const f1Fim = document.getElementById('inp-data-fim-f1');
+    const f2Ini = document.getElementById('inp-data-inicio-f2');
+    const f2Fim = document.getElementById('inp-data-fim-f2');
+    const f3Ini = document.getElementById('inp-data-inicio-f3');
+
+    const addOneDay = (dt) => {
+        if (!dt) return '';
+        const d = new Date(dt + 'T12:00:00');
+        d.setDate(d.getDate() + 1);
+        return d.toISOString().split('T')[0];
+    };
+
+    if (f1Fim) f1Fim.addEventListener('change', () => { if (f1Fim.value && f2Ini) f2Ini.value = addOneDay(f1Fim.value); });
+    if (f2Fim) f2Fim.addEventListener('change', () => { if (f2Fim.value && f3Ini) f3Ini.value = addOneDay(f2Fim.value); });
+
+    document.querySelectorAll('.btn-draw-faixa').forEach(btn => {
+        btn.onclick = () => {
+            activeFaixaIndex = parseInt(btn.dataset.faixa);
+            activateDrawingMode(activeFaixaIndex);
+
+            // Carregar desenho da faixa
+            document.querySelectorAll('.slot').forEach(s => s.classList.remove('selected-slot'));
+            const saved = faixasPatterns[activeFaixaIndex] || [];
+            saved.forEach(slotInfo => {
+                const [d, h] = slotInfo.split('-');
+                const el = Array.from(document.querySelectorAll('.slot')).find(s => s.dataset.dia == d && s.dataset.horario == h);
+                if (el) el.classList.add('selected-slot');
+            });
+        };
+    });
+
+    const btnSaveDraw = document.getElementById('btn-save-draw');
+    if (btnSaveDraw) {
+        btnSaveDraw.onclick = () => {
+            const selected = Array.from(document.querySelectorAll('.slot.selected-slot'));
+            if (selected.length === 0) return alert('Selecione ao menos um horário.');
+            faixasPatterns[activeFaixaIndex] = selected.map(el => `${el.dataset.dia}-${el.dataset.horario}`);
+            const status = document.getElementById(`status-draw-f${activeFaixaIndex}`);
+            if (status) {
+                status.textContent = `${selected.length} horários definidos`;
+                status.style.color = '#27ae60';
+            }
+            deactivateDrawingMode();
+        };
+    }
+}
+
 function initPeriodoLetivoETurno() {
     const defaultStart = calStart && calStart.value ? calStart.value : '';
     const defaultEnd = calEnd && calEnd.value ? calEnd.value : '';
@@ -1103,6 +1162,8 @@ function handleImportBloco() {
 
 
 export function initUI() {
+    console.log('DEBUG: initUI() iniciado');
+    setupFaixaControls();
     if (selCurso) selCurso.addEventListener('change', onCursoChange);
     if (selTurma) selTurma.addEventListener('change', onTurmaChange);
 
@@ -1210,7 +1271,7 @@ export function initUI() {
             if (!window.isDrawingFaixa) return;
 
             const fIndex = window.isDrawingFaixa;
-            const blockCount = window.drawnFaixas[fIndex]?.length || 0;
+            const blockCount = faixasPatterns[fIndex]?.length || 0;
 
             // Atualizar o texto na sidebar
             const labelEl = document.getElementById(`status-draw-f${fIndex}`);
@@ -1411,9 +1472,19 @@ export function initUI() {
         });
     }
 
+    // --- GARANTA QUE ESTAS LINHAS ESTÃO AQUI NO FINAL DA initUI ---
+    
+    // 1. Configura os Listeners de mudança
+    if (selCurso) selCurso.addEventListener('change', onCursoChange);
+    if (selTurma) selTurma.addEventListener('change', onTurmaChange);
+    
+    // 2. Chama as funções para preencher os dados
     populateCursos();
     populateDocentes();
+    
+    console.log('UI Inicializada e Menus Carregados');
 }
+
 
 function handleFileSelect(event) {
     const file = event.target.files[0];
@@ -1440,6 +1511,7 @@ function closeModal() {
 }
 
 function populateCursos() {
+    console.log('DEBUG: populateCursos() chamado', { hasData: !!store.rawData, hasSel: !!selCurso });
     if (!store.rawData || !selCurso) return;
     selCurso.innerHTML = '<option value="">Selecione...</option>';
     (store.rawData.cursos || []).forEach((c) => {
@@ -1642,7 +1714,7 @@ function renderWeeklyGrid() {
                 // If drawing mode is active, handle drawing logic instead of normal slot click
                 if (window.isDrawingFaixa) {
                     const fIndex = window.isDrawingFaixa;
-                    const drawnArray = window.drawnFaixas[fIndex];
+                    const drawnArray = faixasPatterns[fIndex];
                     const isAlreadyDrawn = drawnArray.some(s => s.dia === i && s.slot === horarioStr);
 
                     if (isAlreadyDrawn) {
@@ -1900,624 +1972,142 @@ function handleSlotClick(dia, horario) {
     }
 }
 
-function handleAddManual() {
+
+// =============================================================================
+// SUBSTITUA A FUNÇÃO handleAddIntensiva POR ESTA VERSÃO CORRIGIDA (GOAL SEEK)
+// =============================================================================
+
+async function handleAddIntensiva() {
+    // 1. Validações
     if (!store.selectedTurma) return alert('Selecione uma turma.');
-    const docData = getDocenteData();
-    if (!docData.isValid) return alert('Preencha o(s) Docente(s).');
-
-    // Remove the '(XXh)' and any trailing characters that might accidentally be typed/appended
-    const disciplina = (inputConfig.disciplina?.value ?? '').replace(/\s*\(\s*\d+\s*h\s*\).*$/i, '').trim();
-    const tipo = inputConfig.tipo?.value ?? 'regular';
-    const inicio = inputConfig.inicio?.value ?? '';
-    const subGrupo = (document.getElementById('inp-sub-turma')?.value ?? '').trim();
-
-
-    if (!disciplina) return alert('Preencha o componente.');
-
-    if (tipo === 'intensiva') {
-        const info = getDisciplinaInfo(disciplina);
-        const ch = info.ch || 0;
-        if (ch === 0) return alert(`O componente "${disciplina}" tem CH 0.`);
-        if (docData.mode === 'multi' && docData.totalCH > ch) {
-            return alert(`A soma das cargas horárias excede a CH da disciplina.`);
-        }
-
-        const faixasData = [];
-        for (let f = 1; f <= 3; f++) {
-            const elFaixa = document.getElementById(`faixa-${f}`);
-            if (elFaixa && !elFaixa.classList.contains('hidden')) {
-                const fInicio = document.getElementById(`inp-data-inicio-f${f}`)?.value;
-                if (!fInicio) return alert(`Defina a data de início da Faixa ${f}.`);
-
-                const drawnItems = window.drawnFaixas[f] || [];
-                if (drawnItems.length === 0) return alert(`A Faixa ${f} não possui horários desenhados na Grade. Clique no botão "Desenhar Padrão" e selecione os horários.`);
-
-                const fDiasSet = new Set();
-                const fSlotsSet = new Set();
-                const drawnSlotsByDay = {};
-
-                drawnItems.forEach(item => {
-                    fDiasSet.add(item.dia);
-                    fSlotsSet.add(item.slot);
-
-                    if (!drawnSlotsByDay[item.dia]) {
-                        drawnSlotsByDay[item.dia] = [];
-                    }
-                    drawnSlotsByDay[item.dia].push(item.slot);
-                });
-
-                const fDias = Array.from(fDiasSet).sort((a, b) => a - b);
-                const fSlots = Array.from(fSlotsSet).sort((a, b) => timeToMinutes(a) - timeToMinutes(b));
-
-                Object.keys(drawnSlotsByDay).forEach(dia => {
-                    drawnSlotsByDay[dia].sort((a, b) => timeToMinutes(a) - timeToMinutes(b));
-                });
-
-                faixasData.push({
-                    inicio: fInicio,
-                    slots: fSlots,
-                    dias: fDias,
-                    drawnSlotsByDay: drawnSlotsByDay
-                });
-            }
-        }
-
-        if (faixasData.length === 0) return alert('Nenhuma faixa configurada para a disciplina Intensiva.');
-
-        // Ordenar faixas cronologicamente (básico)
-        faixasData.sort((a, b) => a.inicio.localeCompare(b.inicio));
-
-        const dataInicioReal = faixasData[0].inicio;
-        let effectiveCH = ch;
-
-        let hoursAccumulated = 0;
-        let currentDateStr = dataInicioReal;
-        let currentCursor = new Date(dataInicioReal + "T12:00:00");
-
-        let lastValidDateStr = dataInicioReal;
-        const feriados = store.rawData?.feriados || [];
-
-        let currentFaixaIndex = 0;
-        let activeFaixa = faixasData[0];
-        let remainingSlotsOnLastDay = activeFaixa.slots.length;
-        let horariosUltimoDia = [];
-        let iterationLimit = 365;
-
-        console.log(`[DEBUG GEN] Starting calculation for CH: ${effectiveCH}. F1 starts: ${faixasData[0].inicio}`);
-        if (faixasData[1]) console.log(`[DEBUG GEN] F2 starts: ${faixasData[1].inicio}`);
-
-        // Motor Quântico de Avanço de Faixas
-        while (hoursAccumulated < effectiveCH && iterationLimit > 0) {
-            currentDateStr = currentCursor.toISOString().split('T')[0];
-
-            let prevFaixaIdx = currentFaixaIndex;
-
-            // Muda de marcha se cruzou a data da próxima faixa
-            while (currentFaixaIndex + 1 < faixasData.length && currentDateStr >= faixasData[currentFaixaIndex + 1].inicio) {
-                currentFaixaIndex++;
-                activeFaixa = faixasData[currentFaixaIndex];
-            }
-
-            const dow = currentCursor.getDay();
-            const isHolidayObj = feriados.some(f => (f.data || f) === currentDateStr);
-
-            if (!isHolidayObj && activeFaixa.dias.includes(dow)) {
-                // Get exactly the slots drawn for THIS specific day, fallback to general slots for backwards compatibility
-                const slotsOfToday = activeFaixa.drawnSlotsByDay ? (activeFaixa.drawnSlotsByDay[dow] || []) : activeFaixa.slots;
-                const slotsToGive = Math.min(slotsOfToday.length, effectiveCH - hoursAccumulated);
-
-                console.log(`[DEBUG GEN] ${currentDateStr} (Dow ${dow}) -> F${currentFaixaIndex + 1} active. slotsOfToday len: ${slotsOfToday.length}. Giving: ${slotsToGive}. Acc: ${hoursAccumulated + slotsToGive}`);
-
-                if (slotsToGive > 0) {
-                    hoursAccumulated += slotsToGive;
-                    remainingSlotsOnLastDay = slotsToGive;
-                    horariosUltimoDia = slotsOfToday.slice(0, slotsToGive);
-                    lastValidDateStr = currentDateStr;
-                }
-            } else {
-                console.log(`[DEBUG GEN] ${currentDateStr} (Dow ${dow}) -> F${currentFaixaIndex + 1} SKIP! include? ${activeFaixa.dias.includes(dow)} hol? ${isHolidayObj}`);
-            }
-
-            if (hoursAccumulated < effectiveCH) {
-                currentCursor.setDate(currentCursor.getDate() + 1);
-                iterationLimit--;
-            } else {
-                console.log(`[DEBUG GEN] Finished accumulating! Accumulated: ${hoursAccumulated} >= ${effectiveCH}`);
-            }
-        }
-
-        console.log(`[DEBUG GEN] Final lastValidDateStr = ${lastValidDateStr}, Acc: ${hoursAccumulated}`);
-
-        const dataFimCalculada = lastValidDateStr;
-
-        // Para retrocompatibilidade pontual na função addManual
-        const allUsedSlots = [...new Set(faixasData.map(f => f.slots).flat())];
-        const allUsedDias = [...new Set(faixasData.map(f => f.dias).flat())];
-
-        const intensiveConflict = store.allocations.find(a => {
-            if (String(a.turmaId) !== String(store.selectedTurma)) return false;
-            if (a.tipo !== 'intensiva' || a.disciplina === disciplina) return false;
-            // Verificação Simplificada de Choque entre intensivas
-            return hasIntensiveSlotConflict(dataInicioReal, dataFimCalculada, allUsedSlots, a.dataInicio || store.settings.termStart, a.dataFim || store.settings.termEnd, a.horariosOcupados || []);
+    const disciplinaTxt = document.getElementById('inp-disciplina').value;
+    if (!disciplinaTxt) return alert('Preencha a disciplina.');
+    
+    // Pega Docente
+    let docNome = document.getElementById('inp-docente').value;
+    let docList = null;
+    if (document.getElementById('chk-multi-docente')?.checked) {
+        const rows = document.querySelectorAll('.teacher-row');
+        const list = [];
+        rows.forEach(r => {
+            const n = r.querySelector('.inp-multi-name').value; 
+            if(n) list.push({ nome: n, ch: r.querySelector('.inp-multi-ch').value });
         });
-
-        if (intensiveConflict) {
-            return alert(`❌ CHOQUE DE HORÁRIO!\n\nA Intensiva de "${intensiveConflict.disciplina}" utiliza faixas conflitantes neste período. A ação foi bloqueada.`);
+        if(list.length > 0) {
+            docNome = list.map(d => d.nome.split(' ')[0]).join('/');
+            docList = list;
         }
+    }
+    if (!docNome) return alert('Preencha o docente.');
 
-        // ==== BARREIRA GLOBAL DO PROFESSOR (INTENSIVA) ====
-        const teachersToCheck = (docData.mode === 'single' ? [docData.docente] : docData.docentesList.map(d => d.nome)).filter(n => n && n.trim().toUpperCase() !== 'A DEFINIR');
+    // PEGA A CARGA HORÁRIA TOTAL DO BANCO DE DADOS
+    const infoDisc = getDisciplinaInfo(disciplinaTxt);
+    const chTotalNecessaria = infoDisc.ch || 0;
 
-        if (teachersToCheck.length > 0) {
-            const teacherConflictGlobal = store.allocations.find(a => {
-                if (String(a.turmaId) === String(store.selectedTurma)) return false;
+    if (chTotalNecessaria === 0) {
+        if (!confirm(`A disciplina "${disciplinaTxt}" tem CH = 0. O sistema alocará apenas as datas marcadas sem calcular o fim. Continuar?`)) return;
+    }
 
-                let hasTeacherConflict = false;
-                if (a.docentes && a.docentes.length > 0) {
-                    hasTeacherConflict = a.docentes.some(d => teachersToCheck.includes(d.nome));
-                } else {
-                    hasTeacherConflict = teachersToCheck.includes(a.docente);
-                }
-                if (!hasTeacherConflict) return false;
-
-                const aStart = a.dataInicio || store.settings.termStart;
-                const aEnd = a.dataFim || store.settings.termEnd;
-                if (!isDateOverlap(dataInicioReal, dataFimCalculada, aStart, aEnd)) return false;
-
-                if (a.tipo === 'intensiva') {
-                    return hasIntensiveSlotConflict(dataInicioReal, dataFimCalculada, allUsedSlots, aStart, aEnd, a.horariosOcupados || []);
-                } else {
-                    if (allUsedSlots.includes(a.horario)) {
-                        if (parseInt(a.diaSemana) === 6 && !allUsedDias.includes(6)) return false;
-                        return true;
-                    }
-                    return false;
-                }
+    // 2. Preparar Faixas
+    const faixasAtivas = [];
+    for (let i = 1; i <= 3; i++) {
+        const div = document.getElementById(`faixa-${i}`);
+        if (div && !div.classList.contains('hidden')) {
+            const start = document.getElementById(`inp-data-inicio-f${i}`).value;
+            const end = document.getElementById(`inp-data-fim-f${i}`).value;
+            const pattern = faixasPatterns[i]; 
+            
+            if (!start) return alert(`Data Início da Faixa ${i} é obrigatória.`);
+            if (!pattern || pattern.length === 0) return alert(`Desenhe os horários da Faixa ${i}.`);
+            
+            // Converte padrão visual para mapa de dias
+            const mapSlots = {};
+            pattern.forEach(p => {
+                const parts = p.split('-'); 
+                const d = parseInt(parts[0]); 
+                const h = parts[1];           
+                if (!mapSlots[d]) mapSlots[d] = [];
+                mapSlots[d].push(h);
             });
 
-            if (teacherConflictGlobal) {
-                const turmaNomeConflito = getTurmaLabel(teacherConflictGlobal.turmaId);
-                const profNomes = teachersToCheck.join(', ');
-                showToastWarning(`⚠️ <b>Professor indisponível!</b><br><b>${profNomes}</b> já tem aula de <b>${teacherConflictGlobal.disciplina}</b> na turma <b>${turmaNomeConflito}</b> nestas datas.`, 'warning', 4500);
-                return;
-            }
+            faixasAtivas.push({ index: i, start, end, mapSlots });
         }
-        // ===================================================
-
-        let idToRemove = null;
-        const conflitoIntensiva = store.allocations.find(a => {
-            if (String(a.turmaId) === String(store.selectedTurma) && a.disciplina === disciplina) {
-                if (a.tipo === 'intensiva' && isDateOverlap(dataInicioReal, dataFimCalculada, a.dataInicio || store.settings.termStart, a.dataFim || store.settings.termEnd)) return true;
-                return a.tipo !== 'intensiva';
-            }
-            return false;
-        });
-
-        if (conflitoIntensiva) idToRemove = conflitoIntensiva.id;
-
-        const actionText = idToRemove ? "Atualizar alocação existente?" : "Confirmar alocação?";
-        if (!confirm(`${disciplina} (${formatDateBR(dataInicioReal)} a ${formatDateBR(dataFimCalculada)})\n\n${actionText}`)) return;
-
-        if (idToRemove) store.removeAllocation(idToRemove);
-
-        const affectedRegulars = [];
-        store.allocations.forEach(a => {
-            if (String(a.turmaId) !== String(store.selectedTurma)) return;
-            if (a.tipo !== 'regular') return;
-
-            const sReg = a.dataInicio || store.settings.termStart;
-            const eReg = a.dataFim || store.settings.termEnd;
-
-            if (isDateOverlap(dataInicioReal, dataFimCalculada, sReg, eReg)) {
-                if (allUsedSlots.includes(a.horario)) {
-                    if (!affectedRegulars.includes(a.disciplina)) {
-                        affectedRegulars.push(a.disciplina);
-                    }
-                }
-            }
-        });
-
-        store.addAllocation({
-            turmaId: store.selectedTurma,
-            disciplina: disciplina,
-            docente: docData.docente,
-            docentes: docData.docentesList,
-            tipo: 'intensiva',
-            ch: effectiveCH,
-            dataInicio: dataInicioReal,
-            dataFim: dataFimCalculada,
-            modelo: 'Automático',
-            horariosOcupados: allUsedSlots,
-            horariosUltimoDia: horariosUltimoDia,
-            diasMarcados: allUsedDias,
-            faixas: faixasData, // NOVO: Matriz de faixas injetada permanentemente
-            subGrupo: subGrupo || null,
-            cor: inputConfig.cor ? inputConfig.cor.value : store.getDisciplinaColor(disciplina)
-        });
-
-        syncAllRegularDates();
-        syncAllIntensiveDates();
-        renderOfertasList();
-
-        if (affectedRegulars.length > 0) {
-            const nomes = affectedRegulars.join(', ');
-            showToastWarning(`💡 <b>Ajuste Automático:</b> A(s) disciplina(s) <b>${nomes}</b> teve/tiveram aulas suspensas e a data final foi empurrada para frente!`, 'success');
-        }
-
-    } else {
-        alert('Para regular, clique na grade.');
     }
+
+    if (faixasAtivas.length === 0) return alert("Nenhuma faixa configurada.");
+
+    // 3. O GRANDE CÁLCULO (GOAL SEEK)
+    const newAllocations = [];
+    let chAcumulada = 0;
+    let lastAllocatedDate = null;
+
+    for (let f = 0; f < faixasAtivas.length; f++) {
+        const faixa = faixasAtivas[f];
+        const isLastFaixa = (f === faixasAtivas.length - 1);
+        
+        const startDate = new Date(faixa.start + 'T12:00:00');
+        let currentDate = new Date(startDate);
+        
+        // Se NÃO é a última, respeita a data fim. Se É a última, ignora e vai até completar a CH.
+        let hardLimitDate = (!isLastFaixa && faixa.end) ? new Date(faixa.end + 'T12:00:00') : null;
+
+        let safety = 0;
+        // Roda enquanto não atingir a CH total (ou limite de segurança)
+        while (chAcumulada < chTotalNecessaria && safety < 200) {
+            // Se tem limite de data (faixas intermediárias), verifica se passou
+            if (hardLimitDate && currentDate > hardLimitDate) break;
+
+            const dow = currentDate.getDay();
+            const dateStr = currentDate.toISOString().split('T')[0];
+
+            if (faixa.mapSlots[dow]) {
+                faixa.mapSlots[dow].forEach(hora => {
+                    // Só insere se ainda faltam horas
+                    if (chAcumulada < chTotalNecessaria) {
+                        newAllocations.push({
+                            id: generateUUID(),
+                            turmaId: store.selectedTurma,
+                            disciplina: disciplinaTxt,
+                            docente: docNome,
+                            docentes: docList,
+                            tipo: 'intensiva',
+                            dataInicio: dateStr,
+                            dataFim: dateStr,
+                            diaSemana: dow,
+                            horario: hora,
+                            faixaIndex: faixa.index,
+                            cor: document.getElementById('inp-color').value,
+                            subGrupo: document.getElementById('inp-sub-turma')?.value || null
+                        });
+                        chAcumulada++;
+                        lastAllocatedDate = dateStr;
+                    }
+                });
+            }
+            currentDate.setDate(currentDate.getDate() + 1);
+            safety++;
+        }
+        
+        // Atualiza visualmente o fim da última faixa
+        if (isLastFaixa && lastAllocatedDate) {
+            const el = document.getElementById(`inp-data-fim-f${faixa.index}`);
+            if(el) el.value = lastAllocatedDate;
+        }
+    }
+
+    // Validação Final
+    if (chTotalNecessaria > 0 && chAcumulada < chTotalNecessaria) {
+        if(!confirm(`Foram geradas apenas ${chAcumulada}h de ${chTotalNecessaria}h.\n(Provavelmente faltam dias na semana desenhados ou as datas intermediárias são curtas demais).\nSalvar mesmo assim?`)) return;
+    }
+
+    store.allocations.push(...newAllocations);
+    await store.saveAllocations();
+    renderOfertasList();
+    alert(`Sucesso! Alocado até ${lastAllocatedDate} (${chAcumulada}h).`);
 }
 
-function renderOfertasList() {
-    const tbody = document.querySelector('#ofertas-table tbody');
-    if (!tbody) return;
 
-    const theadTr = document.querySelector('#ofertas-table thead tr');
-    if (theadTr && !document.getElementById('th-sigaa')) {
-        const thSigaa = document.createElement('th');
-        thSigaa.id = 'th-sigaa';
-        thSigaa.textContent = 'SIGAA';
-        thSigaa.style.textAlign = 'center';
-        theadTr.insertBefore(thSigaa, theadTr.lastElementChild);
-    }
 
-    tbody.innerHTML = '';
-    const list = store.allocations.filter((a) => String(a.turmaId) === String(store.selectedTurma));
-    const feriados = store.rawData?.feriados ? store.rawData.feriados.map((f) => f.data) : [];
-    const semestreInicio = calStart ? calStart.value : '2025-01-01';
-    const semestreFim = calEnd ? calEnd.value : '2025-12-31';
-
-    const regular = list.filter((a) => a.tipo === 'regular' || a.tipo === 'regular_prioritaria');
-    const intensivas = list.filter((a) => a.tipo === 'intensiva');
-    const pendentes = list.filter((a) => a.tipo === 'pendente');
-
-    intensivas.sort((a, b) => (a.dataInicio || '').localeCompare(b.dataInicio || ''));
-    regular.sort((a, b) => (a.disciplina || '').localeCompare(b.disciplina || ''));
-
-    const appendSeparator = (label) => {
-        const tr = document.createElement('tr');
-        tr.className = 'month-sep';
-        tr.innerHTML = `<td colspan="7">${label}</td>`;
-        tbody.appendChild(tr);
-    };
-
-    const appendMonthSeparator = (monthKey) => {
-        const [y, m] = monthKey.split('-').map((n) => parseInt(n, 10));
-        const nomeMes = new Date(y, m - 1, 2).toLocaleString('pt-BR', { month: 'long', year: 'numeric' });
-        appendSeparator(nomeMes.toUpperCase());
-    };
-
-    let currentMonth = null;
-
-    const appendRow = (a) => {
-        const tr = document.createElement('tr');
-        const info = getDisciplinaInfo(a.disciplina);
-        const chMax = a.ch || info.ch;
-        let totalHoras = 0, details = '';
-        const start = a.dataInicio || semestreInicio;
-        const end = a.dataFim || semestreFim;
-
-        if (a.tipo === 'pendente') {
-            details = `Aguardando grade`;
-        } else if (a.tipo === 'regular' || a.tipo === 'regular_prioritaria') {
-            const suspended = getSuspendedDates(store.allocations, a.turmaId, a.diaSemana, a.disciplina, start);
-            const numAulasBase = countWeekdaysInPeriod(start, end, parseInt(a.diaSemana), feriados, suspended);
-
-            // Subtrair slots fantasmas do último dia se limitamos a carga matemática
-            // Cada dia base na lista vale 1 slot. Precisamos achar quantos slots esse bloco tem hoje.
-            const slotsDesseDia = store.allocations.filter(all => String(all.turmaId) === String(a.turmaId) && all.disciplina === a.disciplina && parseInt(all.diaSemana) === parseInt(a.diaSemana)).length;
-
-            totalHoras = numAulasBase * 1;
-
-            if (a.horariosUltimoDia && a.horariosUltimoDia.length > 0 && slotsDesseDia > 0) {
-                // Se no último dia o sistema cortou slots pra não estourar, a gente compensa na UI visual subtraindo
-                // o que não foi dado se for o loop responsável pelo fim do slot.
-                const removedSlots = slotsDesseDia - a.horariosUltimoDia.length;
-                // O ui.js chama na DOM 1 linha inteira por slot, então totalHoras de cada 'linha visual' 
-                // representa 1 hora diária para numAulasBase. Se esse for o slot cortado, ele reduz sua cota.
-                if (!a.horariosUltimoDia.includes(a.horario) && numAulasBase > 0) {
-                    totalHoras -= 1;
-                }
-            }
-
-            details = `${numAulasBase} semanas`;
-        } else {
-            // CÁLCULO DINÂMICO DE HORAS (INTENSIVA): 
-            let totalHorasIntensiva = 0;
-            let current = new Date(start + 'T12:00:00');
-            const endObj = new Date(end + 'T12:00:00');
-            const feriadosSet = new Set(feriados.map(f => (f.data || f)));
-
-            let dayCount = 0;
-
-            // Retrocompatibilidade para disciplinas velhas
-            let faixasToUse = [];
-            if (a.faixas && a.faixas.length > 0) {
-                faixasToUse = [...a.faixas].sort((x, y) => x.inicio.localeCompare(y.inicio));
-            } else {
-                const diasFallback = Array.isArray(a.diasMarcados) ? a.diasMarcados : (a.usaSabado ? [1, 2, 3, 4, 5, 6] : [1, 2, 3, 4, 5, 6]);
-                faixasToUse = [{
-                    inicio: start,
-                    slots: a.horariosOcupados || [],
-                    dias: diasFallback
-                }];
-            }
-
-            let currentFaixaIndex = 0;
-            let activeFaixa = faixasToUse[0];
-
-            while (current <= endObj) {
-                const dStr = current.toISOString().split('T')[0];
-
-                // Mudar marcha na Faixa baseando no dia iterado
-                while (currentFaixaIndex + 1 < faixasToUse.length && dStr >= faixasToUse[currentFaixaIndex + 1].inicio) {
-                    currentFaixaIndex++;
-                    activeFaixa = faixasToUse[currentFaixaIndex];
-                }
-
-                const dow = current.getDay();
-                const isHoliday = feriadosSet.has(dStr);
-
-                if (!isHoliday && activeFaixa.dias.includes(dow)) {
-                    const dowSlots = activeFaixa.drawnSlotsByDay ? (activeFaixa.drawnSlotsByDay[dow] || []) : activeFaixa.slots;
-                    if (dowSlots.length > 0) {
-                        if (totalHorasIntensiva < chMax) {
-                            dayCount++;
-                            const diff = chMax - totalHorasIntensiva;
-                            if (dStr === end && a.horariosUltimoDia && a.horariosUltimoDia.length > 0) {
-                                totalHorasIntensiva += Math.min(a.horariosUltimoDia.length, diff);
-                            } else {
-                                totalHorasIntensiva += Math.min(dowSlots.length, diff);
-                            }
-                        }
-                    }
-                }
-                current.setDate(current.getDate() + 1);
-            }
-
-            totalHoras = totalHorasIntensiva;
-            details = `${dayCount} dias`;
-        }
-
-        let color = '#2c3e50';
-        if (chMax > 0) {
-            if (totalHoras < chMax) color = '#d35400';
-            if (totalHoras === chMax) color = '#27ae60';
-            if (totalHoras > chMax) color = '#c0392b';
-        }
-
-        const allocsDaDisciplina = store.allocations.filter(x => String(x.turmaId) === String(a.turmaId) && x.disciplina === a.disciplina && x.tipo !== 'pendente');
-        const sigaaCode = allocsDaDisciplina.length > 0 ? getSigaaCode(allocsDaDisciplina) : '-';
-
-        let btnCopySigaa = '';
-        if (sigaaCode !== '-') {
-            btnCopySigaa = `
-            <div style="display:flex; align-items:center; justify-content:center; gap:6px;">
-                <span style="font-family:monospace; font-weight:bold; background:#ecf0f1; padding:2px 6px; border-radius:4px; font-size:0.9em; letter-spacing:1px;" id="sigaa-${a.id}">${sigaaCode}</span>
-                <button class="btn-sigaa-copy" data-code="${sigaaCode}" title="Copiar Código" style="background:transparent; color:var(--primary); border:1px solid #ccc; border-radius:4px; cursor:pointer; padding:2px 6px; font-size:0.9em; transition: all 0.2s;">📋</button>
-            </div>`;
-        } else {
-            btnCopySigaa = `<span style="color:#999;">-</span>`;
-        }
-
-        const sabadoLabel = a.usaSabado ? `<br><span style="color:#e67e22; font-weight:bold; font-size:0.8em;">(Inclui Sábados)</span>` : '';
-        const chInfo = a.tipo === 'pendente' ? `<span style="color:#7f8c8d;">--- / ${chMax}h</span>` : `<b style="color:${color}">${totalHoras}</b> / ${chMax}h <small>(${details})</small>${sabadoLabel}`;
-
-        let labelTipo = a.tipo;
-        if (a.tipo === 'regular_prioritaria') labelTipo = '<b>Regular (Prioritária)</b>';
-        if (a.tipo === 'pendente') labelTipo = '<span style="background:#f1c40f; color:#000; padding:2px 6px; border-radius:4px; font-size:0.85em; font-weight:bold;">Pendente</span>';
-
-        let horarioTxt = '';
-        if (a.tipo === 'pendente') {
-            horarioTxt = '<span style="color:#e67e22; font-style:italic; font-weight:bold;">Sem horário definido</span>';
-        } else {
-            let endFmt = formatDateBR(end);
-            if (store.settings.termEnd && end > store.settings.termEnd) {
-                endFmt = `<span style="color:#c0392b; font-weight:bold; font-size:1.1em;" title="Atenção: Esta data ultrapassa o fim oficial do semestre!">⚠️ ${endFmt}</span>`;
-            }
-            horarioTxt = `${formatDateBR(start)} a ${endFmt}<br><small>${['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab'][a.diaSemana] || 'Int.'} ${a.horario || ''}</small>`;
-        }
-
-        let btnHtml = `<button class="btn-danger btn-delete-row" style="padding:4px 8px; margin:0; font-size:0.85em; border-radius:3px; cursor:pointer;" title="Excluir">🗑️ Excluir</button>`;
-        btnHtml = `<button class="btn-primary btn-edit-row" style="padding:4px 8px; margin:0; font-size:0.85em; background-color:#2980b9; border:none; color:white; border-radius:3px; cursor:pointer; margin-right:5px;" title="Editar">✏️ Editar</button>` + btnHtml;
-
-        tr.innerHTML = `
-            <td>${a.disciplina}</td>
-            <td>${a.docente}</td>
-            <td>${labelTipo}</td>
-            <td>${horarioTxt}</td>
-            <td style="text-align:center;">${chInfo}</td>
-            <td style="text-align:center;">${btnCopySigaa}</td>
-            <td style="white-space:nowrap;"><div style="display:flex; justify-content:center;">${btnHtml}</div></td>
-        `;
-
-        const copyBtn = tr.querySelector('.btn-sigaa-copy');
-        if (copyBtn) {
-            copyBtn.onclick = async (e) => {
-                const btn = e.currentTarget;
-                const textToCopy = btn.dataset.code;
-                const origHtml = btn.innerHTML;
-                const origBg = btn.style.backgroundColor;
-                const origColor = btn.style.color;
-                const origBorder = btn.style.borderColor;
-
-                try {
-                    if (navigator.clipboard && window.isSecureContext) {
-                        await navigator.clipboard.writeText(textToCopy);
-                    } else {
-                        const textArea = document.createElement("textarea");
-                        textArea.value = textToCopy;
-                        textArea.style.position = "fixed";
-                        textArea.style.opacity = "0";
-                        document.body.appendChild(textArea);
-                        textArea.select();
-                        document.execCommand("copy");
-                        document.body.removeChild(textArea);
-                    }
-
-                    btn.innerHTML = '✅ Copiado';
-                    btn.style.backgroundColor = '#27ae60';
-                    btn.style.color = '#ffffff';
-                    btn.style.borderColor = '#27ae60';
-
-                    setTimeout(() => {
-                        btn.innerHTML = origHtml;
-                        btn.style.backgroundColor = origBg;
-                        btn.style.color = origColor;
-                        btn.style.borderColor = origBorder;
-                    }, 2000);
-                } catch (err) {
-                    console.error('Falha ao copiar', err);
-                }
-            };
-        }
-
-        tr.querySelector('.btn-delete-row').onclick = () => {
-            if (confirm('Remover esta oferta?')) {
-                store.removeAllocation(a.id);
-                syncAllRegularDates();
-                syncAllIntensiveDates();
-                renderWeeklyGrid();
-                renderOfertasList();
-            }
-        };
-
-        const btnEdit = tr.querySelector('.btn-edit-row');
-        if (btnEdit) {
-            btnEdit.onclick = () => {
-                if (confirm('Carregar para edição? A oferta antiga será removida e você deverá clicar na grade para posicioná-la.')) {
-                    if (inputConfig.disciplina) {
-                        inputConfig.disciplina.value = `${a.disciplina} (${info.ch}h)`;
-                        inputConfig.disciplina.dispatchEvent(new Event('input'));
-                    }
-                    if (inputConfig.cor && a.cor) {
-                        inputConfig.cor.value = a.cor;
-                        setTimeout(() => { inputConfig.cor.value = a.cor; }, 50);
-                    }
-                    if (inputConfig.tipo) {
-                        inputConfig.tipo.value = a.tipo === 'pendente' ? 'regular' : a.tipo;
-                        inputConfig.tipo.dispatchEvent(new Event('change'));
-                    }
-                    if (inputConfig.inicio && a.dataInicio) {
-                        inputConfig.inicio.value = a.dataInicio;
-                    }
-
-                    if (a.tipo === 'intensiva') {
-                        const chkSabado = document.getElementById('chk-sabados');
-                        if (chkSabado) chkSabado.checked = !!a.usaSabado;
-
-                        if (a.faixas && a.faixas.length > 0) {
-                            window.drawnFaixas = { 1: [], 2: [], 3: [] };
-                            a.faixas.forEach((fData, index) => {
-                                const f = index + 1;
-                                if (f > 3) return;
-
-                                const elFaixa = document.getElementById(`faixa-${f}`);
-                                if (elFaixa) elFaixa.classList.remove('hidden');
-
-                                const inpInicio = document.getElementById(`inp-data-inicio-f${f}`);
-                                if (inpInicio) inpInicio.value = fData.inicio;
-
-                                const restoredSlots = [];
-                                if (fData.drawnSlotsByDay) {
-                                    Object.keys(fData.drawnSlotsByDay).forEach(dia => {
-                                        fData.drawnSlotsByDay[dia].forEach(slot => {
-                                            restoredSlots.push({ dia: parseInt(dia), slot: slot });
-                                        });
-                                    });
-                                } else if (fData.slots && fData.dias) {
-                                    fData.dias.forEach(dia => {
-                                        fData.slots.forEach(slot => {
-                                            restoredSlots.push({ dia: parseInt(dia), slot: slot });
-                                        });
-                                    });
-                                }
-                                window.drawnFaixas[f] = restoredSlots;
-                            });
-
-                            const btnAddFaixa = document.getElementById('btn-add-faixa');
-                            if (btnAddFaixa && a.faixas.length >= 3) {
-                                btnAddFaixa.classList.add('hidden');
-                            }
-                        }
-                    }
-
-                    const chkMulti = document.getElementById('chk-multi-docente');
-                    if (a.docentes && a.docentes.length > 0) {
-                        if (chkMulti && !chkMulti.checked) {
-                            chkMulti.checked = true;
-                            chkMulti.dispatchEvent(new Event('change'));
-                        }
-                        const listMulti = document.getElementById('multi-docente-list');
-                        if (listMulti) {
-                            listMulti.innerHTML = '';
-                            a.docentes.forEach(d => {
-                                addTeacherRow(d.nome, d.ch);
-                            });
-                            updateTotalCHDisplay();
-                        }
-                    } else {
-                        if (chkMulti && chkMulti.checked) {
-                            chkMulti.checked = false;
-                            chkMulti.dispatchEvent(new Event('change'));
-                        }
-                        if (inputConfig.docente) {
-                            inputConfig.docente.value = a.docente === 'A definir' ? '' : (a.docente || '');
-                            inputConfig.docente.dispatchEvent(new Event('input'));
-                        }
-                    }
-
-                    if (a.horariosOcupados) {
-                        const containerSlots = document.getElementById('slots-checkboxes');
-                        if (containerSlots) {
-                            containerSlots.querySelectorAll('input[type="checkbox"]').forEach(cb => {
-                                cb.checked = a.horariosOcupados.includes(cb.value);
-                            });
-                        }
-                    }
-
-                    store.removeAllocation(a.id);
-                    syncAllRegularDates();
-                    renderWeeklyGrid();
-                    renderOfertasList();
-                    if (a.tipo !== 'intensiva') switchTab('weekly');
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                }
-            };
-        }
-        tbody.appendChild(tr);
-    };
-
-    intensivas.forEach((a) => {
-        const monthKey = a.dataInicio ? a.dataInicio.substring(0, 7) : '';
-        if (monthKey && monthKey !== currentMonth) {
-            appendMonthSeparator(monthKey);
-            currentMonth = monthKey;
-        }
-        if (!monthKey && currentMonth !== 'SEM DATA') {
-            appendSeparator('SEM DATA');
-            currentMonth = 'SEM DATA';
-        }
-        appendRow(a);
-    });
-
-    if (regular.length > 0) {
-        appendSeparator('AULAS REGULARES (E PRIORITÁRIAS)');
-        regular.forEach(appendRow);
-    }
-
-    if (pendentes.length > 0) {
-        appendSeparator('AGUARDANDO ALOCAÇÃO NA GRADE (PENDENTES)');
-        pendentes.forEach(appendRow);
-    }
-
-    if (intensivas.length === 0 && regular.length === 0 && pendentes.length === 0) {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `<td colspan="7" style="text-align:center; color:#666;">Nenhuma oferta cadastrada.</td>`;
-        tbody.appendChild(tr);
-    }
-}
 
 function renderMonthlyCalendar() {
     const container = document.getElementById('monthly-container');
@@ -2585,7 +2175,6 @@ function getShiftTimeRangeStr(timeRanges, shiftCode) {
     filteredTimes.sort((a, b) => timeToMinutes(a) - timeToMinutes(b));
     return ` : ${filteredTimes[0]} - ${filteredTimes[filteredTimes.length - 1]}`;
 }
-
 
 function renderGanttChart() {
     try {
@@ -3489,4 +3078,162 @@ function switchTab(tabId) {
     }
 }
 
+function populateCursos() {
+    if (!selCurso) return;
+    selCurso.innerHTML = '<option value="">Selecione...</option>';
+    if (store.rawData && store.rawData.cursos) {
+        store.rawData.cursos.forEach(c => {
+            const opt = document.createElement('option');
+            opt.value = c.sigla;
+            opt.textContent = `${c.sigla} - ${c.nome}`; // Usa c.nome corretamente
+            selCurso.appendChild(opt);
+        });
+    }
+}
+
+function onCursoChange() {
+    const cursoSigla = selCurso.value;
+    store.selectedCurso = cursoSigla;
+    store.saveSettings();
+    
+    selTurma.innerHTML = '<option value="">Selecione...</option>';
+    selTurma.disabled = true;
+
+    if (cursoSigla && store.rawData && store.rawData.turmas) {
+        const turmasFiltradas = store.rawData.turmas.filter(t => t.sigla === cursoSigla);
+        turmasFiltradas.forEach(t => {
+            const opt = document.createElement('option');
+            opt.value = t.turma_id;
+            opt.textContent = t.turma_label || t.turma_id; 
+            selTurma.appendChild(opt);
+        });
+        selTurma.disabled = false;
+    }
+}
+
+function onTurmaChange() {
+    store.selectedTurma = selTurma.value;
+    store.saveSettings();
+    renderWeeklyGrid();
+    renderOfertasList();
+}
+
+function populateDocentes() {
+    const dataList = document.getElementById('list-docentes');
+    if (!dataList) return;
+    dataList.innerHTML = '';
+    if (store.rawData && store.rawData.docentes) {
+        store.rawData.docentes.forEach(d => {
+            const opt = document.createElement('option');
+            opt.value = d.docente;
+            dataList.appendChild(opt);
+        });
+    }
+}
+
+function getDisciplinaInfo(nome) {
+    if (!store.rawData || !store.rawData.componentes) return { ch: 0 };
+    // Remove (30h) do nome se existir para comparar
+    const cleanNome = nome.split('(')[0].trim();
+    const comp = store.rawData.componentes.find(c => c.componente === cleanNome || c.componente === nome);
+    if (comp) return { ch: parseInt(comp.ch) || 0 };
+    return { ch: 0 };
+}
+
+// ==========================================
+// FUNÇÕES DE MENU E INICIALIZAÇÃO
+// ==========================================
+
+function populateCursos() {
+    if (!selCurso) return;
+    selCurso.innerHTML = '<option value="">Selecione...</option>';
+    
+    // Verifica se os dados existem antes de tentar iterar
+    if (store.rawData && store.rawData.cursos) {
+        store.rawData.cursos.forEach(c => {
+            const opt = document.createElement('option');
+            opt.value = c.sigla;
+            opt.textContent = `${c.sigla} - ${c.curso || c.nome}`; 
+            selCurso.appendChild(opt);
+        });
+    }
+
+    // Restaura seleção anterior
+    if (store.selectedCurso) {
+        selCurso.value = store.selectedCurso;
+        if(selCurso.value) onCursoChange();
+    }
+}
+
+function onCursoChange() {
+    const cursoSigla = selCurso.value;
+    store.selectedCurso = cursoSigla;
+    store.saveSettings();
+    
+    selTurma.innerHTML = '<option value="">Selecione...</option>';
+    selTurma.disabled = true;
+
+    if (cursoSigla && store.rawData && store.rawData.turmas) {
+        const turmasFiltradas = store.rawData.turmas.filter(t => t.sigla === cursoSigla);
+        
+        turmasFiltradas.forEach(t => {
+            const opt = document.createElement('option');
+            opt.value = t.turma_id;
+            opt.textContent = t.turma_label || t.turma_id; 
+            selTurma.appendChild(opt);
+        });
+        
+        selTurma.disabled = false;
+        
+        if (store.selectedTurma) {
+             const existe = turmasFiltradas.find(t => String(t.turma_id) === String(store.selectedTurma));
+             if(existe) {
+                 selTurma.value = store.selectedTurma;
+                 onTurmaChange();
+             } else {
+                 store.selectedTurma = null;
+             }
+        }
+    }
+}
+
+function onTurmaChange() {
+    store.selectedTurma = selTurma.value;
+    store.saveSettings();
+    renderWeeklyGrid();
+    renderOfertasList();
+}
+
+function populateDocentes() {
+    const dataList = document.getElementById('list-docentes');
+    if (!dataList) return;
+    dataList.innerHTML = '';
+
+    if (store.rawData && store.rawData.docentes) {
+        store.rawData.docentes.forEach(d => {
+            const opt = document.createElement('option');
+            opt.value = d.docente;
+            dataList.appendChild(opt);
+        });
+        
+        // Popula também o filtro de visão do professor
+        const viewList = document.getElementById('list-view-docentes');
+        if(viewList) {
+            viewList.innerHTML = '';
+            store.rawData.docentes.forEach(d => viewList.appendChild(new Option(d.docente, d.docente)));
+        }
+    }
+}
+
+function getDisciplinaInfo(nome) {
+    if (!store.rawData || !store.rawData.componentes) return { ch: 0, abrev: nome };
+    const cleanNome = nome.split('(')[0].trim();
+    const comp = store.rawData.componentes.find(c => c.componente === cleanNome || c.componente === nome);
+    
+    if (comp) return { ch: parseInt(comp.ch) || 0, abrev: comp.abreviacao || comp.componente };
+    return { ch: 0, abrev: cleanNome };
+}
+
+// EXPORTS
+export { renderWeeklyGrid, renderOfertasList, renderMonthlyCalendar, renderTeacherCalendar };
 export { renderWeeklyGrid, renderOfertasList, renderMonthlyCalendar, renderTeacherCalendar };

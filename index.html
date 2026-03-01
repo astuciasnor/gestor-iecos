@@ -593,11 +593,36 @@
                                 <label>Data de Início da Faixa 1</label>
                                 <input type="date" id="inp-data-inicio-f1" class="inp-data-inicio">
                             </div>
+                            <div class="form-group" style="margin-bottom: 10px;">
+                                <label>Data de Fim da Faixa 1</label>
+                                <input type="date" id="inp-data-fim-f1" class="inp-data-fim">
+                            </div>
                             <div class="form-group" style="margin-bottom: 0;">
                                 <button type="button" class="btn-draw-faixa" data-faixa="1"
                                     style="width:100%; display:flex; align-items:center; justify-content:center; gap:8px; background:#3498db; color:white; border:none; padding:10px; border-radius:4px; font-weight:bold; cursor:pointer; transition:background 0.2s;">
                                     <span style="font-size:1.2em;">🖌️</span> Desenhar Padrão na Grade Semanal
                                 </button>
+                                <div class="faixa-days-selector"
+                                    style="display:grid; grid-template-columns: repeat(6, 1fr); gap:4px; margin-top:10px;">
+                                    <label title="Segunda"
+                                        style="font-size:0.75em; display:flex; flex-direction:column; align-items:center; gap:2px; background:rgba(255,255,255,0.1); padding:4px; border-radius:4px; cursor:pointer;"><input
+                                            type="checkbox" value="1" class="f1-day" checked>Seg</label>
+                                    <label title="Terça"
+                                        style="font-size:0.75em; display:flex; flex-direction:column; align-items:center; gap:2px; background:rgba(255,255,255,0.1); padding:4px; border-radius:4px; cursor:pointer;"><input
+                                            type="checkbox" value="2" class="f1-day" checked>Ter</label>
+                                    <label title="Quarta"
+                                        style="font-size:0.75em; display:flex; flex-direction:column; align-items:center; gap:2px; background:rgba(255,255,255,0.1); padding:4px; border-radius:4px; cursor:pointer;"><input
+                                            type="checkbox" value="3" class="f1-day" checked>Qua</label>
+                                    <label title="Quinta"
+                                        style="font-size:0.75em; display:flex; flex-direction:column; align-items:center; gap:2px; background:rgba(255,255,255,0.1); padding:4px; border-radius:4px; cursor:pointer;"><input
+                                            type="checkbox" value="4" class="f1-day" checked>Qui</label>
+                                    <label title="Sexta"
+                                        style="font-size:0.75em; display:flex; flex-direction:column; align-items:center; gap:2px; background:rgba(255,255,255,0.1); padding:4px; border-radius:4px; cursor:pointer;"><input
+                                            type="checkbox" value="5" class="f1-day" checked>Sex</label>
+                                    <label title="Sábado"
+                                        style="font-size:0.75em; display:flex; flex-direction:column; align-items:center; gap:2px; background:rgba(255,255,255,0.1); padding:4px; border-radius:4px; cursor:pointer;"><input
+                                            type="checkbox" value="6" class="f1-day">Sáb</label>
+                                </div>
                                 <small id="status-draw-f1"
                                     style="display:block; text-align:center; color:#95a5a6; margin-top:5px; font-size:0.8em;">0
                                     horários definidos</small>
@@ -616,11 +641,36 @@
                                 <label>Data de Início da Faixa 2</label>
                                 <input type="date" id="inp-data-inicio-f2" class="inp-data-inicio">
                             </div>
+                            <div class="form-group" style="margin-bottom: 10px;">
+                                <label>Data de Fim da Faixa 2</label>
+                                <input type="date" id="inp-data-fim-f2" class="inp-data-fim">
+                            </div>
                             <div class="form-group" style="margin-bottom: 0;">
                                 <button type="button" class="btn-draw-faixa" data-faixa="2"
                                     style="width:100%; display:flex; align-items:center; justify-content:center; gap:8px; background:#3498db; color:white; border:none; padding:10px; border-radius:4px; font-weight:bold; cursor:pointer; transition:background 0.2s;">
                                     <span style="font-size:1.2em;">🖌️</span> Desenhar Padrão na Grade Semanal
                                 </button>
+                                <div class="faixa-days-selector"
+                                    style="display:grid; grid-template-columns: repeat(6, 1fr); gap:4px; margin-top:10px;">
+                                    <label title="Segunda"
+                                        style="font-size:0.75em; display:flex; flex-direction:column; align-items:center; gap:2px; background:rgba(255,255,255,0.1); padding:4px; border-radius:4px; cursor:pointer;"><input
+                                            type="checkbox" value="1" class="f2-day" checked>Seg</label>
+                                    <label title="Terça"
+                                        style="font-size:0.75em; display:flex; flex-direction:column; align-items:center; gap:2px; background:rgba(255,255,255,0.1); padding:4px; border-radius:4px; cursor:pointer;"><input
+                                            type="checkbox" value="2" class="f2-day" checked>Ter</label>
+                                    <label title="Quarta"
+                                        style="font-size:0.75em; display:flex; flex-direction:column; align-items:center; gap:2px; background:rgba(255,255,255,0.1); padding:4px; border-radius:4px; cursor:pointer;"><input
+                                            type="checkbox" value="3" class="f2-day" checked>Qua</label>
+                                    <label title="Quinta"
+                                        style="font-size:0.75em; display:flex; flex-direction:column; align-items:center; gap:2px; background:rgba(255,255,255,0.1); padding:4px; border-radius:4px; cursor:pointer;"><input
+                                            type="checkbox" value="4" class="f2-day" checked>Qui</label>
+                                    <label title="Sexta"
+                                        style="font-size:0.75em; display:flex; flex-direction:column; align-items:center; gap:2px; background:rgba(255,255,255,0.1); padding:4px; border-radius:4px; cursor:pointer;"><input
+                                            type="checkbox" value="5" class="f2-day" checked>Sex</label>
+                                    <label title="Sábado"
+                                        style="font-size:0.75em; display:flex; flex-direction:column; align-items:center; gap:2px; background:rgba(255,255,255,0.1); padding:4px; border-radius:4px; cursor:pointer;"><input
+                                            type="checkbox" value="6" class="f2-day">Sáb</label>
+                                </div>
                                 <small id="status-draw-f2"
                                     style="display:block; text-align:center; color:#95a5a6; margin-top:5px; font-size:0.8em;">0
                                     horários definidos</small>
@@ -638,11 +688,36 @@
                                 <label>Data de Início da Faixa 3</label>
                                 <input type="date" id="inp-data-inicio-f3" class="inp-data-inicio">
                             </div>
+                            <div class="form-group" style="margin-bottom: 10px;">
+                                <label>Data de Fim da Faixa 3</label>
+                                <input type="date" id="inp-data-fim-f3" class="inp-data-fim">
+                            </div>
                             <div class="form-group" style="margin-bottom: 0;">
                                 <button type="button" class="btn-draw-faixa" data-faixa="3"
                                     style="width:100%; display:flex; align-items:center; justify-content:center; gap:8px; background:#3498db; color:white; border:none; padding:10px; border-radius:4px; font-weight:bold; cursor:pointer; transition:background 0.2s;">
                                     <span style="font-size:1.2em;">🖌️</span> Desenhar Padrão na Grade Semanal
                                 </button>
+                                <div class="faixa-days-selector"
+                                    style="display:grid; grid-template-columns: repeat(6, 1fr); gap:4px; margin-top:10px;">
+                                    <label title="Segunda"
+                                        style="font-size:0.75em; display:flex; flex-direction:column; align-items:center; gap:2px; background:rgba(255,255,255,0.1); padding:4px; border-radius:4px; cursor:pointer;"><input
+                                            type="checkbox" value="1" class="f3-day" checked>Seg</label>
+                                    <label title="Terça"
+                                        style="font-size:0.75em; display:flex; flex-direction:column; align-items:center; gap:2px; background:rgba(255,255,255,0.1); padding:4px; border-radius:4px; cursor:pointer;"><input
+                                            type="checkbox" value="2" class="f3-day" checked>Ter</label>
+                                    <label title="Quarta"
+                                        style="font-size:0.75em; display:flex; flex-direction:column; align-items:center; gap:2px; background:rgba(255,255,255,0.1); padding:4px; border-radius:4px; cursor:pointer;"><input
+                                            type="checkbox" value="3" class="f3-day" checked>Qua</label>
+                                    <label title="Quinta"
+                                        style="font-size:0.75em; display:flex; flex-direction:column; align-items:center; gap:2px; background:rgba(255,255,255,0.1); padding:4px; border-radius:4px; cursor:pointer;"><input
+                                            type="checkbox" value="4" class="f3-day" checked>Qui</label>
+                                    <label title="Sexta"
+                                        style="font-size:0.75em; display:flex; flex-direction:column; align-items:center; gap:2px; background:rgba(255,255,255,0.1); padding:4px; border-radius:4px; cursor:pointer;"><input
+                                            type="checkbox" value="5" class="f3-day" checked>Sex</label>
+                                    <label title="Sábado"
+                                        style="font-size:0.75em; display:flex; flex-direction:column; align-items:center; gap:2px; background:rgba(255,255,255,0.1); padding:4px; border-radius:4px; cursor:pointer;"><input
+                                            type="checkbox" value="6" class="f3-day">Sáb</label>
+                                </div>
                                 <small id="status-draw-f3"
                                     style="display:block; text-align:center; color:#95a5a6; margin-top:5px; font-size:0.8em;">0
                                     horários definidos</small>
