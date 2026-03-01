@@ -255,19 +255,40 @@ export function getCalendarEvents(turmaId, startDate, endDate, docenteFilter = n
       i => dateStr >= i.dataInicio && dateStr <= i.dataFim
     );
 
-    activeGlobalIntensives.forEach(intensiva => {
-      // ATUALIZAÇÃO 4D: Se for sábado e essa intensiva não usa sábado, não processa bloqueios!
-      if (dayOfWeek === 6 && !intensiva.usaSabado) return;
+    const getActiveFaixaForDate = (intensivaObj, dStr) => {
+      if (!intensivaObj.faixas || intensivaObj.faixas.length === 0) {
+        const fallbackDias = Array.isArray(intensivaObj.diasMarcados) ? intensivaObj.diasMarcados : (intensivaObj.usaSabado ? [1, 2, 3, 4, 5, 6] : [1, 2, 3, 4, 5]);
+        const mockDrawnSlotsByDay = {};
+        fallbackDias.forEach(d => mockDrawnSlotsByDay[d] = intensivaObj.horariosOcupados || []);
+        return { inicio: intensivaObj.dataInicio, slots: intensivaObj.horariosOcupados || [], dias: fallbackDias, drawnSlotsByDay: mockDrawnSlotsByDay };
+      }
+      const faixasOrdem = [...intensivaObj.faixas].sort((a, b) => a.inicio.localeCompare(b.inicio));
+      let active = null;
+      for (let i = faixasOrdem.length - 1; i >= 0; i--) {
+        const f = faixasOrdem[i];
+        if (dStr < f.inicio) continue;
+        if (f.fim && dStr > f.fim) continue;
+        active = f;
+        break;
+      }
+      return active;
+    };
 
+    activeGlobalIntensives.forEach(intensiva => {
       // Se a turma desta intensiva tem uma prioritária hoje, a intensiva é SUSPENSA.
       if (turmasWithPriorityToday.has(String(intensiva.turmaId))) return;
+
+      const activeFaixa = getActiveFaixaForDate(intensiva, dateStr);
+      if (!activeFaixa || !activeFaixa.dias.includes(dayOfWeek)) return;
 
       // Se não suspensa, bloqueia slots
       const tId = String(intensiva.turmaId);
       if (!blockedSlotsByTurma[tId]) blockedSlotsByTurma[tId] = [];
 
-      if (intensiva.horariosOcupados && Array.isArray(intensiva.horariosOcupados)) {
-        intensiva.horariosOcupados.forEach(slot => {
+      const activeSlotsToday = activeFaixa.drawnSlotsByDay ? (activeFaixa.drawnSlotsByDay[dayOfWeek] || []) : activeFaixa.slots;
+
+      if (activeSlotsToday && Array.isArray(activeSlotsToday)) {
+        activeSlotsToday.forEach(slot => {
           blockedSlotsByTurma[tId].push(normalizeTime(slot));
         });
       }
@@ -291,41 +312,48 @@ export function getCalendarEvents(turmaId, startDate, endDate, docenteFilter = n
 
 
     myActiveIntensives.forEach(intense => {
-      // ATUALIZAÇÃO 4D: Se for sábado e a intensiva NÃO permite sábado, pula!
-      if (dayOfWeek === 6 && !intense.usaSabado) return;
-
-      // ** REMOVIDO SUPRESSÃO VISUAL DO DIA INTEIRO **
-      // A Intensiva pode pintar hoje, mas APENAS os slots que não batem com a Prioritária.
-
-      const slots = intense.horariosOcupados || [];
-      const slotsPerDay = slots.length;
-
-      // Retaguarda para alocações antigas:
-      const diasPermitidos = Array.isArray(intense.diasMarcados) ? intense.diasMarcados : (intense.usaSabado ? [1, 2, 3, 4, 5, 6] : [1, 2, 3, 4, 5, 6]);
-
       // === CÁLCULO DE HORAS ACUMULADAS ===
       let hoursBeforeToday = 0;
       let cursor = new Date(intense.dataInicio + 'T12:00:00');
       const targetDate = new Date(dateStr + 'T12:00:00');
 
+      let faixasDataList = [{ inicio: intense.dataInicio, slots: intense.horariosOcupados || [], dias: intense.usaSabado ? [1, 2, 3, 4, 5, 6] : [1, 2, 3, 4, 5] }];
+      if (intense.faixas && intense.faixas.length > 0) {
+        faixasDataList = [...intense.faixas].sort((a, b) => a.inicio.localeCompare(b.inicio));
+      }
+
+      let currentFaixaIdxCal = 0;
+      let activeFaixaCal = faixasDataList[0];
+
       while (cursor < targetDate) {
         const cStr = cursor.toISOString().split('T')[0];
+        if (currentFaixaIdxCal + 1 < faixasDataList.length && cStr >= faixasDataList[currentFaixaIdxCal + 1].inicio) {
+          currentFaixaIdxCal++;
+          activeFaixaCal = faixasDataList[currentFaixaIdxCal];
+        }
         const dow = cursor.getDay();
         const isHolidayObj = store.rawData?.feriados?.some(f => (f.data || f) === cStr);
-
-        // Se o dia não for feriado E estiver marcado no array do usuário:
-        if (!isHolidayObj && diasPermitidos.includes(dow)) {
-          hoursBeforeToday += slots.length;
+        if (!isHolidayObj && activeFaixaCal.dias.includes(dow)) {
+          const pastSlotsToday = activeFaixaCal.drawnSlotsByDay ? (activeFaixaCal.drawnSlotsByDay[dow] || []) : (activeFaixaCal.slots || []);
+          hoursBeforeToday += pastSlotsToday.length;
         }
         cursor.setDate(cursor.getDate() + 1);
       }
 
-      // Se HOJE (dateStr) não estiver nos dias permitidos ou for feriado, não desenha NADA.
+      // Determinar a faixa ativa para HOJE (dateStr)
+      let activeFaixaForToday = faixasDataList[0];
+      for (const f of faixasDataList) {
+        if (dateStr >= f.inicio) activeFaixaForToday = f;
+      }
+
       const currentDow = new Date(dateStr + 'T12:00:00').getDay();
       const currentIsHoliday = store.rawData?.feriados?.some(f => (f.data || f) === dateStr);
-      if (currentIsHoliday || !diasPermitidos.includes(currentDow)) return;
+      if (currentIsHoliday || !activeFaixaForToday.dias.includes(currentDow)) return;
 
-      slots.forEach((slotTime, slotIndex) => {
+      const slotsToday = activeFaixaForToday.drawnSlotsByDay ? (activeFaixaForToday.drawnSlotsByDay[currentDow] || []) : (activeFaixaForToday.slots || []);
+      const slotsPerDay = slotsToday.length;
+
+      slotsToday.forEach((slotTime, slotIndex) => {
         // SE ESTE SLOT NÃO PERTENCE À CARGA RESIDUAL ÍMPAR QUE SOBROU NO ÚLTIMO DIA, PULAR.
         if (intense.horariosUltimoDia && intense.horariosUltimoDia.length > 0 && dateStr === intense.dataFim) {
           if (!intense.horariosUltimoDia.includes(slotTime)) return;
@@ -394,7 +422,10 @@ export function getCalendarEvents(turmaId, startDate, endDate, docenteFilter = n
             } else {
               const blockerInt = activeGlobalIntensives.find(i => {
                 if (String(i.turmaId) !== tId) return false;
-                return (i.horariosOcupados || []).map(normalizeTime).includes(hReg);
+                const activeFaixa = getActiveFaixaForDate(i, dateStr);
+                if (!activeFaixa) return false;
+                const slotsDoDia = activeFaixa.drawnSlotsByDay ? (activeFaixa.drawnSlotsByDay[dayOfWeek] || []) : (activeFaixa.slots || []);
+                return slotsDoDia.map(normalizeTime).includes(hReg);
               });
               if (blockerInt) blockerName = blockerInt.disciplina;
             }
