@@ -74,6 +74,66 @@
             max-width: 180px;
         }
 
+        /* Faixas: datas de inicio/fim lado a lado sem alterar estrutura */
+        #container-faixas-intensiva .faixa-item {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px 10px;
+        }
+
+        #container-faixas-intensiva .faixa-item>div:first-child {
+            grid-column: 1 / span 2;
+        }
+
+        #container-faixas-intensiva .faixa-item>.form-group {
+            margin-bottom: 0 !important;
+        }
+
+        #container-faixas-intensiva .faixa-item>.form-group:last-child {
+            grid-column: 1 / span 2;
+        }
+
+        #container-faixas-intensiva .faixa-days-selector {
+            display: none !important;
+        }
+
+        .publish-clear-row {
+            display: flex;
+            gap: 8px;
+            align-items: stretch;
+            margin-bottom: 15px;
+        }
+
+        .publish-clear-row .btn-primary,
+        .publish-clear-row .btn-danger {
+            width: 50%;
+            margin: 0;
+            padding: 10px 8px;
+            font-size: 0.95rem;
+            line-height: 1.15;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            white-space: nowrap;
+        }
+
+        .publish-clear-row .btn-icon {
+            font-size: 1rem;
+            line-height: 1;
+        }
+
+        @media (max-width: 1120px) {
+            .publish-clear-row {
+                flex-direction: column;
+            }
+
+            .publish-clear-row .btn-primary,
+            .publish-clear-row .btn-danger {
+                width: 100%;
+            }
+        }
+
         /* Estilos adicionais para a nova aba de Ajuda */
         .tutorial-card {
             background: #fff;
@@ -588,19 +648,19 @@
                         <!-- Faixa 1 (Sempre visível) -->
                         <div id="faixa-1" class="faixa-item"
                             style="background: rgba(0,0,0,0.2); padding: 10px; border-radius: 6px; margin-bottom: 10px; border: 1px solid #2c3e50;">
-                            <div style="font-weight:bold; color:#a8e6cf; margin-bottom:10px;">Faixa 1 (Inicial)</div>
+                            <div style="font-weight:bold; color:#a8e6cf; margin-bottom:10px;">Faixa 1:</div>
                             <div class="form-group" style="margin-bottom: 10px;">
-                                <label>Data de Início da Faixa 1</label>
+                                <label>Data de Início</label>
                                 <input type="date" id="inp-data-inicio-f1" class="inp-data-inicio">
                             </div>
                             <div class="form-group" style="margin-bottom: 10px;">
-                                <label>Data de Fim da Faixa 1</label>
+                                <label>Data de Fim</label>
                                 <input type="date" id="inp-data-fim-f1" class="inp-data-fim">
                             </div>
                             <div class="form-group" style="margin-bottom: 0;">
                                 <button type="button" class="btn-draw-faixa" data-faixa="1"
                                     style="width:100%; display:flex; align-items:center; justify-content:center; gap:8px; background:#3498db; color:white; border:none; padding:10px; border-radius:4px; font-weight:bold; cursor:pointer; transition:background 0.2s;">
-                                    <span style="font-size:1.2em;">🖌️</span> Desenhar Padrão na Grade Semanal
+                                    Desenhar na Grade Semanal
                                 </button>
                                 <div class="faixa-days-selector"
                                     style="display:grid; grid-template-columns: repeat(6, 1fr); gap:4px; margin-top:10px;">
@@ -635,20 +695,20 @@
                             <button type="button" class="btn-remove-faixa" data-target="faixa-2"
                                 style="position:absolute; right:8px; top:8px; background:none; border:none; color:#e74c3c; font-size:1.2em; cursor:pointer; font-weight:bold;"
                                 title="Remover Faixa">×</button>
-                            <div style="font-weight:bold; color:#f39c12; margin-bottom:10px;">Faixa 2 (Intensificação)
+                            <div style="font-weight:bold; color:#f39c12; margin-bottom:10px;">Faixa 2:
                             </div>
                             <div class="form-group" style="margin-bottom: 10px;">
-                                <label>Data de Início da Faixa 2</label>
+                                <label>Data de Início</label>
                                 <input type="date" id="inp-data-inicio-f2" class="inp-data-inicio">
                             </div>
                             <div class="form-group" style="margin-bottom: 10px;">
-                                <label>Data de Fim da Faixa 2</label>
+                                <label>Data de Fim</label>
                                 <input type="date" id="inp-data-fim-f2" class="inp-data-fim">
                             </div>
                             <div class="form-group" style="margin-bottom: 0;">
                                 <button type="button" class="btn-draw-faixa" data-faixa="2"
                                     style="width:100%; display:flex; align-items:center; justify-content:center; gap:8px; background:#3498db; color:white; border:none; padding:10px; border-radius:4px; font-weight:bold; cursor:pointer; transition:background 0.2s;">
-                                    <span style="font-size:1.2em;">🖌️</span> Desenhar Padrão na Grade Semanal
+                                    Desenhar na Grade Semanal
                                 </button>
                                 <div class="faixa-days-selector"
                                     style="display:grid; grid-template-columns: repeat(6, 1fr); gap:4px; margin-top:10px;">
@@ -683,19 +743,19 @@
                             <button type="button" class="btn-remove-faixa" data-target="faixa-3"
                                 style="position:absolute; right:8px; top:8px; background:none; border:none; color:#e74c3c; font-size:1.2em; cursor:pointer; font-weight:bold;"
                                 title="Remover Faixa">×</button>
-                            <div style="font-weight:bold; color:#e74c3c; margin-bottom:10px;">Faixa 3 (Final)</div>
+                            <div style="font-weight:bold; color:#e74c3c; margin-bottom:10px;">Faixa 3:</div>
                             <div class="form-group" style="margin-bottom: 10px;">
-                                <label>Data de Início da Faixa 3</label>
+                                <label>Data de Início</label>
                                 <input type="date" id="inp-data-inicio-f3" class="inp-data-inicio">
                             </div>
                             <div class="form-group" style="margin-bottom: 10px;">
-                                <label>Data de Fim da Faixa 3</label>
+                                <label>Data de Fim</label>
                                 <input type="date" id="inp-data-fim-f3" class="inp-data-fim">
                             </div>
                             <div class="form-group" style="margin-bottom: 0;">
                                 <button type="button" class="btn-draw-faixa" data-faixa="3"
                                     style="width:100%; display:flex; align-items:center; justify-content:center; gap:8px; background:#3498db; color:white; border:none; padding:10px; border-radius:4px; font-weight:bold; cursor:pointer; transition:background 0.2s;">
-                                    <span style="font-size:1.2em;">🖌️</span> Desenhar Padrão na Grade Semanal
+                                    Desenhar na Grade Semanal
                                 </button>
                                 <div class="faixa-days-selector"
                                     style="display:grid; grid-template-columns: repeat(6, 1fr); gap:4px; margin-top:10px;">
@@ -743,11 +803,16 @@
                     <input type="file" id="inp-import" accept=".json,.csv" style="display:none">
                 </div>
 
-                <button id="btn-export-public" class="btn-primary"
-                    style="background-color: #27ae60; font-size: 1.05rem; padding: 12px; margin-bottom: 15px; width: 100%;">🌐
-                    Publicar Grade Online</button>
-
-                <button id="btn-clear" class="btn-danger" style="padding: 12px; width: 100%;">Limpar Tudo</button>
+                <div class="publish-clear-row">
+                    <button id="btn-export-public" class="btn-primary" style="background-color: #27ae60;">
+                        <span class="btn-icon" aria-hidden="true">&#127760;</span>
+                        Publicar Online
+                    </button>
+                    <button id="btn-clear" class="btn-danger">
+                        <span class="btn-icon" aria-hidden="true">&#128465;</span>
+                        Limpar Tudo
+                    </button>
+                </div>
             </div>
         </aside>
 

@@ -612,8 +612,87 @@ function getFaixaSlotsAndDays(faixaIndex = 1) {
 function setFaixaStatus(faixaIndex, count) {
     const status = document.getElementById(`status-draw-f${faixaIndex}`);
     if (!status) return;
-    status.textContent = `${count} horários definidos`;
-    status.style.color = count > 0 ? '#27ae60' : '#95a5a6';
+    const summary = buildFaixaSummaryText(faixaIndex, count);
+    status.textContent = summary;
+    status.style.color = '#27ae60';
+}
+
+function shortDayName(dayNumber) {
+    const map = { 1: 'Seg', 2: 'Ter', 3: 'Qua', 4: 'Qui', 5: 'Sex', 6: 'Sab' };
+    return map[dayNumber] || String(dayNumber);
+}
+
+function formatSlotLabel(slot) {
+    const text = String(slot || '').trim();
+    if (!text) return '';
+    if (text.includes('-')) {
+        return text.replace(/\s*-\s*/g, ' - ');
+    }
+    const match = text.match(/^(\d{1,2}):(\d{2})$/);
+    if (match) {
+        return `${match[1]}h:${match[2]}`;
+    }
+    return text;
+}
+
+function calcFaixaCH(faixaIndex) {
+    const start = document.getElementById(`inp-data-inicio-f${faixaIndex}`)?.value || '';
+    const endRaw = document.getElementById(`inp-data-fim-f${faixaIndex}`)?.value || '';
+    const end = endRaw || start;
+    if (!start || !end) return 0;
+
+    const { pattern } = getFaixaSlotsAndDays(faixaIndex);
+    if (pattern.length === 0) return 0;
+
+    const slotsByDay = {};
+    pattern.forEach((p) => {
+        if (!slotsByDay[p.dia]) slotsByDay[p.dia] = new Set();
+        slotsByDay[p.dia].add(p.slot);
+    });
+
+    const feriadosSet = new Set((store.rawData?.feriados || []).map((f) => f.data || f));
+    let total = 0;
+    const cursor = new Date(`${start}T12:00:00`);
+    const maxDate = new Date(`${end}T12:00:00`);
+
+    while (cursor <= maxDate) {
+        const dStr = cursor.toISOString().split('T')[0];
+        const dow = cursor.getDay();
+        if (dow >= 1 && dow <= 6 && !feriadosSet.has(dStr) && slotsByDay[dow]) {
+            total += slotsByDay[dow].size;
+        }
+        cursor.setDate(cursor.getDate() + 1);
+    }
+    return total;
+}
+
+function resolveFaixaTurno(faixaIndex) {
+    const { slots } = getFaixaSlotsAndDays(faixaIndex);
+    if (slots.length === 0) return '-';
+    let hasM = false;
+    let hasT = false;
+    slots.forEach((s) => {
+        const mins = timeToMinutes(s);
+        if (mins < 780) hasM = true;
+        else hasT = true;
+    });
+    if (hasM && hasT) return 'M/T';
+    if (hasM) return 'M';
+    if (hasT) return 'T';
+    return '-';
+}
+
+function buildFaixaSummaryText(faixaIndex, count) {
+    const start = document.getElementById(`inp-data-inicio-f${faixaIndex}`)?.value || '';
+    const endRaw = document.getElementById(`inp-data-fim-f${faixaIndex}`)?.value || '';
+    const end = endRaw || start;
+    const intervalTxt = (start && end) ? `${formatDateBR(start)} a ${formatDateBR(end)}` : '-';
+    const ch = calcFaixaCH(faixaIndex);
+    const { dias, slots } = getFaixaSlotsAndDays(faixaIndex);
+    const diasTxt = dias.length > 0 ? dias.map(shortDayName).join(', ') : '-';
+    const turnoTxt = resolveFaixaTurno(faixaIndex);
+    const horariosTxt = slots.length > 0 ? slots.map(formatSlotLabel).join(', ') : '-';
+    return `Intervalo: ${intervalTxt}; CH: ${ch} horas-aula; Dias: ${diasTxt}; Turno: ${turnoTxt}; Horários: ${horariosTxt}`;
 }
 
 function activateDrawingMode(faixaIndex) {
@@ -650,8 +729,33 @@ function setupFaixaControls() {
         return d.toISOString().split('T')[0];
     };
 
-    if (f1Fim) f1Fim.addEventListener('change', () => { if (f1Fim.value && f2Ini) f2Ini.value = addOneDay(f1Fim.value); });
-    if (f2Fim) f2Fim.addEventListener('change', () => { if (f2Fim.value && f3Ini) f3Ini.value = addOneDay(f2Fim.value); });
+    if (f1Fim) {
+        f1Fim.addEventListener('change', () => {
+            if (f1Fim.value && f2Ini) f2Ini.value = addOneDay(f1Fim.value);
+            setFaixaStatus(1, getFaixaSlotsAndDays(1).pattern.length);
+            setFaixaStatus(2, getFaixaSlotsAndDays(2).pattern.length);
+        });
+    }
+    if (f2Fim) {
+        f2Fim.addEventListener('change', () => {
+            if (f2Fim.value && f3Ini) f3Ini.value = addOneDay(f2Fim.value);
+            setFaixaStatus(2, getFaixaSlotsAndDays(2).pattern.length);
+            setFaixaStatus(3, getFaixaSlotsAndDays(3).pattern.length);
+        });
+    }
+
+    for (let i = 1; i <= 3; i++) {
+        const iniEl = document.getElementById(`inp-data-inicio-f${i}`);
+        const fimEl = document.getElementById(`inp-data-fim-f${i}`);
+        [iniEl, fimEl].forEach((el) => {
+            if (!el) return;
+            ['input', 'change'].forEach((evt) => {
+                el.addEventListener(evt, () => {
+                    setFaixaStatus(i, getFaixaSlotsAndDays(i).pattern.length);
+                });
+            });
+        });
+    }
 
     const btnAddFaixa = document.getElementById('btn-add-faixa');
     if (btnAddFaixa) {
@@ -689,6 +793,8 @@ function setupFaixaControls() {
     });
 
     document.querySelectorAll('.btn-draw-faixa').forEach((btn) => {
+        btn.textContent = 'Desenhar na Grade Semanal';
+        btn.style.whiteSpace = 'nowrap';
         btn.addEventListener('click', (e) => {
             if (!store.selectedTurma) {
                 showToastWarning('Selecione curso e turma antes de desenhar.', 'warning', 2500);
@@ -715,6 +821,10 @@ function setupFaixaControls() {
             setFaixaStatus(window.isDrawingFaixa, selected.length);
             deactivateDrawingMode();
         });
+    }
+
+    for (let i = 1; i <= 3; i++) {
+        setFaixaStatus(i, getFaixaSlotsAndDays(i).pattern.length);
     }
 }
 
