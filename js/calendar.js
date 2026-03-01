@@ -257,16 +257,19 @@ export function getCalendarEvents(turmaId, startDate, endDate, docenteFilter = n
 
     const getActiveFaixaForDate = (intensivaObj, dStr) => {
       if (!intensivaObj.faixas || intensivaObj.faixas.length === 0) {
-        const fallbackDias = Array.isArray(intensivaObj.diasMarcados) ? intensivaObj.diasMarcados : (intensivaObj.usaSabado ? [1, 2, 3, 4, 5, 6] : [1, 2, 3, 4, 5, 6]);
+        const fallbackDias = Array.isArray(intensivaObj.diasMarcados) ? intensivaObj.diasMarcados : (intensivaObj.usaSabado ? [1, 2, 3, 4, 5, 6] : [1, 2, 3, 4, 5]);
         const mockDrawnSlotsByDay = {};
         fallbackDias.forEach(d => mockDrawnSlotsByDay[d] = intensivaObj.horariosOcupados || []);
         return { inicio: intensivaObj.dataInicio, slots: intensivaObj.horariosOcupados || [], dias: fallbackDias, drawnSlotsByDay: mockDrawnSlotsByDay };
       }
       const faixasOrdem = [...intensivaObj.faixas].sort((a, b) => a.inicio.localeCompare(b.inicio));
-      let active = faixasOrdem[0];
-      for (let f of faixasOrdem) {
-        if (dStr >= f.inicio) active = f;
-        else break;
+      let active = null;
+      for (let i = faixasOrdem.length - 1; i >= 0; i--) {
+        const f = faixasOrdem[i];
+        if (dStr < f.inicio) continue;
+        if (f.fim && dStr > f.fim) continue;
+        active = f;
+        break;
       }
       return active;
     };
@@ -276,7 +279,7 @@ export function getCalendarEvents(turmaId, startDate, endDate, docenteFilter = n
       if (turmasWithPriorityToday.has(String(intensiva.turmaId))) return;
 
       const activeFaixa = getActiveFaixaForDate(intensiva, dateStr);
-      if (!activeFaixa.dias.includes(dayOfWeek)) return;
+      if (!activeFaixa || !activeFaixa.dias.includes(dayOfWeek)) return;
 
       // Se não suspensa, bloqueia slots
       const tId = String(intensiva.turmaId);
@@ -314,7 +317,7 @@ export function getCalendarEvents(turmaId, startDate, endDate, docenteFilter = n
       let cursor = new Date(intense.dataInicio + 'T12:00:00');
       const targetDate = new Date(dateStr + 'T12:00:00');
 
-      let faixasDataList = [{ inicio: intense.dataInicio, slots: intense.horariosOcupados || [], dias: intense.usaSabado ? [1, 2, 3, 4, 5, 6] : [1, 2, 3, 4, 5, 6] }];
+      let faixasDataList = [{ inicio: intense.dataInicio, slots: intense.horariosOcupados || [], dias: intense.usaSabado ? [1, 2, 3, 4, 5, 6] : [1, 2, 3, 4, 5] }];
       if (intense.faixas && intense.faixas.length > 0) {
         faixasDataList = [...intense.faixas].sort((a, b) => a.inicio.localeCompare(b.inicio));
       }
@@ -420,7 +423,9 @@ export function getCalendarEvents(turmaId, startDate, endDate, docenteFilter = n
               const blockerInt = activeGlobalIntensives.find(i => {
                 if (String(i.turmaId) !== tId) return false;
                 const activeFaixa = getActiveFaixaForDate(i, dateStr);
-                return (activeFaixa.slots || []).map(normalizeTime).includes(hReg);
+                if (!activeFaixa) return false;
+                const slotsDoDia = activeFaixa.drawnSlotsByDay ? (activeFaixa.drawnSlotsByDay[dayOfWeek] || []) : (activeFaixa.slots || []);
+                return slotsDoDia.map(normalizeTime).includes(hReg);
               });
               if (blockerInt) blockerName = blockerInt.disciplina;
             }

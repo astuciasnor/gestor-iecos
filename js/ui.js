@@ -27,6 +27,13 @@ const inputConfig = {
 };
 
 let tempImportData = null;
+let activeFaixaIndex = 1;
+let faixasPatterns = {
+    1: [],
+    2: [],
+    3: []
+};
+window.isDrawingFaixa = null;
 
 // ==========================================
 // AJUSTES VISUAIS DA BARRA LATERAL (SIDEBAR)
@@ -572,6 +579,458 @@ function getCheckedSlots() {
     return checked;
 }
 
+function normalizeFaixaPattern(pattern) {
+    if (!Array.isArray(pattern)) return [];
+    return pattern
+        .map((entry) => {
+            if (typeof entry === 'string') {
+                const idx = entry.indexOf('-');
+                if (idx <= 0) return null;
+                return {
+                    dia: parseInt(entry.slice(0, idx), 10),
+                    slot: entry.slice(idx + 1)
+                };
+            }
+            if (entry && typeof entry === 'object') {
+                const dia = parseInt(entry.dia, 10);
+                const slot = entry.slot || entry.horario;
+                if (Number.isNaN(dia) || !slot) return null;
+                return { dia, slot };
+            }
+            return null;
+        })
+        .filter((x) => x && x.dia >= 1 && x.dia <= 6 && typeof x.slot === 'string');
+}
+
+function getFaixaSlotsAndDays(faixaIndex = 1) {
+    const pattern = normalizeFaixaPattern(faixasPatterns[faixaIndex]);
+    const slots = [...new Set(pattern.map((p) => p.slot))].sort((a, b) => timeToMinutes(a) - timeToMinutes(b));
+    const dias = [...new Set(pattern.map((p) => p.dia))].sort((a, b) => a - b);
+    return { slots, dias, pattern };
+}
+
+function setFaixaStatus(faixaIndex, count) {
+    const status = document.getElementById(`status-draw-f${faixaIndex}`);
+    if (!status) return;
+    status.textContent = `${count} horários definidos`;
+    status.style.color = count > 0 ? '#27ae60' : '#95a5a6';
+}
+
+function activateDrawingMode(faixaIndex) {
+    activeFaixaIndex = faixaIndex;
+    window.isDrawingFaixa = faixaIndex;
+
+    const nameEl = document.getElementById('drawing-faixa-name');
+    if (nameEl) nameEl.textContent = `Faixa ${faixaIndex}`;
+    const toolbar = document.getElementById('drawing-toolbar');
+    if (toolbar) toolbar.classList.remove('hidden');
+
+    switchTab('weekly');
+    renderWeeklyGrid();
+    showToastWarning(`Modo desenho ativo para a Faixa ${faixaIndex}.`, 'success', 2000);
+}
+
+function deactivateDrawingMode() {
+    window.isDrawingFaixa = null;
+    const toolbar = document.getElementById('drawing-toolbar');
+    if (toolbar) toolbar.classList.add('hidden');
+    renderWeeklyGrid();
+}
+
+function setupFaixaControls() {
+    const f1Fim = document.getElementById('inp-data-fim-f1');
+    const f2Ini = document.getElementById('inp-data-inicio-f2');
+    const f2Fim = document.getElementById('inp-data-fim-f2');
+    const f3Ini = document.getElementById('inp-data-inicio-f3');
+
+    const addOneDay = (dt) => {
+        if (!dt) return '';
+        const d = new Date(dt + 'T12:00:00');
+        d.setDate(d.getDate() + 1);
+        return d.toISOString().split('T')[0];
+    };
+
+    if (f1Fim) f1Fim.addEventListener('change', () => { if (f1Fim.value && f2Ini) f2Ini.value = addOneDay(f1Fim.value); });
+    if (f2Fim) f2Fim.addEventListener('change', () => { if (f2Fim.value && f3Ini) f3Ini.value = addOneDay(f2Fim.value); });
+
+    const btnAddFaixa = document.getElementById('btn-add-faixa');
+    if (btnAddFaixa) {
+        btnAddFaixa.addEventListener('click', () => {
+            const f2 = document.getElementById('faixa-2');
+            const f3 = document.getElementById('faixa-3');
+            if (f2 && f2.classList.contains('hidden')) {
+                f2.classList.remove('hidden');
+                const iniF2 = document.getElementById('inp-data-inicio-f2');
+                if (iniF2) iniF2.focus();
+                return;
+            }
+            if (f3 && f3.classList.contains('hidden')) {
+                f3.classList.remove('hidden');
+                const iniF3 = document.getElementById('inp-data-inicio-f3');
+                if (iniF3) iniF3.focus();
+                return;
+            }
+            showToastWarning('Limite de 3 faixas atingido.', 'warning', 2000);
+        });
+    }
+
+    document.querySelectorAll('.btn-remove-faixa').forEach((btn) => {
+        btn.addEventListener('click', (e) => {
+            const targetId = e.currentTarget.getAttribute('data-target');
+            const faixa = document.getElementById(targetId);
+            if (!faixa) return;
+            faixa.classList.add('hidden');
+            const faixaNum = parseInt((targetId || '').replace('faixa-', ''), 10);
+            if (!Number.isNaN(faixaNum)) {
+                faixasPatterns[faixaNum] = [];
+                setFaixaStatus(faixaNum, 0);
+            }
+        });
+    });
+
+    document.querySelectorAll('.btn-draw-faixa').forEach((btn) => {
+        btn.addEventListener('click', (e) => {
+            if (!store.selectedTurma) {
+                showToastWarning('Selecione curso e turma antes de desenhar.', 'warning', 2500);
+                return;
+            }
+            const idx = parseInt(e.currentTarget.getAttribute('data-faixa'), 10);
+            if (Number.isNaN(idx)) return;
+            activateDrawingMode(idx);
+        });
+    });
+
+    const btnCancelDraw = document.getElementById('btn-cancel-draw');
+    if (btnCancelDraw) btnCancelDraw.addEventListener('click', deactivateDrawingMode);
+
+    const btnSaveDraw = document.getElementById('btn-save-draw');
+    if (btnSaveDraw) {
+        btnSaveDraw.addEventListener('click', () => {
+            if (!window.isDrawingFaixa) return;
+            const selected = Array.from(document.querySelectorAll('.slot.selected-slot'));
+            faixasPatterns[window.isDrawingFaixa] = selected.map((el) => ({
+                dia: parseInt(el.dataset.dia, 10),
+                slot: el.dataset.horario
+            }));
+            setFaixaStatus(window.isDrawingFaixa, selected.length);
+            deactivateDrawingMode();
+        });
+    }
+}
+
+function hydrateFaixa1FromIntensiva(allocation) {
+    if (!allocation || allocation.tipo !== 'intensiva') return;
+
+    const dias = Array.isArray(allocation.diasMarcados) && allocation.diasMarcados.length > 0
+        ? allocation.diasMarcados
+        : (allocation.usaSabado ? [1, 2, 3, 4, 5, 6] : [1, 2, 3, 4, 5]);
+    const slots = Array.isArray(allocation.horariosOcupados) ? allocation.horariosOcupados : [];
+    const pattern = [];
+    dias.forEach((dia) => {
+        slots.forEach((slot) => pattern.push({ dia: parseInt(dia, 10), slot }));
+    });
+    faixasPatterns[1] = normalizeFaixaPattern(pattern);
+    setFaixaStatus(1, faixasPatterns[1].length);
+
+    const ini = document.getElementById('inp-data-inicio-f1');
+    const fim = document.getElementById('inp-data-fim-f1');
+    if (ini && allocation.dataInicio) ini.value = allocation.dataInicio;
+    if (fim && allocation.dataFim) fim.value = allocation.dataFim;
+
+    const dayChecks = Array.from(document.querySelectorAll('#faixa-1 .faixa-days-selector input[type="checkbox"]'));
+    dayChecks.forEach((chk) => {
+        const day = parseInt(chk.value, 10);
+        chk.checked = dias.includes(day);
+    });
+}
+
+function hydrateFaixasFromIntensiva(allocation) {
+    if (!allocation || allocation.tipo !== 'intensiva') return;
+
+    const faixa2El = document.getElementById('faixa-2');
+    const faixa3El = document.getElementById('faixa-3');
+    if (faixa2El) faixa2El.classList.add('hidden');
+    if (faixa3El) faixa3El.classList.add('hidden');
+
+    faixasPatterns = { 1: [], 2: [], 3: [] };
+    setFaixaStatus(1, 0);
+    setFaixaStatus(2, 0);
+    setFaixaStatus(3, 0);
+
+    const faixas = getNormalizedIntensiveFaixas(allocation);
+    if (faixas.length === 0) {
+        hydrateFaixa1FromIntensiva(allocation);
+        return;
+    }
+
+    faixas.slice(0, 3).forEach((faixa, idx) => {
+        const i = idx + 1;
+        if (i === 2 && faixa2El) faixa2El.classList.remove('hidden');
+        if (i === 3 && faixa3El) faixa3El.classList.remove('hidden');
+
+        const ini = document.getElementById(`inp-data-inicio-f${i}`);
+        const fim = document.getElementById(`inp-data-fim-f${i}`);
+        if (ini) ini.value = faixa.inicio || '';
+        if (fim) fim.value = faixa.fim || '';
+
+        const pattern = [];
+        Object.keys(faixa.drawnSlotsByDay || {}).forEach((dayKey) => {
+            const day = parseInt(dayKey, 10);
+            (faixa.drawnSlotsByDay[day] || []).forEach((slot) => pattern.push({ dia: day, slot }));
+        });
+        faixasPatterns[i] = normalizeFaixaPattern(pattern);
+        setFaixaStatus(i, faixasPatterns[i].length);
+    });
+
+    const firstDays = faixas[0].dias || [];
+    const dayChecks = Array.from(document.querySelectorAll('#faixa-1 .faixa-days-selector input[type="checkbox"]'));
+    dayChecks.forEach((chk) => {
+        const day = parseInt(chk.value, 10);
+        chk.checked = firstDays.includes(day);
+    });
+}
+
+function toISODate(dateObj) {
+    return dateObj.toISOString().split('T')[0];
+}
+
+function addDaysISO(dateStr, days) {
+    const d = new Date(dateStr + 'T12:00:00');
+    d.setDate(d.getDate() + days);
+    return toISODate(d);
+}
+
+function normalizeDrawnSlotsByDay(raw) {
+    const map = {};
+    if (!raw || typeof raw !== 'object') return map;
+    Object.keys(raw).forEach((k) => {
+        const day = parseInt(k, 10);
+        if (Number.isNaN(day) || day < 1 || day > 6) return;
+        const arr = Array.isArray(raw[k]) ? raw[k] : [];
+        const slots = [...new Set(arr.filter(Boolean).map(String))].sort((a, b) => timeToMinutes(a) - timeToMinutes(b));
+        if (slots.length > 0) map[day] = slots;
+    });
+    return map;
+}
+
+function normalizeFaixaEntry(faixa) {
+    if (!faixa || !faixa.inicio) return null;
+    const drawn = normalizeDrawnSlotsByDay(faixa.drawnSlotsByDay || {});
+    let dias = Array.isArray(faixa.dias) ? faixa.dias.map((d) => parseInt(d, 10)).filter((d) => d >= 1 && d <= 6) : [];
+    let slots = Array.isArray(faixa.slots) ? faixa.slots.filter(Boolean).map(String) : [];
+
+    if (Object.keys(drawn).length > 0) {
+        dias = Object.keys(drawn).map((d) => parseInt(d, 10)).sort((a, b) => a - b);
+        slots = [...new Set(Object.values(drawn).flat())].sort((a, b) => timeToMinutes(a) - timeToMinutes(b));
+    } else {
+        dias = [...new Set(dias)].sort((a, b) => a - b);
+        slots = [...new Set(slots)].sort((a, b) => timeToMinutes(a) - timeToMinutes(b));
+        dias.forEach((d) => { drawn[d] = slots.slice(); });
+    }
+
+    if (dias.length === 0 || slots.length === 0) return null;
+    return {
+        inicio: faixa.inicio,
+        fim: faixa.fim || null,
+        dias,
+        slots,
+        drawnSlotsByDay: drawn
+    };
+}
+
+function getNormalizedIntensiveFaixas(intense) {
+    if (!intense) return [];
+
+    let faixas = [];
+    if (Array.isArray(intense.faixas) && intense.faixas.length > 0) {
+        faixas = intense.faixas
+            .map(normalizeFaixaEntry)
+            .filter(Boolean)
+            .sort((a, b) => a.inicio.localeCompare(b.inicio));
+    }
+
+    if (faixas.length === 0 && intense.dataInicio) {
+        const diasLegacy = Array.isArray(intense.diasMarcados) && intense.diasMarcados.length > 0
+            ? intense.diasMarcados
+            : (intense.usaSabado ? [1, 2, 3, 4, 5, 6] : [1, 2, 3, 4, 5]);
+        const slotsLegacy = Array.isArray(intense.horariosOcupados) ? intense.horariosOcupados : [];
+        const drawn = {};
+        diasLegacy.forEach((d) => { drawn[d] = slotsLegacy.slice(); });
+        const legacy = normalizeFaixaEntry({
+            inicio: intense.dataInicio,
+            fim: intense.dataFim || null,
+            dias: diasLegacy,
+            slots: slotsLegacy,
+            drawnSlotsByDay: drawn
+        });
+        if (legacy) faixas = [legacy];
+    }
+
+    for (let i = 0; i < faixas.length; i++) {
+        if (!faixas[i].fim && i < faixas.length - 1) {
+            faixas[i].fim = addDaysISO(faixas[i + 1].inicio, -1);
+        }
+    }
+
+    return faixas;
+}
+
+function getActiveFaixaForDate(faixas, dStr) {
+    if (!Array.isArray(faixas) || faixas.length === 0) return null;
+    for (let i = faixas.length - 1; i >= 0; i--) {
+        const f = faixas[i];
+        if (dStr < f.inicio) continue;
+        if (f.fim && dStr > f.fim) continue;
+        return f;
+    }
+    return null;
+}
+
+function getIntensiveSlotsForDate(intense, dStr, opts = {}) {
+    const dow = opts.dayOfWeek ?? new Date(dStr + 'T12:00:00').getDay();
+    if (dow === 0) return [];
+
+    const faixas = getNormalizedIntensiveFaixas(intense);
+    const faixa = getActiveFaixaForDate(faixas, dStr);
+    if (!faixa) return [];
+    if (!faixa.dias.includes(dow)) return [];
+
+    const byDay = faixa.drawnSlotsByDay || {};
+    return (byDay[dow] || faixa.slots || []).slice();
+}
+
+function computeIntensiveExecution(intense, options = {}) {
+    const result = {
+        totalHours: 0,
+        dataInicio: intense?.dataInicio || '',
+        dataFim: intense?.dataInicio || '',
+        horariosUltimoDia: [],
+        byDate: {},
+        unionSlots: [],
+        unionDias: []
+    };
+    if (!intense) return result;
+
+    const faixas = getNormalizedIntensiveFaixas(intense);
+    if (faixas.length === 0) return result;
+
+    const totalCH = parseInt(intense.ch || 0, 10);
+    const feriadosSet = new Set((store.rawData?.feriados || []).map((f) => f.data || f));
+    const priorityRegulars = options.respectPriority
+        ? store.allocations.filter((a) =>
+            String(a.turmaId) === String(intense.turmaId) &&
+            a.tipo === 'regular_prioritaria' &&
+            a.disciplina !== intense.disciplina)
+        : [];
+
+    result.dataInicio = faixas[0].inicio;
+    let cursor = new Date(faixas[0].inicio + 'T12:00:00');
+    let loops = 0;
+    const maxLoops = options.maxLoops || 800;
+
+    while (loops < maxLoops) {
+        const dStr = toISODate(cursor);
+        const dow = cursor.getDay();
+
+        const faixa = getActiveFaixaForDate(faixas, dStr);
+        if (!faixa) {
+            const lastFaixaEnd = faixas[faixas.length - 1].fim;
+            if (lastFaixaEnd && dStr > lastFaixaEnd) break;
+            cursor.setDate(cursor.getDate() + 1);
+            loops++;
+            continue;
+        }
+
+        if (!feriadosSet.has(dStr) && dow !== 0 && faixa.dias.includes(dow)) {
+            const daySlots = (faixa.drawnSlotsByDay?.[dow] || faixa.slots || []).slice();
+            const freeSlots = options.respectPriority
+                ? daySlots.filter((slot) => !priorityRegulars.some((p) => {
+                    const pStart = p.dataInicio || store.settings.termStart;
+                    const pEnd = p.dataFim || store.settings.termEnd;
+                    return parseInt(p.diaSemana, 10) === dow && dStr >= pStart && dStr <= pEnd && p.horario === slot;
+                }))
+                : daySlots;
+
+            if (freeSlots.length > 0) {
+                const remaining = totalCH > 0 ? (totalCH - result.totalHours) : freeSlots.length;
+                const take = totalCH > 0 ? Math.min(remaining, freeSlots.length) : freeSlots.length;
+                if (take > 0) {
+                    const usedSlots = freeSlots.slice(0, take);
+                    result.byDate[dStr] = usedSlots;
+                    result.totalHours += usedSlots.length;
+                    result.dataFim = dStr;
+                    result.horariosUltimoDia = usedSlots;
+                }
+            }
+        }
+
+        if (totalCH > 0 && result.totalHours >= totalCH) break;
+        cursor.setDate(cursor.getDate() + 1);
+        loops++;
+    }
+
+    const allSlots = new Set();
+    const allDays = new Set();
+    Object.keys(result.byDate).forEach((dStr) => {
+        const dow = new Date(dStr + 'T12:00:00').getDay();
+        if (dow >= 1 && dow <= 6) allDays.add(dow);
+        result.byDate[dStr].forEach((h) => allSlots.add(h));
+    });
+    result.unionSlots = [...allSlots].sort((a, b) => timeToMinutes(a) - timeToMinutes(b));
+    result.unionDias = [...allDays].sort((a, b) => a - b);
+
+    return result;
+}
+
+function collectIntensiveFaixasFromUI(fallbackInicio, fallbackSlots, fallbackDias) {
+    const faixas = [];
+    for (let i = 1; i <= 3; i++) {
+        const faixaEl = document.getElementById(`faixa-${i}`);
+        if (!faixaEl || faixaEl.classList.contains('hidden')) continue;
+
+        const inicio = document.getElementById(`inp-data-inicio-f${i}`)?.value || (i === 1 ? fallbackInicio : '');
+        const fim = document.getElementById(`inp-data-fim-f${i}`)?.value || null;
+        if (!inicio) {
+            throw new Error(`Defina a data de início da Faixa ${i}.`);
+        }
+
+        const pattern = normalizeFaixaPattern(faixasPatterns[i]);
+        let drawnSlotsByDay = {};
+        pattern.forEach((p) => {
+            if (!drawnSlotsByDay[p.dia]) drawnSlotsByDay[p.dia] = [];
+            drawnSlotsByDay[p.dia].push(p.slot);
+        });
+        drawnSlotsByDay = normalizeDrawnSlotsByDay(drawnSlotsByDay);
+
+        if (Object.keys(drawnSlotsByDay).length === 0 && i === 1 && Array.isArray(fallbackSlots) && fallbackSlots.length > 0) {
+            const daysFromFaixa = Array.from(document.querySelectorAll('#faixa-1 .faixa-days-selector input[type="checkbox"]'))
+                .filter((chk) => chk.checked)
+                .map((chk) => parseInt(chk.value, 10))
+                .filter((d) => !Number.isNaN(d));
+            const days = daysFromFaixa.length > 0 ? daysFromFaixa : fallbackDias;
+            days.forEach((d) => { drawnSlotsByDay[d] = [...fallbackSlots]; });
+        }
+
+        const normFaixa = normalizeFaixaEntry({
+            inicio,
+            fim,
+            drawnSlotsByDay
+        });
+        if (!normFaixa) {
+            throw new Error(`Desenhe horários válidos para a Faixa ${i}.`);
+        }
+        faixas.push(normFaixa);
+    }
+
+    const sorted = faixas.sort((a, b) => a.inicio.localeCompare(b.inicio));
+    for (let i = 0; i < sorted.length - 1; i++) {
+        if (!sorted[i].fim || sorted[i].fim >= sorted[i + 1].inicio) {
+            sorted[i].fim = addDaysISO(sorted[i + 1].inicio, -1);
+        }
+    }
+    return sorted;
+}
+
 
 function getDisciplinaCHGlobal(disciplina, turmaId) {
     let sigla = '';
@@ -763,81 +1222,23 @@ function syncAllRegularDates() {
  * Robusto e genérico para qualquer CH e combinação de horários.
  */
 function syncAllIntensiveDates() {
-    // Normaliza para "HH:MM" - resolve incompatibilidades de formato entre slots
-    const normT = (t) => { const m = (t || '').match(/\d{1,2}:\d{2}/); return m ? m[0] : ''; };
-
-    const feriadosSet = new Set((store.rawData?.feriados || []).map(f => f.data || f));
-
     // Filtra todas as intensivas da turma selecionada
     const intensivas = store.allocations.filter(a =>
         String(a.turmaId) === String(store.selectedTurma) && a.tipo === 'intensiva'
     );
 
-    // Filtra as prioritárias (as "chefonas") que causam suspensão
-    const priorityRegulars = store.allocations.filter(a =>
-        String(a.turmaId) === String(store.selectedTurma) && a.tipo === 'regular_prioritaria'
-    );
-
     intensivas.forEach(intense => {
-        const totalCH = intense.ch || 0;
-        if (totalCH === 0) return;
+        const execution = computeIntensiveExecution(intense, { respectPriority: true });
+        if (execution.dataInicio) intense.dataInicio = execution.dataInicio;
+        if (execution.dataFim) intense.dataFim = execution.dataFim;
+        intense.horariosUltimoDia = execution.horariosUltimoDia || [];
+        intense.horariosOcupados = execution.unionSlots || intense.horariosOcupados || [];
+        intense.diasMarcados = execution.unionDias || intense.diasMarcados || [];
+        intense.usaSabado = (intense.diasMarcados || []).includes(6);
 
-        const slots = (intense.horariosOcupados || []).map(normT); // Normaliza slots
-        if (slots.length === 0) return;
-
-        const usaSabado = intense.usaSabado || false;
-
-        let classesFound = 0;
-        let currentDate = new Date(intense.dataInicio + 'T12:00:00');
-        let lastValidDate = new Date(currentDate);
-        let loops = 0;
-
-        // Limpa cache residual
-        delete intense.horariosUltimoDia;
-
-        while (classesFound < totalCH && loops < 500) {
-            const dStr = currentDate.toISOString().split('T')[0];
-            const dow = currentDate.getDay();
-
-            // Dia útil?
-            let isBusiness = true;
-            if (dow === 0) isBusiness = false;
-            if (dow === 6 && !usaSabado) isBusiness = false;
-            if (feriadosSet.has(dStr)) isBusiness = false;
-            if (isBusiness) {
-                // Slots bloqueados pela Prioritária NESTE dia específico (normalizado)
-                const prioSlotsToday = priorityRegulars
-                    .filter(p =>
-                        parseInt(p.diaSemana) === dow &&
-                        dStr >= (p.dataInicio || '') &&
-                        dStr <= (p.dataFim || '')
-                    )
-                    .map(p => normT(p.horario));
-
-                // Slots livres = slots da intensiva menos os bloqueados pela Prioritária
-                const freeSlots = slots.filter(s => !prioSlotsToday.includes(s));
-
-                if (freeSlots.length > 0) {
-                    const remaining = totalCH - classesFound;
-                    if (freeSlots.length <= remaining) {
-                        classesFound += freeSlots.length;
-                    } else {
-                        // Último dia parcial: mapeia de volta para o formato original
-                        const origSlots = intense.horariosOcupados || [];
-                        intense.horariosUltimoDia = origSlots
-                            .filter(s => freeSlots.slice(0, remaining).includes(normT(s)));
-                        classesFound += remaining;
-                    }
-                    lastValidDate = new Date(currentDate);
-                }
-            }
-
-            if (classesFound >= totalCH) break;
-            currentDate.setDate(currentDate.getDate() + 1);
-            loops++;
+        if (!Array.isArray(intense.faixas) || intense.faixas.length === 0) {
+            intense.faixas = getNormalizedIntensiveFaixas(intense);
         }
-
-        intense.dataFim = lastValidDate.toISOString().split('T')[0];
     });
 
     // REAÇÃO EM CADEIA: Após ajustar as Intensivas, 
@@ -870,11 +1271,9 @@ function getSuspendedDates(allocs, turmaId, diaSemana, disciplina, startDate) {
                 if (dStr >= bStart && dStr <= bEnd) {
                     const originalIsPrio = allocs.some(a => a.disciplina === disciplina && String(a.turmaId) === String(turmaId) && a.tipo === 'regular_prioritaria');
 
-                    if (b.tipo === 'intensiva' && b.horariosOcupados && !originalIsPrio) {
-                        if (dStr === b.dataFim && b.horariosUltimoDia) {
-                            return mySlots.some(s => b.horariosUltimoDia.includes(s));
-                        }
-                        return mySlots.some(s => b.horariosOcupados.includes(s));
+                    if (b.tipo === 'intensiva' && !originalIsPrio) {
+                        const intSlots = getIntensiveSlotsForDate(b, dStr);
+                        return mySlots.some(s => intSlots.includes(s));
                     }
                     if (b.tipo === 'regular_prioritaria' && parseInt(b.diaSemana) === parseInt(diaSemana)) {
                         return mySlots.some(s => b.horario === s && b.disciplina !== disciplina);
@@ -914,26 +1313,15 @@ function getSigaaCode(allocsForClass) {
             const sInfo = getSlot(a.horario);
             if (sInfo) slotsList.push({ day: dSigaa, shift: sInfo.s, slot: sInfo.sl });
         } else if (a.tipo === 'intensiva') {
-            const startDt = new Date((a.dataInicio || store.settings.termStart) + "T12:00:00");
-            const endDt = new Date((a.dataFim || store.settings.termEnd) + "T12:00:00");
-            let curDt = new Date(startDt);
-            while (curDt <= endDt) {
-                const dSigaa = curDt.getDay() + 1;
-                const aceitaDia = (dSigaa >= 2 && dSigaa <= 6) || (dSigaa === 7 && a.usaSabado);
-
-                if (aceitaDia) {
-                    let slotsToUse = a.horariosOcupados || [];
-                    if (curDt.toISOString().split('T')[0] === a.dataFim && a.horariosUltimoDia) {
-                        slotsToUse = a.horariosUltimoDia;
-                    }
-
-                    slotsToUse.forEach(h => {
-                        const sInfo = getSlot(h);
-                        if (sInfo) slotsList.push({ day: dSigaa, shift: sInfo.s, slot: sInfo.sl });
-                    });
-                }
-                curDt.setDate(curDt.getDate() + 1);
-            }
+            const execution = computeIntensiveExecution(a, { respectPriority: true });
+            const byDate = execution.byDate || {};
+            Object.keys(byDate).sort().forEach((dStr) => {
+                const dSigaa = new Date(dStr + "T12:00:00").getDay() + 1;
+                (byDate[dStr] || []).forEach((h) => {
+                    const sInfo = getSlot(h);
+                    if (sInfo) slotsList.push({ day: dSigaa, shift: sInfo.s, slot: sInfo.sl });
+                });
+            });
         }
     });
 
@@ -1103,6 +1491,7 @@ function handleImportBloco() {
 
 
 export function initUI() {
+    setupFaixaControls();
     if (selCurso) selCurso.addEventListener('change', onCursoChange);
     if (selTurma) selTurma.addEventListener('change', onTurmaChange);
 
@@ -1125,12 +1514,14 @@ export function initUI() {
         inputConfig.tipo.addEventListener('change', (e) => {
             const divDataEl = document.getElementById('datas-intensiva');
             const divSlots = document.getElementById('container-slots-selection');
+            const faixasContainer = document.getElementById('container-faixas-intensiva');
             const isIntensive = (e.target.value === 'intensiva');
 
-            divDataEl.classList.remove('hidden');
+            if (divDataEl) divDataEl.classList.remove('hidden');
 
             if (isIntensive) {
-                divSlots.classList.remove('hidden');
+                if (divSlots) divSlots.classList.remove('hidden');
+                if (faixasContainer) faixasContainer.classList.remove('hidden');
                 renderIntensiveSlots();
 
                 // Mostrar container dos dias da semana
@@ -1146,15 +1537,23 @@ export function initUI() {
                 if (chkSaber) chkSaber.checked = false;
 
             } else {
-                divSlots.classList.add('hidden');
+                if (divSlots) divSlots.classList.add('hidden');
+                if (faixasContainer) faixasContainer.classList.add('hidden');
 
                 // Ocultar container dos dias da semana
                 const containerDias = document.getElementById('container-dias-semana-intensiva');
                 if (containerDias) containerDias.style.display = 'none';
+
+                deactivateDrawingMode();
             }
 
             if (store.settings.termStart && inputConfig.inicio) {
                 inputConfig.inicio.value = store.settings.termStart;
+            }
+
+            const inpInicioF1 = document.getElementById('inp-data-inicio-f1');
+            if (isIntensive && store.settings.termStart && inpInicioF1 && !inpInicioF1.value) {
+                inpInicioF1.value = store.settings.termStart;
             }
         });
     }
@@ -1456,6 +1855,12 @@ function populateDocentes() {
 function onTurmaChange() {
     store.selectedTurma = selTurma.value;
     store.setLastContext(store.selectedCurso, store.selectedTurma);
+    deactivateDrawingMode();
+
+    faixasPatterns = { 1: [], 2: [], 3: [] };
+    setFaixaStatus(1, 0);
+    setFaixaStatus(2, 0);
+    setFaixaStatus(3, 0);
 
     const btnImportBloco = document.getElementById('btn-import-bloco');
     if (btnImportBloco) {
@@ -1477,6 +1882,7 @@ function onTurmaChange() {
 
     const intensivas = alocacoesTurma.filter(a => a.tipo === 'intensiva' && a.dataInicio);
     if (intensivas.length > 0) {
+        hydrateFaixasFromIntensiva(intensivas[0]);
         const datas = intensivas.map(a => a.dataInicio).sort();
         if (calStart && datas[0] < calStart.value) {
             calStart.value = datas[0];
@@ -1495,6 +1901,10 @@ function onTurmaChange() {
 
     if (inputConfig.inicio && store.settings.termStart) {
         inputConfig.inicio.value = store.settings.termStart;
+    }
+    const inpInicioF1 = document.getElementById('inp-data-inicio-f1');
+    if (inpInicioF1 && store.settings.termStart && !inpInicioF1.value) {
+        inpInicioF1.value = store.settings.termStart;
     }
 
     renderWeeklyGrid();
@@ -1568,7 +1978,34 @@ function renderWeeklyGrid() {
 
                 if (allocs.length > 0) renderSlotContent(cell, allocs);
 
-                cell.addEventListener('click', () => handleSlotClick(i, horarioStr));
+                if (window.isDrawingFaixa) {
+                    const pattern = normalizeFaixaPattern(faixasPatterns[window.isDrawingFaixa]);
+                    const isSelected = pattern.some((p) => p.dia === i && p.slot === horarioStr);
+
+                    if (isSelected) {
+                        cell.classList.add('selected-slot');
+                        cell.style.background = '#f39c12';
+                        cell.style.border = '2px dashed #d35400';
+                    }
+
+                    if (allocs.length === 0) {
+                        cell.style.cursor = 'crosshair';
+                        cell.addEventListener('click', (e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            cell.classList.toggle('selected-slot');
+                            const selectedNow = cell.classList.contains('selected-slot');
+                            cell.style.background = selectedNow ? '#f39c12' : '';
+                            cell.style.border = selectedNow ? '2px dashed #d35400' : '';
+                        });
+                    } else {
+                        cell.style.opacity = '0.6';
+                        cell.style.pointerEvents = 'none';
+                        cell.title = 'Horário ocupado na turma';
+                    }
+                } else {
+                    cell.addEventListener('click', () => handleSlotClick(i, horarioStr));
+                }
                 gridContainer.appendChild(cell);
             }
         }
@@ -1792,89 +2229,83 @@ function handleAddManual() {
 
     const disciplina = (inputConfig.disciplina?.value ?? '').replace(/\s*\(\s*\d+\s*h\s*\)\s*$/i, '');
     const tipo = inputConfig.tipo?.value ?? 'regular';
-    const inicio = inputConfig.inicio?.value ?? '';
+    const inicioFaixa1 = document.getElementById('inp-data-inicio-f1')?.value ?? '';
+    const inicioLegacy = inputConfig.inicio?.value ?? '';
+    const inicio = (tipo === 'intensiva' && inicioFaixa1) ? inicioFaixa1 : inicioLegacy;
     const subGrupo = (document.getElementById('inp-sub-turma')?.value ?? '').trim();
-
 
     if (!disciplina) return alert('Preencha o componente.');
 
     if (tipo === 'intensiva') {
-        if (!inicio) return alert('Defina a data de início.');
+        if (!inicio) return alert('Defina a data de inicio.');
 
         const info = getDisciplinaInfo(disciplina);
         const ch = info.ch || 0;
         if (ch === 0) return alert(`O componente "${disciplina}" tem CH 0.`);
         if (docData.mode === 'multi' && docData.totalCH > ch) {
-            return alert(`A soma das cargas horárias excede a CH da disciplina.`);
+            return alert('A soma das cargas horarias excede a CH da disciplina.');
         }
 
-        let slotsIntensiva = getCheckedSlots();
-        if (slotsIntensiva.length === 0) return alert('Selecione pelo menos um horário.');
-
-        let effectiveCH = ch;
-        // ==========================================
-        // NOVO: CALCULAR DATA FIM ITERANDO PELOS DIAS MARCADOS MANUALMENTE (Ignora Prioritárias)
-        // ==========================================
+        const effectiveCH = ch;
+        const slotsLegacy = getCheckedSlots();
 
         let diasMarcados = [];
         for (let i = 1; i <= 6; i++) {
             const chk = document.getElementById(`chk-dia-${i}`);
             if (chk && chk.checked) diasMarcados.push(i);
         }
-
         if (diasMarcados.length === 0) {
-            return alert('Selecione pelo menos um dia da semana permitido para a Intensiva!');
+            diasMarcados = Array.from(document.querySelectorAll('#faixa-1 .faixa-days-selector input[type="checkbox"]'))
+                .filter((chk) => chk.checked)
+                .map((chk) => parseInt(chk.value, 10))
+                .filter((d) => !Number.isNaN(d));
+        }
+        if (diasMarcados.length === 0) diasMarcados = [1, 2, 3, 4, 5];
+
+        let faixasConfig = [];
+        try {
+            faixasConfig = collectIntensiveFaixasFromUI(inicio, slotsLegacy, diasMarcados);
+        } catch (err) {
+            return alert(err.message || 'Erro ao ler as faixas da intensiva.');
+        }
+        if (faixasConfig.length === 0) return alert('Configure ao menos uma faixa da intensiva.');
+
+        const previewIntensive = {
+            turmaId: store.selectedTurma,
+            disciplina,
+            tipo: 'intensiva',
+            ch: effectiveCH,
+            dataInicio: faixasConfig[0].inicio,
+            dataFim: faixasConfig[0].inicio,
+            horariosOcupados: slotsLegacy,
+            diasMarcados,
+            usaSabado: diasMarcados.includes(6),
+            faixas: faixasConfig
+        };
+
+        const execution = computeIntensiveExecution(previewIntensive, { respectPriority: true });
+        if (execution.totalHours === 0) return alert('Nenhuma aula foi gerada com as faixas configuradas.');
+        if (execution.totalHours < effectiveCH) {
+            return alert(`As faixas somam ${execution.totalHours}h, mas a disciplina exige ${effectiveCH}h. Ajuste a configuracao.`);
         }
 
-        let hoursAccumulated = 0;
-        let currentDateStr = inicio;
-        let currentCursor = new Date(inicio + "T12:00:00");
-
-        let lastValidDateStr = inicio;
-        // Obter feriados padrão
-        const feriados = store.rawData?.feriados || [];
-
-        let remainingSlotsOnLastDay = slotsIntensiva.length;
-        let iterationLimit = 365;
-        let horariosUltimoDia = [];
-
-        // Itera de dia em dia até a carga horária ser preenchida
-        while (hoursAccumulated < effectiveCH && iterationLimit > 0) {
-            currentDateStr = currentCursor.toISOString().split('T')[0];
-            const dow = currentCursor.getDay();
-
-            const isHolidayObj = feriados.some(f => (f.data || f) === currentDateStr);
-
-            // Um dia só conta se NÃO for feriado E se o dia da semana foi MARCADO pelo usuário
-            if (!isHolidayObj && diasMarcados.includes(dow)) {
-
-                const slotsToGive = Math.min(slotsIntensiva.length, effectiveCH - hoursAccumulated);
-                hoursAccumulated += slotsToGive;
-                remainingSlotsOnLastDay = slotsToGive;
-                horariosUltimoDia = slotsIntensiva.slice(0, slotsToGive);
-                lastValidDateStr = currentDateStr;
-
-            }
-
-            if (hoursAccumulated < effectiveCH) {
-                currentCursor.setDate(currentCursor.getDate() + 1);
-                iterationLimit--;
-            }
-        }
-
-        const dataFimCalculada = lastValidDateStr;
+        const inicioCalculado = execution.dataInicio || inicio;
+        const dataFimCalculada = execution.dataFim || inicioCalculado;
+        const horariosUltimoDia = execution.horariosUltimoDia || [];
+        const slotsIntensiva = execution.unionSlots || [];
+        diasMarcados = execution.unionDias || diasMarcados;
+        const usaSabado = diasMarcados.includes(6);
 
         const intensiveConflict = store.allocations.find(a => {
             if (String(a.turmaId) !== String(store.selectedTurma)) return false;
             if (a.tipo !== 'intensiva' || a.disciplina === disciplina) return false;
-            return hasIntensiveSlotConflict(inicio, dataFimCalculada, slotsIntensiva, a.dataInicio || store.settings.termStart, a.dataFim || store.settings.termEnd, a.horariosOcupados);
+            return hasIntensiveSlotConflict(inicioCalculado, dataFimCalculada, slotsIntensiva, a.dataInicio || store.settings.termStart, a.dataFim || store.settings.termEnd, a.horariosOcupados);
         });
 
         if (intensiveConflict) {
-            return alert(`❌ CHOQUE DE HORÁRIO!\n\nA Intensiva de "${intensiveConflict.disciplina}" já está utilizando este(s) horário(s) no mesmo período. A ação foi bloqueada.`);
+            return alert(`Conflito de horario: "${intensiveConflict.disciplina}" ja usa esse horario no mesmo periodo.`);
         }
 
-        // ==== BARREIRA GLOBAL DO PROFESSOR (INTENSIVA) ====
         const teachersToCheck = (docData.mode === 'single' ? [docData.docente] : docData.docentesList.map(d => d.nome)).filter(n => n && n.trim().toUpperCase() !== 'A DEFINIR');
 
         if (teachersToCheck.length > 0) {
@@ -1891,32 +2322,31 @@ function handleAddManual() {
 
                 const aStart = a.dataInicio || store.settings.termStart;
                 const aEnd = a.dataFim || store.settings.termEnd;
-                if (!isDateOverlap(inicio, dataFimCalculada, aStart, aEnd)) return false;
+                if (!isDateOverlap(inicioCalculado, dataFimCalculada, aStart, aEnd)) return false;
 
                 if (a.tipo === 'intensiva') {
-                    return hasIntensiveSlotConflict(inicio, dataFimCalculada, slotsIntensiva, aStart, aEnd, a.horariosOcupados);
-                } else {
-                    if (slotsIntensiva.includes(a.horario)) {
-                        if (parseInt(a.diaSemana) === 6 && !usaSabado) return false;
-                        return true;
-                    }
-                    return false;
+                    return hasIntensiveSlotConflict(inicioCalculado, dataFimCalculada, slotsIntensiva, aStart, aEnd, a.horariosOcupados);
                 }
+
+                if (slotsIntensiva.includes(a.horario)) {
+                    if (parseInt(a.diaSemana, 10) === 6 && !usaSabado) return false;
+                    return true;
+                }
+                return false;
             });
 
             if (teacherConflictGlobal) {
                 const turmaNomeConflito = getTurmaLabel(teacherConflictGlobal.turmaId);
                 const profNomes = teachersToCheck.join(', ');
-                showToastWarning(`⚠️ <b>Professor indisponível!</b><br><b>${profNomes}</b> já tem aula de <b>${teacherConflictGlobal.disciplina}</b> na turma <b>${turmaNomeConflito}</b> nestas datas.`, 'warning', 4500);
+                showToastWarning(`Professor indisponivel: ${profNomes} ja tem aula de ${teacherConflictGlobal.disciplina} na turma ${turmaNomeConflito}.`, 'warning', 4500);
                 return;
             }
         }
-        // ===================================================
 
         let idToRemove = null;
         const conflitoIntensiva = store.allocations.find(a => {
             if (String(a.turmaId) === String(store.selectedTurma) && a.disciplina === disciplina) {
-                if (a.tipo === 'intensiva' && isDateOverlap(inicio, dataFimCalculada, a.dataInicio || store.settings.termStart, a.dataFim || store.settings.termEnd)) return true;
+                if (a.tipo === 'intensiva' && isDateOverlap(inicioCalculado, dataFimCalculada, a.dataInicio || store.settings.termStart, a.dataFim || store.settings.termEnd)) return true;
                 return a.tipo !== 'intensiva';
             }
             return false;
@@ -1924,26 +2354,20 @@ function handleAddManual() {
 
         if (conflitoIntensiva) idToRemove = conflitoIntensiva.id;
 
-        const actionText = idToRemove ? "Atualizar alocação existente?" : "Confirmar alocação?";
-        if (!confirm(`${disciplina} (${formatDateBR(inicio)} a ${formatDateBR(dataFimCalculada)})\n\n${actionText}`)) return;
+        const actionText = idToRemove ? 'Atualizar alocacao existente?' : 'Confirmar alocacao?';
+        if (!confirm(`${disciplina} (${formatDateBR(inicioCalculado)} a ${formatDateBR(dataFimCalculada)})\n\n${actionText}`)) return;
 
         if (idToRemove) store.removeAllocation(idToRemove);
 
         const affectedRegulars = [];
         store.allocations.forEach(a => {
             if (String(a.turmaId) !== String(store.selectedTurma)) return;
-            // A Intensiva NÃO afeta/empurra Disciplinas Prioritárias (Chefonas)
             if (a.tipo !== 'regular') return;
 
             const sReg = a.dataInicio || store.settings.termStart;
             const eReg = a.dataFim || store.settings.termEnd;
-
-            if (isDateOverlap(inicio, dataFimCalculada, sReg, eReg)) {
-                if (slotsIntensiva.includes(a.horario)) {
-                    if (!affectedRegulars.includes(a.disciplina)) {
-                        affectedRegulars.push(a.disciplina);
-                    }
-                }
+            if (isDateOverlap(inicioCalculado, dataFimCalculada, sReg, eReg) && slotsIntensiva.includes(a.horario)) {
+                if (!affectedRegulars.includes(a.disciplina)) affectedRegulars.push(a.disciplina);
             }
         });
 
@@ -1954,13 +2378,15 @@ function handleAddManual() {
             docentes: docData.docentesList,
             tipo: 'intensiva',
             ch: effectiveCH,
-            dataInicio: inicio,
+            dataInicio: inicioCalculado,
             dataFim: dataFimCalculada,
-            modelo: 'Automático',
+            modelo: 'Automatico',
             horariosOcupados: slotsIntensiva,
             horariosUltimoDia: horariosUltimoDia,
-            diasMarcados: diasMarcados,   // Array de dias da semana explícitos [1,2,3,4,5]
-            subGrupo: subGrupo || null,   // Sub-grupo da turma (ex: '01', '02')
+            diasMarcados: diasMarcados,
+            usaSabado: usaSabado,
+            faixas: faixasConfig,
+            subGrupo: subGrupo || null,
             cor: inputConfig.cor ? inputConfig.cor.value : store.getDisciplinaColor(disciplina)
         });
 
@@ -1970,14 +2396,13 @@ function handleAddManual() {
 
         if (affectedRegulars.length > 0) {
             const nomes = affectedRegulars.join(', ');
-            showToastWarning(`💡 <b>Ajuste Automático:</b> A(s) disciplina(s) <b>${nomes}</b> teve/tiveram aulas suspensas e a data final foi empurrada para frente!`, 'success');
+            showToastWarning(`Ajuste automatico: ${nomes} teve/tiveram aulas suspensas e data final compensada.`, 'success');
         }
 
     } else {
         alert('Para regular, clique na grade.');
     }
 }
-
 function renderOfertasList() {
     const tbody = document.querySelector('#ofertas-table tbody');
     if (!tbody) return;
@@ -2052,42 +2477,9 @@ function renderOfertasList() {
 
             details = `${numAulasBase} semanas`;
         } else {
-            // CÁLCULO DINÂMICO DE HORAS (INTENSIVA): 
-            // Varre o período e soma slots reais, respeitando suspensões por Prioritárias.
-            let totalHorasIntensiva = 0;
-            let current = new Date(start + 'T12:00:00');
-            const endObj = new Date(end + 'T12:00:00');
-            const feriadosSet = new Set(feriados.map(f => (f.data || f)));
-            const slots = a.horariosOcupados || [];
-            const priorityRegulars = list.filter(p => p.tipo === 'regular_prioritaria');
-
-            let dayCount = 0;
-            // Retaguarda de segurança: se for grade antiga sem 'diasMarcados', permite uso de Sabado pela flag antiga ou default Seg-Sáb
-            const diasPermitidos = Array.isArray(a.diasMarcados) ? a.diasMarcados : (a.usaSabado ? [1, 2, 3, 4, 5, 6] : [1, 2, 3, 4, 5, 6]);
-
-            while (current <= endObj) {
-                const dStr = current.toISOString().split('T')[0];
-                const dow = current.getDay();
-
-                const isHoliday = feriadosSet.has(dStr);
-
-                // O dia só é válido se não for feriado E estiver marcado no array diasPermitidos da disciplina
-                if (!isHoliday && diasPermitidos.includes(dow)) {
-                    if (slots.length > 0 && totalHorasIntensiva < chMax) {
-                        dayCount++;
-                        const diff = chMax - totalHorasIntensiva;
-                        if (dStr === end && a.horariosUltimoDia && a.horariosUltimoDia.length > 0) {
-                            totalHorasIntensiva += Math.min(a.horariosUltimoDia.length, diff);
-                        } else {
-                            totalHorasIntensiva += Math.min(slots.length, diff);
-                        }
-                    }
-                }
-                current.setDate(current.getDate() + 1);
-            }
-
-            totalHoras = totalHorasIntensiva;
-            details = `${dayCount} dias`;
+            const execution = computeIntensiveExecution(a, { respectPriority: true });
+            totalHoras = execution.totalHours;
+            details = `${Object.keys(execution.byDate || {}).length} dias`;
         }
 
         let color = '#2c3e50';
@@ -2216,6 +2608,7 @@ function renderOfertasList() {
                     if (a.tipo === 'intensiva') {
                         const chkSabado = document.getElementById('chk-sabados');
                         if (chkSabado) chkSabado.checked = !!a.usaSabado;
+                        hydrateFaixasFromIntensiva(a);
                     }
 
                     const chkMulti = document.getElementById('chk-multi-docente');
@@ -2883,7 +3276,7 @@ function detectGlobalTeacherConflicts() {
                 const regDay = parseInt(regAlloc.diaSemana);
 
                 // Fallback de retrocompatibilidade
-                const diasPermitidos = Array.isArray(intAlloc.diasMarcados) ? intAlloc.diasMarcados : (intAlloc.usaSabado ? [1, 2, 3, 4, 5, 6] : [1, 2, 3, 4, 5, 6]);
+                const diasPermitidos = Array.isArray(intAlloc.diasMarcados) ? intAlloc.diasMarcados : (intAlloc.usaSabado ? [1, 2, 3, 4, 5, 6] : [1, 2, 3, 4, 5]);
 
                 const isIntDayActive = diasPermitidos.includes(regDay);
                 if (isIntDayActive && intAlloc.horariosOcupados && intAlloc.horariosOcupados.includes(regAlloc.horario)) {
@@ -3246,3 +3639,4 @@ function switchTab(tabId) {
 }
 
 export { renderWeeklyGrid, renderOfertasList, renderMonthlyCalendar, renderTeacherCalendar };
+
