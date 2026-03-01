@@ -902,11 +902,18 @@
             </section>
 
             <section id="tab-list" class="tab-content">
-                <h3>Ofertas Cadastradas</h3>
+                <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:10px;">
+                    <h3 style="margin:0;">Ofertas Cadastradas</h3>
+                    <button id="btn-export-sigaa-json" class="btn-secondary"
+                        style="background: var(--primary); color:#fff; border:none; padding:8px 12px;">
+                        Exportar Metadados SIGAA (JSON)
+                    </button>
+                </div>
                 <table class="data-table" id="ofertas-table">
                     <thead>
                         <tr>
                             <th>Disciplina</th>
+                            <th>Código</th>
                             <th>Docente</th>
                             <th>Tipo</th>
                             <th>Horário/Data</th>

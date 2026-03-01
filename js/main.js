@@ -1,5 +1,5 @@
 import { store } from './store.js';
-import { initUI } from './ui.js';
+import { initUI, exportSigaaMetadataJSON } from './ui.js';
 
 // Executar imediatamente (scripts type="module" já são diferidos e o DOM já deve estar pronto)
 (async () => {
@@ -83,6 +83,11 @@ import { initUI } from './ui.js';
 
       alert("Arquivo '" + fileName + "' gerado com sucesso!\n\nFaça o upload deste arquivo no GitHub para atualizar a grade de todos os alunos instantaneamente.");
     };
+  }
+
+  const btnExportSigaa = document.getElementById('btn-export-sigaa-json');
+  if (btnExportSigaa) {
+    btnExportSigaa.onclick = () => exportSigaaMetadataJSON();
   }
 
   // Importar (Mesclar/Substituir)

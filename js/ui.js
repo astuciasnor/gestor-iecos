@@ -2526,23 +2526,22 @@ function renderOfertasList() {
         theadTr.insertBefore(thSigaa, theadTr.lastElementChild);
     }
 
-    tbody.innerHTML = '';
-    const list = store.allocations.filter((a) => String(a.turmaId) === String(store.selectedTurma));
-    const feriados = store.rawData?.feriados ? store.rawData.feriados.map((f) => f.data) : [];
-    const semestreInicio = calStart ? calStart.value : '2025-01-01';
-    const semestreFim = calEnd ? calEnd.value : '2025-12-31';
+    const getColCount = () => document.querySelectorAll('#ofertas-table thead th').length || 8;
+    const dayLabels = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab'];
+    const semesterStart = calStart ? calStart.value : '2025-01-01';
+    const semesterEnd = calEnd ? calEnd.value : '2025-12-31';
+    const regularExec = getRegularExecutionSnapshot(String(store.selectedTurma), semesterStart, semesterEnd);
+    const intensiveExec = getIntensiveExecutionSnapshot(String(store.selectedTurma), semesterStart, semesterEnd);
 
+    const list = store.allocations.filter((a) => String(a.turmaId) === String(store.selectedTurma));
     const regular = list.filter((a) => a.tipo === 'regular' || a.tipo === 'regular_prioritaria');
     const intensivas = list.filter((a) => a.tipo === 'intensiva');
     const pendentes = list.filter((a) => a.tipo === 'pendente');
 
-    intensivas.sort((a, b) => (a.dataInicio || '').localeCompare(b.dataInicio || ''));
-    regular.sort((a, b) => (a.disciplina || '').localeCompare(b.disciplina || ''));
-
     const appendSeparator = (label) => {
         const tr = document.createElement('tr');
         tr.className = 'month-sep';
-        tr.innerHTML = `<td colspan="7">${label}</td>`;
+        tr.innerHTML = `<td colspan="${getColCount()}">${label}</td>`;
         tbody.appendChild(tr);
     };
 
@@ -2552,223 +2551,348 @@ function renderOfertasList() {
         appendSeparator(nomeMes.toUpperCase());
     };
 
-    let currentMonth = null;
+    const ensureWarningEndDate = (end) => {
+        let endFmt = formatDateBR(end);
+        if (store.settings.termEnd && end > store.settings.termEnd) {
+            endFmt = `<span style="color:#c0392b; font-weight:bold; font-size:1.1em;" title="Atenção: Esta data ultrapassa o fim oficial do semestre!">${endFmt}</span>`;
+        }
+        return endFmt;
+    };
 
-    const appendRow = (a) => {
-        const tr = document.createElement('tr');
-        const info = getDisciplinaInfo(a.disciplina);
-        const chMax = a.ch || info.ch;
-        let totalHoras = 0, details = '';
-        const start = a.dataInicio || semestreInicio;
-        const end = a.dataFim || semestreFim;
+    const buildRegularRows = () => {
+        const grouped = new Map();
+        regular.forEach((a) => {
+            const key = [a.disciplina, a.docente, a.tipo, a.subGrupo || ''].join('|');
+            if (!grouped.has(key)) grouped.set(key, []);
+            grouped.get(key).push(a);
+        });
 
-        if (a.tipo === 'pendente') {
-            details = `Aguardando grade`;
-        } else if (a.tipo === 'regular' || a.tipo === 'regular_prioritaria') {
-            const suspended = getSuspendedDates(store.allocations, a.turmaId, a.diaSemana, a.disciplina, start);
-            const numAulasBase = countWeekdaysInPeriod(start, end, parseInt(a.diaSemana), feriados, suspended);
+        const rows = [];
+        grouped.forEach((allocs) => {
+            const sorted = allocs.slice().sort((x, y) => {
+                const byDay = parseInt(x.diaSemana, 10) - parseInt(y.diaSemana, 10);
+                if (byDay !== 0) return byDay;
+                return timeToMinutes(x.horario) - timeToMinutes(y.horario);
+            });
+            const fallbackStart = sorted.map((a) => a.dataInicio || semesterStart).sort()[0];
+            const fallbackEnd = sorted.map((a) => a.dataFim || semesterEnd).sort().slice(-1)[0];
+            let totalHoras = 0;
+            let maxSemanas = 0;
+            let start = null;
+            let end = null;
+            sorted.forEach((a) => {
+                const horas = regularExec.hoursByAlloc.get(a.id) || 0;
+                totalHoras += horas;
 
-            // Subtrair slots fantasmas do último dia se limitamos a carga matemática
-            // Cada dia base na lista vale 1 slot. Precisamos achar quantos slots esse bloco tem hoje.
-            const slotsDesseDia = store.allocations.filter(all => String(all.turmaId) === String(a.turmaId) && all.disciplina === a.disciplina && parseInt(all.diaSemana) === parseInt(a.diaSemana)).length;
+                const datesSet = regularExec.datesByAlloc.get(a.id);
+                const semanas = datesSet ? datesSet.size : 0;
+                if (semanas > maxSemanas) maxSemanas = semanas;
 
-            totalHoras = numAulasBase * 1;
-
-            if (a.horariosUltimoDia && a.horariosUltimoDia.length > 0 && slotsDesseDia > 0) {
-                // Se no último dia o sistema cortou slots pra não estourar, a gente compensa na UI visual subtraindo
-                // o que não foi dado se for o loop responsável pelo fim do slot.
-                const removedSlots = slotsDesseDia - a.horariosUltimoDia.length;
-                // O ui.js chama na DOM 1 linha inteira por slot, então totalHoras de cada 'linha visual' 
-                // representa 1 hora diária para numAulasBase. Se esse for o slot cortado, ele reduz sua cota.
-                if (!a.horariosUltimoDia.includes(a.horario) && numAulasBase > 0) {
-                    totalHoras -= 1;
+                if (datesSet && datesSet.size > 0) {
+                    datesSet.forEach((d) => {
+                        if (!start || d < start) start = d;
+                        if (!end || d > end) end = d;
+                    });
                 }
+            });
+            if (!start) start = fallbackStart;
+            if (!end) end = fallbackEnd;
+
+            const first = sorted[0];
+            const info = getDisciplinaInfo(first.disciplina);
+            const horariosResumo = sorted.map((a) => `${dayLabels[a.diaSemana] || 'Dia'} ${a.horario}`).join(', ');
+
+            rows.push({
+                rowType: 'regular_group',
+                baseAlloc: first,
+                groupIds: sorted.map((a) => a.id),
+                disciplina: first.disciplina,
+                codigo: info.codigo || '-',
+                docente: first.docente,
+                tipoLabel: first.tipo === 'regular_prioritaria' ? '<b>Regular (Prioritária)</b>' : 'regular',
+                start,
+                end,
+                horarioTxt: `${formatDateBR(start)} a ${ensureWarningEndDate(end)}<br><small>${horariosResumo}</small>`,
+                totalHoras,
+                chMax: first.ch || info.ch,
+                details: `${maxSemanas} semanas`,
+                sigaaCode: getSigaaCode(sorted)
+            });
+        });
+
+        rows.sort((a, b) => (a.disciplina || '').localeCompare(b.disciplina || ''));
+        return rows;
+    };
+
+    const buildIntensiveRows = () => {
+        const rows = [];
+        intensivas
+            .slice()
+            .sort((a, b) => (a.dataInicio || '').localeCompare(b.dataInicio || ''))
+            .forEach((base) => {
+                const info = getDisciplinaInfo(base.disciplina);
+                const faixas = getNormalizedIntensiveFaixas(base);
+                const fallbackDias = Array.isArray(base.diasMarcados) && base.diasMarcados.length > 0
+                    ? base.diasMarcados
+                    : (base.usaSabado ? [1, 2, 3, 4, 5, 6] : [1, 2, 3, 4, 5]);
+                const fallbackSlots = Array.isArray(base.horariosOcupados) ? base.horariosOcupados : [];
+
+                const resolvedFaixas = faixas.length > 0
+                    ? faixas
+                    : [{
+                        inicio: base.dataInicio || semesterStart,
+                        fim: base.dataFim || semesterEnd,
+                        dias: fallbackDias,
+                        slots: fallbackSlots,
+                        drawnSlotsByDay: fallbackDias.reduce((acc, d) => {
+                            acc[d] = [...fallbackSlots];
+                            return acc;
+                        }, {})
+                    }];
+
+                resolvedFaixas.forEach((faixa, idx) => {
+                    const faixaStart = faixa.inicio || base.dataInicio || semesterStart;
+                    const faixaEnd = faixa.fim || base.dataFim || semesterEnd;
+                    const faixaDias = Array.isArray(faixa.dias) && faixa.dias.length > 0 ? faixa.dias : fallbackDias;
+                    const faixaSlots = Array.isArray(faixa.slots) && faixa.slots.length > 0 ? faixa.slots : fallbackSlots;
+                    const dateHours = intensiveExec.dateHoursByAlloc.get(base.id) || new Map();
+                    let faixaTotalHoras = 0;
+                    const faixaDaysSet = new Set();
+                    dateHours.forEach((hours, dStr) => {
+                        if (dStr >= faixaStart && dStr <= faixaEnd) {
+                            faixaTotalHoras += hours;
+                            if (hours > 0) faixaDaysSet.add(dStr);
+                        }
+                    });
+
+                    const scoped = {
+                        ...base,
+                        ch: 0,
+                        dataInicio: faixaStart,
+                        dataFim: faixaEnd,
+                        diasMarcados: faixaDias,
+                        horariosOcupados: faixaSlots,
+                        usaSabado: faixaDias.includes(6),
+                        faixas: [{ ...faixa, inicio: faixaStart, fim: faixaEnd, dias: faixaDias, slots: faixaSlots }]
+                    };
+                    const sigaaCode = getSigaaCode([scoped]);
+                    const sabadoLabel = faixaDias.includes(6)
+                        ? `<br><span style="color:#e67e22; font-weight:bold; font-size:0.8em;">(Inclui Sábados)</span>`
+                        : '';
+
+                    rows.push({
+                        rowType: 'intensiva_faixa',
+                        baseAlloc: base,
+                        groupIds: [base.id],
+                        disciplina: base.disciplina,
+                        codigo: info.codigo || '-',
+                        docente: base.docente,
+                        tipoLabel: resolvedFaixas.length > 1 ? `intensiva <small>(Faixa ${idx + 1})</small>` : 'intensiva',
+                        start: faixaStart,
+                        end: faixaEnd,
+                        horarioTxt: `${formatDateBR(faixaStart)} a ${ensureWarningEndDate(faixaEnd)}<br><small>Int. Faixa ${idx + 1}</small>`,
+                        totalHoras: faixaTotalHoras,
+                        chMax: base.ch || info.ch,
+                        details: `${faixaDaysSet.size} dias`,
+                        sigaaCode,
+                        sabadoLabel
+                    });
+                });
+            });
+
+        return rows;
+    };
+
+    const buildPendenteRows = () => {
+        return pendentes.map((a) => {
+            const info = getDisciplinaInfo(a.disciplina);
+            return {
+                rowType: 'pendente',
+                baseAlloc: a,
+                groupIds: [a.id],
+                disciplina: a.disciplina,
+                codigo: info.codigo || '-',
+                docente: a.docente,
+                tipoLabel: '<span style="background:#f1c40f; color:#000; padding:2px 6px; border-radius:4px; font-size:0.85em; font-weight:bold;">Pendente</span>',
+                start: a.dataInicio || semesterStart,
+                end: a.dataFim || semesterEnd,
+                horarioTxt: '<span style="color:#e67e22; font-style:italic; font-weight:bold;">Sem horário definido</span>',
+                totalHoras: 0,
+                chMax: a.ch || info.ch,
+                details: 'Aguardando grade',
+                sigaaCode: '-'
+            };
+        });
+    };
+
+    const handleCopySigaa = async (btn) => {
+        const textToCopy = btn.dataset.code;
+        const origHtml = btn.innerHTML;
+        const origBg = btn.style.backgroundColor;
+        const origColor = btn.style.color;
+        const origBorder = btn.style.borderColor;
+        try {
+            if (navigator.clipboard && window.isSecureContext) {
+                await navigator.clipboard.writeText(textToCopy);
+            } else {
+                const ta = document.createElement('textarea');
+                ta.value = textToCopy;
+                ta.style.position = 'fixed';
+                ta.style.opacity = '0';
+                document.body.appendChild(ta);
+                ta.select();
+                document.execCommand('copy');
+                document.body.removeChild(ta);
             }
-
-            details = `${numAulasBase} semanas`;
-        } else {
-            const execution = computeIntensiveExecution(a, { respectPriority: true });
-            totalHoras = execution.totalHours;
-            details = `${Object.keys(execution.byDate || {}).length} dias`;
+            btn.innerHTML = 'Copiado';
+            btn.style.backgroundColor = '#27ae60';
+            btn.style.color = '#ffffff';
+            btn.style.borderColor = '#27ae60';
+            setTimeout(() => {
+                btn.innerHTML = origHtml;
+                btn.style.backgroundColor = origBg;
+                btn.style.color = origColor;
+                btn.style.borderColor = origBorder;
+            }, 2000);
+        } catch (err) {
+            console.error('Falha ao copiar', err);
         }
+    };
 
+    const appendRow = (row) => {
+        const tr = document.createElement('tr');
         let color = '#2c3e50';
-        if (chMax > 0) {
-            if (totalHoras < chMax) color = '#d35400';
-            if (totalHoras === chMax) color = '#27ae60';
-            if (totalHoras > chMax) color = '#c0392b';
+        if (row.chMax > 0) {
+            if (row.totalHoras < row.chMax) color = '#d35400';
+            if (row.totalHoras === row.chMax) color = '#27ae60';
+            if (row.totalHoras > row.chMax) color = '#c0392b';
         }
+        const chInfo = row.rowType === 'pendente'
+            ? `<span style="color:#7f8c8d;">--- / ${row.chMax}h</span>`
+            : `<b style="color:${color}">${row.totalHoras}</b> / ${row.chMax}h <small>(${row.details})</small>${row.sabadoLabel || ''}`;
 
-        const allocsDaDisciplina = store.allocations.filter(x => String(x.turmaId) === String(a.turmaId) && x.disciplina === a.disciplina && x.tipo !== 'pendente');
-        const sigaaCode = allocsDaDisciplina.length > 0 ? getSigaaCode(allocsDaDisciplina) : '-';
+        const btnCopySigaa = row.sigaaCode && row.sigaaCode !== '-'
+            ? `<div style="display:flex; align-items:center; justify-content:center; gap:6px;">
+                    <span style="font-family:monospace; font-weight:bold; background:#ecf0f1; padding:2px 6px; border-radius:4px; font-size:0.9em; letter-spacing:1px;">${row.sigaaCode}</span>
+                    <button class="btn-sigaa-copy" data-code="${row.sigaaCode}" title="Copiar Código" style="background:transparent; color:var(--primary); border:1px solid #ccc; border-radius:4px; cursor:pointer; padding:2px 6px; font-size:0.9em; transition: all 0.2s;">Copiar</button>
+               </div>`
+            : `<span style="color:#999;">-</span>`;
 
-        let btnCopySigaa = '';
-        if (sigaaCode !== '-') {
-            btnCopySigaa = `
-            <div style="display:flex; align-items:center; justify-content:center; gap:6px;">
-                <span style="font-family:monospace; font-weight:bold; background:#ecf0f1; padding:2px 6px; border-radius:4px; font-size:0.9em; letter-spacing:1px;" id="sigaa-${a.id}">${sigaaCode}</span>
-                <button class="btn-sigaa-copy" data-code="${sigaaCode}" title="Copiar Código" style="background:transparent; color:var(--primary); border:1px solid #ccc; border-radius:4px; cursor:pointer; padding:2px 6px; font-size:0.9em; transition: all 0.2s;">📋</button>
-            </div>`;
-        } else {
-            btnCopySigaa = `<span style="color:#999;">-</span>`;
-        }
-
-        const sabadoLabel = a.usaSabado ? `<br><span style="color:#e67e22; font-weight:bold; font-size:0.8em;">(Inclui Sábados)</span>` : '';
-        const chInfo = a.tipo === 'pendente' ? `<span style="color:#7f8c8d;">--- / ${chMax}h</span>` : `<b style="color:${color}">${totalHoras}</b> / ${chMax}h <small>(${details})</small>${sabadoLabel}`;
-
-        let labelTipo = a.tipo;
-        if (a.tipo === 'regular_prioritaria') labelTipo = '<b>Regular (Prioritária)</b>';
-        if (a.tipo === 'pendente') labelTipo = '<span style="background:#f1c40f; color:#000; padding:2px 6px; border-radius:4px; font-size:0.85em; font-weight:bold;">Pendente</span>';
-
-        let horarioTxt = '';
-        if (a.tipo === 'pendente') {
-            horarioTxt = '<span style="color:#e67e22; font-style:italic; font-weight:bold;">Sem horário definido</span>';
-        } else {
-            let endFmt = formatDateBR(end);
-            if (store.settings.termEnd && end > store.settings.termEnd) {
-                endFmt = `<span style="color:#c0392b; font-weight:bold; font-size:1.1em;" title="Atenção: Esta data ultrapassa o fim oficial do semestre!">⚠️ ${endFmt}</span>`;
-            }
-            horarioTxt = `${formatDateBR(start)} a ${endFmt}<br><small>${['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab'][a.diaSemana] || 'Int.'} ${a.horario || ''}</small>`;
-        }
-
-        let btnHtml = `<button class="btn-danger btn-delete-row" style="padding:4px 8px; margin:0; font-size:0.85em; border-radius:3px; cursor:pointer;" title="Excluir">🗑️ Excluir</button>`;
-        btnHtml = `<button class="btn-primary btn-edit-row" style="padding:4px 8px; margin:0; font-size:0.85em; background-color:#2980b9; border:none; color:white; border-radius:3px; cursor:pointer; margin-right:5px;" title="Editar">✏️ Editar</button>` + btnHtml;
+        const btnHtml = `
+            <button class="btn-primary btn-edit-row" style="padding:4px 8px; margin:0; font-size:0.85em; background-color:#2980b9; border:none; color:white; border-radius:3px; cursor:pointer; margin-right:5px;" title="Editar">Editar</button>
+            <button class="btn-danger btn-delete-row" style="padding:4px 8px; margin:0; font-size:0.85em; border-radius:3px; cursor:pointer;" title="Excluir">Excluir</button>
+        `;
 
         tr.innerHTML = `
-            <td>${a.disciplina}</td>
-            <td>${a.docente}</td>
-            <td>${labelTipo}</td>
-            <td>${horarioTxt}</td>
+            <td>${row.disciplina}</td>
+            <td style="text-align:center; font-family:monospace; font-weight:bold;">${row.codigo || '-'}</td>
+            <td>${row.docente || '-'}</td>
+            <td>${row.tipoLabel}</td>
+            <td>${row.horarioTxt}</td>
             <td style="text-align:center;">${chInfo}</td>
             <td style="text-align:center;">${btnCopySigaa}</td>
             <td style="white-space:nowrap;"><div style="display:flex; justify-content:center;">${btnHtml}</div></td>
         `;
 
+        const idsToRemove = Array.isArray(row.groupIds) && row.groupIds.length > 0 ? row.groupIds : [row.baseAlloc.id];
+
         const copyBtn = tr.querySelector('.btn-sigaa-copy');
-        if (copyBtn) {
-            copyBtn.onclick = async (e) => {
-                const btn = e.currentTarget;
-                const textToCopy = btn.dataset.code;
-                const origHtml = btn.innerHTML;
-                const origBg = btn.style.backgroundColor;
-                const origColor = btn.style.color;
-                const origBorder = btn.style.borderColor;
+        if (copyBtn) copyBtn.onclick = (e) => handleCopySigaa(e.currentTarget);
 
-                try {
-                    if (navigator.clipboard && window.isSecureContext) {
-                        await navigator.clipboard.writeText(textToCopy);
-                    } else {
-                        const textArea = document.createElement("textarea");
-                        textArea.value = textToCopy;
-                        textArea.style.position = "fixed";
-                        textArea.style.opacity = "0";
-                        document.body.appendChild(textArea);
-                        textArea.select();
-                        document.execCommand("copy");
-                        document.body.removeChild(textArea);
-                    }
-
-                    btn.innerHTML = '✅ Copiado';
-                    btn.style.backgroundColor = '#27ae60';
-                    btn.style.color = '#ffffff';
-                    btn.style.borderColor = '#27ae60';
-
-                    setTimeout(() => {
-                        btn.innerHTML = origHtml;
-                        btn.style.backgroundColor = origBg;
-                        btn.style.color = origColor;
-                        btn.style.borderColor = origBorder;
-                    }, 2000);
-                } catch (err) {
-                    console.error('Falha ao copiar', err);
-                }
-            };
-        }
-
-        tr.querySelector('.btn-delete-row').onclick = () => {
-            if (confirm('Remover esta oferta?')) {
-                store.removeAllocation(a.id);
+        const btnDelete = tr.querySelector('.btn-delete-row');
+        if (btnDelete) {
+            btnDelete.onclick = () => {
+                const msg = idsToRemove.length > 1
+                    ? 'Remover este bloco (todas as linhas associadas)?'
+                    : 'Remover esta oferta?';
+                if (!confirm(msg)) return;
+                idsToRemove.forEach((id) => store.removeAllocation(id));
                 syncAllRegularDates();
                 syncAllIntensiveDates();
                 renderWeeklyGrid();
                 renderOfertasList();
-            }
-        };
+            };
+        }
 
         const btnEdit = tr.querySelector('.btn-edit-row');
         if (btnEdit) {
             btnEdit.onclick = () => {
-                if (confirm('Carregar para edição? A oferta antiga será removida e você deverá clicar na grade para posicioná-la.')) {
-                    if (inputConfig.disciplina) {
-                        inputConfig.disciplina.value = `${a.disciplina} (${info.ch}h)`;
-                        inputConfig.disciplina.dispatchEvent(new Event('input'));
-                    }
-                    if (inputConfig.cor && a.cor) {
-                        inputConfig.cor.value = a.cor;
-                        setTimeout(() => { inputConfig.cor.value = a.cor; }, 50);
-                    }
-                    if (inputConfig.tipo) {
-                        inputConfig.tipo.value = a.tipo === 'pendente' ? 'regular' : a.tipo;
-                        inputConfig.tipo.dispatchEvent(new Event('change'));
-                    }
-                    if (inputConfig.inicio && a.dataInicio) {
-                        inputConfig.inicio.value = a.dataInicio;
-                    }
+                const a = row.baseAlloc;
+                const info = getDisciplinaInfo(a.disciplina);
+                if (!confirm('Carregar para edição? A oferta antiga será removida e você deverá clicar na grade para posicioná-la.')) return;
 
-                    if (a.tipo === 'intensiva') {
-                        const chkSabado = document.getElementById('chk-sabados');
-                        if (chkSabado) chkSabado.checked = !!a.usaSabado;
-                        hydrateFaixasFromIntensiva(a);
-                    }
-
-                    const chkMulti = document.getElementById('chk-multi-docente');
-                    if (a.docentes && a.docentes.length > 0) {
-                        if (chkMulti && !chkMulti.checked) {
-                            chkMulti.checked = true;
-                            chkMulti.dispatchEvent(new Event('change'));
-                        }
-                        const listMulti = document.getElementById('multi-docente-list');
-                        if (listMulti) {
-                            listMulti.innerHTML = '';
-                            a.docentes.forEach(d => {
-                                addTeacherRow(d.nome, d.ch);
-                            });
-                            updateTotalCHDisplay();
-                        }
-                    } else {
-                        if (chkMulti && chkMulti.checked) {
-                            chkMulti.checked = false;
-                            chkMulti.dispatchEvent(new Event('change'));
-                        }
-                        if (inputConfig.docente) {
-                            inputConfig.docente.value = a.docente === 'A definir' ? '' : (a.docente || '');
-                            inputConfig.docente.dispatchEvent(new Event('input'));
-                        }
-                    }
-
-                    if (a.horariosOcupados) {
-                        const containerSlots = document.getElementById('slots-checkboxes');
-                        if (containerSlots) {
-                            containerSlots.querySelectorAll('input[type="checkbox"]').forEach(cb => {
-                                cb.checked = a.horariosOcupados.includes(cb.value);
-                            });
-                        }
-                    }
-
-                    store.removeAllocation(a.id);
-                    syncAllRegularDates();
-                    renderWeeklyGrid();
-                    renderOfertasList();
-                    if (a.tipo !== 'intensiva') switchTab('weekly');
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                if (inputConfig.disciplina) {
+                    inputConfig.disciplina.value = `${a.disciplina} (${info.ch}h)`;
+                    inputConfig.disciplina.dispatchEvent(new Event('input'));
                 }
+                if (inputConfig.cor && a.cor) {
+                    inputConfig.cor.value = a.cor;
+                    setTimeout(() => { inputConfig.cor.value = a.cor; }, 50);
+                }
+                if (inputConfig.tipo) {
+                    inputConfig.tipo.value = a.tipo === 'pendente' ? 'regular' : a.tipo;
+                    inputConfig.tipo.dispatchEvent(new Event('change'));
+                }
+                if (inputConfig.inicio && a.dataInicio) inputConfig.inicio.value = a.dataInicio;
+
+                if (a.tipo === 'intensiva') {
+                    const chkSabado = document.getElementById('chk-sabados');
+                    if (chkSabado) chkSabado.checked = !!a.usaSabado;
+                    hydrateFaixasFromIntensiva(a);
+                }
+
+                const chkMulti = document.getElementById('chk-multi-docente');
+                if (a.docentes && a.docentes.length > 0) {
+                    if (chkMulti && !chkMulti.checked) {
+                        chkMulti.checked = true;
+                        chkMulti.dispatchEvent(new Event('change'));
+                    }
+                    const listMulti = document.getElementById('multi-docente-list');
+                    if (listMulti) {
+                        listMulti.innerHTML = '';
+                        a.docentes.forEach((d) => addTeacherRow(d.nome, d.ch));
+                        updateTotalCHDisplay();
+                    }
+                } else {
+                    if (chkMulti && chkMulti.checked) {
+                        chkMulti.checked = false;
+                        chkMulti.dispatchEvent(new Event('change'));
+                    }
+                    if (inputConfig.docente) {
+                        inputConfig.docente.value = a.docente === 'A definir' ? '' : (a.docente || '');
+                        inputConfig.docente.dispatchEvent(new Event('input'));
+                    }
+                }
+
+                if (a.horariosOcupados) {
+                    const containerSlots = document.getElementById('slots-checkboxes');
+                    if (containerSlots) {
+                        containerSlots.querySelectorAll('input[type="checkbox"]').forEach((cb) => {
+                            cb.checked = a.horariosOcupados.includes(cb.value);
+                        });
+                    }
+                }
+
+                idsToRemove.forEach((id) => store.removeAllocation(id));
+                syncAllRegularDates();
+                renderWeeklyGrid();
+                renderOfertasList();
+                if (a.tipo !== 'intensiva') switchTab('weekly');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
             };
         }
+
         tbody.appendChild(tr);
     };
 
-    intensivas.forEach((a) => {
-        const monthKey = a.dataInicio ? a.dataInicio.substring(0, 7) : '';
+    const intensiveRows = buildIntensiveRows();
+    const regularRows = buildRegularRows();
+    const pendenteRows = buildPendenteRows();
+
+    tbody.innerHTML = '';
+    let currentMonth = null;
+    intensiveRows.forEach((row) => {
+        const monthKey = row.start ? row.start.substring(0, 7) : '';
         if (monthKey && monthKey !== currentMonth) {
             appendMonthSeparator(monthKey);
             currentMonth = monthKey;
@@ -2777,24 +2901,234 @@ function renderOfertasList() {
             appendSeparator('SEM DATA');
             currentMonth = 'SEM DATA';
         }
-        appendRow(a);
+        appendRow(row);
     });
 
-    if (regular.length > 0) {
+    if (regularRows.length > 0) {
         appendSeparator('AULAS REGULARES (E PRIORITÁRIAS)');
-        regular.forEach(appendRow);
+        regularRows.forEach(appendRow);
     }
 
-    if (pendentes.length > 0) {
+    if (pendenteRows.length > 0) {
         appendSeparator('AGUARDANDO ALOCAÇÃO NA GRADE (PENDENTES)');
-        pendentes.forEach(appendRow);
+        pendenteRows.forEach(appendRow);
     }
 
-    if (intensivas.length === 0 && regular.length === 0 && pendentes.length === 0) {
+    if (intensiveRows.length === 0 && regularRows.length === 0 && pendenteRows.length === 0) {
         const tr = document.createElement('tr');
-        tr.innerHTML = `<td colspan="7" style="text-align:center; color:#666;">Nenhuma oferta cadastrada.</td>`;
+        tr.innerHTML = `<td colspan="${getColCount()}" style="text-align:center; color:#666;">Nenhuma oferta cadastrada.</td>`;
         tbody.appendChild(tr);
     }
+}
+
+function buildSigaaMetadataPayload() {
+    if (!store.selectedTurma) return null;
+
+    const turmaId = String(store.selectedTurma);
+    const list = store.allocations.filter((a) => String(a.turmaId) === turmaId);
+    const regular = list.filter((a) => a.tipo === 'regular' || a.tipo === 'regular_prioritaria');
+    const intensivas = list.filter((a) => a.tipo === 'intensiva');
+    const pendentes = list.filter((a) => a.tipo === 'pendente');
+    const semesterStart = calStart ? calStart.value : (store.settings.termStart || '2025-01-01');
+    const semesterEnd = calEnd ? calEnd.value : (store.settings.termEnd || '2025-12-31');
+
+    const regularExec = getRegularExecutionSnapshot(turmaId, semesterStart, semesterEnd);
+    const regularGroups = new Map();
+    regular.forEach((a) => {
+        const key = [a.disciplina, a.docente, a.tipo, a.subGrupo || ''].join('|');
+        if (!regularGroups.has(key)) regularGroups.set(key, []);
+        regularGroups.get(key).push(a);
+    });
+
+    const ofertas = [];
+    regularGroups.forEach((allocs) => {
+        const base = allocs[0];
+        const info = getDisciplinaInfo(base.disciplina);
+        const activeDates = new Set();
+        allocs.forEach((a) => {
+            const datesSet = regularExec.datesByAlloc.get(a.id);
+            if (datesSet && datesSet.size > 0) {
+                datesSet.forEach((d) => activeDates.add(d));
+            }
+        });
+
+        let faixas = [];
+        if (activeDates.size > 0) {
+            const orderedDates = [...activeDates].sort();
+            faixas = [{
+                inicio: orderedDates[0],
+                fim: orderedDates[orderedDates.length - 1],
+                sigaa: getSigaaCode(allocs)
+            }];
+        } else {
+            const byInterval = new Map();
+            allocs.forEach((a) => {
+                const start = a.dataInicio || semesterStart;
+                const end = a.dataFim || semesterEnd;
+                const key = `${start}|${end}`;
+                if (!byInterval.has(key)) byInterval.set(key, []);
+                byInterval.get(key).push(a);
+            });
+            byInterval.forEach((slice, intervalKey) => {
+                const [start, end] = intervalKey.split('|');
+                faixas.push({
+                    inicio: start,
+                    fim: end,
+                    sigaa: getSigaaCode(slice)
+                });
+            });
+        }
+        ofertas.push({
+            componente: base.disciplina,
+            codigo: info.codigo || '',
+            tipo: base.tipo,
+            cargaHoraria: base.ch || info.ch || 0,
+            docente: base.docente || '',
+            subGrupo: base.subGrupo || '',
+            horarioSigaa: faixas.map((f) => `${f.sigaa} (${formatDateBR(f.inicio)} - ${formatDateBR(f.fim)})`).join(', '),
+            faixas
+        });
+    });
+
+    intensivas.forEach((a) => {
+        const info = getDisciplinaInfo(a.disciplina);
+        const normalizedFaixas = getNormalizedIntensiveFaixas(a);
+        const fallbackDias = Array.isArray(a.diasMarcados) && a.diasMarcados.length > 0
+            ? a.diasMarcados
+            : (a.usaSabado ? [1, 2, 3, 4, 5, 6] : [1, 2, 3, 4, 5]);
+        const fallbackSlots = Array.isArray(a.horariosOcupados) ? a.horariosOcupados : [];
+        const faixas = (normalizedFaixas.length > 0 ? normalizedFaixas : [{
+            inicio: a.dataInicio || semesterStart,
+            fim: a.dataFim || semesterEnd,
+            dias: fallbackDias,
+            slots: fallbackSlots
+        }]).map((faixa) => {
+            const scoped = {
+                ...a,
+                ch: 0,
+                dataInicio: faixa.inicio || a.dataInicio || semesterStart,
+                dataFim: faixa.fim || a.dataFim || semesterEnd,
+                diasMarcados: faixa.dias || fallbackDias,
+                horariosOcupados: faixa.slots || fallbackSlots,
+                usaSabado: (faixa.dias || fallbackDias).includes(6),
+                faixas: [faixa]
+            };
+            return {
+                inicio: scoped.dataInicio,
+                fim: scoped.dataFim,
+                sigaa: getSigaaCode([scoped])
+            };
+        });
+
+        ofertas.push({
+            componente: a.disciplina,
+            codigo: info.codigo || '',
+            tipo: a.tipo,
+            cargaHoraria: a.ch || info.ch || 0,
+            docente: a.docente || '',
+            subGrupo: a.subGrupo || '',
+            horarioSigaa: faixas.map((f) => `${f.sigaa} (${formatDateBR(f.inicio)} - ${formatDateBR(f.fim)})`).join(', '),
+            faixas
+        });
+    });
+
+    pendentes.forEach((a) => {
+        const info = getDisciplinaInfo(a.disciplina);
+        ofertas.push({
+            componente: a.disciplina,
+            codigo: info.codigo || '',
+            tipo: a.tipo,
+            cargaHoraria: a.ch || info.ch || 0,
+            docente: a.docente || '',
+            subGrupo: a.subGrupo || '',
+            horarioSigaa: '',
+            faixas: []
+        });
+    });
+
+    let turmaLabel = turmaId;
+    if (store.rawData?.turmas) {
+        const t = store.rawData.turmas.find((x) => String(x.turma_id) === turmaId);
+        if (t?.turma_label) turmaLabel = t.turma_label;
+    }
+
+    return {
+        generatedAt: new Date().toISOString(),
+        cursoSigla: store.selectedCurso || '',
+        turmaId,
+        turmaLabel,
+        periodoLetivo: store.settings.periodo || '',
+        termStart: semesterStart,
+        termEnd: semesterEnd,
+        ofertas
+    };
+}
+
+export function exportSigaaMetadataJSON() {
+    const payload = buildSigaaMetadataPayload();
+    if (!payload) {
+        alert('Selecione uma turma antes de exportar os metadados SIGAA.');
+        return;
+    }
+    const ano = (payload.termStart || '').split('-')[0] || '0000';
+    const periodo = payload.periodoLetivo || 'P';
+    const fileName = `sigaa_metadata_${payload.cursoSigla || 'CURSO'}_${payload.turmaId}_${ano}_${periodo}.json`;
+    const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(payload, null, 2));
+    const a = document.createElement('a');
+    a.setAttribute('href', dataStr);
+    a.setAttribute('download', fileName);
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+}
+
+function getRegularExecutionSnapshot(turmaId, startDate, endDate) {
+    const hoursByAlloc = new Map();
+    const datesByAlloc = new Map();
+    if (!turmaId || !startDate || !endDate) {
+        return { hoursByAlloc, datesByAlloc };
+    }
+
+    const eventsByDate = getCalendarEvents(turmaId, startDate, endDate);
+    Object.keys(eventsByDate).forEach((dateStr) => {
+        const events = eventsByDate[dateStr] || [];
+        events.forEach((e) => {
+            if (e.type === 'suspended') return;
+            if (e.tipo !== 'regular' && e.tipo !== 'regular_prioritaria') return;
+            if (e.id === undefined || e.id === null) return;
+
+            const id = e.id;
+            hoursByAlloc.set(id, (hoursByAlloc.get(id) || 0) + 1);
+            if (!datesByAlloc.has(id)) datesByAlloc.set(id, new Set());
+            datesByAlloc.get(id).add(dateStr);
+        });
+    });
+
+    return { hoursByAlloc, datesByAlloc };
+}
+
+function getIntensiveExecutionSnapshot(turmaId, startDate, endDate) {
+    const dateHoursByAlloc = new Map();
+    if (!turmaId || !startDate || !endDate) {
+        return { dateHoursByAlloc };
+    }
+
+    const eventsByDate = getCalendarEvents(turmaId, startDate, endDate);
+    Object.keys(eventsByDate).forEach((dateStr) => {
+        const events = eventsByDate[dateStr] || [];
+        events.forEach((e) => {
+            if (e.type === 'suspended') return;
+            if (e.tipo !== 'intensiva') return;
+            if (e.id === undefined || e.id === null) return;
+
+            const id = e.id;
+            if (!dateHoursByAlloc.has(id)) dateHoursByAlloc.set(id, new Map());
+            const byDate = dateHoursByAlloc.get(id);
+            byDate.set(dateStr, (byDate.get(dateStr) || 0) + 1);
+        });
+    });
+
+    return { dateHoursByAlloc };
 }
 
 function renderMonthlyCalendar() {
