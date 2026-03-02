@@ -81,7 +81,7 @@
             gap: 8px 10px;
         }
 
-        #container-faixas-intensiva .faixa-item>div:first-child {
+        #container-faixas-intensiva .faixa-item>div:first-of-type {
             grid-column: 1 / span 2;
         }
 
@@ -609,9 +609,7 @@
                 <div class="form-group">
                     <label>Tipo</label>
                     <select id="sel-tipo">
-                        <option value="regular">Regular (Semanal)</option>
-                        <!-- <option value="regular_prioritaria">Regular (Prioritária)</option> -->
-                        <option value="intensiva">Intensiva (Blocada)</option>
+                        <option value="intensiva">Oferta por Faixas (Canonica)</option>
                     </select>
                 </div>
 
@@ -836,8 +834,8 @@
             <section id="tab-weekly" class="tab-content active">
                 <div class="grid-header">
                     <h2 id="turma-title">Selecione uma turma</h2>
-                    <p class="instruction">Para disciplinas <b>Regulares</b>: Clique direto nos horários abaixo.<br>Para
-                        <b>Intensivas</b>: Configure as datas no menu e clique em "Adicionar à Grade".
+                    <p class="instruction">Todas as ofertas usam o modelo por <b>Faixas</b>.<br>
+                        Configure as datas e desenhe o padrão semanal antes de clicar em "Adicionar à Grade".
                     </p>
                 </div>
                 <!-- BOOTSTRAPPED DRAWING TOOLBAR -->
@@ -865,7 +863,7 @@
                     <div style="display: flex; gap: 10px;">
                         <button id="btn-cancel-draw" type="button"
                             style="background:#fff; color:#e74c3c; border:none; padding:8px 16px; font-weight:bold; border-radius:4px; cursor:pointer; font-size:1rem; box-shadow:0 2px 4px rgba(0,0,0,0.1); transition:transform 0.1s;">
-                            Descartar
+                            Limpar Padrão
                         </button>
                         <button id="btn-save-draw" type="button"
                             style="background:#2ecc71; color:white; border:none; padding:8px 20px; font-weight:bold; border-radius:4px; cursor:pointer; font-size:1rem; box-shadow:0 2px 4px rgba(0,0,0,0.2); transition:transform 0.1s;">

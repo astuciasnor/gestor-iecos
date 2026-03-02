@@ -1,6 +1,6 @@
 import { store } from './store.js';
 import { getCalendarEvents } from './calendar.js';
-import { countBusinessDays, countWeekdaysInPeriod, addBusinessDays, isDateOverlap, calculateEndDateByWeekday, hasIntensiveSlotConflict } from './utils.js';
+import { countBusinessDays, countWeekdaysInPeriod, addBusinessDays, isDateOverlap, calculateEndDateByWeekday } from './utils.js';
 
 const gridContainer = document.getElementById('weekly-grid');
 const selCurso = document.getElementById('sel-curso');
@@ -695,6 +695,76 @@ function buildFaixaSummaryText(faixaIndex, count) {
     return `Intervalo: ${intervalTxt}; CH: ${ch} horas-aula; Dias: ${diasTxt}; Turno: ${turnoTxt}; Horários: ${horariosTxt}`;
 }
 
+function normalizeHexColor(color, fallback = '#f39c12') {
+    const src = String(color || '').trim();
+    if (/^#[0-9a-fA-F]{6}$/.test(src)) return src.toLowerCase();
+    if (/^#[0-9a-fA-F]{3}$/.test(src)) {
+        return `#${src[1]}${src[1]}${src[2]}${src[2]}${src[3]}${src[3]}`.toLowerCase();
+    }
+    return fallback;
+}
+
+function hexToRgb(hexColor) {
+    const hex = normalizeHexColor(hexColor);
+    return {
+        r: parseInt(hex.slice(1, 3), 16),
+        g: parseInt(hex.slice(3, 5), 16),
+        b: parseInt(hex.slice(5, 7), 16)
+    };
+}
+
+function adjustHexColor(hexColor, delta) {
+    const { r, g, b } = hexToRgb(hexColor);
+    const clamp = (v) => Math.max(0, Math.min(255, v));
+    const toHex = (v) => clamp(v).toString(16).padStart(2, '0');
+    return `#${toHex(r + delta)}${toHex(g + delta)}${toHex(b + delta)}`;
+}
+
+function hexToRgba(hexColor, alpha = 1) {
+    const { r, g, b } = hexToRgb(hexColor);
+    const a = Math.max(0, Math.min(1, alpha));
+    return `rgba(${r}, ${g}, ${b}, ${a})`;
+}
+
+function getDrawingBaseColor() {
+    const disciplina = (inputConfig.disciplina?.value ?? '').replace(/\s*\(\s*\d+\s*h\s*\)\s*$/i, '').trim();
+    const fallbackColor = normalizeHexColor(disciplina ? store.getDisciplinaColor(disciplina) : '#f39c12');
+    return normalizeHexColor(inputConfig.cor?.value, fallbackColor);
+}
+
+function getDrawingSelectedStyles() {
+    const base = getDrawingBaseColor();
+    return {
+        background: base,
+        border: `2px dashed ${adjustHexColor(base, -45)}`,
+        color: '#fff',
+        fontWeight: 'bold'
+    };
+}
+
+function applyDrawingToolbarTheme() {
+    const toolbar = document.getElementById('drawing-toolbar');
+    if (!toolbar) return;
+    const base = getDrawingBaseColor();
+    const light = adjustHexColor(base, 24);
+    const border = adjustHexColor(base, -22);
+    toolbar.style.background = `linear-gradient(135deg, ${light}, ${base})`;
+    toolbar.style.boxShadow = `0 4px 15px ${hexToRgba(base, 0.4)}`;
+    toolbar.style.border = `2px solid ${border}`;
+}
+
+function clearActiveDrawingSelection() {
+    if (!window.isDrawingFaixa) return 0;
+    const faixaIndex = window.isDrawingFaixa;
+    const domSelected = document.querySelectorAll('.slot.selected-slot').length;
+    const persisted = normalizeFaixaPattern(faixasPatterns[faixaIndex]).length;
+    const clearedCount = Math.max(domSelected, persisted);
+    faixasPatterns[faixaIndex] = [];
+    setFaixaStatus(faixaIndex, 0);
+    renderWeeklyGrid();
+    return clearedCount;
+}
+
 function activateDrawingMode(faixaIndex) {
     activeFaixaIndex = faixaIndex;
     window.isDrawingFaixa = faixaIndex;
@@ -703,6 +773,7 @@ function activateDrawingMode(faixaIndex) {
     if (nameEl) nameEl.textContent = `Faixa ${faixaIndex}`;
     const toolbar = document.getElementById('drawing-toolbar');
     if (toolbar) toolbar.classList.remove('hidden');
+    applyDrawingToolbarTheme();
 
     switchTab('weekly');
     renderWeeklyGrid();
@@ -716,29 +787,73 @@ function deactivateDrawingMode() {
     renderWeeklyGrid();
 }
 
+function shiftISODate(dateStr, days) {
+    if (!dateStr) return '';
+    const d = new Date(`${dateStr}T12:00:00`);
+    d.setDate(d.getDate() + days);
+    return d.toISOString().split('T')[0];
+}
+
+function applyFaixaDateAutofill(options = {}) {
+    const { forceSingleBounds = false, forceFaixa2End = false } = options;
+
+    const f1Ini = document.getElementById('inp-data-inicio-f1');
+    const f1Fim = document.getElementById('inp-data-fim-f1');
+    const f2Ini = document.getElementById('inp-data-inicio-f2');
+    const f2Fim = document.getElementById('inp-data-fim-f2');
+    const faixa2El = document.getElementById('faixa-2');
+    const faixa3El = document.getElementById('faixa-3');
+
+    const hasFaixa2 = !!faixa2El && !faixa2El.classList.contains('hidden');
+    const hasFaixa3 = !!faixa3El && !faixa3El.classList.contains('hidden');
+
+    const termStart = store.settings.termStart || inpTermStart?.value || calStart?.value || '';
+    const termEnd = store.settings.termEnd || inpTermEnd?.value || calEnd?.value || '';
+
+    if (f2Ini) f2Ini.required = hasFaixa2;
+    if (termStart && f1Ini && !f1Ini.value) f1Ini.value = termStart;
+
+    if (!hasFaixa2 && !hasFaixa3) {
+        if (termStart && f1Ini && (forceSingleBounds || !f1Ini.value)) f1Ini.value = termStart;
+        if (termEnd && f1Fim && (forceSingleBounds || !f1Fim.value)) f1Fim.value = termEnd;
+        return;
+    }
+
+    if (hasFaixa2) {
+        if (f2Ini && f2Ini.value && f1Fim) {
+            const faixa1End = shiftISODate(f2Ini.value, -1);
+            if (faixa1End) f1Fim.value = faixa1End;
+        }
+        if (termEnd && f2Fim && (forceFaixa2End || !f2Fim.value)) {
+            f2Fim.value = termEnd;
+        }
+    }
+}
+
 function setupFaixaControls() {
     const f1Fim = document.getElementById('inp-data-fim-f1');
     const f2Ini = document.getElementById('inp-data-inicio-f2');
     const f2Fim = document.getElementById('inp-data-fim-f2');
     const f3Ini = document.getElementById('inp-data-inicio-f3');
 
-    const addOneDay = (dt) => {
-        if (!dt) return '';
-        const d = new Date(dt + 'T12:00:00');
-        d.setDate(d.getDate() + 1);
-        return d.toISOString().split('T')[0];
-    };
-
     if (f1Fim) {
         f1Fim.addEventListener('change', () => {
-            if (f1Fim.value && f2Ini) f2Ini.value = addOneDay(f1Fim.value);
             setFaixaStatus(1, getFaixaSlotsAndDays(1).pattern.length);
             setFaixaStatus(2, getFaixaSlotsAndDays(2).pattern.length);
         });
     }
+    if (f2Ini) {
+        ['input', 'change'].forEach((evt) => {
+            f2Ini.addEventListener(evt, () => {
+                applyFaixaDateAutofill();
+                setFaixaStatus(1, getFaixaSlotsAndDays(1).pattern.length);
+                setFaixaStatus(2, getFaixaSlotsAndDays(2).pattern.length);
+            });
+        });
+    }
     if (f2Fim) {
         f2Fim.addEventListener('change', () => {
-            if (f2Fim.value && f3Ini) f3Ini.value = addOneDay(f2Fim.value);
+            if (f2Fim.value && f3Ini) f3Ini.value = shiftISODate(f2Fim.value, 1);
             setFaixaStatus(2, getFaixaSlotsAndDays(2).pattern.length);
             setFaixaStatus(3, getFaixaSlotsAndDays(3).pattern.length);
         });
@@ -764,6 +879,7 @@ function setupFaixaControls() {
             const f3 = document.getElementById('faixa-3');
             if (f2 && f2.classList.contains('hidden')) {
                 f2.classList.remove('hidden');
+                applyFaixaDateAutofill({ forceFaixa2End: true });
                 const iniF2 = document.getElementById('inp-data-inicio-f2');
                 if (iniF2) iniF2.focus();
                 return;
@@ -789,6 +905,7 @@ function setupFaixaControls() {
                 faixasPatterns[faixaNum] = [];
                 setFaixaStatus(faixaNum, 0);
             }
+            applyFaixaDateAutofill({ forceSingleBounds: true });
         });
     });
 
@@ -807,7 +924,14 @@ function setupFaixaControls() {
     });
 
     const btnCancelDraw = document.getElementById('btn-cancel-draw');
-    if (btnCancelDraw) btnCancelDraw.addEventListener('click', deactivateDrawingMode);
+    if (btnCancelDraw) {
+        btnCancelDraw.textContent = 'Limpar Padrão';
+        btnCancelDraw.addEventListener('click', () => {
+            const cleared = clearActiveDrawingSelection();
+            if (cleared > 0) showToastWarning('Slots limpos. Desenhe o novo padrao.', 'success', 1800);
+            else showToastWarning('Nao ha slots marcados para limpar.', 'warning', 1600);
+        });
+    }
 
     const btnSaveDraw = document.getElementById('btn-save-draw');
     if (btnSaveDraw) {
@@ -826,6 +950,7 @@ function setupFaixaControls() {
     for (let i = 1; i <= 3; i++) {
         setFaixaStatus(i, getFaixaSlotsAndDays(i).pattern.length);
     }
+    applyFaixaDateAutofill({ forceSingleBounds: true });
 }
 
 function hydrateFaixa1FromIntensiva(allocation) {
@@ -1139,6 +1264,79 @@ function collectIntensiveFaixasFromUI(fallbackInicio, fallbackSlots, fallbackDia
         }
     }
     return sorted;
+}
+
+function buildIntensiveConflictFaixas(intense, rangeStart, rangeEnd) {
+    if (!intense) return [];
+
+    const fallbackStart = rangeStart || intense.dataInicio || store.settings.termStart || '';
+    const fallbackEnd = rangeEnd || intense.dataFim || store.settings.termEnd || fallbackStart;
+    const normalized = getNormalizedIntensiveFaixas(intense);
+
+    if (normalized.length === 0) {
+        const dias = Array.isArray(intense.diasMarcados) && intense.diasMarcados.length > 0
+            ? intense.diasMarcados
+            : (intense.usaSabado ? [1, 2, 3, 4, 5, 6] : [1, 2, 3, 4, 5]);
+        const slots = Array.isArray(intense.horariosOcupados) ? intense.horariosOcupados : [];
+        if (!fallbackStart || !fallbackEnd || dias.length === 0 || slots.length === 0) return [];
+
+        const byDay = {};
+        dias.forEach((d) => { byDay[d] = [...slots]; });
+        return [{ inicio: fallbackStart, fim: fallbackEnd, byDay }];
+    }
+
+    const faixas = normalized.map((faixa, idx) => {
+        let inicio = faixa.inicio || fallbackStart;
+        let fim = faixa.fim || '';
+
+        if (!fim) {
+            if (idx < normalized.length - 1) fim = addDaysISO(normalized[idx + 1].inicio, -1);
+            else fim = fallbackEnd || inicio;
+        }
+
+        if (!inicio || !fim) return null;
+        if (fallbackStart && inicio < fallbackStart) inicio = fallbackStart;
+        if (fallbackEnd && fim > fallbackEnd) fim = fallbackEnd;
+        if (inicio > fim) return null;
+
+        const byDay = normalizeDrawnSlotsByDay(faixa.drawnSlotsByDay || {});
+        if (Object.keys(byDay).length === 0) {
+            const dias = Array.isArray(faixa.dias) ? faixa.dias : [];
+            const slots = Array.isArray(faixa.slots) ? faixa.slots : [];
+            dias.forEach((d) => { if (slots.length > 0) byDay[d] = [...slots]; });
+        }
+
+        if (Object.keys(byDay).length === 0) return null;
+        return { inicio, fim, byDay };
+    }).filter(Boolean);
+
+    return faixas;
+}
+
+function hasSlotsIntersection(slotsA, slotsB) {
+    if (!Array.isArray(slotsA) || !Array.isArray(slotsB) || slotsA.length === 0 || slotsB.length === 0) return false;
+    const setB = new Set(slotsB);
+    return slotsA.some((s) => setB.has(s));
+}
+
+function hasIntensiveConflictByDay(candidate, existing, candidateRange = {}, existingRange = {}) {
+    const faixasA = buildIntensiveConflictFaixas(candidate, candidateRange.start, candidateRange.end);
+    const faixasB = buildIntensiveConflictFaixas(existing, existingRange.start, existingRange.end);
+    if (faixasA.length === 0 || faixasB.length === 0) return false;
+
+    for (const faixaA of faixasA) {
+        for (const faixaB of faixasB) {
+            if (!isDateOverlap(faixaA.inicio, faixaA.fim, faixaB.inicio, faixaB.fim)) continue;
+
+            const daysA = Object.keys(faixaA.byDay).map((d) => parseInt(d, 10)).filter((d) => d >= 1 && d <= 6);
+            for (const day of daysA) {
+                const slotsA = faixaA.byDay[day] || [];
+                const slotsB = faixaB.byDay[day] || [];
+                if (hasSlotsIntersection(slotsA, slotsB)) return true;
+            }
+        }
+    }
+    return false;
 }
 
 
@@ -1511,6 +1709,7 @@ function initPeriodoLetivoETurno() {
             store.setTermDates(inpTermStart.value, store.settings.termEnd);
             if (calStart) calStart.value = inpTermStart.value;
             if (inputConfig.inicio) inputConfig.inicio.value = inpTermStart.value;
+            applyFaixaDateAutofill({ forceSingleBounds: true, forceFaixa2End: true });
             renderOfertasList();
         });
     }
@@ -1518,6 +1717,7 @@ function initPeriodoLetivoETurno() {
         inpTermEnd.addEventListener('change', () => {
             store.setTermDates(store.settings.termStart, inpTermEnd.value);
             if (calEnd) calEnd.value = inpTermEnd.value;
+            applyFaixaDateAutofill({ forceSingleBounds: true, forceFaixa2End: true });
             renderOfertasList();
         });
     }
@@ -1525,6 +1725,7 @@ function initPeriodoLetivoETurno() {
         calStart.addEventListener('change', () => {
             store.setTermDates(calStart.value, store.settings.termEnd || (calEnd ? calEnd.value : ''));
             if (inpTermStart) inpTermStart.value = calStart.value;
+            applyFaixaDateAutofill({ forceSingleBounds: true, forceFaixa2End: true });
             renderOfertasList();
         });
     }
@@ -1532,9 +1733,11 @@ function initPeriodoLetivoETurno() {
         calEnd.addEventListener('change', () => {
             store.setTermDates(store.settings.termStart || (calStart ? calStart.value : ''), calEnd.value);
             if (inpTermEnd) inpTermEnd.value = calEnd.value;
+            applyFaixaDateAutofill({ forceSingleBounds: true, forceFaixa2End: true });
             renderOfertasList();
         });
     }
+    applyFaixaDateAutofill({ forceSingleBounds: true, forceFaixa2End: true });
     if (selTurnoOferta) {
         selTurnoOferta.addEventListener('change', () => {
             store.setTurnoOferta(selTurnoOferta.value);
@@ -1605,6 +1808,12 @@ export function initUI() {
     if (selCurso) selCurso.addEventListener('change', onCursoChange);
     if (selTurma) selTurma.addEventListener('change', onTurmaChange);
 
+    // Modelo canonico: toda oferta por faixas (intensiva)
+    if (inputConfig.tipo) {
+        inputConfig.tipo.value = 'intensiva';
+        inputConfig.tipo.disabled = true;
+    }
+
     initPeriodoLetivoETurno();
 
     // ORDEM IMPORTANTE: Primeiro conserta o layout e encapsula os selects
@@ -1625,7 +1834,8 @@ export function initUI() {
             const divDataEl = document.getElementById('datas-intensiva');
             const divSlots = document.getElementById('container-slots-selection');
             const faixasContainer = document.getElementById('container-faixas-intensiva');
-            const isIntensive = (e.target.value === 'intensiva');
+            if (e.target.value !== 'intensiva') e.target.value = 'intensiva';
+            const isIntensive = true;
 
             if (divDataEl) divDataEl.classList.remove('hidden');
 
@@ -1661,11 +1871,9 @@ export function initUI() {
                 inputConfig.inicio.value = store.settings.termStart;
             }
 
-            const inpInicioF1 = document.getElementById('inp-data-inicio-f1');
-            if (isIntensive && store.settings.termStart && inpInicioF1 && !inpInicioF1.value) {
-                inpInicioF1.value = store.settings.termStart;
-            }
+            if (isIntensive) applyFaixaDateAutofill({ forceSingleBounds: true, forceFaixa2End: true });
         });
+        inputConfig.tipo.dispatchEvent(new Event('change'));
     }
 
     if (inputConfig.disciplina) {
@@ -1745,6 +1953,16 @@ export function initUI() {
             inpSub.addEventListener('input', updatePreview);
             updatePreview();
         });
+    }
+
+    if (inputConfig.cor) {
+        const repaintDrawing = () => {
+            if (!window.isDrawingFaixa) return;
+            applyDrawingToolbarTheme();
+            renderWeeklyGrid();
+        };
+        inputConfig.cor.addEventListener('input', repaintDrawing);
+        inputConfig.cor.addEventListener('change', repaintDrawing);
     }
 
     const btnAdd = document.getElementById('btn-add-oferta');
@@ -2012,10 +2230,7 @@ function onTurmaChange() {
     if (inputConfig.inicio && store.settings.termStart) {
         inputConfig.inicio.value = store.settings.termStart;
     }
-    const inpInicioF1 = document.getElementById('inp-data-inicio-f1');
-    if (inpInicioF1 && store.settings.termStart && !inpInicioF1.value) {
-        inpInicioF1.value = store.settings.termStart;
-    }
+    applyFaixaDateAutofill({ forceSingleBounds: true, forceFaixa2End: true });
 
     renderWeeklyGrid();
     renderOfertasList();
@@ -2076,14 +2291,31 @@ function renderWeeklyGrid() {
                 cell.dataset.horario = horarioStr;
 
                 const allocs = store.allocations.filter((a) => {
-                    const isValidTypeAndSlot = String(a.turmaId) === String(store.selectedTurma) &&
-                        (a.tipo === 'regular' || a.tipo === 'regular_prioritaria') &&
+                    if (String(a.turmaId) !== String(store.selectedTurma)) return false;
+
+                    if (a.tipo === 'intensiva') {
+                        if (Array.isArray(a.faixas) && a.faixas.length > 0) {
+                            return a.faixas.some((faixa) => {
+                                const byDay = faixa?.drawnSlotsByDay || {};
+                                const slotsInDay = Array.isArray(byDay?.[i])
+                                    ? byDay[i]
+                                    : ((Array.isArray(faixa?.dias) && faixa.dias.includes(i))
+                                        ? (faixa.slots || [])
+                                        : []);
+                                return Array.isArray(slotsInDay) && slotsInDay.includes(horarioStr);
+                            });
+                        }
+
+                        const dias = Array.isArray(a.diasMarcados) && a.diasMarcados.length > 0
+                            ? a.diasMarcados
+                            : (a.usaSabado ? [1, 2, 3, 4, 5, 6] : [1, 2, 3, 4, 5]);
+                        const slots = Array.isArray(a.horariosOcupados) ? a.horariosOcupados : [];
+                        return dias.includes(i) && slots.includes(horarioStr);
+                    }
+
+                    return (a.tipo === 'regular' || a.tipo === 'regular_prioritaria') &&
                         a.diaSemana == i &&
                         a.horario === horarioStr;
-
-                    if (!isValidTypeAndSlot) return false;
-
-                    return true;
                 });
 
                 if (allocs.length > 0) renderSlotContent(cell, allocs);
@@ -2091,11 +2323,14 @@ function renderWeeklyGrid() {
                 if (window.isDrawingFaixa) {
                     const pattern = normalizeFaixaPattern(faixasPatterns[window.isDrawingFaixa]);
                     const isSelected = pattern.some((p) => p.dia === i && p.slot === horarioStr);
+                    const drawStyles = getDrawingSelectedStyles();
 
                     if (isSelected) {
                         cell.classList.add('selected-slot');
-                        cell.style.background = '#f39c12';
-                        cell.style.border = '2px dashed #d35400';
+                        cell.style.background = drawStyles.background;
+                        cell.style.border = drawStyles.border;
+                        cell.style.color = drawStyles.color;
+                        cell.style.fontWeight = drawStyles.fontWeight;
                     }
 
                     if (allocs.length === 0) {
@@ -2105,8 +2340,10 @@ function renderWeeklyGrid() {
                             e.stopPropagation();
                             cell.classList.toggle('selected-slot');
                             const selectedNow = cell.classList.contains('selected-slot');
-                            cell.style.background = selectedNow ? '#f39c12' : '';
-                            cell.style.border = selectedNow ? '2px dashed #d35400' : '';
+                            cell.style.background = selectedNow ? drawStyles.background : '';
+                            cell.style.border = selectedNow ? drawStyles.border : '';
+                            cell.style.color = selectedNow ? drawStyles.color : '';
+                            cell.style.fontWeight = selectedNow ? drawStyles.fontWeight : '';
                         });
                     } else {
                         cell.style.opacity = '0.6';
@@ -2172,6 +2409,8 @@ function renderSlotContent(cell, allocs) {
 }
 
 function handleSlotClick(dia, horario) {
+    return alert('No modelo por faixas, use "Desenhar na Grade Semanal" na faixa da oferta.');
+
     if (!store.selectedTurma) return alert('Selecione uma turma.');
 
     const disciplina = (inputConfig.disciplina?.value ?? '').replace(/\s*\(\s*\d+\s*h\s*\)\s*$/i, '');
@@ -2187,7 +2426,7 @@ function handleSlotClick(dia, horario) {
         return alert(`A soma das horas (${docData.totalCH}h) ultrapassa a carga horária da disciplina (${maxCH}h).`);
     }
 
-    const tipo = inputConfig.tipo?.value ?? 'regular';
+    const tipo = 'intensiva';
     if (tipo === 'intensiva') return alert('Para intensivas, configure as datas no menu e clique em "Adicionar à Grade".');
 
     const existingInSlot = store.allocations.filter(a =>
@@ -2341,13 +2580,18 @@ function handleAddManual() {
     const tipo = inputConfig.tipo?.value ?? 'regular';
     const inicioFaixa1 = document.getElementById('inp-data-inicio-f1')?.value ?? '';
     const inicioLegacy = inputConfig.inicio?.value ?? '';
-    const inicio = (tipo === 'intensiva' && inicioFaixa1) ? inicioFaixa1 : inicioLegacy;
+    const inicio = inicioFaixa1 || inicioLegacy;
     const subGrupo = (document.getElementById('inp-sub-turma')?.value ?? '').trim();
 
     if (!disciplina) return alert('Preencha o componente.');
 
     if (tipo === 'intensiva') {
         if (!inicio) return alert('Defina a data de inicio.');
+        const faixa2El = document.getElementById('faixa-2');
+        const inicioF2 = document.getElementById('inp-data-inicio-f2')?.value || '';
+        if (faixa2El && !faixa2El.classList.contains('hidden') && !inicioF2) {
+            return alert('Defina a data de inicio da Faixa 2 para continuar.');
+        }
 
         const info = getDisciplinaInfo(disciplina);
         const ch = info.ch || 0;
@@ -2405,11 +2649,25 @@ function handleAddManual() {
         const slotsIntensiva = execution.unionSlots || [];
         diasMarcados = execution.unionDias || diasMarcados;
         const usaSabado = diasMarcados.includes(6);
+        const candidateIntensiveForConflict = {
+            ...previewIntensive,
+            dataInicio: inicioCalculado,
+            dataFim: dataFimCalculada,
+            horariosOcupados: slotsIntensiva,
+            diasMarcados,
+            usaSabado,
+            faixas: faixasConfig
+        };
 
         const intensiveConflict = store.allocations.find(a => {
             if (String(a.turmaId) !== String(store.selectedTurma)) return false;
             if (a.tipo !== 'intensiva' || a.disciplina === disciplina) return false;
-            return hasIntensiveSlotConflict(inicioCalculado, dataFimCalculada, slotsIntensiva, a.dataInicio || store.settings.termStart, a.dataFim || store.settings.termEnd, a.horariosOcupados);
+            return hasIntensiveConflictByDay(
+                candidateIntensiveForConflict,
+                a,
+                { start: inicioCalculado, end: dataFimCalculada },
+                { start: a.dataInicio || store.settings.termStart, end: a.dataFim || store.settings.termEnd }
+            );
         });
 
         if (intensiveConflict) {
@@ -2435,7 +2693,12 @@ function handleAddManual() {
                 if (!isDateOverlap(inicioCalculado, dataFimCalculada, aStart, aEnd)) return false;
 
                 if (a.tipo === 'intensiva') {
-                    return hasIntensiveSlotConflict(inicioCalculado, dataFimCalculada, slotsIntensiva, aStart, aEnd, a.horariosOcupados);
+                    return hasIntensiveConflictByDay(
+                        candidateIntensiveForConflict,
+                        a,
+                        { start: inicioCalculado, end: dataFimCalculada },
+                        { start: aStart, end: aEnd }
+                    );
                 }
 
                 if (slotsIntensiva.includes(a.horario)) {
@@ -2509,8 +2772,6 @@ function handleAddManual() {
             showToastWarning(`Ajuste automatico: ${nomes} teve/tiveram aulas suspensas e data final compensada.`, 'success');
         }
 
-    } else {
-        alert('Para regular, clique na grade.');
     }
 }
 function renderOfertasList() {
@@ -2819,7 +3080,7 @@ function renderOfertasList() {
             btnEdit.onclick = () => {
                 const a = row.baseAlloc;
                 const info = getDisciplinaInfo(a.disciplina);
-                if (!confirm('Carregar para edição? A oferta antiga será removida e você deverá clicar na grade para posicioná-la.')) return;
+                if (!confirm('Carregar para edição? A oferta antiga será removida e você deverá redesenhar os slots da faixa.')) return;
 
                 if (inputConfig.disciplina) {
                     inputConfig.disciplina.value = `${a.disciplina} (${info.ch}h)`;
@@ -2830,7 +3091,7 @@ function renderOfertasList() {
                     setTimeout(() => { inputConfig.cor.value = a.cor; }, 50);
                 }
                 if (inputConfig.tipo) {
-                    inputConfig.tipo.value = a.tipo === 'pendente' ? 'regular' : a.tipo;
+                    inputConfig.tipo.value = 'intensiva';
                     inputConfig.tipo.dispatchEvent(new Event('change'));
                 }
                 if (inputConfig.inicio && a.dataInicio) inputConfig.inicio.value = a.dataInicio;
@@ -2877,7 +3138,7 @@ function renderOfertasList() {
                 syncAllRegularDates();
                 renderWeeklyGrid();
                 renderOfertasList();
-                if (a.tipo !== 'intensiva') switchTab('weekly');
+                switchTab('weekly');
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             };
         }

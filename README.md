@@ -73,3 +73,45 @@ A fim de cruzar horários entre Eng. de Pesca, Ciências Biológicas e Naturais:
 O sistema é robustamente abastecido via pipeline estático ETL. Ele utiliza a base `dados_app.json`, a qual é cronicamente compilada a partir de planilhas locais Excel (`planilha_base.xlsx`) na máquina do administrador. 
 
 ⚠️ Para a rotina de manipulação via script Python, arquitetura da árvore de códigos ou Setup inicial, dirija-se exclusivamente ao doc principal em: `docs/manual_desenvolvedor.md`.
+
+---
+
+## Regra Oficial (Modelo Canonico)
+
+### Filosofia
+O projeto passa a adotar a diretriz:
+
+**"Toda oferta e modelada por faixas."**
+
+Isso reduz bifurcacao de regras (`regular`, `regular_prioritaria`, `intensiva`), unifica validacoes de conflito e simplifica manutencao.
+
+### Regra Unica de Conflito
+
+Um conflito real existe somente quando houver, ao mesmo tempo:
+
+1. sobreposicao de periodo (datas),
+2. sobreposicao de dia da semana,
+3. sobreposicao de slot (horario).
+
+Em formula:
+
+`conflito = overlap(periodo) AND overlap(dia) AND overlap(slot)`
+
+### Tabela de Conflitos (Unificada)
+
+| Escopo | Regra | Bloqueia |
+|---|---|---|
+| Turma | Duas ofertas com intersecao de periodo + dia + slot | Sim |
+| Turma | Mesmo periodo e mesmo slot, mas dias diferentes | Nao |
+| Turma | Periodos sem sobreposicao | Nao |
+| Professor (global) | Mesmo professor, em turmas diferentes, com intersecao de periodo + dia + slot | Sim |
+| Professor (global) | Mesmo professor, periodo/slot iguais, mas dias diferentes | Nao |
+| Professor (global) | Professor "A definir" | Nao (pode haver aviso) |
+
+### Estrategia de Migracao (Em Etapas)
+
+1. Tornar "oferta por faixa" o modelo canonico interno.
+2. Manter leitura de legado por compatibilidade temporaria.
+3. Migrar UX de clique de regular para atalho que cria faixa.
+4. Ajustar exportacoes/relatorios (incluindo SIGAA) para o modelo unificado.
+5. Remover tipos antigos da UI apos estabilizacao.
