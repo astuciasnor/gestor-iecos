@@ -2114,6 +2114,7 @@ export function initUI() {
             if (tempImportData) {
                 store.allocations = tempImportData;
                 syncAllRegularDates();
+                syncAllIntensiveDates();
                 alert('Dados importados com datas recalculadas com sucesso!');
                 window.location.reload();
             }
@@ -2127,6 +2128,7 @@ export function initUI() {
             if (tempImportData) {
                 const count = store.mergeAllocations(tempImportData);
                 syncAllRegularDates();
+                syncAllIntensiveDates();
                 alert(`Mesclagem concluída! ${count} novas alocações adicionadas com datas corrigidas.`);
                 renderWeeklyGrid();
                 renderOfertasList();
@@ -2809,8 +2811,13 @@ function handleAddManual() {
             if (teacherConflictGlobal) {
                 const turmaNomeConflito = getTurmaLabel(teacherConflictGlobal.turmaId);
                 const profNomes = teachersToCheck.join(', ');
-                showToastWarning(`Professor indisponivel: ${profNomes} ja tem aula de ${teacherConflictGlobal.disciplina} na turma ${turmaNomeConflito}.`, 'warning', 4500);
-                return;
+                const forceImport = confirm(
+                    `Conflito de professor detectado.\n\n` +
+                    `${profNomes} ja tem aula de ${teacherConflictGlobal.disciplina} na turma ${turmaNomeConflito} no mesmo periodo/horario.\n\n` +
+                    `Deseja importar/alocar mesmo assim?`
+                );
+                if (!forceImport) return;
+                showToastWarning(`Conflito permitido: ${profNomes} mantido(s) com choque para auditoria posterior.`, 'warning', 3500);
             }
         }
 
@@ -3266,6 +3273,8 @@ function renderOfertasList() {
         tr.innerHTML = `<td colspan="${getColCount()}" style="text-align:center; color:#666;">Nenhuma oferta cadastrada.</td>`;
         tbody.appendChild(tr);
     }
+
+    refreshTeacherConflictsUI();
 }
 
 function buildSigaaMetadataPayload() {
@@ -4161,6 +4170,14 @@ function updateGlobalConflictsUI() {
         warningDiv.style.display = 'none';
     }
 }
+
+function refreshTeacherConflictsUI() {
+    updateGlobalConflictsUI();
+    const activeTab = document.querySelector('.tab-btn.active')?.dataset.tab;
+    if (activeTab === 'teacher' && selViewDocente && selViewDocente.value) {
+        renderTeacherCalendar();
+    }
+}
 // ========================================================
 
 function generateCalendarGrid(container, turmaId, docenteName, start, end, titleHTML) {
@@ -4425,7 +4442,7 @@ function switchTab(tabId) {
     if (btn) btn.classList.add('active');
 
     if (tabId === 'teacher') {
-        updateGlobalConflictsUI();
+        refreshTeacherConflictsUI();
     }
 }
 
