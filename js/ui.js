@@ -33,7 +33,14 @@ let faixasPatterns = {
     3: []
 };
 let editingDisciplinaDraft = '';
+let lastDisciplinaInputNormalized = '';
 window.isDrawingFaixa = null;
+let drawingViewMode = 'context';
+const drawingDragState = {
+    active: false,
+    shouldSelect: true,
+    touchedAnyCell: false
+};
 
 // ==========================================
 // AJUSTES VISUAIS DA BARRA LATERAL (SIDEBAR)
@@ -753,6 +760,42 @@ function applyDrawingToolbarTheme() {
     toolbar.style.border = `2px solid ${border}`;
 }
 
+function updateDrawingViewToggleButton() {
+    const btn = document.getElementById('btn-toggle-draw-view');
+    if (!btn) return;
+    if (drawingViewMode === 'clean') {
+        btn.textContent = 'Mostrar Contexto';
+        btn.style.background = '#16a085';
+    } else {
+        btn.textContent = 'Modo Limpo';
+        btn.style.background = '#2c3e50';
+    }
+}
+
+function setDrawingCellSelection(cell, selected, styles) {
+    if (!cell) return;
+    if (selected) {
+        cell.classList.add('selected-slot');
+        cell.style.background = styles.background;
+        cell.style.border = styles.border;
+        cell.style.color = styles.color;
+        cell.style.fontWeight = styles.fontWeight;
+    } else {
+        cell.classList.remove('selected-slot');
+        cell.style.background = '';
+        cell.style.border = '';
+        cell.style.color = '';
+        cell.style.fontWeight = '';
+    }
+}
+
+function endDrawingDrag() {
+    drawingDragState.active = false;
+    drawingDragState.shouldSelect = true;
+    drawingDragState.touchedAnyCell = false;
+    if (document.body) document.body.style.userSelect = '';
+}
+
 function clearActiveDrawingSelection() {
     if (!window.isDrawingFaixa) return 0;
     const faixaIndex = window.isDrawingFaixa;
@@ -768,12 +811,14 @@ function clearActiveDrawingSelection() {
 function activateDrawingMode(faixaIndex) {
     activeFaixaIndex = faixaIndex;
     window.isDrawingFaixa = faixaIndex;
+    endDrawingDrag();
 
     const nameEl = document.getElementById('drawing-faixa-name');
     if (nameEl) nameEl.textContent = `Faixa ${faixaIndex}`;
     const toolbar = document.getElementById('drawing-toolbar');
     if (toolbar) toolbar.classList.remove('hidden');
     applyDrawingToolbarTheme();
+    updateDrawingViewToggleButton();
 
     switchTab('weekly');
     renderWeeklyGrid();
@@ -781,6 +826,7 @@ function activateDrawingMode(faixaIndex) {
 }
 
 function deactivateDrawingMode() {
+    endDrawingDrag();
     window.isDrawingFaixa = null;
     const toolbar = document.getElementById('drawing-toolbar');
     if (toolbar) toolbar.classList.add('hidden');
@@ -809,10 +855,13 @@ function collapseFaixasForNewComponent() {
         if (el) el.value = '';
     });
 
+    faixasPatterns[1] = [];
     faixasPatterns[2] = [];
     faixasPatterns[3] = [];
+    setFaixaStatus(1, 0);
     setFaixaStatus(2, 0);
     setFaixaStatus(3, 0);
+    if (window.isDrawingFaixa) renderWeeklyGrid();
     applyFaixaDateAutofill({ forceSingleBounds: true, forceFaixa2End: true });
 }
 
@@ -871,6 +920,12 @@ function rangeOverlaps(rangeA, rangeB) {
     return isDateOverlap(rangeA.start, rangeA.end, rangeB.start, rangeB.end);
 }
 
+function getPreferredStartDateForCurrentTurma() {
+    const termStart = store.settings.termStart || inpTermStart?.value || calStart?.value || '';
+    const turmaPreferred = store.selectedTurma ? store.getTurmaLastStart(store.selectedTurma) : '';
+    return turmaPreferred || termStart;
+}
+
 function applyFaixaDateAutofill(options = {}) {
     const { forceSingleBounds = false, forceFaixa2End = false } = options;
 
@@ -884,14 +939,14 @@ function applyFaixaDateAutofill(options = {}) {
     const hasFaixa2 = !!faixa2El && !faixa2El.classList.contains('hidden');
     const hasFaixa3 = !!faixa3El && !faixa3El.classList.contains('hidden');
 
-    const termStart = store.settings.termStart || inpTermStart?.value || calStart?.value || '';
+    const preferredStart = getPreferredStartDateForCurrentTurma();
     const termEnd = store.settings.termEnd || inpTermEnd?.value || calEnd?.value || '';
 
     if (f2Ini) f2Ini.required = hasFaixa2;
-    if (termStart && f1Ini && !f1Ini.value) f1Ini.value = termStart;
+    if (preferredStart && f1Ini && !f1Ini.value) f1Ini.value = preferredStart;
 
     if (!hasFaixa2 && !hasFaixa3) {
-        if (termStart && f1Ini && (forceSingleBounds || !f1Ini.value)) f1Ini.value = termStart;
+        if (preferredStart && f1Ini && (forceSingleBounds || !f1Ini.value)) f1Ini.value = preferredStart;
         if (termEnd && f1Fim && (forceSingleBounds || !f1Fim.value)) f1Fim.value = termEnd;
         return;
     }
@@ -914,8 +969,9 @@ function enforceCanonicalFaixaMode() {
     const btnAddOferta = document.getElementById('btn-add-oferta');
     if (btnAddOferta) btnAddOferta.textContent = 'Adicionar Oferta à Grade';
 
-    if (store.settings.termStart && inputConfig.inicio) {
-        inputConfig.inicio.value = store.settings.termStart;
+    const preferredStart = getPreferredStartDateForCurrentTurma();
+    if (preferredStart && inputConfig.inicio) {
+        inputConfig.inicio.value = preferredStart;
     }
     renderIntensiveSlots();
     applyFaixaDateAutofill({ forceSingleBounds: true, forceFaixa2End: true });
@@ -1031,6 +1087,16 @@ function setupFaixaControls() {
         });
     }
 
+    const btnToggleDrawView = document.getElementById('btn-toggle-draw-view');
+    if (btnToggleDrawView) {
+        updateDrawingViewToggleButton();
+        btnToggleDrawView.addEventListener('click', () => {
+            drawingViewMode = drawingViewMode === 'clean' ? 'context' : 'clean';
+            updateDrawingViewToggleButton();
+            if (window.isDrawingFaixa) renderWeeklyGrid();
+        });
+    }
+
     const btnSaveDraw = document.getElementById('btn-save-draw');
     if (btnSaveDraw) {
         btnSaveDraw.addEventListener('click', () => {
@@ -1043,6 +1109,13 @@ function setupFaixaControls() {
             setFaixaStatus(window.isDrawingFaixa, selected.length);
             deactivateDrawingMode();
         });
+    }
+
+    if (!window.__drawingDragListenersBound) {
+        window.__drawingDragListenersBound = true;
+        document.addEventListener('mouseup', endDrawingDrag);
+        document.addEventListener('mouseleave', endDrawingDrag);
+        window.addEventListener('blur', endDrawingDrag);
     }
 
     for (let i = 1; i <= 3; i++) {
@@ -1504,6 +1577,41 @@ function derivarBloco(turmaId, periodo, termStart) {
     return `BL${numBloco}`;
 }
 
+function numberToRoman(num) {
+    const n = parseInt(num, 10);
+    if (!Number.isFinite(n) || n <= 0) return '';
+    const table = [
+        [1000, 'M'], [900, 'CM'], [500, 'D'], [400, 'CD'],
+        [100, 'C'], [90, 'XC'], [50, 'L'], [40, 'XL'],
+        [10, 'X'], [9, 'IX'], [5, 'V'], [4, 'IV'], [1, 'I']
+    ];
+    let rest = n;
+    let out = '';
+    table.forEach(([v, r]) => {
+        while (rest >= v) {
+            out += r;
+            rest -= v;
+        }
+    });
+    return out;
+}
+
+function getTurmaSelectLabel(turmaId) {
+    let base = turmaId;
+    if (store.rawData?.turmas) {
+        const t = store.rawData.turmas.find(x => String(x.turma_id) === String(turmaId));
+        if (t) base = t.turma_label;
+    }
+
+    const bloco = derivarBloco(turmaId, store.settings?.periodo, store.settings?.termStart);
+    const m = bloco.match(/^BL(\d+)$/i);
+    if (!m) return base;
+
+    const romano = numberToRoman(m[1]);
+    if (!romano) return base;
+    return `${base} (BL_${romano})`;
+}
+
 function getTurmaLabel(turmaId, subGrupo) {
     let base = turmaId;
     if (store.rawData?.turmas) {
@@ -1954,6 +2062,14 @@ export function initUI() {
             if (inputConfig.inicio && !inputConfig.inicio.value && termStartEl && termStartEl.value) {
                 inputConfig.inicio.value = termStartEl.value;
             }
+
+            const discNome = normalizeDisciplinaInputValue(inputConfig.disciplina.value || '');
+            const isEditingSameDisc = editingDisciplinaDraft && discNome === editingDisciplinaDraft;
+            if (discNome && discNome !== lastDisciplinaInputNormalized && !isEditingSameDisc) {
+                collapseFaixasForNewComponent();
+                editingDisciplinaDraft = '';
+            }
+            lastDisciplinaInputNormalized = discNome;
         });
 
         // Detecção de duplicata: mostra o campo sub-grupo quando a mesma disciplina já existe na turma
@@ -1964,6 +2080,7 @@ export function initUI() {
                 collapseFaixasForNewComponent();
                 editingDisciplinaDraft = '';
             }
+            lastDisciplinaInputNormalized = discNome;
             const containerSub = document.getElementById('container-sub-turma');
             const inpSub = document.getElementById('inp-sub-turma');
             const preview = document.getElementById('preview-sub-turma');
@@ -2196,7 +2313,7 @@ function onCursoChange() {
     if (cursoSigla && store.rawData?.turmas) {
         const turmas = store.rawData.turmas.filter((t) => t.sigla === cursoSigla);
         turmas.forEach((t) => {
-            const blocoLabel = getTurmaLabel(t.turma_id);
+            const blocoLabel = getTurmaSelectLabel(t.turma_id);
             selTurma.innerHTML += `<option value="${t.turma_id}">${blocoLabel}</option>`;
         });
 
@@ -2212,8 +2329,9 @@ function onCursoChange() {
 
     updateDisciplinaDatalist();
 
-    if (inputConfig.inicio && store.settings.termStart) {
-        inputConfig.inicio.value = store.settings.termStart;
+    const preferredStart = getPreferredStartDateForCurrentTurma();
+    if (inputConfig.inicio && preferredStart) {
+        inputConfig.inicio.value = preferredStart;
     }
 
     // Recalcula datas ao carregar (corrige dados antigos do localStorage)
@@ -2309,8 +2427,9 @@ function onTurmaChange() {
         selTurnoOferta.value = store.settings.turnoOferta || 'Tarde';
     }
 
-    if (inputConfig.inicio && store.settings.termStart) {
-        inputConfig.inicio.value = store.settings.termStart;
+    const preferredStart = getPreferredStartDateForCurrentTurma();
+    if (inputConfig.inicio && preferredStart) {
+        inputConfig.inicio.value = preferredStart;
     }
     applyFaixaDateAutofill({ forceSingleBounds: true, forceFaixa2End: true });
 
@@ -2336,6 +2455,9 @@ function renderWeeklyGrid() {
     const drawRange = isDrawing ? getActiveDrawingFaixaRange() : null;
     const drawingDisciplina = normalizeDisciplinaInputValue(inputConfig.disciplina?.value || '');
     const turmaAllocs = store.allocations.filter((a) => String(a.turmaId) === String(store.selectedTurma));
+    const pattern = isDrawing ? normalizeFaixaPattern(faixasPatterns[window.isDrawingFaixa]) : [];
+    const drawStyles = isDrawing ? getDrawingSelectedStyles() : null;
+    const showContextWhileDrawing = !isDrawing || drawingViewMode === 'context';
 
     if (!store.selectedTurma || horariosUI.length === 0) {
         const turnoAtual = store.settings?.turnoOferta || "Manhã";
@@ -2419,36 +2541,36 @@ function renderWeeklyGrid() {
                         a.horario === horarioStr;
                 });
 
-                if (allocs.length > 0) renderSlotContent(cell, allocs);
+                if (allocs.length > 0 && showContextWhileDrawing) renderSlotContent(cell, allocs);
 
                 if (isDrawing) {
-                    const pattern = normalizeFaixaPattern(faixasPatterns[window.isDrawingFaixa]);
                     const isSelected = pattern.some((p) => p.dia === i && p.slot === horarioStr);
-                    const drawStyles = getDrawingSelectedStyles();
-
-                    if (isSelected) {
-                        cell.classList.add('selected-slot');
-                        cell.style.background = drawStyles.background;
-                        cell.style.border = drawStyles.border;
-                        cell.style.color = drawStyles.color;
-                        cell.style.fontWeight = drawStyles.fontWeight;
-                    }
+                    setDrawingCellSelection(cell, isSelected, drawStyles);
 
                     if (allocs.length === 0) {
                         cell.style.cursor = 'crosshair';
-                        cell.addEventListener('click', (e) => {
+                        cell.addEventListener('mousedown', (e) => {
+                            if (e.button !== 0) return;
                             e.preventDefault();
                             e.stopPropagation();
-                            cell.classList.toggle('selected-slot');
-                            const selectedNow = cell.classList.contains('selected-slot');
-                            cell.style.background = selectedNow ? drawStyles.background : '';
-                            cell.style.border = selectedNow ? drawStyles.border : '';
-                            cell.style.color = selectedNow ? drawStyles.color : '';
-                            cell.style.fontWeight = selectedNow ? drawStyles.fontWeight : '';
+                            drawingDragState.active = true;
+                            drawingDragState.shouldSelect = !cell.classList.contains('selected-slot');
+                            drawingDragState.touchedAnyCell = true;
+                            document.body.style.userSelect = 'none';
+                            setDrawingCellSelection(cell, drawingDragState.shouldSelect, drawStyles);
+                        });
+                        cell.addEventListener('mouseenter', () => {
+                            if (!drawingDragState.active) return;
+                            drawingDragState.touchedAnyCell = true;
+                            setDrawingCellSelection(cell, drawingDragState.shouldSelect, drawStyles);
                         });
                     } else {
                         cell.style.opacity = '0.6';
                         cell.style.pointerEvents = 'none';
+                        if (!showContextWhileDrawing) {
+                            cell.innerHTML = '';
+                            cell.style.background = '#dfe6e9';
+                        }
                         cell.title = 'Horário ocupado na turma';
                     }
                 }
@@ -2856,6 +2978,10 @@ function handleAddManual() {
             cor: inputConfig.cor ? inputConfig.cor.value : store.getDisciplinaColor(disciplina)
         });
 
+        if (inicioCalculado && store.selectedTurma) {
+            store.setTurmaLastStart(store.selectedTurma, inicioCalculado);
+        }
+
         syncAllIntensiveDates();
         const allocAtualizada = [...store.allocations].reverse().find((a) =>
             String(a.turmaId) === String(store.selectedTurma) &&
@@ -2871,6 +2997,7 @@ function handleAddManual() {
             applyFaixasConfigToSidebar(faixasSidebar);
         }
         editingDisciplinaDraft = '';
+        collapseFaixasForNewComponent();
         renderOfertasList();
 
     }

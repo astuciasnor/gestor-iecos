@@ -13,7 +13,8 @@ class Store {
       turnoOferta: '', // "Manhã" | "Tarde" | ...
       periodo: '1P',   // NOVO: Persistência do Período (1P, 2P, 3P, 4P)
       lastCurso: '',   // PERSISTÊNCIA
-      lastTurma: ''    // PERSISTÊNCIA
+      lastTurma: '',   // PERSISTÊNCIA
+      lastStartByTurma: {} // Sugestão de data de início por turma
     };
 
     this.loadSettings();
@@ -65,6 +66,22 @@ class Store {
   setLastContext(curso, turma) {
     if (curso) this.settings.lastCurso = curso;
     if (turma) this.settings.lastTurma = turma;
+    this.saveSettings();
+  }
+
+  getTurmaLastStart(turmaId) {
+    if (!turmaId) return '';
+    const map = this.settings?.lastStartByTurma;
+    if (!map || typeof map !== 'object') return '';
+    return String(map[String(turmaId)] || '');
+  }
+
+  setTurmaLastStart(turmaId, startDate) {
+    if (!turmaId || !startDate) return;
+    if (!this.settings.lastStartByTurma || typeof this.settings.lastStartByTurma !== 'object') {
+      this.settings.lastStartByTurma = {};
+    }
+    this.settings.lastStartByTurma[String(turmaId)] = String(startDate);
     this.saveSettings();
   }
 
