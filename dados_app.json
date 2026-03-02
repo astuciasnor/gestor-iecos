@@ -1,6 +1,6 @@
 {
   "meta": {
-    "generated_at": "2026-03-02T17:21:58",
+    "generated_at": "2026-03-02T17:52:16",
     "source_file": "planilha_base.xlsx"
   },
   "docentes": [
@@ -1154,6 +1154,15 @@
       "cor": "#f29898",
       "componente": "INTRODUCAO AOS EUCARIONTES",
       "abreviacao": "Intr Euca",
+      "ch": 45
+    },
+    {
+      "sigla": "CB",
+      "periodo": "III",
+      "codigo": "CBBR019",
+      "cor": "#8daeda",
+      "componente": "Educação e Pluralidade Cultural no ensino de ciências e biologia",
+      "abreviacao": "Educ Plur Cult",
       "ch": 45
     },
     {
