@@ -520,11 +520,27 @@ export function getCalendarEvents(turmaId, startDate, endDate, docenteFilter = n
       slotMap[h].push(e);
     });
 
+    const getConflictIdentity = (ev, timeKey) => {
+      const sg = String(ev.subGrupo || '');
+      const disc = String(ev.disciplina || '');
+      const turma = String(ev.turmaId || '');
+      const tipo = String(ev.tipo || '');
+      const horario = normalizeTime(ev.horario || timeKey || '');
+      return `${turma}|${disc}|${tipo}|${sg}|${horario}`;
+    };
+
     Object.entries(slotMap).forEach(([timeKey, eventList]) => {
       const activeEvents = eventList.filter(ev => ev.type !== 'suspended');
+      const seen = new Set();
+      const uniqueActiveEvents = activeEvents.filter((ev) => {
+        const key = getConflictIdentity(ev, timeKey);
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
 
-      if (activeEvents.length > 1) {
-        activeEvents.forEach(ev => {
+      if (uniqueActiveEvents.length > 1) {
+        uniqueActiveEvents.forEach(ev => {
           if (!ev.conflictsAt) ev.conflictsAt = [];
           if (!ev.conflictsAt.includes(timeKey)) ev.conflictsAt.push(timeKey);
           ev.isConflict = true;

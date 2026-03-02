@@ -2943,21 +2943,24 @@ function handleAddManual() {
             }
         }
 
-        let idToRemove = null;
-        const conflitoIntensiva = store.allocations.find(a => {
-            if (String(a.turmaId) === String(store.selectedTurma) && a.disciplina === disciplina) {
-                return a.tipo === 'intensiva' &&
-                    isDateOverlap(inicioCalculado, dataFimCalculada, a.dataInicio || store.settings.termStart, a.dataFim || store.settings.termEnd);
-            }
-            return false;
-        });
+        const idsToRemove = store.allocations
+            .filter((a) => {
+                if (String(a.turmaId) !== String(store.selectedTurma)) return false;
+                if (a.disciplina !== disciplina || a.tipo !== 'intensiva') return false;
+                if (String(a.subGrupo || '') !== String(subGrupo || '')) return false;
+                return isDateOverlap(
+                    inicioCalculado,
+                    dataFimCalculada,
+                    a.dataInicio || store.settings.termStart,
+                    a.dataFim || store.settings.termEnd
+                );
+            })
+            .map((a) => a.id);
 
-        if (conflitoIntensiva) idToRemove = conflitoIntensiva.id;
-
-        const actionText = idToRemove ? 'Atualizar alocacao existente?' : 'Confirmar alocacao?';
+        const actionText = idsToRemove.length > 0 ? 'Atualizar alocacao existente?' : 'Confirmar alocacao?';
         if (!confirm(`${disciplina} (${formatDateBR(inicioCalculado)} a ${formatDateBR(dataFimCalculada)})\n\n${actionText}`)) return;
 
-        if (idToRemove) store.removeAllocation(idToRemove);
+        idsToRemove.forEach((id) => store.removeAllocation(id));
 
         store.addAllocation({
             turmaId: store.selectedTurma,
@@ -4236,6 +4239,168 @@ function detectGlobalTeacherConflicts() {
     return conflictMap;
 }
 
+function detectGlobalTeacherConflictsStable() {
+    // Retorna Map<nomeDocente, [{dia, horario, dataInicio, discA, discB}]>
+    const conflictMap = new Map();
+    const allocs = (store.allocations || []).filter((a) => a && a.tipo !== 'pendente');
+    const diasNomes = ['', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab'];
+
+    function getInvolvedTeachers(alloc) {
+        if (alloc.docentes && alloc.docentes.length > 0) {
+            return alloc.docentes
+                .map((d) => String(d.nome || '').trim())
+                .filter((n) => n && n.toUpperCase() !== 'A DEFINIR');
+        }
+        const n = String(alloc.docente || '').trim();
+        return n && n.toUpperCase() !== 'A DEFINIR' ? [n] : [];
+    }
+
+    function getAllocRange(alloc) {
+        const start = alloc.dataInicio || store.settings.termStart || '';
+        const end = alloc.dataFim || store.settings.termEnd || start;
+        return { start, end };
+    }
+
+    function formatSlotSummary(slotSet) {
+        const ordered = [...slotSet].sort((x, y) => timeToMinutes(x) - timeToMinutes(y));
+        if (ordered.length <= 3) return ordered.join(', ');
+        return `${ordered.slice(0, 3).join(', ')}...`;
+    }
+
+    function formatDaySummary(daySet) {
+        const ordered = [...daySet].sort((a, b) => a - b);
+        if (ordered.length === 0) return '';
+        if (ordered.length <= 3) return ordered.map((d) => diasNomes[d] || String(d)).join(', ');
+        return `${ordered.slice(0, 3).map((d) => diasNomes[d] || String(d)).join(', ')}...`;
+    }
+
+    function summarizeIntensiveVsIntensive(intA, intB, rangeA, rangeB) {
+        const faixasA = buildIntensiveConflictFaixas(intA, rangeA.start, rangeA.end);
+        const faixasB = buildIntensiveConflictFaixas(intB, rangeB.start, rangeB.end);
+        if (faixasA.length === 0 || faixasB.length === 0) return null;
+
+        const conflictDays = new Set();
+        const conflictSlots = new Set();
+        let firstConflictStart = '';
+
+        for (const faixaA of faixasA) {
+            for (const faixaB of faixasB) {
+                if (!isDateOverlap(faixaA.inicio, faixaA.fim, faixaB.inicio, faixaB.fim)) continue;
+                const overlapStart = faixaA.inicio > faixaB.inicio ? faixaA.inicio : faixaB.inicio;
+                const daysA = Object.keys(faixaA.byDay).map((d) => parseInt(d, 10)).filter((d) => d >= 1 && d <= 6);
+
+                for (const day of daysA) {
+                    const sharedSlots = (faixaA.byDay[day] || []).filter((h) => (faixaB.byDay[day] || []).includes(h));
+                    if (sharedSlots.length === 0) continue;
+                    conflictDays.add(day);
+                    sharedSlots.forEach((h) => conflictSlots.add(h));
+                    if (!firstConflictStart || overlapStart < firstConflictStart) firstConflictStart = overlapStart;
+                }
+            }
+        }
+
+        if (conflictDays.size === 0 || conflictSlots.size === 0) return null;
+        return {
+            dia: formatDaySummary(conflictDays),
+            horario: formatSlotSummary(conflictSlots),
+            dataInicio: firstConflictStart || (rangeA.start > rangeB.start ? rangeA.start : rangeB.start)
+        };
+    }
+
+    function summarizeRegularVsIntensive(regAlloc, intAlloc, rangeReg, rangeInt) {
+        const regDay = parseInt(regAlloc.diaSemana, 10);
+        const regSlot = String(regAlloc.horario || '').trim();
+        if (Number.isNaN(regDay) || regDay < 1 || regDay > 6 || !regSlot) return null;
+
+        const faixasInt = buildIntensiveConflictFaixas(intAlloc, rangeInt.start, rangeInt.end);
+        if (faixasInt.length === 0) return null;
+
+        let firstConflictStart = '';
+        faixasInt.forEach((faixa) => {
+            if (!isDateOverlap(rangeReg.start, rangeReg.end, faixa.inicio, faixa.fim)) return;
+            const slotsDay = faixa.byDay?.[regDay] || [];
+            if (!slotsDay.includes(regSlot)) return;
+            const overlapStart = rangeReg.start > faixa.inicio ? rangeReg.start : faixa.inicio;
+            if (!firstConflictStart || overlapStart < firstConflictStart) firstConflictStart = overlapStart;
+        });
+
+        if (!firstConflictStart) return null;
+        return {
+            dia: diasNomes[regDay] || String(regDay),
+            horario: regSlot,
+            dataInicio: firstConflictStart
+        };
+    }
+
+    for (let i = 0; i < allocs.length; i++) {
+        for (let j = i + 1; j < allocs.length; j++) {
+            const a = allocs[i];
+            const b = allocs[j];
+
+            if (String(a.turmaId) === String(b.turmaId) && a.disciplina === b.disciplina && a.tipo === b.tipo) continue;
+
+            const teachersA = getInvolvedTeachers(a);
+            const teachersB = getInvolvedTeachers(b);
+            const sharedTeachers = teachersA.filter((t) => teachersB.includes(t));
+            if (sharedTeachers.length === 0) continue;
+
+            const rangeA = getAllocRange(a);
+            const rangeB = getAllocRange(b);
+            if (!rangeA.start || !rangeA.end || !rangeB.start || !rangeB.end) continue;
+            if (!isDateOverlap(rangeA.start, rangeA.end, rangeB.start, rangeB.end)) continue;
+
+            let summary = null;
+
+            if (a.tipo !== 'intensiva' && b.tipo !== 'intensiva') {
+                const dayA = parseInt(a.diaSemana, 10);
+                const dayB = parseInt(b.diaSemana, 10);
+                const slotA = String(a.horario || '').trim();
+                const slotB = String(b.horario || '').trim();
+                if (dayA === dayB && slotA && slotA === slotB) {
+                    summary = {
+                        dia: diasNomes[dayA] || String(dayA),
+                        horario: slotA,
+                        dataInicio: rangeA.start > rangeB.start ? rangeA.start : rangeB.start
+                    };
+                }
+            } else if (a.tipo === 'intensiva' && b.tipo === 'intensiva') {
+                summary = summarizeIntensiveVsIntensive(a, b, rangeA, rangeB);
+            } else {
+                const intAlloc = a.tipo === 'intensiva' ? a : b;
+                const regAlloc = a.tipo === 'intensiva' ? b : a;
+                const rangeReg = a.tipo === 'intensiva' ? rangeB : rangeA;
+                const rangeInt = a.tipo === 'intensiva' ? rangeA : rangeB;
+                summary = summarizeRegularVsIntensive(regAlloc, intAlloc, rangeReg, rangeInt);
+            }
+
+            if (!summary) continue;
+
+            const detail = {
+                dia: summary.dia,
+                horario: summary.horario,
+                dataInicio: summary.dataInicio,
+                discA: `${getTurmaLabel(a.turmaId)} - ${a.disciplina}`,
+                discB: `${getTurmaLabel(b.turmaId)} - ${b.disciplina}`,
+            };
+
+            sharedTeachers.forEach((t) => {
+                if (!conflictMap.has(t)) conflictMap.set(t, []);
+                const existing = conflictMap.get(t);
+                const isDup = existing.some((e) =>
+                    e.dia === detail.dia &&
+                    e.horario === detail.horario &&
+                    e.dataInicio === detail.dataInicio &&
+                    ((e.discA === detail.discA && e.discB === detail.discB) ||
+                        (e.discA === detail.discB && e.discB === detail.discA))
+                );
+                if (!isDup) existing.push(detail);
+            });
+        }
+    }
+
+    return conflictMap;
+}
+
 function updateGlobalConflictsUI() {
     const tabTeacher = document.getElementById('tab-teacher');
     if (!tabTeacher) return;
@@ -4247,7 +4412,7 @@ function updateGlobalConflictsUI() {
         tabTeacher.insertBefore(warningDiv, tabTeacher.firstChild);
     }
 
-    const conflictMap = detectGlobalTeacherConflicts();
+    const conflictMap = detectGlobalTeacherConflictsStable();
 
     if (conflictMap.size > 0) {
         const tdStyle = 'padding: 5px 10px; border: 1px solid rgba(255,255,255,0.3); font-size: 0.85em; white-space: nowrap;';
@@ -4436,6 +4601,14 @@ function generateCalendarGrid(container, turmaId, docenteName, start, end, title
                             if (e.horariosOcupados && e.horariosOcupados.some(h => normalizeTime(h) === slotTimeNorm)) return true;
                             return false;
                         });
+                        const dedupeEventKey = (e) => `${e.turmaId || ''}|${e.disciplina || ''}|${e.tipo || ''}|${e.subGrupo || ''}|${slotTimeNorm}`;
+                        const seenSlotEvents = new Set();
+                        const uniqueEventsInSlot = eventsInSlot.filter((e) => {
+                            const key = dedupeEventKey(e);
+                            if (seenSlotEvents.has(key)) return false;
+                            seenSlotEvents.add(key);
+                            return true;
+                        });
 
                         let content = '';
                         let style = '';
@@ -4443,28 +4616,28 @@ function generateCalendarGrid(container, turmaId, docenteName, start, end, title
                         if (isIntervalo) {
                             content = '<span style="color:#7f8c8d; font-style:italic; font-size:0.85em;">Intervalo</span>';
                             style = 'background:#e0e0e0;';
-                        } else if (eventsInSlot.length > 0) {
-                            const hasSpecificConflict = eventsInSlot.some(e => e.conflictsAt && e.conflictsAt.includes(slotTimeNorm));
-                            const implicitConflict = eventsInSlot.length > 1;
-                            const isSuspended = eventsInSlot.some((e) => e.type === 'suspended');
+                        } else if (uniqueEventsInSlot.length > 0) {
+                            const hasSpecificConflict = uniqueEventsInSlot.some(e => e.conflictsAt && e.conflictsAt.includes(slotTimeNorm));
+                            const implicitConflict = uniqueEventsInSlot.filter(e => e.type !== 'suspended').length > 1;
+                            const isSuspended = uniqueEventsInSlot.some((e) => e.type === 'suspended');
 
                             if (docenteName) {
                                 if (hasSpecificConflict || implicitConflict) {
                                     style = 'background: #c0392b; color: white; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight:bold;';
-                                    const conflictNames = eventsInSlot.map((e) => `${getDisciplinaInfo(e.disciplina).abrev} - ${e.turmaId}`).join(' <b style="color:#fff">x</b> ');
+                                    const conflictNames = uniqueEventsInSlot.filter((e) => e.type !== 'suspended').map((e) => `${getDisciplinaInfo(e.disciplina).abrev} - ${e.turmaId}`).join(' <b style="color:#fff">x</b> ');
                                     content = `<span title="Choque: ${conflictNames.replace(/<[^>]+>/g, '')}">⚠️ ${conflictNames}</span>`;
                                 } else if (isSuspended) {
-                                    const suspendedEvent = eventsInSlot.find(e => e.type === 'suspended');
+                                    const suspendedEvent = uniqueEventsInSlot.find(e => e.type === 'suspended');
                                     const info = getDisciplinaInfo(suspendedEvent.disciplina);
                                     content = `⛔ ${info.abrev} - ${suspendedEvent.turmaId} Suspensa`;
                                 } else {
-                                    const event = eventsInSlot[0];
+                                    const event = uniqueEventsInSlot[0];
                                     const info = getDisciplinaInfo(event.disciplina);
                                     content = `${info.abrev} - ${event.turmaId}`;
                                     style = `background:${event.cor || '#bdc3c7'}; color:black;`;
                                 }
                             } else {
-                                const activeEvent = eventsInSlot.find(e => e.type !== 'suspended');
+                                const activeEvent = uniqueEventsInSlot.find(e => e.type !== 'suspended');
                                 if (activeEvent) {
                                     const info = getDisciplinaInfo(activeEvent.disciplina);
                                     content = info.abrev;
@@ -4487,8 +4660,8 @@ function generateCalendarGrid(container, turmaId, docenteName, start, end, title
                             style = 'background: #ecf0f1;';
                         }
 
-                        const hasSuspended = eventsInSlot.some(e => e.type === 'suspended');
-                        const hasOverriding = eventsInSlot.some(e => (e.isIntensive || e.isPriority) && !docenteName);
+                        const hasSuspended = uniqueEventsInSlot.some(e => e.type === 'suspended');
+                        const hasOverriding = uniqueEventsInSlot.some(e => (e.isIntensive || e.isPriority) && !docenteName);
 
                         let className = 'cal-slot-content';
                         if (hasSuspended && docenteName) className += ' suspended-slot';
@@ -4496,9 +4669,9 @@ function generateCalendarGrid(container, turmaId, docenteName, start, end, title
 
                         let tooltip = '';
                         if (hasSuspended && docenteName) {
-                            const suspEvent = eventsInSlot.find(e => e.type === 'suspended');
+                            const suspEvent = uniqueEventsInSlot.find(e => e.type === 'suspended');
                             tooltip = `title="${suspEvent.blockingReason || 'Suspenso'}"`;
-                        } else if (isOutOfBounds && eventsInSlot.length > 0 && !hasSuspended) {
+                        } else if (isOutOfBounds && uniqueEventsInSlot.length > 0 && !hasSuspended) {
                             tooltip = `title="ALERTA: Aula marcada fora do semestre letivo!"`;
                         }
 
