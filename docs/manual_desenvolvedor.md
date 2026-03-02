@@ -216,3 +216,50 @@ git push
 
 > **⚠️ PROTOCOLO DE SEGURANÇA NA VIRADA DE SEMESTRE:**
 > Sempre que fizer um Push estrutural, comunique a equipe: *“Caros diretores, salvem o JSON de suas disciplinas finalizadas. Ao abrirem o sistema na nova versão, cliquem impreterivelmente no botão vermelho **Limpar Tudo** para apagar o cache antigo do navegador antes de recomeçar.”*
+
+---
+
+## 6. Regra Oficial de Conflitos (Modelo "Todas por Faixas")
+
+### 6.1. Diretriz de Arquitetura
+
+A partir da estrategia atual do projeto, a filosofia oficial e:
+
+**"Toda oferta deve ser tratada como oferta por faixas."**
+
+Impacto esperado:
+
+1. elimina bifurcacao de logica por tipo (`regular`, `regular_prioritaria`, `intensiva`);
+2. unifica motor de conflito para turma e professor;
+3. reduz superficie de regressao e custo de manutencao.
+
+### 6.2. Formula Canonica de Conflito
+
+Um conflito real existe apenas quando os tres eixos abaixo se intersectam:
+
+1. periodo (datas);
+2. dia da semana;
+3. slot (horario).
+
+Formula:
+
+`conflito = overlap(periodo) AND overlap(dia) AND overlap(slot)`
+
+### 6.3. Tabela de Conflitos (Turma e Professor)
+
+| Escopo | Regra de Avaliacao | Bloqueia? | Observacao |
+|---|---|---|---|
+| Turma | Intersecao de periodo + dia + slot entre duas ofertas | Sim | Conflito real de sala/grade |
+| Turma | Mesmo periodo e mesmo slot, mas dias diferentes | Nao | Convivencia permitida |
+| Turma | Periodos sem sobreposicao | Nao | Sem conflito temporal |
+| Professor (global) | Mesmo professor em turmas diferentes com intersecao de periodo + dia + slot | Sim | Conflito global docente |
+| Professor (global) | Mesmo professor com periodo/slot iguais, mas dias diferentes | Nao | Escalas compativeis |
+| Professor (global) | Professor "A definir" | Nao | Opcionalmente avisar |
+
+### 6.4. Roadmap de Simplificacao (Etapas)
+
+1. Promover "oferta por faixa" a modelo canonico interno.
+2. Preservar leitura de dados legados por periodo de transicao.
+3. Transformar UX de "clique de regular" em atalho para criar faixa.
+4. Adaptar exportacoes/relatorios (SIGAA e correlatos) ao modelo unificado.
+5. Remover tipos antigos da UI somente apos validacao operacional.

@@ -1,6 +1,6 @@
 import { store } from './store.js';
 import { getCalendarEvents } from './calendar.js';
-import { countBusinessDays, countWeekdaysInPeriod, addBusinessDays, isDateOverlap, calculateEndDateByWeekday, hasIntensiveSlotConflict } from './utils.js';
+import { countBusinessDays, countWeekdaysInPeriod, addBusinessDays, isDateOverlap, calculateEndDateByWeekday } from './utils.js';
 
 const gridContainer = document.getElementById('weekly-grid');
 const selCurso = document.getElementById('sel-curso');
@@ -21,7 +21,6 @@ const inputConfig = {
     disciplina: document.getElementById('inp-disciplina'),
     cor: document.getElementById('inp-color'),
     docente: document.getElementById('inp-docente'),
-    tipo: document.getElementById('sel-tipo'),
     inicio: document.getElementById('inp-data-inicio'),
     fim: document.getElementById('inp-data-fim')
 };
@@ -33,6 +32,7 @@ let faixasPatterns = {
     2: [],
     3: []
 };
+let editingDisciplinaDraft = '';
 window.isDrawingFaixa = null;
 
 // ==========================================
@@ -695,6 +695,76 @@ function buildFaixaSummaryText(faixaIndex, count) {
     return `Intervalo: ${intervalTxt}; CH: ${ch} horas-aula; Dias: ${diasTxt}; Turno: ${turnoTxt}; Horários: ${horariosTxt}`;
 }
 
+function normalizeHexColor(color, fallback = '#f39c12') {
+    const src = String(color || '').trim();
+    if (/^#[0-9a-fA-F]{6}$/.test(src)) return src.toLowerCase();
+    if (/^#[0-9a-fA-F]{3}$/.test(src)) {
+        return `#${src[1]}${src[1]}${src[2]}${src[2]}${src[3]}${src[3]}`.toLowerCase();
+    }
+    return fallback;
+}
+
+function hexToRgb(hexColor) {
+    const hex = normalizeHexColor(hexColor);
+    return {
+        r: parseInt(hex.slice(1, 3), 16),
+        g: parseInt(hex.slice(3, 5), 16),
+        b: parseInt(hex.slice(5, 7), 16)
+    };
+}
+
+function adjustHexColor(hexColor, delta) {
+    const { r, g, b } = hexToRgb(hexColor);
+    const clamp = (v) => Math.max(0, Math.min(255, v));
+    const toHex = (v) => clamp(v).toString(16).padStart(2, '0');
+    return `#${toHex(r + delta)}${toHex(g + delta)}${toHex(b + delta)}`;
+}
+
+function hexToRgba(hexColor, alpha = 1) {
+    const { r, g, b } = hexToRgb(hexColor);
+    const a = Math.max(0, Math.min(1, alpha));
+    return `rgba(${r}, ${g}, ${b}, ${a})`;
+}
+
+function getDrawingBaseColor() {
+    const disciplina = (inputConfig.disciplina?.value ?? '').replace(/\s*\(\s*\d+\s*h\s*\)\s*$/i, '').trim();
+    const fallbackColor = normalizeHexColor(disciplina ? store.getDisciplinaColor(disciplina) : '#f39c12');
+    return normalizeHexColor(inputConfig.cor?.value, fallbackColor);
+}
+
+function getDrawingSelectedStyles() {
+    const base = getDrawingBaseColor();
+    return {
+        background: base,
+        border: `2px dashed ${adjustHexColor(base, -45)}`,
+        color: '#fff',
+        fontWeight: 'bold'
+    };
+}
+
+function applyDrawingToolbarTheme() {
+    const toolbar = document.getElementById('drawing-toolbar');
+    if (!toolbar) return;
+    const base = getDrawingBaseColor();
+    const light = adjustHexColor(base, 24);
+    const border = adjustHexColor(base, -22);
+    toolbar.style.background = `linear-gradient(135deg, ${light}, ${base})`;
+    toolbar.style.boxShadow = `0 4px 15px ${hexToRgba(base, 0.4)}`;
+    toolbar.style.border = `2px solid ${border}`;
+}
+
+function clearActiveDrawingSelection() {
+    if (!window.isDrawingFaixa) return 0;
+    const faixaIndex = window.isDrawingFaixa;
+    const domSelected = document.querySelectorAll('.slot.selected-slot').length;
+    const persisted = normalizeFaixaPattern(faixasPatterns[faixaIndex]).length;
+    const clearedCount = Math.max(domSelected, persisted);
+    faixasPatterns[faixaIndex] = [];
+    setFaixaStatus(faixaIndex, 0);
+    renderWeeklyGrid();
+    return clearedCount;
+}
+
 function activateDrawingMode(faixaIndex) {
     activeFaixaIndex = faixaIndex;
     window.isDrawingFaixa = faixaIndex;
@@ -703,6 +773,7 @@ function activateDrawingMode(faixaIndex) {
     if (nameEl) nameEl.textContent = `Faixa ${faixaIndex}`;
     const toolbar = document.getElementById('drawing-toolbar');
     if (toolbar) toolbar.classList.remove('hidden');
+    applyDrawingToolbarTheme();
 
     switchTab('weekly');
     renderWeeklyGrid();
@@ -716,31 +787,169 @@ function deactivateDrawingMode() {
     renderWeeklyGrid();
 }
 
+function shiftISODate(dateStr, days) {
+    if (!dateStr) return '';
+    const d = new Date(`${dateStr}T12:00:00`);
+    d.setDate(d.getDate() + days);
+    return d.toISOString().split('T')[0];
+}
+
+function normalizeDisciplinaInputValue(rawValue) {
+    return String(rawValue || '').replace(/\s*\(\s*\d+\s*h\s*\)\s*$/i, '').trim();
+}
+
+function collapseFaixasForNewComponent() {
+    const faixa2El = document.getElementById('faixa-2');
+    const faixa3El = document.getElementById('faixa-3');
+    if (faixa2El) faixa2El.classList.add('hidden');
+    if (faixa3El) faixa3El.classList.add('hidden');
+
+    ['inp-data-inicio-f2', 'inp-data-fim-f2', 'inp-data-inicio-f3', 'inp-data-fim-f3'].forEach((id) => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+    });
+
+    faixasPatterns[2] = [];
+    faixasPatterns[3] = [];
+    setFaixaStatus(2, 0);
+    setFaixaStatus(3, 0);
+    applyFaixaDateAutofill({ forceSingleBounds: true, forceFaixa2End: true });
+}
+
+function applyFaixasConfigToSidebar(faixasConfig = []) {
+    const sorted = Array.isArray(faixasConfig)
+        ? faixasConfig.map(normalizeFaixaEntry).filter(Boolean).sort((a, b) => a.inicio.localeCompare(b.inicio))
+        : [];
+    const faixa2El = document.getElementById('faixa-2');
+    const faixa3El = document.getElementById('faixa-3');
+
+    for (let i = 1; i <= 3; i++) {
+        const faixa = sorted[i - 1] || null;
+        const iniEl = document.getElementById(`inp-data-inicio-f${i}`);
+        const fimEl = document.getElementById(`inp-data-fim-f${i}`);
+        const faixaEl = document.getElementById(`faixa-${i}`);
+        if (faixa) {
+            if (faixaEl) faixaEl.classList.remove('hidden');
+            if (iniEl) iniEl.value = faixa.inicio || '';
+            if (fimEl) fimEl.value = faixa.fim || '';
+        } else {
+            if (i > 1 && faixaEl) faixaEl.classList.add('hidden');
+            if (i > 1 && iniEl) iniEl.value = '';
+            if (i > 1 && fimEl) fimEl.value = '';
+            if (i > 1) faixasPatterns[i] = [];
+        }
+        setFaixaStatus(i, getFaixaSlotsAndDays(i).pattern.length);
+    }
+
+    if (sorted.length < 2 && faixa2El) faixa2El.classList.add('hidden');
+    if (sorted.length < 3 && faixa3El) faixa3El.classList.add('hidden');
+}
+
+function getActiveDrawingFaixaRange() {
+    if (!window.isDrawingFaixa) return null;
+    const idx = parseInt(window.isDrawingFaixa, 10);
+    if (Number.isNaN(idx) || idx < 1 || idx > 3) return null;
+
+    const iniEl = document.getElementById(`inp-data-inicio-f${idx}`);
+    const fimEl = document.getElementById(`inp-data-fim-f${idx}`);
+    const nextIniEl = document.getElementById(`inp-data-inicio-f${idx + 1}`);
+    const termStart = store.settings.termStart || inpTermStart?.value || calStart?.value || '';
+    const termEnd = store.settings.termEnd || inpTermEnd?.value || calEnd?.value || '';
+
+    const start = (iniEl?.value || termStart || '').trim();
+    let end = (fimEl?.value || '').trim();
+    if (!end && nextIniEl?.value) end = shiftISODate(nextIniEl.value, -1);
+    if (!end) end = (termEnd || start || '').trim();
+    if (!start || !end) return null;
+    if (end < start) end = start;
+
+    return { start, end };
+}
+
+function rangeOverlaps(rangeA, rangeB) {
+    if (!rangeA?.start || !rangeA?.end || !rangeB?.start || !rangeB?.end) return true;
+    return isDateOverlap(rangeA.start, rangeA.end, rangeB.start, rangeB.end);
+}
+
+function applyFaixaDateAutofill(options = {}) {
+    const { forceSingleBounds = false, forceFaixa2End = false } = options;
+
+    const f1Ini = document.getElementById('inp-data-inicio-f1');
+    const f1Fim = document.getElementById('inp-data-fim-f1');
+    const f2Ini = document.getElementById('inp-data-inicio-f2');
+    const f2Fim = document.getElementById('inp-data-fim-f2');
+    const faixa2El = document.getElementById('faixa-2');
+    const faixa3El = document.getElementById('faixa-3');
+
+    const hasFaixa2 = !!faixa2El && !faixa2El.classList.contains('hidden');
+    const hasFaixa3 = !!faixa3El && !faixa3El.classList.contains('hidden');
+
+    const termStart = store.settings.termStart || inpTermStart?.value || calStart?.value || '';
+    const termEnd = store.settings.termEnd || inpTermEnd?.value || calEnd?.value || '';
+
+    if (f2Ini) f2Ini.required = hasFaixa2;
+    if (termStart && f1Ini && !f1Ini.value) f1Ini.value = termStart;
+
+    if (!hasFaixa2 && !hasFaixa3) {
+        if (termStart && f1Ini && (forceSingleBounds || !f1Ini.value)) f1Ini.value = termStart;
+        if (termEnd && f1Fim && (forceSingleBounds || !f1Fim.value)) f1Fim.value = termEnd;
+        return;
+    }
+
+    if (hasFaixa2) {
+        if (f2Ini && f2Ini.value && f1Fim) {
+            const faixa1End = shiftISODate(f2Ini.value, -1);
+            if (faixa1End) f1Fim.value = faixa1End;
+        }
+        if (termEnd && f2Fim && (forceFaixa2End || !f2Fim.value)) {
+            f2Fim.value = termEnd;
+        }
+    }
+}
+
+function enforceCanonicalFaixaMode() {
+    const faixasContainer = document.getElementById('container-faixas-intensiva');
+    if (faixasContainer) faixasContainer.classList.remove('hidden');
+
+    const btnAddOferta = document.getElementById('btn-add-oferta');
+    if (btnAddOferta) btnAddOferta.textContent = 'Adicionar Oferta à Grade';
+
+    if (store.settings.termStart && inputConfig.inicio) {
+        inputConfig.inicio.value = store.settings.termStart;
+    }
+    renderIntensiveSlots();
+    applyFaixaDateAutofill({ forceSingleBounds: true, forceFaixa2End: true });
+}
+
 function setupFaixaControls() {
     const f1Fim = document.getElementById('inp-data-fim-f1');
     const f2Ini = document.getElementById('inp-data-inicio-f2');
     const f2Fim = document.getElementById('inp-data-fim-f2');
     const f3Ini = document.getElementById('inp-data-inicio-f3');
 
-    const addOneDay = (dt) => {
-        if (!dt) return '';
-        const d = new Date(dt + 'T12:00:00');
-        d.setDate(d.getDate() + 1);
-        return d.toISOString().split('T')[0];
-    };
-
     if (f1Fim) {
         f1Fim.addEventListener('change', () => {
-            if (f1Fim.value && f2Ini) f2Ini.value = addOneDay(f1Fim.value);
             setFaixaStatus(1, getFaixaSlotsAndDays(1).pattern.length);
             setFaixaStatus(2, getFaixaSlotsAndDays(2).pattern.length);
+            if (window.isDrawingFaixa) renderWeeklyGrid();
+        });
+    }
+    if (f2Ini) {
+        ['input', 'change'].forEach((evt) => {
+            f2Ini.addEventListener(evt, () => {
+                applyFaixaDateAutofill();
+                setFaixaStatus(1, getFaixaSlotsAndDays(1).pattern.length);
+                setFaixaStatus(2, getFaixaSlotsAndDays(2).pattern.length);
+                if (window.isDrawingFaixa) renderWeeklyGrid();
+            });
         });
     }
     if (f2Fim) {
         f2Fim.addEventListener('change', () => {
-            if (f2Fim.value && f3Ini) f3Ini.value = addOneDay(f2Fim.value);
+            if (f2Fim.value && f3Ini) f3Ini.value = shiftISODate(f2Fim.value, 1);
             setFaixaStatus(2, getFaixaSlotsAndDays(2).pattern.length);
             setFaixaStatus(3, getFaixaSlotsAndDays(3).pattern.length);
+            if (window.isDrawingFaixa) renderWeeklyGrid();
         });
     }
 
@@ -752,6 +961,7 @@ function setupFaixaControls() {
             ['input', 'change'].forEach((evt) => {
                 el.addEventListener(evt, () => {
                     setFaixaStatus(i, getFaixaSlotsAndDays(i).pattern.length);
+                    if (window.isDrawingFaixa) renderWeeklyGrid();
                 });
             });
         });
@@ -764,14 +974,17 @@ function setupFaixaControls() {
             const f3 = document.getElementById('faixa-3');
             if (f2 && f2.classList.contains('hidden')) {
                 f2.classList.remove('hidden');
+                applyFaixaDateAutofill({ forceFaixa2End: true });
                 const iniF2 = document.getElementById('inp-data-inicio-f2');
                 if (iniF2) iniF2.focus();
+                if (window.isDrawingFaixa) renderWeeklyGrid();
                 return;
             }
             if (f3 && f3.classList.contains('hidden')) {
                 f3.classList.remove('hidden');
                 const iniF3 = document.getElementById('inp-data-inicio-f3');
                 if (iniF3) iniF3.focus();
+                if (window.isDrawingFaixa) renderWeeklyGrid();
                 return;
             }
             showToastWarning('Limite de 3 faixas atingido.', 'warning', 2000);
@@ -789,6 +1002,8 @@ function setupFaixaControls() {
                 faixasPatterns[faixaNum] = [];
                 setFaixaStatus(faixaNum, 0);
             }
+            applyFaixaDateAutofill({ forceSingleBounds: true });
+            if (window.isDrawingFaixa) renderWeeklyGrid();
         });
     });
 
@@ -807,7 +1022,14 @@ function setupFaixaControls() {
     });
 
     const btnCancelDraw = document.getElementById('btn-cancel-draw');
-    if (btnCancelDraw) btnCancelDraw.addEventListener('click', deactivateDrawingMode);
+    if (btnCancelDraw) {
+        btnCancelDraw.textContent = 'Limpar Padrão';
+        btnCancelDraw.addEventListener('click', () => {
+            const cleared = clearActiveDrawingSelection();
+            if (cleared > 0) showToastWarning('Slots limpos. Desenhe o novo padrao.', 'success', 1800);
+            else showToastWarning('Nao ha slots marcados para limpar.', 'warning', 1600);
+        });
+    }
 
     const btnSaveDraw = document.getElementById('btn-save-draw');
     if (btnSaveDraw) {
@@ -826,6 +1048,7 @@ function setupFaixaControls() {
     for (let i = 1; i <= 3; i++) {
         setFaixaStatus(i, getFaixaSlotsAndDays(i).pattern.length);
     }
+    applyFaixaDateAutofill({ forceSingleBounds: true });
 }
 
 function hydrateFaixa1FromIntensiva(allocation) {
@@ -1141,6 +1364,106 @@ function collectIntensiveFaixasFromUI(fallbackInicio, fallbackSlots, fallbackDia
     return sorted;
 }
 
+function alignFaixasToExecutionEnd(faixasInput, executionEnd) {
+    const end = String(executionEnd || '').trim();
+    const normalized = Array.isArray(faixasInput)
+        ? faixasInput.map(normalizeFaixaEntry).filter(Boolean).sort((a, b) => a.inicio.localeCompare(b.inicio))
+        : [];
+    if (normalized.length === 0 || !end) return normalized;
+
+    const clipped = normalized
+        .filter((f) => f.inicio <= end)
+        .map((f) => {
+            const faixaEnd = f.fim && f.fim < end ? f.fim : end;
+            return { ...f, fim: faixaEnd };
+        })
+        .filter((f) => f.fim >= f.inicio);
+
+    if (clipped.length === 0) return normalized;
+
+    for (let i = 0; i < clipped.length - 1; i++) {
+        const maxEnd = addDaysISO(clipped[i + 1].inicio, -1);
+        if (!clipped[i].fim || clipped[i].fim > maxEnd) clipped[i].fim = maxEnd;
+        if (clipped[i].fim < clipped[i].inicio) clipped[i].fim = clipped[i].inicio;
+    }
+
+    clipped[clipped.length - 1].fim = end;
+    return clipped;
+}
+
+function buildIntensiveConflictFaixas(intense, rangeStart, rangeEnd) {
+    if (!intense) return [];
+
+    const fallbackStart = rangeStart || intense.dataInicio || store.settings.termStart || '';
+    const fallbackEnd = rangeEnd || intense.dataFim || store.settings.termEnd || fallbackStart;
+    const normalized = getNormalizedIntensiveFaixas(intense);
+
+    if (normalized.length === 0) {
+        const dias = Array.isArray(intense.diasMarcados) && intense.diasMarcados.length > 0
+            ? intense.diasMarcados
+            : (intense.usaSabado ? [1, 2, 3, 4, 5, 6] : [1, 2, 3, 4, 5]);
+        const slots = Array.isArray(intense.horariosOcupados) ? intense.horariosOcupados : [];
+        if (!fallbackStart || !fallbackEnd || dias.length === 0 || slots.length === 0) return [];
+
+        const byDay = {};
+        dias.forEach((d) => { byDay[d] = [...slots]; });
+        return [{ inicio: fallbackStart, fim: fallbackEnd, byDay }];
+    }
+
+    const faixas = normalized.map((faixa, idx) => {
+        let inicio = faixa.inicio || fallbackStart;
+        let fim = faixa.fim || '';
+
+        if (!fim) {
+            if (idx < normalized.length - 1) fim = addDaysISO(normalized[idx + 1].inicio, -1);
+            else fim = fallbackEnd || inicio;
+        }
+
+        if (!inicio || !fim) return null;
+        if (fallbackStart && inicio < fallbackStart) inicio = fallbackStart;
+        if (fallbackEnd && fim > fallbackEnd) fim = fallbackEnd;
+        if (inicio > fim) return null;
+
+        const byDay = normalizeDrawnSlotsByDay(faixa.drawnSlotsByDay || {});
+        if (Object.keys(byDay).length === 0) {
+            const dias = Array.isArray(faixa.dias) ? faixa.dias : [];
+            const slots = Array.isArray(faixa.slots) ? faixa.slots : [];
+            dias.forEach((d) => { if (slots.length > 0) byDay[d] = [...slots]; });
+        }
+
+        if (Object.keys(byDay).length === 0) return null;
+        return { inicio, fim, byDay };
+    }).filter(Boolean);
+
+    return faixas;
+}
+
+function hasSlotsIntersection(slotsA, slotsB) {
+    if (!Array.isArray(slotsA) || !Array.isArray(slotsB) || slotsA.length === 0 || slotsB.length === 0) return false;
+    const setB = new Set(slotsB);
+    return slotsA.some((s) => setB.has(s));
+}
+
+function hasIntensiveConflictByDay(candidate, existing, candidateRange = {}, existingRange = {}) {
+    const faixasA = buildIntensiveConflictFaixas(candidate, candidateRange.start, candidateRange.end);
+    const faixasB = buildIntensiveConflictFaixas(existing, existingRange.start, existingRange.end);
+    if (faixasA.length === 0 || faixasB.length === 0) return false;
+
+    for (const faixaA of faixasA) {
+        for (const faixaB of faixasB) {
+            if (!isDateOverlap(faixaA.inicio, faixaA.fim, faixaB.inicio, faixaB.fim)) continue;
+
+            const daysA = Object.keys(faixaA.byDay).map((d) => parseInt(d, 10)).filter((d) => d >= 1 && d <= 6);
+            for (const day of daysA) {
+                const slotsA = faixaA.byDay[day] || [];
+                const slotsB = faixaB.byDay[day] || [];
+                if (hasSlotsIntersection(slotsA, slotsB)) return true;
+            }
+        }
+    }
+    return false;
+}
+
 
 function getDisciplinaCHGlobal(disciplina, turmaId) {
     let sigla = '';
@@ -1345,10 +1668,10 @@ function syncAllIntensiveDates() {
         intense.horariosOcupados = execution.unionSlots || intense.horariosOcupados || [];
         intense.diasMarcados = execution.unionDias || intense.diasMarcados || [];
         intense.usaSabado = (intense.diasMarcados || []).includes(6);
-
-        if (!Array.isArray(intense.faixas) || intense.faixas.length === 0) {
-            intense.faixas = getNormalizedIntensiveFaixas(intense);
-        }
+        const sourceFaixas = (Array.isArray(intense.faixas) && intense.faixas.length > 0)
+            ? intense.faixas
+            : getNormalizedIntensiveFaixas(intense);
+        intense.faixas = alignFaixasToExecutionEnd(sourceFaixas, intense.dataFim || execution.dataFim);
     });
 
     // REAÇÃO EM CADEIA: Após ajustar as Intensivas, 
@@ -1511,6 +1834,7 @@ function initPeriodoLetivoETurno() {
             store.setTermDates(inpTermStart.value, store.settings.termEnd);
             if (calStart) calStart.value = inpTermStart.value;
             if (inputConfig.inicio) inputConfig.inicio.value = inpTermStart.value;
+            applyFaixaDateAutofill({ forceSingleBounds: true, forceFaixa2End: true });
             renderOfertasList();
         });
     }
@@ -1518,6 +1842,7 @@ function initPeriodoLetivoETurno() {
         inpTermEnd.addEventListener('change', () => {
             store.setTermDates(store.settings.termStart, inpTermEnd.value);
             if (calEnd) calEnd.value = inpTermEnd.value;
+            applyFaixaDateAutofill({ forceSingleBounds: true, forceFaixa2End: true });
             renderOfertasList();
         });
     }
@@ -1525,6 +1850,7 @@ function initPeriodoLetivoETurno() {
         calStart.addEventListener('change', () => {
             store.setTermDates(calStart.value, store.settings.termEnd || (calEnd ? calEnd.value : ''));
             if (inpTermStart) inpTermStart.value = calStart.value;
+            applyFaixaDateAutofill({ forceSingleBounds: true, forceFaixa2End: true });
             renderOfertasList();
         });
     }
@@ -1532,17 +1858,17 @@ function initPeriodoLetivoETurno() {
         calEnd.addEventListener('change', () => {
             store.setTermDates(store.settings.termStart || (calStart ? calStart.value : ''), calEnd.value);
             if (inpTermEnd) inpTermEnd.value = calEnd.value;
+            applyFaixaDateAutofill({ forceSingleBounds: true, forceFaixa2End: true });
             renderOfertasList();
         });
     }
+    applyFaixaDateAutofill({ forceSingleBounds: true, forceFaixa2End: true });
     if (selTurnoOferta) {
         selTurnoOferta.addEventListener('change', () => {
             store.setTurnoOferta(selTurnoOferta.value);
             renderWeeklyGrid();
             renderOfertasList();
-            if (inputConfig.tipo && inputConfig.tipo.value === 'intensiva') {
-                renderIntensiveSlots();
-            }
+            renderIntensiveSlots();
         });
     }
 }
@@ -1620,53 +1946,7 @@ export function initUI() {
     const btnImportBloco = document.getElementById('btn-import-bloco');
     if (btnImportBloco) btnImportBloco.addEventListener('click', handleImportBloco);
 
-    if (inputConfig.tipo) {
-        inputConfig.tipo.addEventListener('change', (e) => {
-            const divDataEl = document.getElementById('datas-intensiva');
-            const divSlots = document.getElementById('container-slots-selection');
-            const faixasContainer = document.getElementById('container-faixas-intensiva');
-            const isIntensive = (e.target.value === 'intensiva');
-
-            if (divDataEl) divDataEl.classList.remove('hidden');
-
-            if (isIntensive) {
-                if (divSlots) divSlots.classList.remove('hidden');
-                if (faixasContainer) faixasContainer.classList.remove('hidden');
-                renderIntensiveSlots();
-
-                // Mostrar container dos dias da semana
-                const containerDias = document.getElementById('container-dias-semana-intensiva');
-                if (containerDias) containerDias.style.display = 'block';
-
-                // Reset Padrão: Seg a Sex marcados, Sab desmarcado
-                for (let i = 1; i <= 5; i++) {
-                    const chk = document.getElementById(`chk-dia-${i}`);
-                    if (chk) chk.checked = true;
-                }
-                const chkSaber = document.getElementById('chk-dia-6');
-                if (chkSaber) chkSaber.checked = false;
-
-            } else {
-                if (divSlots) divSlots.classList.add('hidden');
-                if (faixasContainer) faixasContainer.classList.add('hidden');
-
-                // Ocultar container dos dias da semana
-                const containerDias = document.getElementById('container-dias-semana-intensiva');
-                if (containerDias) containerDias.style.display = 'none';
-
-                deactivateDrawingMode();
-            }
-
-            if (store.settings.termStart && inputConfig.inicio) {
-                inputConfig.inicio.value = store.settings.termStart;
-            }
-
-            const inpInicioF1 = document.getElementById('inp-data-inicio-f1');
-            if (isIntensive && store.settings.termStart && inpInicioF1 && !inpInicioF1.value) {
-                inpInicioF1.value = store.settings.termStart;
-            }
-        });
-    }
+    enforceCanonicalFaixaMode();
 
     if (inputConfig.disciplina) {
         inputConfig.disciplina.addEventListener('input', () => {
@@ -1678,7 +1958,12 @@ export function initUI() {
 
         // Detecção de duplicata: mostra o campo sub-grupo quando a mesma disciplina já existe na turma
         inputConfig.disciplina.addEventListener('change', () => {
-            const discNome = (inputConfig.disciplina.value || '').replace(/\s*\(\s*\d+\s*h\s*\)\s*$/i, '').trim();
+            const discNome = normalizeDisciplinaInputValue(inputConfig.disciplina.value || '');
+            const isEditingSameDisc = editingDisciplinaDraft && discNome === editingDisciplinaDraft;
+            if (discNome && !isEditingSameDisc) {
+                collapseFaixasForNewComponent();
+                editingDisciplinaDraft = '';
+            }
             const containerSub = document.getElementById('container-sub-turma');
             const inpSub = document.getElementById('inp-sub-turma');
             const preview = document.getElementById('preview-sub-turma');
@@ -1745,6 +2030,16 @@ export function initUI() {
             inpSub.addEventListener('input', updatePreview);
             updatePreview();
         });
+    }
+
+    if (inputConfig.cor) {
+        const repaintDrawing = () => {
+            if (!window.isDrawingFaixa) return;
+            applyDrawingToolbarTheme();
+            renderWeeklyGrid();
+        };
+        inputConfig.cor.addEventListener('input', repaintDrawing);
+        inputConfig.cor.addEventListener('change', repaintDrawing);
     }
 
     const btnAdd = document.getElementById('btn-add-oferta');
@@ -1819,6 +2114,7 @@ export function initUI() {
             if (tempImportData) {
                 store.allocations = tempImportData;
                 syncAllRegularDates();
+                syncAllIntensiveDates();
                 alert('Dados importados com datas recalculadas com sucesso!');
                 window.location.reload();
             }
@@ -1832,6 +2128,7 @@ export function initUI() {
             if (tempImportData) {
                 const count = store.mergeAllocations(tempImportData);
                 syncAllRegularDates();
+                syncAllIntensiveDates();
                 alert(`Mesclagem concluída! ${count} novas alocações adicionadas com datas corrigidas.`);
                 renderWeeklyGrid();
                 renderOfertasList();
@@ -1966,6 +2263,8 @@ function onTurmaChange() {
     store.selectedTurma = selTurma.value;
     store.setLastContext(store.selectedCurso, store.selectedTurma);
     deactivateDrawingMode();
+    editingDisciplinaDraft = '';
+    collapseFaixasForNewComponent();
 
     faixasPatterns = { 1: [], 2: [], 3: [] };
     setFaixaStatus(1, 0);
@@ -1978,10 +2277,11 @@ function onTurmaChange() {
     }
 
     const alocacoesTurma = store.allocations.filter(a => String(a.turmaId) === String(store.selectedTurma));
-    const primeiraAula = alocacoesTurma.find(a => a.tipo === 'regular' && a.horario);
+    const primeiraIntensiva = alocacoesTurma.find(a => a.tipo === 'intensiva' && Array.isArray(a.horariosOcupados) && a.horariosOcupados.length > 0);
 
-    if (primeiraAula) {
-        const hora = parseInt(primeiraAula.horario.split(':')[0]);
+    if (primeiraIntensiva) {
+        const slotRef = String(primeiraIntensiva.horariosOcupados[0] || '');
+        const hora = parseInt(slotRef.split(':')[0], 10);
         if (hora < 13) store.setTurnoOferta('Manhã');
         else store.setTurnoOferta('Tarde');
     }
@@ -2012,10 +2312,7 @@ function onTurmaChange() {
     if (inputConfig.inicio && store.settings.termStart) {
         inputConfig.inicio.value = store.settings.termStart;
     }
-    const inpInicioF1 = document.getElementById('inp-data-inicio-f1');
-    if (inpInicioF1 && store.settings.termStart && !inpInicioF1.value) {
-        inpInicioF1.value = store.settings.termStart;
-    }
+    applyFaixaDateAutofill({ forceSingleBounds: true, forceFaixa2End: true });
 
     renderWeeklyGrid();
     renderOfertasList();
@@ -2035,6 +2332,10 @@ function renderWeeklyGrid() {
     gridContainer.innerHTML = '';
     const horariosUI = buildHorariosForUI();
     const dias = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
+    const isDrawing = !!window.isDrawingFaixa;
+    const drawRange = isDrawing ? getActiveDrawingFaixaRange() : null;
+    const drawingDisciplina = normalizeDisciplinaInputValue(inputConfig.disciplina?.value || '');
+    const turmaAllocs = store.allocations.filter((a) => String(a.turmaId) === String(store.selectedTurma));
 
     if (!store.selectedTurma || horariosUI.length === 0) {
         const turnoAtual = store.settings?.turnoOferta || "Manhã";
@@ -2075,27 +2376,62 @@ function renderWeeklyGrid() {
                 cell.dataset.dia = i;
                 cell.dataset.horario = horarioStr;
 
-                const allocs = store.allocations.filter((a) => {
-                    const isValidTypeAndSlot = String(a.turmaId) === String(store.selectedTurma) &&
-                        (a.tipo === 'regular' || a.tipo === 'regular_prioritaria') &&
+                const allocs = turmaAllocs.filter((a) => {
+                    if (isDrawing && drawingDisciplina && a.disciplina === drawingDisciplina) return false;
+                    if (isDrawing && drawRange) {
+                        const allocRange = {
+                            start: a.dataInicio || store.settings.termStart || drawRange.start,
+                            end: a.dataFim || store.settings.termEnd || a.dataInicio || drawRange.end
+                        };
+                        if (!rangeOverlaps(drawRange, allocRange)) return false;
+                    }
+
+                    if (a.tipo === 'intensiva') {
+                        if (Array.isArray(a.faixas) && a.faixas.length > 0) {
+                            return a.faixas.some((faixa) => {
+                                const byDay = faixa?.drawnSlotsByDay || {};
+                                const slotsInDay = Array.isArray(byDay?.[i])
+                                    ? byDay[i]
+                                    : ((Array.isArray(faixa?.dias) && faixa.dias.includes(i))
+                                        ? (faixa.slots || [])
+                                        : []);
+                                if (!Array.isArray(slotsInDay) || !slotsInDay.includes(horarioStr)) return false;
+                                if (isDrawing && drawRange) {
+                                    const faixaRange = {
+                                        start: faixa?.inicio || a.dataInicio || store.settings.termStart || drawRange.start,
+                                        end: faixa?.fim || a.dataFim || store.settings.termEnd || faixa?.inicio || drawRange.end
+                                    };
+                                    return rangeOverlaps(drawRange, faixaRange);
+                                }
+                                return true;
+                            });
+                        }
+
+                        const dias = Array.isArray(a.diasMarcados) && a.diasMarcados.length > 0
+                            ? a.diasMarcados
+                            : (a.usaSabado ? [1, 2, 3, 4, 5, 6] : [1, 2, 3, 4, 5]);
+                        const slots = Array.isArray(a.horariosOcupados) ? a.horariosOcupados : [];
+                        return dias.includes(i) && slots.includes(horarioStr);
+                    }
+
+                    return (a.tipo === 'regular' || a.tipo === 'regular_prioritaria') &&
                         a.diaSemana == i &&
                         a.horario === horarioStr;
-
-                    if (!isValidTypeAndSlot) return false;
-
-                    return true;
                 });
 
                 if (allocs.length > 0) renderSlotContent(cell, allocs);
 
-                if (window.isDrawingFaixa) {
+                if (isDrawing) {
                     const pattern = normalizeFaixaPattern(faixasPatterns[window.isDrawingFaixa]);
                     const isSelected = pattern.some((p) => p.dia === i && p.slot === horarioStr);
+                    const drawStyles = getDrawingSelectedStyles();
 
                     if (isSelected) {
                         cell.classList.add('selected-slot');
-                        cell.style.background = '#f39c12';
-                        cell.style.border = '2px dashed #d35400';
+                        cell.style.background = drawStyles.background;
+                        cell.style.border = drawStyles.border;
+                        cell.style.color = drawStyles.color;
+                        cell.style.fontWeight = drawStyles.fontWeight;
                     }
 
                     if (allocs.length === 0) {
@@ -2105,16 +2441,16 @@ function renderWeeklyGrid() {
                             e.stopPropagation();
                             cell.classList.toggle('selected-slot');
                             const selectedNow = cell.classList.contains('selected-slot');
-                            cell.style.background = selectedNow ? '#f39c12' : '';
-                            cell.style.border = selectedNow ? '2px dashed #d35400' : '';
+                            cell.style.background = selectedNow ? drawStyles.background : '';
+                            cell.style.border = selectedNow ? drawStyles.border : '';
+                            cell.style.color = selectedNow ? drawStyles.color : '';
+                            cell.style.fontWeight = selectedNow ? drawStyles.fontWeight : '';
                         });
                     } else {
                         cell.style.opacity = '0.6';
                         cell.style.pointerEvents = 'none';
                         cell.title = 'Horário ocupado na turma';
                     }
-                } else {
-                    cell.addEventListener('click', () => handleSlotClick(i, horarioStr));
                 }
                 gridContainer.appendChild(cell);
             }
@@ -2172,9 +2508,11 @@ function renderSlotContent(cell, allocs) {
 }
 
 function handleSlotClick(dia, horario) {
+    return alert('No modelo por faixas, use "Desenhar na Grade Semanal" na faixa da oferta.');
+
     if (!store.selectedTurma) return alert('Selecione uma turma.');
 
-    const disciplina = (inputConfig.disciplina?.value ?? '').replace(/\s*\(\s*\d+\s*h\s*\)\s*$/i, '');
+    const disciplina = normalizeDisciplinaInputValue(inputConfig.disciplina?.value ?? '');
     if (!disciplina) return alert('Preencha a Disciplina.');
 
     const docData = getDocenteData();
@@ -2187,7 +2525,7 @@ function handleSlotClick(dia, horario) {
         return alert(`A soma das horas (${docData.totalCH}h) ultrapassa a carga horária da disciplina (${maxCH}h).`);
     }
 
-    const tipo = inputConfig.tipo?.value ?? 'regular';
+    const tipo = 'intensiva';
     if (tipo === 'intensiva') return alert('Para intensivas, configure as datas no menu e clique em "Adicionar à Grade".');
 
     const existingInSlot = store.allocations.filter(a =>
@@ -2338,16 +2676,21 @@ function handleAddManual() {
     if (!docData.isValid) return alert('Preencha o(s) Docente(s).');
 
     const disciplina = (inputConfig.disciplina?.value ?? '').replace(/\s*\(\s*\d+\s*h\s*\)\s*$/i, '');
-    const tipo = inputConfig.tipo?.value ?? 'regular';
+    const tipo = 'intensiva';
     const inicioFaixa1 = document.getElementById('inp-data-inicio-f1')?.value ?? '';
     const inicioLegacy = inputConfig.inicio?.value ?? '';
-    const inicio = (tipo === 'intensiva' && inicioFaixa1) ? inicioFaixa1 : inicioLegacy;
+    const inicio = inicioFaixa1 || inicioLegacy;
     const subGrupo = (document.getElementById('inp-sub-turma')?.value ?? '').trim();
 
     if (!disciplina) return alert('Preencha o componente.');
 
     if (tipo === 'intensiva') {
         if (!inicio) return alert('Defina a data de inicio.');
+        const faixa2El = document.getElementById('faixa-2');
+        const inicioF2 = document.getElementById('inp-data-inicio-f2')?.value || '';
+        if (faixa2El && !faixa2El.classList.contains('hidden') && !inicioF2) {
+            return alert('Defina a data de inicio da Faixa 2 para continuar.');
+        }
 
         const info = getDisciplinaInfo(disciplina);
         const ch = info.ch || 0;
@@ -2401,15 +2744,30 @@ function handleAddManual() {
 
         const inicioCalculado = execution.dataInicio || inicio;
         const dataFimCalculada = execution.dataFim || inicioCalculado;
+        const faixasConfigAjustadas = alignFaixasToExecutionEnd(faixasConfig, dataFimCalculada);
         const horariosUltimoDia = execution.horariosUltimoDia || [];
         const slotsIntensiva = execution.unionSlots || [];
         diasMarcados = execution.unionDias || diasMarcados;
         const usaSabado = diasMarcados.includes(6);
+        const candidateIntensiveForConflict = {
+            ...previewIntensive,
+            dataInicio: inicioCalculado,
+            dataFim: dataFimCalculada,
+            horariosOcupados: slotsIntensiva,
+            diasMarcados,
+            usaSabado,
+            faixas: faixasConfigAjustadas
+        };
 
         const intensiveConflict = store.allocations.find(a => {
             if (String(a.turmaId) !== String(store.selectedTurma)) return false;
             if (a.tipo !== 'intensiva' || a.disciplina === disciplina) return false;
-            return hasIntensiveSlotConflict(inicioCalculado, dataFimCalculada, slotsIntensiva, a.dataInicio || store.settings.termStart, a.dataFim || store.settings.termEnd, a.horariosOcupados);
+            return hasIntensiveConflictByDay(
+                candidateIntensiveForConflict,
+                a,
+                { start: inicioCalculado, end: dataFimCalculada },
+                { start: a.dataInicio || store.settings.termStart, end: a.dataFim || store.settings.termEnd }
+            );
         });
 
         if (intensiveConflict) {
@@ -2435,7 +2793,12 @@ function handleAddManual() {
                 if (!isDateOverlap(inicioCalculado, dataFimCalculada, aStart, aEnd)) return false;
 
                 if (a.tipo === 'intensiva') {
-                    return hasIntensiveSlotConflict(inicioCalculado, dataFimCalculada, slotsIntensiva, aStart, aEnd, a.horariosOcupados);
+                    return hasIntensiveConflictByDay(
+                        candidateIntensiveForConflict,
+                        a,
+                        { start: inicioCalculado, end: dataFimCalculada },
+                        { start: aStart, end: aEnd }
+                    );
                 }
 
                 if (slotsIntensiva.includes(a.horario)) {
@@ -2448,16 +2811,21 @@ function handleAddManual() {
             if (teacherConflictGlobal) {
                 const turmaNomeConflito = getTurmaLabel(teacherConflictGlobal.turmaId);
                 const profNomes = teachersToCheck.join(', ');
-                showToastWarning(`Professor indisponivel: ${profNomes} ja tem aula de ${teacherConflictGlobal.disciplina} na turma ${turmaNomeConflito}.`, 'warning', 4500);
-                return;
+                const forceImport = confirm(
+                    `Conflito de professor detectado.\n\n` +
+                    `${profNomes} ja tem aula de ${teacherConflictGlobal.disciplina} na turma ${turmaNomeConflito} no mesmo periodo/horario.\n\n` +
+                    `Deseja importar/alocar mesmo assim?`
+                );
+                if (!forceImport) return;
+                showToastWarning(`Conflito permitido: ${profNomes} mantido(s) com choque para auditoria posterior.`, 'warning', 3500);
             }
         }
 
         let idToRemove = null;
         const conflitoIntensiva = store.allocations.find(a => {
             if (String(a.turmaId) === String(store.selectedTurma) && a.disciplina === disciplina) {
-                if (a.tipo === 'intensiva' && isDateOverlap(inicioCalculado, dataFimCalculada, a.dataInicio || store.settings.termStart, a.dataFim || store.settings.termEnd)) return true;
-                return a.tipo !== 'intensiva';
+                return a.tipo === 'intensiva' &&
+                    isDateOverlap(inicioCalculado, dataFimCalculada, a.dataInicio || store.settings.termStart, a.dataFim || store.settings.termEnd);
             }
             return false;
         });
@@ -2468,18 +2836,6 @@ function handleAddManual() {
         if (!confirm(`${disciplina} (${formatDateBR(inicioCalculado)} a ${formatDateBR(dataFimCalculada)})\n\n${actionText}`)) return;
 
         if (idToRemove) store.removeAllocation(idToRemove);
-
-        const affectedRegulars = [];
-        store.allocations.forEach(a => {
-            if (String(a.turmaId) !== String(store.selectedTurma)) return;
-            if (a.tipo !== 'regular') return;
-
-            const sReg = a.dataInicio || store.settings.termStart;
-            const eReg = a.dataFim || store.settings.termEnd;
-            if (isDateOverlap(inicioCalculado, dataFimCalculada, sReg, eReg) && slotsIntensiva.includes(a.horario)) {
-                if (!affectedRegulars.includes(a.disciplina)) affectedRegulars.push(a.disciplina);
-            }
-        });
 
         store.addAllocation({
             turmaId: store.selectedTurma,
@@ -2495,22 +2851,28 @@ function handleAddManual() {
             horariosUltimoDia: horariosUltimoDia,
             diasMarcados: diasMarcados,
             usaSabado: usaSabado,
-            faixas: faixasConfig,
+            faixas: faixasConfigAjustadas,
             subGrupo: subGrupo || null,
             cor: inputConfig.cor ? inputConfig.cor.value : store.getDisciplinaColor(disciplina)
         });
 
-        syncAllRegularDates();
         syncAllIntensiveDates();
+        const allocAtualizada = [...store.allocations].reverse().find((a) =>
+            String(a.turmaId) === String(store.selectedTurma) &&
+            a.tipo === 'intensiva' &&
+            a.disciplina === disciplina &&
+            String(a.subGrupo || '') === String(subGrupo || '')
+        );
+        if (allocAtualizada) {
+            const faixasSidebar = alignFaixasToExecutionEnd(
+                getNormalizedIntensiveFaixas(allocAtualizada),
+                allocAtualizada.dataFim || dataFimCalculada
+            );
+            applyFaixasConfigToSidebar(faixasSidebar);
+        }
+        editingDisciplinaDraft = '';
         renderOfertasList();
 
-        if (affectedRegulars.length > 0) {
-            const nomes = affectedRegulars.join(', ');
-            showToastWarning(`Ajuste automatico: ${nomes} teve/tiveram aulas suspensas e data final compensada.`, 'success');
-        }
-
-    } else {
-        alert('Para regular, clique na grade.');
     }
 }
 function renderOfertasList() {
@@ -2530,11 +2892,11 @@ function renderOfertasList() {
     const dayLabels = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab'];
     const semesterStart = calStart ? calStart.value : '2025-01-01';
     const semesterEnd = calEnd ? calEnd.value : '2025-12-31';
-    const regularExec = getRegularExecutionSnapshot(String(store.selectedTurma), semesterStart, semesterEnd);
+    const regularExec = { hoursByAlloc: new Map(), datesByAlloc: new Map() };
     const intensiveExec = getIntensiveExecutionSnapshot(String(store.selectedTurma), semesterStart, semesterEnd);
 
     const list = store.allocations.filter((a) => String(a.turmaId) === String(store.selectedTurma));
-    const regular = list.filter((a) => a.tipo === 'regular' || a.tipo === 'regular_prioritaria');
+    const regular = [];
     const intensivas = list.filter((a) => a.tipo === 'intensiva');
     const pendentes = list.filter((a) => a.tipo === 'pendente');
 
@@ -2819,7 +3181,8 @@ function renderOfertasList() {
             btnEdit.onclick = () => {
                 const a = row.baseAlloc;
                 const info = getDisciplinaInfo(a.disciplina);
-                if (!confirm('Carregar para edição? A oferta antiga será removida e você deverá clicar na grade para posicioná-la.')) return;
+                if (!confirm('Carregar para edição? A oferta antiga será removida e você deverá redesenhar os slots da faixa.')) return;
+                editingDisciplinaDraft = normalizeDisciplinaInputValue(a.disciplina);
 
                 if (inputConfig.disciplina) {
                     inputConfig.disciplina.value = `${a.disciplina} (${info.ch}h)`;
@@ -2829,10 +3192,7 @@ function renderOfertasList() {
                     inputConfig.cor.value = a.cor;
                     setTimeout(() => { inputConfig.cor.value = a.cor; }, 50);
                 }
-                if (inputConfig.tipo) {
-                    inputConfig.tipo.value = a.tipo === 'pendente' ? 'regular' : a.tipo;
-                    inputConfig.tipo.dispatchEvent(new Event('change'));
-                }
+                enforceCanonicalFaixaMode();
                 if (inputConfig.inicio && a.dataInicio) inputConfig.inicio.value = a.dataInicio;
 
                 if (a.tipo === 'intensiva') {
@@ -2877,7 +3237,7 @@ function renderOfertasList() {
                 syncAllRegularDates();
                 renderWeeklyGrid();
                 renderOfertasList();
-                if (a.tipo !== 'intensiva') switchTab('weekly');
+                switchTab('weekly');
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             };
         }
@@ -2886,7 +3246,6 @@ function renderOfertasList() {
     };
 
     const intensiveRows = buildIntensiveRows();
-    const regularRows = buildRegularRows();
     const pendenteRows = buildPendenteRows();
 
     tbody.innerHTML = '';
@@ -2904,21 +3263,18 @@ function renderOfertasList() {
         appendRow(row);
     });
 
-    if (regularRows.length > 0) {
-        appendSeparator('AULAS REGULARES (E PRIORITÁRIAS)');
-        regularRows.forEach(appendRow);
-    }
-
     if (pendenteRows.length > 0) {
         appendSeparator('AGUARDANDO ALOCAÇÃO NA GRADE (PENDENTES)');
         pendenteRows.forEach(appendRow);
     }
 
-    if (intensiveRows.length === 0 && regularRows.length === 0 && pendenteRows.length === 0) {
+    if (intensiveRows.length === 0 && pendenteRows.length === 0) {
         const tr = document.createElement('tr');
         tr.innerHTML = `<td colspan="${getColCount()}" style="text-align:center; color:#666;">Nenhuma oferta cadastrada.</td>`;
         tbody.appendChild(tr);
     }
+
+    refreshTeacherConflictsUI();
 }
 
 function buildSigaaMetadataPayload() {
@@ -2926,13 +3282,13 @@ function buildSigaaMetadataPayload() {
 
     const turmaId = String(store.selectedTurma);
     const list = store.allocations.filter((a) => String(a.turmaId) === turmaId);
-    const regular = list.filter((a) => a.tipo === 'regular' || a.tipo === 'regular_prioritaria');
+    const regular = [];
     const intensivas = list.filter((a) => a.tipo === 'intensiva');
     const pendentes = list.filter((a) => a.tipo === 'pendente');
     const semesterStart = calStart ? calStart.value : (store.settings.termStart || '2025-01-01');
     const semesterEnd = calEnd ? calEnd.value : (store.settings.termEnd || '2025-12-31');
 
-    const regularExec = getRegularExecutionSnapshot(turmaId, semesterStart, semesterEnd);
+    const regularExec = { hoursByAlloc: new Map(), datesByAlloc: new Map() };
     const regularGroups = new Map();
     regular.forEach((a) => {
         const key = [a.disciplina, a.docente, a.tipo, a.subGrupo || ''].join('|');
@@ -2992,7 +3348,7 @@ function buildSigaaMetadataPayload() {
 
     intensivas.forEach((a) => {
         const info = getDisciplinaInfo(a.disciplina);
-        const normalizedFaixas = getNormalizedIntensiveFaixas(a);
+        const normalizedFaixas = alignFaixasToExecutionEnd(getNormalizedIntensiveFaixas(a), a.dataFim || semesterEnd);
         const fallbackDias = Array.isArray(a.diasMarcados) && a.diasMarcados.length > 0
             ? a.diasMarcados
             : (a.usaSabado ? [1, 2, 3, 4, 5, 6] : [1, 2, 3, 4, 5]);
@@ -3814,6 +4170,14 @@ function updateGlobalConflictsUI() {
         warningDiv.style.display = 'none';
     }
 }
+
+function refreshTeacherConflictsUI() {
+    updateGlobalConflictsUI();
+    const activeTab = document.querySelector('.tab-btn.active')?.dataset.tab;
+    if (activeTab === 'teacher' && selViewDocente && selViewDocente.value) {
+        renderTeacherCalendar();
+    }
+}
 // ========================================================
 
 function generateCalendarGrid(container, turmaId, docenteName, start, end, titleHTML) {
@@ -4078,7 +4442,7 @@ function switchTab(tabId) {
     if (btn) btn.classList.add('active');
 
     if (tabId === 'teacher') {
-        updateGlobalConflictsUI();
+        refreshTeacherConflictsUI();
     }
 }
 
