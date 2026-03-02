@@ -1,6 +1,6 @@
 {
   "meta": {
-    "generated_at": "2026-03-02T17:52:16",
+    "generated_at": "2026-03-02T17:54:23",
     "source_file": "planilha_base.xlsx"
   },
   "docentes": [
@@ -1161,7 +1161,7 @@
       "periodo": "III",
       "codigo": "CBBR019",
       "cor": "#8daeda",
-      "componente": "Educação e Pluralidade Cultural no ensino de ciências e biologia",
+      "componente": "EDUCAÇÃO E PLURALIDADE CULTURAL NO ENSINO DE CIÊNCIAS E BIOLOGIA",
       "abreviacao": "Educ Plur Cult",
       "ch": 45
     },
