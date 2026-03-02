@@ -39,6 +39,7 @@ from pathlib import Path
 from typing import Any, Dict, List
 
 import openpyxl
+from openpyxl.utils.datetime import from_excel
 
 
 # -----------------------------
@@ -80,6 +81,16 @@ def to_date_iso(x: Any) -> str:
         return x.date().isoformat()
     if isinstance(x, date):
         return x.isoformat()
+    if isinstance(x, (int, float)):
+        # Alguns feriados vêm como serial numérico do Excel (ex.: 46143).
+        try:
+            dt = from_excel(x)
+            if isinstance(dt, datetime):
+                return dt.date().isoformat()
+            if isinstance(dt, date):
+                return dt.isoformat()
+        except Exception:
+            pass
 
     s = str(x).strip()
     if not s:
