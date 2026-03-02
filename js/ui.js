@@ -2332,6 +2332,7 @@ function renderWeeklyGrid() {
     const dias = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
     const isDrawing = !!window.isDrawingFaixa;
     const drawRange = isDrawing ? getActiveDrawingFaixaRange() : null;
+    const drawingDisciplina = normalizeDisciplinaInputValue(inputConfig.disciplina?.value || '');
     const turmaAllocs = store.allocations.filter((a) => String(a.turmaId) === String(store.selectedTurma));
 
     if (!store.selectedTurma || horariosUI.length === 0) {
@@ -2374,6 +2375,7 @@ function renderWeeklyGrid() {
                 cell.dataset.horario = horarioStr;
 
                 const allocs = turmaAllocs.filter((a) => {
+                    if (isDrawing && drawingDisciplina && a.disciplina === drawingDisciplina) return false;
                     if (isDrawing && drawRange) {
                         const allocRange = {
                             start: a.dataInicio || store.settings.termStart || drawRange.start,
