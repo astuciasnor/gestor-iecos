@@ -21,7 +21,6 @@ const inputConfig = {
     disciplina: document.getElementById('inp-disciplina'),
     cor: document.getElementById('inp-color'),
     docente: document.getElementById('inp-docente'),
-    tipo: document.getElementById('sel-tipo'),
     inicio: document.getElementById('inp-data-inicio'),
     fim: document.getElementById('inp-data-fim')
 };
@@ -828,6 +827,20 @@ function applyFaixaDateAutofill(options = {}) {
             f2Fim.value = termEnd;
         }
     }
+}
+
+function enforceCanonicalFaixaMode() {
+    const faixasContainer = document.getElementById('container-faixas-intensiva');
+    if (faixasContainer) faixasContainer.classList.remove('hidden');
+
+    const btnAddOferta = document.getElementById('btn-add-oferta');
+    if (btnAddOferta) btnAddOferta.textContent = 'Adicionar Oferta à Grade';
+
+    if (store.settings.termStart && inputConfig.inicio) {
+        inputConfig.inicio.value = store.settings.termStart;
+    }
+    renderIntensiveSlots();
+    applyFaixaDateAutofill({ forceSingleBounds: true, forceFaixa2End: true });
 }
 
 function setupFaixaControls() {
@@ -1743,9 +1756,7 @@ function initPeriodoLetivoETurno() {
             store.setTurnoOferta(selTurnoOferta.value);
             renderWeeklyGrid();
             renderOfertasList();
-            if (inputConfig.tipo && inputConfig.tipo.value === 'intensiva') {
-                renderIntensiveSlots();
-            }
+            renderIntensiveSlots();
         });
     }
 }
@@ -1808,12 +1819,6 @@ export function initUI() {
     if (selCurso) selCurso.addEventListener('change', onCursoChange);
     if (selTurma) selTurma.addEventListener('change', onTurmaChange);
 
-    // Modelo canonico: toda oferta por faixas (intensiva)
-    if (inputConfig.tipo) {
-        inputConfig.tipo.value = 'intensiva';
-        inputConfig.tipo.disabled = true;
-    }
-
     initPeriodoLetivoETurno();
 
     // ORDEM IMPORTANTE: Primeiro conserta o layout e encapsula os selects
@@ -1829,52 +1834,7 @@ export function initUI() {
     const btnImportBloco = document.getElementById('btn-import-bloco');
     if (btnImportBloco) btnImportBloco.addEventListener('click', handleImportBloco);
 
-    if (inputConfig.tipo) {
-        inputConfig.tipo.addEventListener('change', (e) => {
-            const divDataEl = document.getElementById('datas-intensiva');
-            const divSlots = document.getElementById('container-slots-selection');
-            const faixasContainer = document.getElementById('container-faixas-intensiva');
-            if (e.target.value !== 'intensiva') e.target.value = 'intensiva';
-            const isIntensive = true;
-
-            if (divDataEl) divDataEl.classList.remove('hidden');
-
-            if (isIntensive) {
-                if (divSlots) divSlots.classList.remove('hidden');
-                if (faixasContainer) faixasContainer.classList.remove('hidden');
-                renderIntensiveSlots();
-
-                // Mostrar container dos dias da semana
-                const containerDias = document.getElementById('container-dias-semana-intensiva');
-                if (containerDias) containerDias.style.display = 'block';
-
-                // Reset Padrão: Seg a Sex marcados, Sab desmarcado
-                for (let i = 1; i <= 5; i++) {
-                    const chk = document.getElementById(`chk-dia-${i}`);
-                    if (chk) chk.checked = true;
-                }
-                const chkSaber = document.getElementById('chk-dia-6');
-                if (chkSaber) chkSaber.checked = false;
-
-            } else {
-                if (divSlots) divSlots.classList.add('hidden');
-                if (faixasContainer) faixasContainer.classList.add('hidden');
-
-                // Ocultar container dos dias da semana
-                const containerDias = document.getElementById('container-dias-semana-intensiva');
-                if (containerDias) containerDias.style.display = 'none';
-
-                deactivateDrawingMode();
-            }
-
-            if (store.settings.termStart && inputConfig.inicio) {
-                inputConfig.inicio.value = store.settings.termStart;
-            }
-
-            if (isIntensive) applyFaixaDateAutofill({ forceSingleBounds: true, forceFaixa2End: true });
-        });
-        inputConfig.tipo.dispatchEvent(new Event('change'));
-    }
+    enforceCanonicalFaixaMode();
 
     if (inputConfig.disciplina) {
         inputConfig.disciplina.addEventListener('input', () => {
@@ -2196,10 +2156,11 @@ function onTurmaChange() {
     }
 
     const alocacoesTurma = store.allocations.filter(a => String(a.turmaId) === String(store.selectedTurma));
-    const primeiraAula = alocacoesTurma.find(a => a.tipo === 'regular' && a.horario);
+    const primeiraIntensiva = alocacoesTurma.find(a => a.tipo === 'intensiva' && Array.isArray(a.horariosOcupados) && a.horariosOcupados.length > 0);
 
-    if (primeiraAula) {
-        const hora = parseInt(primeiraAula.horario.split(':')[0]);
+    if (primeiraIntensiva) {
+        const slotRef = String(primeiraIntensiva.horariosOcupados[0] || '');
+        const hora = parseInt(slotRef.split(':')[0], 10);
         if (hora < 13) store.setTurnoOferta('Manhã');
         else store.setTurnoOferta('Tarde');
     }
@@ -2350,8 +2311,6 @@ function renderWeeklyGrid() {
                         cell.style.pointerEvents = 'none';
                         cell.title = 'Horário ocupado na turma';
                     }
-                } else {
-                    cell.addEventListener('click', () => handleSlotClick(i, horarioStr));
                 }
                 gridContainer.appendChild(cell);
             }
@@ -2577,7 +2536,7 @@ function handleAddManual() {
     if (!docData.isValid) return alert('Preencha o(s) Docente(s).');
 
     const disciplina = (inputConfig.disciplina?.value ?? '').replace(/\s*\(\s*\d+\s*h\s*\)\s*$/i, '');
-    const tipo = inputConfig.tipo?.value ?? 'regular';
+    const tipo = 'intensiva';
     const inicioFaixa1 = document.getElementById('inp-data-inicio-f1')?.value ?? '';
     const inicioLegacy = inputConfig.inicio?.value ?? '';
     const inicio = inicioFaixa1 || inicioLegacy;
@@ -2719,8 +2678,8 @@ function handleAddManual() {
         let idToRemove = null;
         const conflitoIntensiva = store.allocations.find(a => {
             if (String(a.turmaId) === String(store.selectedTurma) && a.disciplina === disciplina) {
-                if (a.tipo === 'intensiva' && isDateOverlap(inicioCalculado, dataFimCalculada, a.dataInicio || store.settings.termStart, a.dataFim || store.settings.termEnd)) return true;
-                return a.tipo !== 'intensiva';
+                return a.tipo === 'intensiva' &&
+                    isDateOverlap(inicioCalculado, dataFimCalculada, a.dataInicio || store.settings.termStart, a.dataFim || store.settings.termEnd);
             }
             return false;
         });
@@ -2731,18 +2690,6 @@ function handleAddManual() {
         if (!confirm(`${disciplina} (${formatDateBR(inicioCalculado)} a ${formatDateBR(dataFimCalculada)})\n\n${actionText}`)) return;
 
         if (idToRemove) store.removeAllocation(idToRemove);
-
-        const affectedRegulars = [];
-        store.allocations.forEach(a => {
-            if (String(a.turmaId) !== String(store.selectedTurma)) return;
-            if (a.tipo !== 'regular') return;
-
-            const sReg = a.dataInicio || store.settings.termStart;
-            const eReg = a.dataFim || store.settings.termEnd;
-            if (isDateOverlap(inicioCalculado, dataFimCalculada, sReg, eReg) && slotsIntensiva.includes(a.horario)) {
-                if (!affectedRegulars.includes(a.disciplina)) affectedRegulars.push(a.disciplina);
-            }
-        });
 
         store.addAllocation({
             turmaId: store.selectedTurma,
@@ -2763,14 +2710,8 @@ function handleAddManual() {
             cor: inputConfig.cor ? inputConfig.cor.value : store.getDisciplinaColor(disciplina)
         });
 
-        syncAllRegularDates();
         syncAllIntensiveDates();
         renderOfertasList();
-
-        if (affectedRegulars.length > 0) {
-            const nomes = affectedRegulars.join(', ');
-            showToastWarning(`Ajuste automatico: ${nomes} teve/tiveram aulas suspensas e data final compensada.`, 'success');
-        }
 
     }
 }
@@ -2791,11 +2732,11 @@ function renderOfertasList() {
     const dayLabels = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab'];
     const semesterStart = calStart ? calStart.value : '2025-01-01';
     const semesterEnd = calEnd ? calEnd.value : '2025-12-31';
-    const regularExec = getRegularExecutionSnapshot(String(store.selectedTurma), semesterStart, semesterEnd);
+    const regularExec = { hoursByAlloc: new Map(), datesByAlloc: new Map() };
     const intensiveExec = getIntensiveExecutionSnapshot(String(store.selectedTurma), semesterStart, semesterEnd);
 
     const list = store.allocations.filter((a) => String(a.turmaId) === String(store.selectedTurma));
-    const regular = list.filter((a) => a.tipo === 'regular' || a.tipo === 'regular_prioritaria');
+    const regular = [];
     const intensivas = list.filter((a) => a.tipo === 'intensiva');
     const pendentes = list.filter((a) => a.tipo === 'pendente');
 
@@ -3090,10 +3031,7 @@ function renderOfertasList() {
                     inputConfig.cor.value = a.cor;
                     setTimeout(() => { inputConfig.cor.value = a.cor; }, 50);
                 }
-                if (inputConfig.tipo) {
-                    inputConfig.tipo.value = 'intensiva';
-                    inputConfig.tipo.dispatchEvent(new Event('change'));
-                }
+                enforceCanonicalFaixaMode();
                 if (inputConfig.inicio && a.dataInicio) inputConfig.inicio.value = a.dataInicio;
 
                 if (a.tipo === 'intensiva') {
@@ -3147,7 +3085,6 @@ function renderOfertasList() {
     };
 
     const intensiveRows = buildIntensiveRows();
-    const regularRows = buildRegularRows();
     const pendenteRows = buildPendenteRows();
 
     tbody.innerHTML = '';
@@ -3165,17 +3102,12 @@ function renderOfertasList() {
         appendRow(row);
     });
 
-    if (regularRows.length > 0) {
-        appendSeparator('AULAS REGULARES (E PRIORITÁRIAS)');
-        regularRows.forEach(appendRow);
-    }
-
     if (pendenteRows.length > 0) {
         appendSeparator('AGUARDANDO ALOCAÇÃO NA GRADE (PENDENTES)');
         pendenteRows.forEach(appendRow);
     }
 
-    if (intensiveRows.length === 0 && regularRows.length === 0 && pendenteRows.length === 0) {
+    if (intensiveRows.length === 0 && pendenteRows.length === 0) {
         const tr = document.createElement('tr');
         tr.innerHTML = `<td colspan="${getColCount()}" style="text-align:center; color:#666;">Nenhuma oferta cadastrada.</td>`;
         tbody.appendChild(tr);
@@ -3187,13 +3119,13 @@ function buildSigaaMetadataPayload() {
 
     const turmaId = String(store.selectedTurma);
     const list = store.allocations.filter((a) => String(a.turmaId) === turmaId);
-    const regular = list.filter((a) => a.tipo === 'regular' || a.tipo === 'regular_prioritaria');
+    const regular = [];
     const intensivas = list.filter((a) => a.tipo === 'intensiva');
     const pendentes = list.filter((a) => a.tipo === 'pendente');
     const semesterStart = calStart ? calStart.value : (store.settings.termStart || '2025-01-01');
     const semesterEnd = calEnd ? calEnd.value : (store.settings.termEnd || '2025-12-31');
 
-    const regularExec = getRegularExecutionSnapshot(turmaId, semesterStart, semesterEnd);
+    const regularExec = { hoursByAlloc: new Map(), datesByAlloc: new Map() };
     const regularGroups = new Map();
     regular.forEach((a) => {
         const key = [a.disciplina, a.docente, a.tipo, a.subGrupo || ''].join('|');
