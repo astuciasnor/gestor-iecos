@@ -74,6 +74,21 @@ O sistema é robustamente abastecido via pipeline estático ETL. Ele utiliza a b
 
 ⚠️ Para a rotina de manipulação via script Python, arquitetura da árvore de códigos ou Setup inicial, dirija-se exclusivamente ao doc principal em: `docs/manual_desenvolvedor.md`.
 
+### Publicacao Online (Fluxo Seguro)
+
+1. No painel principal, clique em `Publicar Online` para validar os dados e gerar `alocacoes_publicas.json`.
+2. No terminal, execute:
+
+```bash
+python tools/publish_online.py --from-download "%USERPROFILE%\\Downloads\\alocacoes_publicas.json" --push
+```
+
+3. O script aplica validacoes, cria commit e faz `push` (com confirmacao), atualizando o GitHub Pages.
+
+URL publica:
+- `https://astuciasnor.github.io/gestor-iecos/`
+- `https://astuciasnor.github.io/gestor-iecos/alocacoes_publicas.json`
+
 ---
 
 ## Regra Oficial (Modelo Canonico)

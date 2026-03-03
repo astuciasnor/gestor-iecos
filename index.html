@@ -1105,9 +1105,10 @@
                                     Calendário (Turma/Professor) e Gráfico Gantt, use os botões azuis <b>🔄
                                         Atualizar</b> sempre que fizer uma mudança, para renderizar as novidades
                                     imediatamente.</li>
-                                <li>🌐 <strong>Publicação:</strong><br>O botão verde <b>"Publicar Grade Online"</b>
-                                    salva o arquivo final (`alocacoes_publicas.json`). Ele é de uso <b>exclusivo do
-                                        mantenedor do sistema</b> para atualizar o mural público dos alunos.</li>
+                                <li>🌐 <strong>Publicação:</strong><br>O botão verde <b>"Publicar Online"</b> valida e
+                                    gera o arquivo final (`alocacoes_publicas.json`). Depois, execute o script
+                                    `python tools/publish_online.py --from-download "...\\Downloads\\alocacoes_publicas.json" --push`
+                                    para commit/push com segurança.</li>
                             </ul>
                         </div>
 

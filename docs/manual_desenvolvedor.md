@@ -63,6 +63,7 @@ A estrutura de arquivos foi desenhada para separar a lógica de processamento de
 ├── tools/
 │   ├── convert_data.py          (⚙️ O script conversor Python Excel -> JSON)
 │   ├── instalar_pacotes.py      (🚀 Script de automação de instalação)
+│   ├── publish_online.py        (🚀 Publicacao segura do alocacoes_publicas.json)
 │   └── requirements.txt         (📄 Pacotes Python necessários: openpyxl)
 │
 ├── .gitignore                   (Regras de ignorar pastas de ambiente)
@@ -197,22 +198,25 @@ O script consumirá a planilha e atualizará de forma automática e minificada o
 Para evitar que os diretores comecem configurando a data errada, modifique os atributos `value` dos inputs de data padrão no `index.html`.
 *Exemplo: Troque de `2025-10-13` para o novo calendário letivo na linha respectiva do `<input type="date" id="cal-start">`.*
 
-### 5.4. Publicação e Deploy (GitHub Pages)
-Testou localmente e tudo funcionou? Salve as mudanças e mande para o GitHub Pages para os diretores atualizarem suas versões online:
+### 5.4. Publicacao e Deploy (GitHub Pages)
+Fluxo oficial para publicar a grade online com seguranca:
+
+1. No painel principal, clique em **Publicar Online** para validar e gerar `alocacoes_publicas.json`.
+2. No terminal (raiz do repositorio), execute:
 
 ```bash
-# Volte para a raiz do repositório (se estiver na tools)
-cd ..
-
-# Adiciona todos os arquivos rastreados (incluindo o novo dados_app.json modificado)
-git add .
-
-# Empacota a versão com uma mensagem clara (Modifique a string conforme a atualização)
-git commit -m "Nova carga de PPC e Professores atualizada para o período 2026.2"
-
-# Envia para a nuvem
-git push
+python tools/publish_online.py --from-download "%USERPROFILE%\Downloads\alocacoes_publicas.json" --push
 ```
+
+3. O script:
+   - valida estrutura e datas do JSON publico;
+   - bloqueia publicacao em branch errada (por padrao exige `main`);
+   - bloqueia publicacao com arvore suja (a menos que use `--allow-dirty`);
+   - faz `git add`, `git commit` e `git push origin main` com confirmacao.
+
+4. URLs oficiais:
+   - Sistema: `https://astuciasnor.github.io/gestor-iecos/`
+   - JSON publico: `https://astuciasnor.github.io/gestor-iecos/alocacoes_publicas.json`
 
 > **⚠️ PROTOCOLO DE SEGURANÇA NA VIRADA DE SEMESTRE:**
 > Sempre que fizer um Push estrutural, comunique a equipe: *“Caros diretores, salvem o JSON de suas disciplinas finalizadas. Ao abrirem o sistema na nova versão, cliquem impreterivelmente no botão vermelho **Limpar Tudo** para apagar o cache antigo do navegador antes de recomeçar.”*

@@ -1,6 +1,46 @@
 import { store } from './store.js';
 import { initUI, exportSigaaMetadataJSON } from './ui.js';
 
+function isValidIsoDate(value) {
+  return typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value);
+}
+
+function validatePublicExportData(exportData) {
+  const issues = [];
+  if (!exportData || typeof exportData !== 'object') {
+    issues.push('Payload inválido para exportação pública.');
+    return issues;
+  }
+
+  const { allocations, settings } = exportData;
+  if (!Array.isArray(allocations)) {
+    issues.push('Campo allocations ausente ou inválido.');
+  } else if (!allocations.length) {
+    issues.push('Nenhuma alocação encontrada para publicar.');
+  }
+
+  if (!settings || typeof settings !== 'object') {
+    issues.push('Configurações do semestre ausentes.');
+    return issues;
+  }
+
+  if (!isValidIsoDate(settings.termStart)) {
+    issues.push('Data inicial do semestre inválida.');
+  }
+  if (!isValidIsoDate(settings.termEnd)) {
+    issues.push('Data final do semestre inválida.');
+  }
+  if (
+    isValidIsoDate(settings.termStart) &&
+    isValidIsoDate(settings.termEnd) &&
+    settings.termStart > settings.termEnd
+  ) {
+    issues.push('Data inicial do semestre maior que a data final.');
+  }
+
+  return issues;
+}
+
 // Executar imediatamente (scripts type="module" já são diferidos e o DOM já deve estar pronto)
 (async () => {
   await store.loadData();
@@ -61,7 +101,6 @@ import { initUI, exportSigaaMetadataJSON } from './ui.js';
     btnExportPublic.onclick = () => {
       const fileName = 'alocacoes_publicas.json';
 
-      // MÁGICA DA OPÇÃO C: Agrupamos as alocações E as configurações do semestre
       const exportData = {
         allocations: store.allocations,
         settings: {
@@ -70,9 +109,26 @@ import { initUI, exportSigaaMetadataJSON } from './ui.js';
         }
       };
 
+      const issues = validatePublicExportData(exportData);
+      if (issues.length) {
+        alert(
+          'Publicação cancelada por inconsistências:\n\n- ' +
+          issues.join('\n- ')
+        );
+        return;
+      }
+
+      const shouldExport = confirm(
+        `Confirmar publicação online?\n\n` +
+        `Alocações: ${exportData.allocations.length}\n` +
+        `Período: ${exportData.settings.termStart} a ${exportData.settings.termEnd}\n\n` +
+        `Clique em OK para gerar o arquivo público.`
+      );
+      if (!shouldExport) return;
+
       const dataStr =
         "data:text/json;charset=utf-8," +
-        encodeURIComponent(JSON.stringify(exportData));
+        encodeURIComponent(JSON.stringify(exportData, null, 2));
 
       const a = document.createElement('a');
       a.setAttribute('href', dataStr);
@@ -81,7 +137,11 @@ import { initUI, exportSigaaMetadataJSON } from './ui.js';
       a.click();
       a.remove();
 
-      alert("Arquivo '" + fileName + "' gerado com sucesso!\n\nFaça o upload deste arquivo no GitHub para atualizar a grade de todos os alunos instantaneamente.");
+      alert(
+        "Arquivo '" + fileName + "' gerado com sucesso.\n\n" +
+        "Publicação automática recomendada (na raiz do projeto):\n" +
+        "python tools/publish_online.py --from-download \"%USERPROFILE%\\Downloads\\alocacoes_publicas.json\" --push"
+      );
     };
   }
 
