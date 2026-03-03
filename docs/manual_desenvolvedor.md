@@ -92,24 +92,17 @@ O sistema foi desenhado para que múltiplos diretores de faculdade trabalhem em 
 
 Esta versão blindou o aplicativo contra o erro humano com matemática de datas rigorosa.
 
-### 4.1. ⏳ Empurre e Suspensão de Regulares (Shift Logic)
-Diferente de sistemas básicos, o IECOS v3 trata conflitos internos de turma de forma inteligente. Ao inserir uma disciplina Intensiva sobre uma data que já possuía uma aula Regular:
+### 4.1. 🧭 Modelo Canônico de Conflito por Faixa
+No modelo atual, componentes não entram em estado de "suspensão". O motor de validação usa uma regra única:
 
-* O sistema chama a função `getSuspendedDates()`. Ao cruzar as datas e notar interseção, a data daquela Regular entra no vetor de `suspended`.
-* O loop principal `syncAllRegularDates()` ignora os dias suspensos e **estende a data de encerramento** (`dataFim`) da aula Regular para compensar. Nenhuma carga horária é perdida.
-
-### 4.1.1. 👑 Regular Prioritária (A Chefona)
-
-> **⚠️ NOTA DE DESENVOLVIMENTO (Fev/2026):** A pedido da direção, a opção "Regular Prioritária" foi temporariamente ocultada da interface de seleção (HTML) para simplificar a operação e reduzir a complexidade das regras de colisão, evitando efeitos colaterais imprevistos nas outras visões do sistema. A lógica interna profunda (Tolerância Zero, bloqueio de dia inteiro e deslocamento de slots em `calendar.js` e `ui.js`) permanece 100% preservada no código-fonte. O objetivo é reativar na tela a funcionalidade no início do próximo semestre, quando o fluxo estiver consolidado.
-
-Diferente da Regular comum, a **Regular Prioritária** possui precedência absoluta *dentro da sua própria turma*:
-- **Inversão de Suspensão**: Ela **não pode ser suspensa** por disciplinas Intensivas. Se houver sobreposição no mesmo dia, a Intensiva sofre "Tolerância Zero" e é quem tem as aulas suspensas integralmente naquele dia, empurrando as horas para a frente.
-- **Visual**: Aparece com uma **borda preta tracejada** na grade semanal.
+* Há conflito apenas com sobreposição simultânea de **período**, **dia da semana** e **slot**.
+* Não há deslocamento em cascata entre ofertas comuns.
+* Quando há colisão, o ajuste é explícito (data/horário), preservando previsibilidade de calendário e manutenção do código.
 
 ### 4.2. 🛡️ Barreiras de Conflito Global (Escudo do Docente)
-O sistema aplica a "Lei da Física": um professor não pode estar em dois lugares ao mesmo tempo, mesmo que uma das aulas seja "Prioritária".
+O sistema aplica a "Lei da Física": um professor não pode estar em dois lugares ao mesmo tempo.
 
-1. **Barreira de Inserção (Real-time):** Ao tentar clicar na grade ou adicionar uma Intensiva, o sistema varre **todas as turmas de todos os cursos** no banco de dados local. Se o professor já tiver qualquer alocação no mesmo dia/horário/período, o sistema **barra a inserção** com um alerta vermelho. O status de "Prioritária" ajuda contra conflitos internos, mas **não anula** este Escudo Global.
+1. **Barreira de Inserção (Real-time):** Ao tentar inserir ou editar uma oferta, o sistema varre **todas as turmas de todos os cursos** no banco de dados local. Se o professor já tiver alocação no mesmo dia/horário/período, o sistema **barra a inserção** com um alerta vermelho.
 2. **Barreira de Auditoria (Pós-Importação):** Se um choque ocorrer após mesclar JSONs de outros diretores, o sistema usa o Hook na aba **Visão do Professor** (`detectGlobalTeacherConflicts()`) para localizar duplicações e avisar a direção através de um Banner de Alerta Crítico.
 
 ### 4.3. 🧮 Amputação Cirúrgica do Último Dia (Intensivas)
@@ -233,7 +226,7 @@ A partir da estrategia atual do projeto, a filosofia oficial e:
 
 Impacto esperado:
 
-1. elimina bifurcacao de logica por tipo (`regular`, `regular_prioritaria`, `intensiva`);
+1. elimina bifurcacao de logica por modos legados;
 2. unifica motor de conflito para turma e professor;
 3. reduz superficie de regressao e custo de manutencao.
 
@@ -264,6 +257,6 @@ Formula:
 
 1. Promover "oferta por faixa" a modelo canonico interno.
 2. Preservar leitura de dados legados por periodo de transicao.
-3. Transformar UX de "clique de regular" em atalho para criar faixa.
+3. Transformar UX de alocacao manual em atalho padronizado para criar faixa.
 4. Adaptar exportacoes/relatorios (SIGAA e correlatos) ao modelo unificado.
 5. Remover tipos antigos da UI somente apos validacao operacional.

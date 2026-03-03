@@ -12,12 +12,12 @@ Sistema web desenvolvido sob medida para a gestão, alocação e visualização 
 
 ## 🎯 Funcionalidades Principais
 
-O sistema foi desenhado para resolver a complexidade de alocar turmas Regulares e Intensivas no mesmo calendário de forma harmônica e matematicamente estrita:
+O sistema foi desenhado para resolver a complexidade de alocar componentes acadêmicas em um mesmo calendário de forma harmônica e matematicamente estrita:
 
 * **Importação de Bloco de PPC:** Puxe todas as disciplinas de um período inteiro para a grade pendente com apenas um clique.
-* **Grade Semanal Interativa:** Interface visual de "clicar e alocar" slots para disciplinas regulares semanais.
+* **Grade Semanal Interativa:** Interface visual de "clicar e alocar" slots no modelo canônico por faixas.
 * **Matemática do Último Dia (Intensivas):** Suporte a disciplinas blocadas e híbridas. O sistema calcula a data de término exata e **recorta (amputa)** os slots excedentes do último dia de aula para que as horas do sistema batam perfeitamente com a Carga Horária do Plano de Curso.
-* **Motor de Suspensão de Aulas:** Quando uma Intensiva é alocada por cima de uma Regular da mesma turma, o sistema automaticamente suspende a Regular daquele dia e empurra seu calendário para compensar as horas finais.
+* **Regra Canônica de Conflito por Faixa:** O sistema considera conflito real apenas quando há sobreposição simultânea de período, dia da semana e slot de horário. Sem mecanismo de "suspensão" de componente.
 * **Auditoria Global de Professores:** A barreira de inserção cruza o banco inteiro e impede que aulas sejam criadas se um professor já estiver em sala em *outro curso* no mesmo horário.
 * **Auditoria Visual Pós-Importação:** Alert box inteligente na Visão do Professor que denuncia sobreposição cruzada após o "merge" de arquivos JSON de coordenações diferentes.
 * **Gráfico de Gantt Interativo:** Um mapa de calor no tempo mostrando a jornada fluida do semestre de cada professor e equipe letiva (múltiplos docentes).
@@ -34,9 +34,8 @@ O sistema foi desenhado para resolver a complexidade de alocar turmas Regulares 
 3.  **Configuração Inicial:** No menu lateral esquerdo, selecione o **Período Letivo** (1P a 4P) e o **Turno**. Depois escolha o **Curso** e a **Turma** que deseja trabalhar (nesta exata ordem).
 
 ### 2. Alocação de Aulas
-* **Disciplinas Regulares:** Selecione a disciplina, a cor e o docente (ou múltiplos docentes). Em seguida, clique diretamente nos "quadradinhos" vazios da grade semanal para preencher os horários.
-* **Disciplinas Intensivas:** Mude o "Tipo" para *Intensiva*. Selecione os slots de horário que a disciplina utilizará. Defina a **Data de Início** e clique em "Adicionar à Grade". (A data final e fracionamento do último dia são gerados pelo software).
-* **Regular Prioritária:** Utilize esta opção para horários inegociáveis de um docente ou laboratórios essenciais. Elas formam uma borda preta tracejada e o sistema impede que disciplinas intensivas se alojem em cima.
+* **Oferta por Faixas:** Selecione a disciplina, cor e docente (ou múltiplos docentes), desenhe os slots na grade e ajuste datas de início/fim conforme a execução.
+* **Fechamento de Carga Horária:** O sistema calcula a execução no calendário e mantém consistência de CH com tratamento do último dia quando necessário.
 
 ### 3. Visualização e Relatórios de Output (Versão 3.1)
 
@@ -98,7 +97,7 @@ O projeto passa a adotar a diretriz:
 
 **"Toda oferta e modelada por faixas."**
 
-Isso reduz bifurcacao de regras (`regular`, `regular_prioritaria`, `intensiva`), unifica validacoes de conflito e simplifica manutencao.
+Isso reduz bifurcacao de regras legadas, unifica validacoes de conflito e simplifica manutencao.
 
 ### Regra Unica de Conflito
 
@@ -127,6 +126,6 @@ Em formula:
 
 1. Tornar "oferta por faixa" o modelo canonico interno.
 2. Manter leitura de legado por compatibilidade temporaria.
-3. Migrar UX de clique de regular para atalho que cria faixa.
+3. Migrar UX de alocacao manual para um atalho padronizado de criacao de faixa.
 4. Ajustar exportacoes/relatorios (incluindo SIGAA) para o modelo unificado.
 5. Remover tipos antigos da UI apos estabilizacao.

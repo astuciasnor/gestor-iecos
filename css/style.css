@@ -416,6 +416,22 @@ input[type="date"] { color-scheme: dark; }
 
 .print-only { display: none; }
 
+.print-header-container {
+    text-align: center;
+    border-bottom: 2px solid var(--primary);
+    padding: 6px 0;
+    margin-bottom: 10px;
+}
+
+.print-title-line {
+    display: inline-block;
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: var(--primary);
+    letter-spacing: 0.6px;
+    white-space: nowrap;
+}
+
 .teacher-row {
     display: flex;
     gap: 5px;

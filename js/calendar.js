@@ -1,5 +1,5 @@
 import { store } from './store.js';
-import { getDaysArray, toLocalDateString, countBusinessDays } from './utils.js';
+import { getDaysArray, toLocalDateString } from './utils.js';
 
 export function getCalendarEvents(turmaId, startDate, endDate, docenteFilter = null) {
   const days = getDaysArray(startDate, endDate);
@@ -24,11 +24,6 @@ export function getCalendarEvents(turmaId, startDate, endDate, docenteFilter = n
   }
 
   const executionCount = {};
-
-  // --- Recupera TUDO para cálculo de bloqueios ---
-  const allAllocations = store.allocations;
-  const allIntensives = allAllocations.filter(a => a.tipo === 'intensiva');
-  const allPriorityRegulars = allAllocations.filter(a => a.tipo === 'regular_prioritaria');
 
   // --- Filtros para EXIBIÇÃO ---
   let myAllocations = store.allocations.filter(a => {
@@ -116,22 +111,6 @@ export function getCalendarEvents(turmaId, startDate, endDate, docenteFilter = n
           if (reg.diaSemana != preDow) return;
 
           // Verifica se está bloqueada por intensiva neste dia
-          const tId = String(reg.turmaId);
-          const hReg = normalizeTime(reg.horario);
-          // Checa intensivas globais ativas nesse dia
-          const intensivasAtivas = allIntensives.filter(
-            i => preDateStr >= i.dataInicio && preDateStr <= i.dataFim
-          );
-          let bloqueada = false;
-          intensivasAtivas.forEach(intensiva => {
-            if (String(intensiva.turmaId) === tId) {
-              if (intensiva.horariosOcupados && intensiva.horariosOcupados.some(s => normalizeTime(s) === hReg)) {
-                bloqueada = true;
-              }
-            }
-          });
-          if (bloqueada) return;
-
           const cursoSigla = turmaToCurso[reg.turmaId];
           let maxCH = 999;
           if (cursoSigla && cursoRules[cursoSigla] && cursoRules[cursoSigla][reg.disciplina]) {
@@ -170,21 +149,8 @@ export function getCalendarEvents(turmaId, startDate, endDate, docenteFilter = n
     }
 
     // =========================================================================================
-    // 1. PASSO A: RENDERIZAR E BLOQUEAR COM "REGULAR (PRIORITÁRIA)" - Agora Modular
+    // 1. PASSO A: RENDERIZAR REGULAR PRIORITARIA - Agora Modular
     // =========================================================================================
-
-    // Identifica quais turmas têm prioritária HOJE (Contexto Global para Bloqueio)
-    const activeGlobalPriority = allPriorityRegulars.filter(a => {
-      if (a.diaSemana != dayOfWeek) return false;
-      const start = a.dataInicio || store.settings.termStart || '0000-00-00';
-      const end = a.dataFim || store.settings.termEnd || '2099-12-31';
-      return dateStr >= start && dateStr <= end;
-    });
-
-    const turmasWithPriorityToday = new Set(activeGlobalPriority.map(a => String(a.turmaId)));
-
-    // Mapa de slots bloqueados (para regulares comuns depois)
-    const blockedSlotsByTurma = {};
 
     // Renderiza Minhas Prioritárias (Respeitando datas modulares)
     const myActivePriority = myPriorityRegulars.filter(a => {
@@ -197,11 +163,6 @@ export function getCalendarEvents(turmaId, startDate, endDate, docenteFilter = n
     myActivePriority.forEach(reg => {
       // Bloqueio extra pelo fim de semestre global caso a disciplina não tenha fim próprio
       if (!reg.dataFim && store.settings.termEnd && dateStr > store.settings.termEnd) return;
-
-      // Adiciona aos slots bloqueados
-      const tId = String(reg.turmaId);
-      if (!blockedSlotsByTurma[tId]) blockedSlotsByTurma[tId] = [];
-      blockedSlotsByTurma[tId].push(normalizeTime(reg.horario));
 
       // Lógica de CH e Renderização
       const cursoSigla = turmaToCurso[reg.turmaId];
@@ -237,62 +198,9 @@ export function getCalendarEvents(turmaId, startDate, endDate, docenteFilter = n
         });
       }
     });
-
-    // Adiciona slots das prioritárias GLOBAIS ao mapa de bloqueio (para bloquear regulares comuns)
-    activeGlobalPriority.forEach(reg => {
-      const tId = String(reg.turmaId);
-      if (!blockedSlotsByTurma[tId]) blockedSlotsByTurma[tId] = [];
-      blockedSlotsByTurma[tId].push(normalizeTime(reg.horario));
-    });
-
-
     // =========================================================================================
     // 2. PASSO B: RENDERIZAR INTENSIVAS
     // =========================================================================================
-
-    // Globais para bloqueio de regulares comuns
-    const activeGlobalIntensives = allIntensives.filter(
-      i => dateStr >= i.dataInicio && dateStr <= i.dataFim
-    );
-
-    const getActiveFaixaForDate = (intensivaObj, dStr) => {
-      if (!intensivaObj.faixas || intensivaObj.faixas.length === 0) {
-        const fallbackDias = Array.isArray(intensivaObj.diasMarcados) ? intensivaObj.diasMarcados : (intensivaObj.usaSabado ? [1, 2, 3, 4, 5, 6] : [1, 2, 3, 4, 5]);
-        const mockDrawnSlotsByDay = {};
-        fallbackDias.forEach(d => mockDrawnSlotsByDay[d] = intensivaObj.horariosOcupados || []);
-        return { inicio: intensivaObj.dataInicio, slots: intensivaObj.horariosOcupados || [], dias: fallbackDias, drawnSlotsByDay: mockDrawnSlotsByDay };
-      }
-      const faixasOrdem = [...intensivaObj.faixas].sort((a, b) => a.inicio.localeCompare(b.inicio));
-      let active = null;
-      for (let i = faixasOrdem.length - 1; i >= 0; i--) {
-        const f = faixasOrdem[i];
-        if (dStr < f.inicio) continue;
-        if (f.fim && dStr > f.fim) continue;
-        active = f;
-        break;
-      }
-      return active;
-    };
-
-    activeGlobalIntensives.forEach(intensiva => {
-      // Se a turma desta intensiva tem uma prioritária hoje, a intensiva é SUSPENSA.
-      if (turmasWithPriorityToday.has(String(intensiva.turmaId))) return;
-
-      const activeFaixa = getActiveFaixaForDate(intensiva, dateStr);
-      if (!activeFaixa || !activeFaixa.dias.includes(dayOfWeek)) return;
-
-      // Se não suspensa, bloqueia slots
-      const tId = String(intensiva.turmaId);
-      if (!blockedSlotsByTurma[tId]) blockedSlotsByTurma[tId] = [];
-
-      const activeSlotsToday = activeFaixa.drawnSlotsByDay ? (activeFaixa.drawnSlotsByDay[dayOfWeek] || []) : activeFaixa.slots;
-
-      if (activeSlotsToday && Array.isArray(activeSlotsToday)) {
-        activeSlotsToday.forEach(slot => {
-          blockedSlotsByTurma[tId].push(normalizeTime(slot));
-        });
-      }
-    });
 
     // Minhas Intensivas
     const myActiveIntensives = myIntensives.filter(
@@ -392,52 +300,8 @@ export function getCalendarEvents(turmaId, startDate, endDate, docenteFilter = n
         });
       });
     });
-
-
     // =========================================================================================
-    // PRÉ-PASSO C: DETECTAR QUAIS REGULARES SERÃO TOTALMENTE SUSPENSAS HOJE (TUDO OU NADA)
-    // =========================================================================================
-    const suspendedRegularDisciplinasInfo = {};
-
-    myRegulars.forEach(reg => {
-      // Verifica validade temporal modular
-      const start = reg.dataInicio || store.settings.termStart;
-      const end = reg.dataFim || store.settings.termEnd;
-      if (dateStr < start || dateStr > end) return;
-
-      if (reg.diaSemana == dayOfWeek) {
-        const tId = String(reg.turmaId);
-        const hReg = normalizeTime(reg.horario);
-
-        // Se este slot específico encostou num bloqueio...
-        if (blockedSlotsByTurma[tId] && blockedSlotsByTurma[tId].includes(hReg)) {
-          if (!suspendedRegularDisciplinasInfo[tId]) suspendedRegularDisciplinasInfo[tId] = {};
-
-          if (!suspendedRegularDisciplinasInfo[tId][reg.disciplina]) {
-            let blockerName = "Intensiva";
-
-            const blockerPrio = activeGlobalPriority.find(p => String(p.turmaId) === tId && normalizeTime(p.horario) === hReg);
-            if (blockerPrio) {
-              blockerName = blockerPrio.disciplina;
-            } else {
-              const blockerInt = activeGlobalIntensives.find(i => {
-                if (String(i.turmaId) !== tId) return false;
-                const activeFaixa = getActiveFaixaForDate(i, dateStr);
-                if (!activeFaixa) return false;
-                const slotsDoDia = activeFaixa.drawnSlotsByDay ? (activeFaixa.drawnSlotsByDay[dayOfWeek] || []) : (activeFaixa.slots || []);
-                return slotsDoDia.map(normalizeTime).includes(hReg);
-              });
-              if (blockerInt) blockerName = blockerInt.disciplina;
-            }
-
-            suspendedRegularDisciplinasInfo[tId][reg.disciplina] = blockerName;
-          }
-        }
-      }
-    });
-
-    // =========================================================================================
-    // 3. PASSO C: RENDERIZAR REGULARES COMUNS (Respeitando a Suspensão em Bloco e Modularização)
+    // 3. PASSO C: RENDERIZAR REGULARES COMUNS (somente criterios canonicos de data/dia/CH)
     // =========================================================================================
     myRegulars.forEach(reg => {
       // Verifica validade temporal modular
@@ -446,32 +310,6 @@ export function getCalendarEvents(turmaId, startDate, endDate, docenteFilter = n
       if (dateStr < start || dateStr > end) return;
 
       if (reg.diaSemana == dayOfWeek) {
-
-        const tId = String(reg.turmaId);
-        const blockerName = suspendedRegularDisciplinasInfo[tId]?.[reg.disciplina];
-
-        if (blockerName) {
-
-          let isOwner = true;
-          if (docenteFilter) {
-            isOwner = (reg.docente === docenteFilter);
-            if (!isOwner && reg.docentes) {
-              isOwner = reg.docentes.some(d => d.nome === docenteFilter);
-            }
-          }
-
-          if (isOwner) {
-            events.push({
-              ...reg,
-              type: 'suspended',
-              title: `⛔ Suspensa (${blockerName})`,
-              blockingReason: `Aula regular totalmente suspensa neste dia devido a choque com a disciplina "${blockerName}".`,
-              priority: 0
-            });
-          }
-
-          return;
-        }
 
         const cursoSigla = turmaToCurso[reg.turmaId];
         let maxCH = 999;
@@ -530,9 +368,8 @@ export function getCalendarEvents(turmaId, startDate, endDate, docenteFilter = n
     };
 
     Object.entries(slotMap).forEach(([timeKey, eventList]) => {
-      const activeEvents = eventList.filter(ev => ev.type !== 'suspended');
       const seen = new Set();
-      const uniqueActiveEvents = activeEvents.filter((ev) => {
+      const uniqueActiveEvents = eventList.filter((ev) => {
         const key = getConflictIdentity(ev, timeKey);
         if (seen.has(key)) return false;
         seen.add(key);

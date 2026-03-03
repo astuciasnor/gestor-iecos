@@ -37,7 +37,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                     store.settings.termEnd = dadosPublicos.settings.termEnd;
                 }
             }
-            console.log("Dados carregados do arquivo público (Online)");
         } else {
             console.warn('Arquivo alocacoes_publicas.json não encontrado. Carregando modo Offline (Local).');
             store.loadAllocations();
@@ -222,7 +221,7 @@ function gerarCartoesHTML(calendarData) {
 
         if (!eventos || eventos.length === 0) return;
 
-        const eventosAtivos = eventos.filter(e => e.type !== 'suspended');
+        const eventosAtivos = eventos;
         if (eventosAtivos.length === 0) return;
 
         temAulaNoMes = true;
@@ -346,7 +345,7 @@ function gerarGradeSemanalHTML(calendarData, ano, mes) {
             `;
 
             const eventos = calendarData[dateStr] || [];
-            const eventosAtivos = eventos.filter(e => e.type !== 'suspended');
+            const eventosAtivos = eventos;
 
             if (eventosAtivos.length > 0) temAulaNoMes = true;
 

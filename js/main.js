@@ -1,5 +1,5 @@
 import { store } from './store.js';
-import { initUI, exportSigaaMetadataJSON } from './ui.js';
+import { initUI, exportSigaaMetadataJSON, showToastWarning } from './ui.js';
 
 function isValidIsoDate(value) {
   return typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value);
@@ -111,9 +111,11 @@ function validatePublicExportData(exportData) {
 
       const issues = validatePublicExportData(exportData);
       if (issues.length) {
-        alert(
-          'Publicação cancelada por inconsistências:\n\n- ' +
-          issues.join('\n- ')
+        showToastWarning(
+          'Publicação cancelada por inconsistências:<br>- ' +
+          issues.join('<br>- '),
+          'error',
+          5600
         );
         return;
       }
@@ -137,10 +139,12 @@ function validatePublicExportData(exportData) {
       a.click();
       a.remove();
 
-      alert(
-        "Arquivo '" + fileName + "' gerado com sucesso.\n\n" +
-        "Publicação automática recomendada (na raiz do projeto):\n" +
-        "python tools/publish_online.py --from-download \"%USERPROFILE%\\Downloads\\alocacoes_publicas.json\" --push"
+      showToastWarning(
+        "Arquivo '" + fileName + "' gerado com sucesso.<br>" +
+        "Publicação automática recomendada na raiz do projeto:<br>" +
+        "<code>python tools/publish_online.py --from-download \"%USERPROFILE%\\Downloads\\alocacoes_publicas.json\" --push</code>",
+        'success',
+        7000
       );
     };
   }
@@ -170,20 +174,20 @@ function validatePublicExportData(exportData) {
 
           if (mode) {
             const count = store.mergeAllocations(dataToImport);
-            alert(`Processo concluído! ${count} novas alocações foram adicionadas.`);
+            showToastWarning(`Processo concluído! ${count} novas alocações foram adicionadas.`, 'success', 2200);
           } else {
             store.allocations = dataToImport;
             store.saveAllocations();
-            alert("Dados substituídos com sucesso!");
+            showToastWarning('Dados substituídos com sucesso!', 'success', 2200);
           }
 
-          window.location.reload();
+          setTimeout(() => window.location.reload(), 350);
         } else {
-          alert("Arquivo inválido. O formato não é suportado.");
+          showToastWarning('Arquivo inválido. O formato não é suportado.', 'error', 3200);
         }
       } catch (err) {
         console.error(err);
-        alert("Erro ao ler o arquivo JSON.");
+        showToastWarning('Erro ao ler o arquivo JSON.', 'error', 3200);
       }
     };
 

@@ -87,9 +87,7 @@ class Store {
 
   // ===== Data =====
   async loadData() {
-    console.log('DEBUG: store.loadData() iniciado');
     try {
-      console.log('DEBUG: Iniciando fetch(dados_app.json)');
       const response = await fetch('dados_app.json');
       this.rawData = await response.json();
       this.loadAllocations();
