@@ -1,1 +1,4834 @@
-{"allocations":[{"turmaId":"EP2026","disciplina":"INFORMATICA BASICA","docente":"Evaldo Martins da Silva","docentes":null,"tipo":"intensiva","ch":45,"dataInicio":"2026-03-23","dataFim":"2026-07-09","modelo":"Automatico","horariosOcupados":["07:30 - 08:20","08:20 - 09:10","09:10 - 10:00"],"horariosUltimoDia":["07:30 - 08:20","08:20 - 09:10","09:10 - 10:00"],"diasMarcados":[4],"usaSabado":false,"faixas":[{"inicio":"2026-03-23","fim":"2026-07-09","dias":[4],"slots":["07:30 - 08:20","08:20 - 09:10","09:10 - 10:00"],"drawnSlotsByDay":{"4":["07:30 - 08:20","08:20 - 09:10","09:10 - 10:00"]}}],"subGrupo":null,"cor":"#fdffb6","id":"0b7510a1-776d-4aa4-ab03-5a82a3a4ad92"},{"turmaId":"EP2026","disciplina":"INGLES TECNICO","docente":"Lorena Batista de Moura","docentes":null,"tipo":"intensiva","ch":60,"dataInicio":"2026-03-23","dataFim":"2026-07-17","modelo":"Automatico","horariosOcupados":["07:30 - 08:20","08:20 - 09:10","09:10 - 10:00","10:20 - 11:10"],"horariosUltimoDia":["07:30 - 08:20","08:20 - 09:10","09:10 - 10:00","10:20 - 11:10"],"diasMarcados":[5],"usaSabado":false,"faixas":[{"inicio":"2026-03-23","fim":"2026-07-17","dias":[5],"slots":["07:30 - 08:20","08:20 - 09:10","09:10 - 10:00","10:20 - 11:10"],"drawnSlotsByDay":{"5":["07:30 - 08:20","08:20 - 09:10","09:10 - 10:00","10:20 - 11:10"]}}],"subGrupo":null,"cor":"#ffadad","id":"cc378f3d-d3ce-40a2-bfb5-0aa2a474a523"},{"turmaId":"EP2026","disciplina":"INTRODUCAO A ENGENHARIA DE PESCA","docente":"Marcos Ferreira Brabo","docentes":null,"tipo":"intensiva","ch":30,"dataInicio":"2026-03-23","dataFim":"2026-07-07","modelo":"Automatico","horariosOcupados":["08:20 - 09:10","09:10 - 10:00"],"horariosUltimoDia":["08:20 - 09:10","09:10 - 10:00"],"diasMarcados":[2],"usaSabado":false,"faixas":[{"inicio":"2026-03-23","fim":"2026-07-07","dias":[2],"slots":["08:20 - 09:10","09:10 - 10:00"],"drawnSlotsByDay":{"2":["08:20 - 09:10","09:10 - 10:00"]}}],"subGrupo":null,"cor":"#a0c4ff","id":"dd854398-c0be-4f00-9f1f-fa30e979c32d"},{"turmaId":"EP2026","disciplina":"MATEMATICA BASICA","docente":"Ana Garcês","docentes":null,"tipo":"intensiva","ch":90,"dataInicio":"2026-03-23","dataFim":"2026-07-09","modelo":"Automatico","horariosOcupados":["10:20 - 11:10","11:10 - 12:00","12:00 - 12:50"],"horariosUltimoDia":["10:20 - 11:10","11:10 - 12:00","12:00 - 12:50"],"diasMarcados":[2,4],"usaSabado":false,"faixas":[{"inicio":"2026-03-23","fim":"2026-07-09","dias":[2,4],"slots":["10:20 - 11:10","11:10 - 12:00","12:00 - 12:50"],"drawnSlotsByDay":{"2":["10:20 - 11:10","11:10 - 12:00","12:00 - 12:50"],"4":["10:20 - 11:10","11:10 - 12:00","12:00 - 12:50"]}}],"subGrupo":null,"cor":"#caffbf","id":"c97596d5-06fc-477d-a262-25551efef0c8"},{"turmaId":"EP2026","disciplina":"METODOLOGIA CIENTIFICA","docente":"Hudson Cleber Pereira da Silva","docentes":null,"tipo":"intensiva","ch":45,"dataInicio":"2026-03-23","dataFim":"2026-07-01","modelo":"Automatico","horariosOcupados":["10:20 - 11:10","11:10 - 12:00","12:00 - 12:50"],"horariosUltimoDia":["10:20 - 11:10","11:10 - 12:00","12:00 - 12:50"],"diasMarcados":[3],"usaSabado":false,"faixas":[{"inicio":"2026-03-23","fim":"2026-07-01","dias":[3],"slots":["10:20 - 11:10","11:10 - 12:00","12:00 - 12:50"],"drawnSlotsByDay":{"3":["10:20 - 11:10","11:10 - 12:00","12:00 - 12:50"]}}],"subGrupo":null,"cor":"#ffd6a5","id":"a19faf45-8cd2-4386-83f2-3dfe92dfed4b"},{"turmaId":"EP2026","disciplina":"QUIMICA GERAL E ANALITICA","docente":"Marileide / Evaldo (Múltiplos)","docentes":[{"nome":"Marileide Moraes Alves","ch":60},{"nome":"Evaldo Martins da Silva","ch":30}],"tipo":"intensiva","ch":90,"dataInicio":"2026-03-23","dataFim":"2026-07-01","modelo":"Automatico","horariosOcupados":["07:30 - 08:20","08:20 - 09:10","09:10 - 10:00"],"horariosUltimoDia":["07:30 - 08:20","08:20 - 09:10","09:10 - 10:00"],"diasMarcados":[1,3],"usaSabado":false,"faixas":[{"inicio":"2026-03-23","fim":"2026-07-01","dias":[1,3],"slots":["07:30 - 08:20","08:20 - 09:10","09:10 - 10:00"],"drawnSlotsByDay":{"1":["07:30 - 08:20","08:20 - 09:10","09:10 - 10:00"],"3":["07:30 - 08:20","08:20 - 09:10","09:10 - 10:00"]}}],"subGrupo":null,"cor":"#e83b5d","id":"e490e322-78ca-40e6-bcbc-b9b5742791fd"},{"turmaId":"EP2026","disciplina":"ECOLOGIA","docente":"Hudson Cleber Pereira da Silva","docentes":null,"tipo":"intensiva","ch":60,"dataInicio":"2026-03-23","dataFim":"2026-07-10","modelo":"Automatico","horariosOcupados":["10:20 - 11:10","11:10 - 12:00","12:00 - 12:50"],"horariosUltimoDia":["11:10 - 12:00","12:00 - 12:50"],"diasMarcados":[1,5],"usaSabado":false,"faixas":[{"inicio":"2026-03-23","fim":"2026-07-10","dias":[1,5],"slots":["10:20 - 11:10","11:10 - 12:00","12:00 - 12:50"],"drawnSlotsByDay":{"1":["10:20 - 11:10","11:10 - 12:00"],"5":["11:10 - 12:00","12:00 - 12:50"]}}],"subGrupo":null,"cor":"#9bf6ff","id":"11ebfc46-e157-4284-beaf-39488a9cd29a"},{"turmaId":"EP2025","disciplina":"BOTANICA AQUATICA","docente":"Rauquírio André Albuquerque Marinho da Costa","docentes":null,"tipo":"intensiva","ch":60,"dataInicio":"2026-03-23","dataFim":"2026-04-02","modelo":"Automatico","horariosOcupados":["13:30 - 14:20","14:20 - 15:10","15:10 - 16:00","16:20 - 17:10","17:10 - 18:00","18:00 - 18:50"],"horariosUltimoDia":["13:30 - 14:20","14:20 - 15:10","15:10 - 16:00","16:20 - 17:10","17:10 - 18:00","18:00 - 18:50"],"diasMarcados":[1,2,3,4,5,6],"usaSabado":true,"faixas":[{"inicio":"2026-03-23","fim":"2026-04-02","dias":[1,2,3,4,5,6],"slots":["13:30 - 14:20","14:20 - 15:10","15:10 - 16:00","16:20 - 17:10","17:10 - 18:00","18:00 - 18:50"],"drawnSlotsByDay":{"1":["13:30 - 14:20","14:20 - 15:10","15:10 - 16:00","16:20 - 17:10","17:10 - 18:00","18:00 - 18:50"],"2":["13:30 - 14:20","14:20 - 15:10","15:10 - 16:00","16:20 - 17:10","17:10 - 18:00","18:00 - 18:50"],"3":["13:30 - 14:20","14:20 - 15:10","15:10 - 16:00","16:20 - 17:10","17:10 - 18:00","18:00 - 18:50"],"4":["13:30 - 14:20","14:20 - 15:10","15:10 - 16:00","16:20 - 17:10","17:10 - 18:00","18:00 - 18:50"],"5":["13:30 - 14:20","14:20 - 15:10","15:10 - 16:00","16:20 - 17:10","17:10 - 18:00","18:00 - 18:50"],"6":["13:30 - 14:20","14:20 - 15:10","15:10 - 16:00","16:20 - 17:10","17:10 - 18:00","18:00 - 18:50"]}}],"subGrupo":null,"cor":"#f2c08f","id":"abbc17c1-24ef-45aa-8a49-fc6b120be497"},{"turmaId":"CB2022","disciplina":"TRABALHO DE CONCLUSAO DE CURSO (TCC)","docente":"A definir","tipo":"pendente","cor":"#fffbf8","dataInicio":"2026-03-23","dataFim":"2026-07-23","id":"2dc2c88d-9f6d-402f-a436-03a9f7d1a6fe"},{"turmaId":"CB2022","disciplina":"ESTAGIO V: ENSINO MEDIO","docente":"A definir","tipo":"pendente","cor":"#d6d874","dataInicio":"2026-03-23","dataFim":"2026-07-23","id":"6b9d9bb0-6817-4085-9e80-48c72ef6f30b"},{"turmaId":"CB2022","disciplina":"ATIVIDADES COMPLEMENTARES","docente":"A definir","tipo":"pendente","cor":"#5cc0be","dataInicio":"2026-03-23","dataFim":"2026-07-23","id":"39ada3ea-d77a-49c7-a5fa-5842e4e0f2f9"},{"turmaId":"CB2023","disciplina":"DIVERSIDADE ANIMAL III","docente":"A definir","tipo":"pendente","cor":"#ffeded","dataInicio":"2026-03-23","dataFim":"2026-07-23","id":"83297238-df35-4f70-87b2-d34ee0a117d7"},{"turmaId":"CB2024","disciplina":"DIVERSIDADE ANIMAL I","docente":"A definir","tipo":"pendente","cor":"#c0fcff","dataInicio":"2026-03-23","dataFim":"2026-07-23","id":"73e43876-b2fb-4052-93ee-9058f6a9608f"},{"turmaId":"CB2025","disciplina":"FISICA BASICA","docente":"A definir","tipo":"pendente","cor":"#8daeda","dataInicio":"2026-03-23","dataFim":"2026-07-23","id":"d400ba9a-8ceb-444b-90db-9e91798a134e"},{"turmaId":"CB2026","disciplina":"BIOLOGIA CELULAR E MOLECULAR","docente":"A definir","tipo":"pendente","cor":"#ffadad","dataInicio":"2026-03-23","dataFim":"2026-07-23","id":"6b172623-bca1-4bce-8ca0-fc3b5978298e"},{"turmaId":"CB2026","disciplina":"ECOLOGIA GERAL","docente":"A definir","tipo":"pendente","cor":"#ffd6a5","dataInicio":"2026-03-23","dataFim":"2026-07-23","id":"327b00bf-81ee-4a62-b717-ef976aa0cefe"},{"turmaId":"CB2026","disciplina":"MATEMATICA BASICA","docente":"A definir","tipo":"pendente","cor":"#fdffb6","dataInicio":"2026-03-23","dataFim":"2026-07-23","id":"a8a255b8-9c12-4100-82a7-ffe4f880932c"},{"turmaId":"CB2026","disciplina":"DIDATICA APLICADA A FORMACAO DOCENTE","docente":"A definir","tipo":"pendente","cor":"#caffbf","dataInicio":"2026-03-23","dataFim":"2026-07-23","id":"562e23be-2d97-4e17-aef0-b3b79559f024"},{"turmaId":"CB2026","disciplina":"BIOLOGIA EVOLUTIVA DO DESENVOLVIMENTO","docente":"A definir","tipo":"pendente","cor":"#a0c4ff","dataInicio":"2026-03-23","dataFim":"2026-07-23","id":"2147d876-308f-4c44-be08-c4c151376354"},{"turmaId":"CB2026","disciplina":"FILOSOFIA E HISTORIA DA CIENCIA","docente":"A definir","tipo":"pendente","cor":"#bdb2ff","dataInicio":"2026-03-23","dataFim":"2026-07-23","id":"2279637e-d12b-4119-a020-acc0d1da4d90"},{"turmaId":"CB2026","disciplina":"AVALIACAO NO PROCESSO EDUCACIONAL","docente":"A definir","tipo":"pendente","cor":"#ffc6ff","dataInicio":"2026-03-23","dataFim":"2026-07-23","id":"da991278-630a-4cfb-adb1-0aee28912399"},{"turmaId":"CB2026","disciplina":"DIVERSIDADE DE ALGAS","docente":"A definir","tipo":"pendente","cor":"#e0bbe4","dataInicio":"2026-03-23","dataFim":"2026-07-23","id":"24f666f6-0bf1-483e-ba20-65a9ed695fdc"},{"turmaId":"CB2026","disciplina":"TEMAS CONTEMPORANEOS PARA A EDUCACAO","docente":"A definir","tipo":"pendente","cor":"#ffdfd3","dataInicio":"2026-03-23","dataFim":"2026-07-23","id":"4dae79b4-dd5e-4bee-bff9-7763b9979ce8"},{"turmaId":"CB2026","disciplina":"TEMAS SOCIOAMBIENTAIS E CULTURAIS","docente":"A definir","tipo":"pendente","cor":"#ffc2c2","dataInicio":"2026-03-23","dataFim":"2026-07-23","id":"2b2eb8ae-dd8f-45e1-af4a-3365169f8488"},{"turmaId":"CB2026","disciplina":"TOPICOS ESPECIAIS: ENSINO DE ECOLOGIA","docente":"A definir","tipo":"pendente","cor":"#ffe2b9","dataInicio":"2026-03-23","dataFim":"2026-07-23","id":"52ba463f-736c-4061-bd27-38b6ff80ee2b"},{"turmaId":"CB2026","disciplina":"TOPICOS ESPECIAIS: ENSINO EM EDUCACAO","docente":"A definir","tipo":"pendente","cor":"#feffcc","dataInicio":"2026-03-23","dataFim":"2026-07-23","id":"c084b33d-096f-4d65-8c64-a146415dafcc"},{"turmaId":"CB2026","disciplina":"ECOLOGIA GERAL","docente":"Moirah Paula Machado de Menezes","docentes":null,"tipo":"intensiva","ch":75,"dataInicio":"2026-04-07","dataFim":"2026-04-28","modelo":"Automático","horariosOcupados":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"],"usaSabado":true,"cor":"#f1b974","id":"59f1bfb9-d14b-4967-a149-7abad9d654e6","horariosUltimoDia":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10"],"diasMarcados":[1,2,3,4,5,6],"faixas":[{"inicio":"2026-04-07","fim":"2026-04-28","dias":[1,2,3,4,5,6],"slots":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"],"drawnSlotsByDay":{"1":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"],"2":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"],"3":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"],"4":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"],"5":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"],"6":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"]}}]},{"turmaId":"CB2026","disciplina":"FILOSOFIA E HISTORIA DA CIENCIA","docente":"Fábio Batagini Quinteiro","docentes":null,"tipo":"intensiva","ch":30,"dataInicio":"2026-03-26","dataFim":"2026-04-03","modelo":"Automático","horariosOcupados":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"],"usaSabado":true,"cor":"#bdb2ff","id":"f365edd2-5aea-47ef-aac3-e87ef6606f0d","horariosUltimoDia":["08:20 - 09:10","09:10 - 10:00"],"diasMarcados":[1,2,3,4,5,6],"faixas":[{"inicio":"2026-03-26","fim":"2026-04-03","dias":[1,2,3,4,5,6],"slots":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"],"drawnSlotsByDay":{"1":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"],"2":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"],"3":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"],"4":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"],"5":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"],"6":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"]}}]},{"turmaId":"CB2026","disciplina":"INICIACAO A COMPUTACAO","docente":"Carlos Murilo Tenório Maciel","docentes":null,"tipo":"intensiva","ch":30,"dataInicio":"2026-07-16","dataFim":"2026-07-24","modelo":"Automático","horariosOcupados":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"],"usaSabado":true,"subGrupo":null,"cor":"#5ae790","id":"d5a1d7e4-78d5-4207-8369-69c6fe0c4774","horariosUltimoDia":["08:20 - 09:10","09:10 - 10:00"],"diasMarcados":[1,2,3,4,5,6],"faixas":[{"inicio":"2026-07-16","fim":"2026-07-24","dias":[1,2,3,4,5,6],"slots":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"],"drawnSlotsByDay":{"1":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"],"2":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"],"3":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"],"4":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"],"5":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"],"6":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"]}}]},{"turmaId":"CB2026","disciplina":"INICIACAO A COMPUTACAO","docente":"Carlos Murilo Tenório Maciel","docentes":null,"tipo":"intensiva","ch":30,"dataInicio":"2026-07-06","dataFim":"2026-07-14","modelo":"Automático","horariosOcupados":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"],"usaSabado":true,"subGrupo":null,"cor":"#cfed35","id":"eca41d25-5072-4616-a165-b729acfde0b3","horariosUltimoDia":["08:20 - 09:10","09:10 - 10:00"],"diasMarcados":[1,2,3,4,5,6],"faixas":[{"inicio":"2026-07-06","fim":"2026-07-14","dias":[1,2,3,4,5,6],"slots":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"],"drawnSlotsByDay":{"1":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"],"2":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"],"3":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"],"4":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"],"5":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"],"6":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"]}}]},{"turmaId":"CB2026","disciplina":"INICIACAO A COMPUTACAO","docente":"A definir","tipo":"pendente","cor":"#9bf6ff","dataInicio":"2026-03-23","dataFim":"2026-07-23","id":"e6f0c717-ac84-4c93-9685-ce63ed63efc3"},{"turmaId":"CB2025","disciplina":"BIOLOGIA CELULAR E MOLECULAR","docente":"A definir","tipo":"pendente","cor":"#ffadad","dataInicio":"2025-03-24","dataFim":"2026-07-24","subGrupo":"BLI","id":"9d7151f0-5b6b-4f39-9c7c-09d3f16c3e14"},{"turmaId":"CB2025","disciplina":"ECOLOGIA GERAL","docente":"A definir","tipo":"pendente","cor":"#ffd6a5","dataInicio":"2025-03-24","dataFim":"2026-07-24","subGrupo":"BLI","id":"6ba1a388-db5d-466e-9a7e-24eaa8e9b6a0"},{"turmaId":"CB2025","disciplina":"MATEMATICA BASICA","docente":"A definir","tipo":"pendente","cor":"#fdffb6","dataInicio":"2025-03-24","dataFim":"2026-07-24","subGrupo":"BLI","id":"0e356360-8868-4d8a-a97b-8d9064ce1d86"},{"turmaId":"CB2025","disciplina":"DIDATICA APLICADA A FORMACAO DOCENTE","docente":"A definir","tipo":"pendente","cor":"#caffbf","dataInicio":"2025-03-24","dataFim":"2026-07-24","subGrupo":"BLI","id":"7fb818fe-e026-4e5c-b079-8f1ed57b2a17"},{"turmaId":"CB2025","disciplina":"INICIACAO A COMPUTACAO","docente":"A definir","tipo":"pendente","cor":"#9bf6ff","dataInicio":"2025-03-24","dataFim":"2026-07-24","subGrupo":"BLI","id":"847ee019-cb48-44aa-9171-d731480f7743"},{"turmaId":"CB2025","disciplina":"BIOLOGIA EVOLUTIVA DO DESENVOLVIMENTO","docente":"A definir","tipo":"pendente","cor":"#a0c4ff","dataInicio":"2025-03-24","dataFim":"2026-07-24","subGrupo":"BLI","id":"c179e952-f6af-48f2-88a6-d092cdf172df"},{"turmaId":"CB2025","disciplina":"FILOSOFIA E HISTORIA DA CIENCIA","docente":"A definir","tipo":"pendente","cor":"#bdb2ff","dataInicio":"2025-03-24","dataFim":"2026-07-24","subGrupo":"BLI","id":"384f706e-70f4-4477-9dd0-4ed9c04129bb"},{"turmaId":"CB2025","disciplina":"AVALIACAO NO PROCESSO EDUCACIONAL","docente":"A definir","tipo":"pendente","cor":"#ffc6ff","dataInicio":"2025-03-24","dataFim":"2026-07-24","subGrupo":"BLI","id":"2d6c773d-9efb-4c2f-93a2-423a6ab7c79e"},{"turmaId":"CB2025","disciplina":"DIVERSIDADE DE ALGAS","docente":"A definir","tipo":"pendente","cor":"#e0bbe4","dataInicio":"2025-03-24","dataFim":"2026-07-24","subGrupo":"BLI","id":"395965a7-3d5d-45bd-8ae7-a9f929c25086"},{"turmaId":"CB2025","disciplina":"TEMAS CONTEMPORANEOS PARA A EDUCACAO","docente":"A definir","tipo":"pendente","cor":"#ffdfd3","dataInicio":"2025-03-24","dataFim":"2026-07-24","subGrupo":"BLI","id":"1174135a-aab1-4d75-bb7d-361755f6b643"},{"turmaId":"CB2025","disciplina":"TEMAS SOCIOAMBIENTAIS E CULTURAIS","docente":"A definir","tipo":"pendente","cor":"#ffc2c2","dataInicio":"2025-03-24","dataFim":"2026-07-24","subGrupo":"BLI","id":"5183ef35-e33e-4fc6-9a85-f1f2cc45828d"},{"turmaId":"CB2025","disciplina":"TOPICOS ESPECIAIS: ENSINO DE ECOLOGIA","docente":"A definir","tipo":"pendente","cor":"#ffe2b9","dataInicio":"2025-03-24","dataFim":"2026-07-24","subGrupo":"BLI","id":"f0cc2e5b-8313-4d23-addd-fb4e0fc26ccf"},{"turmaId":"CB2025","disciplina":"TOPICOS ESPECIAIS: ENSINO EM EDUCACAO","docente":"A definir","tipo":"pendente","cor":"#feffcc","dataInicio":"2025-03-24","dataFim":"2026-07-24","subGrupo":"BLI","id":"2ce036d2-d6ea-428c-9977-effe2ddcc21a"},{"turmaId":"CB2025","disciplina":"METODOLOGIA CIENTIFICA","docente":"Fábio Batagini Quinteiro","docentes":null,"tipo":"intensiva","ch":15,"dataInicio":"2026-04-08","dataFim":"2026-04-13","modelo":"Automatico","horariosOcupados":["14:20 - 15:10","15:10 - 16:00","16:20 - 17:10","17:10 - 18:00"],"horariosUltimoDia":["14:20 - 15:10","15:10 - 16:00","16:20 - 17:10"],"diasMarcados":[1,3,4,5],"usaSabado":false,"faixas":[{"inicio":"2026-04-08","fim":"2026-04-13","dias":[1,2,3,4,5],"slots":["14:20 - 15:10","15:10 - 16:00","16:20 - 17:10","17:10 - 18:00"],"drawnSlotsByDay":{"1":["14:20 - 15:10","15:10 - 16:00","16:20 - 17:10","17:10 - 18:00"],"2":["14:20 - 15:10","15:10 - 16:00","16:20 - 17:10","17:10 - 18:00"],"3":["14:20 - 15:10","15:10 - 16:00","16:20 - 17:10","17:10 - 18:00"],"4":["14:20 - 15:10","15:10 - 16:00","16:20 - 17:10","17:10 - 18:00"],"5":["14:20 - 15:10","15:10 - 16:00","16:20 - 17:10","17:10 - 18:00"]}}],"subGrupo":null,"cor":"#e91e63","id":"7a0ef768-b4c4-48b0-b5e5-263e17c9e943"},{"turmaId":"CB2025","disciplina":"LIBRAS I","docente":"Gláucia Caroline Silva de Oliveira","docentes":null,"tipo":"intensiva","ch":45,"dataInicio":"2026-03-23","dataFim":"2026-04-07","modelo":"Automatico","horariosOcupados":["14:20 - 15:10","15:10 - 16:00","16:20 - 17:10","17:10 - 18:00"],"horariosUltimoDia":["14:20 - 15:10","15:10 - 16:00","16:20 - 17:10","17:10 - 18:00"],"diasMarcados":[1,2,3,4,5],"usaSabado":false,"faixas":[{"inicio":"2026-03-23","fim":"2026-04-07","dias":[1,2,3,4,5],"slots":["14:20 - 15:10","15:10 - 16:00","16:20 - 17:10","17:10 - 18:00"],"drawnSlotsByDay":{"1":["14:20 - 15:10","15:10 - 16:00","16:20 - 17:10","17:10 - 18:00"],"2":["14:20 - 15:10","15:10 - 16:00","16:20 - 17:10","17:10 - 18:00"],"3":["14:20 - 15:10","15:10 - 16:00","16:20 - 17:10","17:10 - 18:00"],"4":["14:20 - 15:10","15:10 - 16:00","16:20 - 17:10","17:10 - 18:00"],"5":["14:20 - 15:10","15:10 - 16:00","16:20 - 17:10","17:10 - 18:00"]}}],"subGrupo":null,"cor":"#a79cea","id":"98e03699-ab24-4c24-aff8-bd904c3c46fd"},{"turmaId":"CB2025","disciplina":"BIOESTATISTICA I","docente":"Colin Robert Beasley","docentes":null,"tipo":"intensiva","ch":45,"dataInicio":"2026-05-13","dataFim":"2026-05-28","modelo":"Automatico","horariosOcupados":["14:20 - 15:10","15:10 - 16:00","16:20 - 17:10","17:10 - 18:00"],"horariosUltimoDia":["14:20 - 15:10"],"diasMarcados":[1,2,3,4,5],"usaSabado":false,"faixas":[{"inicio":"2026-05-13","fim":"2026-05-28","dias":[1,2,3,4,5],"slots":["14:20 - 15:10","15:10 - 16:00","16:20 - 17:10","17:10 - 18:00"],"drawnSlotsByDay":{"1":["14:20 - 15:10","15:10 - 16:00","16:20 - 17:10","17:10 - 18:00"],"2":["14:20 - 15:10","15:10 - 16:00","16:20 - 17:10","17:10 - 18:00"],"3":["14:20 - 15:10","15:10 - 16:00","16:20 - 17:10","17:10 - 18:00"],"4":["14:20 - 15:10","15:10 - 16:00","16:20 - 17:10","17:10 - 18:00"],"5":["14:20 - 15:10","15:10 - 16:00","16:20 - 17:10","17:10 - 18:00"]}}],"subGrupo":null,"cor":"#b7f2ab","id":"2ee57888-c29b-4a01-9c3b-9be3a95a1839"},{"turmaId":"CB2025","disciplina":"INTRODUCAO AOS EUCARIONTES","docente":"Rauquírio André Albuquerque Marinho da Costa","docentes":null,"tipo":"intensiva","ch":45,"dataInicio":"2026-06-01","dataFim":"2026-06-13","modelo":"Automatico","horariosOcupados":["14:20 - 15:10","15:10 - 16:00","16:20 - 17:10","17:10 - 18:00"],"horariosUltimoDia":["14:20 - 15:10","15:10 - 16:00","16:20 - 17:10","17:10 - 18:00"],"diasMarcados":[1,2,3,4,5,6],"usaSabado":true,"faixas":[{"inicio":"2026-06-01","fim":"2026-06-13","dias":[1,2,3,4,5,6],"slots":["14:20 - 15:10","15:10 - 16:00","16:20 - 17:10","17:10 - 18:00"],"drawnSlotsByDay":{"1":["14:20 - 15:10","15:10 - 16:00","16:20 - 17:10","17:10 - 18:00"],"2":["14:20 - 15:10","15:10 - 16:00","16:20 - 17:10","17:10 - 18:00"],"3":["14:20 - 15:10","15:10 - 16:00","16:20 - 17:10","17:10 - 18:00"],"4":["14:20 - 15:10","15:10 - 16:00","16:20 - 17:10","17:10 - 18:00"],"5":["14:20 - 15:10","15:10 - 16:00","16:20 - 17:10","17:10 - 18:00"],"6":["14:20 - 15:10","15:10 - 16:00","16:20 - 17:10","17:10 - 18:00"]}}],"subGrupo":null,"cor":"#f29898","id":"03dbc7a9-c9b7-4b17-b353-762a5c665c15"},{"turmaId":"CB2025","disciplina":"DIVERSIDADE DE FUNGOS","docente":"Leiliane Rocha","docentes":null,"tipo":"intensiva","ch":45,"dataInicio":"2026-06-29","dataFim":"2026-07-11","modelo":"Automatico","horariosOcupados":["14:20 - 15:10","15:10 - 16:00","16:20 - 17:10","17:10 - 18:00"],"horariosUltimoDia":["14:20 - 15:10","15:10 - 16:00","16:20 - 17:10","17:10 - 18:00"],"diasMarcados":[1,2,3,4,5,6],"usaSabado":true,"faixas":[{"inicio":"2026-06-29","fim":"2026-07-11","dias":[1,2,3,4,5,6],"slots":["14:20 - 15:10","15:10 - 16:00","16:20 - 17:10","17:10 - 18:00"],"drawnSlotsByDay":{"1":["14:20 - 15:10","15:10 - 16:00","16:20 - 17:10","17:10 - 18:00"],"2":["14:20 - 15:10","15:10 - 16:00","16:20 - 17:10","17:10 - 18:00"],"3":["14:20 - 15:10","15:10 - 16:00","16:20 - 17:10","17:10 - 18:00"],"4":["14:20 - 15:10","15:10 - 16:00","16:20 - 17:10","17:10 - 18:00"],"5":["14:20 - 15:10","15:10 - 16:00","16:20 - 17:10","17:10 - 18:00"],"6":["14:20 - 15:10","15:10 - 16:00","16:20 - 17:10","17:10 - 18:00"]}}],"subGrupo":null,"cor":"#f2c08f","id":"d75e9413-ceb5-4497-a85d-2e9efaf6a361"},{"turmaId":"CB2025","disciplina":"BIOFISICA","docente":"Vicent Ferrer","docentes":null,"tipo":"intensiva","ch":45,"dataInicio":"2026-07-13","dataFim":"2026-07-23","modelo":"Automatico","horariosOcupados":["14:20 - 15:10","15:10 - 16:00","16:20 - 17:10","17:10 - 18:00","18:00 - 18:50"],"horariosUltimoDia":["14:20 - 15:10","15:10 - 16:00"],"diasMarcados":[1,2,3,4,5,6],"usaSabado":true,"faixas":[{"inicio":"2026-07-13","fim":"2026-07-23","dias":[1,2,3,4,5,6],"slots":["14:20 - 15:10","15:10 - 16:00","16:20 - 17:10","17:10 - 18:00","18:00 - 18:50"],"drawnSlotsByDay":{"1":["14:20 - 15:10","15:10 - 16:00","16:20 - 17:10","17:10 - 18:00","18:00 - 18:50"],"2":["14:20 - 15:10","15:10 - 16:00","16:20 - 17:10","17:10 - 18:00","18:00 - 18:50"],"3":["14:20 - 15:10","15:10 - 16:00","16:20 - 17:10","17:10 - 18:00","18:00 - 18:50"],"4":["14:20 - 15:10","15:10 - 16:00","16:20 - 17:10","17:10 - 18:00","18:00 - 18:50"],"5":["14:20 - 15:10","15:10 - 16:00","16:20 - 17:10","17:10 - 18:00"],"6":["14:20 - 15:10","15:10 - 16:00","16:20 - 17:10","17:10 - 18:00"]}}],"subGrupo":null,"cor":"#6c72d0","id":"d7ef5b7c-d8f5-4cca-a74c-9da46fb70f80"},{"turmaId":"CB2024","disciplina":"DIVERSIDADE VEGETAL I","docente":"Leiliane Rocha","docentes":null,"tipo":"intensiva","ch":60,"dataInicio":"2026-03-23","dataFim":"2026-04-11","modelo":"Automatico","horariosOcupados":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"],"horariosUltimoDia":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"],"diasMarcados":[1,2,3,5,6],"usaSabado":true,"faixas":[{"inicio":"2026-03-23","fim":"2026-04-11","dias":[1,2,3,5,6],"slots":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"],"drawnSlotsByDay":{"1":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"],"2":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"],"3":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"],"5":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"],"6":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"]}}],"subGrupo":null,"cor":"#e58383","id":"e8cf1668-9c05-4a96-b34b-035a35ec55c8"},{"turmaId":"CB2024","disciplina":"ESTAGIO I: ESPACOS NAO FORMAIS","docente":"Neide Ramos","docentes":null,"tipo":"intensiva","ch":60,"dataInicio":"2026-04-13","dataFim":"2026-04-29","modelo":"Automatico","horariosOcupados":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"],"horariosUltimoDia":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"],"diasMarcados":[1,2,3,4,5,6],"usaSabado":true,"faixas":[{"inicio":"2026-04-13","fim":"2026-04-29","dias":[1,2,3,4,5,6],"slots":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"],"drawnSlotsByDay":{"1":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"],"2":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"],"3":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"],"4":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"],"5":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"],"6":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"]}}],"subGrupo":null,"cor":"#ffe0ff","id":"d3675816-dfce-43e8-9c1a-7242704113bc"},{"turmaId":"CB2024","disciplina":"EDUCACAO ESPECIAL E INCLUSIVA","docente":"Cinthya Arruda","docentes":null,"tipo":"intensiva","ch":45,"dataInicio":"2026-06-03","dataFim":"2026-06-16","modelo":"Automatico","horariosOcupados":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"],"horariosUltimoDia":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"],"diasMarcados":[1,2,3,4,5,6],"usaSabado":true,"faixas":[{"inicio":"2026-06-03","fim":"2026-06-16","dias":[1,2,3,4,5,6],"slots":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"],"drawnSlotsByDay":{"1":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"],"2":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"],"3":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"],"4":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"],"5":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"],"6":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"]}}],"subGrupo":null,"cor":"#fff2ec","id":"b4f7c857-07d8-4d1b-9c8d-f825921f7e09"},{"turmaId":"CB2024","disciplina":"EDUCACAO DO CAMPO","docente":"Lucinaldo da Silva Bandtt","docentes":null,"tipo":"intensiva","ch":45,"dataInicio":"2026-06-17","dataFim":"2026-06-30","modelo":"Automatico","horariosOcupados":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"],"horariosUltimoDia":["08:20 - 09:10"],"diasMarcados":[1,2,3,4,5,6],"usaSabado":true,"faixas":[{"inicio":"2026-06-17","fim":"2026-06-30","dias":[1,2,3,4,5,6],"slots":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"],"drawnSlotsByDay":{"1":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"],"2":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"],"3":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"],"4":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"],"5":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"],"6":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"]}}],"subGrupo":null,"cor":"#c9deff","id":"e5bda8f8-4d82-45ba-a93d-38b122882393"},{"turmaId":"CB2024","disciplina":"EVOLUCAO E BIOGEOGRAFIA","docente":"Cláudia Xavier","docentes":null,"tipo":"intensiva","ch":75,"dataInicio":"2026-07-01","dataFim":"2026-07-22","modelo":"Automatico","horariosOcupados":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"],"horariosUltimoDia":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"],"diasMarcados":[1,2,3,4,5,6],"usaSabado":true,"faixas":[{"inicio":"2026-07-01","fim":"2026-07-22","dias":[1,2,3,4,5,6],"slots":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"],"drawnSlotsByDay":{"1":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"],"2":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"],"3":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"],"4":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"],"5":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"],"6":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"]}}],"subGrupo":null,"cor":"#dcd5ff","id":"a85a5d30-d6d1-47f3-b571-d3d332021930"},{"turmaId":"CB2024","disciplina":"PALEONTOLOGIA GERAL","docente":"Benedito Nunes","docentes":null,"tipo":"intensiva","ch":45,"dataInicio":"2026-05-19","dataFim":"2026-06-02","modelo":"Automatico","horariosOcupados":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"],"horariosUltimoDia":["08:20 - 09:10"],"diasMarcados":[1,2,3,4,5,6],"usaSabado":true,"faixas":[{"inicio":"2026-05-19","fim":"2026-06-02","dias":[1,2,3,4,5,6],"slots":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"],"drawnSlotsByDay":{"1":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"],"2":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"],"3":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"],"4":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"],"5":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"],"6":["08:20 - 09:10","09:10 - 10:00"]}}],"subGrupo":null,"cor":"#e25a7c","id":"11e8a63b-f48b-48b3-85f9-1668c07d6176"},{"turmaId":"CB2024","disciplina":"PSICOLOGIA DA APRENDIZAGEM","docente":"Darlene Ferreira","docentes":null,"tipo":"intensiva","ch":45,"dataInicio":"2026-05-04","dataFim":"2026-05-16","modelo":"Automatico","horariosOcupados":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"],"horariosUltimoDia":["08:20 - 09:10"],"diasMarcados":[1,2,3,4,5,6],"usaSabado":true,"faixas":[{"inicio":"2026-05-04","fim":"2026-05-16","dias":[1,2,3,4,5,6],"slots":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"],"drawnSlotsByDay":{"1":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"],"2":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"],"3":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"],"4":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"],"5":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"],"6":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"]}}],"subGrupo":null,"cor":"#7bd779","id":"98691e83-5ecd-4965-8823-422547ada72c"},{"turmaId":"CB2023","disciplina":"BIOESTATISTICA II","docente":"Colin Robert Beasley","docentes":null,"tipo":"intensiva","ch":60,"dataInicio":"2026-03-30","dataFim":"2026-04-16","modelo":"Automatico","horariosOcupados":["14:20 - 15:10","15:10 - 16:00","16:20 - 17:10","17:10 - 18:00"],"horariosUltimoDia":["14:20 - 15:10","15:10 - 16:00","16:20 - 17:10","17:10 - 18:00"],"diasMarcados":[1,2,3,4,5,6],"usaSabado":true,"faixas":[{"inicio":"2026-03-30","fim":"2026-04-16","dias":[1,2,3,4,5,6],"slots":["14:20 - 15:10","15:10 - 16:00","16:20 - 17:10","17:10 - 18:00"],"drawnSlotsByDay":{"1":["14:20 - 15:10","15:10 - 16:00","16:20 - 17:10","17:10 - 18:00"],"2":["14:20 - 15:10","15:10 - 16:00","16:20 - 17:10","17:10 - 18:00"],"3":["14:20 - 15:10","15:10 - 16:00","16:20 - 17:10","17:10 - 18:00"],"4":["14:20 - 15:10","15:10 - 16:00","16:20 - 17:10","17:10 - 18:00"],"5":["14:20 - 15:10","15:10 - 16:00","16:20 - 17:10","17:10 - 18:00"],"6":["14:20 - 15:10","15:10 - 16:00","16:20 - 17:10","17:10 - 18:00"]}}],"subGrupo":null,"cor":"#f1ffeb","id":"f52fdf75-87d4-4a5b-94c5-ec9c393da5ce"},{"turmaId":"CB2023","disciplina":"DIVERSIDADE VEGETAL III","docente":"Leiliane Rocha","docentes":null,"tipo":"intensiva","ch":30,"dataInicio":"2026-04-22","dataFim":"2026-04-30","modelo":"Automatico","horariosOcupados":["14:20 - 15:10","15:10 - 16:00","16:20 - 17:10","17:10 - 18:00"],"horariosUltimoDia":["14:20 - 15:10","15:10 - 16:00"],"diasMarcados":[1,2,3,4,5,6],"usaSabado":true,"faixas":[{"inicio":"2026-04-22","fim":"2026-04-30","dias":[1,2,3,4,5,6],"slots":["14:20 - 15:10","15:10 - 16:00","16:20 - 17:10","17:10 - 18:00"],"drawnSlotsByDay":{"1":["14:20 - 15:10","15:10 - 16:00","16:20 - 17:10","17:10 - 18:00"],"2":["14:20 - 15:10","15:10 - 16:00","16:20 - 17:10","17:10 - 18:00"],"3":["14:20 - 15:10","15:10 - 16:00","16:20 - 17:10","17:10 - 18:00"],"4":["14:20 - 15:10","15:10 - 16:00","16:20 - 17:10","17:10 - 18:00"],"5":["14:20 - 15:10","15:10 - 16:00","16:20 - 17:10","17:10 - 18:00"],"6":["14:20 - 15:10","15:10 - 16:00","16:20 - 17:10","17:10 - 18:00"]}}],"subGrupo":null,"cor":"#ea8d61","id":"9b819d9c-0773-488e-81f9-1be84f658be6"},{"turmaId":"CB2023","disciplina":"BIOLOGIA MARINHA","docente":"Luci Cajueiro Carneiro Pereira","docentes":null,"tipo":"intensiva","ch":60,"dataInicio":"2026-05-04","dataFim":"2026-05-22","modelo":"Automatico","horariosOcupados":["14:20 - 15:10","15:10 - 16:00","16:20 - 17:10","17:10 - 18:00"],"horariosUltimoDia":["14:20 - 15:10","15:10 - 16:00","16:20 - 17:10","17:10 - 18:00"],"diasMarcados":[1,2,3,4,5],"usaSabado":false,"faixas":[{"inicio":"2026-05-04","fim":"2026-05-22","dias":[1,2,3,4,5],"slots":["14:20 - 15:10","15:10 - 16:00","16:20 - 17:10","17:10 - 18:00"],"drawnSlotsByDay":{"1":["14:20 - 15:10","15:10 - 16:00","16:20 - 17:10","17:10 - 18:00"],"2":["14:20 - 15:10","15:10 - 16:00","16:20 - 17:10","17:10 - 18:00"],"3":["14:20 - 15:10","15:10 - 16:00","16:20 - 17:10","17:10 - 18:00"],"4":["14:20 - 15:10","15:10 - 16:00","16:20 - 17:10","17:10 - 18:00"],"5":["14:20 - 15:10","15:10 - 16:00","16:20 - 17:10","17:10 - 18:00"]}}],"subGrupo":null,"cor":"#e2b928","id":"ec515aa7-ae7d-4d93-8577-3ab94f586286"},{"turmaId":"CB2023","disciplina":"ECOLOGIA DE POPULACOES","docente":"Marcus Emanuel Barroncas Fernandes","docentes":null,"tipo":"intensiva","ch":75,"dataInicio":"2026-06-08","dataFim":"2026-07-02","modelo":"Automatico","horariosOcupados":["14:20 - 15:10","15:10 - 16:00","16:20 - 17:10","17:10 - 18:00"],"horariosUltimoDia":["14:20 - 15:10","15:10 - 16:00","16:20 - 17:10"],"diasMarcados":[1,2,3,4,5],"usaSabado":false,"faixas":[{"inicio":"2026-06-08","fim":"2026-07-02","dias":[1,2,3,4,5],"slots":["14:20 - 15:10","15:10 - 16:00","16:20 - 17:10","17:10 - 18:00"],"drawnSlotsByDay":{"1":["14:20 - 15:10","15:10 - 16:00","16:20 - 17:10","17:10 - 18:00"],"2":["14:20 - 15:10","15:10 - 16:00","16:20 - 17:10","17:10 - 18:00"],"3":["14:20 - 15:10","15:10 - 16:00","16:20 - 17:10","17:10 - 18:00"],"4":["14:20 - 15:10","15:10 - 16:00","16:20 - 17:10","17:10 - 18:00"],"5":["14:20 - 15:10","15:10 - 16:00","16:20 - 17:10","17:10 - 18:00"]}}],"subGrupo":null,"cor":"#6c47f0","id":"bb6bc902-6659-47a6-9712-35450a0fd219"},{"turmaId":"CB2022","disciplina":"MORFOFISIOLOGIA ANIMAL II","docente":"Cláudia Xavier","docentes":null,"tipo":"intensiva","ch":75,"dataInicio":"2026-03-30","dataFim":"2026-04-27","modelo":"Automatico","horariosOcupados":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"],"horariosUltimoDia":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10"],"diasMarcados":[1,2,3,4,5],"usaSabado":false,"faixas":[{"inicio":"2026-03-30","fim":"2026-04-27","dias":[1,2,3,4,5],"slots":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"],"drawnSlotsByDay":{"1":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"],"2":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"],"3":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"],"4":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"],"5":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"]}}],"subGrupo":null,"cor":"#d89663","id":"b9701a2c-7092-44d4-885c-f11eebc7b48e"},{"turmaId":"CB2022","disciplina":"BIOLOGIA DA CONSERVACAO","docente":"Colin Robert Beasley","docentes":null,"tipo":"intensiva","ch":60,"dataInicio":"2026-06-01","dataFim":"2026-06-22","modelo":"Automatico","horariosOcupados":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"],"horariosUltimoDia":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"],"diasMarcados":[1,2,3,4,5],"usaSabado":false,"faixas":[{"inicio":"2026-06-01","fim":"2026-06-22","dias":[1,2,3,4,5],"slots":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"],"drawnSlotsByDay":{"1":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"],"2":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"],"3":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"],"4":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"],"5":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"]}}],"subGrupo":null,"cor":"#d86e6e","id":"24812484-55fa-4cb4-91c3-6cdcb4427d21"},{"turmaId":"CB2022","disciplina":"PARASITOLOGIA","docente":"Benedito Nunes","docentes":null,"tipo":"intensiva","ch":60,"dataInicio":"2026-06-24","dataFim":"2026-07-11","modelo":"Automatico","horariosOcupados":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"],"horariosUltimoDia":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"],"diasMarcados":[1,2,3,4,5,6],"usaSabado":true,"faixas":[{"inicio":"2026-06-24","fim":"2026-07-11","dias":[1,2,3,4,5,6],"slots":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"],"drawnSlotsByDay":{"1":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"],"2":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"],"3":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"],"4":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"],"5":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"],"6":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"]}}],"subGrupo":null,"cor":"#8bcc7f","id":"9ffab0b1-d987-4ad6-b469-37f6597c9ad1"},{"turmaId":"CB2022","disciplina":"MORFOFISIOLOGIA ANIMAL I","docente":"A definir","tipo":"pendente","cor":"#e1fdff","dataInicio":"2026-03-23","dataFim":"2026-07-23","subGrupo":"BLVIII","id":"4b0b5a6f-2339-4b0e-ba0b-fa85daa4b7f6"},{"turmaId":"CB2022","disciplina":"ECOLOGIA DE COMUNIDADES","docente":"A definir","tipo":"pendente","cor":"#e6f0ff","dataInicio":"2026-03-23","dataFim":"2026-07-23","subGrupo":"BLVIII","id":"9320dca9-4206-47c9-85dd-08f1b80c1f72"},{"turmaId":"CB2022","disciplina":"DIVERSIDADE ANIMAL IV","docente":"A definir","tipo":"pendente","cor":"#f1eeff","dataInicio":"2026-03-23","dataFim":"2026-07-23","subGrupo":"BLVIII","id":"aaf5c911-0173-474c-9466-b7676a7f1a54"},{"turmaId":"CB2022","disciplina":"EDUCACAO E SAUDE HUMANA","docente":"A definir","tipo":"pendente","cor":"#fff1ff","dataInicio":"2026-03-23","dataFim":"2026-07-23","subGrupo":"BLVIII","id":"afdf845f-d79a-4eed-b46a-d2d70faa3493"},{"turmaId":"CB2022","disciplina":"FISIOLOGIA VEGETAL","docente":"Marivana Borges Silva","docentes":null,"tipo":"intensiva","ch":75,"dataInicio":"2026-05-04","dataFim":"2026-05-28","modelo":"Automatico","horariosOcupados":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"],"horariosUltimoDia":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10"],"diasMarcados":[1,2,3,4,5],"usaSabado":false,"faixas":[{"inicio":"2026-05-04","fim":"2026-05-28","dias":[1,2,3,4,5],"slots":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"],"drawnSlotsByDay":{"1":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"],"2":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"],"3":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"],"4":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"],"5":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"]}}],"subGrupo":null,"cor":"#f02d8f","id":"e506e7f0-6e7d-4df0-80e5-99234ffe9293"},{"turmaId":"CB2025","disciplina":"GENETICA GERAL","docente":"Natália Reis","docentes":null,"tipo":"intensiva","ch":75,"dataInicio":"2026-04-14","dataFim":"2026-05-12","modelo":"Automatico","horariosOcupados":["14:20 - 15:10","15:10 - 16:00","16:20 - 17:10","17:10 - 18:00"],"horariosUltimoDia":["14:20 - 15:10","15:10 - 16:00","16:20 - 17:10"],"diasMarcados":[1,2,3,4,5],"usaSabado":false,"faixas":[{"inicio":"2026-04-14","fim":"2026-05-12","dias":[1,2,3,4,5],"slots":["14:20 - 15:10","15:10 - 16:00","16:20 - 17:10","17:10 - 18:00"],"drawnSlotsByDay":{"1":["14:20 - 15:10","15:10 - 16:00","16:20 - 17:10","17:10 - 18:00"],"2":["14:20 - 15:10","15:10 - 16:00","16:20 - 17:10","17:10 - 18:00"],"3":["14:20 - 15:10","15:10 - 16:00","16:20 - 17:10","17:10 - 18:00"],"4":["14:20 - 15:10","15:10 - 16:00","16:20 - 17:10","17:10 - 18:00"],"5":["14:20 - 15:10","15:10 - 16:00","16:20 - 17:10","17:10 - 18:00"]}}],"subGrupo":null,"cor":"#f0f2a0","id":"949965a0-2a34-4475-ba5f-a12805f53382"},{"turmaId":"CB2025","disciplina":"EDUCAÇÃO E PLURALIDADE CULTURAL NO ENSINO DE CIÊNCIAS E BIOLOGIA","docente":"Dhemersson Santos","docentes":null,"tipo":"intensiva","ch":45,"dataInicio":"2026-06-15","dataFim":"2026-06-26","modelo":"Automatico","horariosOcupados":["14:20 - 15:10","15:10 - 16:00","16:20 - 17:10","17:10 - 18:00","18:00 - 18:50"],"horariosUltimoDia":["14:20 - 15:10","15:10 - 16:00","16:20 - 17:10","17:10 - 18:00"],"diasMarcados":[1,2,3,4,5],"usaSabado":false,"faixas":[{"inicio":"2026-06-15","fim":"2026-06-21","dias":[1,2,3,4,5],"slots":["14:20 - 15:10","15:10 - 16:00","16:20 - 17:10","17:10 - 18:00","18:00 - 18:50"],"drawnSlotsByDay":{"1":["14:20 - 15:10","15:10 - 16:00","16:20 - 17:10","17:10 - 18:00","18:00 - 18:50"],"2":["14:20 - 15:10","15:10 - 16:00","16:20 - 17:10","17:10 - 18:00","18:00 - 18:50"],"3":["14:20 - 15:10","15:10 - 16:00","16:20 - 17:10","17:10 - 18:00","18:00 - 18:50"],"4":["14:20 - 15:10","15:10 - 16:00","16:20 - 17:10","17:10 - 18:00","18:00 - 18:50"],"5":["14:20 - 15:10","15:10 - 16:00","16:20 - 17:10","17:10 - 18:00","18:00 - 18:50"]}},{"inicio":"2026-06-22","fim":"2026-06-26","dias":[1,2,3,4,5],"slots":["14:20 - 15:10","15:10 - 16:00","16:20 - 17:10","17:10 - 18:00"],"drawnSlotsByDay":{"1":["14:20 - 15:10","15:10 - 16:00","16:20 - 17:10","17:10 - 18:00"],"2":["14:20 - 15:10","15:10 - 16:00","16:20 - 17:10","17:10 - 18:00"],"3":["14:20 - 15:10","15:10 - 16:00","16:20 - 17:10","17:10 - 18:00"],"4":["14:20 - 15:10","15:10 - 16:00","16:20 - 17:10","17:10 - 18:00"],"5":["14:20 - 15:10","15:10 - 16:00","16:20 - 17:10","17:10 - 18:00"]}}],"subGrupo":null,"cor":"#e91e63","id":"8ac0bd82-dc23-4c9b-96c6-87bc88e8f554"},{"turmaId":"EP2025","disciplina":"ICTIOLOGIA","docente":"Grazielle Fernanda Evangelista Gomes","docentes":null,"tipo":"intensiva","ch":45,"dataInicio":"2026-04-06","dataFim":"2026-06-22","modelo":"Automatico","horariosOcupados":["14:20 - 15:10","15:10 - 16:00","16:20 - 17:10","17:10 - 18:00"],"horariosUltimoDia":["14:20 - 15:10"],"diasMarcados":[1],"usaSabado":false,"faixas":[{"inicio":"2026-04-06","fim":"2026-06-22","dias":[1],"slots":["14:20 - 15:10","15:10 - 16:00","16:20 - 17:10","17:10 - 18:00"],"drawnSlotsByDay":{"1":["14:20 - 15:10","15:10 - 16:00","16:20 - 17:10","17:10 - 18:00"]}}],"subGrupo":null,"cor":"#ccc6ff","id":"be35fad2-927f-40a8-8ccc-d0ff3a5a5c47"},{"turmaId":"EP2025","disciplina":"ECONOMIA","docente":"Marcos Ferreira Brabo","docentes":null,"tipo":"intensiva","ch":45,"dataInicio":"2026-04-06","dataFim":"2026-07-23","modelo":"Automatico","horariosOcupados":["13:30 - 14:20","14:20 - 15:10","15:10 - 16:00"],"horariosUltimoDia":["13:30 - 14:20","14:20 - 15:10","15:10 - 16:00"],"diasMarcados":[4],"usaSabado":false,"faixas":[{"inicio":"2026-04-06","fim":"2026-07-23","dias":[4],"slots":["13:30 - 14:20","14:20 - 15:10","15:10 - 16:00"],"drawnSlotsByDay":{"4":["13:30 - 14:20","14:20 - 15:10","15:10 - 16:00"]}}],"subGrupo":null,"cor":"#eccfe9","id":"55e6f843-394a-4bb6-b4c4-dc6cfdc0faeb"},{"turmaId":"EP2025","disciplina":"MICROBIOLOGIA DO PESCADO","docente":"Simoni Santos da Silva","docentes":null,"tipo":"intensiva","ch":60,"dataInicio":"2026-04-06","dataFim":"2026-07-03","modelo":"Automatico","horariosOcupados":["14:20 - 15:10","15:10 - 16:00","16:20 - 17:10","17:10 - 18:00","18:00 - 18:50"],"horariosUltimoDia":["14:20 - 15:10","15:10 - 16:00","16:20 - 17:10","17:10 - 18:00","18:00 - 18:50"],"diasMarcados":[5],"usaSabado":false,"faixas":[{"inicio":"2026-04-06","fim":"2026-07-03","dias":[5],"slots":["14:20 - 15:10","15:10 - 16:00","16:20 - 17:10","17:10 - 18:00","18:00 - 18:50"],"drawnSlotsByDay":{"5":["14:20 - 15:10","15:10 - 16:00","16:20 - 17:10","17:10 - 18:00","18:00 - 18:50"]}}],"subGrupo":null,"cor":"#e91e63","id":"936adb7f-7d94-4b56-ad7c-ce1701a8e644"},{"turmaId":"EP2025","disciplina":"DESENHO COMPUTACIONAL","docente":"Carlos Eduardo Rangel Andrade","docentes":null,"tipo":"intensiva","ch":60,"dataInicio":"2026-04-06","dataFim":"2026-06-24","modelo":"Automatico","horariosOcupados":["14:20 - 15:10","15:10 - 16:00","16:20 - 17:10","17:10 - 18:00","18:00 - 18:50"],"horariosUltimoDia":["14:20 - 15:10","15:10 - 16:00","16:20 - 17:10","17:10 - 18:00","18:00 - 18:50"],"diasMarcados":[3],"usaSabado":false,"faixas":[{"inicio":"2026-04-06","fim":"2026-06-24","dias":[3],"slots":["14:20 - 15:10","15:10 - 16:00","16:20 - 17:10","17:10 - 18:00","18:00 - 18:50"],"drawnSlotsByDay":{"3":["14:20 - 15:10","15:10 - 16:00","16:20 - 17:10","17:10 - 18:00","18:00 - 18:50"]}}],"subGrupo":null,"cor":"#96d13d","id":"e1a90c37-d2b5-4a99-a731-e7b1e6667242"},{"turmaId":"EP2022","disciplina":"GERENCIAMENTO COSTEIRO","docente":"Luci Cajueiro Carneiro Pereira","docentes":null,"tipo":"intensiva","ch":60,"dataInicio":"2026-03-23","dataFim":"2026-04-02","modelo":"Automatico","horariosOcupados":["07:30 - 08:20","08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00","12:00 - 12:50"],"horariosUltimoDia":["07:30 - 08:20","08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00","12:00 - 12:50"],"diasMarcados":[1,2,3,4,5,6],"usaSabado":true,"faixas":[{"inicio":"2026-03-23","fim":"2026-04-02","dias":[1,2,3,4,5,6],"slots":["07:30 - 08:20","08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00","12:00 - 12:50"],"drawnSlotsByDay":{"1":["07:30 - 08:20","08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00","12:00 - 12:50"],"2":["07:30 - 08:20","08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00","12:00 - 12:50"],"3":["07:30 - 08:20","08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00","12:00 - 12:50"],"4":["07:30 - 08:20","08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00","12:00 - 12:50"],"5":["07:30 - 08:20","08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00","12:00 - 12:50"],"6":["07:30 - 08:20","08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00","12:00 - 12:50"]}}],"subGrupo":null,"cor":"#5cc0be","id":"0411c82f-97ba-4c57-85ef-1d670cbba1d1"},{"turmaId":"EP2022","disciplina":"SISTEMAS DE PESCA","docente":"Francisco Carlos Alberto Fonteles Holanda","docentes":null,"tipo":"intensiva","ch":45,"dataInicio":"2026-04-06","dataFim":"2026-07-13","modelo":"Automatico","horariosOcupados":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10"],"horariosUltimoDia":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10"],"diasMarcados":[1],"usaSabado":false,"faixas":[{"inicio":"2026-04-06","fim":"2026-07-13","dias":[1],"slots":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10"],"drawnSlotsByDay":{"1":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10"]}}],"subGrupo":null,"cor":"#61a0e5","id":"c59bad00-24ae-45ab-9c08-81b6fd176946"},{"turmaId":"EP2022","disciplina":"ADMINISTRACAO E LEGISLACAO PESQUEIRA E AQUICOLA","docente":"Leonnan Oliveira","docentes":null,"tipo":"intensiva","ch":60,"dataInicio":"2026-04-06","dataFim":"2026-07-03","modelo":"Automatico","horariosOcupados":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00","12:00 - 12:50"],"horariosUltimoDia":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00","12:00 - 12:50"],"diasMarcados":[5],"usaSabado":false,"faixas":[{"inicio":"2026-04-06","fim":"2026-07-03","dias":[5],"slots":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00","12:00 - 12:50"],"drawnSlotsByDay":{"5":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10","11:10 - 12:00","12:00 - 12:50"]}}],"subGrupo":null,"cor":"#7b70e5","id":"7931f71f-0539-4a5b-bfa5-25b62eb3d652"},{"turmaId":"EP2022","disciplina":"AVALIACAO DE ESTOQUES PESQUEIROS","docente":"Leonnan Oliveira","docentes":null,"tipo":"intensiva","ch":45,"dataInicio":"2026-04-06","dataFim":"2026-07-23","modelo":"Automatico","horariosOcupados":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10"],"horariosUltimoDia":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10"],"diasMarcados":[4],"usaSabado":false,"faixas":[{"inicio":"2026-04-06","fim":"2026-07-23","dias":[4],"slots":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10"],"drawnSlotsByDay":{"4":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10"]}}],"subGrupo":null,"cor":"#d884d8","id":"9e892b4b-cbf6-4ea3-87d4-ce4b724e3033"},{"turmaId":"EP2022","disciplina":"PARASITOLOGIA DE ORGANISMOS AQUATICOS","docente":"Lorena Batista de Moura","docentes":null,"tipo":"intensiva","ch":45,"dataInicio":"2026-04-06","dataFim":"2026-07-21","modelo":"Automatico","horariosOcupados":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10"],"horariosUltimoDia":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10"],"diasMarcados":[2],"usaSabado":false,"faixas":[{"inicio":"2026-04-06","fim":"2026-07-21","dias":[2],"slots":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10"],"drawnSlotsByDay":{"2":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10"]}}],"subGrupo":null,"cor":"#a079a2","id":"825d74d2-5f03-44c3-b825-2e6bdf36895a"},{"turmaId":"EP2022","disciplina":"MARKETING","docente":"Marcos Ferreira Brabo","docentes":null,"tipo":"intensiva","ch":30,"dataInicio":"2026-04-06","dataFim":"2026-06-10","modelo":"Automatico","horariosOcupados":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10"],"horariosUltimoDia":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10"],"diasMarcados":[3],"usaSabado":false,"faixas":[{"inicio":"2026-04-06","fim":"2026-06-10","dias":[3],"slots":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10"],"drawnSlotsByDay":{"3":["08:20 - 09:10","09:10 - 10:00","10:20 - 11:10"]}}],"subGrupo":null,"cor":"#ffb7b7","id":"1202dd24-5819-42c4-b6e1-0dc2c6f8c775"},{"turmaId":"EP2024","disciplina":"CARTOGRAFIA E GEOPROCESSAMENTO","docente":"Pedro Andrés Chira Oliva","docentes":null,"tipo":"intensiva","ch":60,"dataInicio":"2026-03-23","dataFim":"2026-05-27","modelo":"Automatico","horariosOcupados":["09:10 - 10:00","10:20 - 11:10","11:10 - 12:00","12:00 - 12:50"],"horariosUltimoDia":["09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"],"diasMarcados":[1,3],"usaSabado":false,"faixas":[{"inicio":"2026-03-23","fim":"2026-05-27","dias":[1,3],"slots":["09:10 - 10:00","10:20 - 11:10","11:10 - 12:00","12:00 - 12:50"],"drawnSlotsByDay":{"1":["10:20 - 11:10","11:10 - 12:00","12:00 - 12:50"],"3":["09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"]}}],"subGrupo":null,"cor":"#feffd9","id":"b2cb0834-3e8a-4143-8d8d-2937f941da5f"},{"turmaId":"EP2024","disciplina":"FISIOECOLOGIA DE ANIMAIS AQUATICOS","docente":"Leonnan Oliveira","docentes":null,"tipo":"intensiva","ch":75,"dataInicio":"2026-03-23","dataFim":"2026-07-01","modelo":"Automatico","horariosOcupados":["07:30 - 08:20","08:20 - 09:10","09:10 - 10:00"],"horariosUltimoDia":["07:30 - 08:20","08:20 - 09:10"],"diasMarcados":[1,3],"usaSabado":false,"faixas":[{"inicio":"2026-03-23","fim":"2026-07-01","dias":[1,3],"slots":["07:30 - 08:20","08:20 - 09:10","09:10 - 10:00"],"drawnSlotsByDay":{"1":["07:30 - 08:20","08:20 - 09:10","09:10 - 10:00"],"3":["07:30 - 08:20","08:20 - 09:10"]}}],"subGrupo":null,"cor":"#715ae2","id":"14ffe4f5-0c04-487b-bd3a-57dc054f7150"},{"turmaId":"EP2024","disciplina":"LIMNOLOGIA","docente":"Zélia / Hudson (Múltiplos)","docentes":[{"nome":"Zélia Maria Pimental Nunes","ch":45},{"nome":"Hudson Cleber Pereira da Silva","ch":30}],"tipo":"intensiva","ch":75,"dataInicio":"2026-03-23","dataFim":"2026-07-14","modelo":"Automatico","horariosOcupados":["07:30 - 08:20","08:20 - 09:10","09:10 - 10:00"],"horariosUltimoDia":["07:30 - 08:20","08:20 - 09:10"],"diasMarcados":[2,5],"usaSabado":false,"faixas":[{"inicio":"2026-03-23","fim":"2026-07-14","dias":[2,5],"slots":["07:30 - 08:20","08:20 - 09:10","09:10 - 10:00"],"drawnSlotsByDay":{"2":["07:30 - 08:20","08:20 - 09:10","09:10 - 10:00"],"5":["07:30 - 08:20","08:20 - 09:10"]}}],"subGrupo":null,"cor":"#e8c67d","id":"7fe2e740-40cb-4e75-801d-25655976c5f0"},{"turmaId":"EP2024","disciplina":"MAQUINAS E MOTORES","docente":"Carlos Eduardo Rangel Andrade","docentes":null,"tipo":"intensiva","ch":45,"dataInicio":"2026-03-23","dataFim":"2026-07-09","modelo":"Automatico","horariosOcupados":["09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"],"horariosUltimoDia":["09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"],"diasMarcados":[4],"usaSabado":false,"faixas":[{"inicio":"2026-03-23","fim":"2026-07-09","dias":[4],"slots":["09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"],"drawnSlotsByDay":{"4":["09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"]}}],"subGrupo":null,"cor":"#6decf3","id":"bc81be62-1851-45ce-ae9f-3ef6264d77ba"},{"turmaId":"EP2024","disciplina":"TECNOLOGIA DO PESCADO","docente":"Marileide Moraes Alves","docentes":null,"tipo":"intensiva","ch":60,"dataInicio":"2026-03-23","dataFim":"2026-07-09","modelo":"Automatico","horariosOcupados":["07:30 - 08:20","08:20 - 09:10","10:20 - 11:10","11:10 - 12:00"],"horariosUltimoDia":["07:30 - 08:20","08:20 - 09:10"],"diasMarcados":[2,4],"usaSabado":false,"faixas":[{"inicio":"2026-03-23","fim":"2026-07-09","dias":[2,4],"slots":["07:30 - 08:20","08:20 - 09:10","10:20 - 11:10","11:10 - 12:00"],"drawnSlotsByDay":{"2":["10:20 - 11:10","11:10 - 12:00"],"4":["07:30 - 08:20","08:20 - 09:10"]}}],"subGrupo":null,"cor":"#71e656","id":"65853e4e-b4be-4c98-8340-7cc9f1b68d4f"},{"turmaId":"EP2024","disciplina":"ELABORACAO E AVALIACAO DE PROJETOS PESQUEIROS E AQUICOLAS","docente":"Marcos Ferreira Brabo","docentes":null,"tipo":"intensiva","ch":45,"dataInicio":"2026-03-23","dataFim":"2026-07-17","modelo":"Automatico","horariosOcupados":["09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"],"horariosUltimoDia":["09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"],"diasMarcados":[5],"usaSabado":false,"faixas":[{"inicio":"2026-03-23","fim":"2026-07-17","dias":[5],"slots":["09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"],"drawnSlotsByDay":{"5":["09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"]}}],"subGrupo":null,"cor":"#a556e6","id":"7364c547-07fc-44ee-9a06-7538449407d9"},{"turmaId":"EP2024","disciplina":"SOCIOLOGIA APLICADA AS COMUNIDADES PESQUEIRAS","docente":"Cleide Marques","docentes":null,"tipo":"intensiva","ch":45,"dataInicio":"2026-06-01","dataFim":"2026-07-22","modelo":"Automatico","horariosOcupados":["09:10 - 10:00","10:20 - 11:10","11:10 - 12:00","12:00 - 12:50"],"horariosUltimoDia":["09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"],"diasMarcados":[1,3],"usaSabado":false,"faixas":[{"inicio":"2026-06-01","fim":"2026-07-22","dias":[1,3],"slots":["09:10 - 10:00","10:20 - 11:10","11:10 - 12:00","12:00 - 12:50"],"drawnSlotsByDay":{"1":["10:20 - 11:10","11:10 - 12:00","12:00 - 12:50"],"3":["09:10 - 10:00","10:20 - 11:10","11:10 - 12:00"]}}],"subGrupo":null,"cor":"#f77373","id":"88a5fa6c-0f23-4e0f-815a-f638d0b49798"},{"turmaId":"EP2023","disciplina":"CARCINICULTURA","docente":"Cristiana Ramalho Maciel","docentes":null,"tipo":"intensiva","ch":45,"dataInicio":"2026-03-23","dataFim":"2026-07-17","modelo":"Automatico","horariosOcupados":["16:20 - 17:10","17:10 - 18:00","18:00 - 18:50"],"horariosUltimoDia":["16:20 - 17:10","17:10 - 18:00","18:00 - 18:50"],"diasMarcados":[5],"usaSabado":false,"faixas":[{"inicio":"2026-03-23","fim":"2026-07-17","dias":[5],"slots":["16:20 - 17:10","17:10 - 18:00","18:00 - 18:50"],"drawnSlotsByDay":{"5":["16:20 - 17:10","17:10 - 18:00","18:00 - 18:50"]}}],"subGrupo":null,"cor":"#f57575","id":"ddd15df7-bbb1-48b1-ad45-7ade117754bf"},{"turmaId":"EP2023","disciplina":"GENETICA APLICADA","docente":"Simoni Santos da Silva","docentes":null,"tipo":"intensiva","ch":60,"dataInicio":"2026-03-23","dataFim":"2026-06-29","modelo":"Automatico","horariosOcupados":["15:10 - 16:00","16:20 - 17:10","17:10 - 18:00","18:00 - 18:50"],"horariosUltimoDia":["15:10 - 16:00","16:20 - 17:10","17:10 - 18:00","18:00 - 18:50"],"diasMarcados":[1],"usaSabado":false,"faixas":[{"inicio":"2026-03-23","fim":"2026-06-29","dias":[1],"slots":["15:10 - 16:00","16:20 - 17:10","17:10 - 18:00","18:00 - 18:50"],"drawnSlotsByDay":{"1":["15:10 - 16:00","16:20 - 17:10","17:10 - 18:00","18:00 - 18:50"]}}],"subGrupo":null,"cor":"#be51f0","id":"9a45f6a2-b22a-48e4-bc31-b5ee66a79939"},{"turmaId":"EP2023","disciplina":"TECNICAS APLICADAS DE EDUCACAO NAO FORMAL","docente":"Cleide Marques","docentes":null,"tipo":"intensiva","ch":45,"dataInicio":"2026-03-23","dataFim":"2026-07-07","modelo":"Automatico","horariosOcupados":["15:10 - 16:00","16:20 - 17:10","17:10 - 18:00"],"horariosUltimoDia":["15:10 - 16:00","16:20 - 17:10","17:10 - 18:00"],"diasMarcados":[2],"usaSabado":false,"faixas":[{"inicio":"2026-03-23","fim":"2026-07-07","dias":[2],"slots":["15:10 - 16:00","16:20 - 17:10","17:10 - 18:00"],"drawnSlotsByDay":{"2":["15:10 - 16:00","16:20 - 17:10","17:10 - 18:00"]}}],"subGrupo":null,"cor":"#f5e199","id":"7b85859d-20b7-4316-85d0-e2a60eb5cd05"},{"turmaId":"EP2023","disciplina":"PISCICULTURA","docente":"Zélia / Daniel (Múltiplos)","docentes":[{"nome":"Zélia Maria Pimental Nunes","ch":30},{"nome":"Daniel Abreu Vasconcelos Campelo","ch":30}],"tipo":"intensiva","ch":60,"dataInicio":"2026-03-23","dataFim":"2026-07-06","modelo":"Automatico","horariosOcupados":["13:30 - 14:20","14:20 - 15:10","15:10 - 16:00","16:20 - 17:10"],"horariosUltimoDia":["13:30 - 14:20","14:20 - 15:10"],"diasMarcados":[1,4],"usaSabado":false,"faixas":[{"inicio":"2026-03-23","fim":"2026-07-06","dias":[1,4],"slots":["13:30 - 14:20","14:20 - 15:10","15:10 - 16:00","16:20 - 17:10"],"drawnSlotsByDay":{"1":["13:30 - 14:20","14:20 - 15:10"],"4":["15:10 - 16:00","16:20 - 17:10"]}}],"subGrupo":null,"cor":"#7beac9","id":"3fc806d1-b93e-4e78-95f7-79554d184575"},{"turmaId":"EP2023","disciplina":"TECNICAS DE PESCA","docente":"Francisco Carlos Alberto Fonteles Holanda","docentes":null,"tipo":"intensiva","ch":45,"dataInicio":"2026-03-23","dataFim":"2026-07-01","modelo":"Automatico","horariosOcupados":["13:30 - 14:20","14:20 - 15:10","15:10 - 16:00"],"horariosUltimoDia":["13:30 - 14:20","14:20 - 15:10","15:10 - 16:00"],"diasMarcados":[3],"usaSabado":false,"faixas":[{"inicio":"2026-03-23","fim":"2026-07-01","dias":[3],"slots":["13:30 - 14:20","14:20 - 15:10","15:10 - 16:00"],"drawnSlotsByDay":{"3":["13:30 - 14:20","14:20 - 15:10","15:10 - 16:00"]}}],"subGrupo":null,"cor":"#d85be1","id":"a6048adf-44ab-42f8-98a0-38ecf4564569"},{"turmaId":"EP2023","disciplina":"NAVEGACAO BASICA","docente":"Carlos Eduardo Rangel Andrade","docentes":null,"tipo":"intensiva","ch":60,"dataInicio":"2026-03-23","dataFim":"2026-07-09","modelo":"Automatico","horariosOcupados":["13:30 - 14:20","14:20 - 15:10"],"horariosUltimoDia":["13:30 - 14:20","14:20 - 15:10"],"diasMarcados":[2,4],"usaSabado":false,"faixas":[{"inicio":"2026-03-23","fim":"2026-07-09","dias":[2,4],"slots":["13:30 - 14:20","14:20 - 15:10"],"drawnSlotsByDay":{"2":["13:30 - 14:20","14:20 - 15:10"],"4":["13:30 - 14:20","14:20 - 15:10"]}}],"subGrupo":null,"cor":"#e1e647","id":"f8ba6e95-8a9e-43c8-81fd-3d98e8b6ec8c"},{"turmaId":"EP2025","disciplina":"ELETROMAGNETISMO","docente":"Leonnan Oliveira","docentes":null,"tipo":"intensiva","ch":75,"dataInicio":"2026-04-06","dataFim":"2026-07-07","modelo":"Automatico","horariosOcupados":["14:20 - 15:10","15:10 - 16:00","16:20 - 17:10","17:10 - 18:00"],"horariosUltimoDia":["14:20 - 15:10","15:10 - 16:00","16:20 - 17:10"],"diasMarcados":[2,4],"usaSabado":false,"faixas":[{"inicio":"2026-04-06","fim":"2026-07-07","dias":[2,4],"slots":["14:20 - 15:10","15:10 - 16:00","16:20 - 17:10","17:10 - 18:00"],"drawnSlotsByDay":{"2":["14:20 - 15:10","15:10 - 16:00","16:20 - 17:10","17:10 - 18:00"],"4":["16:20 - 17:10","17:10 - 18:00"]}}],"subGrupo":null,"cor":"#25e9c2","id":"e8de0a43-ec8b-4dc7-94a5-b38fb99ba041"},{"turmaId":"EP2023","disciplina":"INTRODUCAO AO TRABALHO DE CONCLUSAO DE CURSO","docente":"Cleide Marques","docentes":null,"tipo":"intensiva","ch":15,"dataInicio":"2026-03-23","dataFim":"2026-07-07","modelo":"Automatico","horariosOcupados":["18:00 - 18:50"],"horariosUltimoDia":["18:00 - 18:50"],"diasMarcados":[2],"usaSabado":false,"faixas":[{"inicio":"2026-03-23","fim":"2026-07-07","dias":[2],"slots":["18:00 - 18:50"],"drawnSlotsByDay":{"2":["18:00 - 18:50"]}}],"subGrupo":null,"cor":"#6ad93a","id":"8ee75970-e2c5-44a3-90f2-065d24d1e9ba"},{"turmaId":"EP2023","disciplina":"ESTATISTICA APLICADA A PESCA E AQUICULTURA","docente":"Evaldo Martins da Silva","docentes":null,"tipo":"intensiva","ch":45,"dataInicio":"2026-03-23","dataFim":"2026-07-17","modelo":"Automatico","horariosOcupados":["13:30 - 14:20","14:20 - 15:10","15:10 - 16:00"],"horariosUltimoDia":["13:30 - 14:20","14:20 - 15:10","15:10 - 16:00"],"diasMarcados":[5],"usaSabado":false,"faixas":[{"inicio":"2026-03-23","fim":"2026-07-17","dias":[5],"slots":["13:30 - 14:20","14:20 - 15:10","15:10 - 16:00"],"drawnSlotsByDay":{"5":["13:30 - 14:20","14:20 - 15:10","15:10 - 16:00"]}}],"subGrupo":null,"cor":"#51a0f5","id":"40a77501-e230-4c24-8056-5edf83363ba1"},{"turmaId":"EP2023","disciplina":"TOPICOS ESPECIAIS EM TECNOLOGIA DO PESCADO","docente":"Cleide Marques","docentes":null,"tipo":"intensiva","ch":30,"dataInicio":"2026-03-23","dataFim":"2026-07-01","modelo":"Automatico","horariosOcupados":["16:20 - 17:10","17:10 - 18:00"],"horariosUltimoDia":["16:20 - 17:10","17:10 - 18:00"],"diasMarcados":[3],"usaSabado":false,"faixas":[{"inicio":"2026-03-23","fim":"2026-07-01","dias":[3],"slots":["16:20 - 17:10","17:10 - 18:00"],"drawnSlotsByDay":{"3":["16:20 - 17:10","17:10 - 18:00"]}}],"subGrupo":null,"cor":"#51a0f5","id":"7bf05ed0-e3d4-44d3-aa41-7059ea469d18"},{"turmaId":"EP2023","disciplina":"TOPICOS ESPECIAIS EM AQUICULTURA","docente":"Cleide Marques","docentes":null,"tipo":"intensiva","ch":30,"dataInicio":"2026-03-23","dataFim":"2026-07-09","modelo":"Automatico","horariosOcupados":["17:10 - 18:00","18:00 - 18:50"],"horariosUltimoDia":["17:10 - 18:00","18:00 - 18:50"],"diasMarcados":[4],"usaSabado":false,"faixas":[{"inicio":"2026-03-23","fim":"2026-07-09","dias":[4],"slots":["17:10 - 18:00","18:00 - 18:50"],"drawnSlotsByDay":{"4":["17:10 - 18:00","18:00 - 18:50"]}}],"subGrupo":null,"cor":"#90f33f","id":"41e1ce64-4d71-4cda-8a65-d38dbc6c575a"}],"settings":{"termStart":"2026-03-23","termEnd":"2026-07-23"}}
+{
+  "allocations": [
+    {
+      "turmaId": "EP2026",
+      "disciplina": "INFORMATICA BASICA",
+      "docente": "Evaldo Martins da Silva",
+      "docentes": null,
+      "tipo": "intensiva",
+      "ch": 45,
+      "dataInicio": "2026-03-23",
+      "dataFim": "2026-07-09",
+      "modelo": "Automatico",
+      "horariosOcupados": [
+        "07:30 - 08:20",
+        "08:20 - 09:10",
+        "09:10 - 10:00"
+      ],
+      "horariosUltimoDia": [
+        "07:30 - 08:20",
+        "08:20 - 09:10",
+        "09:10 - 10:00"
+      ],
+      "diasMarcados": [
+        4
+      ],
+      "usaSabado": false,
+      "faixas": [
+        {
+          "inicio": "2026-03-23",
+          "fim": "2026-07-09",
+          "dias": [
+            4
+          ],
+          "slots": [
+            "07:30 - 08:20",
+            "08:20 - 09:10",
+            "09:10 - 10:00"
+          ],
+          "drawnSlotsByDay": {
+            "4": [
+              "07:30 - 08:20",
+              "08:20 - 09:10",
+              "09:10 - 10:00"
+            ]
+          }
+        }
+      ],
+      "subGrupo": null,
+      "cor": "#fdffb6",
+      "id": "0b7510a1-776d-4aa4-ab03-5a82a3a4ad92"
+    },
+    {
+      "turmaId": "EP2026",
+      "disciplina": "INGLES TECNICO",
+      "docente": "Lorena Batista de Moura",
+      "docentes": null,
+      "tipo": "intensiva",
+      "ch": 60,
+      "dataInicio": "2026-03-23",
+      "dataFim": "2026-07-17",
+      "modelo": "Automatico",
+      "horariosOcupados": [
+        "07:30 - 08:20",
+        "08:20 - 09:10",
+        "09:10 - 10:00",
+        "10:20 - 11:10"
+      ],
+      "horariosUltimoDia": [
+        "07:30 - 08:20",
+        "08:20 - 09:10",
+        "09:10 - 10:00",
+        "10:20 - 11:10"
+      ],
+      "diasMarcados": [
+        5
+      ],
+      "usaSabado": false,
+      "faixas": [
+        {
+          "inicio": "2026-03-23",
+          "fim": "2026-07-17",
+          "dias": [
+            5
+          ],
+          "slots": [
+            "07:30 - 08:20",
+            "08:20 - 09:10",
+            "09:10 - 10:00",
+            "10:20 - 11:10"
+          ],
+          "drawnSlotsByDay": {
+            "5": [
+              "07:30 - 08:20",
+              "08:20 - 09:10",
+              "09:10 - 10:00",
+              "10:20 - 11:10"
+            ]
+          }
+        }
+      ],
+      "subGrupo": null,
+      "cor": "#ffadad",
+      "id": "cc378f3d-d3ce-40a2-bfb5-0aa2a474a523"
+    },
+    {
+      "turmaId": "EP2026",
+      "disciplina": "INTRODUCAO A ENGENHARIA DE PESCA",
+      "docente": "Marcos Ferreira Brabo",
+      "docentes": null,
+      "tipo": "intensiva",
+      "ch": 30,
+      "dataInicio": "2026-03-23",
+      "dataFim": "2026-07-07",
+      "modelo": "Automatico",
+      "horariosOcupados": [
+        "08:20 - 09:10",
+        "09:10 - 10:00"
+      ],
+      "horariosUltimoDia": [
+        "08:20 - 09:10",
+        "09:10 - 10:00"
+      ],
+      "diasMarcados": [
+        2
+      ],
+      "usaSabado": false,
+      "faixas": [
+        {
+          "inicio": "2026-03-23",
+          "fim": "2026-07-07",
+          "dias": [
+            2
+          ],
+          "slots": [
+            "08:20 - 09:10",
+            "09:10 - 10:00"
+          ],
+          "drawnSlotsByDay": {
+            "2": [
+              "08:20 - 09:10",
+              "09:10 - 10:00"
+            ]
+          }
+        }
+      ],
+      "subGrupo": null,
+      "cor": "#a0c4ff",
+      "id": "dd854398-c0be-4f00-9f1f-fa30e979c32d"
+    },
+    {
+      "turmaId": "EP2026",
+      "disciplina": "MATEMATICA BASICA",
+      "docente": "Ana Garcês",
+      "docentes": null,
+      "tipo": "intensiva",
+      "ch": 90,
+      "dataInicio": "2026-03-23",
+      "dataFim": "2026-07-09",
+      "modelo": "Automatico",
+      "horariosOcupados": [
+        "10:20 - 11:10",
+        "11:10 - 12:00",
+        "12:00 - 12:50"
+      ],
+      "horariosUltimoDia": [
+        "10:20 - 11:10",
+        "11:10 - 12:00",
+        "12:00 - 12:50"
+      ],
+      "diasMarcados": [
+        2,
+        4
+      ],
+      "usaSabado": false,
+      "faixas": [
+        {
+          "inicio": "2026-03-23",
+          "fim": "2026-07-09",
+          "dias": [
+            2,
+            4
+          ],
+          "slots": [
+            "10:20 - 11:10",
+            "11:10 - 12:00",
+            "12:00 - 12:50"
+          ],
+          "drawnSlotsByDay": {
+            "2": [
+              "10:20 - 11:10",
+              "11:10 - 12:00",
+              "12:00 - 12:50"
+            ],
+            "4": [
+              "10:20 - 11:10",
+              "11:10 - 12:00",
+              "12:00 - 12:50"
+            ]
+          }
+        }
+      ],
+      "subGrupo": null,
+      "cor": "#caffbf",
+      "id": "c97596d5-06fc-477d-a262-25551efef0c8"
+    },
+    {
+      "turmaId": "EP2026",
+      "disciplina": "METODOLOGIA CIENTIFICA",
+      "docente": "Hudson Cleber Pereira da Silva",
+      "docentes": null,
+      "tipo": "intensiva",
+      "ch": 45,
+      "dataInicio": "2026-03-23",
+      "dataFim": "2026-07-01",
+      "modelo": "Automatico",
+      "horariosOcupados": [
+        "10:20 - 11:10",
+        "11:10 - 12:00",
+        "12:00 - 12:50"
+      ],
+      "horariosUltimoDia": [
+        "10:20 - 11:10",
+        "11:10 - 12:00",
+        "12:00 - 12:50"
+      ],
+      "diasMarcados": [
+        3
+      ],
+      "usaSabado": false,
+      "faixas": [
+        {
+          "inicio": "2026-03-23",
+          "fim": "2026-07-01",
+          "dias": [
+            3
+          ],
+          "slots": [
+            "10:20 - 11:10",
+            "11:10 - 12:00",
+            "12:00 - 12:50"
+          ],
+          "drawnSlotsByDay": {
+            "3": [
+              "10:20 - 11:10",
+              "11:10 - 12:00",
+              "12:00 - 12:50"
+            ]
+          }
+        }
+      ],
+      "subGrupo": null,
+      "cor": "#ffd6a5",
+      "id": "a19faf45-8cd2-4386-83f2-3dfe92dfed4b"
+    },
+    {
+      "turmaId": "EP2026",
+      "disciplina": "QUIMICA GERAL E ANALITICA",
+      "docente": "Marileide / Evaldo (Múltiplos)",
+      "docentes": [
+        {
+          "nome": "Marileide Moraes Alves",
+          "ch": 60
+        },
+        {
+          "nome": "Evaldo Martins da Silva",
+          "ch": 30
+        }
+      ],
+      "tipo": "intensiva",
+      "ch": 90,
+      "dataInicio": "2026-03-23",
+      "dataFim": "2026-07-01",
+      "modelo": "Automatico",
+      "horariosOcupados": [
+        "07:30 - 08:20",
+        "08:20 - 09:10",
+        "09:10 - 10:00"
+      ],
+      "horariosUltimoDia": [
+        "07:30 - 08:20",
+        "08:20 - 09:10",
+        "09:10 - 10:00"
+      ],
+      "diasMarcados": [
+        1,
+        3
+      ],
+      "usaSabado": false,
+      "faixas": [
+        {
+          "inicio": "2026-03-23",
+          "fim": "2026-07-01",
+          "dias": [
+            1,
+            3
+          ],
+          "slots": [
+            "07:30 - 08:20",
+            "08:20 - 09:10",
+            "09:10 - 10:00"
+          ],
+          "drawnSlotsByDay": {
+            "1": [
+              "07:30 - 08:20",
+              "08:20 - 09:10",
+              "09:10 - 10:00"
+            ],
+            "3": [
+              "07:30 - 08:20",
+              "08:20 - 09:10",
+              "09:10 - 10:00"
+            ]
+          }
+        }
+      ],
+      "subGrupo": null,
+      "cor": "#e83b5d",
+      "id": "e490e322-78ca-40e6-bcbc-b9b5742791fd"
+    },
+    {
+      "turmaId": "EP2026",
+      "disciplina": "ECOLOGIA",
+      "docente": "Hudson Cleber Pereira da Silva",
+      "docentes": null,
+      "tipo": "intensiva",
+      "ch": 60,
+      "dataInicio": "2026-03-23",
+      "dataFim": "2026-07-10",
+      "modelo": "Automatico",
+      "horariosOcupados": [
+        "10:20 - 11:10",
+        "11:10 - 12:00",
+        "12:00 - 12:50"
+      ],
+      "horariosUltimoDia": [
+        "11:10 - 12:00",
+        "12:00 - 12:50"
+      ],
+      "diasMarcados": [
+        1,
+        5
+      ],
+      "usaSabado": false,
+      "faixas": [
+        {
+          "inicio": "2026-03-23",
+          "fim": "2026-07-10",
+          "dias": [
+            1,
+            5
+          ],
+          "slots": [
+            "10:20 - 11:10",
+            "11:10 - 12:00",
+            "12:00 - 12:50"
+          ],
+          "drawnSlotsByDay": {
+            "1": [
+              "10:20 - 11:10",
+              "11:10 - 12:00"
+            ],
+            "5": [
+              "11:10 - 12:00",
+              "12:00 - 12:50"
+            ]
+          }
+        }
+      ],
+      "subGrupo": null,
+      "cor": "#9bf6ff",
+      "id": "11ebfc46-e157-4284-beaf-39488a9cd29a"
+    },
+    {
+      "turmaId": "EP2025",
+      "disciplina": "BOTANICA AQUATICA",
+      "docente": "Rauquírio André Albuquerque Marinho da Costa",
+      "docentes": null,
+      "tipo": "intensiva",
+      "ch": 60,
+      "dataInicio": "2026-03-23",
+      "dataFim": "2026-04-02",
+      "modelo": "Automatico",
+      "horariosOcupados": [
+        "13:30 - 14:20",
+        "14:20 - 15:10",
+        "15:10 - 16:00",
+        "16:20 - 17:10",
+        "17:10 - 18:00",
+        "18:00 - 18:50"
+      ],
+      "horariosUltimoDia": [
+        "13:30 - 14:20",
+        "14:20 - 15:10",
+        "15:10 - 16:00",
+        "16:20 - 17:10",
+        "17:10 - 18:00",
+        "18:00 - 18:50"
+      ],
+      "diasMarcados": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "usaSabado": true,
+      "faixas": [
+        {
+          "inicio": "2026-03-23",
+          "fim": "2026-04-02",
+          "dias": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6
+          ],
+          "slots": [
+            "13:30 - 14:20",
+            "14:20 - 15:10",
+            "15:10 - 16:00",
+            "16:20 - 17:10",
+            "17:10 - 18:00",
+            "18:00 - 18:50"
+          ],
+          "drawnSlotsByDay": {
+            "1": [
+              "13:30 - 14:20",
+              "14:20 - 15:10",
+              "15:10 - 16:00",
+              "16:20 - 17:10",
+              "17:10 - 18:00",
+              "18:00 - 18:50"
+            ],
+            "2": [
+              "13:30 - 14:20",
+              "14:20 - 15:10",
+              "15:10 - 16:00",
+              "16:20 - 17:10",
+              "17:10 - 18:00",
+              "18:00 - 18:50"
+            ],
+            "3": [
+              "13:30 - 14:20",
+              "14:20 - 15:10",
+              "15:10 - 16:00",
+              "16:20 - 17:10",
+              "17:10 - 18:00",
+              "18:00 - 18:50"
+            ],
+            "4": [
+              "13:30 - 14:20",
+              "14:20 - 15:10",
+              "15:10 - 16:00",
+              "16:20 - 17:10",
+              "17:10 - 18:00",
+              "18:00 - 18:50"
+            ],
+            "5": [
+              "13:30 - 14:20",
+              "14:20 - 15:10",
+              "15:10 - 16:00",
+              "16:20 - 17:10",
+              "17:10 - 18:00",
+              "18:00 - 18:50"
+            ],
+            "6": [
+              "13:30 - 14:20",
+              "14:20 - 15:10",
+              "15:10 - 16:00",
+              "16:20 - 17:10",
+              "17:10 - 18:00",
+              "18:00 - 18:50"
+            ]
+          }
+        }
+      ],
+      "subGrupo": null,
+      "cor": "#f2c08f",
+      "id": "abbc17c1-24ef-45aa-8a49-fc6b120be497"
+    },
+    {
+      "turmaId": "CB2022",
+      "disciplina": "TRABALHO DE CONCLUSAO DE CURSO (TCC)",
+      "docente": "A definir",
+      "tipo": "pendente",
+      "cor": "#fffbf8",
+      "dataInicio": "2026-03-23",
+      "dataFim": "2026-07-23",
+      "id": "2dc2c88d-9f6d-402f-a436-03a9f7d1a6fe"
+    },
+    {
+      "turmaId": "CB2022",
+      "disciplina": "ESTAGIO V: ENSINO MEDIO",
+      "docente": "A definir",
+      "tipo": "pendente",
+      "cor": "#d6d874",
+      "dataInicio": "2026-03-23",
+      "dataFim": "2026-07-23",
+      "id": "6b9d9bb0-6817-4085-9e80-48c72ef6f30b"
+    },
+    {
+      "turmaId": "CB2022",
+      "disciplina": "ATIVIDADES COMPLEMENTARES",
+      "docente": "A definir",
+      "tipo": "pendente",
+      "cor": "#5cc0be",
+      "dataInicio": "2026-03-23",
+      "dataFim": "2026-07-23",
+      "id": "39ada3ea-d77a-49c7-a5fa-5842e4e0f2f9"
+    },
+    {
+      "turmaId": "CB2023",
+      "disciplina": "DIVERSIDADE ANIMAL III",
+      "docente": "A definir",
+      "tipo": "pendente",
+      "cor": "#ffeded",
+      "dataInicio": "2026-03-23",
+      "dataFim": "2026-07-23",
+      "id": "83297238-df35-4f70-87b2-d34ee0a117d7"
+    },
+    {
+      "turmaId": "CB2024",
+      "disciplina": "DIVERSIDADE ANIMAL I",
+      "docente": "A definir",
+      "tipo": "pendente",
+      "cor": "#c0fcff",
+      "dataInicio": "2026-03-23",
+      "dataFim": "2026-07-23",
+      "id": "73e43876-b2fb-4052-93ee-9058f6a9608f"
+    },
+    {
+      "turmaId": "CB2025",
+      "disciplina": "FISICA BASICA",
+      "docente": "A definir",
+      "tipo": "pendente",
+      "cor": "#8daeda",
+      "dataInicio": "2026-03-23",
+      "dataFim": "2026-07-23",
+      "id": "d400ba9a-8ceb-444b-90db-9e91798a134e"
+    },
+    {
+      "turmaId": "CB2026",
+      "disciplina": "BIOLOGIA CELULAR E MOLECULAR",
+      "docente": "A definir",
+      "tipo": "pendente",
+      "cor": "#ffadad",
+      "dataInicio": "2026-03-23",
+      "dataFim": "2026-07-23",
+      "id": "6b172623-bca1-4bce-8ca0-fc3b5978298e"
+    },
+    {
+      "turmaId": "CB2026",
+      "disciplina": "ECOLOGIA GERAL",
+      "docente": "A definir",
+      "tipo": "pendente",
+      "cor": "#ffd6a5",
+      "dataInicio": "2026-03-23",
+      "dataFim": "2026-07-23",
+      "id": "327b00bf-81ee-4a62-b717-ef976aa0cefe"
+    },
+    {
+      "turmaId": "CB2026",
+      "disciplina": "MATEMATICA BASICA",
+      "docente": "A definir",
+      "tipo": "pendente",
+      "cor": "#fdffb6",
+      "dataInicio": "2026-03-23",
+      "dataFim": "2026-07-23",
+      "id": "a8a255b8-9c12-4100-82a7-ffe4f880932c"
+    },
+    {
+      "turmaId": "CB2026",
+      "disciplina": "DIDATICA APLICADA A FORMACAO DOCENTE",
+      "docente": "A definir",
+      "tipo": "pendente",
+      "cor": "#caffbf",
+      "dataInicio": "2026-03-23",
+      "dataFim": "2026-07-23",
+      "id": "562e23be-2d97-4e17-aef0-b3b79559f024"
+    },
+    {
+      "turmaId": "CB2026",
+      "disciplina": "BIOLOGIA EVOLUTIVA DO DESENVOLVIMENTO",
+      "docente": "A definir",
+      "tipo": "pendente",
+      "cor": "#a0c4ff",
+      "dataInicio": "2026-03-23",
+      "dataFim": "2026-07-23",
+      "id": "2147d876-308f-4c44-be08-c4c151376354"
+    },
+    {
+      "turmaId": "CB2026",
+      "disciplina": "FILOSOFIA E HISTORIA DA CIENCIA",
+      "docente": "A definir",
+      "tipo": "pendente",
+      "cor": "#bdb2ff",
+      "dataInicio": "2026-03-23",
+      "dataFim": "2026-07-23",
+      "id": "2279637e-d12b-4119-a020-acc0d1da4d90"
+    },
+    {
+      "turmaId": "CB2026",
+      "disciplina": "AVALIACAO NO PROCESSO EDUCACIONAL",
+      "docente": "A definir",
+      "tipo": "pendente",
+      "cor": "#ffc6ff",
+      "dataInicio": "2026-03-23",
+      "dataFim": "2026-07-23",
+      "id": "da991278-630a-4cfb-adb1-0aee28912399"
+    },
+    {
+      "turmaId": "CB2026",
+      "disciplina": "DIVERSIDADE DE ALGAS",
+      "docente": "A definir",
+      "tipo": "pendente",
+      "cor": "#e0bbe4",
+      "dataInicio": "2026-03-23",
+      "dataFim": "2026-07-23",
+      "id": "24f666f6-0bf1-483e-ba20-65a9ed695fdc"
+    },
+    {
+      "turmaId": "CB2026",
+      "disciplina": "TEMAS CONTEMPORANEOS PARA A EDUCACAO",
+      "docente": "A definir",
+      "tipo": "pendente",
+      "cor": "#ffdfd3",
+      "dataInicio": "2026-03-23",
+      "dataFim": "2026-07-23",
+      "id": "4dae79b4-dd5e-4bee-bff9-7763b9979ce8"
+    },
+    {
+      "turmaId": "CB2026",
+      "disciplina": "TEMAS SOCIOAMBIENTAIS E CULTURAIS",
+      "docente": "A definir",
+      "tipo": "pendente",
+      "cor": "#ffc2c2",
+      "dataInicio": "2026-03-23",
+      "dataFim": "2026-07-23",
+      "id": "2b2eb8ae-dd8f-45e1-af4a-3365169f8488"
+    },
+    {
+      "turmaId": "CB2026",
+      "disciplina": "TOPICOS ESPECIAIS: ENSINO DE ECOLOGIA",
+      "docente": "A definir",
+      "tipo": "pendente",
+      "cor": "#ffe2b9",
+      "dataInicio": "2026-03-23",
+      "dataFim": "2026-07-23",
+      "id": "52ba463f-736c-4061-bd27-38b6ff80ee2b"
+    },
+    {
+      "turmaId": "CB2026",
+      "disciplina": "TOPICOS ESPECIAIS: ENSINO EM EDUCACAO",
+      "docente": "A definir",
+      "tipo": "pendente",
+      "cor": "#feffcc",
+      "dataInicio": "2026-03-23",
+      "dataFim": "2026-07-23",
+      "id": "c084b33d-096f-4d65-8c64-a146415dafcc"
+    },
+    {
+      "turmaId": "CB2026",
+      "disciplina": "ECOLOGIA GERAL",
+      "docente": "Moirah Paula Machado de Menezes",
+      "docentes": null,
+      "tipo": "intensiva",
+      "ch": 75,
+      "dataInicio": "2026-04-07",
+      "dataFim": "2026-04-28",
+      "modelo": "Automático",
+      "horariosOcupados": [
+        "08:20 - 09:10",
+        "09:10 - 10:00",
+        "10:20 - 11:10",
+        "11:10 - 12:00"
+      ],
+      "usaSabado": true,
+      "cor": "#f1b974",
+      "id": "59f1bfb9-d14b-4967-a149-7abad9d654e6",
+      "horariosUltimoDia": [
+        "08:20 - 09:10",
+        "09:10 - 10:00",
+        "10:20 - 11:10"
+      ],
+      "diasMarcados": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "faixas": [
+        {
+          "inicio": "2026-04-07",
+          "fim": "2026-04-28",
+          "dias": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6
+          ],
+          "slots": [
+            "08:20 - 09:10",
+            "09:10 - 10:00",
+            "10:20 - 11:10",
+            "11:10 - 12:00"
+          ],
+          "drawnSlotsByDay": {
+            "1": [
+              "08:20 - 09:10",
+              "09:10 - 10:00",
+              "10:20 - 11:10",
+              "11:10 - 12:00"
+            ],
+            "2": [
+              "08:20 - 09:10",
+              "09:10 - 10:00",
+              "10:20 - 11:10",
+              "11:10 - 12:00"
+            ],
+            "3": [
+              "08:20 - 09:10",
+              "09:10 - 10:00",
+              "10:20 - 11:10",
+              "11:10 - 12:00"
+            ],
+            "4": [
+              "08:20 - 09:10",
+              "09:10 - 10:00",
+              "10:20 - 11:10",
+              "11:10 - 12:00"
+            ],
+            "5": [
+              "08:20 - 09:10",
+              "09:10 - 10:00",
+              "10:20 - 11:10",
+              "11:10 - 12:00"
+            ],
+            "6": [
+              "08:20 - 09:10",
+              "09:10 - 10:00",
+              "10:20 - 11:10",
+              "11:10 - 12:00"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "turmaId": "CB2026",
+      "disciplina": "FILOSOFIA E HISTORIA DA CIENCIA",
+      "docente": "Fábio Batagini Quinteiro",
+      "docentes": null,
+      "tipo": "intensiva",
+      "ch": 30,
+      "dataInicio": "2026-03-26",
+      "dataFim": "2026-04-03",
+      "modelo": "Automático",
+      "horariosOcupados": [
+        "08:20 - 09:10",
+        "09:10 - 10:00",
+        "10:20 - 11:10",
+        "11:10 - 12:00"
+      ],
+      "usaSabado": true,
+      "cor": "#bdb2ff",
+      "id": "f365edd2-5aea-47ef-aac3-e87ef6606f0d",
+      "horariosUltimoDia": [
+        "08:20 - 09:10",
+        "09:10 - 10:00"
+      ],
+      "diasMarcados": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "faixas": [
+        {
+          "inicio": "2026-03-26",
+          "fim": "2026-04-03",
+          "dias": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6
+          ],
+          "slots": [
+            "08:20 - 09:10",
+            "09:10 - 10:00",
+            "10:20 - 11:10",
+            "11:10 - 12:00"
+          ],
+          "drawnSlotsByDay": {
+            "1": [
+              "08:20 - 09:10",
+              "09:10 - 10:00",
+              "10:20 - 11:10",
+              "11:10 - 12:00"
+            ],
+            "2": [
+              "08:20 - 09:10",
+              "09:10 - 10:00",
+              "10:20 - 11:10",
+              "11:10 - 12:00"
+            ],
+            "3": [
+              "08:20 - 09:10",
+              "09:10 - 10:00",
+              "10:20 - 11:10",
+              "11:10 - 12:00"
+            ],
+            "4": [
+              "08:20 - 09:10",
+              "09:10 - 10:00",
+              "10:20 - 11:10",
+              "11:10 - 12:00"
+            ],
+            "5": [
+              "08:20 - 09:10",
+              "09:10 - 10:00",
+              "10:20 - 11:10",
+              "11:10 - 12:00"
+            ],
+            "6": [
+              "08:20 - 09:10",
+              "09:10 - 10:00",
+              "10:20 - 11:10",
+              "11:10 - 12:00"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "turmaId": "CB2026",
+      "disciplina": "INICIACAO A COMPUTACAO",
+      "docente": "Carlos Murilo Tenório Maciel",
+      "docentes": null,
+      "tipo": "intensiva",
+      "ch": 30,
+      "dataInicio": "2026-07-16",
+      "dataFim": "2026-07-24",
+      "modelo": "Automático",
+      "horariosOcupados": [
+        "08:20 - 09:10",
+        "09:10 - 10:00",
+        "10:20 - 11:10",
+        "11:10 - 12:00"
+      ],
+      "usaSabado": true,
+      "subGrupo": null,
+      "cor": "#5ae790",
+      "id": "d5a1d7e4-78d5-4207-8369-69c6fe0c4774",
+      "horariosUltimoDia": [
+        "08:20 - 09:10",
+        "09:10 - 10:00"
+      ],
+      "diasMarcados": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "faixas": [
+        {
+          "inicio": "2026-07-16",
+          "fim": "2026-07-24",
+          "dias": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6
+          ],
+          "slots": [
+            "08:20 - 09:10",
+            "09:10 - 10:00",
+            "10:20 - 11:10",
+            "11:10 - 12:00"
+          ],
+          "drawnSlotsByDay": {
+            "1": [
+              "08:20 - 09:10",
+              "09:10 - 10:00",
+              "10:20 - 11:10",
+              "11:10 - 12:00"
+            ],
+            "2": [
+              "08:20 - 09:10",
+              "09:10 - 10:00",
+              "10:20 - 11:10",
+              "11:10 - 12:00"
+            ],
+            "3": [
+              "08:20 - 09:10",
+              "09:10 - 10:00",
+              "10:20 - 11:10",
+              "11:10 - 12:00"
+            ],
+            "4": [
+              "08:20 - 09:10",
+              "09:10 - 10:00",
+              "10:20 - 11:10",
+              "11:10 - 12:00"
+            ],
+            "5": [
+              "08:20 - 09:10",
+              "09:10 - 10:00",
+              "10:20 - 11:10",
+              "11:10 - 12:00"
+            ],
+            "6": [
+              "08:20 - 09:10",
+              "09:10 - 10:00",
+              "10:20 - 11:10",
+              "11:10 - 12:00"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "turmaId": "CB2026",
+      "disciplina": "INICIACAO A COMPUTACAO",
+      "docente": "Carlos Murilo Tenório Maciel",
+      "docentes": null,
+      "tipo": "intensiva",
+      "ch": 30,
+      "dataInicio": "2026-07-06",
+      "dataFim": "2026-07-14",
+      "modelo": "Automático",
+      "horariosOcupados": [
+        "08:20 - 09:10",
+        "09:10 - 10:00",
+        "10:20 - 11:10",
+        "11:10 - 12:00"
+      ],
+      "usaSabado": true,
+      "subGrupo": null,
+      "cor": "#cfed35",
+      "id": "eca41d25-5072-4616-a165-b729acfde0b3",
+      "horariosUltimoDia": [
+        "08:20 - 09:10",
+        "09:10 - 10:00"
+      ],
+      "diasMarcados": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "faixas": [
+        {
+          "inicio": "2026-07-06",
+          "fim": "2026-07-14",
+          "dias": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6
+          ],
+          "slots": [
+            "08:20 - 09:10",
+            "09:10 - 10:00",
+            "10:20 - 11:10",
+            "11:10 - 12:00"
+          ],
+          "drawnSlotsByDay": {
+            "1": [
+              "08:20 - 09:10",
+              "09:10 - 10:00",
+              "10:20 - 11:10",
+              "11:10 - 12:00"
+            ],
+            "2": [
+              "08:20 - 09:10",
+              "09:10 - 10:00",
+              "10:20 - 11:10",
+              "11:10 - 12:00"
+            ],
+            "3": [
+              "08:20 - 09:10",
+              "09:10 - 10:00",
+              "10:20 - 11:10",
+              "11:10 - 12:00"
+            ],
+            "4": [
+              "08:20 - 09:10",
+              "09:10 - 10:00",
+              "10:20 - 11:10",
+              "11:10 - 12:00"
+            ],
+            "5": [
+              "08:20 - 09:10",
+              "09:10 - 10:00",
+              "10:20 - 11:10",
+              "11:10 - 12:00"
+            ],
+            "6": [
+              "08:20 - 09:10",
+              "09:10 - 10:00",
+              "10:20 - 11:10",
+              "11:10 - 12:00"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "turmaId": "CB2026",
+      "disciplina": "INICIACAO A COMPUTACAO",
+      "docente": "A definir",
+      "tipo": "pendente",
+      "cor": "#9bf6ff",
+      "dataInicio": "2026-03-23",
+      "dataFim": "2026-07-23",
+      "id": "e6f0c717-ac84-4c93-9685-ce63ed63efc3"
+    },
+    {
+      "turmaId": "CB2025",
+      "disciplina": "BIOLOGIA CELULAR E MOLECULAR",
+      "docente": "A definir",
+      "tipo": "pendente",
+      "cor": "#ffadad",
+      "dataInicio": "2025-03-24",
+      "dataFim": "2026-07-24",
+      "subGrupo": "BLI",
+      "id": "9d7151f0-5b6b-4f39-9c7c-09d3f16c3e14"
+    },
+    {
+      "turmaId": "CB2025",
+      "disciplina": "ECOLOGIA GERAL",
+      "docente": "A definir",
+      "tipo": "pendente",
+      "cor": "#ffd6a5",
+      "dataInicio": "2025-03-24",
+      "dataFim": "2026-07-24",
+      "subGrupo": "BLI",
+      "id": "6ba1a388-db5d-466e-9a7e-24eaa8e9b6a0"
+    },
+    {
+      "turmaId": "CB2025",
+      "disciplina": "MATEMATICA BASICA",
+      "docente": "A definir",
+      "tipo": "pendente",
+      "cor": "#fdffb6",
+      "dataInicio": "2025-03-24",
+      "dataFim": "2026-07-24",
+      "subGrupo": "BLI",
+      "id": "0e356360-8868-4d8a-a97b-8d9064ce1d86"
+    },
+    {
+      "turmaId": "CB2025",
+      "disciplina": "DIDATICA APLICADA A FORMACAO DOCENTE",
+      "docente": "A definir",
+      "tipo": "pendente",
+      "cor": "#caffbf",
+      "dataInicio": "2025-03-24",
+      "dataFim": "2026-07-24",
+      "subGrupo": "BLI",
+      "id": "7fb818fe-e026-4e5c-b079-8f1ed57b2a17"
+    },
+    {
+      "turmaId": "CB2025",
+      "disciplina": "INICIACAO A COMPUTACAO",
+      "docente": "A definir",
+      "tipo": "pendente",
+      "cor": "#9bf6ff",
+      "dataInicio": "2025-03-24",
+      "dataFim": "2026-07-24",
+      "subGrupo": "BLI",
+      "id": "847ee019-cb48-44aa-9171-d731480f7743"
+    },
+    {
+      "turmaId": "CB2025",
+      "disciplina": "BIOLOGIA EVOLUTIVA DO DESENVOLVIMENTO",
+      "docente": "A definir",
+      "tipo": "pendente",
+      "cor": "#a0c4ff",
+      "dataInicio": "2025-03-24",
+      "dataFim": "2026-07-24",
+      "subGrupo": "BLI",
+      "id": "c179e952-f6af-48f2-88a6-d092cdf172df"
+    },
+    {
+      "turmaId": "CB2025",
+      "disciplina": "FILOSOFIA E HISTORIA DA CIENCIA",
+      "docente": "A definir",
+      "tipo": "pendente",
+      "cor": "#bdb2ff",
+      "dataInicio": "2025-03-24",
+      "dataFim": "2026-07-24",
+      "subGrupo": "BLI",
+      "id": "384f706e-70f4-4477-9dd0-4ed9c04129bb"
+    },
+    {
+      "turmaId": "CB2025",
+      "disciplina": "AVALIACAO NO PROCESSO EDUCACIONAL",
+      "docente": "A definir",
+      "tipo": "pendente",
+      "cor": "#ffc6ff",
+      "dataInicio": "2025-03-24",
+      "dataFim": "2026-07-24",
+      "subGrupo": "BLI",
+      "id": "2d6c773d-9efb-4c2f-93a2-423a6ab7c79e"
+    },
+    {
+      "turmaId": "CB2025",
+      "disciplina": "DIVERSIDADE DE ALGAS",
+      "docente": "A definir",
+      "tipo": "pendente",
+      "cor": "#e0bbe4",
+      "dataInicio": "2025-03-24",
+      "dataFim": "2026-07-24",
+      "subGrupo": "BLI",
+      "id": "395965a7-3d5d-45bd-8ae7-a9f929c25086"
+    },
+    {
+      "turmaId": "CB2025",
+      "disciplina": "TEMAS CONTEMPORANEOS PARA A EDUCACAO",
+      "docente": "A definir",
+      "tipo": "pendente",
+      "cor": "#ffdfd3",
+      "dataInicio": "2025-03-24",
+      "dataFim": "2026-07-24",
+      "subGrupo": "BLI",
+      "id": "1174135a-aab1-4d75-bb7d-361755f6b643"
+    },
+    {
+      "turmaId": "CB2025",
+      "disciplina": "TEMAS SOCIOAMBIENTAIS E CULTURAIS",
+      "docente": "A definir",
+      "tipo": "pendente",
+      "cor": "#ffc2c2",
+      "dataInicio": "2025-03-24",
+      "dataFim": "2026-07-24",
+      "subGrupo": "BLI",
+      "id": "5183ef35-e33e-4fc6-9a85-f1f2cc45828d"
+    },
+    {
+      "turmaId": "CB2025",
+      "disciplina": "TOPICOS ESPECIAIS: ENSINO DE ECOLOGIA",
+      "docente": "A definir",
+      "tipo": "pendente",
+      "cor": "#ffe2b9",
+      "dataInicio": "2025-03-24",
+      "dataFim": "2026-07-24",
+      "subGrupo": "BLI",
+      "id": "f0cc2e5b-8313-4d23-addd-fb4e0fc26ccf"
+    },
+    {
+      "turmaId": "CB2025",
+      "disciplina": "TOPICOS ESPECIAIS: ENSINO EM EDUCACAO",
+      "docente": "A definir",
+      "tipo": "pendente",
+      "cor": "#feffcc",
+      "dataInicio": "2025-03-24",
+      "dataFim": "2026-07-24",
+      "subGrupo": "BLI",
+      "id": "2ce036d2-d6ea-428c-9977-effe2ddcc21a"
+    },
+    {
+      "turmaId": "CB2025",
+      "disciplina": "METODOLOGIA CIENTIFICA",
+      "docente": "Fábio Batagini Quinteiro",
+      "docentes": null,
+      "tipo": "intensiva",
+      "ch": 15,
+      "dataInicio": "2026-04-08",
+      "dataFim": "2026-04-13",
+      "modelo": "Automatico",
+      "horariosOcupados": [
+        "14:20 - 15:10",
+        "15:10 - 16:00",
+        "16:20 - 17:10",
+        "17:10 - 18:00"
+      ],
+      "horariosUltimoDia": [
+        "14:20 - 15:10",
+        "15:10 - 16:00",
+        "16:20 - 17:10"
+      ],
+      "diasMarcados": [
+        1,
+        3,
+        4,
+        5
+      ],
+      "usaSabado": false,
+      "faixas": [
+        {
+          "inicio": "2026-04-08",
+          "fim": "2026-04-13",
+          "dias": [
+            1,
+            2,
+            3,
+            4,
+            5
+          ],
+          "slots": [
+            "14:20 - 15:10",
+            "15:10 - 16:00",
+            "16:20 - 17:10",
+            "17:10 - 18:00"
+          ],
+          "drawnSlotsByDay": {
+            "1": [
+              "14:20 - 15:10",
+              "15:10 - 16:00",
+              "16:20 - 17:10",
+              "17:10 - 18:00"
+            ],
+            "2": [
+              "14:20 - 15:10",
+              "15:10 - 16:00",
+              "16:20 - 17:10",
+              "17:10 - 18:00"
+            ],
+            "3": [
+              "14:20 - 15:10",
+              "15:10 - 16:00",
+              "16:20 - 17:10",
+              "17:10 - 18:00"
+            ],
+            "4": [
+              "14:20 - 15:10",
+              "15:10 - 16:00",
+              "16:20 - 17:10",
+              "17:10 - 18:00"
+            ],
+            "5": [
+              "14:20 - 15:10",
+              "15:10 - 16:00",
+              "16:20 - 17:10",
+              "17:10 - 18:00"
+            ]
+          }
+        }
+      ],
+      "subGrupo": null,
+      "cor": "#e91e63",
+      "id": "7a0ef768-b4c4-48b0-b5e5-263e17c9e943"
+    },
+    {
+      "turmaId": "CB2025",
+      "disciplina": "LIBRAS I",
+      "docente": "Gláucia Caroline Silva de Oliveira",
+      "docentes": null,
+      "tipo": "intensiva",
+      "ch": 45,
+      "dataInicio": "2026-03-23",
+      "dataFim": "2026-04-07",
+      "modelo": "Automatico",
+      "horariosOcupados": [
+        "14:20 - 15:10",
+        "15:10 - 16:00",
+        "16:20 - 17:10",
+        "17:10 - 18:00"
+      ],
+      "horariosUltimoDia": [
+        "14:20 - 15:10",
+        "15:10 - 16:00",
+        "16:20 - 17:10",
+        "17:10 - 18:00"
+      ],
+      "diasMarcados": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "usaSabado": false,
+      "faixas": [
+        {
+          "inicio": "2026-03-23",
+          "fim": "2026-04-07",
+          "dias": [
+            1,
+            2,
+            3,
+            4,
+            5
+          ],
+          "slots": [
+            "14:20 - 15:10",
+            "15:10 - 16:00",
+            "16:20 - 17:10",
+            "17:10 - 18:00"
+          ],
+          "drawnSlotsByDay": {
+            "1": [
+              "14:20 - 15:10",
+              "15:10 - 16:00",
+              "16:20 - 17:10",
+              "17:10 - 18:00"
+            ],
+            "2": [
+              "14:20 - 15:10",
+              "15:10 - 16:00",
+              "16:20 - 17:10",
+              "17:10 - 18:00"
+            ],
+            "3": [
+              "14:20 - 15:10",
+              "15:10 - 16:00",
+              "16:20 - 17:10",
+              "17:10 - 18:00"
+            ],
+            "4": [
+              "14:20 - 15:10",
+              "15:10 - 16:00",
+              "16:20 - 17:10",
+              "17:10 - 18:00"
+            ],
+            "5": [
+              "14:20 - 15:10",
+              "15:10 - 16:00",
+              "16:20 - 17:10",
+              "17:10 - 18:00"
+            ]
+          }
+        }
+      ],
+      "subGrupo": null,
+      "cor": "#a79cea",
+      "id": "98e03699-ab24-4c24-aff8-bd904c3c46fd"
+    },
+    {
+      "turmaId": "CB2025",
+      "disciplina": "BIOESTATISTICA I",
+      "docente": "Colin Robert Beasley",
+      "docentes": null,
+      "tipo": "intensiva",
+      "ch": 45,
+      "dataInicio": "2026-05-13",
+      "dataFim": "2026-05-28",
+      "modelo": "Automatico",
+      "horariosOcupados": [
+        "14:20 - 15:10",
+        "15:10 - 16:00",
+        "16:20 - 17:10",
+        "17:10 - 18:00"
+      ],
+      "horariosUltimoDia": [
+        "14:20 - 15:10"
+      ],
+      "diasMarcados": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "usaSabado": false,
+      "faixas": [
+        {
+          "inicio": "2026-05-13",
+          "fim": "2026-05-28",
+          "dias": [
+            1,
+            2,
+            3,
+            4,
+            5
+          ],
+          "slots": [
+            "14:20 - 15:10",
+            "15:10 - 16:00",
+            "16:20 - 17:10",
+            "17:10 - 18:00"
+          ],
+          "drawnSlotsByDay": {
+            "1": [
+              "14:20 - 15:10",
+              "15:10 - 16:00",
+              "16:20 - 17:10",
+              "17:10 - 18:00"
+            ],
+            "2": [
+              "14:20 - 15:10",
+              "15:10 - 16:00",
+              "16:20 - 17:10",
+              "17:10 - 18:00"
+            ],
+            "3": [
+              "14:20 - 15:10",
+              "15:10 - 16:00",
+              "16:20 - 17:10",
+              "17:10 - 18:00"
+            ],
+            "4": [
+              "14:20 - 15:10",
+              "15:10 - 16:00",
+              "16:20 - 17:10",
+              "17:10 - 18:00"
+            ],
+            "5": [
+              "14:20 - 15:10",
+              "15:10 - 16:00",
+              "16:20 - 17:10",
+              "17:10 - 18:00"
+            ]
+          }
+        }
+      ],
+      "subGrupo": null,
+      "cor": "#b7f2ab",
+      "id": "2ee57888-c29b-4a01-9c3b-9be3a95a1839"
+    },
+    {
+      "turmaId": "CB2025",
+      "disciplina": "INTRODUCAO AOS EUCARIONTES",
+      "docente": "Rauquírio André Albuquerque Marinho da Costa",
+      "docentes": null,
+      "tipo": "intensiva",
+      "ch": 45,
+      "dataInicio": "2026-06-01",
+      "dataFim": "2026-06-13",
+      "modelo": "Automatico",
+      "horariosOcupados": [
+        "14:20 - 15:10",
+        "15:10 - 16:00",
+        "16:20 - 17:10",
+        "17:10 - 18:00"
+      ],
+      "horariosUltimoDia": [
+        "14:20 - 15:10",
+        "15:10 - 16:00",
+        "16:20 - 17:10",
+        "17:10 - 18:00"
+      ],
+      "diasMarcados": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "usaSabado": true,
+      "faixas": [
+        {
+          "inicio": "2026-06-01",
+          "fim": "2026-06-13",
+          "dias": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6
+          ],
+          "slots": [
+            "14:20 - 15:10",
+            "15:10 - 16:00",
+            "16:20 - 17:10",
+            "17:10 - 18:00"
+          ],
+          "drawnSlotsByDay": {
+            "1": [
+              "14:20 - 15:10",
+              "15:10 - 16:00",
+              "16:20 - 17:10",
+              "17:10 - 18:00"
+            ],
+            "2": [
+              "14:20 - 15:10",
+              "15:10 - 16:00",
+              "16:20 - 17:10",
+              "17:10 - 18:00"
+            ],
+            "3": [
+              "14:20 - 15:10",
+              "15:10 - 16:00",
+              "16:20 - 17:10",
+              "17:10 - 18:00"
+            ],
+            "4": [
+              "14:20 - 15:10",
+              "15:10 - 16:00",
+              "16:20 - 17:10",
+              "17:10 - 18:00"
+            ],
+            "5": [
+              "14:20 - 15:10",
+              "15:10 - 16:00",
+              "16:20 - 17:10",
+              "17:10 - 18:00"
+            ],
+            "6": [
+              "14:20 - 15:10",
+              "15:10 - 16:00",
+              "16:20 - 17:10",
+              "17:10 - 18:00"
+            ]
+          }
+        }
+      ],
+      "subGrupo": null,
+      "cor": "#f29898",
+      "id": "03dbc7a9-c9b7-4b17-b353-762a5c665c15"
+    },
+    {
+      "turmaId": "CB2025",
+      "disciplina": "DIVERSIDADE DE FUNGOS",
+      "docente": "Leiliane Rocha",
+      "docentes": null,
+      "tipo": "intensiva",
+      "ch": 45,
+      "dataInicio": "2026-06-29",
+      "dataFim": "2026-07-11",
+      "modelo": "Automatico",
+      "horariosOcupados": [
+        "14:20 - 15:10",
+        "15:10 - 16:00",
+        "16:20 - 17:10",
+        "17:10 - 18:00"
+      ],
+      "horariosUltimoDia": [
+        "14:20 - 15:10",
+        "15:10 - 16:00",
+        "16:20 - 17:10",
+        "17:10 - 18:00"
+      ],
+      "diasMarcados": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "usaSabado": true,
+      "faixas": [
+        {
+          "inicio": "2026-06-29",
+          "fim": "2026-07-11",
+          "dias": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6
+          ],
+          "slots": [
+            "14:20 - 15:10",
+            "15:10 - 16:00",
+            "16:20 - 17:10",
+            "17:10 - 18:00"
+          ],
+          "drawnSlotsByDay": {
+            "1": [
+              "14:20 - 15:10",
+              "15:10 - 16:00",
+              "16:20 - 17:10",
+              "17:10 - 18:00"
+            ],
+            "2": [
+              "14:20 - 15:10",
+              "15:10 - 16:00",
+              "16:20 - 17:10",
+              "17:10 - 18:00"
+            ],
+            "3": [
+              "14:20 - 15:10",
+              "15:10 - 16:00",
+              "16:20 - 17:10",
+              "17:10 - 18:00"
+            ],
+            "4": [
+              "14:20 - 15:10",
+              "15:10 - 16:00",
+              "16:20 - 17:10",
+              "17:10 - 18:00"
+            ],
+            "5": [
+              "14:20 - 15:10",
+              "15:10 - 16:00",
+              "16:20 - 17:10",
+              "17:10 - 18:00"
+            ],
+            "6": [
+              "14:20 - 15:10",
+              "15:10 - 16:00",
+              "16:20 - 17:10",
+              "17:10 - 18:00"
+            ]
+          }
+        }
+      ],
+      "subGrupo": null,
+      "cor": "#f2c08f",
+      "id": "d75e9413-ceb5-4497-a85d-2e9efaf6a361"
+    },
+    {
+      "turmaId": "CB2025",
+      "disciplina": "BIOFISICA",
+      "docente": "Vicent Ferrer",
+      "docentes": null,
+      "tipo": "intensiva",
+      "ch": 45,
+      "dataInicio": "2026-07-13",
+      "dataFim": "2026-07-23",
+      "modelo": "Automatico",
+      "horariosOcupados": [
+        "14:20 - 15:10",
+        "15:10 - 16:00",
+        "16:20 - 17:10",
+        "17:10 - 18:00",
+        "18:00 - 18:50"
+      ],
+      "horariosUltimoDia": [
+        "14:20 - 15:10",
+        "15:10 - 16:00"
+      ],
+      "diasMarcados": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "usaSabado": true,
+      "faixas": [
+        {
+          "inicio": "2026-07-13",
+          "fim": "2026-07-23",
+          "dias": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6
+          ],
+          "slots": [
+            "14:20 - 15:10",
+            "15:10 - 16:00",
+            "16:20 - 17:10",
+            "17:10 - 18:00",
+            "18:00 - 18:50"
+          ],
+          "drawnSlotsByDay": {
+            "1": [
+              "14:20 - 15:10",
+              "15:10 - 16:00",
+              "16:20 - 17:10",
+              "17:10 - 18:00",
+              "18:00 - 18:50"
+            ],
+            "2": [
+              "14:20 - 15:10",
+              "15:10 - 16:00",
+              "16:20 - 17:10",
+              "17:10 - 18:00",
+              "18:00 - 18:50"
+            ],
+            "3": [
+              "14:20 - 15:10",
+              "15:10 - 16:00",
+              "16:20 - 17:10",
+              "17:10 - 18:00",
+              "18:00 - 18:50"
+            ],
+            "4": [
+              "14:20 - 15:10",
+              "15:10 - 16:00",
+              "16:20 - 17:10",
+              "17:10 - 18:00",
+              "18:00 - 18:50"
+            ],
+            "5": [
+              "14:20 - 15:10",
+              "15:10 - 16:00",
+              "16:20 - 17:10",
+              "17:10 - 18:00"
+            ],
+            "6": [
+              "14:20 - 15:10",
+              "15:10 - 16:00",
+              "16:20 - 17:10",
+              "17:10 - 18:00"
+            ]
+          }
+        }
+      ],
+      "subGrupo": null,
+      "cor": "#6c72d0",
+      "id": "d7ef5b7c-d8f5-4cca-a74c-9da46fb70f80"
+    },
+    {
+      "turmaId": "CB2024",
+      "disciplina": "DIVERSIDADE VEGETAL I",
+      "docente": "Leiliane Rocha",
+      "docentes": null,
+      "tipo": "intensiva",
+      "ch": 60,
+      "dataInicio": "2026-03-23",
+      "dataFim": "2026-04-11",
+      "modelo": "Automatico",
+      "horariosOcupados": [
+        "08:20 - 09:10",
+        "09:10 - 10:00",
+        "10:20 - 11:10",
+        "11:10 - 12:00"
+      ],
+      "horariosUltimoDia": [
+        "08:20 - 09:10",
+        "09:10 - 10:00",
+        "10:20 - 11:10",
+        "11:10 - 12:00"
+      ],
+      "diasMarcados": [
+        1,
+        2,
+        3,
+        5,
+        6
+      ],
+      "usaSabado": true,
+      "faixas": [
+        {
+          "inicio": "2026-03-23",
+          "fim": "2026-04-11",
+          "dias": [
+            1,
+            2,
+            3,
+            5,
+            6
+          ],
+          "slots": [
+            "08:20 - 09:10",
+            "09:10 - 10:00",
+            "10:20 - 11:10",
+            "11:10 - 12:00"
+          ],
+          "drawnSlotsByDay": {
+            "1": [
+              "08:20 - 09:10",
+              "09:10 - 10:00",
+              "10:20 - 11:10",
+              "11:10 - 12:00"
+            ],
+            "2": [
+              "08:20 - 09:10",
+              "09:10 - 10:00",
+              "10:20 - 11:10",
+              "11:10 - 12:00"
+            ],
+            "3": [
+              "08:20 - 09:10",
+              "09:10 - 10:00",
+              "10:20 - 11:10",
+              "11:10 - 12:00"
+            ],
+            "5": [
+              "08:20 - 09:10",
+              "09:10 - 10:00",
+              "10:20 - 11:10",
+              "11:10 - 12:00"
+            ],
+            "6": [
+              "08:20 - 09:10",
+              "09:10 - 10:00",
+              "10:20 - 11:10",
+              "11:10 - 12:00"
+            ]
+          }
+        }
+      ],
+      "subGrupo": null,
+      "cor": "#e58383",
+      "id": "e8cf1668-9c05-4a96-b34b-035a35ec55c8"
+    },
+    {
+      "turmaId": "CB2024",
+      "disciplina": "ESTAGIO I: ESPACOS NAO FORMAIS",
+      "docente": "Neide Ramos",
+      "docentes": null,
+      "tipo": "intensiva",
+      "ch": 60,
+      "dataInicio": "2026-04-13",
+      "dataFim": "2026-04-29",
+      "modelo": "Automatico",
+      "horariosOcupados": [
+        "08:20 - 09:10",
+        "09:10 - 10:00",
+        "10:20 - 11:10",
+        "11:10 - 12:00"
+      ],
+      "horariosUltimoDia": [
+        "08:20 - 09:10",
+        "09:10 - 10:00",
+        "10:20 - 11:10",
+        "11:10 - 12:00"
+      ],
+      "diasMarcados": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "usaSabado": true,
+      "faixas": [
+        {
+          "inicio": "2026-04-13",
+          "fim": "2026-04-29",
+          "dias": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6
+          ],
+          "slots": [
+            "08:20 - 09:10",
+            "09:10 - 10:00",
+            "10:20 - 11:10",
+            "11:10 - 12:00"
+          ],
+          "drawnSlotsByDay": {
+            "1": [
+              "08:20 - 09:10",
+              "09:10 - 10:00",
+              "10:20 - 11:10",
+              "11:10 - 12:00"
+            ],
+            "2": [
+              "08:20 - 09:10",
+              "09:10 - 10:00",
+              "10:20 - 11:10",
+              "11:10 - 12:00"
+            ],
+            "3": [
+              "08:20 - 09:10",
+              "09:10 - 10:00",
+              "10:20 - 11:10",
+              "11:10 - 12:00"
+            ],
+            "4": [
+              "08:20 - 09:10",
+              "09:10 - 10:00",
+              "10:20 - 11:10",
+              "11:10 - 12:00"
+            ],
+            "5": [
+              "08:20 - 09:10",
+              "09:10 - 10:00",
+              "10:20 - 11:10",
+              "11:10 - 12:00"
+            ],
+            "6": [
+              "08:20 - 09:10",
+              "09:10 - 10:00",
+              "10:20 - 11:10",
+              "11:10 - 12:00"
+            ]
+          }
+        }
+      ],
+      "subGrupo": null,
+      "cor": "#ffe0ff",
+      "id": "d3675816-dfce-43e8-9c1a-7242704113bc"
+    },
+    {
+      "turmaId": "CB2024",
+      "disciplina": "EDUCACAO ESPECIAL E INCLUSIVA",
+      "docente": "Cinthya Arruda",
+      "docentes": null,
+      "tipo": "intensiva",
+      "ch": 45,
+      "dataInicio": "2026-06-03",
+      "dataFim": "2026-06-16",
+      "modelo": "Automatico",
+      "horariosOcupados": [
+        "08:20 - 09:10",
+        "09:10 - 10:00",
+        "10:20 - 11:10",
+        "11:10 - 12:00"
+      ],
+      "horariosUltimoDia": [
+        "08:20 - 09:10",
+        "09:10 - 10:00",
+        "10:20 - 11:10",
+        "11:10 - 12:00"
+      ],
+      "diasMarcados": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "usaSabado": true,
+      "faixas": [
+        {
+          "inicio": "2026-06-03",
+          "fim": "2026-06-16",
+          "dias": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6
+          ],
+          "slots": [
+            "08:20 - 09:10",
+            "09:10 - 10:00",
+            "10:20 - 11:10",
+            "11:10 - 12:00"
+          ],
+          "drawnSlotsByDay": {
+            "1": [
+              "08:20 - 09:10",
+              "09:10 - 10:00",
+              "10:20 - 11:10",
+              "11:10 - 12:00"
+            ],
+            "2": [
+              "08:20 - 09:10",
+              "09:10 - 10:00",
+              "10:20 - 11:10",
+              "11:10 - 12:00"
+            ],
+            "3": [
+              "08:20 - 09:10",
+              "09:10 - 10:00",
+              "10:20 - 11:10",
+              "11:10 - 12:00"
+            ],
+            "4": [
+              "08:20 - 09:10",
+              "09:10 - 10:00",
+              "10:20 - 11:10",
+              "11:10 - 12:00"
+            ],
+            "5": [
+              "08:20 - 09:10",
+              "09:10 - 10:00",
+              "10:20 - 11:10",
+              "11:10 - 12:00"
+            ],
+            "6": [
+              "08:20 - 09:10",
+              "09:10 - 10:00",
+              "10:20 - 11:10",
+              "11:10 - 12:00"
+            ]
+          }
+        }
+      ],
+      "subGrupo": null,
+      "cor": "#fff2ec",
+      "id": "b4f7c857-07d8-4d1b-9c8d-f825921f7e09"
+    },
+    {
+      "turmaId": "CB2024",
+      "disciplina": "EDUCACAO DO CAMPO",
+      "docente": "Lucinaldo da Silva Bandtt",
+      "docentes": null,
+      "tipo": "intensiva",
+      "ch": 45,
+      "dataInicio": "2026-06-17",
+      "dataFim": "2026-06-30",
+      "modelo": "Automatico",
+      "horariosOcupados": [
+        "08:20 - 09:10",
+        "09:10 - 10:00",
+        "10:20 - 11:10",
+        "11:10 - 12:00"
+      ],
+      "horariosUltimoDia": [
+        "08:20 - 09:10"
+      ],
+      "diasMarcados": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "usaSabado": true,
+      "faixas": [
+        {
+          "inicio": "2026-06-17",
+          "fim": "2026-06-30",
+          "dias": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6
+          ],
+          "slots": [
+            "08:20 - 09:10",
+            "09:10 - 10:00",
+            "10:20 - 11:10",
+            "11:10 - 12:00"
+          ],
+          "drawnSlotsByDay": {
+            "1": [
+              "08:20 - 09:10",
+              "09:10 - 10:00",
+              "10:20 - 11:10",
+              "11:10 - 12:00"
+            ],
+            "2": [
+              "08:20 - 09:10",
+              "09:10 - 10:00",
+              "10:20 - 11:10",
+              "11:10 - 12:00"
+            ],
+            "3": [
+              "08:20 - 09:10",
+              "09:10 - 10:00",
+              "10:20 - 11:10",
+              "11:10 - 12:00"
+            ],
+            "4": [
+              "08:20 - 09:10",
+              "09:10 - 10:00",
+              "10:20 - 11:10",
+              "11:10 - 12:00"
+            ],
+            "5": [
+              "08:20 - 09:10",
+              "09:10 - 10:00",
+              "10:20 - 11:10",
+              "11:10 - 12:00"
+            ],
+            "6": [
+              "08:20 - 09:10",
+              "09:10 - 10:00",
+              "10:20 - 11:10",
+              "11:10 - 12:00"
+            ]
+          }
+        }
+      ],
+      "subGrupo": null,
+      "cor": "#c9deff",
+      "id": "e5bda8f8-4d82-45ba-a93d-38b122882393"
+    },
+    {
+      "turmaId": "CB2024",
+      "disciplina": "EVOLUCAO E BIOGEOGRAFIA",
+      "docente": "Cláudia Xavier",
+      "docentes": null,
+      "tipo": "intensiva",
+      "ch": 75,
+      "dataInicio": "2026-07-01",
+      "dataFim": "2026-07-22",
+      "modelo": "Automatico",
+      "horariosOcupados": [
+        "08:20 - 09:10",
+        "09:10 - 10:00",
+        "10:20 - 11:10",
+        "11:10 - 12:00"
+      ],
+      "horariosUltimoDia": [
+        "08:20 - 09:10",
+        "09:10 - 10:00",
+        "10:20 - 11:10",
+        "11:10 - 12:00"
+      ],
+      "diasMarcados": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "usaSabado": true,
+      "faixas": [
+        {
+          "inicio": "2026-07-01",
+          "fim": "2026-07-22",
+          "dias": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6
+          ],
+          "slots": [
+            "08:20 - 09:10",
+            "09:10 - 10:00",
+            "10:20 - 11:10",
+            "11:10 - 12:00"
+          ],
+          "drawnSlotsByDay": {
+            "1": [
+              "08:20 - 09:10",
+              "09:10 - 10:00",
+              "10:20 - 11:10",
+              "11:10 - 12:00"
+            ],
+            "2": [
+              "08:20 - 09:10",
+              "09:10 - 10:00",
+              "10:20 - 11:10",
+              "11:10 - 12:00"
+            ],
+            "3": [
+              "08:20 - 09:10",
+              "09:10 - 10:00",
+              "10:20 - 11:10",
+              "11:10 - 12:00"
+            ],
+            "4": [
+              "08:20 - 09:10",
+              "09:10 - 10:00",
+              "10:20 - 11:10",
+              "11:10 - 12:00"
+            ],
+            "5": [
+              "08:20 - 09:10",
+              "09:10 - 10:00",
+              "10:20 - 11:10",
+              "11:10 - 12:00"
+            ],
+            "6": [
+              "08:20 - 09:10",
+              "09:10 - 10:00",
+              "10:20 - 11:10",
+              "11:10 - 12:00"
+            ]
+          }
+        }
+      ],
+      "subGrupo": null,
+      "cor": "#dcd5ff",
+      "id": "a85a5d30-d6d1-47f3-b571-d3d332021930"
+    },
+    {
+      "turmaId": "CB2024",
+      "disciplina": "PALEONTOLOGIA GERAL",
+      "docente": "Benedito Nunes",
+      "docentes": null,
+      "tipo": "intensiva",
+      "ch": 45,
+      "dataInicio": "2026-05-19",
+      "dataFim": "2026-06-02",
+      "modelo": "Automatico",
+      "horariosOcupados": [
+        "08:20 - 09:10",
+        "09:10 - 10:00",
+        "10:20 - 11:10",
+        "11:10 - 12:00"
+      ],
+      "horariosUltimoDia": [
+        "08:20 - 09:10"
+      ],
+      "diasMarcados": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "usaSabado": true,
+      "faixas": [
+        {
+          "inicio": "2026-05-19",
+          "fim": "2026-06-02",
+          "dias": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6
+          ],
+          "slots": [
+            "08:20 - 09:10",
+            "09:10 - 10:00",
+            "10:20 - 11:10",
+            "11:10 - 12:00"
+          ],
+          "drawnSlotsByDay": {
+            "1": [
+              "08:20 - 09:10",
+              "09:10 - 10:00",
+              "10:20 - 11:10",
+              "11:10 - 12:00"
+            ],
+            "2": [
+              "08:20 - 09:10",
+              "09:10 - 10:00",
+              "10:20 - 11:10",
+              "11:10 - 12:00"
+            ],
+            "3": [
+              "08:20 - 09:10",
+              "09:10 - 10:00",
+              "10:20 - 11:10",
+              "11:10 - 12:00"
+            ],
+            "4": [
+              "08:20 - 09:10",
+              "09:10 - 10:00",
+              "10:20 - 11:10",
+              "11:10 - 12:00"
+            ],
+            "5": [
+              "08:20 - 09:10",
+              "09:10 - 10:00",
+              "10:20 - 11:10",
+              "11:10 - 12:00"
+            ],
+            "6": [
+              "08:20 - 09:10",
+              "09:10 - 10:00"
+            ]
+          }
+        }
+      ],
+      "subGrupo": null,
+      "cor": "#e25a7c",
+      "id": "11e8a63b-f48b-48b3-85f9-1668c07d6176"
+    },
+    {
+      "turmaId": "CB2024",
+      "disciplina": "PSICOLOGIA DA APRENDIZAGEM",
+      "docente": "Darlene Ferreira",
+      "docentes": null,
+      "tipo": "intensiva",
+      "ch": 45,
+      "dataInicio": "2026-05-04",
+      "dataFim": "2026-05-16",
+      "modelo": "Automatico",
+      "horariosOcupados": [
+        "08:20 - 09:10",
+        "09:10 - 10:00",
+        "10:20 - 11:10",
+        "11:10 - 12:00"
+      ],
+      "horariosUltimoDia": [
+        "08:20 - 09:10"
+      ],
+      "diasMarcados": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "usaSabado": true,
+      "faixas": [
+        {
+          "inicio": "2026-05-04",
+          "fim": "2026-05-16",
+          "dias": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6
+          ],
+          "slots": [
+            "08:20 - 09:10",
+            "09:10 - 10:00",
+            "10:20 - 11:10",
+            "11:10 - 12:00"
+          ],
+          "drawnSlotsByDay": {
+            "1": [
+              "08:20 - 09:10",
+              "09:10 - 10:00",
+              "10:20 - 11:10",
+              "11:10 - 12:00"
+            ],
+            "2": [
+              "08:20 - 09:10",
+              "09:10 - 10:00",
+              "10:20 - 11:10",
+              "11:10 - 12:00"
+            ],
+            "3": [
+              "08:20 - 09:10",
+              "09:10 - 10:00",
+              "10:20 - 11:10",
+              "11:10 - 12:00"
+            ],
+            "4": [
+              "08:20 - 09:10",
+              "09:10 - 10:00",
+              "10:20 - 11:10",
+              "11:10 - 12:00"
+            ],
+            "5": [
+              "08:20 - 09:10",
+              "09:10 - 10:00",
+              "10:20 - 11:10",
+              "11:10 - 12:00"
+            ],
+            "6": [
+              "08:20 - 09:10",
+              "09:10 - 10:00",
+              "10:20 - 11:10",
+              "11:10 - 12:00"
+            ]
+          }
+        }
+      ],
+      "subGrupo": null,
+      "cor": "#7bd779",
+      "id": "98691e83-5ecd-4965-8823-422547ada72c"
+    },
+    {
+      "turmaId": "CB2023",
+      "disciplina": "BIOESTATISTICA II",
+      "docente": "Colin Robert Beasley",
+      "docentes": null,
+      "tipo": "intensiva",
+      "ch": 60,
+      "dataInicio": "2026-03-30",
+      "dataFim": "2026-04-16",
+      "modelo": "Automatico",
+      "horariosOcupados": [
+        "14:20 - 15:10",
+        "15:10 - 16:00",
+        "16:20 - 17:10",
+        "17:10 - 18:00"
+      ],
+      "horariosUltimoDia": [
+        "14:20 - 15:10",
+        "15:10 - 16:00",
+        "16:20 - 17:10",
+        "17:10 - 18:00"
+      ],
+      "diasMarcados": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "usaSabado": true,
+      "faixas": [
+        {
+          "inicio": "2026-03-30",
+          "fim": "2026-04-16",
+          "dias": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6
+          ],
+          "slots": [
+            "14:20 - 15:10",
+            "15:10 - 16:00",
+            "16:20 - 17:10",
+            "17:10 - 18:00"
+          ],
+          "drawnSlotsByDay": {
+            "1": [
+              "14:20 - 15:10",
+              "15:10 - 16:00",
+              "16:20 - 17:10",
+              "17:10 - 18:00"
+            ],
+            "2": [
+              "14:20 - 15:10",
+              "15:10 - 16:00",
+              "16:20 - 17:10",
+              "17:10 - 18:00"
+            ],
+            "3": [
+              "14:20 - 15:10",
+              "15:10 - 16:00",
+              "16:20 - 17:10",
+              "17:10 - 18:00"
+            ],
+            "4": [
+              "14:20 - 15:10",
+              "15:10 - 16:00",
+              "16:20 - 17:10",
+              "17:10 - 18:00"
+            ],
+            "5": [
+              "14:20 - 15:10",
+              "15:10 - 16:00",
+              "16:20 - 17:10",
+              "17:10 - 18:00"
+            ],
+            "6": [
+              "14:20 - 15:10",
+              "15:10 - 16:00",
+              "16:20 - 17:10",
+              "17:10 - 18:00"
+            ]
+          }
+        }
+      ],
+      "subGrupo": null,
+      "cor": "#f1ffeb",
+      "id": "f52fdf75-87d4-4a5b-94c5-ec9c393da5ce"
+    },
+    {
+      "turmaId": "CB2023",
+      "disciplina": "DIVERSIDADE VEGETAL III",
+      "docente": "Leiliane Rocha",
+      "docentes": null,
+      "tipo": "intensiva",
+      "ch": 30,
+      "dataInicio": "2026-04-22",
+      "dataFim": "2026-04-30",
+      "modelo": "Automatico",
+      "horariosOcupados": [
+        "14:20 - 15:10",
+        "15:10 - 16:00",
+        "16:20 - 17:10",
+        "17:10 - 18:00"
+      ],
+      "horariosUltimoDia": [
+        "14:20 - 15:10",
+        "15:10 - 16:00"
+      ],
+      "diasMarcados": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "usaSabado": true,
+      "faixas": [
+        {
+          "inicio": "2026-04-22",
+          "fim": "2026-04-30",
+          "dias": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6
+          ],
+          "slots": [
+            "14:20 - 15:10",
+            "15:10 - 16:00",
+            "16:20 - 17:10",
+            "17:10 - 18:00"
+          ],
+          "drawnSlotsByDay": {
+            "1": [
+              "14:20 - 15:10",
+              "15:10 - 16:00",
+              "16:20 - 17:10",
+              "17:10 - 18:00"
+            ],
+            "2": [
+              "14:20 - 15:10",
+              "15:10 - 16:00",
+              "16:20 - 17:10",
+              "17:10 - 18:00"
+            ],
+            "3": [
+              "14:20 - 15:10",
+              "15:10 - 16:00",
+              "16:20 - 17:10",
+              "17:10 - 18:00"
+            ],
+            "4": [
+              "14:20 - 15:10",
+              "15:10 - 16:00",
+              "16:20 - 17:10",
+              "17:10 - 18:00"
+            ],
+            "5": [
+              "14:20 - 15:10",
+              "15:10 - 16:00",
+              "16:20 - 17:10",
+              "17:10 - 18:00"
+            ],
+            "6": [
+              "14:20 - 15:10",
+              "15:10 - 16:00",
+              "16:20 - 17:10",
+              "17:10 - 18:00"
+            ]
+          }
+        }
+      ],
+      "subGrupo": null,
+      "cor": "#ea8d61",
+      "id": "9b819d9c-0773-488e-81f9-1be84f658be6"
+    },
+    {
+      "turmaId": "CB2023",
+      "disciplina": "BIOLOGIA MARINHA",
+      "docente": "Luci Cajueiro Carneiro Pereira",
+      "docentes": null,
+      "tipo": "intensiva",
+      "ch": 60,
+      "dataInicio": "2026-05-04",
+      "dataFim": "2026-05-22",
+      "modelo": "Automatico",
+      "horariosOcupados": [
+        "14:20 - 15:10",
+        "15:10 - 16:00",
+        "16:20 - 17:10",
+        "17:10 - 18:00"
+      ],
+      "horariosUltimoDia": [
+        "14:20 - 15:10",
+        "15:10 - 16:00",
+        "16:20 - 17:10",
+        "17:10 - 18:00"
+      ],
+      "diasMarcados": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "usaSabado": false,
+      "faixas": [
+        {
+          "inicio": "2026-05-04",
+          "fim": "2026-05-22",
+          "dias": [
+            1,
+            2,
+            3,
+            4,
+            5
+          ],
+          "slots": [
+            "14:20 - 15:10",
+            "15:10 - 16:00",
+            "16:20 - 17:10",
+            "17:10 - 18:00"
+          ],
+          "drawnSlotsByDay": {
+            "1": [
+              "14:20 - 15:10",
+              "15:10 - 16:00",
+              "16:20 - 17:10",
+              "17:10 - 18:00"
+            ],
+            "2": [
+              "14:20 - 15:10",
+              "15:10 - 16:00",
+              "16:20 - 17:10",
+              "17:10 - 18:00"
+            ],
+            "3": [
+              "14:20 - 15:10",
+              "15:10 - 16:00",
+              "16:20 - 17:10",
+              "17:10 - 18:00"
+            ],
+            "4": [
+              "14:20 - 15:10",
+              "15:10 - 16:00",
+              "16:20 - 17:10",
+              "17:10 - 18:00"
+            ],
+            "5": [
+              "14:20 - 15:10",
+              "15:10 - 16:00",
+              "16:20 - 17:10",
+              "17:10 - 18:00"
+            ]
+          }
+        }
+      ],
+      "subGrupo": null,
+      "cor": "#e2b928",
+      "id": "ec515aa7-ae7d-4d93-8577-3ab94f586286"
+    },
+    {
+      "turmaId": "CB2023",
+      "disciplina": "ECOLOGIA DE POPULACOES",
+      "docente": "Marcus Emanuel Barroncas Fernandes",
+      "docentes": null,
+      "tipo": "intensiva",
+      "ch": 75,
+      "dataInicio": "2026-06-08",
+      "dataFim": "2026-07-02",
+      "modelo": "Automatico",
+      "horariosOcupados": [
+        "14:20 - 15:10",
+        "15:10 - 16:00",
+        "16:20 - 17:10",
+        "17:10 - 18:00"
+      ],
+      "horariosUltimoDia": [
+        "14:20 - 15:10",
+        "15:10 - 16:00",
+        "16:20 - 17:10"
+      ],
+      "diasMarcados": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "usaSabado": false,
+      "faixas": [
+        {
+          "inicio": "2026-06-08",
+          "fim": "2026-07-02",
+          "dias": [
+            1,
+            2,
+            3,
+            4,
+            5
+          ],
+          "slots": [
+            "14:20 - 15:10",
+            "15:10 - 16:00",
+            "16:20 - 17:10",
+            "17:10 - 18:00"
+          ],
+          "drawnSlotsByDay": {
+            "1": [
+              "14:20 - 15:10",
+              "15:10 - 16:00",
+              "16:20 - 17:10",
+              "17:10 - 18:00"
+            ],
+            "2": [
+              "14:20 - 15:10",
+              "15:10 - 16:00",
+              "16:20 - 17:10",
+              "17:10 - 18:00"
+            ],
+            "3": [
+              "14:20 - 15:10",
+              "15:10 - 16:00",
+              "16:20 - 17:10",
+              "17:10 - 18:00"
+            ],
+            "4": [
+              "14:20 - 15:10",
+              "15:10 - 16:00",
+              "16:20 - 17:10",
+              "17:10 - 18:00"
+            ],
+            "5": [
+              "14:20 - 15:10",
+              "15:10 - 16:00",
+              "16:20 - 17:10",
+              "17:10 - 18:00"
+            ]
+          }
+        }
+      ],
+      "subGrupo": null,
+      "cor": "#6c47f0",
+      "id": "bb6bc902-6659-47a6-9712-35450a0fd219"
+    },
+    {
+      "turmaId": "CB2022",
+      "disciplina": "MORFOFISIOLOGIA ANIMAL II",
+      "docente": "Cláudia Xavier",
+      "docentes": null,
+      "tipo": "intensiva",
+      "ch": 75,
+      "dataInicio": "2026-03-30",
+      "dataFim": "2026-04-27",
+      "modelo": "Automatico",
+      "horariosOcupados": [
+        "08:20 - 09:10",
+        "09:10 - 10:00",
+        "10:20 - 11:10",
+        "11:10 - 12:00"
+      ],
+      "horariosUltimoDia": [
+        "08:20 - 09:10",
+        "09:10 - 10:00",
+        "10:20 - 11:10"
+      ],
+      "diasMarcados": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "usaSabado": false,
+      "faixas": [
+        {
+          "inicio": "2026-03-30",
+          "fim": "2026-04-27",
+          "dias": [
+            1,
+            2,
+            3,
+            4,
+            5
+          ],
+          "slots": [
+            "08:20 - 09:10",
+            "09:10 - 10:00",
+            "10:20 - 11:10",
+            "11:10 - 12:00"
+          ],
+          "drawnSlotsByDay": {
+            "1": [
+              "08:20 - 09:10",
+              "09:10 - 10:00",
+              "10:20 - 11:10",
+              "11:10 - 12:00"
+            ],
+            "2": [
+              "08:20 - 09:10",
+              "09:10 - 10:00",
+              "10:20 - 11:10",
+              "11:10 - 12:00"
+            ],
+            "3": [
+              "08:20 - 09:10",
+              "09:10 - 10:00",
+              "10:20 - 11:10",
+              "11:10 - 12:00"
+            ],
+            "4": [
+              "08:20 - 09:10",
+              "09:10 - 10:00",
+              "10:20 - 11:10",
+              "11:10 - 12:00"
+            ],
+            "5": [
+              "08:20 - 09:10",
+              "09:10 - 10:00",
+              "10:20 - 11:10",
+              "11:10 - 12:00"
+            ]
+          }
+        }
+      ],
+      "subGrupo": null,
+      "cor": "#d89663",
+      "id": "b9701a2c-7092-44d4-885c-f11eebc7b48e"
+    },
+    {
+      "turmaId": "CB2022",
+      "disciplina": "BIOLOGIA DA CONSERVACAO",
+      "docente": "Colin Robert Beasley",
+      "docentes": null,
+      "tipo": "intensiva",
+      "ch": 60,
+      "dataInicio": "2026-06-01",
+      "dataFim": "2026-06-22",
+      "modelo": "Automatico",
+      "horariosOcupados": [
+        "08:20 - 09:10",
+        "09:10 - 10:00",
+        "10:20 - 11:10",
+        "11:10 - 12:00"
+      ],
+      "horariosUltimoDia": [
+        "08:20 - 09:10",
+        "09:10 - 10:00",
+        "10:20 - 11:10",
+        "11:10 - 12:00"
+      ],
+      "diasMarcados": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "usaSabado": false,
+      "faixas": [
+        {
+          "inicio": "2026-06-01",
+          "fim": "2026-06-22",
+          "dias": [
+            1,
+            2,
+            3,
+            4,
+            5
+          ],
+          "slots": [
+            "08:20 - 09:10",
+            "09:10 - 10:00",
+            "10:20 - 11:10",
+            "11:10 - 12:00"
+          ],
+          "drawnSlotsByDay": {
+            "1": [
+              "08:20 - 09:10",
+              "09:10 - 10:00",
+              "10:20 - 11:10",
+              "11:10 - 12:00"
+            ],
+            "2": [
+              "08:20 - 09:10",
+              "09:10 - 10:00",
+              "10:20 - 11:10",
+              "11:10 - 12:00"
+            ],
+            "3": [
+              "08:20 - 09:10",
+              "09:10 - 10:00",
+              "10:20 - 11:10",
+              "11:10 - 12:00"
+            ],
+            "4": [
+              "08:20 - 09:10",
+              "09:10 - 10:00",
+              "10:20 - 11:10",
+              "11:10 - 12:00"
+            ],
+            "5": [
+              "08:20 - 09:10",
+              "09:10 - 10:00",
+              "10:20 - 11:10",
+              "11:10 - 12:00"
+            ]
+          }
+        }
+      ],
+      "subGrupo": null,
+      "cor": "#d86e6e",
+      "id": "24812484-55fa-4cb4-91c3-6cdcb4427d21"
+    },
+    {
+      "turmaId": "CB2022",
+      "disciplina": "PARASITOLOGIA",
+      "docente": "Benedito Nunes",
+      "docentes": null,
+      "tipo": "intensiva",
+      "ch": 60,
+      "dataInicio": "2026-06-24",
+      "dataFim": "2026-07-11",
+      "modelo": "Automatico",
+      "horariosOcupados": [
+        "08:20 - 09:10",
+        "09:10 - 10:00",
+        "10:20 - 11:10",
+        "11:10 - 12:00"
+      ],
+      "horariosUltimoDia": [
+        "08:20 - 09:10",
+        "09:10 - 10:00",
+        "10:20 - 11:10",
+        "11:10 - 12:00"
+      ],
+      "diasMarcados": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "usaSabado": true,
+      "faixas": [
+        {
+          "inicio": "2026-06-24",
+          "fim": "2026-07-11",
+          "dias": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6
+          ],
+          "slots": [
+            "08:20 - 09:10",
+            "09:10 - 10:00",
+            "10:20 - 11:10",
+            "11:10 - 12:00"
+          ],
+          "drawnSlotsByDay": {
+            "1": [
+              "08:20 - 09:10",
+              "09:10 - 10:00",
+              "10:20 - 11:10",
+              "11:10 - 12:00"
+            ],
+            "2": [
+              "08:20 - 09:10",
+              "09:10 - 10:00",
+              "10:20 - 11:10",
+              "11:10 - 12:00"
+            ],
+            "3": [
+              "08:20 - 09:10",
+              "09:10 - 10:00",
+              "10:20 - 11:10",
+              "11:10 - 12:00"
+            ],
+            "4": [
+              "08:20 - 09:10",
+              "09:10 - 10:00",
+              "10:20 - 11:10",
+              "11:10 - 12:00"
+            ],
+            "5": [
+              "08:20 - 09:10",
+              "09:10 - 10:00",
+              "10:20 - 11:10",
+              "11:10 - 12:00"
+            ],
+            "6": [
+              "08:20 - 09:10",
+              "09:10 - 10:00",
+              "10:20 - 11:10",
+              "11:10 - 12:00"
+            ]
+          }
+        }
+      ],
+      "subGrupo": null,
+      "cor": "#8bcc7f",
+      "id": "9ffab0b1-d987-4ad6-b469-37f6597c9ad1"
+    },
+    {
+      "turmaId": "CB2022",
+      "disciplina": "MORFOFISIOLOGIA ANIMAL I",
+      "docente": "A definir",
+      "tipo": "pendente",
+      "cor": "#e1fdff",
+      "dataInicio": "2026-03-23",
+      "dataFim": "2026-07-23",
+      "subGrupo": "BLVIII",
+      "id": "4b0b5a6f-2339-4b0e-ba0b-fa85daa4b7f6"
+    },
+    {
+      "turmaId": "CB2022",
+      "disciplina": "ECOLOGIA DE COMUNIDADES",
+      "docente": "A definir",
+      "tipo": "pendente",
+      "cor": "#e6f0ff",
+      "dataInicio": "2026-03-23",
+      "dataFim": "2026-07-23",
+      "subGrupo": "BLVIII",
+      "id": "9320dca9-4206-47c9-85dd-08f1b80c1f72"
+    },
+    {
+      "turmaId": "CB2022",
+      "disciplina": "DIVERSIDADE ANIMAL IV",
+      "docente": "A definir",
+      "tipo": "pendente",
+      "cor": "#f1eeff",
+      "dataInicio": "2026-03-23",
+      "dataFim": "2026-07-23",
+      "subGrupo": "BLVIII",
+      "id": "aaf5c911-0173-474c-9466-b7676a7f1a54"
+    },
+    {
+      "turmaId": "CB2022",
+      "disciplina": "EDUCACAO E SAUDE HUMANA",
+      "docente": "A definir",
+      "tipo": "pendente",
+      "cor": "#fff1ff",
+      "dataInicio": "2026-03-23",
+      "dataFim": "2026-07-23",
+      "subGrupo": "BLVIII",
+      "id": "afdf845f-d79a-4eed-b46a-d2d70faa3493"
+    },
+    {
+      "turmaId": "CB2022",
+      "disciplina": "FISIOLOGIA VEGETAL",
+      "docente": "Marivana Borges Silva",
+      "docentes": null,
+      "tipo": "intensiva",
+      "ch": 75,
+      "dataInicio": "2026-05-04",
+      "dataFim": "2026-05-28",
+      "modelo": "Automatico",
+      "horariosOcupados": [
+        "08:20 - 09:10",
+        "09:10 - 10:00",
+        "10:20 - 11:10",
+        "11:10 - 12:00"
+      ],
+      "horariosUltimoDia": [
+        "08:20 - 09:10",
+        "09:10 - 10:00",
+        "10:20 - 11:10"
+      ],
+      "diasMarcados": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "usaSabado": false,
+      "faixas": [
+        {
+          "inicio": "2026-05-04",
+          "fim": "2026-05-28",
+          "dias": [
+            1,
+            2,
+            3,
+            4,
+            5
+          ],
+          "slots": [
+            "08:20 - 09:10",
+            "09:10 - 10:00",
+            "10:20 - 11:10",
+            "11:10 - 12:00"
+          ],
+          "drawnSlotsByDay": {
+            "1": [
+              "08:20 - 09:10",
+              "09:10 - 10:00",
+              "10:20 - 11:10",
+              "11:10 - 12:00"
+            ],
+            "2": [
+              "08:20 - 09:10",
+              "09:10 - 10:00",
+              "10:20 - 11:10",
+              "11:10 - 12:00"
+            ],
+            "3": [
+              "08:20 - 09:10",
+              "09:10 - 10:00",
+              "10:20 - 11:10",
+              "11:10 - 12:00"
+            ],
+            "4": [
+              "08:20 - 09:10",
+              "09:10 - 10:00",
+              "10:20 - 11:10",
+              "11:10 - 12:00"
+            ],
+            "5": [
+              "08:20 - 09:10",
+              "09:10 - 10:00",
+              "10:20 - 11:10",
+              "11:10 - 12:00"
+            ]
+          }
+        }
+      ],
+      "subGrupo": null,
+      "cor": "#f02d8f",
+      "id": "e506e7f0-6e7d-4df0-80e5-99234ffe9293"
+    },
+    {
+      "turmaId": "CB2025",
+      "disciplina": "GENETICA GERAL",
+      "docente": "Natália Reis",
+      "docentes": null,
+      "tipo": "intensiva",
+      "ch": 75,
+      "dataInicio": "2026-04-14",
+      "dataFim": "2026-05-12",
+      "modelo": "Automatico",
+      "horariosOcupados": [
+        "14:20 - 15:10",
+        "15:10 - 16:00",
+        "16:20 - 17:10",
+        "17:10 - 18:00"
+      ],
+      "horariosUltimoDia": [
+        "14:20 - 15:10",
+        "15:10 - 16:00",
+        "16:20 - 17:10"
+      ],
+      "diasMarcados": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "usaSabado": false,
+      "faixas": [
+        {
+          "inicio": "2026-04-14",
+          "fim": "2026-05-12",
+          "dias": [
+            1,
+            2,
+            3,
+            4,
+            5
+          ],
+          "slots": [
+            "14:20 - 15:10",
+            "15:10 - 16:00",
+            "16:20 - 17:10",
+            "17:10 - 18:00"
+          ],
+          "drawnSlotsByDay": {
+            "1": [
+              "14:20 - 15:10",
+              "15:10 - 16:00",
+              "16:20 - 17:10",
+              "17:10 - 18:00"
+            ],
+            "2": [
+              "14:20 - 15:10",
+              "15:10 - 16:00",
+              "16:20 - 17:10",
+              "17:10 - 18:00"
+            ],
+            "3": [
+              "14:20 - 15:10",
+              "15:10 - 16:00",
+              "16:20 - 17:10",
+              "17:10 - 18:00"
+            ],
+            "4": [
+              "14:20 - 15:10",
+              "15:10 - 16:00",
+              "16:20 - 17:10",
+              "17:10 - 18:00"
+            ],
+            "5": [
+              "14:20 - 15:10",
+              "15:10 - 16:00",
+              "16:20 - 17:10",
+              "17:10 - 18:00"
+            ]
+          }
+        }
+      ],
+      "subGrupo": null,
+      "cor": "#f0f2a0",
+      "id": "949965a0-2a34-4475-ba5f-a12805f53382"
+    },
+    {
+      "turmaId": "CB2025",
+      "disciplina": "EDUCAÇÃO E PLURALIDADE CULTURAL NO ENSINO DE CIÊNCIAS E BIOLOGIA",
+      "docente": "Dhemersson Santos",
+      "docentes": null,
+      "tipo": "intensiva",
+      "ch": 45,
+      "dataInicio": "2026-06-15",
+      "dataFim": "2026-06-26",
+      "modelo": "Automatico",
+      "horariosOcupados": [
+        "14:20 - 15:10",
+        "15:10 - 16:00",
+        "16:20 - 17:10",
+        "17:10 - 18:00",
+        "18:00 - 18:50"
+      ],
+      "horariosUltimoDia": [
+        "14:20 - 15:10",
+        "15:10 - 16:00",
+        "16:20 - 17:10",
+        "17:10 - 18:00"
+      ],
+      "diasMarcados": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "usaSabado": false,
+      "faixas": [
+        {
+          "inicio": "2026-06-15",
+          "fim": "2026-06-21",
+          "dias": [
+            1,
+            2,
+            3,
+            4,
+            5
+          ],
+          "slots": [
+            "14:20 - 15:10",
+            "15:10 - 16:00",
+            "16:20 - 17:10",
+            "17:10 - 18:00",
+            "18:00 - 18:50"
+          ],
+          "drawnSlotsByDay": {
+            "1": [
+              "14:20 - 15:10",
+              "15:10 - 16:00",
+              "16:20 - 17:10",
+              "17:10 - 18:00",
+              "18:00 - 18:50"
+            ],
+            "2": [
+              "14:20 - 15:10",
+              "15:10 - 16:00",
+              "16:20 - 17:10",
+              "17:10 - 18:00",
+              "18:00 - 18:50"
+            ],
+            "3": [
+              "14:20 - 15:10",
+              "15:10 - 16:00",
+              "16:20 - 17:10",
+              "17:10 - 18:00",
+              "18:00 - 18:50"
+            ],
+            "4": [
+              "14:20 - 15:10",
+              "15:10 - 16:00",
+              "16:20 - 17:10",
+              "17:10 - 18:00",
+              "18:00 - 18:50"
+            ],
+            "5": [
+              "14:20 - 15:10",
+              "15:10 - 16:00",
+              "16:20 - 17:10",
+              "17:10 - 18:00",
+              "18:00 - 18:50"
+            ]
+          }
+        },
+        {
+          "inicio": "2026-06-22",
+          "fim": "2026-06-26",
+          "dias": [
+            1,
+            2,
+            3,
+            4,
+            5
+          ],
+          "slots": [
+            "14:20 - 15:10",
+            "15:10 - 16:00",
+            "16:20 - 17:10",
+            "17:10 - 18:00"
+          ],
+          "drawnSlotsByDay": {
+            "1": [
+              "14:20 - 15:10",
+              "15:10 - 16:00",
+              "16:20 - 17:10",
+              "17:10 - 18:00"
+            ],
+            "2": [
+              "14:20 - 15:10",
+              "15:10 - 16:00",
+              "16:20 - 17:10",
+              "17:10 - 18:00"
+            ],
+            "3": [
+              "14:20 - 15:10",
+              "15:10 - 16:00",
+              "16:20 - 17:10",
+              "17:10 - 18:00"
+            ],
+            "4": [
+              "14:20 - 15:10",
+              "15:10 - 16:00",
+              "16:20 - 17:10",
+              "17:10 - 18:00"
+            ],
+            "5": [
+              "14:20 - 15:10",
+              "15:10 - 16:00",
+              "16:20 - 17:10",
+              "17:10 - 18:00"
+            ]
+          }
+        }
+      ],
+      "subGrupo": null,
+      "cor": "#e91e63",
+      "id": "8ac0bd82-dc23-4c9b-96c6-87bc88e8f554"
+    },
+    {
+      "turmaId": "EP2025",
+      "disciplina": "ICTIOLOGIA",
+      "docente": "Grazielle Fernanda Evangelista Gomes",
+      "docentes": null,
+      "tipo": "intensiva",
+      "ch": 45,
+      "dataInicio": "2026-04-06",
+      "dataFim": "2026-06-22",
+      "modelo": "Automatico",
+      "horariosOcupados": [
+        "14:20 - 15:10",
+        "15:10 - 16:00",
+        "16:20 - 17:10",
+        "17:10 - 18:00"
+      ],
+      "horariosUltimoDia": [
+        "14:20 - 15:10"
+      ],
+      "diasMarcados": [
+        1
+      ],
+      "usaSabado": false,
+      "faixas": [
+        {
+          "inicio": "2026-04-06",
+          "fim": "2026-06-22",
+          "dias": [
+            1
+          ],
+          "slots": [
+            "14:20 - 15:10",
+            "15:10 - 16:00",
+            "16:20 - 17:10",
+            "17:10 - 18:00"
+          ],
+          "drawnSlotsByDay": {
+            "1": [
+              "14:20 - 15:10",
+              "15:10 - 16:00",
+              "16:20 - 17:10",
+              "17:10 - 18:00"
+            ]
+          }
+        }
+      ],
+      "subGrupo": null,
+      "cor": "#ccc6ff",
+      "id": "be35fad2-927f-40a8-8ccc-d0ff3a5a5c47"
+    },
+    {
+      "turmaId": "EP2025",
+      "disciplina": "ECONOMIA",
+      "docente": "Marcos Ferreira Brabo",
+      "docentes": null,
+      "tipo": "intensiva",
+      "ch": 45,
+      "dataInicio": "2026-04-06",
+      "dataFim": "2026-07-23",
+      "modelo": "Automatico",
+      "horariosOcupados": [
+        "13:30 - 14:20",
+        "14:20 - 15:10",
+        "15:10 - 16:00"
+      ],
+      "horariosUltimoDia": [
+        "13:30 - 14:20",
+        "14:20 - 15:10",
+        "15:10 - 16:00"
+      ],
+      "diasMarcados": [
+        4
+      ],
+      "usaSabado": false,
+      "faixas": [
+        {
+          "inicio": "2026-04-06",
+          "fim": "2026-07-23",
+          "dias": [
+            4
+          ],
+          "slots": [
+            "13:30 - 14:20",
+            "14:20 - 15:10",
+            "15:10 - 16:00"
+          ],
+          "drawnSlotsByDay": {
+            "4": [
+              "13:30 - 14:20",
+              "14:20 - 15:10",
+              "15:10 - 16:00"
+            ]
+          }
+        }
+      ],
+      "subGrupo": null,
+      "cor": "#eccfe9",
+      "id": "55e6f843-394a-4bb6-b4c4-dc6cfdc0faeb"
+    },
+    {
+      "turmaId": "EP2025",
+      "disciplina": "MICROBIOLOGIA DO PESCADO",
+      "docente": "Simoni Santos da Silva",
+      "docentes": null,
+      "tipo": "intensiva",
+      "ch": 60,
+      "dataInicio": "2026-04-06",
+      "dataFim": "2026-07-03",
+      "modelo": "Automatico",
+      "horariosOcupados": [
+        "14:20 - 15:10",
+        "15:10 - 16:00",
+        "16:20 - 17:10",
+        "17:10 - 18:00",
+        "18:00 - 18:50"
+      ],
+      "horariosUltimoDia": [
+        "14:20 - 15:10",
+        "15:10 - 16:00",
+        "16:20 - 17:10",
+        "17:10 - 18:00",
+        "18:00 - 18:50"
+      ],
+      "diasMarcados": [
+        5
+      ],
+      "usaSabado": false,
+      "faixas": [
+        {
+          "inicio": "2026-04-06",
+          "fim": "2026-07-03",
+          "dias": [
+            5
+          ],
+          "slots": [
+            "14:20 - 15:10",
+            "15:10 - 16:00",
+            "16:20 - 17:10",
+            "17:10 - 18:00",
+            "18:00 - 18:50"
+          ],
+          "drawnSlotsByDay": {
+            "5": [
+              "14:20 - 15:10",
+              "15:10 - 16:00",
+              "16:20 - 17:10",
+              "17:10 - 18:00",
+              "18:00 - 18:50"
+            ]
+          }
+        }
+      ],
+      "subGrupo": null,
+      "cor": "#e91e63",
+      "id": "936adb7f-7d94-4b56-ad7c-ce1701a8e644"
+    },
+    {
+      "turmaId": "EP2025",
+      "disciplina": "DESENHO COMPUTACIONAL",
+      "docente": "Carlos Eduardo Rangel Andrade",
+      "docentes": null,
+      "tipo": "intensiva",
+      "ch": 60,
+      "dataInicio": "2026-04-06",
+      "dataFim": "2026-06-24",
+      "modelo": "Automatico",
+      "horariosOcupados": [
+        "14:20 - 15:10",
+        "15:10 - 16:00",
+        "16:20 - 17:10",
+        "17:10 - 18:00",
+        "18:00 - 18:50"
+      ],
+      "horariosUltimoDia": [
+        "14:20 - 15:10",
+        "15:10 - 16:00",
+        "16:20 - 17:10",
+        "17:10 - 18:00",
+        "18:00 - 18:50"
+      ],
+      "diasMarcados": [
+        3
+      ],
+      "usaSabado": false,
+      "faixas": [
+        {
+          "inicio": "2026-04-06",
+          "fim": "2026-06-24",
+          "dias": [
+            3
+          ],
+          "slots": [
+            "14:20 - 15:10",
+            "15:10 - 16:00",
+            "16:20 - 17:10",
+            "17:10 - 18:00",
+            "18:00 - 18:50"
+          ],
+          "drawnSlotsByDay": {
+            "3": [
+              "14:20 - 15:10",
+              "15:10 - 16:00",
+              "16:20 - 17:10",
+              "17:10 - 18:00",
+              "18:00 - 18:50"
+            ]
+          }
+        }
+      ],
+      "subGrupo": null,
+      "cor": "#96d13d",
+      "id": "e1a90c37-d2b5-4a99-a731-e7b1e6667242"
+    },
+    {
+      "turmaId": "EP2022",
+      "disciplina": "GERENCIAMENTO COSTEIRO",
+      "docente": "Luci Cajueiro Carneiro Pereira",
+      "docentes": null,
+      "tipo": "intensiva",
+      "ch": 60,
+      "dataInicio": "2026-03-23",
+      "dataFim": "2026-04-02",
+      "modelo": "Automatico",
+      "horariosOcupados": [
+        "07:30 - 08:20",
+        "08:20 - 09:10",
+        "09:10 - 10:00",
+        "10:20 - 11:10",
+        "11:10 - 12:00",
+        "12:00 - 12:50"
+      ],
+      "horariosUltimoDia": [
+        "07:30 - 08:20",
+        "08:20 - 09:10",
+        "09:10 - 10:00",
+        "10:20 - 11:10",
+        "11:10 - 12:00",
+        "12:00 - 12:50"
+      ],
+      "diasMarcados": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "usaSabado": true,
+      "faixas": [
+        {
+          "inicio": "2026-03-23",
+          "fim": "2026-04-02",
+          "dias": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6
+          ],
+          "slots": [
+            "07:30 - 08:20",
+            "08:20 - 09:10",
+            "09:10 - 10:00",
+            "10:20 - 11:10",
+            "11:10 - 12:00",
+            "12:00 - 12:50"
+          ],
+          "drawnSlotsByDay": {
+            "1": [
+              "07:30 - 08:20",
+              "08:20 - 09:10",
+              "09:10 - 10:00",
+              "10:20 - 11:10",
+              "11:10 - 12:00",
+              "12:00 - 12:50"
+            ],
+            "2": [
+              "07:30 - 08:20",
+              "08:20 - 09:10",
+              "09:10 - 10:00",
+              "10:20 - 11:10",
+              "11:10 - 12:00",
+              "12:00 - 12:50"
+            ],
+            "3": [
+              "07:30 - 08:20",
+              "08:20 - 09:10",
+              "09:10 - 10:00",
+              "10:20 - 11:10",
+              "11:10 - 12:00",
+              "12:00 - 12:50"
+            ],
+            "4": [
+              "07:30 - 08:20",
+              "08:20 - 09:10",
+              "09:10 - 10:00",
+              "10:20 - 11:10",
+              "11:10 - 12:00",
+              "12:00 - 12:50"
+            ],
+            "5": [
+              "07:30 - 08:20",
+              "08:20 - 09:10",
+              "09:10 - 10:00",
+              "10:20 - 11:10",
+              "11:10 - 12:00",
+              "12:00 - 12:50"
+            ],
+            "6": [
+              "07:30 - 08:20",
+              "08:20 - 09:10",
+              "09:10 - 10:00",
+              "10:20 - 11:10",
+              "11:10 - 12:00",
+              "12:00 - 12:50"
+            ]
+          }
+        }
+      ],
+      "subGrupo": null,
+      "cor": "#5cc0be",
+      "id": "0411c82f-97ba-4c57-85ef-1d670cbba1d1"
+    },
+    {
+      "turmaId": "EP2022",
+      "disciplina": "SISTEMAS DE PESCA",
+      "docente": "Francisco Carlos Alberto Fonteles Holanda",
+      "docentes": null,
+      "tipo": "intensiva",
+      "ch": 45,
+      "dataInicio": "2026-04-06",
+      "dataFim": "2026-07-13",
+      "modelo": "Automatico",
+      "horariosOcupados": [
+        "08:20 - 09:10",
+        "09:10 - 10:00",
+        "10:20 - 11:10"
+      ],
+      "horariosUltimoDia": [
+        "08:20 - 09:10",
+        "09:10 - 10:00",
+        "10:20 - 11:10"
+      ],
+      "diasMarcados": [
+        1
+      ],
+      "usaSabado": false,
+      "faixas": [
+        {
+          "inicio": "2026-04-06",
+          "fim": "2026-07-13",
+          "dias": [
+            1
+          ],
+          "slots": [
+            "08:20 - 09:10",
+            "09:10 - 10:00",
+            "10:20 - 11:10"
+          ],
+          "drawnSlotsByDay": {
+            "1": [
+              "08:20 - 09:10",
+              "09:10 - 10:00",
+              "10:20 - 11:10"
+            ]
+          }
+        }
+      ],
+      "subGrupo": null,
+      "cor": "#61a0e5",
+      "id": "c59bad00-24ae-45ab-9c08-81b6fd176946"
+    },
+    {
+      "turmaId": "EP2022",
+      "disciplina": "ADMINISTRACAO E LEGISLACAO PESQUEIRA E AQUICOLA",
+      "docente": "Leonnan Oliveira",
+      "docentes": null,
+      "tipo": "intensiva",
+      "ch": 60,
+      "dataInicio": "2026-04-06",
+      "dataFim": "2026-07-03",
+      "modelo": "Automatico",
+      "horariosOcupados": [
+        "08:20 - 09:10",
+        "09:10 - 10:00",
+        "10:20 - 11:10",
+        "11:10 - 12:00",
+        "12:00 - 12:50"
+      ],
+      "horariosUltimoDia": [
+        "08:20 - 09:10",
+        "09:10 - 10:00",
+        "10:20 - 11:10",
+        "11:10 - 12:00",
+        "12:00 - 12:50"
+      ],
+      "diasMarcados": [
+        5
+      ],
+      "usaSabado": false,
+      "faixas": [
+        {
+          "inicio": "2026-04-06",
+          "fim": "2026-07-03",
+          "dias": [
+            5
+          ],
+          "slots": [
+            "08:20 - 09:10",
+            "09:10 - 10:00",
+            "10:20 - 11:10",
+            "11:10 - 12:00",
+            "12:00 - 12:50"
+          ],
+          "drawnSlotsByDay": {
+            "5": [
+              "08:20 - 09:10",
+              "09:10 - 10:00",
+              "10:20 - 11:10",
+              "11:10 - 12:00",
+              "12:00 - 12:50"
+            ]
+          }
+        }
+      ],
+      "subGrupo": null,
+      "cor": "#7b70e5",
+      "id": "7931f71f-0539-4a5b-bfa5-25b62eb3d652"
+    },
+    {
+      "turmaId": "EP2022",
+      "disciplina": "AVALIACAO DE ESTOQUES PESQUEIROS",
+      "docente": "Leonnan Oliveira",
+      "docentes": null,
+      "tipo": "intensiva",
+      "ch": 45,
+      "dataInicio": "2026-04-06",
+      "dataFim": "2026-07-23",
+      "modelo": "Automatico",
+      "horariosOcupados": [
+        "08:20 - 09:10",
+        "09:10 - 10:00",
+        "10:20 - 11:10"
+      ],
+      "horariosUltimoDia": [
+        "08:20 - 09:10",
+        "09:10 - 10:00",
+        "10:20 - 11:10"
+      ],
+      "diasMarcados": [
+        4
+      ],
+      "usaSabado": false,
+      "faixas": [
+        {
+          "inicio": "2026-04-06",
+          "fim": "2026-07-23",
+          "dias": [
+            4
+          ],
+          "slots": [
+            "08:20 - 09:10",
+            "09:10 - 10:00",
+            "10:20 - 11:10"
+          ],
+          "drawnSlotsByDay": {
+            "4": [
+              "08:20 - 09:10",
+              "09:10 - 10:00",
+              "10:20 - 11:10"
+            ]
+          }
+        }
+      ],
+      "subGrupo": null,
+      "cor": "#d884d8",
+      "id": "9e892b4b-cbf6-4ea3-87d4-ce4b724e3033"
+    },
+    {
+      "turmaId": "EP2022",
+      "disciplina": "PARASITOLOGIA DE ORGANISMOS AQUATICOS",
+      "docente": "Lorena Batista de Moura",
+      "docentes": null,
+      "tipo": "intensiva",
+      "ch": 45,
+      "dataInicio": "2026-04-06",
+      "dataFim": "2026-07-21",
+      "modelo": "Automatico",
+      "horariosOcupados": [
+        "08:20 - 09:10",
+        "09:10 - 10:00",
+        "10:20 - 11:10"
+      ],
+      "horariosUltimoDia": [
+        "08:20 - 09:10",
+        "09:10 - 10:00",
+        "10:20 - 11:10"
+      ],
+      "diasMarcados": [
+        2
+      ],
+      "usaSabado": false,
+      "faixas": [
+        {
+          "inicio": "2026-04-06",
+          "fim": "2026-07-21",
+          "dias": [
+            2
+          ],
+          "slots": [
+            "08:20 - 09:10",
+            "09:10 - 10:00",
+            "10:20 - 11:10"
+          ],
+          "drawnSlotsByDay": {
+            "2": [
+              "08:20 - 09:10",
+              "09:10 - 10:00",
+              "10:20 - 11:10"
+            ]
+          }
+        }
+      ],
+      "subGrupo": null,
+      "cor": "#a079a2",
+      "id": "825d74d2-5f03-44c3-b825-2e6bdf36895a"
+    },
+    {
+      "turmaId": "EP2022",
+      "disciplina": "MARKETING",
+      "docente": "Marcos Ferreira Brabo",
+      "docentes": null,
+      "tipo": "intensiva",
+      "ch": 30,
+      "dataInicio": "2026-04-06",
+      "dataFim": "2026-06-10",
+      "modelo": "Automatico",
+      "horariosOcupados": [
+        "08:20 - 09:10",
+        "09:10 - 10:00",
+        "10:20 - 11:10"
+      ],
+      "horariosUltimoDia": [
+        "08:20 - 09:10",
+        "09:10 - 10:00",
+        "10:20 - 11:10"
+      ],
+      "diasMarcados": [
+        3
+      ],
+      "usaSabado": false,
+      "faixas": [
+        {
+          "inicio": "2026-04-06",
+          "fim": "2026-06-10",
+          "dias": [
+            3
+          ],
+          "slots": [
+            "08:20 - 09:10",
+            "09:10 - 10:00",
+            "10:20 - 11:10"
+          ],
+          "drawnSlotsByDay": {
+            "3": [
+              "08:20 - 09:10",
+              "09:10 - 10:00",
+              "10:20 - 11:10"
+            ]
+          }
+        }
+      ],
+      "subGrupo": null,
+      "cor": "#ffb7b7",
+      "id": "1202dd24-5819-42c4-b6e1-0dc2c6f8c775"
+    },
+    {
+      "turmaId": "EP2024",
+      "disciplina": "CARTOGRAFIA E GEOPROCESSAMENTO",
+      "docente": "Pedro Andrés Chira Oliva",
+      "docentes": null,
+      "tipo": "intensiva",
+      "ch": 60,
+      "dataInicio": "2026-03-23",
+      "dataFim": "2026-05-27",
+      "modelo": "Automatico",
+      "horariosOcupados": [
+        "09:10 - 10:00",
+        "10:20 - 11:10",
+        "11:10 - 12:00",
+        "12:00 - 12:50"
+      ],
+      "horariosUltimoDia": [
+        "09:10 - 10:00",
+        "10:20 - 11:10",
+        "11:10 - 12:00"
+      ],
+      "diasMarcados": [
+        1,
+        3
+      ],
+      "usaSabado": false,
+      "faixas": [
+        {
+          "inicio": "2026-03-23",
+          "fim": "2026-05-27",
+          "dias": [
+            1,
+            3
+          ],
+          "slots": [
+            "09:10 - 10:00",
+            "10:20 - 11:10",
+            "11:10 - 12:00",
+            "12:00 - 12:50"
+          ],
+          "drawnSlotsByDay": {
+            "1": [
+              "10:20 - 11:10",
+              "11:10 - 12:00",
+              "12:00 - 12:50"
+            ],
+            "3": [
+              "09:10 - 10:00",
+              "10:20 - 11:10",
+              "11:10 - 12:00"
+            ]
+          }
+        }
+      ],
+      "subGrupo": null,
+      "cor": "#feffd9",
+      "id": "b2cb0834-3e8a-4143-8d8d-2937f941da5f"
+    },
+    {
+      "turmaId": "EP2024",
+      "disciplina": "FISIOECOLOGIA DE ANIMAIS AQUATICOS",
+      "docente": "Leonnan Oliveira",
+      "docentes": null,
+      "tipo": "intensiva",
+      "ch": 75,
+      "dataInicio": "2026-03-23",
+      "dataFim": "2026-07-01",
+      "modelo": "Automatico",
+      "horariosOcupados": [
+        "07:30 - 08:20",
+        "08:20 - 09:10",
+        "09:10 - 10:00"
+      ],
+      "horariosUltimoDia": [
+        "07:30 - 08:20",
+        "08:20 - 09:10"
+      ],
+      "diasMarcados": [
+        1,
+        3
+      ],
+      "usaSabado": false,
+      "faixas": [
+        {
+          "inicio": "2026-03-23",
+          "fim": "2026-07-01",
+          "dias": [
+            1,
+            3
+          ],
+          "slots": [
+            "07:30 - 08:20",
+            "08:20 - 09:10",
+            "09:10 - 10:00"
+          ],
+          "drawnSlotsByDay": {
+            "1": [
+              "07:30 - 08:20",
+              "08:20 - 09:10",
+              "09:10 - 10:00"
+            ],
+            "3": [
+              "07:30 - 08:20",
+              "08:20 - 09:10"
+            ]
+          }
+        }
+      ],
+      "subGrupo": null,
+      "cor": "#715ae2",
+      "id": "14ffe4f5-0c04-487b-bd3a-57dc054f7150"
+    },
+    {
+      "turmaId": "EP2024",
+      "disciplina": "LIMNOLOGIA",
+      "docente": "Zélia / Hudson (Múltiplos)",
+      "docentes": [
+        {
+          "nome": "Zélia Maria Pimental Nunes",
+          "ch": 45
+        },
+        {
+          "nome": "Hudson Cleber Pereira da Silva",
+          "ch": 30
+        }
+      ],
+      "tipo": "intensiva",
+      "ch": 75,
+      "dataInicio": "2026-03-23",
+      "dataFim": "2026-07-14",
+      "modelo": "Automatico",
+      "horariosOcupados": [
+        "07:30 - 08:20",
+        "08:20 - 09:10",
+        "09:10 - 10:00"
+      ],
+      "horariosUltimoDia": [
+        "07:30 - 08:20",
+        "08:20 - 09:10"
+      ],
+      "diasMarcados": [
+        2,
+        5
+      ],
+      "usaSabado": false,
+      "faixas": [
+        {
+          "inicio": "2026-03-23",
+          "fim": "2026-07-14",
+          "dias": [
+            2,
+            5
+          ],
+          "slots": [
+            "07:30 - 08:20",
+            "08:20 - 09:10",
+            "09:10 - 10:00"
+          ],
+          "drawnSlotsByDay": {
+            "2": [
+              "07:30 - 08:20",
+              "08:20 - 09:10",
+              "09:10 - 10:00"
+            ],
+            "5": [
+              "07:30 - 08:20",
+              "08:20 - 09:10"
+            ]
+          }
+        }
+      ],
+      "subGrupo": null,
+      "cor": "#e8c67d",
+      "id": "7fe2e740-40cb-4e75-801d-25655976c5f0"
+    },
+    {
+      "turmaId": "EP2024",
+      "disciplina": "MAQUINAS E MOTORES",
+      "docente": "Carlos Eduardo Rangel Andrade",
+      "docentes": null,
+      "tipo": "intensiva",
+      "ch": 45,
+      "dataInicio": "2026-03-23",
+      "dataFim": "2026-07-09",
+      "modelo": "Automatico",
+      "horariosOcupados": [
+        "09:10 - 10:00",
+        "10:20 - 11:10",
+        "11:10 - 12:00"
+      ],
+      "horariosUltimoDia": [
+        "09:10 - 10:00",
+        "10:20 - 11:10",
+        "11:10 - 12:00"
+      ],
+      "diasMarcados": [
+        4
+      ],
+      "usaSabado": false,
+      "faixas": [
+        {
+          "inicio": "2026-03-23",
+          "fim": "2026-07-09",
+          "dias": [
+            4
+          ],
+          "slots": [
+            "09:10 - 10:00",
+            "10:20 - 11:10",
+            "11:10 - 12:00"
+          ],
+          "drawnSlotsByDay": {
+            "4": [
+              "09:10 - 10:00",
+              "10:20 - 11:10",
+              "11:10 - 12:00"
+            ]
+          }
+        }
+      ],
+      "subGrupo": null,
+      "cor": "#6decf3",
+      "id": "bc81be62-1851-45ce-ae9f-3ef6264d77ba"
+    },
+    {
+      "turmaId": "EP2024",
+      "disciplina": "TECNOLOGIA DO PESCADO",
+      "docente": "Marileide Moraes Alves",
+      "docentes": null,
+      "tipo": "intensiva",
+      "ch": 60,
+      "dataInicio": "2026-03-23",
+      "dataFim": "2026-07-09",
+      "modelo": "Automatico",
+      "horariosOcupados": [
+        "07:30 - 08:20",
+        "08:20 - 09:10",
+        "10:20 - 11:10",
+        "11:10 - 12:00"
+      ],
+      "horariosUltimoDia": [
+        "07:30 - 08:20",
+        "08:20 - 09:10"
+      ],
+      "diasMarcados": [
+        2,
+        4
+      ],
+      "usaSabado": false,
+      "faixas": [
+        {
+          "inicio": "2026-03-23",
+          "fim": "2026-07-09",
+          "dias": [
+            2,
+            4
+          ],
+          "slots": [
+            "07:30 - 08:20",
+            "08:20 - 09:10",
+            "10:20 - 11:10",
+            "11:10 - 12:00"
+          ],
+          "drawnSlotsByDay": {
+            "2": [
+              "10:20 - 11:10",
+              "11:10 - 12:00"
+            ],
+            "4": [
+              "07:30 - 08:20",
+              "08:20 - 09:10"
+            ]
+          }
+        }
+      ],
+      "subGrupo": null,
+      "cor": "#71e656",
+      "id": "65853e4e-b4be-4c98-8340-7cc9f1b68d4f"
+    },
+    {
+      "turmaId": "EP2024",
+      "disciplina": "ELABORACAO E AVALIACAO DE PROJETOS PESQUEIROS E AQUICOLAS",
+      "docente": "Marcos Ferreira Brabo",
+      "docentes": null,
+      "tipo": "intensiva",
+      "ch": 45,
+      "dataInicio": "2026-03-23",
+      "dataFim": "2026-07-17",
+      "modelo": "Automatico",
+      "horariosOcupados": [
+        "09:10 - 10:00",
+        "10:20 - 11:10",
+        "11:10 - 12:00"
+      ],
+      "horariosUltimoDia": [
+        "09:10 - 10:00",
+        "10:20 - 11:10",
+        "11:10 - 12:00"
+      ],
+      "diasMarcados": [
+        5
+      ],
+      "usaSabado": false,
+      "faixas": [
+        {
+          "inicio": "2026-03-23",
+          "fim": "2026-07-17",
+          "dias": [
+            5
+          ],
+          "slots": [
+            "09:10 - 10:00",
+            "10:20 - 11:10",
+            "11:10 - 12:00"
+          ],
+          "drawnSlotsByDay": {
+            "5": [
+              "09:10 - 10:00",
+              "10:20 - 11:10",
+              "11:10 - 12:00"
+            ]
+          }
+        }
+      ],
+      "subGrupo": null,
+      "cor": "#a556e6",
+      "id": "7364c547-07fc-44ee-9a06-7538449407d9"
+    },
+    {
+      "turmaId": "EP2024",
+      "disciplina": "SOCIOLOGIA APLICADA AS COMUNIDADES PESQUEIRAS",
+      "docente": "Cleide Marques",
+      "docentes": null,
+      "tipo": "intensiva",
+      "ch": 45,
+      "dataInicio": "2026-06-01",
+      "dataFim": "2026-07-22",
+      "modelo": "Automatico",
+      "horariosOcupados": [
+        "09:10 - 10:00",
+        "10:20 - 11:10",
+        "11:10 - 12:00",
+        "12:00 - 12:50"
+      ],
+      "horariosUltimoDia": [
+        "09:10 - 10:00",
+        "10:20 - 11:10",
+        "11:10 - 12:00"
+      ],
+      "diasMarcados": [
+        1,
+        3
+      ],
+      "usaSabado": false,
+      "faixas": [
+        {
+          "inicio": "2026-06-01",
+          "fim": "2026-07-22",
+          "dias": [
+            1,
+            3
+          ],
+          "slots": [
+            "09:10 - 10:00",
+            "10:20 - 11:10",
+            "11:10 - 12:00",
+            "12:00 - 12:50"
+          ],
+          "drawnSlotsByDay": {
+            "1": [
+              "10:20 - 11:10",
+              "11:10 - 12:00",
+              "12:00 - 12:50"
+            ],
+            "3": [
+              "09:10 - 10:00",
+              "10:20 - 11:10",
+              "11:10 - 12:00"
+            ]
+          }
+        }
+      ],
+      "subGrupo": null,
+      "cor": "#f77373",
+      "id": "88a5fa6c-0f23-4e0f-815a-f638d0b49798"
+    },
+    {
+      "turmaId": "EP2023",
+      "disciplina": "CARCINICULTURA",
+      "docente": "Cristiana Ramalho Maciel",
+      "docentes": null,
+      "tipo": "intensiva",
+      "ch": 45,
+      "dataInicio": "2026-03-23",
+      "dataFim": "2026-07-17",
+      "modelo": "Automatico",
+      "horariosOcupados": [
+        "16:20 - 17:10",
+        "17:10 - 18:00",
+        "18:00 - 18:50"
+      ],
+      "horariosUltimoDia": [
+        "16:20 - 17:10",
+        "17:10 - 18:00",
+        "18:00 - 18:50"
+      ],
+      "diasMarcados": [
+        5
+      ],
+      "usaSabado": false,
+      "faixas": [
+        {
+          "inicio": "2026-03-23",
+          "fim": "2026-07-17",
+          "dias": [
+            5
+          ],
+          "slots": [
+            "16:20 - 17:10",
+            "17:10 - 18:00",
+            "18:00 - 18:50"
+          ],
+          "drawnSlotsByDay": {
+            "5": [
+              "16:20 - 17:10",
+              "17:10 - 18:00",
+              "18:00 - 18:50"
+            ]
+          }
+        }
+      ],
+      "subGrupo": null,
+      "cor": "#f57575",
+      "id": "ddd15df7-bbb1-48b1-ad45-7ade117754bf"
+    },
+    {
+      "turmaId": "EP2023",
+      "disciplina": "GENETICA APLICADA",
+      "docente": "Simoni Santos da Silva",
+      "docentes": null,
+      "tipo": "intensiva",
+      "ch": 60,
+      "dataInicio": "2026-03-23",
+      "dataFim": "2026-06-29",
+      "modelo": "Automatico",
+      "horariosOcupados": [
+        "15:10 - 16:00",
+        "16:20 - 17:10",
+        "17:10 - 18:00",
+        "18:00 - 18:50"
+      ],
+      "horariosUltimoDia": [
+        "15:10 - 16:00",
+        "16:20 - 17:10",
+        "17:10 - 18:00",
+        "18:00 - 18:50"
+      ],
+      "diasMarcados": [
+        1
+      ],
+      "usaSabado": false,
+      "faixas": [
+        {
+          "inicio": "2026-03-23",
+          "fim": "2026-06-29",
+          "dias": [
+            1
+          ],
+          "slots": [
+            "15:10 - 16:00",
+            "16:20 - 17:10",
+            "17:10 - 18:00",
+            "18:00 - 18:50"
+          ],
+          "drawnSlotsByDay": {
+            "1": [
+              "15:10 - 16:00",
+              "16:20 - 17:10",
+              "17:10 - 18:00",
+              "18:00 - 18:50"
+            ]
+          }
+        }
+      ],
+      "subGrupo": null,
+      "cor": "#be51f0",
+      "id": "9a45f6a2-b22a-48e4-bc31-b5ee66a79939"
+    },
+    {
+      "turmaId": "EP2023",
+      "disciplina": "TECNICAS APLICADAS DE EDUCACAO NAO FORMAL",
+      "docente": "Cleide Marques",
+      "docentes": null,
+      "tipo": "intensiva",
+      "ch": 45,
+      "dataInicio": "2026-03-23",
+      "dataFim": "2026-07-07",
+      "modelo": "Automatico",
+      "horariosOcupados": [
+        "15:10 - 16:00",
+        "16:20 - 17:10",
+        "17:10 - 18:00"
+      ],
+      "horariosUltimoDia": [
+        "15:10 - 16:00",
+        "16:20 - 17:10",
+        "17:10 - 18:00"
+      ],
+      "diasMarcados": [
+        2
+      ],
+      "usaSabado": false,
+      "faixas": [
+        {
+          "inicio": "2026-03-23",
+          "fim": "2026-07-07",
+          "dias": [
+            2
+          ],
+          "slots": [
+            "15:10 - 16:00",
+            "16:20 - 17:10",
+            "17:10 - 18:00"
+          ],
+          "drawnSlotsByDay": {
+            "2": [
+              "15:10 - 16:00",
+              "16:20 - 17:10",
+              "17:10 - 18:00"
+            ]
+          }
+        }
+      ],
+      "subGrupo": null,
+      "cor": "#f5e199",
+      "id": "7b85859d-20b7-4316-85d0-e2a60eb5cd05"
+    },
+    {
+      "turmaId": "EP2023",
+      "disciplina": "PISCICULTURA",
+      "docente": "Zélia / Daniel (Múltiplos)",
+      "docentes": [
+        {
+          "nome": "Zélia Maria Pimental Nunes",
+          "ch": 30
+        },
+        {
+          "nome": "Daniel Abreu Vasconcelos Campelo",
+          "ch": 30
+        }
+      ],
+      "tipo": "intensiva",
+      "ch": 60,
+      "dataInicio": "2026-03-23",
+      "dataFim": "2026-07-06",
+      "modelo": "Automatico",
+      "horariosOcupados": [
+        "13:30 - 14:20",
+        "14:20 - 15:10",
+        "15:10 - 16:00",
+        "16:20 - 17:10"
+      ],
+      "horariosUltimoDia": [
+        "13:30 - 14:20",
+        "14:20 - 15:10"
+      ],
+      "diasMarcados": [
+        1,
+        4
+      ],
+      "usaSabado": false,
+      "faixas": [
+        {
+          "inicio": "2026-03-23",
+          "fim": "2026-07-06",
+          "dias": [
+            1,
+            4
+          ],
+          "slots": [
+            "13:30 - 14:20",
+            "14:20 - 15:10",
+            "15:10 - 16:00",
+            "16:20 - 17:10"
+          ],
+          "drawnSlotsByDay": {
+            "1": [
+              "13:30 - 14:20",
+              "14:20 - 15:10"
+            ],
+            "4": [
+              "15:10 - 16:00",
+              "16:20 - 17:10"
+            ]
+          }
+        }
+      ],
+      "subGrupo": null,
+      "cor": "#7beac9",
+      "id": "3fc806d1-b93e-4e78-95f7-79554d184575"
+    },
+    {
+      "turmaId": "EP2023",
+      "disciplina": "TECNICAS DE PESCA",
+      "docente": "Francisco Carlos Alberto Fonteles Holanda",
+      "docentes": null,
+      "tipo": "intensiva",
+      "ch": 45,
+      "dataInicio": "2026-03-23",
+      "dataFim": "2026-07-01",
+      "modelo": "Automatico",
+      "horariosOcupados": [
+        "13:30 - 14:20",
+        "14:20 - 15:10",
+        "15:10 - 16:00"
+      ],
+      "horariosUltimoDia": [
+        "13:30 - 14:20",
+        "14:20 - 15:10",
+        "15:10 - 16:00"
+      ],
+      "diasMarcados": [
+        3
+      ],
+      "usaSabado": false,
+      "faixas": [
+        {
+          "inicio": "2026-03-23",
+          "fim": "2026-07-01",
+          "dias": [
+            3
+          ],
+          "slots": [
+            "13:30 - 14:20",
+            "14:20 - 15:10",
+            "15:10 - 16:00"
+          ],
+          "drawnSlotsByDay": {
+            "3": [
+              "13:30 - 14:20",
+              "14:20 - 15:10",
+              "15:10 - 16:00"
+            ]
+          }
+        }
+      ],
+      "subGrupo": null,
+      "cor": "#d85be1",
+      "id": "a6048adf-44ab-42f8-98a0-38ecf4564569"
+    },
+    {
+      "turmaId": "EP2023",
+      "disciplina": "NAVEGACAO BASICA",
+      "docente": "Carlos Eduardo Rangel Andrade",
+      "docentes": null,
+      "tipo": "intensiva",
+      "ch": 60,
+      "dataInicio": "2026-03-23",
+      "dataFim": "2026-07-09",
+      "modelo": "Automatico",
+      "horariosOcupados": [
+        "13:30 - 14:20",
+        "14:20 - 15:10"
+      ],
+      "horariosUltimoDia": [
+        "13:30 - 14:20",
+        "14:20 - 15:10"
+      ],
+      "diasMarcados": [
+        2,
+        4
+      ],
+      "usaSabado": false,
+      "faixas": [
+        {
+          "inicio": "2026-03-23",
+          "fim": "2026-07-09",
+          "dias": [
+            2,
+            4
+          ],
+          "slots": [
+            "13:30 - 14:20",
+            "14:20 - 15:10"
+          ],
+          "drawnSlotsByDay": {
+            "2": [
+              "13:30 - 14:20",
+              "14:20 - 15:10"
+            ],
+            "4": [
+              "13:30 - 14:20",
+              "14:20 - 15:10"
+            ]
+          }
+        }
+      ],
+      "subGrupo": null,
+      "cor": "#e1e647",
+      "id": "f8ba6e95-8a9e-43c8-81fd-3d98e8b6ec8c"
+    },
+    {
+      "turmaId": "EP2025",
+      "disciplina": "ELETROMAGNETISMO",
+      "docente": "Leonnan Oliveira",
+      "docentes": null,
+      "tipo": "intensiva",
+      "ch": 75,
+      "dataInicio": "2026-04-06",
+      "dataFim": "2026-07-07",
+      "modelo": "Automatico",
+      "horariosOcupados": [
+        "14:20 - 15:10",
+        "15:10 - 16:00",
+        "16:20 - 17:10",
+        "17:10 - 18:00"
+      ],
+      "horariosUltimoDia": [
+        "14:20 - 15:10",
+        "15:10 - 16:00",
+        "16:20 - 17:10"
+      ],
+      "diasMarcados": [
+        2,
+        4
+      ],
+      "usaSabado": false,
+      "faixas": [
+        {
+          "inicio": "2026-04-06",
+          "fim": "2026-07-07",
+          "dias": [
+            2,
+            4
+          ],
+          "slots": [
+            "14:20 - 15:10",
+            "15:10 - 16:00",
+            "16:20 - 17:10",
+            "17:10 - 18:00"
+          ],
+          "drawnSlotsByDay": {
+            "2": [
+              "14:20 - 15:10",
+              "15:10 - 16:00",
+              "16:20 - 17:10",
+              "17:10 - 18:00"
+            ],
+            "4": [
+              "16:20 - 17:10",
+              "17:10 - 18:00"
+            ]
+          }
+        }
+      ],
+      "subGrupo": null,
+      "cor": "#25e9c2",
+      "id": "e8de0a43-ec8b-4dc7-94a5-b38fb99ba041"
+    },
+    {
+      "turmaId": "EP2023",
+      "disciplina": "INTRODUCAO AO TRABALHO DE CONCLUSAO DE CURSO",
+      "docente": "Cleide Marques",
+      "docentes": null,
+      "tipo": "intensiva",
+      "ch": 15,
+      "dataInicio": "2026-03-23",
+      "dataFim": "2026-07-07",
+      "modelo": "Automatico",
+      "horariosOcupados": [
+        "18:00 - 18:50"
+      ],
+      "horariosUltimoDia": [
+        "18:00 - 18:50"
+      ],
+      "diasMarcados": [
+        2
+      ],
+      "usaSabado": false,
+      "faixas": [
+        {
+          "inicio": "2026-03-23",
+          "fim": "2026-07-07",
+          "dias": [
+            2
+          ],
+          "slots": [
+            "18:00 - 18:50"
+          ],
+          "drawnSlotsByDay": {
+            "2": [
+              "18:00 - 18:50"
+            ]
+          }
+        }
+      ],
+      "subGrupo": null,
+      "cor": "#6ad93a",
+      "id": "8ee75970-e2c5-44a3-90f2-065d24d1e9ba"
+    },
+    {
+      "turmaId": "EP2023",
+      "disciplina": "ESTATISTICA APLICADA A PESCA E AQUICULTURA",
+      "docente": "Evaldo Martins da Silva",
+      "docentes": null,
+      "tipo": "intensiva",
+      "ch": 45,
+      "dataInicio": "2026-03-23",
+      "dataFim": "2026-07-17",
+      "modelo": "Automatico",
+      "horariosOcupados": [
+        "13:30 - 14:20",
+        "14:20 - 15:10",
+        "15:10 - 16:00"
+      ],
+      "horariosUltimoDia": [
+        "13:30 - 14:20",
+        "14:20 - 15:10",
+        "15:10 - 16:00"
+      ],
+      "diasMarcados": [
+        5
+      ],
+      "usaSabado": false,
+      "faixas": [
+        {
+          "inicio": "2026-03-23",
+          "fim": "2026-07-17",
+          "dias": [
+            5
+          ],
+          "slots": [
+            "13:30 - 14:20",
+            "14:20 - 15:10",
+            "15:10 - 16:00"
+          ],
+          "drawnSlotsByDay": {
+            "5": [
+              "13:30 - 14:20",
+              "14:20 - 15:10",
+              "15:10 - 16:00"
+            ]
+          }
+        }
+      ],
+      "subGrupo": null,
+      "cor": "#51a0f5",
+      "id": "40a77501-e230-4c24-8056-5edf83363ba1"
+    },
+    {
+      "turmaId": "EP2023",
+      "disciplina": "TOPICOS ESPECIAIS EM TECNOLOGIA DO PESCADO",
+      "docente": "Cleide Marques",
+      "docentes": null,
+      "tipo": "intensiva",
+      "ch": 30,
+      "dataInicio": "2026-03-23",
+      "dataFim": "2026-07-01",
+      "modelo": "Automatico",
+      "horariosOcupados": [
+        "16:20 - 17:10",
+        "17:10 - 18:00"
+      ],
+      "horariosUltimoDia": [
+        "16:20 - 17:10",
+        "17:10 - 18:00"
+      ],
+      "diasMarcados": [
+        3
+      ],
+      "usaSabado": false,
+      "faixas": [
+        {
+          "inicio": "2026-03-23",
+          "fim": "2026-07-01",
+          "dias": [
+            3
+          ],
+          "slots": [
+            "16:20 - 17:10",
+            "17:10 - 18:00"
+          ],
+          "drawnSlotsByDay": {
+            "3": [
+              "16:20 - 17:10",
+              "17:10 - 18:00"
+            ]
+          }
+        }
+      ],
+      "subGrupo": null,
+      "cor": "#51a0f5",
+      "id": "7bf05ed0-e3d4-44d3-aa41-7059ea469d18"
+    },
+    {
+      "turmaId": "EP2023",
+      "disciplina": "TOPICOS ESPECIAIS EM AQUICULTURA",
+      "docente": "Cleide Marques",
+      "docentes": null,
+      "tipo": "intensiva",
+      "ch": 30,
+      "dataInicio": "2026-03-23",
+      "dataFim": "2026-07-09",
+      "modelo": "Automatico",
+      "horariosOcupados": [
+        "17:10 - 18:00",
+        "18:00 - 18:50"
+      ],
+      "horariosUltimoDia": [
+        "17:10 - 18:00",
+        "18:00 - 18:50"
+      ],
+      "diasMarcados": [
+        4
+      ],
+      "usaSabado": false,
+      "faixas": [
+        {
+          "inicio": "2026-03-23",
+          "fim": "2026-07-09",
+          "dias": [
+            4
+          ],
+          "slots": [
+            "17:10 - 18:00",
+            "18:00 - 18:50"
+          ],
+          "drawnSlotsByDay": {
+            "4": [
+              "17:10 - 18:00",
+              "18:00 - 18:50"
+            ]
+          }
+        }
+      ],
+      "subGrupo": null,
+      "cor": "#90f33f",
+      "id": "41e1ce64-4d71-4cda-8a65-d38dbc6c575a"
+    }
+  ],
+  "settings": {
+    "termStart": "2026-03-23",
+    "termEnd": "2026-07-23"
+  }
+}
