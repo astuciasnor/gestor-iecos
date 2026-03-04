@@ -3653,6 +3653,9 @@ function renderGanttChart() {
                 let add = false;
                 let shift = '';
                 let slotsToAdd = 1;
+                let dayRangeStart = a.dataInicio || minDateStr;
+                let dayRangeEnd = a.dataFim || maxDateStr;
+                let intensiveSlotsForDay = [];
 
                 if (a.tipo === 'regular' || a.tipo === 'regular_prioritaria') {
                     if (parseInt(a.diaSemana) === d.id) {
@@ -3662,25 +3665,35 @@ function renderGanttChart() {
                     }
                 }
                 else if (a.tipo === 'intensiva') {
-                    let curDt = new Date((a.dataInicio || minDateStr) + "T12:00:00");
-                    const endDt = new Date((a.dataFim || maxDateStr) + "T12:00:00");
-                    let hasThisDay = false;
+                    const faixas = buildIntensiveConflictFaixas(
+                        a,
+                        a.dataInicio || minDateStr,
+                        a.dataFim || maxDateStr
+                    );
+                    let faixaStart = '';
+                    let faixaEnd = '';
+                    const occsSet = new Set();
 
-                    while (curDt <= endDt) {
-                        if (curDt.getDay() === d.id) {
-                            hasThisDay = true;
-                            break;
-                        }
-                        curDt.setDate(curDt.getDate() + 1);
-                    }
+                    faixas.forEach((faixa) => {
+                        if (!faixa || !faixa.inicio || !faixa.fim) return;
+                        if (!isDateOverlap(faixa.inicio, faixa.fim, minDateStr, maxDateStr)) return;
+                        const daySlots = faixa.byDay?.[d.id] || [];
+                        if (daySlots.length === 0) return;
+                        daySlots.forEach((slot) => occsSet.add(slot));
+                        if (!faixaStart || faixa.inicio < faixaStart) faixaStart = faixa.inicio;
+                        if (!faixaEnd || faixa.fim > faixaEnd) faixaEnd = faixa.fim;
+                    });
 
-                    if (hasThisDay) {
+                    const occs = [...occsSet].sort((x, y) => timeToMinutes(x) - timeToMinutes(y));
+                    if (occs.length > 0) {
                         add = true;
-                        const occs = a.horariosOcupados || [];
                         const isM = occs.some(h => timeToMinutes(h) < 780);
                         const isT = occs.some(h => timeToMinutes(h) >= 780);
                         shift = (isM && isT) ? 'M/T' : (isM ? 'M' : 'T');
-                        slotsToAdd = occs.length > 0 ? occs.length : 5;
+                        slotsToAdd = occs.length;
+                        intensiveSlotsForDay = occs;
+                        if (faixaStart) dayRangeStart = faixaStart;
+                        if (faixaEnd) dayRangeEnd = faixaEnd;
                     }
                 }
 
@@ -3701,24 +3714,24 @@ function renderGanttChart() {
                             shift: shift,
                             chTotal: chTotal,
                             chProf: chProf,
-                            dataInicio: a.dataInicio || minDateStr,
-                            dataFim: a.dataFim || maxDateStr,
+                            dataInicio: dayRangeStart,
+                            dataFim: dayRangeEnd,
                             slotCount: slotsToAdd,
-                            timeRanges: a.tipo === 'intensiva' ? [...(a.horariosOcupados || [])] : [a.horario]
+                            timeRanges: a.tipo === 'intensiva' ? [...intensiveSlotsForDay] : [a.horario]
                         };
                     } else {
                         if (a.tipo !== 'intensiva') {
                             dayItemsMap[key].slotCount += slotsToAdd;
                         }
-                        if (a.dataInicio && a.dataInicio < dayItemsMap[key].dataInicio) {
-                            dayItemsMap[key].dataInicio = a.dataInicio;
+                        if (dayRangeStart && dayRangeStart < dayItemsMap[key].dataInicio) {
+                            dayItemsMap[key].dataInicio = dayRangeStart;
                         }
-                        if (a.dataFim && a.dataFim > dayItemsMap[key].dataFim) {
-                            dayItemsMap[key].dataFim = a.dataFim;
+                        if (dayRangeEnd && dayRangeEnd > dayItemsMap[key].dataFim) {
+                            dayItemsMap[key].dataFim = dayRangeEnd;
                         }
 
                         if (a.tipo === 'intensiva') {
-                            dayItemsMap[key].timeRanges.push(...(a.horariosOcupados || []));
+                            dayItemsMap[key].timeRanges.push(...intensiveSlotsForDay);
                         } else {
                             dayItemsMap[key].timeRanges.push(a.horario);
                         }
@@ -3752,11 +3765,7 @@ function renderGanttChart() {
                 const isOutOfBounds = store.settings.termEnd && item.dataFim > store.settings.termEnd;
                 let boxBorder = isOutOfBounds ? 'border: 2px solid #900;' : `border: 1px solid ${item.cor || '#ccc'};`;
 
-                let barHeight = 24;
-                if (item.tipo !== 'intensiva') {
-                    let cappedSlots = Math.min(item.slotCount, 5);
-                    barHeight = 24 + ((cappedSlots - 1) * 8);
-                }
+                const barHeight = 36;
 
                 const timeRangeStr = getShiftTimeRangeStr(item.timeRanges, 'M');
 
@@ -3767,8 +3776,14 @@ function renderGanttChart() {
 
                 docentesList.forEach((d, idx) => {
                     const isTarget = d.nome === docenteName;
+                    const segCH = parseFloat(d.ch) || 0;
+                    const totalCH = parseFloat(item.chTotal) || 0;
+                    const rawShare = totalCH > 0 ? (segCH / totalCH) : 1;
+                    const safeShare = rawShare > 0 ? rawShare : (totalCH > 0 ? (1 / totalCH) : 1);
+                    const flexUnits = segCH > 0 ? segCH : 1;
+
                     let segStartT = currentSegmentT;
-                    let segEndT = currentSegmentT + (timeSpan * (d.ch / item.chTotal));
+                    let segEndT = currentSegmentT + (timeSpan * safeShare);
                     let sDate = new Date(segStartT).toISOString().split('T')[0];
                     let eDate = new Date(segEndT).toISOString().split('T')[0];
 
@@ -3783,43 +3798,58 @@ function renderGanttChart() {
                     const borderStyle = isTarget ? 'none' : `1px dashed ${item.cor || '#ccc'}`;
                     const zIndex = isTarget ? '2' : '1';
 
+                    const segmentPct = widthPct * safeShare;
+                    const isShortSegment = segmentPct < 16;
+                    const chProfessor = parseFloat(String(d.ch).replace(',', '.'));
+                    const chProfessorTxt = Number.isFinite(chProfessor) ? String(chProfessor).replace(/\.0+$/, '') : String(d.ch || '0');
+                    const labelMain = `${baseLabel} ${tPrefix}${item.disciplina} (${chProfessorTxt}h)`.replace(/\s+/g, ' ').trim();
+                    const horarioSmall = timeRangeStr.replace(/^\s*:\s*/, '').trim();
+                    const outsideLabel = `${baseLabel} ${tPrefix}${item.disciplina} (${chProfessorTxt}h)${timeRangeStr}`.replace(/\s+/g, ' ').trim();
+
                     let content = '';
+                    if (isTarget) {
+                        if (isShortSegment) {
+                            content = `
+                            <div style="display:flex; justify-content:space-between; align-items:center; width:100%; padding:0 4px; gap:4px;">
+                                <span style="font-size:0.68em; opacity:0.95; flex-shrink:0; letter-spacing:-0.4px;">${fmtStart}</span>
+                                <span style="font-size:0.68em; opacity:0.95; flex-shrink:0; letter-spacing:-0.4px;">${fmtEnd}</span>
+                            </div>
+                        `;
 
-                    if (item.tipo === 'intensiva') {
-                        if (isTarget) {
-                            content = `<span style="font-size:0.75em; font-weight:800; letter-spacing:-0.5px; padding:0 2px;">${fmtStart} - ${fmtEnd}</span>`;
-
-                            let textPos = (leftPct + widthPct > 75)
+                            const textPos = (leftPct + widthPct > 75)
                                 ? `right: calc(100% - ${leftPct}% + 6px);`
                                 : `left: calc(${leftPct + widthPct}% + 6px);`;
-
-                            let textColor = item.cor || '#3498db';
+                            const textColor = '#000000';
                             externalLabelsHtml += `
-                            <div style="position: absolute; top: ${currentTopM}px; height: ${barHeight}px; display: flex; align-items: center; ${textPos} color: ${textColor}; font-weight: 900; font-size: 0.85em; white-space: nowrap; z-index: 10; text-shadow: 1px 1px 0px #fff, -1px -1px 0px #fff, 1px -1px 0px #fff, -1px 1px 0px #fff, 0px 2px 4px rgba(0,0,0,0.15);">
-                                ${baseLabel} ${tPrefix}${info.codigo ? info.codigo + ' ' : ''}${info.abrev} (${d.ch}h)
+                            <div style="position:absolute; top:${currentTopM}px; height:${barHeight}px; display:flex; align-items:center; ${textPos} color:${textColor}; font-weight:800; font-size:0.82em; white-space:nowrap; z-index:10; text-shadow:1px 1px 0 #fff, -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff;">
+                                ${outsideLabel}
                             </div>
                         `;
                         } else {
-                            content = `<span style="font-size:0.85em; font-weight:normal; opacity:0.8">${d.nome.split(' ')[0]}</span>`;
+                            content = `
+                            <div style="display:flex; flex-direction:column; justify-content:center; width:100%; padding:0 4px; line-height:1.05; gap:1px;">
+                                <div style="position:relative; display:flex; align-items:center; justify-content:space-between; width:100%; min-height:1.05em; gap:4px;">
+                                    <span style="font-size:0.66em; font-weight:700; opacity:0.98; letter-spacing:-0.2px; flex-shrink:0;">${fmtStart}</span>
+                                    <span style="position:absolute; left:50%; transform:translateX(-50%); max-width:calc(100% - 64px); font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; text-align:center; font-size:0.8em; letter-spacing:-0.3px;">
+                                        ${labelMain}
+                                    </span>
+                                    <span style="font-size:0.66em; font-weight:700; opacity:0.98; letter-spacing:-0.2px; flex-shrink:0;">${fmtEnd}</span>
+                                </div>
+                                <div style="font-size:0.66em; opacity:0.95; letter-spacing:-0.2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; width:100%; text-align:center;">
+                                    ${horarioSmall || ''}
+                                </div>
+                            </div>
+                        `;
                         }
                     } else {
-                        if (isTarget) {
-                            content = `
-                            <div style="display:flex; justify-content:space-between; align-items:center; width:100%; padding:0 2px;">
-                                <span style="font-size:0.7em; opacity:0.9; flex-shrink:0; letter-spacing: -0.5px;">${fmtStart}</span>
-                                <span style="font-weight:bold; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; padding:0 4px; font-size: 0.8em; letter-spacing: -0.4px;">
-                                    ${baseLabel} ${tPrefix}${info.codigo ? info.codigo + ' ' : ''}${info.abrev} (${d.ch}h)${timeRangeStr}
-                                </span>
-                                <span style="font-size:0.7em; opacity:0.9; flex-shrink:0; letter-spacing: -0.5px;">${fmtEnd}</span>
-                            </div>
-                        `;
-                        } else {
-                            content = `<span style="font-size:0.8em; font-weight:normal; opacity:0.8; letter-spacing: -0.3px;">${d.nome.split(' ')[0]} (${d.ch}h)</span>`;
-                        }
+                        const firstName = (d.nome || '').split(' ')[0] || 'Docente';
+                        content = segmentPct < 8
+                            ? `<span style="font-size:0.8em; font-weight:normal; opacity:0.8; letter-spacing: -0.2px;">${firstName}</span>`
+                            : `<span style="font-size:0.8em; font-weight:normal; opacity:0.8; letter-spacing: -0.3px;">${firstName} (${chProfessorTxt}h)</span>`;
                     }
 
                     segmentsHtml += `
-                    <div style="flex: ${d.ch}; background-color: ${bgColor}; color: ${txtColor}; border-right: ${borderStyle}; border-left: ${borderStyle}; height: 100%; display: flex; align-items: center; justify-content: center; overflow: hidden; box-sizing: border-box; z-index: ${zIndex};">
+                    <div style="flex: ${flexUnits}; background-color: ${bgColor}; color: ${txtColor}; border-right: ${borderStyle}; border-left: ${borderStyle}; height: 100%; display: flex; align-items: center; justify-content: center; overflow: hidden; min-width: 0; box-sizing: border-box; z-index: ${zIndex};">
                         ${content}
                     </div>
                 `;
@@ -3859,11 +3889,7 @@ function renderGanttChart() {
                 const isOutOfBounds = store.settings.termEnd && item.dataFim > store.settings.termEnd;
                 let boxBorder = isOutOfBounds ? 'border: 2px solid #900;' : `border: 1px solid ${item.cor || '#ccc'};`;
 
-                let barHeight = 24;
-                if (item.tipo !== 'intensiva') {
-                    let cappedSlots = Math.min(item.slotCount, 5);
-                    barHeight = 24 + ((cappedSlots - 1) * 8);
-                }
+                const barHeight = 36;
 
                 const timeRangeStr = getShiftTimeRangeStr(item.timeRanges, 'T');
 
@@ -3874,8 +3900,14 @@ function renderGanttChart() {
 
                 docentesList.forEach((d, idx) => {
                     const isTarget = d.nome === docenteName;
+                    const segCH = parseFloat(d.ch) || 0;
+                    const totalCH = parseFloat(item.chTotal) || 0;
+                    const rawShare = totalCH > 0 ? (segCH / totalCH) : 1;
+                    const safeShare = rawShare > 0 ? rawShare : (totalCH > 0 ? (1 / totalCH) : 1);
+                    const flexUnits = segCH > 0 ? segCH : 1;
+
                     let segStartT = currentSegmentT;
-                    let segEndT = currentSegmentT + (timeSpan * (d.ch / item.chTotal));
+                    let segEndT = currentSegmentT + (timeSpan * safeShare);
                     let sDate = new Date(segStartT).toISOString().split('T')[0];
                     let eDate = new Date(segEndT).toISOString().split('T')[0];
 
@@ -3890,43 +3922,58 @@ function renderGanttChart() {
                     const borderStyle = isTarget ? 'none' : `1px dashed ${item.cor || '#ccc'}`;
                     const zIndex = isTarget ? '2' : '1';
 
+                    const segmentPct = widthPct * safeShare;
+                    const isShortSegment = segmentPct < 16;
+                    const chProfessor = parseFloat(String(d.ch).replace(',', '.'));
+                    const chProfessorTxt = Number.isFinite(chProfessor) ? String(chProfessor).replace(/\.0+$/, '') : String(d.ch || '0');
+                    const labelMain = `${baseLabel} ${tPrefix}${item.disciplina} (${chProfessorTxt}h)`.replace(/\s+/g, ' ').trim();
+                    const horarioSmall = timeRangeStr.replace(/^\s*:\s*/, '').trim();
+                    const outsideLabel = `${baseLabel} ${tPrefix}${item.disciplina} (${chProfessorTxt}h)${timeRangeStr}`.replace(/\s+/g, ' ').trim();
+
                     let content = '';
+                    if (isTarget) {
+                        if (isShortSegment) {
+                            content = `
+                            <div style="display:flex; justify-content:space-between; align-items:center; width:100%; padding:0 4px; gap:4px;">
+                                <span style="font-size:0.68em; opacity:0.95; flex-shrink:0; letter-spacing:-0.4px;">${fmtStart}</span>
+                                <span style="font-size:0.68em; opacity:0.95; flex-shrink:0; letter-spacing:-0.4px;">${fmtEnd}</span>
+                            </div>
+                        `;
 
-                    if (item.tipo === 'intensiva') {
-                        if (isTarget) {
-                            content = `<span style="font-size:0.75em; font-weight:800; letter-spacing:-0.5px; padding:0 2px;">${fmtStart} - ${fmtEnd}</span>`;
-
-                            let textPos = (leftPct + widthPct > 75)
+                            const textPos = (leftPct + widthPct > 75)
                                 ? `right: calc(100% - ${leftPct}% + 6px);`
                                 : `left: calc(${leftPct + widthPct}% + 6px);`;
-
-                            let textColor = item.cor || '#3498db';
+                            const textColor = '#000000';
                             externalLabelsHtml += `
-                            <div style="position: absolute; top: ${currentTopT}px; height: ${barHeight}px; display: flex; align-items: center; ${textPos} color: ${textColor}; font-weight: 900; font-size: 0.85em; white-space: nowrap; z-index: 10; text-shadow: 1px 1px 0px #fff, -1px -1px 0px #fff, 1px -1px 0px #fff, -1px 1px 0px #fff, 0px 2px 4px rgba(0,0,0,0.15);">
-                                ${baseLabel} ${tPrefix}${info.codigo ? info.codigo + ' ' : ''}${info.abrev} (${d.ch}h)
+                            <div style="position:absolute; top:${currentTopT}px; height:${barHeight}px; display:flex; align-items:center; ${textPos} color:${textColor}; font-weight:800; font-size:0.82em; white-space:nowrap; z-index:10; text-shadow:1px 1px 0 #fff, -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff;">
+                                ${outsideLabel}
                             </div>
                         `;
                         } else {
-                            content = `<span style="font-size:0.85em; font-weight:normal; opacity:0.8">${d.nome.split(' ')[0]}</span>`;
+                            content = `
+                            <div style="display:flex; flex-direction:column; justify-content:center; width:100%; padding:0 4px; line-height:1.05; gap:1px;">
+                                <div style="position:relative; display:flex; align-items:center; justify-content:space-between; width:100%; min-height:1.05em; gap:4px;">
+                                    <span style="font-size:0.66em; font-weight:700; opacity:0.98; letter-spacing:-0.2px; flex-shrink:0;">${fmtStart}</span>
+                                    <span style="position:absolute; left:50%; transform:translateX(-50%); max-width:calc(100% - 64px); font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; text-align:center; font-size:0.8em; letter-spacing:-0.3px;">
+                                        ${labelMain}
+                                    </span>
+                                    <span style="font-size:0.66em; font-weight:700; opacity:0.98; letter-spacing:-0.2px; flex-shrink:0;">${fmtEnd}</span>
+                                </div>
+                                <div style="font-size:0.66em; opacity:0.95; letter-spacing:-0.2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; width:100%; text-align:center;">
+                                    ${horarioSmall || ''}
+                                </div>
+                            </div>
+                        `;
                         }
                     } else {
-                        if (isTarget) {
-                            content = `
-                            <div style="display:flex; justify-content:space-between; align-items:center; width:100%; padding:0 2px;">
-                                <span style="font-size:0.7em; opacity:0.9; flex-shrink:0; letter-spacing: -0.5px;">${fmtStart}</span>
-                                <span style="font-weight:bold; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; padding:0 4px; font-size: 0.8em; letter-spacing: -0.4px;">
-                                    ${baseLabel} ${tPrefix}${info.codigo ? info.codigo + ' ' : ''}${info.abrev} (${d.ch}h)${timeRangeStr}
-                                </span>
-                                <span style="font-size:0.7em; opacity:0.9; flex-shrink:0; letter-spacing: -0.5px;">${fmtEnd}</span>
-                            </div>
-                        `;
-                        } else {
-                            content = `<span style="font-size:0.8em; font-weight:normal; opacity:0.8; letter-spacing: -0.3px;">${d.nome.split(' ')[0]} (${d.ch}h)</span>`;
-                        }
+                        const firstName = (d.nome || '').split(' ')[0] || 'Docente';
+                        content = segmentPct < 8
+                            ? `<span style="font-size:0.8em; font-weight:normal; opacity:0.8; letter-spacing: -0.2px;">${firstName}</span>`
+                            : `<span style="font-size:0.8em; font-weight:normal; opacity:0.8; letter-spacing: -0.3px;">${firstName} (${chProfessorTxt}h)</span>`;
                     }
 
                     segmentsHtml += `
-                    <div style="flex: ${d.ch}; background-color: ${bgColor}; color: ${txtColor}; border-right: ${borderStyle}; border-left: ${borderStyle}; height: 100%; display: flex; align-items: center; justify-content: center; overflow: hidden; box-sizing: border-box; z-index: ${zIndex};">
+                    <div style="flex: ${flexUnits}; background-color: ${bgColor}; color: ${txtColor}; border-right: ${borderStyle}; border-left: ${borderStyle}; height: 100%; display: flex; align-items: center; justify-content: center; overflow: hidden; min-width: 0; box-sizing: border-box; z-index: ${zIndex};">
                         ${content}
                     </div>
                 `;
@@ -4477,7 +4524,11 @@ function generateCalendarGrid(container, turmaId, docenteName, start, end, title
                                 const event = uniqueEventsInSlot[0];
                                 if (event) {
                                     const info = getDisciplinaInfo(event.disciplina);
-                                    content = info.abrev;
+                                    const docenteFirst = String(event.docente || '').trim().split(/\s+/)[0] || '';
+                                    const docenteLabel = (docenteFirst && !/^a$/i.test(docenteFirst)) ? docenteFirst.toUpperCase() : '';
+                                    content = docenteLabel
+                                        ? `<div>${info.abrev} <span style="font-size:0.82em; font-weight:600; opacity:0.92;">- ${docenteLabel}</span></div>`
+                                        : info.abrev;
                                     style = `background:${event.cor || '#bdc3c7'}; color:black;`;
                                 } else {
                                     content = '&nbsp;';
