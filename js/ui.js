@@ -404,7 +404,7 @@ function buildHorariosForUI() {
         .filter((s) => s && s.trim().length > 0);
 }
 
-function applyWeeklyGridRowHeightScale(scaleNormal = 0.504, scaleHeaderAndInterval = 0.6) {
+function applyWeeklyGridRowHeightScale(scaleNormal = 0.354) {
     if (!gridContainer) return;
 
     requestAnimationFrame(() => {
@@ -438,8 +438,7 @@ function applyWeeklyGridRowHeightScale(scaleNormal = 0.504, scaleHeaderAndInterv
 
         if (hadStyle && styleEl) styleEl.disabled = false;
 
-        const normalH = Math.max(24, Math.round(base * scaleNormal));
-        const smallH = Math.max(16, Math.round(normalH * scaleHeaderAndInterval));
+        const uniformH = Math.max(24, Math.round(base * scaleNormal));
 
         if (!styleEl) {
             styleEl = document.createElement('style');
@@ -448,10 +447,11 @@ function applyWeeklyGridRowHeightScale(scaleNormal = 0.504, scaleHeaderAndInterv
         }
 
         styleEl.textContent = `
-          #weekly-grid .slot { height: auto !important; min-height: ${normalH}px !important; }
-          #weekly-grid .header.time { height: ${normalH}px !important; min-height: ${normalH}px !important; }
-          #weekly-grid .header.top-header { height: ${smallH}px !important; min-height: ${smallH}px !important; line-height: 1.1 !important; padding-top: 4px !important; padding-bottom: 4px !important; }
-          #weekly-grid .header.interval-time, #weekly-grid .header.interval-merge { height: ${smallH}px !important; min-height: ${smallH}px !important; line-height: 1.1 !important; padding-top: 4px !important; padding-bottom: 4px !important; }
+          #weekly-grid .slot { height: auto !important; min-height: ${uniformH}px !important; box-sizing: border-box !important; }
+          #weekly-grid .header.time,
+          #weekly-grid .header.top-header,
+          #weekly-grid .header.interval-time,
+          #weekly-grid .header.interval-merge { height: ${uniformH}px !important; min-height: ${uniformH}px !important; box-sizing: border-box !important; }
         `;
     });
 }
@@ -2972,7 +2972,7 @@ function renderWeeklyGrid() {
         }
     });
 
-    applyWeeklyGridRowHeightScale(0.504, 0.6);
+    applyWeeklyGridRowHeightScale(0.354);
     updateWeeklySavePatternButton();
 }
 

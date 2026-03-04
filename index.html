@@ -646,47 +646,61 @@
 
             <section id="tab-weekly" class="tab-content active">
                 <div class="weekly-top-layout">
-                    <div class="grid-header">
-                        <h2 id="turma-title">Selecione uma turma</h2>
-                        <p class="instruction">Todas as ofertas usam o modelo por <b>Faixas</b>.<br>
-                            Configure as datas e desenhe o padrão semanal na própria grade.
-                        </p>
+                    <div class="grid-header weekly-header-panel">
+                        <div class="weekly-instructions-card">
+                            <h3>Instru&ccedil;&otilde;es de preenchimento e uso</h3>
+                            <ul>
+                                <li>Selecione um curso e uma turma; em seguida, a componente e a(o)(s) docente(s) ministrante(s)</li>
+                                <li>As ofertas usam o modelo por faixas de hor&aacute;rios</li>
+                                <li>Configure a data inicial da(s) faixa(s) &mdash; em geral, haver&aacute; apenas uma</li>
+                                <li>Desenhe o padr&atilde;o de hor&aacute;rios clicando sobre cada slot do dia da semana</li>
+                                <li>N&atilde;o &eacute; necess&aacute;rio desenhar nas demais semanas se o padr&atilde;o for o mesmo em toda a oferta da componente</li>
+                            </ul>
+                        </div>
                     </div>
                     <div id="container-faixas-intensiva" class="weekly-faixas-panel no-print">
-                        <table class="weekly-faixas-table">
-                            <thead>
-                                <tr>
-                                    <th>Faixa</th>
-                                    <th>Inicio</th>
-                                    <th>Fim</th>
-                                    <th>CH</th>
-                                </tr>
-                            </thead>
-                            <tbody id="faixas-lista">
-                                <tr id="faixa-1" class="faixa-item">
-                                    <td class="faixa-num">1</td>
-                                    <td><input type="date" id="inp-data-inicio-f1" class="inp-data-inicio"></td>
-                                    <td><input type="date" id="inp-data-fim-f1" class="inp-data-fim"></td>
-                                    <td id="faixa-ch-f1" class="faixa-ch-cell">0</td>
-                                </tr>
-                                <tr id="faixa-2" class="faixa-item">
-                                    <td class="faixa-num">2</td>
-                                    <td><input type="date" id="inp-data-inicio-f2" class="inp-data-inicio"></td>
-                                    <td><input type="date" id="inp-data-fim-f2" class="inp-data-fim"></td>
-                                    <td id="faixa-ch-f2" class="faixa-ch-cell">0</td>
-                                </tr>
-                                <tr id="faixa-3" class="faixa-item">
-                                    <td class="faixa-num">3</td>
-                                    <td><input type="date" id="inp-data-inicio-f3" class="inp-data-inicio"></td>
-                                    <td><input type="date" id="inp-data-fim-f3" class="inp-data-fim"></td>
-                                    <td id="faixa-ch-f3" class="faixa-ch-cell">0</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                        <div class="weekly-faixas-total">
-                            <div class="weekly-faixas-total-main">Total: <span id="weekly-faixa-total-ch">0</span></div>
-                            <div class="weekly-faixas-target">Meta CH: <span id="weekly-faixa-target-ch">-</span></div>
-                            <div id="weekly-faixa-consistency" class="weekly-faixas-consistency">Selecione uma componente.</div>
+                        <div class="weekly-faixas-title">Faixas de Datas e CH da Componente</div>
+                        <div class="weekly-faixas-main">
+                            <table class="weekly-faixas-table">
+                                <colgroup>
+                                    <col class="col-faixa-id">
+                                    <col class="col-faixa-date-start">
+                                    <col class="col-faixa-date-end">
+                                    <col class="col-faixa-ch">
+                                </colgroup>
+                                <thead>
+                                    <tr>
+                                        <th>Faixa</th>
+                                        <th>Inicio</th>
+                                        <th>Fim</th>
+                                        <th>CH</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="faixas-lista">
+                                    <tr id="faixa-1" class="faixa-item">
+                                        <td class="faixa-num">1</td>
+                                        <td><input type="date" id="inp-data-inicio-f1" class="inp-data-inicio"></td>
+                                        <td><input type="date" id="inp-data-fim-f1" class="inp-data-fim"></td>
+                                        <td id="faixa-ch-f1" class="faixa-ch-cell">0</td>
+                                    </tr>
+                                    <tr id="faixa-2" class="faixa-item">
+                                        <td class="faixa-num">2</td>
+                                        <td><input type="date" id="inp-data-inicio-f2" class="inp-data-inicio"></td>
+                                        <td><input type="date" id="inp-data-fim-f2" class="inp-data-fim"></td>
+                                        <td id="faixa-ch-f2" class="faixa-ch-cell">0</td>
+                                    </tr>
+                                    <tr id="faixa-3" class="faixa-item">
+                                        <td class="faixa-num">3</td>
+                                        <td><input type="date" id="inp-data-inicio-f3" class="inp-data-inicio"></td>
+                                        <td><input type="date" id="inp-data-fim-f3" class="inp-data-fim"></td>
+                                        <td id="faixa-ch-f3" class="faixa-ch-cell">0</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <div class="weekly-faixas-total">
+                                <div class="weekly-faixas-total-main">Total: <span id="weekly-faixa-total-ch">0</span></div>
+                                <div class="weekly-faixas-target">Meta CH: <span id="weekly-faixa-target-ch">-</span></div>
+                            </div>
                         </div>
                         <div class="weekly-faixas-status hidden">
                             <span id="status-draw-f1"></span>
