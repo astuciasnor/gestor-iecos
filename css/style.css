@@ -230,6 +230,97 @@ input[type="date"] { color-scheme: dark; }
 .grid-header h2 { margin: 0 0 5px 0; color: var(--primary); font-size: 1.8em; }
 .instruction { margin: 0; color: var(--text-muted); font-size: 1em; }
 
+.weekly-week-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin: 14px 0 14px 0;
+    padding: 10px 12px;
+    border: 1px solid #d6dde5;
+    background: #f8fafb;
+    border-radius: 8px;
+}
+
+.weekly-week-label {
+    flex: 1;
+    text-align: center;
+    font-weight: 700;
+    color: #204350;
+    letter-spacing: 0.2px;
+    font-size: 0.95rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.weekly-week-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-week-nav {
+    border: 1px solid #b8c6d1;
+    background: #ffffff;
+    color: #2f4c5a;
+    border-radius: 6px;
+    padding: 7px 10px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.84rem;
+}
+
+.btn-week-nav:hover {
+    background: #eef4f8;
+}
+
+.btn-week-focus {
+    border-color: #90b7a0;
+    color: #235f3c;
+    background: #f2fbf5;
+}
+
+.week-day-header {
+    line-height: 1.1;
+}
+
+.week-day-header .week-day-name {
+    display: block;
+    font-weight: 700;
+}
+
+.week-day-header .week-day-date {
+    display: block;
+    margin-top: 2px;
+    font-size: 0.74em;
+    color: #607d8b;
+    font-weight: 600;
+}
+
+.week-day-header.week-day-holiday .week-day-date {
+    color: #b03a2e;
+}
+
+.timetable .slot.slot-free-draw {
+    background: rgba(39, 174, 96, 0.14) !important;
+    border: 1px solid rgba(39, 174, 96, 0.32) !important;
+}
+
+.timetable .slot.slot-free-draw:hover {
+    background: rgba(39, 174, 96, 0.23) !important;
+}
+
+.timetable .slot.slot-week-disabled {
+    background: #f1f4f7 !important;
+    border: 1px solid #d3dde6 !important;
+}
+
+.timetable .slot.slot-week-holiday {
+    background: #f8eeee !important;
+    border: 1px solid #e7c5c5 !important;
+}
+
 .timetable {
     display: grid;
     grid-template-columns: 115px repeat(6, 1fr); 

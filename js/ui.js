@@ -42,6 +42,11 @@ const drawingDragState = {
     touchedAnyCell: false
 };
 
+const weeklyViewState = {
+    weekStartISO: '',
+    followActiveFaixa: true
+};
+
 // ==========================================
 // AJUSTES VISUAIS DA BARRA LATERAL (SIDEBAR)
 // ==========================================
@@ -793,15 +798,27 @@ function clearActiveDrawingSelection() {
     return clearedCount;
 }
 
-function activateDrawingMode(faixaIndex) {
+function activateDrawingMode(faixaIndex, options = {}) {
+    const { silent = false, jumpToFaixaStart = false } = options;
     const faixaEl = document.getElementById(`faixa-${faixaIndex}`);
     if (!faixaEl || faixaEl.classList.contains('hidden')) {
-        showToastWarning(`Faixa ${faixaIndex} nao esta disponivel para desenho.`, 'warning', 2400);
+        if (!silent) showToastWarning(`Faixa ${faixaIndex} nao esta disponivel para desenho.`, 'warning', 2400);
         return;
     }
     activeFaixaIndex = faixaIndex;
     window.isDrawingFaixa = faixaIndex;
     endDrawingDrag();
+
+    if (jumpToFaixaStart) {
+        const faixaStart = getActiveFaixaStartDate(faixaIndex);
+        if (faixaStart) {
+            setWeeklyViewByDate(faixaStart, { followFaixa: true, render: false });
+        } else {
+            weeklyViewState.followActiveFaixa = true;
+        }
+    } else {
+        weeklyViewState.followActiveFaixa = true;
+    }
 
     const nameEl = document.getElementById('drawing-faixa-name');
     if (nameEl) nameEl.textContent = `Faixa ${faixaIndex}`;
@@ -812,12 +829,13 @@ function activateDrawingMode(faixaIndex) {
 
     switchTab('weekly');
     renderWeeklyGrid();
-    showToastWarning(`Modo desenho ativo para a Faixa ${faixaIndex}.`, 'success', 2000);
+    if (!silent) showToastWarning(`Modo desenho ativo para a Faixa ${faixaIndex}.`, 'success', 2000);
 }
 
 function deactivateDrawingMode() {
     endDrawingDrag();
     window.isDrawingFaixa = null;
+    weeklyViewState.followActiveFaixa = false;
     const toolbar = document.getElementById('drawing-toolbar');
     if (toolbar) toolbar.classList.add('hidden');
     renderWeeklyGrid();
@@ -980,6 +998,17 @@ function enforceCanonicalFaixaMode() {
     applyFaixaDateAutofill({ forceSingleBounds: true, forceFaixa2End: true });
 }
 
+function autoEnterWeeklyEditingForFaixa(faixaIndex) {
+    if (!store.selectedTurma) return;
+    const faixaEl = document.getElementById(`faixa-${faixaIndex}`);
+    if (!faixaEl || faixaEl.classList.contains('hidden')) return;
+
+    const ini = getActiveFaixaStartDate(faixaIndex);
+    if (!ini) return;
+
+    activateDrawingMode(faixaIndex, { silent: true, jumpToFaixaStart: true });
+}
+
 function setupFaixaControls() {
     const f1Fim = document.getElementById('inp-data-fim-f1');
     const f2Ini = document.getElementById('inp-data-inicio-f2');
@@ -1020,6 +1049,10 @@ function setupFaixaControls() {
             ['input', 'change'].forEach((evt) => {
                 el.addEventListener(evt, () => {
                     setFaixaStatus(i, getFaixaSlotsAndDays(i).pattern.length);
+                    if (el === iniEl && iniEl.value) {
+                        autoEnterWeeklyEditingForFaixa(i);
+                        return;
+                    }
                     if (window.isDrawingFaixa) renderWeeklyGrid();
                 });
             });
@@ -1076,8 +1109,11 @@ function setupFaixaControls() {
     });
 
     document.querySelectorAll('.btn-draw-faixa').forEach((btn) => {
-        btn.textContent = 'Desenhar na Grade Semanal';
+        btn.textContent = 'Abrir Edicao na Grade';
         btn.style.whiteSpace = 'nowrap';
+        btn.style.background = '#5f6f80';
+        btn.style.opacity = '0.88';
+        btn.title = 'Fluxo em transicao: a grade tambem entra em modo de edicao automaticamente ao definir a data da faixa.';
         btn.addEventListener('click', (e) => {
             if (!store.selectedTurma) {
                 showToastWarning('Selecione curso e turma antes de desenhar.', 'warning', 2500);
@@ -1213,6 +1249,164 @@ function addDaysISO(dateStr, days) {
     return toISODate(d);
 }
 
+function getWeekStartISO(dateStr) {
+    if (!dateStr) return '';
+    const d = new Date(`${dateStr}T12:00:00`);
+    if (Number.isNaN(d.getTime())) return '';
+    const dow = d.getDay();
+    const delta = dow === 0 ? -6 : (1 - dow);
+    d.setDate(d.getDate() + delta);
+    return toISODate(d);
+}
+
+function formatDayMonthShort(dateStr) {
+    if (!dateStr) return '';
+    const d = new Date(`${dateStr}T12:00:00`);
+    if (Number.isNaN(d.getTime())) return '';
+    const meses = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+    const dd = String(d.getDate()).padStart(2, '0');
+    return `${dd}/${meses[d.getMonth()]}`;
+}
+
+function getWeeklyWeekDates(weekStartISO) {
+    if (!weekStartISO) return [];
+    const dates = [];
+    for (let i = 0; i < 6; i++) {
+        dates.push(addDaysISO(weekStartISO, i));
+    }
+    return dates;
+}
+
+function getActiveFaixaStartDate(faixaIndex) {
+    const idx = parseInt(faixaIndex, 10);
+    if (Number.isNaN(idx) || idx < 1 || idx > 3) return '';
+    return document.getElementById(`inp-data-inicio-f${idx}`)?.value || '';
+}
+
+function getDefaultWeeklyAnchorDate() {
+    const activeStart = getActiveFaixaStartDate(window.isDrawingFaixa || activeFaixaIndex);
+    const termStart = store.settings.termStart || inpTermStart?.value || calStart?.value || '';
+    if (activeStart) return activeStart;
+    if (termStart) return termStart;
+    return toISODate(new Date());
+}
+
+function setWeeklyViewByDate(dateStr, options = {}) {
+    const { followFaixa = false, render = false } = options;
+    const weekStart = getWeekStartISO(dateStr || getDefaultWeeklyAnchorDate());
+    if (!weekStart) return;
+    weeklyViewState.weekStartISO = weekStart;
+    weeklyViewState.followActiveFaixa = !!followFaixa;
+    if (render) renderWeeklyGrid();
+}
+
+function resolveWeeklyViewWeekStart() {
+    if (!weeklyViewState.weekStartISO) {
+        setWeeklyViewByDate(getDefaultWeeklyAnchorDate(), { followFaixa: !!window.isDrawingFaixa, render: false });
+    }
+    return weeklyViewState.weekStartISO;
+}
+
+function moveWeeklyViewWeek(weekDelta = 0) {
+    const currentStart = resolveWeeklyViewWeekStart();
+    if (!currentStart) return;
+    const nextDate = addDaysISO(currentStart, weekDelta * 7);
+    setWeeklyViewByDate(nextDate, { followFaixa: false, render: true });
+}
+
+function updateWeeklyNavigatorLabel() {
+    const labelEl = document.getElementById('weekly-week-label');
+    if (!labelEl) return;
+
+    const weekStart = resolveWeeklyViewWeekStart();
+    if (!weekStart) {
+        labelEl.textContent = 'Semana nao definida';
+        return;
+    }
+
+    const weekEnd = addDaysISO(weekStart, 5);
+    let suffix = '';
+
+    if (window.isDrawingFaixa) {
+        const idx = parseInt(window.isDrawingFaixa, 10);
+        const ini = document.getElementById(`inp-data-inicio-f${idx}`)?.value || '';
+        const fim = document.getElementById(`inp-data-fim-f${idx}`)?.value || ini;
+        if (ini) {
+            suffix = ` | Faixa ${idx}: ${formatDateBR(ini)} a ${formatDateBR(fim)}`;
+        }
+    }
+
+    labelEl.textContent = `Semana ${formatDateBR(weekStart)} a ${formatDateBR(weekEnd)}${suffix}`;
+}
+
+function setupWeeklyWeekNavigator() {
+    if (window.__weeklyNavigatorBound) {
+        updateWeeklyNavigatorLabel();
+        return;
+    }
+    window.__weeklyNavigatorBound = true;
+
+    const btnPrev = document.getElementById('btn-week-prev');
+    const btnNext = document.getElementById('btn-week-next');
+    const btnFocus = document.getElementById('btn-week-focus-faixa');
+
+    if (btnPrev) {
+        btnPrev.addEventListener('click', () => {
+            moveWeeklyViewWeek(-1);
+        });
+    }
+    if (btnNext) {
+        btnNext.addEventListener('click', () => {
+            moveWeeklyViewWeek(1);
+        });
+    }
+    if (btnFocus) {
+        btnFocus.addEventListener('click', () => {
+            const faixaStart = getActiveFaixaStartDate(window.isDrawingFaixa || activeFaixaIndex);
+            const anchor = faixaStart || getDefaultWeeklyAnchorDate();
+            setWeeklyViewByDate(anchor, { followFaixa: !!faixaStart, render: true });
+        });
+    }
+
+    updateWeeklyNavigatorLabel();
+}
+
+function isDateInsideRange(dateStr, start, end) {
+    if (!dateStr) return false;
+    const s = start || dateStr;
+    const e = end || s;
+    return dateStr >= s && dateStr <= e;
+}
+
+function isAllocationActiveInWeeklyCell(alloc, dayNumber, dateStr, horarioStr) {
+    if (!alloc || !dateStr || !horarioStr) return false;
+
+    if (alloc.tipo === 'intensiva') {
+        if (Array.isArray(alloc.faixas) && alloc.faixas.length > 0) {
+            const slots = getIntensiveSlotsForDate(alloc, dateStr, { dayOfWeek: dayNumber });
+            return Array.isArray(slots) && slots.includes(horarioStr);
+        }
+
+        const start = alloc.dataInicio || store.settings.termStart || dateStr;
+        const end = alloc.dataFim || store.settings.termEnd || start;
+        if (!isDateInsideRange(dateStr, start, end)) return false;
+
+        const dias = Array.isArray(alloc.diasMarcados) && alloc.diasMarcados.length > 0
+            ? alloc.diasMarcados
+            : (alloc.usaSabado ? [1, 2, 3, 4, 5, 6] : [1, 2, 3, 4, 5]);
+        const slots = Array.isArray(alloc.horariosOcupados) ? alloc.horariosOcupados : [];
+        return dias.includes(dayNumber) && slots.includes(horarioStr);
+    }
+
+    if (alloc.tipo === 'regular' || alloc.tipo === 'regular_prioritaria') {
+        const start = alloc.dataInicio || store.settings.termStart || dateStr;
+        const end = alloc.dataFim || store.settings.termEnd || start;
+        if (!isDateInsideRange(dateStr, start, end)) return false;
+        return parseInt(alloc.diaSemana, 10) === dayNumber && alloc.horario === horarioStr;
+    }
+
+    return false;
+}
 function normalizeDrawnSlotsByDay(raw) {
     const map = {};
     if (!raw || typeof raw !== 'object') return map;
@@ -2017,6 +2211,8 @@ function handleImportBloco() {
 
 export function initUI() {
     setupFaixaControls();
+    setupWeeklyWeekNavigator();
+    setWeeklyViewByDate(store.settings.termStart || calStart?.value || '', { followFaixa: false, render: false });
     if (selCurso) selCurso.addEventListener('change', onCursoChange);
     if (selTurma) selTurma.addEventListener('change', onTurmaChange);
 
@@ -2414,6 +2610,7 @@ function onTurmaChange() {
         inputConfig.inicio.value = preferredStart;
     }
     applyFaixaDateAutofill({ forceSingleBounds: true, forceFaixa2End: true });
+    setWeeklyViewByDate(preferredStart || store.settings.termStart || calStart?.value || '', { followFaixa: false, render: false });
 
     renderWeeklyGrid();
     renderOfertasList();
@@ -2432,7 +2629,14 @@ function renderWeeklyGrid() {
 
     gridContainer.innerHTML = '';
     const horariosUI = buildHorariosForUI();
-    const dias = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
+    const diasSemana = [
+        { id: 1, nome: 'Segunda' },
+        { id: 2, nome: 'Terca' },
+        { id: 3, nome: 'Quarta' },
+        { id: 4, nome: 'Quinta' },
+        { id: 5, nome: 'Sexta' },
+        { id: 6, nome: 'Sabado' }
+    ];
     const isDrawing = !!window.isDrawingFaixa;
     const drawRange = isDrawing ? getActiveDrawingFaixaRange() : null;
     const drawingDisciplina = normalizeDisciplinaInputValue(inputConfig.disciplina?.value || '');
@@ -2440,24 +2644,40 @@ function renderWeeklyGrid() {
     const pattern = isDrawing ? normalizeFaixaPattern(faixasPatterns[window.isDrawingFaixa]) : [];
     const drawStyles = isDrawing ? getDrawingSelectedStyles() : null;
     const showContextWhileDrawing = !isDrawing || drawingViewMode === 'context';
+    const feriadosSet = new Set((store.rawData?.feriados || []).map((f) => f.data || f));
 
     if (!store.selectedTurma || horariosUI.length === 0) {
-        const turnoAtual = store.settings?.turnoOferta || "Manhã";
+        const turnoAtual = store.settings?.turnoOferta || "Manha";
         gridContainer.innerHTML = `
             <div style="grid-column: 1/-1; padding: 22px; background:#bdc3c7; border-radius: 6px;">
                 <ul style="margin:0; padding-left: 20px; color:#2c3e50; font-size: 1.05rem; line-height: 1.55; text-align:left; width:100%; display:block; margin-left:0;">
                     <li>Selecione um curso do IECOS</li>
-                    <li>Selecione uma turma válida do seu curso</li>
-                    <li>Insira data de início e fim do Período Letivo</li>
+                    <li>Selecione uma turma valida do seu curso</li>
+                    <li>Insira data de inicio e fim do Periodo Letivo</li>
                     <li>Selecione um turno <span style="color:#34495e; font-size:0.95rem; opacity:0.9;">(Turno Atual: ${turnoAtual})</span></li>
                 </ul>
             </div>
         `;
+        updateWeeklyNavigatorLabel();
         return;
     }
 
+    if (weeklyViewState.followActiveFaixa && window.isDrawingFaixa) {
+        const faixaStart = getActiveFaixaStartDate(window.isDrawingFaixa);
+        if (faixaStart) setWeeklyViewByDate(faixaStart, { followFaixa: true, render: false });
+    }
+    const weekStartISO = resolveWeeklyViewWeekStart();
+    const weekDates = getWeeklyWeekDates(weekStartISO);
+    updateWeeklyNavigatorLabel();
+
     gridContainer.appendChild(createCell('header top-header', ''));
-    dias.forEach((d) => gridContainer.appendChild(createCell('header top-header', d)));
+    diasSemana.forEach((dia, idx) => {
+        const dateStr = weekDates[idx] || '';
+        const h = createCell('header top-header week-day-header', '');
+        h.innerHTML = `<span class="week-day-name">${dia.nome}</span><span class="week-day-date">${formatDayMonthShort(dateStr)}</span>`;
+        if (dateStr && feriadosSet.has(dateStr)) h.classList.add('week-day-holiday');
+        gridContainer.appendChild(h);
+    });
 
     horariosUI.forEach((horarioStr) => {
         const isIntervalo = horarioStr.toUpperCase().includes('INTERVALO');
@@ -2477,50 +2697,14 @@ function renderWeeklyGrid() {
         } else {
             for (let i = 1; i <= 6; i++) {
                 const cell = createCell('slot', '');
+                const cellDate = weekDates[i - 1] || '';
                 cell.dataset.dia = i;
                 cell.dataset.horario = horarioStr;
+                cell.dataset.date = cellDate;
 
                 const allocs = turmaAllocs.filter((a) => {
                     if (isDrawing && drawingDisciplina && a.disciplina === drawingDisciplina) return false;
-                    if (isDrawing && drawRange) {
-                        const allocRange = {
-                            start: a.dataInicio || store.settings.termStart || drawRange.start,
-                            end: a.dataFim || store.settings.termEnd || a.dataInicio || drawRange.end
-                        };
-                        if (!rangeOverlaps(drawRange, allocRange)) return false;
-                    }
-
-                    if (a.tipo === 'intensiva') {
-                        if (Array.isArray(a.faixas) && a.faixas.length > 0) {
-                            return a.faixas.some((faixa) => {
-                                const byDay = faixa?.drawnSlotsByDay || {};
-                                const slotsInDay = Array.isArray(byDay?.[i])
-                                    ? byDay[i]
-                                    : ((Array.isArray(faixa?.dias) && faixa.dias.includes(i))
-                                        ? (faixa.slots || [])
-                                        : []);
-                                if (!Array.isArray(slotsInDay) || !slotsInDay.includes(horarioStr)) return false;
-                                if (isDrawing && drawRange) {
-                                    const faixaRange = {
-                                        start: faixa?.inicio || a.dataInicio || store.settings.termStart || drawRange.start,
-                                        end: faixa?.fim || a.dataFim || store.settings.termEnd || faixa?.inicio || drawRange.end
-                                    };
-                                    return rangeOverlaps(drawRange, faixaRange);
-                                }
-                                return true;
-                            });
-                        }
-
-                        const dias = Array.isArray(a.diasMarcados) && a.diasMarcados.length > 0
-                            ? a.diasMarcados
-                            : (a.usaSabado ? [1, 2, 3, 4, 5, 6] : [1, 2, 3, 4, 5]);
-                        const slots = Array.isArray(a.horariosOcupados) ? a.horariosOcupados : [];
-                        return dias.includes(i) && slots.includes(horarioStr);
-                    }
-
-                    return (a.tipo === 'regular' || a.tipo === 'regular_prioritaria') &&
-                        a.diaSemana == i &&
-                        a.horario === horarioStr;
+                    return isAllocationActiveInWeeklyCell(a, i, cellDate, horarioStr);
                 });
 
                 if (allocs.length > 0 && showContextWhileDrawing) renderSlotContent(cell, allocs);
@@ -2528,8 +2712,14 @@ function renderWeeklyGrid() {
                 if (isDrawing) {
                     const isSelected = pattern.some((p) => p.dia === i && p.slot === horarioStr);
                     setDrawingCellSelection(cell, isSelected, drawStyles);
+                    cell.classList.remove('slot-free-draw', 'slot-week-disabled', 'slot-week-holiday');
 
-                    if (allocs.length === 0) {
+                    const isInsideFaixa = drawRange ? isDateInsideRange(cellDate, drawRange.start, drawRange.end) : true;
+                    const isHoliday = !!cellDate && feriadosSet.has(cellDate);
+                    const canEdit = isInsideFaixa && !isHoliday && allocs.length === 0;
+
+                    if (canEdit) {
+                        if (!isSelected) cell.classList.add('slot-free-draw');
                         cell.style.cursor = 'crosshair';
                         cell.addEventListener('mousedown', (e) => {
                             if (e.button !== 0) return;
@@ -2546,16 +2736,27 @@ function renderWeeklyGrid() {
                             drawingDragState.touchedAnyCell = true;
                             setDrawingCellSelection(cell, drawingDragState.shouldSelect, drawStyles);
                         });
-                    } else {
+                    } else if (allocs.length > 0) {
                         cell.style.opacity = '0.6';
                         cell.style.pointerEvents = 'none';
                         if (!showContextWhileDrawing) {
                             cell.innerHTML = '';
                             cell.style.background = '#dfe6e9';
                         }
-                        cell.title = 'Horário ocupado na turma';
+                        cell.title = 'Horario ocupado na turma nesta semana';
+                    } else {
+                        cell.style.pointerEvents = 'none';
+                        cell.style.cursor = 'not-allowed';
+                        if (isHoliday) {
+                            cell.classList.add('slot-week-holiday');
+                            cell.title = 'Feriado nesta data';
+                        } else if (!isInsideFaixa) {
+                            cell.classList.add('slot-week-disabled');
+                            cell.title = 'Fora do intervalo da faixa ativa';
+                        }
                     }
                 }
+
                 gridContainer.appendChild(cell);
             }
         }
@@ -4626,6 +4827,9 @@ function switchTab(tabId) {
 
     if (tabId === 'teacher') {
         refreshTeacherConflictsUI();
+    }
+    if (tabId === 'weekly') {
+        updateWeeklyNavigatorLabel();
     }
 }
 
