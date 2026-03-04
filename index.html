@@ -647,10 +647,6 @@
                                 <input type="date" id="inp-data-fim-f1" class="inp-data-fim">
                             </div>
                             <div class="form-group" style="margin-bottom: 0;">
-                                <button type="button" class="btn-draw-faixa" data-faixa="1"
-                                    style="width:100%; display:flex; align-items:center; justify-content:center; gap:8px; background:#3498db; color:white; border:none; padding:10px; border-radius:4px; font-weight:bold; cursor:pointer; transition:background 0.2s;">
-                                    Desenhar na Grade Semanal
-                                </button>
                                 <div class="faixa-days-selector"
                                     style="display:grid; grid-template-columns: repeat(6, 1fr); gap:4px; margin-top:10px;">
                                     <label title="Segunda"
@@ -695,10 +691,6 @@
                                 <input type="date" id="inp-data-fim-f2" class="inp-data-fim">
                             </div>
                             <div class="form-group" style="margin-bottom: 0;">
-                                <button type="button" class="btn-draw-faixa" data-faixa="2"
-                                    style="width:100%; display:flex; align-items:center; justify-content:center; gap:8px; background:#3498db; color:white; border:none; padding:10px; border-radius:4px; font-weight:bold; cursor:pointer; transition:background 0.2s;">
-                                    Desenhar na Grade Semanal
-                                </button>
                                 <div class="faixa-days-selector"
                                     style="display:grid; grid-template-columns: repeat(6, 1fr); gap:4px; margin-top:10px;">
                                     <label title="Segunda"
@@ -742,10 +734,6 @@
                                 <input type="date" id="inp-data-fim-f3" class="inp-data-fim">
                             </div>
                             <div class="form-group" style="margin-bottom: 0;">
-                                <button type="button" class="btn-draw-faixa" data-faixa="3"
-                                    style="width:100%; display:flex; align-items:center; justify-content:center; gap:8px; background:#3498db; color:white; border:none; padding:10px; border-radius:4px; font-weight:bold; cursor:pointer; transition:background 0.2s;">
-                                    Desenhar na Grade Semanal
-                                </button>
                                 <div class="faixa-days-selector"
                                     style="display:grid; grid-template-columns: repeat(6, 1fr); gap:4px; margin-top:10px;">
                                     <label title="Segunda"
@@ -833,9 +821,10 @@
                 <div id="weekly-week-nav" class="weekly-week-nav no-print">
                     <div id="weekly-week-label" class="weekly-week-label">Semana nao definida</div>
                     <div class="weekly-week-actions">
-                        <button id="btn-week-prev" type="button" class="btn-week-nav">Semana Anterior</button>
-                        <button id="btn-week-next" type="button" class="btn-week-nav">Proxima Semana</button>
+                        <button id="btn-week-prev" type="button" class="btn-week-nav btn-week-shift">Semana Anterior</button>
+                        <button id="btn-week-next" type="button" class="btn-week-nav btn-week-shift">Proxima Semana</button>
                         <button id="btn-week-focus-faixa" type="button" class="btn-week-nav btn-week-focus">Ir para Faixa Ativa</button>
+                        <button id="btn-week-save-pattern" type="button" class="btn-week-nav btn-week-save hidden">Salvar Padrao</button>
                     </div>
                 </div>
 

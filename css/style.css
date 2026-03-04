@@ -275,10 +275,30 @@ input[type="date"] { color-scheme: dark; }
     background: #eef4f8;
 }
 
+.btn-week-nav.btn-week-shift {
+    background: #eef3f7;
+    border-color: #c8d4df;
+    color: #4a6274;
+}
+
+.btn-week-nav.btn-week-shift:hover {
+    background: #e3ebf2;
+}
+
 .btn-week-focus {
     border-color: #90b7a0;
     color: #235f3c;
     background: #f2fbf5;
+}
+
+.btn-week-save {
+    border-color: #6fa887;
+    color: #1f6a3b;
+    background: #e8f5ec;
+}
+
+.btn-week-save:hover {
+    background: #dff0e5;
 }
 
 .week-day-header {

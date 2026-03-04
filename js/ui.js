@@ -760,10 +760,12 @@ function setDrawingCellSelection(cell, selected, styles) {
 }
 
 function endDrawingDrag() {
+    const shouldPersist = !!window.isDrawingFaixa && drawingDragState.active && drawingDragState.touchedAnyCell;
     drawingDragState.active = false;
     drawingDragState.shouldSelect = true;
     drawingDragState.touchedAnyCell = false;
     if (document.body) document.body.style.userSelect = '';
+    if (shouldPersist) persistActiveDrawingSelection();
 }
 
 function getDrawingSelectionFromDOM() {
@@ -776,6 +778,21 @@ function getDrawingSelectionFromDOM() {
     );
 }
 
+function updateWeeklySavePatternButton() {
+    const btn = document.getElementById('btn-week-save-pattern');
+    if (!btn) return;
+
+    let shouldShow = false;
+    if (window.isDrawingFaixa) {
+        const faixaIndex = parseInt(window.isDrawingFaixa, 10);
+        if (!Number.isNaN(faixaIndex) && faixaIndex >= 1 && faixaIndex <= 3) {
+            shouldShow = normalizeFaixaPattern(faixasPatterns[faixaIndex]).length > 0;
+        }
+    }
+
+    btn.classList.toggle('hidden', !shouldShow);
+}
+
 function persistActiveDrawingSelection() {
     if (!window.isDrawingFaixa) return 0;
     const faixaIndex = parseInt(window.isDrawingFaixa, 10);
@@ -783,6 +800,7 @@ function persistActiveDrawingSelection() {
     const selectedPattern = getDrawingSelectionFromDOM();
     faixasPatterns[faixaIndex] = selectedPattern;
     setFaixaStatus(faixaIndex, selectedPattern.length);
+    updateWeeklySavePatternButton();
     return selectedPattern.length;
 }
 
@@ -794,15 +812,16 @@ function clearActiveDrawingSelection() {
     const clearedCount = Math.max(domSelected, persisted);
     faixasPatterns[faixaIndex] = [];
     setFaixaStatus(faixaIndex, 0);
+    updateWeeklySavePatternButton();
     renderWeeklyGrid();
     return clearedCount;
 }
 
 function activateDrawingMode(faixaIndex, options = {}) {
-    const { silent = false, jumpToFaixaStart = false } = options;
+    const { silent = false, jumpToFaixaStart = false, switchToWeekly = false, showToolbar = false } = options;
     const faixaEl = document.getElementById(`faixa-${faixaIndex}`);
     if (!faixaEl || faixaEl.classList.contains('hidden')) {
-        if (!silent) showToastWarning(`Faixa ${faixaIndex} nao esta disponivel para desenho.`, 'warning', 2400);
+        if (!silent) showToastWarning(`Faixa ${faixaIndex} nao esta disponivel para edicao.`, 'warning', 2400);
         return;
     }
     activeFaixaIndex = faixaIndex;
@@ -823,19 +842,26 @@ function activateDrawingMode(faixaIndex, options = {}) {
     const nameEl = document.getElementById('drawing-faixa-name');
     if (nameEl) nameEl.textContent = `Faixa ${faixaIndex}`;
     const toolbar = document.getElementById('drawing-toolbar');
-    if (toolbar) toolbar.classList.remove('hidden');
-    applyDrawingToolbarTheme();
-    updateDrawingViewToggleButton();
+    if (toolbar) {
+        if (showToolbar) {
+            toolbar.classList.remove('hidden');
+            applyDrawingToolbarTheme();
+            updateDrawingViewToggleButton();
+        } else {
+            toolbar.classList.add('hidden');
+        }
+    }
 
-    switchTab('weekly');
+    if (switchToWeekly) switchTab('weekly');
     renderWeeklyGrid();
-    if (!silent) showToastWarning(`Modo desenho ativo para a Faixa ${faixaIndex}.`, 'success', 2000);
+    if (!silent) showToastWarning(`Edicao ativa para a Faixa ${faixaIndex}.`, 'success', 1800);
 }
 
 function deactivateDrawingMode() {
     endDrawingDrag();
     window.isDrawingFaixa = null;
     weeklyViewState.followActiveFaixa = false;
+    updateWeeklySavePatternButton();
     const toolbar = document.getElementById('drawing-toolbar');
     if (toolbar) toolbar.classList.add('hidden');
     renderWeeklyGrid();
@@ -1006,7 +1032,32 @@ function autoEnterWeeklyEditingForFaixa(faixaIndex) {
     const ini = getActiveFaixaStartDate(faixaIndex);
     if (!ini) return;
 
-    activateDrawingMode(faixaIndex, { silent: true, jumpToFaixaStart: true });
+    activateDrawingMode(faixaIndex, {
+        silent: true,
+        jumpToFaixaStart: true,
+        switchToWeekly: false,
+        showToolbar: false
+    });
+}
+
+function resolveInlineEditableFaixaIndex() {
+    const disciplina = normalizeDisciplinaInputValue(inputConfig.disciplina?.value || '');
+    if (!store.selectedTurma || !disciplina) return null;
+
+    const isFaixaReady = (idx) => {
+        if (idx < 1 || idx > 3) return false;
+        const faixaEl = document.getElementById(`faixa-${idx}`);
+        if (!faixaEl || faixaEl.classList.contains('hidden')) return false;
+        return !!getActiveFaixaStartDate(idx);
+    };
+
+    const current = parseInt(window.isDrawingFaixa || activeFaixaIndex, 10);
+    if (!Number.isNaN(current) && isFaixaReady(current)) return current;
+
+    for (let i = 1; i <= 3; i++) {
+        if (isFaixaReady(i)) return i;
+    }
+    return null;
 }
 
 function setupFaixaControls() {
@@ -1109,20 +1160,11 @@ function setupFaixaControls() {
     });
 
     document.querySelectorAll('.btn-draw-faixa').forEach((btn) => {
-        btn.textContent = 'Abrir Edicao na Grade';
-        btn.style.whiteSpace = 'nowrap';
-        btn.style.background = '#5f6f80';
-        btn.style.opacity = '0.88';
-        btn.title = 'Fluxo em transicao: a grade tambem entra em modo de edicao automaticamente ao definir a data da faixa.';
-        btn.addEventListener('click', (e) => {
-            if (!store.selectedTurma) {
-                showToastWarning('Selecione curso e turma antes de desenhar.', 'warning', 2500);
-                return;
-            }
-            const idx = parseInt(e.currentTarget.getAttribute('data-faixa'), 10);
-            if (Number.isNaN(idx)) return;
-            activateDrawingMode(idx);
-        });
+        // Fluxo antigo removido: a edicao agora e direta por clique na Grade Semanal.
+        btn.classList.add('hidden');
+        btn.disabled = true;
+        btn.setAttribute('aria-hidden', 'true');
+        btn.title = 'Edicao direta ativa na Grade Semanal.';
     });
 
     const btnCancelDraw = document.getElementById('btn-cancel-draw');
@@ -1147,6 +1189,8 @@ function setupFaixaControls() {
 
     const btnSaveDraw = document.getElementById('btn-save-draw');
     if (btnSaveDraw) {
+        btnSaveDraw.textContent = 'Salvar (Opcional)';
+        btnSaveDraw.title = 'As selecoes agora sao aplicadas automaticamente ao clicar/arrastar; use este botao apenas para finalizar e sair do modo de edicao.';
         btnSaveDraw.addEventListener('click', () => {
             if (!window.isDrawingFaixa) return;
             persistActiveDrawingSelection();
@@ -1308,6 +1352,7 @@ function resolveWeeklyViewWeekStart() {
 }
 
 function moveWeeklyViewWeek(weekDelta = 0) {
+    if (window.isDrawingFaixa) persistActiveDrawingSelection();
     const currentStart = resolveWeeklyViewWeekStart();
     if (!currentStart) return;
     const nextDate = addDaysISO(currentStart, weekDelta * 7);
@@ -1342,6 +1387,7 @@ function updateWeeklyNavigatorLabel() {
 function setupWeeklyWeekNavigator() {
     if (window.__weeklyNavigatorBound) {
         updateWeeklyNavigatorLabel();
+        updateWeeklySavePatternButton();
         return;
     }
     window.__weeklyNavigatorBound = true;
@@ -1349,6 +1395,7 @@ function setupWeeklyWeekNavigator() {
     const btnPrev = document.getElementById('btn-week-prev');
     const btnNext = document.getElementById('btn-week-next');
     const btnFocus = document.getElementById('btn-week-focus-faixa');
+    const btnSave = document.getElementById('btn-week-save-pattern');
 
     if (btnPrev) {
         btnPrev.addEventListener('click', () => {
@@ -1362,13 +1409,27 @@ function setupWeeklyWeekNavigator() {
     }
     if (btnFocus) {
         btnFocus.addEventListener('click', () => {
+            if (window.isDrawingFaixa) persistActiveDrawingSelection();
             const faixaStart = getActiveFaixaStartDate(window.isDrawingFaixa || activeFaixaIndex);
             const anchor = faixaStart || getDefaultWeeklyAnchorDate();
             setWeeklyViewByDate(anchor, { followFaixa: !!faixaStart, render: true });
         });
     }
+    if (btnSave) {
+        btnSave.addEventListener('click', () => {
+            if (!window.isDrawingFaixa) {
+                showToastWarning('Defina uma faixa ativa para salvar o padrao.', 'warning', 2200);
+                return;
+            }
+            const qtd = persistActiveDrawingSelection();
+            const idx = parseInt(window.isDrawingFaixa, 10);
+            showToastWarning(`Padrao da Faixa ${idx} salvo (${qtd} slots).`, 'success', 1800);
+            updateWeeklySavePatternButton();
+        });
+    }
 
     updateWeeklyNavigatorLabel();
+    updateWeeklySavePatternButton();
 }
 
 function isDateInsideRange(dateStr, start, end) {
@@ -2247,6 +2308,7 @@ export function initUI() {
                 editingDisciplinaDraft = '';
             }
             lastDisciplinaInputNormalized = discNome;
+            if (store.selectedTurma) renderWeeklyGrid();
         });
 
         // Detecção de duplicata: mostra o campo sub-grupo quando a mesma disciplina já existe na turma
@@ -2258,6 +2320,7 @@ export function initUI() {
                 editingDisciplinaDraft = '';
             }
             lastDisciplinaInputNormalized = discNome;
+            if (store.selectedTurma) renderWeeklyGrid();
             const containerSub = document.getElementById('container-sub-turma');
             const inpSub = document.getElementById('inp-sub-turma');
             const preview = document.getElementById('preview-sub-turma');
@@ -2578,7 +2641,7 @@ function onTurmaChange() {
     if (primeiraIntensiva) {
         const slotRef = String(primeiraIntensiva.horariosOcupados[0] || '');
         const hora = parseInt(slotRef.split(':')[0], 10);
-        if (hora < 13) store.setTurnoOferta('Manhã');
+        if (hora < 13) store.setTurnoOferta('Manh\u00E3');
         else store.setTurnoOferta('Tarde');
     }
     else if (store.rawData?.turmas && store.selectedTurma) {
@@ -2616,6 +2679,7 @@ function onTurmaChange() {
     renderOfertasList();
 }
 
+
 function getDisciplinaInfo(nomeComponente) {
     if (!store.rawData?.componentes) return { abrev: nomeComponente, ch: 0, codigo: '' };
     const c = store.rawData.componentes.find((x) => x.componente === nomeComponente && x.sigla === store.selectedCurso) ||
@@ -2637,7 +2701,17 @@ function renderWeeklyGrid() {
         { id: 5, nome: 'Sexta' },
         { id: 6, nome: 'Sabado' }
     ];
-    const isDrawing = !!window.isDrawingFaixa;
+    let isDrawing = !!window.isDrawingFaixa;
+    if (!isDrawing) {
+        const inlineFaixaIndex = resolveInlineEditableFaixaIndex();
+        if (inlineFaixaIndex) {
+            activeFaixaIndex = inlineFaixaIndex;
+            window.isDrawingFaixa = inlineFaixaIndex;
+            weeklyViewState.followActiveFaixa = true;
+            isDrawing = true;
+        }
+    }
+
     const drawRange = isDrawing ? getActiveDrawingFaixaRange() : null;
     const drawingDisciplina = normalizeDisciplinaInputValue(inputConfig.disciplina?.value || '');
     const turmaAllocs = store.allocations.filter((a) => String(a.turmaId) === String(store.selectedTurma));
@@ -2659,6 +2733,7 @@ function renderWeeklyGrid() {
             </div>
         `;
         updateWeeklyNavigatorLabel();
+        updateWeeklySavePatternButton();
         return;
     }
 
@@ -2763,6 +2838,7 @@ function renderWeeklyGrid() {
     });
 
     applyWeeklyGridRowHeightScale(0.63, 0.6);
+    updateWeeklySavePatternButton();
 }
 
 function createCell(classNames, text) {
@@ -2813,7 +2889,7 @@ function renderSlotContent(cell, allocs) {
 }
 
 function handleSlotClick() {
-    showToastWarning('No modelo por faixas, use "Desenhar na Grade Semanal" na faixa da oferta.', 'warning', 3000);
+    showToastWarning('Clique direto na Grade Semanal para montar o padrao da faixa ativa.', 'success', 2200);
 }
 
 function handleAddManual() {
