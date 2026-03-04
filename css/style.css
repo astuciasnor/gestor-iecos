@@ -223,6 +223,7 @@ input[type="date"] { color-scheme: dark; }
     padding: 30px; 
     overflow-y: auto; 
     height: calc(100% - 60px); 
+    overflow-x: hidden;
 }
 .tab-content.active { display: block; }
 
@@ -230,20 +231,158 @@ input[type="date"] { color-scheme: dark; }
 .grid-header h2 { margin: 0 0 5px 0; color: var(--primary); font-size: 1.8em; }
 .instruction { margin: 0; color: var(--text-muted); font-size: 1em; }
 
+.weekly-top-layout {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 8px;
+    width: 100%;
+    min-width: 0;
+}
+
+.weekly-top-layout .grid-header {
+    flex: 1;
+    min-width: 240px;
+    margin-bottom: 0;
+}
+
+.weekly-top-layout .grid-header h2 {
+    margin: 0 0 3px 0;
+    font-size: 1.9rem;
+    line-height: 1.05;
+}
+
+.weekly-top-layout .instruction {
+    font-size: 0.84rem;
+    line-height: 1.25;
+    max-width: 720px;
+}
+
+.weekly-faixas-panel {
+    min-width: 0;
+    max-width: 560px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 4px 6px;
+    border: 1px solid #d6dde5;
+    border-radius: 8px;
+    background: #f7f9fb;
+    overflow-x: auto;
+    margin-left: auto;
+}
+
+.weekly-faixas-table {
+    border-collapse: collapse;
+    border: 1px solid #1941f2;
+    color: #1941f2;
+    font-weight: 700;
+    background: rgba(255, 255, 255, 0.72);
+}
+
+.weekly-faixas-table th,
+.weekly-faixas-table td {
+    border: 1px solid #1941f2;
+    padding: 2px 6px;
+    text-align: center;
+}
+
+.weekly-faixas-table th {
+    font-size: 0.82rem;
+    line-height: 1.1;
+}
+
+.weekly-faixas-table .faixa-num {
+    min-width: 24px;
+    font-size: 0.95rem;
+}
+
+.weekly-faixas-table input[type="date"] {
+    width: 96px;
+    min-width: 96px;
+    background: rgba(255, 255, 255, 0.85);
+    border: 1px solid #7a92fb;
+    color: #1941f2;
+    font-weight: 700;
+    padding: 2px 4px;
+    font-size: 0.78rem;
+    border-radius: 4px;
+}
+
+.weekly-faixas-table .faixa-ch-cell {
+    min-width: 36px;
+    font-size: 0.98rem;
+}
+
+.weekly-faixas-total {
+    color: #111;
+    font-size: 0.90rem;
+    font-weight: 700;
+    line-height: 1.05;
+    white-space: nowrap;
+    margin-top: 0;
+    padding-left: 10px;
+    border-left: 1px solid #c6d1da;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.weekly-faixas-total #weekly-faixa-total-ch {
+    font-size: 1.22rem;
+    font-weight: 800;
+}
+
+.weekly-faixas-target {
+    color: #2c3e50;
+    font-size: 0.76rem;
+    font-weight: 700;
+}
+
+.weekly-faixas-consistency {
+    max-width: 190px;
+    font-size: 0.70rem;
+    font-weight: 700;
+    white-space: normal;
+    line-height: 1.18;
+    color: #5f6b78;
+}
+
+.weekly-faixas-consistency.state-ok {
+    color: #1e8449;
+}
+
+.weekly-faixas-consistency.state-warn {
+    color: #b9770e;
+}
+
+.weekly-faixas-consistency.state-error {
+    color: #c0392b;
+}
+
+.weekly-faixas-status {
+    display: none;
+}
+
 .weekly-week-nav {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 12px;
-    margin: 14px 0 14px 0;
-    padding: 10px 12px;
+    margin: 8px 0 10px 0;
+    padding: 8px 10px;
     border: 1px solid #d6dde5;
     background: #f8fafb;
     border-radius: 8px;
+    width: 100%;
+    min-width: 0;
+    flex-wrap: wrap;
 }
 
 .weekly-week-label {
-    flex: 1;
+    flex: 1 1 340px;
     text-align: center;
     font-weight: 700;
     color: #204350;
@@ -252,53 +391,78 @@ input[type="date"] { color-scheme: dark; }
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    min-width: 0;
 }
 
 .weekly-week-actions {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
+    margin-left: auto;
+    flex-wrap: wrap;
+    justify-content: flex-end;
 }
 
 .btn-week-nav {
-    border: 1px solid #b8c6d1;
+    border: 1px solid transparent;
     background: #ffffff;
     color: #2f4c5a;
     border-radius: 6px;
-    padding: 7px 10px;
+    padding: 6px 8px;
     cursor: pointer;
-    font-weight: 600;
-    font-size: 0.84rem;
+    font-weight: 700;
+    font-size: 0.79rem;
+    line-height: 1.05;
+    white-space: nowrap;
 }
 
 .btn-week-nav:hover {
-    background: #eef4f8;
+    filter: brightness(1.04);
 }
 
 .btn-week-nav.btn-week-shift {
-    background: #eef3f7;
-    border-color: #c8d4df;
-    color: #4a6274;
+    background: #00b0df;
+    border-color: #0697be;
+    color: #ffffff;
 }
 
 .btn-week-nav.btn-week-shift:hover {
-    background: #e3ebf2;
+    background: #07a3cd;
 }
 
 .btn-week-focus {
-    border-color: #90b7a0;
-    color: #235f3c;
-    background: #f2fbf5;
+    border-color: #069f7a;
+    color: #ffffff;
+    background: #06b388;
 }
 
 .btn-week-save {
-    border-color: #6fa887;
-    color: #1f6a3b;
-    background: #e8f5ec;
+    border-color: #0aa06d;
+    color: #ffffff;
+    background: #12b579;
 }
 
 .btn-week-save:hover {
-    background: #dff0e5;
+    background: #0fa36d;
+}
+
+.btn-week-save:disabled,
+.btn-week-save.is-disabled {
+    background: #9fd3bf;
+    border-color: #84c5ad;
+    color: #f6fffb;
+    cursor: not-allowed;
+    opacity: 0.78;
+}
+
+.btn-week-save-comp {
+    border-color: #b23628;
+    color: #fff;
+    background: #d84b3b;
+}
+
+.btn-week-save-comp:hover {
+    background: #c94334;
 }
 
 .week-day-header {
@@ -323,12 +487,15 @@ input[type="date"] { color-scheme: dark; }
 }
 
 .timetable .slot.slot-free-draw {
-    background: rgba(39, 174, 96, 0.14) !important;
-    border: 1px solid rgba(39, 174, 96, 0.32) !important;
+    background: #ffffff !important;
+    border: 1px dashed rgba(16, 89, 63, 0.28) !important;
+    box-shadow: inset 0 0 0 1px rgba(16, 89, 63, 0.08);
 }
 
 .timetable .slot.slot-free-draw:hover {
-    background: rgba(39, 174, 96, 0.23) !important;
+    background: #f4faf7 !important;
+    border-color: rgba(16, 89, 63, 0.45) !important;
+    box-shadow: inset 0 0 0 1px rgba(16, 89, 63, 0.18);
 }
 
 .timetable .slot.slot-week-disabled {
@@ -378,6 +545,29 @@ input[type="date"] { color-scheme: dark; }
     position: relative; 
 } 
 .timetable .slot:hover { background: #f8f9fa; }
+
+@media (max-width: 1280px) {
+    .weekly-top-layout {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .weekly-faixas-panel {
+        width: 100%;
+        min-width: 0;
+        max-width: none;
+        overflow-x: auto;
+    }
+
+    .weekly-faixas-total {
+        font-size: 1rem;
+        margin-top: 0;
+    }
+
+    .weekly-top-layout .grid-header h2 {
+        font-size: 1.65rem;
+    }
+}
 
 .calendar-controls { 
     margin-bottom: 20px; 
