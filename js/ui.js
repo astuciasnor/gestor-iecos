@@ -1038,6 +1038,34 @@ function getDrawingBaseColor() {
     return normalizeHexColor(inputConfig.cor?.value, fallbackColor);
 }
 
+function getWeeklyFaixasTitleDisciplinaAtiva() {
+    const selected = normalizeDisciplinaInputValue(inputConfig.disciplina?.value || '');
+    if (selected) return selected;
+
+    const editing = normalizeDisciplinaInputValue(editingDisciplinaDraft || '');
+    if (editing) return editing;
+
+    return '';
+}
+
+function updateWeeklyFaixasTitleDisciplina() {
+    const prefixEl = document.getElementById('weekly-faixas-title-prefix');
+    const discEl = document.getElementById('weekly-faixas-title-disc');
+    if (!prefixEl || !discEl) return;
+
+    const disciplina = getWeeklyFaixasTitleDisciplinaAtiva();
+    if (!disciplina) {
+        prefixEl.textContent = 'Datas e CH das Faixas da Componente';
+        discEl.textContent = '';
+        discEl.classList.add('hidden');
+        return;
+    }
+
+    prefixEl.textContent = 'Datas e CH das Faixas de';
+    discEl.textContent = disciplina.toLocaleUpperCase('pt-BR');
+    discEl.classList.remove('hidden');
+}
+
 function getDrawingSelectedStyles() {
     const base = getDrawingBaseColor();
     return {
@@ -1361,7 +1389,8 @@ function applyFaixaDateAutofill(options = {}) {
     const f3Fim = document.getElementById('inp-data-fim-f3');
 
     const preferredStart = getPreferredStartDateForCurrentTurma();
-    if (preferredStart && f1Ini && !f1Ini.value) f1Ini.value = preferredStart;
+    const isEditingF1Start = f1Ini && document.activeElement === f1Ini;
+    if (preferredStart && f1Ini && !f1Ini.value && !isEditingF1Start) f1Ini.value = preferredStart;
 
     const hasF2 = !!(f2Ini && f2Ini.value);
     const hasF3 = !!(f3Ini && f3Ini.value);
@@ -1448,7 +1477,7 @@ function setupFaixaControls() {
         const fimEl = document.getElementById(`inp-data-fim-f${i}`);
 
         if (iniEl) {
-            ['input', 'change'].forEach((evt) => {
+            ['change'].forEach((evt) => {
                 iniEl.addEventListener(evt, () => {
                     if (i === 3 && iniEl.value && !document.getElementById('inp-data-inicio-f2')?.value) {
                         showToastWarning('Defina primeiro o inicio da Faixa 2.', 'warning', 2200);
@@ -1493,7 +1522,7 @@ function setupFaixaControls() {
         }
 
         if (fimEl) {
-            ['input', 'change'].forEach((evt) => {
+            ['change'].forEach((evt) => {
                 fimEl.addEventListener(evt, () => {
                     setFaixaStatus(i, getFaixaSlotsAndDays(i).pattern.length);
                     updateWeeklyFaixaHoursDisplay();
@@ -1694,6 +1723,63 @@ function getActiveFaixaStartDate(faixaIndex) {
     return document.getElementById(`inp-data-inicio-f${idx}`)?.value || '';
 }
 
+function getAvailableFaixasForNavigation() {
+    const out = [];
+    for (let i = 1; i <= 3; i++) {
+        const ini = getActiveFaixaStartDate(i);
+        if (ini) out.push({ idx: i, start: ini });
+    }
+    return out;
+}
+
+function getCurrentFaixaNavigationPosition(faixas) {
+    if (!Array.isArray(faixas) || faixas.length === 0) return -1;
+    const currentIdx = parseInt(window.isDrawingFaixa || activeFaixaIndex || 0, 10);
+    const byActive = faixas.findIndex((f) => f.idx === currentIdx);
+    if (byActive >= 0) return byActive;
+    return 0;
+}
+
+function updateWeeklyFaixaNavButtons() {
+    const btnFaixaPrev = document.getElementById('btn-faixa-prev');
+    const btnFaixaNext = document.getElementById('btn-faixa-next');
+    if (!btnFaixaPrev || !btnFaixaNext) return;
+
+    const faixas = getAvailableFaixasForNavigation();
+    const hasMultiple = faixas.length >= 2;
+    btnFaixaPrev.disabled = !hasMultiple;
+    btnFaixaNext.disabled = !hasMultiple;
+}
+
+function navigateWeeklyFaixa(direction = 1) {
+    const faixas = getAvailableFaixasForNavigation();
+    if (faixas.length < 2) return;
+
+    const currentPos = getCurrentFaixaNavigationPosition(faixas);
+    if (currentPos < 0) return;
+
+    const step = direction < 0 ? -1 : 1;
+    const targetPos = (currentPos + step + faixas.length) % faixas.length;
+
+    const target = faixas[targetPos];
+    if (!target || !target.start) return;
+
+    activeFaixaIndex = target.idx;
+
+    if (window.isDrawingFaixa) {
+        activateDrawingMode(target.idx, {
+            silent: true,
+            jumpToFaixaStart: true,
+            switchToWeekly: true,
+            showToolbar: false
+        });
+        return;
+    }
+
+    setWeeklyViewByDate(target.start, { followFaixa: false, render: true });
+    updateWeeklyNavigatorLabel();
+}
+
 function getDefaultWeeklyAnchorDate() {
     const activeStart = getActiveFaixaStartDate(window.isDrawingFaixa || activeFaixaIndex);
     const termStart = store.settings.termStart || inpTermStart?.value || calStart?.value || '';
@@ -1750,6 +1836,7 @@ function updateWeeklyNavigatorLabel() {
     }
 
     labelEl.textContent = `Semana ${formatDateBR(weekStart)} a ${formatDateBR(weekEnd)}${suffix}`;
+    updateWeeklyFaixaNavButtons();
     updateWeeklyContextNote();
 }
 
@@ -1797,17 +1884,30 @@ function setupWeeklyWeekNavigator() {
     if (window.__weeklyNavigatorBound) {
         updateWeeklyNavigatorLabel();
         updateWeeklySavePatternButton();
+        updateWeeklyFaixaNavButtons();
         return;
     }
     window.__weeklyNavigatorBound = true;
 
     const btnPrev = document.getElementById('btn-week-prev');
     const btnNext = document.getElementById('btn-week-next');
+    const btnFaixaPrev = document.getElementById('btn-faixa-prev');
+    const btnFaixaNext = document.getElementById('btn-faixa-next');
     const btnSave = document.getElementById('btn-week-save-pattern');
 
     if (btnPrev) {
         btnPrev.addEventListener('click', () => {
             moveWeeklyViewWeek(-1);
+        });
+    }
+    if (btnFaixaPrev) {
+        btnFaixaPrev.addEventListener('click', () => {
+            navigateWeeklyFaixa(-1);
+        });
+    }
+    if (btnFaixaNext) {
+        btnFaixaNext.addEventListener('click', () => {
+            navigateWeeklyFaixa(1);
         });
     }
     if (btnNext) {
@@ -1835,6 +1935,7 @@ function setupWeeklyWeekNavigator() {
 
     updateWeeklyNavigatorLabel();
     updateWeeklySavePatternButton();
+    updateWeeklyFaixaNavButtons();
 }
 
 function isDateInsideRange(dateStr, start, end) {
@@ -2380,6 +2481,43 @@ function getPrintAcademicMetaLine(turmaId) {
     return 'Turma: ' + turma + '; Per\u00edodo: ' + periodo + '; Bloco PPC: ' + bloco;
 }
 
+function normalizeTeacherNameForMatch(value) {
+    return String(value || '')
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase()
+        .replace(/[^a-z0-9\s]/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+}
+
+function teacherNamesMatch(candidate, selected) {
+    const cand = normalizeTeacherNameForMatch(candidate);
+    const target = normalizeTeacherNameForMatch(selected);
+    if (!cand || !target) return false;
+    if (cand === target) return true;
+
+    const shorter = cand.length <= target.length ? cand : target;
+    const longer = cand.length <= target.length ? target : cand;
+
+    // Permite alias nominais (ex.: "Neide Ramos" vs "Maria Neide Ramos"),
+    // evitando matches muito curtos e ambiguos.
+    if (shorter.length >= 6 && shorter.split(' ').length >= 2 && longer.includes(shorter)) {
+        return true;
+    }
+    return false;
+}
+
+function allocationHasTeacherMatch(alloc, teacherName) {
+    if (!alloc || !teacherName) return false;
+    if (teacherNamesMatch(alloc.docente, teacherName)) return true;
+    if (alloc.docente && typeof alloc.docente === 'object' && teacherNamesMatch(alloc.docente.nome, teacherName)) return true;
+    if (Array.isArray(alloc.docentes)) {
+        return alloc.docentes.some((d) => teacherNamesMatch(d?.nome || d, teacherName));
+    }
+    return false;
+}
+
 function calculateTeacherTotalCH(teacherName) {
     if (!teacherName) return 0;
 
@@ -2391,11 +2529,11 @@ function calculateTeacherTotalCH(teacherName) {
         if (!handledGroups.has(groupKey)) {
             let teacherCH = 0;
             if (a.docentes && a.docentes.length > 0) {
-                const tInfo = a.docentes.find(d => d.nome === teacherName);
+                const tInfo = a.docentes.find(d => teacherNamesMatch(d?.nome, teacherName));
                 if (tInfo) {
                     teacherCH = parseInt(tInfo.ch) || 0;
                 }
-            } else if (a.docente === teacherName) {
+            } else if (teacherNamesMatch(a.docente, teacherName)) {
                 teacherCH = getDisciplinaCHGlobal(a.disciplina, a.turmaId);
             }
 
@@ -2461,7 +2599,7 @@ function syncAllRegularDates() {
                     const oEnd = other.dataFim || termEnd;
 
                     if (dStr >= oStart && dStr <= oEnd) {
-                        // No modelo can�nico atual, regular n�o � suspensa por intensiva.
+                        // No modelo canônico atual, regular não é suspensa por intensiva.
                         if (other.tipo === 'regular_prioritaria' && parseInt(other.diaSemana) === dow && other.disciplina !== disciplina) {
                             return slotsToday.some(slot => other.horario === slot.horario);
                         }
@@ -2840,6 +2978,7 @@ export function initUI() {
                 editingDisciplinaDraft = '';
             }
             lastDisciplinaInputNormalized = discNome;
+            updateWeeklyFaixasTitleDisciplina();
             updateWeeklyFaixaHoursDisplay();
             if (store.selectedTurma) renderWeeklyGrid();
         });
@@ -2853,6 +2992,7 @@ export function initUI() {
                 editingDisciplinaDraft = '';
             }
             lastDisciplinaInputNormalized = discNome;
+            updateWeeklyFaixasTitleDisciplina();
             updateWeeklyFaixaHoursDisplay();
             if (store.selectedTurma) renderWeeklyGrid();
             const containerSub = document.getElementById('container-sub-turma');
@@ -3039,6 +3179,8 @@ export function initUI() {
 
     populateCursos();
     populateDocentes();
+    renderOfertasList();
+    updateWeeklyFaixasTitleDisciplina();
 }
 
 function handleFileSelect(event) {
@@ -3133,8 +3275,27 @@ function updateDisciplinaDatalist() {
 }
 
 function populateDocentes() {
-    if (!store.rawData?.docentes) return;
-    const nomes = [...new Set(store.rawData.docentes.map((d) => d.docente))].sort();
+    const nomesRaw = Array.isArray(store.rawData?.docentes)
+        ? store.rawData.docentes.map((d) => String(d.docente || '').trim())
+        : [];
+
+    const nomesAlloc = [];
+    (store.allocations || []).forEach((a) => {
+        const single = String(a?.docente || '').trim();
+        if (single && !/^a definir$/i.test(single) && !/\(multiplos\)/i.test(single)) {
+            nomesAlloc.push(single);
+        }
+        if (Array.isArray(a?.docentes)) {
+            a.docentes.forEach((d) => {
+                const nome = String(d?.nome || d || '').trim();
+                if (nome && !/^a definir$/i.test(nome)) nomesAlloc.push(nome);
+            });
+        }
+    });
+
+    const nomes = [...new Set([...nomesRaw, ...nomesAlloc].filter(Boolean))].sort((a, b) =>
+        a.localeCompare(b, 'pt-BR', { sensitivity: 'base' })
+    );
 
     if (listDocentes) {
         listDocentes.innerHTML = '';
@@ -3157,6 +3318,7 @@ function onTurmaChange() {
     store.setLastContext(store.selectedCurso, store.selectedTurma);
     deactivateDrawingMode();
     editingDisciplinaDraft = '';
+    updateWeeklyFaixasTitleDisciplina();
     collapseFaixasForNewComponent();
 
     faixasPatterns = { 1: [], 2: [], 3: [] };
@@ -3186,6 +3348,8 @@ function onTurmaChange() {
     const intensivas = alocacoesTurma.filter(a => a.tipo === 'intensiva' && a.dataInicio);
     if (intensivas.length > 0) {
         hydrateFaixasFromIntensiva(intensivas[0]);
+        editingDisciplinaDraft = normalizeDisciplinaInputValue(intensivas[0].disciplina || '');
+        updateWeeklyFaixasTitleDisciplina();
         const datas = intensivas.map(a => a.dataInicio).sort();
         if (calStart && datas[0] < calStart.value) {
             calStart.value = datas[0];
@@ -3227,6 +3391,7 @@ function getDisciplinaInfo(nomeComponente) {
 function renderWeeklyGrid() {
     if (!gridContainer) return;
 
+    updateWeeklyFaixasTitleDisciplina();
     gridContainer.innerHTML = '';
     const horariosUI = buildHorariosForUI();
     const diasSemana = [
@@ -3443,50 +3608,58 @@ function renderWeeklyGrid() {
                     const isInsideFaixa = drawRange ? isDateInsideRange(cellDate, drawRange.start, drawRange.end) : true;
                     const isHoliday = !!cellDate && feriadosSet.has(cellDate);
                     const holidayLabel = isHoliday ? (feriadosMap.get(cellDate) || 'Feriado') : '';
-                    const canEdit = isInsideFaixa && !isHoliday && allocs.length === 0;
+                    const waitingStartPick = !!pendingFaixaStartPick;
+                    const canPickStartDate = waitingStartPick && !isHoliday && !!cellDate;
+                    const canEdit = !waitingStartPick && isInsideFaixa && !isHoliday && allocs.length === 0;
 
-                    if (canEdit) {
+                    if (canPickStartDate) {
+                        cell.dataset.canEdit = '1';
+                        if (!isSelected) cell.classList.add('slot-free-draw');
+                        cell.style.cursor = 'copy';
+                        cell.style.pointerEvents = 'auto';
+                        cell.style.opacity = '1';
+                        cell.title = 'Clique para definir o inicio da Faixa ' + String(pendingFaixaStartPick) + ' nesta data.';
+                        cell.querySelectorAll('.remove-btn').forEach((btn) => { btn.style.pointerEvents = 'none'; });
+
+                        const handleStartPick = (e) => {
+                            if (typeof e.button === 'number' && e.button !== 0) return;
+                            e.preventDefault();
+                            e.stopPropagation();
+                            endDrawingDrag();
+                            applyPendingFaixaStartByDate(cellDate);
+                        };
+                        cell.addEventListener('pointerdown', handleStartPick);
+                    } else if (canEdit) {
                         cell.dataset.canEdit = '1';
                         if (!isSelected) cell.classList.add('slot-free-draw');
 
-                        if (pendingFaixaStartPick) {
-                            cell.style.cursor = 'copy';
-                            cell.addEventListener('mousedown', (e) => {
-                                if (e.button !== 0) return;
-                                e.preventDefault();
-                                e.stopPropagation();
-                                endDrawingDrag();
-                                applyPendingFaixaStartByDate(cellDate);
-                            });
-                        } else {
-                            cell.style.cursor = 'crosshair';
-                            cell.addEventListener('mousedown', (e) => {
-                                if (e.button !== 0) return;
-                                e.preventDefault();
-                                e.stopPropagation();
-                                drawingDragState.active = true;
-                                drawingDragState.shouldSelect = !cell.classList.contains('selected-slot');
-                                drawingDragState.touchedAnyCell = false;
-                                if (document.body) document.body.style.userSelect = 'none';
+                        cell.style.cursor = 'crosshair';
+                        cell.addEventListener('mousedown', (e) => {
+                            if (e.button !== 0) return;
+                            e.preventDefault();
+                            e.stopPropagation();
+                            drawingDragState.active = true;
+                            drawingDragState.shouldSelect = !cell.classList.contains('selected-slot');
+                            drawingDragState.touchedAnyCell = false;
+                            if (document.body) document.body.style.userSelect = 'none';
 
-                                const applied = tryApplyDrawingSelection(cell, drawingDragState.shouldSelect, drawStyles);
-                                if (!applied) {
-                                    drawingDragState.active = false;
-                                    if (document.body) document.body.style.userSelect = '';
-                                    return;
-                                }
-                                drawingDragState.touchedAnyCell = true;
-                            });
-                            cell.addEventListener('mouseenter', () => {
-                                if (!drawingDragState.active) return;
-                                const applied = tryApplyDrawingSelection(cell, drawingDragState.shouldSelect, drawStyles);
-                                if (!applied) {
-                                    endDrawingDrag();
-                                    return;
-                                }
-                                drawingDragState.touchedAnyCell = true;
-                            });
-                        }
+                            const applied = tryApplyDrawingSelection(cell, drawingDragState.shouldSelect, drawStyles);
+                            if (!applied) {
+                                drawingDragState.active = false;
+                                if (document.body) document.body.style.userSelect = '';
+                                return;
+                            }
+                            drawingDragState.touchedAnyCell = true;
+                        });
+                        cell.addEventListener('mouseenter', () => {
+                            if (!drawingDragState.active) return;
+                            const applied = tryApplyDrawingSelection(cell, drawingDragState.shouldSelect, drawStyles);
+                            if (!applied) {
+                                endDrawingDrag();
+                                return;
+                            }
+                            drawingDragState.touchedAnyCell = true;
+                        });
                     } else if (allocs.length > 0) {
                         delete cell.dataset.canEdit;
                         cell.style.opacity = '0.6';
@@ -3825,6 +3998,7 @@ function handleAddManual() {
             applyFaixasConfigToSidebar(faixasSidebar);
         }
         editingDisciplinaDraft = normalizeDisciplinaInputValue(disciplina);
+        updateWeeklyFaixasTitleDisciplina();
         refreshPendingFaixaStartPickUI();
         updateWeeklyContextNote();
         updateWeeklyFaixaHoursDisplay();
@@ -4155,6 +4329,7 @@ function renderOfertasList() {
                 const info = getDisciplinaInfo(a.disciplina);
                 if (!confirm('Carregar para edição? A oferta antiga será removida e você deverá redesenhar os slots da faixa.')) return;
                 editingDisciplinaDraft = normalizeDisciplinaInputValue(a.disciplina);
+                updateWeeklyFaixasTitleDisciplina();
 
                 if (inputConfig.disciplina) {
                     inputConfig.disciplina.value = `${a.disciplina} (${info.ch}h)`;
@@ -4232,7 +4407,7 @@ function renderOfertasList() {
     });
 
     if (pendenteRows.length > 0) {
-        appendSeparator('AGUARDANDO ALOCA��O NA GRADE (PENDENTES)');
+        appendSeparator('AGUARDANDO ALOCAÇÃO NA GRADE (PENDENTES)');
         pendenteRows.forEach(appendRow);
     }
 
@@ -4529,11 +4704,7 @@ function renderGanttChart() {
             return;
         }
 
-        const allocs = store.allocations.filter(a => {
-            if (a.docente === docenteName) return true;
-            if (a.docentes && a.docentes.some(d => d.nome === docenteName)) return true;
-            return false;
-        });
+        const allocs = store.allocations.filter((a) => allocationHasTeacherMatch(a, docenteName));
 
         if (allocs.length === 0) {
             container.innerHTML = `<div style="text-align: center; color: #7f8c8d; margin-top: 50px; font-size: 1.1em;">Nenhuma disciplina encontrada para <b>${docenteName}</b>.</div>`;
@@ -4693,9 +4864,9 @@ function renderGanttChart() {
                         let chProf = 0;
                         const chTotal = getDisciplinaCHGlobal(a.disciplina, a.turmaId);
                         if (a.docentes && a.docentes.length > 0) {
-                            const doc = a.docentes.find(doc => doc.nome === docenteName);
+                            const doc = a.docentes.find(doc => teacherNamesMatch(doc?.nome, docenteName));
                             if (doc) chProf = parseInt(doc.ch) || 0;
-                        } else {
+                        } else if (teacherNamesMatch(a.docente, docenteName)) {
                             chProf = chTotal;
                         }
 
@@ -4765,7 +4936,7 @@ function renderGanttChart() {
                 const docentesList = (item.docentes && item.docentes.length > 0) ? item.docentes : [{ nome: item.docente, ch: item.chTotal }];
 
                 docentesList.forEach((d, idx) => {
-                    const isTarget = d.nome === docenteName;
+                    const isTarget = teacherNamesMatch(d.nome, docenteName);
                     const segCH = parseFloat(d.ch) || 0;
                     const totalCH = parseFloat(item.chTotal) || 0;
                     const rawShare = totalCH > 0 ? (segCH / totalCH) : 1;
@@ -4889,7 +5060,7 @@ function renderGanttChart() {
                 const docentesList = (item.docentes && item.docentes.length > 0) ? item.docentes : [{ nome: item.docente, ch: item.chTotal }];
 
                 docentesList.forEach((d, idx) => {
-                    const isTarget = d.nome === docenteName;
+                    const isTarget = teacherNamesMatch(d.nome, docenteName);
                     const segCH = parseFloat(d.ch) || 0;
                     const totalCH = parseFloat(item.chTotal) || 0;
                     const rawShare = totalCH > 0 ? (segCH / totalCH) : 1;
@@ -5616,6 +5787,9 @@ function switchTab(tabId) {
 
     if (tabId === 'teacher') {
         refreshTeacherConflictsUI();
+    }
+    if (tabId === 'list') {
+        renderOfertasList();
     }
     if (tabId === 'weekly') {
         updateWeeklyNavigatorLabel();

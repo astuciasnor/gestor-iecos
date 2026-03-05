@@ -650,74 +650,81 @@
                         <div class="weekly-instructions-card">
                             <h3>Instru&ccedil;&otilde;es de preenchimento</h3>
                             <ul>
-                                <li>&#128218; Selecione o curso, a turma, a componente e o(s) docente(s).</li>
+                                <li>&#128218; Selecione o curso, a turma, a componente curricular e o(s) docente(s).</li>
                                 <li>&#128197;&#65039; Defina o in&iacute;cio da 1&ordf; faixa clicando no primeiro slot do dia desejado na Grade Semanal.</li>
-                                <li>&#128256; Crie uma nova faixa, se necess&aacute;rio, para redistribuir melhor a carga hor&aacute;ria.</li>
                                 <li>&#128433;&#65039; Desenhe o padr&atilde;o de hor&aacute;rios clicando ou arrastando sobre os slots dos dias.</li>
+                                <li>&#128256; Se necess&aacute;rio, crie nova faixa para redistribuir melhor a carga hor&aacute;ria (raz&otilde;es pedag&oacute;gicas e log&iacute;sticas): clique no n&uacute;mero 2 ou 3 e depois no slot do dia correspondente &agrave; data de in&iacute;cio do novo padr&atilde;o de hor&aacute;rio.</li>
                             </ul>
                         </div>
                     </div>
-                    <div id="container-faixas-intensiva" class="weekly-faixas-panel no-print">
-                        <div class="weekly-faixas-title">Datas e CH das Faixas da Componente</div>
-                        <div class="weekly-faixas-main">
-                            <table class="weekly-faixas-table">
-                                <colgroup>
-                                    <col class="col-faixa-id">
-                                    <col class="col-faixa-date-start">
-                                    <col class="col-faixa-date-end">
-                                    <col class="col-faixa-ch">
-                                </colgroup>
-                                <thead>
-                                    <tr>
-                                        <th>Faixa</th>
-                                        <th>Inicio</th>
-                                        <th>Fim</th>
-                                        <th>CH</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="faixas-lista">
-                                    <tr id="faixa-1" class="faixa-item">
-                                        <td class="faixa-num">1</td>
-                                        <td><input type="date" id="inp-data-inicio-f1" class="inp-data-inicio"></td>
-                                        <td><input type="date" id="inp-data-fim-f1" class="inp-data-fim"></td>
-                                        <td id="faixa-ch-f1" class="faixa-ch-cell">0</td>
-                                    </tr>
-                                    <tr id="faixa-2" class="faixa-item">
-                                        <td class="faixa-num">2</td>
-                                        <td><input type="date" id="inp-data-inicio-f2" class="inp-data-inicio"></td>
-                                        <td><input type="date" id="inp-data-fim-f2" class="inp-data-fim"></td>
-                                        <td id="faixa-ch-f2" class="faixa-ch-cell">0</td>
-                                    </tr>
-                                    <tr id="faixa-3" class="faixa-item">
-                                        <td class="faixa-num">3</td>
-                                        <td><input type="date" id="inp-data-inicio-f3" class="inp-data-inicio"></td>
-                                        <td><input type="date" id="inp-data-fim-f3" class="inp-data-fim"></td>
-                                        <td id="faixa-ch-f3" class="faixa-ch-cell">0</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                            <div class="weekly-faixas-total">
-                                <div class="weekly-faixas-total-main">Total: <span id="weekly-faixa-total-ch">0</span></div>
-                                <div class="weekly-faixas-target">Meta CH: <span id="weekly-faixa-target-ch">-</span></div>
+                    <div class="weekly-faixas-stack">
+                        <div id="container-faixas-intensiva" class="weekly-faixas-panel no-print">
+                            <div class="weekly-faixas-title">
+                                <span id="weekly-faixas-title-prefix">Datas e CH das Faixas da Componente</span>
+                                <span id="weekly-faixas-title-disc" class="weekly-faixas-title-disc hidden"></span>
+                            </div>
+                            <div class="weekly-faixas-main">
+                                <table class="weekly-faixas-table">
+                                    <colgroup>
+                                        <col class="col-faixa-id">
+                                        <col class="col-faixa-date-start">
+                                        <col class="col-faixa-date-end">
+                                        <col class="col-faixa-ch">
+                                    </colgroup>
+                                    <thead>
+                                        <tr>
+                                            <th>Faixa</th>
+                                            <th>Inicio</th>
+                                            <th>Fim</th>
+                                            <th>CH</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="faixas-lista">
+                                        <tr id="faixa-1" class="faixa-item">
+                                            <td class="faixa-num">1</td>
+                                            <td><input type="date" id="inp-data-inicio-f1" class="inp-data-inicio"></td>
+                                            <td><input type="date" id="inp-data-fim-f1" class="inp-data-fim"></td>
+                                            <td id="faixa-ch-f1" class="faixa-ch-cell">0</td>
+                                        </tr>
+                                        <tr id="faixa-2" class="faixa-item">
+                                            <td class="faixa-num">2</td>
+                                            <td><input type="date" id="inp-data-inicio-f2" class="inp-data-inicio"></td>
+                                            <td><input type="date" id="inp-data-fim-f2" class="inp-data-fim"></td>
+                                            <td id="faixa-ch-f2" class="faixa-ch-cell">0</td>
+                                        </tr>
+                                        <tr id="faixa-3" class="faixa-item">
+                                            <td class="faixa-num">3</td>
+                                            <td><input type="date" id="inp-data-inicio-f3" class="inp-data-inicio"></td>
+                                            <td><input type="date" id="inp-data-fim-f3" class="inp-data-fim"></td>
+                                            <td id="faixa-ch-f3" class="faixa-ch-cell">0</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                                <div class="weekly-faixas-total">
+                                    <div class="weekly-faixas-total-main">Total: <span id="weekly-faixa-total-ch">0</span></div>
+                                    <div class="weekly-faixas-target">Meta CH: <span id="weekly-faixa-target-ch">-</span></div>
+                                </div>
+                            </div>
+                            <div class="weekly-faixas-status hidden">
+                                <span id="status-draw-f1"></span>
+                                <span id="status-draw-f2"></span>
+                                <span id="status-draw-f3"></span>
                             </div>
                         </div>
-                        <div class="weekly-faixas-status hidden">
-                            <span id="status-draw-f1"></span>
-                            <span id="status-draw-f2"></span>
-                            <span id="status-draw-f3"></span>
-                        </div>
-                    </div>
-                </div>
 
-                <div id="weekly-week-nav" class="weekly-week-nav no-print">
-                    <div id="weekly-week-label" class="weekly-week-label">Semana nao definida</div>
-                    <div class="weekly-week-actions">
-                        <button id="btn-week-prev" type="button" class="btn-week-nav btn-week-shift">Semana Anterior</button>
-                        <button id="btn-week-next" type="button" class="btn-week-nav btn-week-shift">Proxima Semana</button>
-                        <button id="btn-add-oferta" type="button" class="btn-week-nav btn-week-save-comp">Salvar Componente</button>
+                        <div id="weekly-week-nav" class="weekly-week-nav no-print">
+                            <div id="weekly-week-label" class="weekly-week-label">Semana nao definida</div>
+                            <div class="weekly-week-actions">
+                                <button id="btn-week-prev" type="button" class="btn-week-nav btn-week-shift">Semana Anterior</button>
+                                <button id="btn-week-next" type="button" class="btn-week-nav btn-week-shift">Proxima Semana</button>
+                                <button id="btn-faixa-prev" type="button" class="btn-week-nav btn-week-faixa" disabled>Faixa Anterior</button>
+                                <button id="btn-faixa-next" type="button" class="btn-week-nav btn-week-faixa" disabled>Proxima Faixa</button>
+                                <button id="btn-add-oferta" type="button" class="btn-week-nav btn-week-save-comp"><span class="btn-label-two-line"><span>Salvar</span><span>Componente</span></span></button>
+                            </div>
+                        </div>
+                        <div id="weekly-week-context-note" class="weekly-week-context-note no-print"></div>
                     </div>
                 </div>
-                <div id="weekly-week-context-note" class="weekly-week-context-note no-print"></div>
 
                 <!-- BOOTSTRAPPED DRAWING TOOLBAR -->
                 <div id="drawing-toolbar" class="hidden" style="
