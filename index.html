@@ -648,18 +648,17 @@
                 <div class="weekly-top-layout">
                     <div class="grid-header weekly-header-panel">
                         <div class="weekly-instructions-card">
-                            <h3>Instru&ccedil;&otilde;es de preenchimento e uso</h3>
+                            <h3>Instru&ccedil;&otilde;es de preenchimento</h3>
                             <ul>
-                                <li>Selecione um curso e uma turma; em seguida, a componente e a(o)(s) docente(s) ministrante(s)</li>
-                                <li>As ofertas usam o modelo por faixas de hor&aacute;rios</li>
-                                <li>Configure a data inicial da(s) faixa(s) &mdash; em geral, haver&aacute; apenas uma</li>
-                                <li>Desenhe o padr&atilde;o de hor&aacute;rios clicando sobre cada slot do dia da semana</li>
-                                <li>N&atilde;o &eacute; necess&aacute;rio desenhar nas demais semanas se o padr&atilde;o for o mesmo em toda a oferta da componente</li>
+                                <li>&#128218; Selecione o curso, a turma, a componente e o(s) docente(s).</li>
+                                <li>&#128197;&#65039; Defina o in&iacute;cio da 1&ordf; faixa clicando no primeiro slot do dia desejado na Grade Semanal.</li>
+                                <li>&#128256; Crie uma nova faixa, se necess&aacute;rio, para redistribuir melhor a carga hor&aacute;ria.</li>
+                                <li>&#128433;&#65039; Desenhe o padr&atilde;o de hor&aacute;rios clicando ou arrastando sobre os slots dos dias.</li>
                             </ul>
                         </div>
                     </div>
                     <div id="container-faixas-intensiva" class="weekly-faixas-panel no-print">
-                        <div class="weekly-faixas-title">Faixas de Datas e CH da Componente</div>
+                        <div class="weekly-faixas-title">Datas e CH das Faixas da Componente</div>
                         <div class="weekly-faixas-main">
                             <table class="weekly-faixas-table">
                                 <colgroup>
@@ -715,11 +714,10 @@
                     <div class="weekly-week-actions">
                         <button id="btn-week-prev" type="button" class="btn-week-nav btn-week-shift">Semana Anterior</button>
                         <button id="btn-week-next" type="button" class="btn-week-nav btn-week-shift">Proxima Semana</button>
-                        <button id="btn-week-focus-faixa" type="button" class="btn-week-nav btn-week-focus">Ir para Faixa Ativa</button>
-                        <button id="btn-week-save-pattern" type="button" class="btn-week-nav btn-week-save hidden">Salvar Padrao</button>
                         <button id="btn-add-oferta" type="button" class="btn-week-nav btn-week-save-comp">Salvar Componente</button>
                     </div>
                 </div>
+                <div id="weekly-week-context-note" class="weekly-week-context-note no-print"></div>
 
                 <!-- BOOTSTRAPPED DRAWING TOOLBAR -->
                 <div id="drawing-toolbar" class="hidden" style="
@@ -851,14 +849,13 @@
                                 <li style="margin-bottom: 10px;"><strong>5. Modelo de Oferta:</strong> Todas as
                                     componentes seguem o padrão por <b>Faixas</b>. Defina docentes, carga horária e
                                     período para cada oferta.</li>
-                                <li style="margin-bottom: 10px;"><strong>6. Alocação Manual:</strong> Desenhe os slots
-                                    clicando nos <b>quadradinhos da grade</b>. Depois ajuste início/fim para cada faixa
-                                    conforme a execução real da disciplina.</li>
-                                <li style="margin-bottom: 10px;"><strong>7. Importação em Bloco (PPC):</strong> Ao usar
+                                <li style="margin-bottom: 10px;"><strong>6. Alocacao Manual (somente na Grade Semanal):</strong> Desenhe os slots clicando nos <b>quadradinhos da grade</b>. Ajuste inicio/fim por faixa na tabela superior da grade. A aba <b>Lista de Ofertas</b> deve ser usada para revisao/edicao/exclusao, e nao para desenhar slots.</li>
+                                <li style="margin-bottom: 10px;"><strong>7. Leitura da Grade Semanal:</strong> Slots bloqueados indicam ocupacao real na semana visivel. Navegue entre semanas ou ajuste inicio/faixa para visualizar e editar corretamente.</li>
+                                <li style="margin-bottom: 10px;"><strong>8. Importação em Bloco (PPC):</strong> Ao usar
                                     a opção de <b>"Importar Componentes"</b>, é <b>obrigatório</b> ir na aba <b>Lista de
                                         Ofertas</b> e editar o horário/data de cada componente pendente para alocá-los
                                     na grade corretamente.</li>
-                                <li><strong>8. Mesclagem de Calendários:</strong> Você pode usar a ferramenta de
+                                <li><strong>9. Mesclagem de Calendários:</strong> Você pode usar a ferramenta de
                                     Importação (JSON) para carregar o trabalho salvo de outro diretor de curso e checar
                                     se há choques.</li>
                             </ul>

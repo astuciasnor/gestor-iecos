@@ -43,6 +43,7 @@ const drawingDragState = {
 };
 
 let chLimitWarningLockUntil = 0;
+let pendingFaixaStartPick = null;
 
 const weeklyViewState = {
     weekStartISO: '',
@@ -404,41 +405,36 @@ function buildHorariosForUI() {
         .filter((s) => s && s.trim().length > 0);
 }
 
-function applyWeeklyGridRowHeightScale(scaleNormal = 0.354) {
+function applyWeeklyGridRowHeightScale() {
     if (!gridContainer) return;
+
+    if (!window.__weeklyGridRowHeightResizeBound) {
+        window.__weeklyGridRowHeightResizeBound = true;
+        window.addEventListener('resize', () => {
+            if (!store.selectedTurma) return;
+            applyWeeklyGridRowHeightScale();
+        });
+    }
 
     requestAnimationFrame(() => {
         const styleId = 'weekly-grid-rowheight-style';
         let styleEl = document.getElementById(styleId);
 
-        const hadStyle = !!styleEl;
-        if (styleEl) styleEl.disabled = true;
+        const horariosCount = buildHorariosForUI().length;
+        const rowCount = Math.max(2, horariosCount + 1);
 
-        const sample = gridContainer.querySelector('.slot') ||
-            gridContainer.querySelector('.header.time') ||
-            gridContainer.querySelector('.header');
+        const viewportH = window.innerHeight || document.documentElement.clientHeight || 900;
+        const rect = gridContainer.getBoundingClientRect();
+        const reserveBottom = 22;
+        const available = Math.max(220, viewportH - rect.top - reserveBottom);
 
-        if (!sample) {
-            if (hadStyle && styleEl) styleEl.disabled = false;
-            return;
-        }
+        const isCompactScreen = window.innerWidth < 900;
+        const minH = isCompactScreen ? 32 : 38;
+        const maxH = isCompactScreen ? 46 : 58;
+        const ideal = Math.round(available / rowCount);
+        const uniformH = Math.max(minH, Math.min(maxH, ideal));
 
-        const rectH = sample.getBoundingClientRect().height;
-        let base = rectH;
-
-        if (!base || Number.isNaN(base)) {
-            const cs = getComputedStyle(sample);
-            base = parseFloat(cs.height);
-        }
-
-        if (!base || Number.isNaN(base)) {
-            if (hadStyle && styleEl) styleEl.disabled = false;
-            return;
-        }
-
-        if (hadStyle && styleEl) styleEl.disabled = false;
-
-        const uniformH = Math.max(24, Math.round(base * scaleNormal));
+        const intervaloH = Math.max(isCompactScreen ? 20 : 22, Math.round(uniformH * 0.6));
 
         if (!styleEl) {
             styleEl = document.createElement('style');
@@ -447,11 +443,22 @@ function applyWeeklyGridRowHeightScale(scaleNormal = 0.354) {
         }
 
         styleEl.textContent = `
-          #weekly-grid .slot { height: auto !important; min-height: ${uniformH}px !important; box-sizing: border-box !important; }
+          #weekly-grid .slot,
           #weekly-grid .header.time,
-          #weekly-grid .header.top-header,
+          #weekly-grid .header.top-header {
+            height: ${uniformH}px !important;
+            min-height: ${uniformH}px !important;
+            max-height: ${uniformH}px !important;
+            box-sizing: border-box !important;
+          }
           #weekly-grid .header.interval-time,
-          #weekly-grid .header.interval-merge { height: ${uniformH}px !important; min-height: ${uniformH}px !important; box-sizing: border-box !important; }
+          #weekly-grid .header.interval-merge {
+            height: ${intervaloH}px !important;
+            min-height: ${intervaloH}px !important;
+            max-height: ${intervaloH}px !important;
+            box-sizing: border-box !important;
+          }
+          #weekly-grid .slot { overflow: hidden !important; }
         `;
     });
 }
@@ -588,10 +595,36 @@ function getFaixaSlotsAndDays(faixaIndex = 1) {
     return { slots, dias, pattern };
 }
 
+function buildEffectiveFaixaPatternMap(overrideFaixaIndex = null, overridePattern = null) {
+    const map = {};
+    let lastPattern = [];
+
+    for (let i = 1; i <= 3; i++) {
+        let pattern = (i === overrideFaixaIndex)
+            ? normalizeFaixaPattern(overridePattern)
+            : normalizeFaixaPattern(faixasPatterns[i]);
+        const hasStart = !!document.getElementById(`inp-data-inicio-f${i}`)?.value;
+
+        if (pattern.length === 0 && hasStart && lastPattern.length > 0) {
+            pattern = lastPattern.map((p) => ({ ...p }));
+        }
+
+        if (pattern.length > 0) {
+            lastPattern = pattern.map((p) => ({ ...p }));
+        }
+
+        map[i] = pattern;
+    }
+
+    return map;
+}
+
 function setFaixaStatus(faixaIndex, count) {
     const status = document.getElementById(`status-draw-f${faixaIndex}`);
+    const effectivePatterns = buildEffectiveFaixaPatternMap();
+    const slotCount = (effectivePatterns[faixaIndex] || []).length || count || 0;
     if (status) {
-        const summary = buildFaixaSummaryText(faixaIndex, count);
+        const summary = buildFaixaSummaryText(faixaIndex, slotCount);
         status.textContent = summary;
         status.style.color = '#27ae60';
     }
@@ -682,7 +715,7 @@ function updateWeeklyFaixaHoursDisplay() {
     }
 
     const excede = total - targetCH;
-    setConsistency(`Excesso de ${excede}h em relacao a meta.`, 'state-error');
+    setConsistency(`A CH alocada excede a meta em ${excede}h. Isso nao bloqueia a insercao; se quiser, ajuste o padrao ou crie uma nova faixa depois.`, 'state-warn');
 }
 function shortDayName(dayNumber) {
     const map = { 1: 'Seg', 2: 'Ter', 3: 'Qua', 4: 'Qui', 5: 'Sex', 6: 'Sab' };
@@ -736,17 +769,16 @@ function calcFaixaCHFromPattern(faixaIndex, patternInput) {
 }
 
 function calcFaixaCH(faixaIndex) {
-    const { pattern } = getFaixaSlotsAndDays(faixaIndex);
+    const patterns = buildEffectiveFaixaPatternMap();
+    const pattern = patterns[faixaIndex] || [];
     return calcFaixaCHFromPattern(faixaIndex, pattern);
 }
 
 function calcTotalConfiguredCHWithOverride(faixaIndex, overridePattern) {
+    const patterns = buildEffectiveFaixaPatternMap(faixaIndex, overridePattern);
     let total = 0;
     for (let i = 1; i <= 3; i++) {
-        const pattern = (i === faixaIndex)
-            ? normalizeFaixaPattern(overridePattern)
-            : getFaixaSlotsAndDays(i).pattern;
-        total += calcFaixaCHFromPattern(i, pattern);
+        total += calcFaixaCHFromPattern(i, patterns[i] || []);
     }
     return total;
 }
@@ -789,6 +821,127 @@ function warnCHLimitReached(limit) {
     showToastWarning(`Meta de CH (${limit.targetCH}h) ja atingida para a componente.`, 'warning', 2400);
 }
 
+function refreshPendingFaixaStartPickUI() {
+    for (let i = 1; i <= 3; i++) {
+        const row = document.getElementById(`faixa-${i}`);
+        const numCell = row ? row.querySelector('.faixa-num') : null;
+        if (!row || !numCell) continue;
+
+        const selectable = i === 2 || i === 3;
+        const waiting = pendingFaixaStartPick === i;
+        numCell.classList.toggle('faixa-num-start-pick', selectable);
+        row.classList.toggle('faixa-start-pick-waiting', waiting);
+
+        if (selectable) {
+            numCell.title = waiting
+                ? `Aguardando clique na grade para definir inicio da Faixa ${i}.`
+                : `Clique para definir o inicio da Faixa ${i} pela grade semanal.`;
+        } else {
+            numCell.title = '';
+        }
+    }
+}
+
+function clearPendingFaixaStartPick() {
+    if (!pendingFaixaStartPick) return;
+    pendingFaixaStartPick = null;
+    refreshPendingFaixaStartPickUI();
+    updateWeeklyContextNote();
+}
+
+function setPendingFaixaStartPick(faixaIndex, options = {}) {
+    const { quiet = false } = options;
+    const idx = parseInt(faixaIndex, 10);
+    if (Number.isNaN(idx) || idx < 2 || idx > 3) return false;
+
+    const f1Ini = document.getElementById('inp-data-inicio-f1')?.value || '';
+    const f2Ini = document.getElementById('inp-data-inicio-f2')?.value || '';
+
+    if (idx === 2 && !f1Ini) {
+        showToastWarning('Defina primeiro o inicio da Faixa 1.', 'warning', 2200);
+        return false;
+    }
+
+    if (idx === 3 && !f2Ini) {
+        showToastWarning('Defina primeiro o inicio da Faixa 2.', 'warning', 2200);
+        return false;
+    }
+
+    pendingFaixaStartPick = idx;
+    activeFaixaIndex = idx;
+    activateDrawingMode(idx, {
+        silent: true,
+        jumpToFaixaStart: false,
+        switchToWeekly: true,
+        showToolbar: false
+    });
+
+    refreshPendingFaixaStartPickUI();
+    updateWeeklyContextNote();
+
+    if (!quiet) {
+        showToastWarning(`Clique em um slot da grade para definir o inicio da Faixa ${idx}.`, 'warning', 2500);
+    }
+
+    return true;
+}
+
+function applyPendingFaixaStartByDate(dateStr) {
+    const idx = parseInt(pendingFaixaStartPick, 10);
+    if (Number.isNaN(idx) || idx < 2 || idx > 3) return false;
+
+    const applied = syncFaixaStartFromGridClick(idx, dateStr, [], { force: true });
+    if (!applied) return false;
+
+    clearPendingFaixaStartPick();
+    activeFaixaIndex = idx;
+    autoEnterWeeklyEditingForFaixa(idx);
+    showToastWarning(`Inicio da Faixa ${idx} definido em ${formatDateBR(dateStr)}.`, 'success', 2000);
+    return true;
+}
+
+function syncFaixaStartFromGridClick(faixaIndex, cellDate, currentPattern = [], options = {}) {
+    const { force = false } = options;
+    const idx = parseInt(faixaIndex, 10);
+    if (Number.isNaN(idx) || idx < 1 || idx > 3) return false;
+
+    const dateStr = String(cellDate || '').trim();
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return false;
+
+    if (idx === 2 && !document.getElementById('inp-data-inicio-f1')?.value) {
+        showToastWarning('Defina primeiro o inicio da Faixa 1.', 'warning', 2200);
+        return false;
+    }
+    if (idx === 3 && !document.getElementById('inp-data-inicio-f2')?.value) {
+        showToastWarning('Defina primeiro o inicio da Faixa 2.', 'warning', 2200);
+        return false;
+    }
+
+    const iniEl = document.getElementById(`inp-data-inicio-f${idx}`);
+    if (!iniEl) return false;
+
+    const persistedCount = normalizeFaixaPattern(faixasPatterns[idx]).length;
+    const currentCount = normalizeFaixaPattern(currentPattern).length;
+    const firstMarking = persistedCount === 0 && currentCount === 0;
+
+    if (!force && !firstMarking && iniEl.value) return false;
+    if ((iniEl.value || '').trim() === dateStr) return false;
+
+    iniEl.value = dateStr;
+    if (idx === 1 && inputConfig.inicio) inputConfig.inicio.value = dateStr;
+    if (idx === 1 && store.selectedTurma) store.setTurmaLastStart(store.selectedTurma, dateStr);
+
+    applyFaixaDateAutofill();
+    setFaixaStatus(1, getFaixaSlotsAndDays(1).pattern.length);
+    setFaixaStatus(2, getFaixaSlotsAndDays(2).pattern.length);
+    setFaixaStatus(3, getFaixaSlotsAndDays(3).pattern.length);
+    refreshPendingFaixaStartPickUI();
+    updateWeeklyFaixaHoursDisplay();
+    updateWeeklyNavigatorLabel();
+    renderOfertasList();
+    return true;
+}
+
 function tryApplyDrawingSelection(cell, shouldSelect, styles) {
     if (!cell) return false;
 
@@ -810,6 +963,7 @@ function tryApplyDrawingSelection(cell, shouldSelect, styles) {
     if (Number.isNaN(dia) || !slot) return false;
 
     const currentPattern = getDrawingSelectionFromDOM();
+    syncFaixaStartFromGridClick(faixaIndex, cell.dataset.date, currentPattern);
     if (currentPattern.some((p) => p.dia === dia && p.slot === slot)) return true;
 
     const candidatePattern = normalizeFaixaPattern([...currentPattern, { dia, slot }]);
@@ -981,13 +1135,42 @@ function persistActiveDrawingSelection() {
     if (!window.isDrawingFaixa) return 0;
     const faixaIndex = parseInt(window.isDrawingFaixa, 10);
     if (Number.isNaN(faixaIndex) || faixaIndex < 1 || faixaIndex > 3) return 0;
-    const selectedPattern = getDrawingSelectionFromDOM();
-    faixasPatterns[faixaIndex] = selectedPattern;
-    setFaixaStatus(faixaIndex, selectedPattern.length);
-    updateWeeklySavePatternButton();
-    return selectedPattern.length;
-}
 
+    const selectedPattern = getDrawingSelectionFromDOM();
+    const previousPattern = normalizeFaixaPattern(faixasPatterns[faixaIndex]);
+    let finalPattern = normalizeFaixaPattern(selectedPattern);
+
+    // Evita perda de slots do padrao em dias de feriado da semana visivel
+    // (esses slots nao ficam selecionaveis no DOM e nao devem ser apagados ao persistir).
+    const weekStartISO = resolveWeeklyViewWeekStart();
+    const weekDates = getWeeklyWeekDates(weekStartISO);
+    if (weekDates.length > 0 && previousPattern.length > 0) {
+        const feriadosMap = getHolidayLabelMap();
+        const holidayDays = new Set();
+
+        for (let i = 1; i <= 6; i++) {
+            const dStr = weekDates[i - 1] || '';
+            if (dStr && feriadosMap.has(dStr)) holidayDays.add(i);
+        }
+
+        if (holidayDays.size > 0) {
+            const keys = new Set(finalPattern.map((p) => (p.dia + '|' + p.slot)));
+            previousPattern.forEach((p) => {
+                if (!holidayDays.has(p.dia)) return;
+                const k = p.dia + '|' + p.slot;
+                if (keys.has(k)) return;
+                finalPattern.push({ ...p });
+                keys.add(k);
+            });
+            finalPattern = normalizeFaixaPattern(finalPattern);
+        }
+    }
+
+    faixasPatterns[faixaIndex] = finalPattern;
+    setFaixaStatus(faixaIndex, finalPattern.length);
+    updateWeeklySavePatternButton();
+    return finalPattern.length;
+}
 function clearActiveDrawingSelection() {
     if (!window.isDrawingFaixa) return 0;
     const faixaIndex = window.isDrawingFaixa;
@@ -1008,9 +1191,20 @@ function activateDrawingMode(faixaIndex, options = {}) {
         if (!silent) showToastWarning(`Faixa ${faixaIndex} nao esta disponivel para edicao.`, 'warning', 2400);
         return;
     }
+
+    const prevFaixa = parseInt(window.isDrawingFaixa, 10);
+    if (!Number.isNaN(prevFaixa) && prevFaixa >= 1 && prevFaixa <= 3 && prevFaixa !== faixaIndex) {
+        if (drawingDragState.active) {
+            endDrawingDrag();
+        } else {
+            persistActiveDrawingSelection();
+        }
+    } else {
+        endDrawingDrag();
+    }
+
     activeFaixaIndex = faixaIndex;
     window.isDrawingFaixa = faixaIndex;
-    endDrawingDrag();
 
     if (jumpToFaixaStart) {
         const faixaStart = getActiveFaixaStartDate(faixaIndex);
@@ -1043,6 +1237,7 @@ function activateDrawingMode(faixaIndex, options = {}) {
 
 function deactivateDrawingMode() {
     endDrawingDrag();
+    if (pendingFaixaStartPick) clearPendingFaixaStartPick();
     window.isDrawingFaixa = null;
     weeklyViewState.followActiveFaixa = false;
     updateWeeklySavePatternButton();
@@ -1079,6 +1274,8 @@ function collapseFaixasForNewComponent() {
     setFaixaStatus(3, 0);
 
     applyFaixaDateAutofill({ forceSingleBounds: true });
+    refreshPendingFaixaStartPickUI();
+    updateWeeklyContextNote();
     if (store.selectedTurma) renderWeeklyGrid();
 }
 
@@ -1089,6 +1286,9 @@ function clearFaixaState(faixaNum, options = {}) {
     if (fimEl) fimEl.value = '';
 
     faixasPatterns[faixaNum] = [];
+    if (pendingFaixaStartPick === faixaNum || (faixaNum === 2 && pendingFaixaStartPick === 3)) {
+        clearPendingFaixaStartPick();
+    }
     setFaixaStatus(faixaNum, 0);
 }
 
@@ -1207,6 +1407,8 @@ function enforceCanonicalFaixaMode() {
         inputConfig.inicio.value = preferredStart;
     }
     applyFaixaDateAutofill({ forceSingleBounds: true });
+    refreshPendingFaixaStartPickUI();
+    updateWeeklyContextNote();
 }
 
 function autoEnterWeeklyEditingForFaixa(faixaIndex) {
@@ -1267,6 +1469,7 @@ function setupFaixaControls() {
                         if (window.isDrawingFaixa && parseInt(window.isDrawingFaixa, 10) === 3) window.isDrawingFaixa = 2;
                     }
 
+                    if (pendingFaixaStartPick === i && iniEl.value) clearPendingFaixaStartPick();
                     applyFaixaDateAutofill();
                     setFaixaStatus(1, getFaixaSlotsAndDays(1).pattern.length);
                     setFaixaStatus(2, getFaixaSlotsAndDays(2).pattern.length);
@@ -1300,6 +1503,20 @@ function setupFaixaControls() {
         }
     }
 
+    for (let i = 2; i <= 3; i++) {
+        const faixaNumCell = document.querySelector(`#faixa-${i} .faixa-num`);
+        if (!faixaNumCell || faixaNumCell.dataset.startPickBound === '1') continue;
+
+        faixaNumCell.dataset.startPickBound = '1';
+        faixaNumCell.addEventListener('click', () => {
+            if (pendingFaixaStartPick === i) {
+                clearPendingFaixaStartPick();
+                showToastWarning(`Selecao de inicio da Faixa ${i} cancelada.`, 'warning', 1800);
+                return;
+            }
+            setPendingFaixaStartPick(i);
+        });
+    }
     const btnCancelDraw = document.getElementById('btn-cancel-draw');
     if (btnCancelDraw) {
         btnCancelDraw.textContent = 'Limpar Padrao';
@@ -1342,6 +1559,8 @@ function setupFaixaControls() {
         setFaixaStatus(i, getFaixaSlotsAndDays(i).pattern.length);
     }
     applyFaixaDateAutofill({ forceSingleBounds: true });
+    refreshPendingFaixaStartPickUI();
+    updateWeeklyContextNote();
 }
 
 function hydrateFaixa1FromIntensiva(allocation) {
@@ -1432,6 +1651,34 @@ function formatDayMonthShort(dateStr) {
     return `${dd}/${meses[d.getMonth()]}`;
 }
 
+function getHolidayLabelMap() {
+    const map = new Map();
+    const feriados = Array.isArray(store.rawData?.feriados) ? store.rawData.feriados : [];
+
+    feriados.forEach((entry) => {
+        let data = '';
+        let nome = 'Feriado';
+
+        if (typeof entry === 'string') {
+            data = entry.trim();
+        } else if (entry && typeof entry === 'object') {
+            data = String(entry.data || entry.date || '').trim();
+            nome = String(entry.feriado || entry.nome || entry.titulo || entry.descricao || 'Feriado').trim() || 'Feriado';
+        }
+
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(data)) return;
+
+        const current = map.get(data);
+        if (!current) {
+            map.set(data, nome);
+            return;
+        }
+
+        if (current !== nome) map.set(data, `${current} / ${nome}`);
+    });
+
+    return map;
+}
 function getWeeklyWeekDates(weekStartISO) {
     if (!weekStartISO) return [];
     const dates = [];
@@ -1486,6 +1733,7 @@ function updateWeeklyNavigatorLabel() {
     const weekStart = resolveWeeklyViewWeekStart();
     if (!weekStart) {
         labelEl.textContent = 'Semana nao definida';
+        updateWeeklyContextNote();
         return;
     }
 
@@ -1502,6 +1750,47 @@ function updateWeeklyNavigatorLabel() {
     }
 
     labelEl.textContent = `Semana ${formatDateBR(weekStart)} a ${formatDateBR(weekEnd)}${suffix}`;
+    updateWeeklyContextNote();
+}
+
+function updateWeeklyContextNote() {
+    const noteEl = document.getElementById('weekly-week-context-note');
+    if (!noteEl) return;
+
+    const weekStart = resolveWeeklyViewWeekStart();
+    if (!weekStart) {
+        noteEl.textContent = '';
+        noteEl.style.display = 'none';
+        noteEl.classList.remove('is-pending');
+        return;
+    }
+
+    noteEl.style.display = 'block';
+
+    if (pendingFaixaStartPick) {
+        noteEl.classList.add('is-pending');
+        noteEl.textContent = `Clique em um slot da grade para definir o inicio da Faixa ${pendingFaixaStartPick}.`;
+        return;
+    }
+
+    noteEl.classList.remove('is-pending');
+
+    if (!window.isDrawingFaixa) {
+        noteEl.textContent = '';
+        noteEl.style.display = 'none';
+        return;
+    }
+
+    const idx = parseInt(window.isDrawingFaixa, 10);
+    const ini = document.getElementById(`inp-data-inicio-f${idx}`)?.value || '';
+
+    if (!ini) {
+        noteEl.textContent = 'Defina o inicio da faixa ativa para alinhar a alocacao com a semana real.';
+        return;
+    }
+
+    noteEl.textContent = '';
+    noteEl.style.display = 'none';
 }
 
 function setupWeeklyWeekNavigator() {
@@ -1514,7 +1803,6 @@ function setupWeeklyWeekNavigator() {
 
     const btnPrev = document.getElementById('btn-week-prev');
     const btnNext = document.getElementById('btn-week-next');
-    const btnFocus = document.getElementById('btn-week-focus-faixa');
     const btnSave = document.getElementById('btn-week-save-pattern');
 
     if (btnPrev) {
@@ -1525,14 +1813,6 @@ function setupWeeklyWeekNavigator() {
     if (btnNext) {
         btnNext.addEventListener('click', () => {
             moveWeeklyViewWeek(1);
-        });
-    }
-    if (btnFocus) {
-        btnFocus.addEventListener('click', () => {
-            if (window.isDrawingFaixa) persistActiveDrawingSelection();
-            const faixaStart = getActiveFaixaStartDate(window.isDrawingFaixa || activeFaixaIndex);
-            const anchor = faixaStart || getDefaultWeeklyAnchorDate();
-            setWeeklyViewByDate(anchor, { followFaixa: !!faixaStart, render: true });
         });
     }
     if (btnSave) {
@@ -1693,14 +1973,19 @@ function getIntensiveSlotsForDate(intense, dStr, opts = {}) {
 }
 
 function computeIntensiveExecution(intense, options = {}) {
-    const result = {
+        const result = {
         totalHours: 0,
         dataInicio: intense?.dataInicio || '',
         dataFim: intense?.dataInicio || '',
         horariosUltimoDia: [],
         byDate: {},
         unionSlots: [],
-        unionDias: []
+        unionDias: [],
+        wasTruncatedByCH: false,
+        truncationDate: '',
+        truncationDaySlots: 0,
+        truncationUsedSlots: 0,
+        truncationType: ''
     };
     if (!intense) return result;
 
@@ -1720,6 +2005,41 @@ function computeIntensiveExecution(intense, options = {}) {
     let cursor = new Date(faixas[0].inicio + 'T12:00:00');
     let loops = 0;
     const maxLoops = options.maxLoops || 800;
+    const lastFaixaEnd = faixas[faixas.length - 1]?.fim || '';
+    const findRemainingCapacityAfter = (currentDateStr) => {
+        if (!lastFaixaEnd || !currentDateStr || currentDateStr >= lastFaixaEnd) return null;
+
+        const probe = new Date(currentDateStr + 'T12:00:00');
+        probe.setDate(probe.getDate() + 1);
+        let guard = 0;
+
+        while (guard < maxLoops) {
+            const probeDate = toISODate(probe);
+            if (probeDate > lastFaixaEnd) break;
+
+            const probeDow = probe.getDay();
+            const probeFaixa = getActiveFaixaForDate(faixas, probeDate);
+            if (probeFaixa && !feriadosSet.has(probeDate) && probeDow !== 0 && probeFaixa.dias.includes(probeDow)) {
+                const probeDaySlots = (probeFaixa.drawnSlotsByDay?.[probeDow] || probeFaixa.slots || []).slice();
+                const probeFreeSlots = options.respectPriority
+                    ? probeDaySlots.filter((slot) => !priorityRegulars.some((p) => {
+                        const pStart = p.dataInicio || store.settings.termStart;
+                        const pEnd = p.dataFim || store.settings.termEnd;
+                        return parseInt(p.diaSemana, 10) === probeDow && probeDate >= pStart && probeDate <= pEnd && p.horario === slot;
+                    }))
+                    : probeDaySlots;
+
+                if (probeFreeSlots.length > 0) {
+                    return { date: probeDate, slots: probeFreeSlots.length };
+                }
+            }
+
+            probe.setDate(probe.getDate() + 1);
+            guard++;
+        }
+
+        return null;
+    };
 
     while (loops < maxLoops) {
         const dStr = toISODate(cursor);
@@ -1747,6 +2067,13 @@ function computeIntensiveExecution(intense, options = {}) {
             if (freeSlots.length > 0) {
                 const remaining = totalCH > 0 ? (totalCH - result.totalHours) : freeSlots.length;
                 const take = totalCH > 0 ? Math.min(remaining, freeSlots.length) : freeSlots.length;
+                if (totalCH > 0 && remaining > 0 && take < freeSlots.length) {
+                    result.wasTruncatedByCH = true;
+                    result.truncationDate = dStr;
+                    result.truncationDaySlots = freeSlots.length;
+                    result.truncationUsedSlots = take;
+                    result.truncationType = 'partial-day';
+                }
                 if (take > 0) {
                     const usedSlots = freeSlots.slice(0, take);
                     result.byDate[dStr] = usedSlots;
@@ -1757,7 +2084,19 @@ function computeIntensiveExecution(intense, options = {}) {
             }
         }
 
-        if (totalCH > 0 && result.totalHours >= totalCH) break;
+        if (totalCH > 0 && result.totalHours >= totalCH) {
+            if (!result.wasTruncatedByCH) {
+                const remainingCapacity = findRemainingCapacityAfter(dStr);
+                if (remainingCapacity) {
+                    result.wasTruncatedByCH = true;
+                    result.truncationDate = remainingCapacity.date;
+                    result.truncationDaySlots = remainingCapacity.slots;
+                    result.truncationUsedSlots = 0;
+                    result.truncationType = 'after-boundary';
+                }
+            }
+            break;
+        }
         cursor.setDate(cursor.getDate() + 1);
         loops++;
     }
@@ -1777,6 +2116,8 @@ function computeIntensiveExecution(intense, options = {}) {
 
 function collectIntensiveFaixasFromUI(fallbackInicio) {
     const faixas = [];
+    let lastEffectivePattern = [];
+
     for (let i = 1; i <= 3; i++) {
         const inicio = (document.getElementById(`inp-data-inicio-f${i}`)?.value || (i === 1 ? fallbackInicio : '')).trim();
         const fim = (document.getElementById(`inp-data-fim-f${i}`)?.value || '').trim() || null;
@@ -1788,8 +2129,13 @@ function collectIntensiveFaixasFromUI(fallbackInicio) {
             continue;
         }
 
+        let effectivePattern = pattern;
+        if (effectivePattern.length === 0 && lastEffectivePattern.length > 0) {
+            effectivePattern = lastEffectivePattern.map((p) => ({ ...p }));
+        }
+
         let drawnSlotsByDay = {};
-        pattern.forEach((p) => {
+        effectivePattern.forEach((p) => {
             if (!drawnSlotsByDay[p.dia]) drawnSlotsByDay[p.dia] = [];
             drawnSlotsByDay[p.dia].push(p.slot);
         });
@@ -1799,6 +2145,8 @@ function collectIntensiveFaixasFromUI(fallbackInicio) {
         if (!normFaixa) {
             throw new Error(`Desenhe horarios validos para a Faixa ${i}.`);
         }
+
+        lastEffectivePattern = effectivePattern.map((p) => ({ ...p }));
         faixas.push(normFaixa);
     }
 
@@ -1807,6 +2155,32 @@ function collectIntensiveFaixasFromUI(fallbackInicio) {
         sorted[i].fim = addDaysISO(sorted[i + 1].inicio, -1);
     }
     return sorted;
+}
+
+function buildFaixaHoursSummaryFromExecution(faixas = [], executionByDate = {}) {
+    const list = Array.isArray(faixas) ? faixas : [];
+    const byDate = executionByDate && typeof executionByDate === "object" ? executionByDate : {};
+
+    return list.map((faixa, idx) => {
+        const inicio = String(faixa?.inicio || "").trim();
+        const fim = String(faixa?.fim || "").trim() || inicio;
+        let total = 0;
+
+        Object.keys(byDate).forEach((dStr) => {
+            if (!inicio) return;
+            if (dStr < inicio) return;
+            if (fim && dStr > fim) return;
+            const slots = Array.isArray(byDate[dStr]) ? byDate[dStr] : [];
+            total += slots.length;
+        });
+
+        return {
+            faixa: idx + 1,
+            inicio,
+            fim,
+            horas: total
+        };
+    });
 }
 
 function alignFaixasToExecutionEnd(faixasInput, executionEnd) {
@@ -2276,6 +2650,8 @@ function initPeriodoLetivoETurno() {
             if (calStart) calStart.value = inpTermStart.value;
             if (inputConfig.inicio) inputConfig.inicio.value = inpTermStart.value;
             applyFaixaDateAutofill({ forceSingleBounds: true });
+    refreshPendingFaixaStartPickUI();
+    updateWeeklyContextNote();
             renderOfertasList();
         });
     }
@@ -2284,6 +2660,8 @@ function initPeriodoLetivoETurno() {
             store.setTermDates(store.settings.termStart, inpTermEnd.value);
             if (calEnd) calEnd.value = inpTermEnd.value;
             applyFaixaDateAutofill({ forceSingleBounds: true });
+    refreshPendingFaixaStartPickUI();
+    updateWeeklyContextNote();
             renderOfertasList();
         });
     }
@@ -2292,6 +2670,8 @@ function initPeriodoLetivoETurno() {
             store.setTermDates(calStart.value, store.settings.termEnd || (calEnd ? calEnd.value : ''));
             if (inpTermStart) inpTermStart.value = calStart.value;
             applyFaixaDateAutofill({ forceSingleBounds: true });
+    refreshPendingFaixaStartPickUI();
+    updateWeeklyContextNote();
             renderOfertasList();
         });
     }
@@ -2300,10 +2680,14 @@ function initPeriodoLetivoETurno() {
             store.setTermDates(store.settings.termStart || (calStart ? calStart.value : ''), calEnd.value);
             if (inpTermEnd) inpTermEnd.value = calEnd.value;
             applyFaixaDateAutofill({ forceSingleBounds: true });
+    refreshPendingFaixaStartPickUI();
+    updateWeeklyContextNote();
             renderOfertasList();
         });
     }
     applyFaixaDateAutofill({ forceSingleBounds: true });
+    refreshPendingFaixaStartPickUI();
+    updateWeeklyContextNote();
     if (selTurnoOferta) {
         selTurnoOferta.addEventListener('change', () => {
             store.setTurnoOferta(selTurnoOferta.value);
@@ -2314,6 +2698,32 @@ function initPeriodoLetivoETurno() {
 }
 
 // ==== IMPORTAÇÃO DE BLOCO ====
+function normalizePeriodoToNumber(value) {
+    const raw = String(value || '').trim().toUpperCase();
+    if (!raw) return '';
+
+    const numMatch = raw.match(/\d{1,2}/);
+    if (numMatch) return String(parseInt(numMatch[0], 10));
+
+    const romanMap = {
+        I: '1',
+        II: '2',
+        III: '3',
+        IV: '4',
+        V: '5',
+        VI: '6',
+        VII: '7',
+        VIII: '8',
+        IX: '9',
+        X: '10'
+    };
+
+    const romanOnly = raw.replace(/[^IVX]/g, '');
+    if (romanOnly && romanMap[romanOnly]) return romanMap[romanOnly];
+
+    return '';
+}
+
 function handleImportBloco() {
     if (!store.selectedCurso || !store.selectedTurma) {
         showToastWarning('Selecione um Curso e uma Turma primeiro.', 'warning', 2600);
@@ -2326,68 +2736,71 @@ function handleImportBloco() {
         return;
     }
 
-    const periodos = [...new Set(comps.map(c => c.periodo).filter(Boolean))].sort();
-    if (periodos.length === 0) {
-        showToastWarning('Os componentes deste curso nao possuem periodos cadastrados.', 'warning', 2800);
+    const periodosDisponiveisNoCurso = [...new Set(comps
+        .map(c => normalizePeriodoToNumber(c.periodo))
+        .filter(Boolean))]
+        .sort((a, b) => parseInt(a, 10) - parseInt(b, 10));
+
+    if (periodosDisponiveisNoCurso.length === 0) {
+        showToastWarning('Os componentes deste curso nao possuem periodos validos cadastrados.', 'warning', 3000);
         return;
     }
 
     const opcoesDisponiveis = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10'];
-    const p = prompt('? INICIANDO IMPORTACAO RAPIDA\nTurma alvo: ' + getTurmaLabel(store.selectedTurma) + '\n\nDigite o NUMERO DO PERIODO que deseja importar:\n(Opcoes disponiveis: ' + opcoesDisponiveis.join(', ') + ')');
+    const p = prompt(
+        'INICIANDO IMPORTACAO RAPIDA\n' +
+        'Turma alvo: ' + getTurmaLabel(store.selectedTurma) + '\n\n' +
+        'Digite o NUMERO DO PERIODO que deseja importar:\n' +
+        '(Opcoes disponiveis: ' + opcoesDisponiveis.join(', ') + ')\n' +
+        'Periodos encontrados neste curso: ' + periodosDisponiveisNoCurso.join(', ')
+    );
 
     if (!p) return;
 
-    const periodoSelecionado = p.trim().toUpperCase();
-    const periodoSelecionadoNum = periodoSelecionado.match(/\d+/)?.[0] || periodoSelecionado;
-    if (!opcoesDisponiveis.includes(periodoSelecionadoNum)) {
+    const periodoSelecionadoNum = normalizePeriodoToNumber(p);
+    if (!periodoSelecionadoNum || !opcoesDisponiveis.includes(periodoSelecionadoNum)) {
         showToastWarning('Periodo invalido. Use uma das opcoes: 1, 2, 3, 4, 5, 6, 7, 8, 9, 10.', 'warning', 3200);
         return;
     }
 
-    const compsToImport = comps.filter(c => {
-        const rawPeriodo = String(c.periodo ?? '').toUpperCase();
-        const rawPeriodoNum = rawPeriodo.match(/\d+/)?.[0] || rawPeriodo;
-        return rawPeriodoNum === periodoSelecionadoNum;
-    });
-
+    const compsToImport = comps.filter(c => normalizePeriodoToNumber(c.periodo) === periodoSelecionadoNum);
     if (compsToImport.length === 0) {
         showToastWarning(`Nenhuma disciplina encontrada no periodo "${periodoSelecionadoNum}".`, 'warning', 3000);
         return;
     }
 
-    // Deriva o identificador de bloco: "1" → "BL1", "BLOCO 2" → "BL2", "2" → "BL2"
-    const numBloco = periodoSelecionadoNum;
-    const blocoId = `BL${numBloco}`;
-
+    const blocoId = `BL${periodoSelecionadoNum}`;
     let addedCount = 0;
+
     compsToImport.forEach(c => {
-        const exists = store.allocations.some(a => String(a.turmaId) === String(store.selectedTurma) && a.disciplina === c.componente);
-        if (!exists) {
-            store.addAllocation({
-                turmaId: store.selectedTurma,
-                disciplina: c.componente,
-                docente: 'A definir',
-                tipo: 'pendente', // Status Especial
-                cor: c.cor || '#bdc3c7',
-                dataInicio: store.settings.termStart,
-                dataFim: store.settings.termEnd,
-                subGrupo: blocoId   // Ex: BL1, BL2 → rótulo EP2026_BL1
-            });
-            addedCount++;
-        }
+        const exists = store.allocations.some(a =>
+            String(a.turmaId) === String(store.selectedTurma) && a.disciplina === c.componente
+        );
+        if (exists) return;
+
+        store.addAllocation({
+            turmaId: store.selectedTurma,
+            disciplina: c.componente,
+            docente: 'A definir',
+            tipo: 'pendente',
+            cor: c.cor || '#bdc3c7',
+            dataInicio: store.settings.termStart,
+            dataFim: store.settings.termEnd,
+            subGrupo: blocoId
+        });
+        addedCount++;
     });
 
     if (addedCount > 0) {
         const turmaNome = getTurmaLabel(store.selectedTurma, blocoId);
-        showToastWarning(`📥 Sucesso! ${addedCount} disciplinas importadas como ${turmaNome}. Vá em "Lista de Ofertas" para alocar na grade.`, 'success');
+        showToastWarning(`Sucesso! ${addedCount} disciplinas importadas como ${turmaNome}. Va em "Lista de Ofertas" para alocar na grade.`, 'success');
         store.saveAllocations();
         renderOfertasList();
         switchTab('list');
     } else {
-        showToastWarning('Todas as disciplinas deste bloco já estão na grade (ou pendentes) para esta turma.', 'warning', 3200);
+        showToastWarning('Todas as disciplinas deste bloco ja estao na grade (ou pendentes) para esta turma.', 'warning', 3200);
     }
 }
-
 
 export function initUI() {
     setupFaixaControls();
@@ -2794,6 +3207,8 @@ function onTurmaChange() {
         inputConfig.inicio.value = preferredStart;
     }
     applyFaixaDateAutofill({ forceSingleBounds: true });
+    refreshPendingFaixaStartPickUI();
+    updateWeeklyContextNote();
     setWeeklyViewByDate(preferredStart || store.settings.termStart || calStart?.value || '', { followFaixa: false, render: false });
 
     renderWeeklyGrid();
@@ -2837,9 +3252,11 @@ function renderWeeklyGrid() {
     const drawingDisciplina = normalizeDisciplinaInputValue(inputConfig.disciplina?.value || '');
     const turmaAllocs = store.allocations.filter((a) => String(a.turmaId) === String(store.selectedTurma));
     const pattern = isDrawing ? normalizeFaixaPattern(faixasPatterns[window.isDrawingFaixa]) : [];
+    const hasAnyDraftPattern = isDrawing && [1, 2, 3].some((idx) => normalizeFaixaPattern(faixasPatterns[idx]).length > 0);
     const drawStyles = isDrawing ? getDrawingSelectedStyles() : null;
     const showContextWhileDrawing = !isDrawing || drawingViewMode === 'context';
-    const feriadosSet = new Set((store.rawData?.feriados || []).map((f) => f.data || f));
+    const feriadosMap = getHolidayLabelMap();
+    const feriadosSet = new Set(feriadosMap.keys());
 
     if (!store.selectedTurma || horariosUI.length === 0) {
         const turnoAtual = store.settings?.turnoOferta || "Manha";
@@ -2865,13 +3282,104 @@ function renderWeeklyGrid() {
     const weekStartISO = resolveWeeklyViewWeekStart();
     const weekDates = getWeeklyWeekDates(weekStartISO);
     updateWeeklyNavigatorLabel();
+    const firstClassSlot = horariosUI.find((h) => !h.toUpperCase().includes('INTERVALO')) || '';
+
+    const weeklySnapshotStart = store.settings.termStart || calStart?.value || weekDates[0] || weekStartISO;
+    const weeklySnapshotEnd = weekDates[weekDates.length - 1] || weekStartISO;
+    const weeklyEventsFull = getCalendarEvents(
+        String(store.selectedTurma),
+        weeklySnapshotStart,
+        weeklySnapshotEnd
+    );
+    const weeklyEventsByDate = {};
+    weekDates.forEach((d) => {
+        weeklyEventsByDate[d] = Array.isArray(weeklyEventsFull?.[d]) ? weeklyEventsFull[d] : [];
+    });
+
+    const slotKey = (value) => {
+        const text = String(value || '').trim();
+        if (!text) return '';
+        const m = text.match(/\d{1,2}:\d{2}/);
+        return m ? m[0] : text.replace(/\s+/g, '');
+    };
+
+    const getWeeklySlotEvents = (dateStr, slotLabel, dayNumber) => {
+        const dayEvents = Array.isArray(weeklyEventsByDate?.[dateStr]) ? weeklyEventsByDate[dateStr] : [];
+        const key = slotKey(slotLabel);
+
+        const seen = new Set();
+        const out = [];
+
+        if (key && dayEvents.length > 0) {
+            dayEvents.forEach((e) => {
+                if (!e || e.type === 'holiday') return;
+                if (hasAnyDraftPattern && drawingDisciplina && normalizeDisciplinaInputValue(e.disciplina || '') === drawingDisciplina) return;
+
+                const eventKey = slotKey(e.horario);
+                const listKey = Array.isArray(e.horariosOcupados)
+                    ? e.horariosOcupados.some((h) => slotKey(h) === key)
+                    : false;
+
+                if (eventKey !== key && !listKey) return;
+
+                const dedupe = `${e.id ?? ''}|${e.disciplina ?? ''}|${e.tipo ?? ''}|${eventKey || key}|${e.subGrupo ?? ''}`;
+                if (seen.has(dedupe)) return;
+                seen.add(dedupe);
+                out.push(e);
+            });
+        }
+
+        if (out.length > 0 || !key) return out;
+
+        // Fallback anti-brecha: evita sumico indevido de dia util anterior por janela de renderizacao
+        turmaAllocs.forEach((a) => {
+            if (hasAnyDraftPattern && drawingDisciplina && normalizeDisciplinaInputValue(a.disciplina || '') === drawingDisciplina) return;
+            if (!isAllocationActiveInWeeklyCell(a, dayNumber, dateStr, slotLabel)) return;
+
+            if (a.tipo === 'intensiva' && a.dataFim === dateStr && Array.isArray(a.horariosUltimoDia) && a.horariosUltimoDia.length > 0) {
+                if (!a.horariosUltimoDia.some((h) => slotKey(h) === key)) return;
+            }
+
+            const dedupe = `${a.id ?? ''}|${a.disciplina ?? ''}|${a.tipo ?? ''}|${key}|${a.subGrupo ?? ''}`;
+            if (seen.has(dedupe)) return;
+            seen.add(dedupe);
+            out.push(a);
+        });
+
+        return out;
+    };
 
     gridContainer.appendChild(createCell('header top-header', ''));
     diasSemana.forEach((dia, idx) => {
         const dateStr = weekDates[idx] || '';
+        const holidayLabel = dateStr ? (feriadosMap.get(dateStr) || '') : '';
         const h = createCell('header top-header week-day-header', '');
-        h.innerHTML = `<span class="week-day-name">${dia.nome}</span><span class="week-day-date">${formatDayMonthShort(dateStr)}</span>`;
-        if (dateStr && feriadosSet.has(dateStr)) h.classList.add('week-day-holiday');
+
+        const dayName = document.createElement('span');
+        dayName.className = 'week-day-name';
+        dayName.textContent = dia.nome;
+
+        const dayDate = document.createElement('span');
+        dayDate.className = 'week-day-date';
+        dayDate.textContent = formatDayMonthShort(dateStr);
+
+        h.appendChild(dayName);
+        h.appendChild(dayDate);
+
+        if (holidayLabel) {
+            const holidayDay = document.createElement('span');
+            holidayDay.className = 'week-day-holiday-number';
+            holidayDay.textContent = String(parseInt((dateStr || '').slice(8, 10), 10) || '');
+            h.appendChild(holidayDay);
+
+            const holidayName = document.createElement('span');
+            holidayName.className = 'week-day-holiday-name';
+            holidayName.textContent = holidayLabel;
+            h.appendChild(holidayName);
+            h.classList.add('week-day-holiday');
+            h.title = `Feriado: ${holidayLabel}`;
+        }
+
         gridContainer.appendChild(h);
     });
 
@@ -2898,71 +3406,108 @@ function renderWeeklyGrid() {
                 cell.dataset.horario = horarioStr;
                 cell.dataset.date = cellDate;
 
-                const allocs = turmaAllocs.filter((a) => {
-                    if (isDrawing && drawingDisciplina && a.disciplina === drawingDisciplina) return false;
-                    return isAllocationActiveInWeeklyCell(a, i, cellDate, horarioStr);
-                });
+                const isHolidayColumn = !!cellDate && feriadosSet.has(cellDate);
+                const holidayLabelForColumn = isHolidayColumn ? (feriadosMap.get(cellDate) || 'Feriado') : '';
+                if (isHolidayColumn) {
+                    cell.classList.add('slot-holiday-column');
+                    cell.title = `Feriado: ${holidayLabelForColumn}`;
+                }
+
+                const allocsRaw = getWeeklySlotEvents(cellDate, horarioStr, i);
+                const allocs = isHolidayColumn ? [] : allocsRaw;
 
                 if (allocs.length > 0 && showContextWhileDrawing) renderSlotContent(cell, allocs);
 
+                if (isHolidayColumn && horarioStr === firstClassSlot) {
+                    const holidayMarker = document.createElement('div');
+                    holidayMarker.className = 'weekly-holiday-column-marker';
+
+                    const holidayDay = document.createElement('span');
+                    holidayDay.className = 'weekly-holiday-column-day';
+                    holidayDay.textContent = String(parseInt((cellDate || '').slice(8, 10), 10) || '');
+
+                    const holidayName = document.createElement('span');
+                    holidayName.className = 'weekly-holiday-column-name';
+                    holidayName.textContent = holidayLabelForColumn;
+
+                    holidayMarker.appendChild(holidayDay);
+                    holidayMarker.appendChild(holidayName);
+                    cell.appendChild(holidayMarker);
+                }
+
                 if (isDrawing) {
-                    const isSelected = pattern.some((p) => p.dia === i && p.slot === horarioStr);
+                    const isSelected = !isHolidayColumn && pattern.some((p) => p.dia === i && p.slot === horarioStr);
                     setDrawingCellSelection(cell, isSelected, drawStyles);
                     cell.classList.remove('slot-free-draw', 'slot-week-disabled', 'slot-week-holiday');
 
                     const isInsideFaixa = drawRange ? isDateInsideRange(cellDate, drawRange.start, drawRange.end) : true;
                     const isHoliday = !!cellDate && feriadosSet.has(cellDate);
+                    const holidayLabel = isHoliday ? (feriadosMap.get(cellDate) || 'Feriado') : '';
                     const canEdit = isInsideFaixa && !isHoliday && allocs.length === 0;
 
                     if (canEdit) {
                         cell.dataset.canEdit = '1';
                         if (!isSelected) cell.classList.add('slot-free-draw');
-                        cell.style.cursor = 'crosshair';
-                        cell.addEventListener('mousedown', (e) => {
-                            if (e.button !== 0) return;
-                            e.preventDefault();
-                            e.stopPropagation();
-                            drawingDragState.active = true;
-                            drawingDragState.shouldSelect = !cell.classList.contains('selected-slot');
-                            drawingDragState.touchedAnyCell = false;
-                            if (document.body) document.body.style.userSelect = 'none';
 
-                            const applied = tryApplyDrawingSelection(cell, drawingDragState.shouldSelect, drawStyles);
-                            if (!applied) {
-                                drawingDragState.active = false;
-                                if (document.body) document.body.style.userSelect = '';
-                                return;
-                            }
-                            drawingDragState.touchedAnyCell = true;
-                        });
-                        cell.addEventListener('mouseenter', () => {
-                            if (!drawingDragState.active) return;
-                            const applied = tryApplyDrawingSelection(cell, drawingDragState.shouldSelect, drawStyles);
-                            if (!applied) {
+                        if (pendingFaixaStartPick) {
+                            cell.style.cursor = 'copy';
+                            cell.addEventListener('mousedown', (e) => {
+                                if (e.button !== 0) return;
+                                e.preventDefault();
+                                e.stopPropagation();
                                 endDrawingDrag();
-                                return;
-                            }
-                            drawingDragState.touchedAnyCell = true;
-                        });
+                                applyPendingFaixaStartByDate(cellDate);
+                            });
+                        } else {
+                            cell.style.cursor = 'crosshair';
+                            cell.addEventListener('mousedown', (e) => {
+                                if (e.button !== 0) return;
+                                e.preventDefault();
+                                e.stopPropagation();
+                                drawingDragState.active = true;
+                                drawingDragState.shouldSelect = !cell.classList.contains('selected-slot');
+                                drawingDragState.touchedAnyCell = false;
+                                if (document.body) document.body.style.userSelect = 'none';
+
+                                const applied = tryApplyDrawingSelection(cell, drawingDragState.shouldSelect, drawStyles);
+                                if (!applied) {
+                                    drawingDragState.active = false;
+                                    if (document.body) document.body.style.userSelect = '';
+                                    return;
+                                }
+                                drawingDragState.touchedAnyCell = true;
+                            });
+                            cell.addEventListener('mouseenter', () => {
+                                if (!drawingDragState.active) return;
+                                const applied = tryApplyDrawingSelection(cell, drawingDragState.shouldSelect, drawStyles);
+                                if (!applied) {
+                                    endDrawingDrag();
+                                    return;
+                                }
+                                drawingDragState.touchedAnyCell = true;
+                            });
+                        }
                     } else if (allocs.length > 0) {
                         delete cell.dataset.canEdit;
                         cell.style.opacity = '0.6';
-                        cell.style.pointerEvents = 'none';
+                        cell.style.pointerEvents = 'auto';
                         if (!showContextWhileDrawing) {
                             cell.innerHTML = '';
                             cell.style.background = '#dfe6e9';
                         }
-                        cell.title = 'Horario ocupado na turma nesta semana';
+                        cell.style.cursor = 'not-allowed';
+                        cell.querySelectorAll('.remove-btn').forEach((btn) => { btn.style.pointerEvents = 'none'; });
+                        cell.title = 'Horario ocupado nesta semana (data real). Use outra semana ou ajuste inicio/faixa.';
                     } else {
                         delete cell.dataset.canEdit;
-                        cell.style.pointerEvents = 'none';
+                        cell.style.pointerEvents = 'auto';
                         cell.style.cursor = 'not-allowed';
                         if (isHoliday) {
                             cell.classList.add('slot-week-holiday');
-                            cell.title = 'Feriado nesta data';
+                            cell.title = holidayLabel ? `Feriado: ${holidayLabel}` : 'Feriado nesta data';
                         } else if (!isInsideFaixa) {
                             cell.classList.add('slot-week-disabled');
-                            cell.title = 'Fora do intervalo da faixa ativa';
+                            cell.title = 'Fora do intervalo da faixa ativa nesta semana. Ajuste inicio/fim ou navegue para outra semana.';
                         }
                     }
                 }
@@ -2972,7 +3517,7 @@ function renderWeeklyGrid() {
         }
     });
 
-    applyWeeklyGridRowHeightScale(0.354);
+    applyWeeklyGridRowHeightScale();
     updateWeeklySavePatternButton();
 }
 
@@ -3000,8 +3545,9 @@ function renderSlotContent(cell, allocs) {
         }
 
         card.innerHTML = `
-            <div class="card-title" title="${alloc.disciplina}" style="display:inline;">
-                ${info.abrev} - <span class="card-docente" style="font-weight:normal;">${docenteNome}</span>
+            <div class="card-title" title="${alloc.disciplina}${docenteNome ? ` - ${docenteNome}` : ''}">
+                <span class="card-comp">${info.abrev}</span>
+                ${docenteNome ? `<span class="card-docente">${docenteNome}</span>` : ''}
             </div>
             <span class="remove-btn" title="Remover">×</span>
         `;
@@ -3035,6 +3581,10 @@ function handleAddManual() {
     const docData = getDocenteData();
     if (!docData.isValid) {
         showToastWarning('Preencha o(s) Docente(s).', 'warning', 2200);
+        return;
+    }
+    if (pendingFaixaStartPick) {
+        showToastWarning(`Finalize a definicao de inicio da Faixa ${pendingFaixaStartPick} antes de salvar a componente.`, 'warning', 2600);
         return;
     }
     if (window.isDrawingFaixa) persistActiveDrawingSelection();
@@ -3084,11 +3634,6 @@ function handleAddManual() {
             return;
         }
 
-        const totalTabelaFaixas = [1, 2, 3].reduce((sum, idx) => sum + calcFaixaCH(idx), 0);
-        if (totalTabelaFaixas > 0 && totalTabelaFaixas !== effectiveCH) {
-            showToastWarning(`A tabela indica ${totalTabelaFaixas}h, mas a meta da componente e ${effectiveCH}h. O sistema vai ajustar o fim da ultima faixa no salvamento.`, 'warning', 3600);
-        }
-
         diasMarcados = [...new Set(faixasConfig.flatMap((f) => f.dias || []))].sort((a, b) => a - b);
         if (diasMarcados.length === 0) diasMarcados = [1, 2, 3, 4, 5];
 
@@ -3110,14 +3655,37 @@ function handleAddManual() {
             showToastWarning('Nenhuma aula foi gerada com as faixas configuradas.', 'error', 3000);
             return;
         }
+
+        let nonBlockingDistributionNotice = '';
+        if (execution.wasTruncatedByCH) {
+            nonBlockingDistributionNotice = 'A componente foi inserida, mas a ultima semana ficou parcial. Se desejar, voce pode criar uma segunda faixa para ajustar melhor a distribuicao final.';
+        }
+
         if (execution.totalHours !== effectiveCH) {
             const diff = execution.totalHours - effectiveCH;
-            if (diff < 0) {
-                showToastWarning(`As faixas somam ${execution.totalHours}h, mas a disciplina exige ${effectiveCH}h. Ajuste a configuracao.`, 'error', 3800);
-            } else {
-                showToastWarning(`As faixas estao com ${execution.totalHours}h e excedem ${Math.abs(diff)}h da meta (${effectiveCH}h). Ajuste o padrao.`, 'error', 3800);
-            }
-            return;
+            const diffMsg = diff < 0
+                ? `A carga alocada ficou em ${execution.totalHours}h para uma meta de ${effectiveCH}h. Voce pode manter assim agora e ajustar depois, se desejar.`
+                : `A carga alocada ficou em ${execution.totalHours}h para uma meta de ${effectiveCH}h. Voce pode visualizar assim primeiro e ajustar depois, se desejar.`;
+
+            nonBlockingDistributionNotice = nonBlockingDistributionNotice
+                ? `${nonBlockingDistributionNotice} ${diffMsg}`
+                : diffMsg;
+        }
+
+        const faixaHoursSummary = buildFaixaHoursSummaryFromExecution(faixasConfig, execution.byDate);
+        const faixasComCarga = faixaHoursSummary.filter((f) => f.horas > 0);
+
+        if (faixasComCarga.length > 1) {
+            const resumoFaixas = faixasComCarga
+                .map((f) => 'Faixa ' + f.faixa + ': ' + f.horas + 'h')
+                .join(' | ');
+
+            const msgConfirm =
+                'Distribuicao confirmada. A componente ficou organizada em ' + faixasComCarga.length + ' faixas: ' + resumoFaixas + '.\n\n' +
+                'Esse ajuste foi reconhecido normalmente pelo sistema e ajuda a evitar uma alocacao final pouco pratica (como slot isolado).\n\n' +
+                'Clique em OK para continuar.';
+
+            if (!confirm(msgConfirm)) return;
         }
 
         const inicioCalculado = execution.dataInicio || inicio;
@@ -3256,11 +3824,16 @@ function handleAddManual() {
             );
             applyFaixasConfigToSidebar(faixasSidebar);
         }
-        editingDisciplinaDraft = '';
-        collapseFaixasForNewComponent();
+        editingDisciplinaDraft = normalizeDisciplinaInputValue(disciplina);
+        refreshPendingFaixaStartPickUI();
+        updateWeeklyContextNote();
         updateWeeklyFaixaHoursDisplay();
         renderWeeklyGrid();
         renderOfertasList();
+
+        if (nonBlockingDistributionNotice) {
+            showToastWarning(nonBlockingDistributionNotice, 'warning', 6200);
+        }
 
     }
 }
@@ -5050,4 +5623,3 @@ function switchTab(tabId) {
 }
 
 export { renderWeeklyGrid, renderOfertasList, renderMonthlyCalendar, renderTeacherCalendar };
-

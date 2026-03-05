@@ -226,6 +226,9 @@ input[type="date"] { color-scheme: dark; }
     overflow-x: hidden;
 }
 .tab-content.active { display: block; }
+#tab-weekly.tab-content {
+    padding: 16px 18px 14px;
+}
 
 .grid-header { margin-bottom: 20px; }
 .grid-header h2 { margin: 0 0 5px 0; color: var(--primary); font-size: 1.8em; }
@@ -233,10 +236,10 @@ input[type="date"] { color-scheme: dark; }
 
 .weekly-top-layout {
     display: grid;
-    grid-template-columns: minmax(467px, 1.02fr) minmax(504px, 1.05fr);
+    grid-template-columns: minmax(0, 1.18fr) minmax(0, 1fr);
     align-items: stretch;
     gap: 8px;
-    margin-bottom: 3px;
+    margin-bottom: 4px;
     width: 100%;
     min-width: 0;
 }
@@ -256,11 +259,11 @@ input[type="date"] { color-scheme: dark; }
 .weekly-header-panel {
     display: flex;
     align-items: stretch;
-    border: 1px solid #d8e2ea;
+    border: 1px solid #cddfd5;
     border-radius: 12px;
-    padding: 6px 8px;
-    background: linear-gradient(145deg, #f6fbfe 0%, #edf5fa 100%);
-    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.9), 0 3px 10px rgba(19, 57, 77, 0.05);
+    padding: 5px 7px;
+    background: linear-gradient(145deg, #effaf4 0%, #e7f4ee 100%);
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.9), 0 3px 10px rgba(23, 68, 52, 0.08);
 }
 
 .weekly-top-layout .weekly-intro {
@@ -273,8 +276,8 @@ input[type="date"] { color-scheme: dark; }
 
 .weekly-instructions-card {
     width: 100%;
-    background: rgba(255, 255, 255, 0.88);
-    border: 1px solid #d5e0e8;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 252, 250, 0.96) 100%);
+    border: 1px solid #c7d9cf;
     border-left: 4px solid #0f7c96;
     border-radius: 10px;
     padding: 6px 8px 6px 10px;
@@ -282,34 +285,39 @@ input[type="date"] { color-scheme: dark; }
 
 .weekly-instructions-card h3 {
     margin: 0 0 3px 0;
-    font-size: 0.98rem;
+    font-size: 1.18rem;
     color: #0f5064;
     letter-spacing: 0.2px;
 }
 
 .weekly-instructions-card ul {
     margin: 0;
-    padding-left: 18px;
+    padding-left: 0;
+    list-style: none;
 }
 
 .weekly-instructions-card li {
     color: #26485a;
-    font-size: 0.84rem;
-    line-height: 1.18;
-    margin: 0;
+    font-size: 1rem;
+    line-height: 1.22;
+    margin: 0 0 3px 0;
+}
+
+.weekly-instructions-card li:last-child {
+    margin-bottom: 0;
 }
 
 .weekly-faixas-panel {
-    min-width: 504px;
-    max-width: 672px;
+    min-width: 0;
+    max-width: 100%;
     display: flex;
     flex-direction: column;
     align-items: stretch;
     gap: 6px;
-    padding: 6px 8px;
-    border: 1px solid #cad8e4;
+    padding: 5px 7px;
+    border: 1px solid #bfd3e6;
     border-radius: 12px;
-    background: linear-gradient(130deg, #f9fbff 0%, #eff5fb 55%, #e9f2f8 100%);
+    background: linear-gradient(130deg, #f2f8ff 0%, #e9f2ff 55%, #e3eefc 100%);
     overflow-x: visible;
     margin-left: 0;
     box-shadow: 0 2px 10px rgba(15, 44, 66, 0.08);
@@ -377,6 +385,23 @@ input[type="date"] { color-scheme: dark; }
     min-width: 44px;
     font-size: 1.04rem;
     color: #0d3da8;
+}
+
+.weekly-faixas-table .faixa-num-start-pick {
+    cursor: pointer;
+    user-select: none;
+    color: #1447cc;
+}
+
+.weekly-faixas-table .faixa-num-start-pick:hover {
+    background: #e8f0ff;
+    color: #0a2f98;
+}
+
+.weekly-faixas-table .faixa-start-pick-waiting .faixa-num {
+    background: #dfe9ff;
+    color: #0f3cb7;
+    box-shadow: inset 0 0 0 1px #7da1f8;
 }
 
 .weekly-faixas-table input[type="date"] {
@@ -457,14 +482,33 @@ input[type="date"] { color-scheme: dark; }
     align-items: center;
     justify-content: space-between;
     gap: 12px;
-    margin: 4px 0 6px 0;
-    padding: 8px 10px;
+    margin: 2px 0 4px 0;
+    padding: 6px 8px;
     border: 1px solid #d6dde5;
     background: #f8fafb;
     border-radius: 8px;
     width: 100%;
     min-width: 0;
     flex-wrap: wrap;
+}
+
+.weekly-week-context-note {
+    margin: 0 0 6px 0;
+    padding: 6px 10px;
+    border: 1px solid #d6dde5;
+    border-left: 3px solid #0f7c96;
+    background: #f6fbfe;
+    border-radius: 8px;
+    color: #35586a;
+    font-size: 0.82rem;
+    line-height: 1.25;
+}
+
+.weekly-week-context-note.is-pending {
+    border-left-color: #2d5fe6;
+    background: #eef4ff;
+    color: #123fa9;
+    font-weight: 700;
 }
 
 .weekly-week-label {
@@ -554,6 +598,8 @@ input[type="date"] { color-scheme: dark; }
 
 .week-day-header {
     line-height: 1.1;
+    position: relative;
+    overflow: hidden;
 }
 
 .week-day-header .week-day-name {
@@ -570,7 +616,37 @@ input[type="date"] { color-scheme: dark; }
 }
 
 .week-day-header.week-day-holiday .week-day-date {
-    color: #b03a2e;
+    color: #7f8c8d;
+}
+
+.week-day-header .week-day-holiday-number {
+    position: absolute;
+    top: 4px;
+    left: 6px;
+    min-width: 20px;
+    padding: 1px 5px;
+    border-radius: 10px;
+    background: rgba(127, 140, 141, 0.16);
+    color: #66767e;
+    font-size: 0.72em;
+    font-weight: 800;
+    line-height: 1.05;
+}
+
+.week-day-header .week-day-holiday-name {
+    display: block;
+    margin-top: 1px;
+    font-size: 0.66em;
+    line-height: 1.15;
+    color: #7f8c8d;
+    font-weight: 700;
+    font-style: italic;
+    text-transform: none;
+    letter-spacing: 0.02em;
+}
+
+.week-day-header.week-day-holiday {
+    background: #f1f2f6;
 }
 
 .timetable .slot.slot-free-draw {
@@ -591,8 +667,44 @@ input[type="date"] { color-scheme: dark; }
 }
 
 .timetable .slot.slot-week-holiday {
-    background: #f8eeee !important;
-    border: 1px solid #e7c5c5 !important;
+    background: #f1f2f6 !important;
+    border: 1px solid #d7dde3 !important;
+}
+
+.timetable .slot.slot-holiday-column {
+    background: #f1f2f6;
+    border: 1px solid #d7dde3;
+}
+
+.timetable .slot.slot-holiday-column:hover {
+    background: #edf0f4;
+}
+
+.weekly-holiday-column-marker {
+    position: absolute;
+    top: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 3px 8px;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.7);
+    color: #7f8c8d;
+    pointer-events: none;
+    text-align: center;
+    white-space: nowrap;
+}
+
+.weekly-holiday-column-day {
+    display: none;
+}
+
+.weekly-holiday-column-name {
+    display: inline-block;
+    font-size: 0.92rem;
+    font-weight: 700;
+    font-style: italic;
+    text-decoration: none;
+    letter-spacing: 0.02em;
 }
 
 .timetable {
@@ -603,7 +715,7 @@ input[type="date"] { color-scheme: dark; }
     border: 1px solid var(--border);
     border-radius: 4px;
     overflow: hidden;
-    margin-bottom: 50px;
+    margin-bottom: 16px;
     box-shadow: 0 4px 15px rgba(0,0,0,0.05);
 }
 .timetable > div { 
@@ -632,6 +744,86 @@ input[type="date"] { color-scheme: dark; }
     position: relative; 
 } 
 .timetable .slot:hover { background: #f8f9fa; }
+
+/* Cards padronizados da Grade Semanal */
+#weekly-grid .mini-card-container {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 4px;
+    width: 100%;
+}
+
+#weekly-grid .mini-card {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    min-height: 28px;
+    border-radius: 5px;
+    padding: 3px 6px 3px 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+    list-style: none;
+    position: relative;
+}
+
+#weekly-grid .mini-card .card-title {
+    flex: 1 1 auto;
+    min-width: 0;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1px;
+    font-weight: 800;
+    font-size: 0.94rem;
+    color: #000;
+    text-align: center;
+    padding: 0 14px;
+}
+
+#weekly-grid .mini-card .card-comp {
+    display: block;
+    line-height: 1.05;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+#weekly-grid .mini-card .card-docente {
+    display: block;
+    line-height: 1.05;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-weight: 600;
+    font-size: 0.76rem;
+    color: #1f3340;
+}
+
+#weekly-grid .mini-card .remove-btn {
+    font-weight: 800;
+    font-size: 1.1rem;
+    line-height: 1;
+    color: #e74c3c;
+    cursor: pointer;
+    user-select: none;
+    flex: 0 0 auto;
+    margin-left: 1px;
+    position: absolute;
+    right: 6px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+#weekly-grid .slot {
+    padding: 2px 3px;
+}
 
 @media (max-width: 1280px) {
     .weekly-top-layout {
