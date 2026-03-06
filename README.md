@@ -33,9 +33,11 @@ O sistema foi desenhado para resolver a complexidade de alocar componentes acad�
 2.  **Login:** Utilize a senha de acesso restrito da coordenação.
 3.  **Configuração Inicial:** No menu lateral esquerdo, selecione o **Período Letivo** (1P a 4P) e o **Turno**. Depois escolha o **Curso** e a **Turma** que deseja trabalhar (nesta exata ordem).
 
-### 2. Alocação de Aulas
-* **Oferta por Faixas:** Selecione a disciplina, cor e docente (ou múltiplos docentes), desenhe os slots na grade e ajuste datas de início/fim conforme a execução.
-* **Fechamento de Carga Horária:** O sistema calcula a execução no calendário e mantém consistência de CH com tratamento do último dia quando necessário.
+### 2. Alocacao de Aulas
+* **Fluxo canonico (exclusivo na Grade Semanal):** selecione disciplina/cor/docente(s) na barra lateral e faca toda a marcacao de slots na aba **Grade Semanal**.
+* **Faixas na Grade Semanal:** defina inicio/fim de cada faixa na tabela superior da propria grade; o sistema ajusta consistencia de datas e CH na execucao.
+* **Salvar Componente:** consolida as faixas e aplica a alocacao no calendario; a aba **Lista de Ofertas** passa a ser painel de revisao/edicao/exclusao (nao de desenho de slots).
+* **Fechamento de Carga Horaria:** o sistema calcula a execucao no calendario e mantem consistencia de CH com tratamento do ultimo dia quando necessario.
 
 ### 3. Visualização e Relatórios de Output (Versão 3.1)
 

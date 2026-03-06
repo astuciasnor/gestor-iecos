@@ -74,29 +74,6 @@
             max-width: 180px;
         }
 
-        /* Faixas: datas de inicio/fim lado a lado sem alterar estrutura */
-        #container-faixas-intensiva .faixa-item {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 8px 10px;
-        }
-
-        #container-faixas-intensiva .faixa-item>div:first-of-type {
-            grid-column: 1 / span 2;
-        }
-
-        #container-faixas-intensiva .faixa-item>.form-group {
-            margin-bottom: 0 !important;
-        }
-
-        #container-faixas-intensiva .faixa-item>.form-group:last-child {
-            grid-column: 1 / span 2;
-        }
-
-        #container-faixas-intensiva .faixa-days-selector {
-            display: none !important;
-        }
-
         .publish-clear-row {
             display: flex;
             gap: 8px;
@@ -262,6 +239,7 @@
             .actions,
             #login-screen,
             #import-modal,
+            #export-scope-modal,
             .no-print {
                 display: none !important;
             }
@@ -455,6 +433,44 @@
         </div>
     </div>
 
+    <div id="export-scope-modal" class="export-scope-modal" aria-hidden="true">
+        <div class="export-scope-dialog" role="dialog" aria-modal="true" aria-labelledby="export-scope-title">
+            <h3 id="export-scope-title">Escolha o escopo da exportação</h3>
+            <p class="export-scope-subtitle">O que você quer exportar?</p>
+
+            <div class="export-scope-actions">
+                <button id="btn-export-scope-all" type="button" class="export-scope-choice export-scope-choice-primary">
+                    <span class="export-scope-choice-title">📦 Todos os Cursos da Unidade</span>
+                    <span class="export-scope-choice-help">Exporta EP + CB + CN</span>
+                </button>
+
+                <button id="btn-export-scope-one" type="button" class="export-scope-choice export-scope-choice-secondary">
+                    <span class="export-scope-choice-title">🎓 Um Curso (EP, CB ou CN)</span>
+                    <span class="export-scope-choice-help">Escolha um único curso para exportar</span>
+                </button>
+            </div>
+
+            <div id="export-scope-course-area" class="export-scope-course-area hidden">
+                <label for="sel-export-scope-course">Curso</label>
+                <select id="sel-export-scope-course">
+                    <option value="">Selecione...</option>
+                    <option value="EP">EP</option>
+                    <option value="CB">CB</option>
+                    <option value="CN">CN</option>
+                </select>
+                <button id="btn-export-scope-course" type="button" class="export-scope-course-btn" disabled>Exportar</button>
+            </div>
+
+            <div id="export-scope-all-summary" class="export-scope-all-summary hidden">
+                <div class="export-scope-all-summary-title">Resumo da exportação (somente leitura)</div>
+                <div id="export-scope-all-summary-body" class="export-scope-all-summary-body"></div>
+                <button id="btn-export-scope-all-download" type="button" class="export-scope-course-btn" disabled>Baixar JSON</button>
+            </div>
+
+            <button id="btn-export-scope-cancel" type="button" class="export-scope-cancel-btn">✖ Cancelar</button>
+        </div>
+    </div>
+
     <script>
         function checkLogin() {
             const senhaDigitada = document.getElementById('inp-senha').value;
@@ -619,165 +635,10 @@
                         style="display:block; color:#a8e6cf; margin-top:4px; font-size:0.82em;"></small>
                 </div>
 
-
-                <div id="container-faixas-intensiva" class="hidden form-group"
-                    style="border: 1px solid #34495e; border-radius: 6px; padding: 10px; background: rgba(52, 73, 94, 0.2); margin-top: 15px;">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 10px;">
-                        <label style="color: #f1c40f; margin:0; font-size:1.05em;">Faixas de Oferta (Opcional)</label>
-                        <button id="btn-add-faixa" type="button"
-                            style="background:#27ae60; color:white; border:none; padding:4px 8px; font-size:0.8em; border-radius:4px; cursor:pointer; font-weight:bold;">+
-                            Faixa</button>
-                    </div>
-                    <small style="display:block; color:#bdc3c7; margin-bottom:15px; font-size:0.8em; line-height: 1.4;">
-                        * O sistema calculará o fim automaticamente. Adicione faixas se a disciplina mudar dias/horários
-                        no meio do semestre.
-                    </small>
-
-                    <div id="faixas-lista">
-                        <!-- Faixa 1 (Sempre visível) -->
-                        <div id="faixa-1" class="faixa-item"
-                            style="background: rgba(0,0,0,0.2); padding: 10px; border-radius: 6px; margin-bottom: 10px; border: 1px solid #2c3e50;">
-                            <div style="font-weight:bold; color:#a8e6cf; margin-bottom:10px;">Faixa 1:</div>
-                            <div class="form-group" style="margin-bottom: 10px;">
-                                <label>Data de Início</label>
-                                <input type="date" id="inp-data-inicio-f1" class="inp-data-inicio">
-                            </div>
-                            <div class="form-group" style="margin-bottom: 10px;">
-                                <label>Data de Fim</label>
-                                <input type="date" id="inp-data-fim-f1" class="inp-data-fim">
-                            </div>
-                            <div class="form-group" style="margin-bottom: 0;">
-                                <button type="button" class="btn-draw-faixa" data-faixa="1"
-                                    style="width:100%; display:flex; align-items:center; justify-content:center; gap:8px; background:#3498db; color:white; border:none; padding:10px; border-radius:4px; font-weight:bold; cursor:pointer; transition:background 0.2s;">
-                                    Desenhar na Grade Semanal
-                                </button>
-                                <div class="faixa-days-selector"
-                                    style="display:grid; grid-template-columns: repeat(6, 1fr); gap:4px; margin-top:10px;">
-                                    <label title="Segunda"
-                                        style="font-size:0.75em; display:flex; flex-direction:column; align-items:center; gap:2px; background:rgba(255,255,255,0.1); padding:4px; border-radius:4px; cursor:pointer;"><input
-                                            type="checkbox" value="1" class="f1-day" checked>Seg</label>
-                                    <label title="Terça"
-                                        style="font-size:0.75em; display:flex; flex-direction:column; align-items:center; gap:2px; background:rgba(255,255,255,0.1); padding:4px; border-radius:4px; cursor:pointer;"><input
-                                            type="checkbox" value="2" class="f1-day" checked>Ter</label>
-                                    <label title="Quarta"
-                                        style="font-size:0.75em; display:flex; flex-direction:column; align-items:center; gap:2px; background:rgba(255,255,255,0.1); padding:4px; border-radius:4px; cursor:pointer;"><input
-                                            type="checkbox" value="3" class="f1-day" checked>Qua</label>
-                                    <label title="Quinta"
-                                        style="font-size:0.75em; display:flex; flex-direction:column; align-items:center; gap:2px; background:rgba(255,255,255,0.1); padding:4px; border-radius:4px; cursor:pointer;"><input
-                                            type="checkbox" value="4" class="f1-day" checked>Qui</label>
-                                    <label title="Sexta"
-                                        style="font-size:0.75em; display:flex; flex-direction:column; align-items:center; gap:2px; background:rgba(255,255,255,0.1); padding:4px; border-radius:4px; cursor:pointer;"><input
-                                            type="checkbox" value="5" class="f1-day" checked>Sex</label>
-                                    <label title="Sábado"
-                                        style="font-size:0.75em; display:flex; flex-direction:column; align-items:center; gap:2px; background:rgba(255,255,255,0.1); padding:4px; border-radius:4px; cursor:pointer;"><input
-                                            type="checkbox" value="6" class="f1-day">Sáb</label>
-                                </div>
-                                <small id="status-draw-f1"
-                                    style="display:block; text-align:center; color:#95a5a6; margin-top:5px; font-size:0.8em;">0
-                                    horários definidos</small>
-                            </div>
-                        </div>
-
-                        <!-- Faixa 2 (Oculta por padrão) -->
-                        <div id="faixa-2" class="faixa-item hidden"
-                            style="background: rgba(0,0,0,0.2); padding: 10px; border-radius: 6px; margin-bottom: 10px; border: 1px solid #2c3e50; position:relative;">
-                            <button type="button" class="btn-remove-faixa" data-target="faixa-2"
-                                style="position:absolute; right:8px; top:8px; background:none; border:none; color:#e74c3c; font-size:1.2em; cursor:pointer; font-weight:bold;"
-                                title="Remover Faixa">×</button>
-                            <div style="font-weight:bold; color:#f39c12; margin-bottom:10px;">Faixa 2:
-                            </div>
-                            <div class="form-group" style="margin-bottom: 10px;">
-                                <label>Data de Início</label>
-                                <input type="date" id="inp-data-inicio-f2" class="inp-data-inicio">
-                            </div>
-                            <div class="form-group" style="margin-bottom: 10px;">
-                                <label>Data de Fim</label>
-                                <input type="date" id="inp-data-fim-f2" class="inp-data-fim">
-                            </div>
-                            <div class="form-group" style="margin-bottom: 0;">
-                                <button type="button" class="btn-draw-faixa" data-faixa="2"
-                                    style="width:100%; display:flex; align-items:center; justify-content:center; gap:8px; background:#3498db; color:white; border:none; padding:10px; border-radius:4px; font-weight:bold; cursor:pointer; transition:background 0.2s;">
-                                    Desenhar na Grade Semanal
-                                </button>
-                                <div class="faixa-days-selector"
-                                    style="display:grid; grid-template-columns: repeat(6, 1fr); gap:4px; margin-top:10px;">
-                                    <label title="Segunda"
-                                        style="font-size:0.75em; display:flex; flex-direction:column; align-items:center; gap:2px; background:rgba(255,255,255,0.1); padding:4px; border-radius:4px; cursor:pointer;"><input
-                                            type="checkbox" value="1" class="f2-day" checked>Seg</label>
-                                    <label title="Terça"
-                                        style="font-size:0.75em; display:flex; flex-direction:column; align-items:center; gap:2px; background:rgba(255,255,255,0.1); padding:4px; border-radius:4px; cursor:pointer;"><input
-                                            type="checkbox" value="2" class="f2-day" checked>Ter</label>
-                                    <label title="Quarta"
-                                        style="font-size:0.75em; display:flex; flex-direction:column; align-items:center; gap:2px; background:rgba(255,255,255,0.1); padding:4px; border-radius:4px; cursor:pointer;"><input
-                                            type="checkbox" value="3" class="f2-day" checked>Qua</label>
-                                    <label title="Quinta"
-                                        style="font-size:0.75em; display:flex; flex-direction:column; align-items:center; gap:2px; background:rgba(255,255,255,0.1); padding:4px; border-radius:4px; cursor:pointer;"><input
-                                            type="checkbox" value="4" class="f2-day" checked>Qui</label>
-                                    <label title="Sexta"
-                                        style="font-size:0.75em; display:flex; flex-direction:column; align-items:center; gap:2px; background:rgba(255,255,255,0.1); padding:4px; border-radius:4px; cursor:pointer;"><input
-                                            type="checkbox" value="5" class="f2-day" checked>Sex</label>
-                                    <label title="Sábado"
-                                        style="font-size:0.75em; display:flex; flex-direction:column; align-items:center; gap:2px; background:rgba(255,255,255,0.1); padding:4px; border-radius:4px; cursor:pointer;"><input
-                                            type="checkbox" value="6" class="f2-day">Sáb</label>
-                                </div>
-                                <small id="status-draw-f2"
-                                    style="display:block; text-align:center; color:#95a5a6; margin-top:5px; font-size:0.8em;">0
-                                    horários definidos</small>
-                            </div>
-                        </div>
-
-                        <!-- Faixa 3 (Oculta por padrão) -->
-                        <div id="faixa-3" class="faixa-item hidden"
-                            style="background: rgba(0,0,0,0.2); padding: 10px; border-radius: 6px; margin-bottom: 10px; border: 1px solid #2c3e50; position:relative;">
-                            <button type="button" class="btn-remove-faixa" data-target="faixa-3"
-                                style="position:absolute; right:8px; top:8px; background:none; border:none; color:#e74c3c; font-size:1.2em; cursor:pointer; font-weight:bold;"
-                                title="Remover Faixa">×</button>
-                            <div style="font-weight:bold; color:#e74c3c; margin-bottom:10px;">Faixa 3:</div>
-                            <div class="form-group" style="margin-bottom: 10px;">
-                                <label>Data de Início</label>
-                                <input type="date" id="inp-data-inicio-f3" class="inp-data-inicio">
-                            </div>
-                            <div class="form-group" style="margin-bottom: 10px;">
-                                <label>Data de Fim</label>
-                                <input type="date" id="inp-data-fim-f3" class="inp-data-fim">
-                            </div>
-                            <div class="form-group" style="margin-bottom: 0;">
-                                <button type="button" class="btn-draw-faixa" data-faixa="3"
-                                    style="width:100%; display:flex; align-items:center; justify-content:center; gap:8px; background:#3498db; color:white; border:none; padding:10px; border-radius:4px; font-weight:bold; cursor:pointer; transition:background 0.2s;">
-                                    Desenhar na Grade Semanal
-                                </button>
-                                <div class="faixa-days-selector"
-                                    style="display:grid; grid-template-columns: repeat(6, 1fr); gap:4px; margin-top:10px;">
-                                    <label title="Segunda"
-                                        style="font-size:0.75em; display:flex; flex-direction:column; align-items:center; gap:2px; background:rgba(255,255,255,0.1); padding:4px; border-radius:4px; cursor:pointer;"><input
-                                            type="checkbox" value="1" class="f3-day" checked>Seg</label>
-                                    <label title="Terça"
-                                        style="font-size:0.75em; display:flex; flex-direction:column; align-items:center; gap:2px; background:rgba(255,255,255,0.1); padding:4px; border-radius:4px; cursor:pointer;"><input
-                                            type="checkbox" value="2" class="f3-day" checked>Ter</label>
-                                    <label title="Quarta"
-                                        style="font-size:0.75em; display:flex; flex-direction:column; align-items:center; gap:2px; background:rgba(255,255,255,0.1); padding:4px; border-radius:4px; cursor:pointer;"><input
-                                            type="checkbox" value="3" class="f3-day" checked>Qua</label>
-                                    <label title="Quinta"
-                                        style="font-size:0.75em; display:flex; flex-direction:column; align-items:center; gap:2px; background:rgba(255,255,255,0.1); padding:4px; border-radius:4px; cursor:pointer;"><input
-                                            type="checkbox" value="4" class="f3-day" checked>Qui</label>
-                                    <label title="Sexta"
-                                        style="font-size:0.75em; display:flex; flex-direction:column; align-items:center; gap:2px; background:rgba(255,255,255,0.1); padding:4px; border-radius:4px; cursor:pointer;"><input
-                                            type="checkbox" value="5" class="f3-day" checked>Sex</label>
-                                    <label title="Sábado"
-                                        style="font-size:0.75em; display:flex; flex-direction:column; align-items:center; gap:2px; background:rgba(255,255,255,0.1); padding:4px; border-radius:4px; cursor:pointer;"><input
-                                            type="checkbox" value="6" class="f3-day">Sáb</label>
-                                </div>
-                                <small id="status-draw-f3"
-                                    style="display:block; text-align:center; color:#95a5a6; margin-top:5px; font-size:0.8em;">0
-                                    horários definidos</small>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <button id="btn-add-oferta" class="btn-primary"
-                    style="background-color: #c0392b; border-color: #c0392b; margin-top: 5px; width: 100%;">Adicionar
-                    Oferta à Grade</button>
+                <small style="display:block; color:#bdc3c7; margin-top:8px; font-size:0.82em; line-height:1.45;">
+                    A definição de faixas, datas e marcação de slots agora acontece exclusivamente na aba
+                    <b>Grade Semanal</b>.
+                </small>
             </div>
 
             <h3 style="text-transform: uppercase; letter-spacing: 1px; margin-bottom: 15px;">GERENCIANDO ARQUIVOS</h3>
@@ -823,12 +684,87 @@
             <div id="feedback-msg" class="feedback hidden"></div>
 
             <section id="tab-weekly" class="tab-content active">
-                <div class="grid-header">
-                    <h2 id="turma-title">Selecione uma turma</h2>
-                    <p class="instruction">Todas as ofertas usam o modelo por <b>Faixas</b>.<br>
-                        Configure as datas e desenhe o padrão semanal antes de clicar em "Adicionar à Grade".
-                    </p>
+                <div class="weekly-top-layout">
+                    <div class="grid-header weekly-header-panel">
+                        <div class="weekly-instructions-card">
+                            <h3>Instru&ccedil;&otilde;es de preenchimento</h3>
+                            <ul>
+                                <li>&#128218; Selecione o curso, a turma, a componente curricular e o(s) docente(s).</li>
+                                <li>&#128197;&#65039; Defina o in&iacute;cio da 1&ordf; faixa clicando no primeiro slot do dia desejado na Grade Semanal.</li>
+                                <li>&#128433;&#65039; Desenhe o padr&atilde;o de hor&aacute;rios clicando ou arrastando sobre os slots dos dias.</li>
+                                <li>&#128256; Se necess&aacute;rio, crie nova faixa para redistribuir melhor a carga hor&aacute;ria (raz&otilde;es pedag&oacute;gicas e log&iacute;sticas): clique no n&uacute;mero 2 ou 3 e depois no slot do dia correspondente &agrave; data de in&iacute;cio do novo padr&atilde;o de hor&aacute;rio.</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="weekly-faixas-stack">
+                        <div id="container-faixas-intensiva" class="weekly-faixas-panel no-print">
+                            <div class="weekly-faixas-title">
+                                <span id="weekly-faixas-title-prefix">Datas e CH das Faixas da Componente</span>
+                                <span id="weekly-faixas-title-disc" class="weekly-faixas-title-disc hidden"></span>
+                            </div>
+                            <div class="weekly-faixas-main">
+                                <table class="weekly-faixas-table">
+                                    <colgroup>
+                                        <col class="col-faixa-id">
+                                        <col class="col-faixa-date-start">
+                                        <col class="col-faixa-date-end">
+                                        <col class="col-faixa-ch">
+                                    </colgroup>
+                                    <thead>
+                                        <tr>
+                                            <th>Faixa</th>
+                                            <th>Inicio</th>
+                                            <th>Fim</th>
+                                            <th>CH</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="faixas-lista">
+                                        <tr id="faixa-1" class="faixa-item">
+                                            <td class="faixa-num">1</td>
+                                            <td><input type="date" id="inp-data-inicio-f1" class="inp-data-inicio"></td>
+                                            <td><input type="date" id="inp-data-fim-f1" class="inp-data-fim"></td>
+                                            <td id="faixa-ch-f1" class="faixa-ch-cell">0</td>
+                                        </tr>
+                                        <tr id="faixa-2" class="faixa-item">
+                                            <td class="faixa-num">2</td>
+                                            <td><input type="date" id="inp-data-inicio-f2" class="inp-data-inicio"></td>
+                                            <td><input type="date" id="inp-data-fim-f2" class="inp-data-fim"></td>
+                                            <td id="faixa-ch-f2" class="faixa-ch-cell">0</td>
+                                        </tr>
+                                        <tr id="faixa-3" class="faixa-item">
+                                            <td class="faixa-num">3</td>
+                                            <td><input type="date" id="inp-data-inicio-f3" class="inp-data-inicio"></td>
+                                            <td><input type="date" id="inp-data-fim-f3" class="inp-data-fim"></td>
+                                            <td id="faixa-ch-f3" class="faixa-ch-cell">0</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                                <div class="weekly-faixas-total">
+                                    <div class="weekly-faixas-total-main">Total: <span id="weekly-faixa-total-ch">0</span></div>
+                                    <div class="weekly-faixas-target">Meta CH: <span id="weekly-faixa-target-ch">-</span></div>
+                                </div>
+                            </div>
+                            <div class="weekly-faixas-status hidden">
+                                <span id="status-draw-f1"></span>
+                                <span id="status-draw-f2"></span>
+                                <span id="status-draw-f3"></span>
+                            </div>
+                        </div>
+
+                        <div id="weekly-week-nav" class="weekly-week-nav no-print">
+                            <div id="weekly-week-label" class="weekly-week-label">Semana nao definida</div>
+                            <div class="weekly-week-actions">
+                                <button id="btn-week-prev" type="button" class="btn-week-nav btn-week-shift">Semana Anterior</button>
+                                <button id="btn-week-next" type="button" class="btn-week-nav btn-week-shift">Proxima Semana</button>
+                                <button id="btn-faixa-prev" type="button" class="btn-week-nav btn-week-faixa" disabled>Faixa Anterior</button>
+                                <button id="btn-faixa-next" type="button" class="btn-week-nav btn-week-faixa" disabled>Proxima Faixa</button>
+                                <button id="btn-add-oferta" type="button" class="btn-week-nav btn-week-save-comp"><span class="btn-label-two-line"><span>Salvar</span><span>Componente</span></span></button>
+                            </div>
+                        </div>
+                        <div id="weekly-week-context-note" class="weekly-week-context-note no-print"></div>
+                    </div>
                 </div>
+
                 <!-- BOOTSTRAPPED DRAWING TOOLBAR -->
                 <div id="drawing-toolbar" class="hidden" style="
                     position: sticky; top: 0; z-index: 999; 
@@ -959,14 +895,13 @@
                                 <li style="margin-bottom: 10px;"><strong>5. Modelo de Oferta:</strong> Todas as
                                     componentes seguem o padrão por <b>Faixas</b>. Defina docentes, carga horária e
                                     período para cada oferta.</li>
-                                <li style="margin-bottom: 10px;"><strong>6. Alocação Manual:</strong> Desenhe os slots
-                                    clicando nos <b>quadradinhos da grade</b>. Depois ajuste início/fim para cada faixa
-                                    conforme a execução real da disciplina.</li>
-                                <li style="margin-bottom: 10px;"><strong>7. Importação em Bloco (PPC):</strong> Ao usar
+                                <li style="margin-bottom: 10px;"><strong>6. Alocacao Manual (somente na Grade Semanal):</strong> Desenhe os slots clicando nos <b>quadradinhos da grade</b>. Ajuste inicio/fim por faixa na tabela superior da grade. A aba <b>Lista de Ofertas</b> deve ser usada para revisao/edicao/exclusao, e nao para desenhar slots.</li>
+                                <li style="margin-bottom: 10px;"><strong>7. Leitura da Grade Semanal:</strong> Slots bloqueados indicam ocupacao real na semana visivel. Navegue entre semanas ou ajuste inicio/faixa para visualizar e editar corretamente.</li>
+                                <li style="margin-bottom: 10px;"><strong>8. Importação em Bloco (PPC):</strong> Ao usar
                                     a opção de <b>"Importar Componentes"</b>, é <b>obrigatório</b> ir na aba <b>Lista de
                                         Ofertas</b> e editar o horário/data de cada componente pendente para alocá-los
                                     na grade corretamente.</li>
-                                <li><strong>8. Mesclagem de Calendários:</strong> Você pode usar a ferramenta de
+                                <li><strong>9. Mesclagem de Calendários:</strong> Você pode usar a ferramenta de
                                     Importação (JSON) para carregar o trabalho salvo de outro diretor de curso e checar
                                     se há choques.</li>
                             </ul>

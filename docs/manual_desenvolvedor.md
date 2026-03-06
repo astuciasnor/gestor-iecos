@@ -159,7 +159,25 @@ Detecção do sufixo T: regex `/_?(T\d+)$/i`
 
 Ao usar **"Importar Componentes em Bloco"**, o sistema extrai o número do período e atribui `subGrupo = 'BLx'` automaticamente a todas as disciplinas importadas. Ex: período `2` → `subGrupo = 'BL2'`.
 
+### 4.5. Fluxo Canonico de Alocacao na UI (Grade Semanal)
+
+A arquitetura de UX atual consolida a alocacao de slots em um unico ponto de entrada:
+
+1. selecao de curso/turma/componente/docente(s) na sidebar;
+2. definicao de faixas (inicio/fim/CH) na tabela superior da **Grade Semanal**;
+3. desenho do padrao semanal por clique/arraste diretamente nos slots da grade;
+4. consolidacao via **Salvar Componente**.
+
+Diretriz de produto:
+
+- **Grade Semanal** = montagem e edicao de alocacao;
+- **Lista de Ofertas** = revisao, ajuste administrativo, edicao pontual e exclusao;
+- **Calendario da Turma / Visao do Professor / Gantt** = leitura e auditoria da execucao.
+
+Essa separacao reduz ambiguidade de fluxo, diminui regressao de UI e concentra regras temporais/canonicas em um unico renderizador de edicao.
+
 ---
+
 
  🛠️ Guia de Manutenção de Dados (ETL e Deploy)
 

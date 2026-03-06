@@ -1,6 +1,8 @@
 import { store } from './store.js';
 import { initUI, exportSigaaMetadataJSON, showToastWarning } from './ui.js';
 
+const EXPORT_CURSOS_UNIDADE = ['EP', 'CB', 'CN'];
+
 function isValidIsoDate(value) {
   return typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value);
 }
@@ -41,58 +43,206 @@ function validatePublicExportData(exportData) {
   return issues;
 }
 
+function formatTimestampForFileName(date = new Date()) {
+  const pad = (v) => String(v).padStart(2, '0');
+  const yyyy = String(date.getFullYear());
+  const mm = pad(date.getMonth() + 1);
+  const dd = pad(date.getDate());
+  const hh = pad(date.getHours());
+  const mi = pad(date.getMinutes());
+  return `${yyyy}-${mm}-${dd}_${hh}-${mi}`;
+}
+
+function buildBackupFilename(scope = 'TODOS') {
+  const stamp = formatTimestampForFileName(new Date());
+  if (scope === 'TODOS') return `backup_iecos_${stamp}.json`;
+  return `backup_iecos_${scope}_${stamp}.json`;
+}
+
+function buildTurmaParaCursoMap() {
+  const turmaParaCurso = {};
+  (store.rawData?.turmas || []).forEach((t) => {
+    if (t.turma_id && t.sigla) turmaParaCurso[String(t.turma_id)] = String(t.sigla);
+  });
+  return turmaParaCurso;
+}
+
+function collectAllocationsByCurso(sigla, turmaParaCurso) {
+  const cursoSigla = String(sigla || '').trim().toUpperCase();
+  return store.allocations.filter((a) => turmaParaCurso[String(a.turmaId)] === cursoSigla);
+}
+
+function buildTodosCursosExportSnapshot() {
+  const turmaParaCurso = buildTurmaParaCursoMap();
+  const porCurso = {};
+  const allocations = [];
+
+  EXPORT_CURSOS_UNIDADE.forEach((sigla) => {
+    const list = collectAllocationsByCurso(sigla, turmaParaCurso);
+    porCurso[sigla] = list.length;
+    allocations.push(...list);
+  });
+
+  return {
+    porCurso,
+    total: allocations.length,
+    allocations
+  };
+}
+
+function downloadJSONFile(payload, fileName) {
+  const dataStr =
+    'data:text/json;charset=utf-8,' +
+    encodeURIComponent(JSON.stringify(payload, null, 2));
+
+  const a = document.createElement('a');
+  a.setAttribute('href', dataStr);
+  a.setAttribute('download', fileName);
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+}
+
+function exportarJSONTodosCursos(snapshot = null) {
+  const effective = snapshot || buildTodosCursosExportSnapshot();
+  const fileName = buildBackupFilename('TODOS');
+  downloadJSONFile(effective.allocations, fileName);
+}
+
+function exportarJSONCurso(sigla) {
+  const cursoSigla = String(sigla || '').trim().toUpperCase();
+  if (!EXPORT_CURSOS_UNIDADE.includes(cursoSigla)) {
+    showToastWarning('Selecione um curso para exportar.', 'warning', 2200);
+    return;
+  }
+
+  const turmaParaCurso = buildTurmaParaCursoMap();
+  const dadosExportar = collectAllocationsByCurso(cursoSigla, turmaParaCurso);
+  const fileName = buildBackupFilename(cursoSigla);
+  downloadJSONFile(dadosExportar, fileName);
+}
+
 // Executar imediatamente (scripts type="module" já são diferidos e o DOM já deve estar pronto)
 (async () => {
   await store.loadData();
   initUI();
 
-  // Exportar: opção de curso atual ou todos os cursos
-  document.getElementById('btn-export').onclick = () => {
-    const sigla = store.selectedCurso || 'DADOS';
-    let ano = '0000';
-    if (store.settings.termStart) ano = store.settings.termStart.split('-')[0];
-    const periodo = store.settings.periodo || '1P';
+  const btnExport = document.getElementById('btn-export');
+  const exportScopeModal = document.getElementById('export-scope-modal');
+  const btnExportScopeAll = document.getElementById('btn-export-scope-all');
+  const btnExportScopeOne = document.getElementById('btn-export-scope-one');
+  const exportScopeCourseArea = document.getElementById('export-scope-course-area');
+  const selExportScopeCourse = document.getElementById('sel-export-scope-course');
+  const btnExportScopeCourse = document.getElementById('btn-export-scope-course');
+  const btnExportScopeCancel = document.getElementById('btn-export-scope-cancel');
+  const exportScopeAllSummary = document.getElementById('export-scope-all-summary');
+  const exportScopeAllSummaryBody = document.getElementById('export-scope-all-summary-body');
+  const btnExportScopeAllDownload = document.getElementById('btn-export-scope-all-download');
+  let pendingAllExportSnapshot = null;
 
-    // Monta mapa turmaId → sigla a partir dos dados de turmas
-    const turmaParaCurso = {};
-    (store.rawData?.turmas || []).forEach(t => {
-      if (t.turma_id && t.sigla) turmaParaCurso[String(t.turma_id)] = String(t.sigla);
-    });
-
-    // Nome legível do curso para exibir no diálogo
-    const cursoObj = (store.rawData?.cursos || []).find(c => c.sigla === sigla);
-    const cursoNome = cursoObj?.nome ? `${sigla} – ${cursoObj.nome}` : sigla;
-
-    const escolha = confirm(
-      `Escolha o escopo da exportação:\n\n` +
-      `[OK]       → Salvar apenas as turmas do curso ${cursoNome}\n` +
-      `[Cancelar] → Salvar todas as turmas dos Cursos do IECOS`
-    );
-
-    let dadosExportar, fileName;
-
-    if (escolha) {
-      // Filtra alocações cujo turmaId pertence ao curso selecionado
-      dadosExportar = store.allocations.filter(a =>
-        turmaParaCurso[String(a.turmaId)] === sigla
-      );
-      fileName = `${sigla}_${ano}_${periodo}.json`;
-    } else {
-      dadosExportar = store.allocations;
-      fileName = `IECOS_TODOS_${ano}_${periodo}.json`;
-    }
-
-    const dataStr =
-      "data:text/json;charset=utf-8," +
-      encodeURIComponent(JSON.stringify(dadosExportar, null, 2));
-
-    const a = document.createElement('a');
-    a.setAttribute('href', dataStr);
-    a.setAttribute('download', fileName);
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
+  const updateExportCourseActionState = () => {
+    if (!btnExportScopeCourse || !selExportScopeCourse) return;
+    btnExportScopeCourse.disabled = !selExportScopeCourse.value;
   };
+
+  const hideAllSummary = () => {
+    pendingAllExportSnapshot = null;
+    if (exportScopeAllSummary) exportScopeAllSummary.classList.add('hidden');
+    if (exportScopeAllSummaryBody) exportScopeAllSummaryBody.innerHTML = '';
+    if (btnExportScopeAllDownload) btnExportScopeAllDownload.disabled = true;
+  };
+
+  const renderAllSummary = (snapshot) => {
+    if (!exportScopeAllSummary || !exportScopeAllSummaryBody || !btnExportScopeAllDownload) return;
+    exportScopeAllSummaryBody.innerHTML =
+      `EP: <b>${snapshot.porCurso.EP || 0}</b> ofertas<br>` +
+      `CB: <b>${snapshot.porCurso.CB || 0}</b> ofertas<br>` +
+      `CN: <b>${snapshot.porCurso.CN || 0}</b> ofertas<br>` +
+      `Total: <b>${snapshot.total || 0}</b>`;
+    exportScopeAllSummary.classList.remove('hidden');
+    btnExportScopeAllDownload.disabled = false;
+  };
+
+  const closeExportScopeModal = () => {
+    if (!exportScopeModal) return;
+    exportScopeModal.classList.remove('is-open');
+    exportScopeModal.setAttribute('aria-hidden', 'true');
+    if (exportScopeCourseArea) exportScopeCourseArea.classList.add('hidden');
+    if (selExportScopeCourse) selExportScopeCourse.value = '';
+    hideAllSummary();
+    updateExportCourseActionState();
+  };
+
+  const openExportScopeModal = () => {
+    if (!exportScopeModal) return;
+    exportScopeModal.classList.add('is-open');
+    exportScopeModal.setAttribute('aria-hidden', 'false');
+    if (exportScopeCourseArea) exportScopeCourseArea.classList.add('hidden');
+    if (selExportScopeCourse) selExportScopeCourse.value = '';
+    hideAllSummary();
+    updateExportCourseActionState();
+  };
+
+  if (btnExport) {
+    btnExport.onclick = () => {
+      openExportScopeModal();
+    };
+  }
+
+  if (btnExportScopeAll) {
+    btnExportScopeAll.addEventListener('click', () => {
+      if (exportScopeCourseArea) exportScopeCourseArea.classList.add('hidden');
+      pendingAllExportSnapshot = buildTodosCursosExportSnapshot();
+      renderAllSummary(pendingAllExportSnapshot);
+    });
+  }
+
+  if (btnExportScopeOne) {
+    btnExportScopeOne.addEventListener('click', () => {
+      if (exportScopeCourseArea) exportScopeCourseArea.classList.remove('hidden');
+      hideAllSummary();
+      updateExportCourseActionState();
+      if (selExportScopeCourse) selExportScopeCourse.focus();
+    });
+  }
+
+  if (selExportScopeCourse) {
+    selExportScopeCourse.addEventListener('change', updateExportCourseActionState);
+  }
+
+  if (btnExportScopeCourse) {
+    btnExportScopeCourse.addEventListener('click', () => {
+      if (!selExportScopeCourse || !selExportScopeCourse.value) return;
+      exportarJSONCurso(selExportScopeCourse.value);
+      closeExportScopeModal();
+    });
+  }
+
+  if (btnExportScopeAllDownload) {
+    btnExportScopeAllDownload.addEventListener('click', () => {
+      if (!pendingAllExportSnapshot) return;
+      exportarJSONTodosCursos(pendingAllExportSnapshot);
+      closeExportScopeModal();
+    });
+  }
+
+  if (btnExportScopeCancel) {
+    btnExportScopeCancel.addEventListener('click', () => {
+      closeExportScopeModal();
+    });
+  }
+
+  if (exportScopeModal) {
+    exportScopeModal.addEventListener('click', (e) => {
+      if (e.target === exportScopeModal) closeExportScopeModal();
+    });
+  }
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && exportScopeModal?.classList.contains('is-open')) {
+      closeExportScopeModal();
+    }
+  });
 
 
   // NOVO: Exportar para o Portal Público (Nome Fixo + Datas do Semestre)
