@@ -239,6 +239,7 @@
             .actions,
             #login-screen,
             #import-modal,
+            #export-scope-modal,
             .no-print {
                 display: none !important;
             }
@@ -429,6 +430,44 @@
             </div>
             <button id="btn-modal-cancel"
                 style="margin-top: 15px; background: transparent; border: none; color: #7f8c8d; cursor: pointer; text-decoration: underline;">Cancelar</button>
+        </div>
+    </div>
+
+    <div id="export-scope-modal" class="export-scope-modal" aria-hidden="true">
+        <div class="export-scope-dialog" role="dialog" aria-modal="true" aria-labelledby="export-scope-title">
+            <h3 id="export-scope-title">Escolha o escopo da exportação</h3>
+            <p class="export-scope-subtitle">O que você quer exportar?</p>
+
+            <div class="export-scope-actions">
+                <button id="btn-export-scope-all" type="button" class="export-scope-choice export-scope-choice-primary">
+                    <span class="export-scope-choice-title">📦 Todos os Cursos da Unidade</span>
+                    <span class="export-scope-choice-help">Exporta EP + CB + CN</span>
+                </button>
+
+                <button id="btn-export-scope-one" type="button" class="export-scope-choice export-scope-choice-secondary">
+                    <span class="export-scope-choice-title">🎓 Um Curso (EP, CB ou CN)</span>
+                    <span class="export-scope-choice-help">Escolha um único curso para exportar</span>
+                </button>
+            </div>
+
+            <div id="export-scope-course-area" class="export-scope-course-area hidden">
+                <label for="sel-export-scope-course">Curso</label>
+                <select id="sel-export-scope-course">
+                    <option value="">Selecione...</option>
+                    <option value="EP">EP</option>
+                    <option value="CB">CB</option>
+                    <option value="CN">CN</option>
+                </select>
+                <button id="btn-export-scope-course" type="button" class="export-scope-course-btn" disabled>Exportar</button>
+            </div>
+
+            <div id="export-scope-all-summary" class="export-scope-all-summary hidden">
+                <div class="export-scope-all-summary-title">Resumo da exportação (somente leitura)</div>
+                <div id="export-scope-all-summary-body" class="export-scope-all-summary-body"></div>
+                <button id="btn-export-scope-all-download" type="button" class="export-scope-course-btn" disabled>Baixar JSON</button>
+            </div>
+
+            <button id="btn-export-scope-cancel" type="button" class="export-scope-cancel-btn">✖ Cancelar</button>
         </div>
     </div>
 

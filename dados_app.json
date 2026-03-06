@@ -1,6 +1,6 @@
 {
   "meta": {
-    "generated_at": "2026-03-05T20:29:37",
+    "generated_at": "2026-03-05T21:05:58",
     "source_file": "planilha_base.xlsx"
   },
   "docentes": [
@@ -617,7 +617,7 @@
       "codigo": "EP05029",
       "cor": "#ffefcd",
       "componente": "LIMNOLOGIA",
-      "abreviacao": "Limno",
+      "abreviacao": "Limnologia",
       "ch": 75
     },
     {
@@ -626,7 +626,7 @@
       "codigo": "EP05032",
       "cor": "#c0fcff",
       "componente": "MAQUINAS E MOTORES",
-      "abreviacao": "Maqui Motor",
+      "abreviacao": "Maq Motor",
       "ch": 45
     },
     {
@@ -797,7 +797,7 @@
       "codigo": "EP05045",
       "cor": "#b68fb9",
       "componente": "TECNICAS DE PESCA",
-      "abreviacao": "Tecni Pesca",
+      "abreviacao": "Tecnicas Pesca",
       "ch": 45
     },
     {
@@ -851,7 +851,7 @@
       "codigo": "EP05058",
       "cor": "#d89663",
       "componente": "LIBRAS",
-      "abreviacao": "Libra",
+      "abreviacao": "Libras",
       "ch": 30
     },
     {
@@ -1058,7 +1058,7 @@
       "codigo": "CBBR067",
       "cor": "#41d629",
       "componente": "DIVERSIDADE DE ALGAS",
-      "abreviacao": "DIVer Algas",
+      "abreviacao": "Diversid Algas",
       "ch": 30
     },
     {
@@ -1067,7 +1067,7 @@
       "codigo": "CBBR068",
       "cor": "#e05c95",
       "componente": "ESTRATEGIAS ALTERNATIVAS DE ENSINO E APRENDIZAGEM EM CIENCIAS E BIOLOGIA",
-      "abreviacao": "Estr Alte Ensi",
+      "abreviacao": "Estrateg Alte Ensi",
       "ch": 30
     },
     {
@@ -1112,7 +1112,7 @@
       "codigo": "CBBR073",
       "cor": "#e06b5c",
       "componente": "TEMAS CONTEMPORANEOS PARA A EDUCACAO",
-      "abreviacao": "Tema Contemp Educ",
+      "abreviacao": "Temas Contemp Educ",
       "ch": 30
     },
     {
@@ -1121,7 +1121,7 @@
       "codigo": "CBBR074",
       "cor": "#5c74e0",
       "componente": "TEMAS SOCIOAMBIENTAIS E CULTURAIS",
-      "abreviacao": "Tema Soci Cult",
+      "abreviacao": "Temas Soci Cult",
       "ch": 30
     },
     {
@@ -1220,7 +1220,7 @@
       "codigo": "CBBR012",
       "cor": "#29d693",
       "componente": "QUIMICA BASICA",
-      "abreviacao": "Quim Basi",
+      "abreviacao": "Quim Basica",
       "ch": 30
     },
     {
@@ -1301,7 +1301,7 @@
       "codigo": "CBBR020",
       "cor": "#e05c5e",
       "componente": "DIVERSIDADE DE FUNGOS",
-      "abreviacao": "DIVe Fung",
+      "abreviacao": "Divers Fung",
       "ch": 45
     },
     {
@@ -1310,7 +1310,7 @@
       "codigo": "CBBR021",
       "cor": "#5c85e0",
       "componente": "GENETICA GERAL",
-      "abreviacao": "Gene Gera",
+      "abreviacao": "Genet Gera",
       "ch": 75
     },
     {
@@ -1418,7 +1418,7 @@
       "codigo": "CBBR034",
       "cor": "#dd674b",
       "componente": "DIVERSIDADE ANIMAL I",
-      "abreviacao": "DIVe Anim I",
+      "abreviacao": "Divers Anim I",
       "ch": 60
     },
     {
@@ -1445,7 +1445,7 @@
       "codigo": "CBBR037",
       "cor": "#e05cb7",
       "componente": "ESTAGIO I: ESPACOS NAO FORMAIS",
-      "abreviacao": "Esta I Espa",
+      "abreviacao": "Estag I Espaços",
       "ch": 60
     },
     {
@@ -1463,7 +1463,7 @@
       "codigo": "CBBR039",
       "cor": "#d6a829",
       "componente": "PALEONTOLOGIA GERAL",
-      "abreviacao": "Pale Gera",
+      "abreviacao": "Paleont Gera",
       "ch": 45
     },
     {
@@ -1472,7 +1472,7 @@
       "codigo": "CBBR040",
       "cor": "#965ce0",
       "componente": "DIVERSIDADE VEGETAL I",
-      "abreviacao": "DIVe Vege I",
+      "abreviacao": "Divers Vege I",
       "ch": 60
     },
     {
@@ -1481,7 +1481,7 @@
       "codigo": "CBBR041",
       "cor": "#29d642",
       "componente": "DIVERSIDADE ANIMAL II",
-      "abreviacao": "DIVe Anim II",
+      "abreviacao": "Divers Anim II",
       "ch": 60
     },
     {
@@ -1526,7 +1526,7 @@
       "codigo": "CBBR046",
       "cor": "#29d6a0",
       "componente": "DIVERSIDADE VEGETAL II",
-      "abreviacao": "DIVe Vege II",
+      "abreviacao": "Divers Veget II",
       "ch": 45
     },
     {
@@ -1535,7 +1535,7 @@
       "codigo": "CBBR047",
       "cor": "#d66e29",
       "componente": "ESTAGIO II: CARACTERIZACAO ESCOLAR",
-      "abreviacao": "Esta II Cara",
+      "abreviacao": "Estag II Caract",
       "ch": 45
     },
     {
@@ -1553,7 +1553,7 @@
       "codigo": "CBBR049",
       "cor": "#49d629",
       "componente": "ESTAGIO III: ENSINO FUNDAMENTAL",
-      "abreviacao": "Esta III Ensi",
+      "abreviacao": "Estag  III Ens Fund",
       "ch": 105
     },
     {
@@ -1562,7 +1562,7 @@
       "codigo": "CBBR050",
       "cor": "#e05c9b",
       "componente": "DIVERSIDADE VEGETAL III",
-      "abreviacao": "DIVe Vege III",
+      "abreviacao": "Divers Vege III",
       "ch": 30
     },
     {
@@ -1571,7 +1571,7 @@
       "codigo": "CBBR051",
       "cor": "#29aed6",
       "componente": "DIVERSIDADE ANIMAL III",
-      "abreviacao": "DIVe Anim III",
+      "abreviacao": "Divers Anim III",
       "ch": 45
     },
     {
@@ -1598,7 +1598,7 @@
       "codigo": "CBBR054",
       "cor": "#29d666",
       "componente": "BIOESTATISTICA II",
-      "abreviacao": "Bioe II",
+      "abreviacao": "Bioestat II",
       "ch": 60
     },
     {
@@ -1625,7 +1625,7 @@
       "codigo": "CBBR057",
       "cor": "#83d629",
       "componente": "ESTAGIO IV: EJA - ENSINO FUNDAMENTAL E MEDIO",
-      "abreviacao": "Esta IV Eja",
+      "abreviacao": "Estag IV EJA",
       "ch": 75
     },
     {
@@ -1634,7 +1634,7 @@
       "codigo": "CBBR058",
       "cor": "#e05cc7",
       "componente": "DIVERSIDADE ANIMAL IV",
-      "abreviacao": "DIVe Anim IV",
+      "abreviacao": "Divers Anim IV",
       "ch": 45
     },
     {
@@ -1652,7 +1652,7 @@
       "codigo": "CBBR060",
       "cor": "#d69129",
       "componente": "FISIOLOGIA VEGETAL",
-      "abreviacao": "Fisiol Vege",
+      "abreviacao": "Fisiol Veget",
       "ch": 75
     },
     {
@@ -1688,7 +1688,7 @@
       "codigo": "CBBR063",
       "cor": "#3a94d9",
       "componente": "ESTAGIO V: ENSINO MEDIO",
-      "abreviacao": "Esta V Ensi",
+      "abreviacao": "Estag V Ensi",
       "ch": 120
     },
     {
@@ -1706,7 +1706,7 @@
       "codigo": "CBBR065",
       "cor": "#cd5ce0",
       "componente": "ATIVIDADES COMPLEMENTARES",
-      "abreviacao": "AtIV Comp",
+      "abreviacao": "Ativid Comp",
       "ch": 80
     },
     {
@@ -1733,7 +1733,7 @@
       "codigo": "CNBR003",
       "cor": "#fdffb6",
       "componente": "POLITICAS E LEGISLACAO DA EDUCACAO BASICA",
-      "abreviacao": "Poli Legi Educ",
+      "abreviacao": "Polit Legis Educ",
       "ch": 45
     },
     {
@@ -1796,7 +1796,7 @@
       "codigo": "CNBR062",
       "cor": "#ffdfd3",
       "componente": "DIVERSIDADE DE ALGAS",
-      "abreviacao": "DIVe Alga",
+      "abreviacao": "Divers Algas",
       "ch": 30
     },
     {
@@ -1805,7 +1805,7 @@
       "codigo": "CNBR063",
       "cor": "#ffc2c2",
       "componente": "ESTRATEGIAS ALTERNATIVAS NO ENSINO DE CIENCIAS E BIOLOGIA",
-      "abreviacao": "Estr Alte Ensi",
+      "abreviacao": "Estrat Altern Ensi",
       "ch": 30
     },
     {
@@ -1814,7 +1814,7 @@
       "codigo": "CNBR064",
       "cor": "#ffe2b9",
       "componente": "ESTRATEGIAS ALTERNATIVAS NO ENSINO DE FISICA",
-      "abreviacao": "Estr Alte Ensi",
+      "abreviacao": "Estrat Alte Ensi",
       "ch": 30
     },
     {
@@ -1823,7 +1823,7 @@
       "codigo": "CNBR065",
       "cor": "#feffcc",
       "componente": "ESTRATEGIAS ALTERNATIVAS NO ENSINO DE QUIMICA",
-      "abreviacao": "Estr Alte Ensi",
+      "abreviacao": "Estrat Alte Ensi",
       "ch": 30
     },
     {
@@ -1841,7 +1841,7 @@
       "codigo": "CNBR067",
       "cor": "#adf9ff",
       "componente": "SEMINARIOS INTEGRADORES NA EDUCACAO CIENTIFICA",
-      "abreviacao": "Semi Inte Educ",
+      "abreviacao": "Semin Inte Educ",
       "ch": 30
     },
     {
@@ -1850,7 +1850,7 @@
       "codigo": "CNBR068",
       "cor": "#b4d1ff",
       "componente": "TEMAS CONTEMPORANEOS PARA A EDUCACAO",
-      "abreviacao": "Tema Cont Educ",
+      "abreviacao": "Temas Cont Educ",
       "ch": 30
     },
     {
@@ -1859,7 +1859,7 @@
       "codigo": "CNBR069",
       "cor": "#ccc6ff",
       "componente": "TEMAS SOCIOAMBIENTAIS E CULTURAIS",
-      "abreviacao": "Tema Soci Cult",
+      "abreviacao": "Temas Soci Cult",
       "ch": 30
     },
     {
@@ -1931,7 +1931,7 @@
       "codigo": "CNBR077",
       "cor": "#88e0ea",
       "componente": "TOPICOS ESPECIAIS EM ENSINO DE ECOLOGIA",
-      "abreviacao": "TE  Ensi",
+      "abreviacao": "TE  Ensin Ecol",
       "ch": 30
     },
     {
@@ -1940,7 +1940,7 @@
       "codigo": "CNBR010",
       "cor": "#8daeda",
       "componente": "GENETICA BASICA",
-      "abreviacao": "Gene tBasic",
+      "abreviacao": "Genet Basic",
       "ch": 60
     },
     {
@@ -1967,7 +1967,7 @@
       "codigo": "CNBR013",
       "cor": "#cba5d0",
       "componente": "ECOLOGIA GERAL",
-      "abreviacao": "Ecol Gera",
+      "abreviacao": "Ecol Geral",
       "ch": 60
     },
     {
@@ -1976,7 +1976,7 @@
       "codigo": "CNBR014",
       "cor": "#f2c9bb",
       "componente": "CALCULO",
-      "abreviacao": "Calc",
+      "abreviacao": "Cálculo",
       "ch": 45
     },
     {
@@ -2021,7 +2021,7 @@
       "codigo": "CNBR019",
       "cor": "#c0fcff",
       "componente": "METODOLOGIA DA PESQUISA",
-      "abreviacao": "Meto Pesq",
+      "abreviacao": "Metodol Pesq",
       "ch": 15
     },
     {
@@ -2048,7 +2048,7 @@
       "codigo": "CNBR022",
       "cor": "#ffe0ff",
       "componente": "FUNDAMENTOS DE FISICA I",
-      "abreviacao": "Fund Fisi I",
+      "abreviacao": "Fund Fisica I",
       "ch": 60
     },
     {
@@ -2057,7 +2057,7 @@
       "codigo": "CNBR023",
       "cor": "#f9e6ef",
       "componente": "EVOLUCAO",
-      "abreviacao": "Evol",
+      "abreviacao": "Evolução",
       "ch": 60
     },
     {
@@ -2066,7 +2066,7 @@
       "codigo": "CNBR024",
       "cor": "#fff2ec",
       "componente": "EDUCACAO E MEIO AMBIENTE NO ENSINO DE CIENCIAS",
-      "abreviacao": "Educ Meio Ambi",
+      "abreviacao": "Educ Meio Ambient",
       "ch": 60
     },
     {
@@ -2075,7 +2075,7 @@
       "codigo": "CNBR025",
       "cor": "#e58383",
       "componente": "DIVERSIDADE DE PROTISTAS",
-      "abreviacao": "DIVe Prot",
+      "abreviacao": "Divers Protista",
       "ch": 30
     },
     {
@@ -2084,7 +2084,7 @@
       "codigo": "CNBR026",
       "cor": "#e5ac79",
       "componente": "METODOLOGIA DO ENSINO DE CIENCIAS",
-      "abreviacao": "Meto Ensi Cien",
+      "abreviacao": "Metod Ensi Cien",
       "ch": 60
     },
     {
@@ -2093,7 +2093,7 @@
       "codigo": "CNBR027",
       "cor": "#e3e58a",
       "componente": "BIOQUIMICA",
-      "abreviacao": "Bioq",
+      "abreviacao": "Bioquimica",
       "ch": 60
     },
     {
@@ -2102,7 +2102,7 @@
       "codigo": "CNBR028",
       "cor": "#a1e595",
       "componente": "FISICA DA TERRA E DO UNIVERSO",
-      "abreviacao": "Fisi Terr UnIV",
+      "abreviacao": "Fisica Terra Universo",
       "ch": 60
     },
     {
@@ -2111,7 +2111,7 @@
       "codigo": "CNBR029",
       "cor": "#72cbd4",
       "componente": "DIVERSIDADE VEGETAL I",
-      "abreviacao": "DIVers Vege I",
+      "abreviacao": "Divers Veget I",
       "ch": 60
     },
     {
@@ -2129,7 +2129,7 @@
       "codigo": "CNBR031",
       "cor": "#9186f2",
       "componente": "VIRUS E PROCARIONTES",
-      "abreviacao": "Viru Proc",
+      "abreviacao": "Virus Proc",
       "ch": 45
     },
     {
@@ -2138,7 +2138,7 @@
       "codigo": "CNBR032",
       "cor": "#e59ae5",
       "componente": "DIVERSIDADE ZOOLOGICA I",
-      "abreviacao": "DIVe Zool I",
+      "abreviacao": "Divers Zool I",
       "ch": 75
     },
     {
@@ -2165,7 +2165,7 @@
       "codigo": "CNBR035",
       "cor": "#ffeded",
       "componente": "DIVERSIDADE DE FUNGOS",
-      "abreviacao": "DIVe Fung",
+      "abreviacao": "Divers Fung",
       "ch": 30
     },
     {
@@ -2174,7 +2174,7 @@
       "codigo": "CNBR036",
       "cor": "#fffcf1",
       "componente": "ESTAGIO DOCENTE EM ESPACOS FORMAIS E NAO- https://sigaa.ufpa.br/sigaa/graduacao/curriculo/lista.jsf# FORMAIS",
-      "abreviacao": "Esta Doce Espa",
+      "abreviacao": "Estag Docen Espaços",
       "ch": 90
     },
     {
@@ -2183,7 +2183,7 @@
       "codigo": "CNBR037",
       "cor": "#feffe6",
       "componente": "PSICOLOGIA DA APRENDIZAGEM",
-      "abreviacao": "Psic Apre",
+      "abreviacao": "Psicol Apred",
       "ch": 45
     },
     {
@@ -2201,7 +2201,7 @@
       "codigo": "CNBR039",
       "cor": "#e1fdff",
       "componente": "DIVERSIDADE VEGETAL II",
-      "abreviacao": "DIVe Vege III",
+      "abreviacao": "Divers Vege II",
       "ch": 60
     },
     {
@@ -2210,7 +2210,7 @@
       "codigo": "CNBR040",
       "cor": "#e6f0ff",
       "componente": "GEOLOGIA",
-      "abreviacao": "Geol",
+      "abreviacao": "Geololgia",
       "ch": 45
     },
     {
@@ -2219,7 +2219,7 @@
       "codigo": "CNBR041",
       "cor": "#f1eeff",
       "componente": "FISIOLOGIA VEGETAL",
-      "abreviacao": "Fisi Vege",
+      "abreviacao": "Fisiologia Veget",
       "ch": 60
     },
     {
@@ -2228,7 +2228,7 @@
       "codigo": "CNBR042",
       "cor": "#fff1ff",
       "componente": "ESTATISTICA E PROBABILIDADE",
-      "abreviacao": "Esta Prob",
+      "abreviacao": "Estat Probab",
       "ch": 60
     },
     {
@@ -2237,7 +2237,7 @@
       "codigo": "CNBR043",
       "cor": "#fff9fc",
       "componente": "DIVERSIDADE ZOOLOGICA II",
-      "abreviacao": "DIVe Zool II",
+      "abreviacao": "Divers Zool II",
       "ch": 75
     },
     {
@@ -2246,7 +2246,7 @@
       "codigo": "CNBR044",
       "cor": "#fffbf8",
       "componente": "ESTAGIO DOCENTE NO ENSINO FUNDAMENTAL I",
-      "abreviacao": "Esta Doce Ensi",
+      "abreviacao": "Estag Doce Ens Fund I",
       "ch": 100
     },
     {
@@ -2255,7 +2255,7 @@
       "codigo": "CNBR045",
       "cor": "#d86e6e",
       "componente": "EDUCACAO DO CAMPO",
-      "abreviacao": "Educ Camp",
+      "abreviacao": "Educ Campo",
       "ch": 45
     },
     {
@@ -2264,7 +2264,7 @@
       "codigo": "CNBR046",
       "cor": "#d89663",
       "componente": "ESTAGIO DOCENTE NO ENSINO FUNDAMENTAL II",
-      "abreviacao": "Esta Doce Ensi",
+      "abreviacao": "Estag Doce Ensi Fund II",
       "ch": 100
     },
     {
@@ -2273,7 +2273,7 @@
       "codigo": "CNBR047",
       "cor": "#d6d874",
       "componente": "IMUNOLOGIA",
-      "abreviacao": "Imun",
+      "abreviacao": "Imunologia",
       "ch": 45
     },
     {
@@ -2282,7 +2282,7 @@
       "codigo": "CNBR048",
       "cor": "#8bcc7f",
       "componente": "BIOFISICA",
-      "abreviacao": "Biof",
+      "abreviacao": "Biofísica",
       "ch": 60
     },
     {
@@ -2291,7 +2291,7 @@
       "codigo": "CNBR049",
       "cor": "#5cc0be",
       "componente": "ELABORACAO DE PROJETOS DE TCC",
-      "abreviacao": "Elab Proj Tcc",
+      "abreviacao": "Elab Proj TCC",
       "ch": 30
     },
     {
@@ -2300,7 +2300,7 @@
       "codigo": "CNBR050",
       "cor": "#61a0e5",
       "componente": "PALEONTOLOGIA",
-      "abreviacao": "Pale",
+      "abreviacao": "Paleontologia",
       "ch": 45
     },
     {
@@ -2309,7 +2309,7 @@
       "codigo": "CNBR051",
       "cor": "#7b70e5",
       "componente": "PARASITOLOGIA HUMANA",
-      "abreviacao": "Para Huma",
+      "abreviacao": "Parasit Huma",
       "ch": 60
     },
     {
@@ -2327,7 +2327,7 @@
       "codigo": "CNBR009",
       "cor": "#a079a2",
       "componente": "TRABALHO DE CONCLUSAO DE CURSO (TCC)",
-      "abreviacao": "Trab Conc Curs",
+      "abreviacao": "TCC",
       "ch": 60
     },
     {
@@ -2345,7 +2345,7 @@
       "codigo": "CNBR054",
       "cor": "#ffb7b7",
       "componente": "ESTAGIO DOCENTE NA EDUCACAO DE JOVENS E ADULTOS",
-      "abreviacao": "Esta Doce Educ",
+      "abreviacao": "Estag Doce Educ",
       "ch": 115
     },
     {
@@ -2363,7 +2363,7 @@
       "codigo": "CNBR056",
       "cor": "#fdffc0",
       "componente": "TECNOLOGIAS APLICADAS AO ENSINO DE FISICA",
-      "abreviacao": "Tecn Apli Ensi",
+      "abreviacao": "Tecn Aplic Ensi",
       "ch": 60
     },
     {
@@ -2372,7 +2372,7 @@
       "codigo": "CNBR057",
       "cor": "#d4ffca",
       "componente": "HISTORIA E EMBRIOLOGIA",
-      "abreviacao": "Hist Embr",
+      "abreviacao": "Historia Embrol",
       "ch": 45
     },
     {
@@ -2381,7 +2381,7 @@
       "codigo": "CNBR058",
       "cor": "#a5f7ff",
       "componente": "MORFOFISIOLOGIA ANIMAL II",
-      "abreviacao": "Morf Anim II",
+      "abreviacao": "Morfofis Anim II",
       "ch": 60
     },
     {
@@ -2390,7 +2390,7 @@
       "codigo": "CNBR059",
       "cor": "#aecbff",
       "componente": "BIOTECNOLOGIA",
-      "abreviacao": "Biotecn",
+      "abreviacao": "Biotecnologia",
       "ch": 30
     },
     {
@@ -2399,7 +2399,7 @@
       "codigo": "CNBR060",
       "cor": "#c7bdff",
       "componente": "ATIVIDADES COMPLEMENTARES",
-      "abreviacao": "AtIV Comp",
+      "abreviacao": "Ativ Complem",
       "ch": 80
     }
   ],
