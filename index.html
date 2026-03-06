@@ -564,24 +564,23 @@
 
             <h3 style="text-transform: uppercase; letter-spacing: 1px; margin-bottom: 15px;">OFERTA DE DISCIPLINA</h3>
 
-            <div style="margin-bottom: 20px;">
-                <label style="display: block; color: #fff; font-weight: 700; font-size: 0.95rem; margin-bottom: 8px;">
-                    1. Oferta em bloco:
+            <div class="offer-mode-section">
+                <label class="offer-mode-label">
+                    1. Inser&ccedil;&atilde;o por Bloco
                 </label>
 
-                <button id="btn-import-bloco"
-                    style="width:100%; display:none; background: #f8f9fa; color:#2c3e50; border:1px solid #ced4da; padding: 8px 10px; border-radius: 6px; cursor:pointer; font-weight:bold; font-size: 0.85rem; transition: all 0.2s ease; text-align: center; white-space: nowrap; overflow: hidden; box-shadow: 0 1px 2px rgba(0,0,0,0.1);">
+                <button id="btn-import-bloco" type="button" class="btn-secondary offer-mode-action">
                     📥 Importar Componentes do Bloco
                 </button>
 
-                <small style="display:block; color:#bdc3c7; margin-top:5px; font-size:0.8em; line-height: 1.4;">
+                <small class="offer-mode-help">
                     * Após importar, edite cada componente pendente indo na aba Lista de Ofertas
                 </small>
             </div>
 
-            <div>
-                <label style="display: block; color: #fff; font-weight: 700; font-size: 0.95rem; margin-bottom: 12px;">
-                    2. Oferta Individual:
+            <div class="offer-mode-section">
+                <label class="offer-mode-label">
+                    2. Inser&ccedil;&atilde;o Individual
                 </label>
 
                 <div class="form-group">
@@ -618,6 +617,26 @@
                     </div>
 
                     <datalist id="list-docentes"></datalist>
+
+                    <div id="auto-week-position-row" class="week-autopos-row"
+                        title="Apenas navegação: reposiciona a grade ao trocar de componente.">
+                        <label for="chk-auto-week-position" class="week-autopos-toggle">
+                            <input type="checkbox" id="chk-auto-week-position">
+                            <span>Auto-posicionar semana</span>
+                        </label>
+                        <div id="auto-week-position-modes" class="week-autopos-modes hidden">
+                            <label class="week-autopos-mode" for="radio-auto-week-regular">
+                                <input type="radio" id="radio-auto-week-regular" name="auto-week-position-mode"
+                                    value="regular" checked>
+                                <span>Regular</span>
+                            </label>
+                            <label class="week-autopos-mode" for="radio-auto-week-intensiva">
+                                <input type="radio" id="radio-auto-week-intensiva" name="auto-week-position-mode"
+                                    value="intensiva">
+                                <span>Intensiva</span>
+                            </label>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Campo de Sub-grupo: aparece automaticamente quando a mesma disciplina já existe na turma -->
@@ -635,7 +654,7 @@
                         style="display:block; color:#a8e6cf; margin-top:4px; font-size:0.82em;"></small>
                 </div>
 
-                <small style="display:block; color:#bdc3c7; margin-top:8px; font-size:0.82em; line-height:1.45;">
+                <small class="hidden" style="display:block; color:#bdc3c7; margin-top:8px; font-size:0.82em; line-height:1.45;">
                     A definição de faixas, datas e marcação de slots agora acontece exclusivamente na aba
                     <b>Grade Semanal</b>.
                 </small>
@@ -720,28 +739,49 @@
                                     </thead>
                                     <tbody id="faixas-lista">
                                         <tr id="faixa-1" class="faixa-item">
-                                            <td class="faixa-num">1</td>
+                                            <td class="faixa-num">
+                                                <span class="faixa-num-value">1</span>
+                                                <button type="button" class="faixa-quick-action-trigger faixa-quick-action-reset" data-faixa-action="1" aria-label="Zerar faixa 1" title="Zerar faixa 1">&#8635;</button>
+                                                <button type="button" class="faixa-quick-action-confirm" data-faixa-confirm="1">Confirmar</button>
+                                            </td>
                                             <td><input type="date" id="inp-data-inicio-f1" class="inp-data-inicio"></td>
                                             <td><input type="date" id="inp-data-fim-f1" class="inp-data-fim"></td>
                                             <td id="faixa-ch-f1" class="faixa-ch-cell">0</td>
                                         </tr>
                                         <tr id="faixa-2" class="faixa-item">
-                                            <td class="faixa-num">2</td>
+                                            <td class="faixa-num">
+                                                <span class="faixa-num-value">2</span>
+                                                <button type="button" class="faixa-quick-action-trigger faixa-quick-action-remove" data-faixa-action="2" aria-label="Remover faixa 2" title="Remover faixa 2">&#10005;</button>
+                                                <button type="button" class="faixa-quick-action-confirm" data-faixa-confirm="2">Confirmar</button>
+                                            </td>
                                             <td><input type="date" id="inp-data-inicio-f2" class="inp-data-inicio"></td>
                                             <td><input type="date" id="inp-data-fim-f2" class="inp-data-fim"></td>
                                             <td id="faixa-ch-f2" class="faixa-ch-cell">0</td>
                                         </tr>
                                         <tr id="faixa-3" class="faixa-item">
-                                            <td class="faixa-num">3</td>
+                                            <td class="faixa-num">
+                                                <span class="faixa-num-value">3</span>
+                                                <button type="button" class="faixa-quick-action-trigger faixa-quick-action-remove" data-faixa-action="3" aria-label="Remover faixa 3" title="Remover faixa 3">&#10005;</button>
+                                                <button type="button" class="faixa-quick-action-confirm" data-faixa-confirm="3">Confirmar</button>
+                                            </td>
                                             <td><input type="date" id="inp-data-inicio-f3" class="inp-data-inicio"></td>
                                             <td><input type="date" id="inp-data-fim-f3" class="inp-data-fim"></td>
                                             <td id="faixa-ch-f3" class="faixa-ch-cell">0</td>
                                         </tr>
                                     </tbody>
                                 </table>
-                                <div class="weekly-faixas-total">
-                                    <div class="weekly-faixas-total-main">Total: <span id="weekly-faixa-total-ch">0</span></div>
-                                    <div class="weekly-faixas-target">Meta CH: <span id="weekly-faixa-target-ch">-</span></div>
+                                <div class="weekly-faixas-total" aria-live="polite">
+                                    <div class="weekly-faixas-metric-card weekly-faixas-metric-total">
+                                        <div class="weekly-faixas-metric-label">Total CH</div>
+                                        <div class="weekly-faixas-metric-value"><span id="weekly-faixa-total-ch">0</span></div>
+                                    </div>
+                                    <div class="weekly-faixas-metric-card weekly-faixas-metric-target">
+                                        <div class="weekly-faixas-metric-label">Meta CH</div>
+                                        <div class="weekly-faixas-metric-value"><span id="weekly-faixa-target-ch">-</span></div>
+                                        <div id="weekly-faixa-remaining-wrap" class="weekly-faixas-metric-sub hidden">
+                                            Restante: <span id="weekly-faixa-remaining-ch">-</span>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                             <div class="weekly-faixas-status hidden">

@@ -44,6 +44,7 @@ const drawingDragState = {
 
 let chLimitWarningLockUntil = 0;
 let pendingFaixaStartPick = null;
+let pendingFaixaQuickActionConfirm = null;
 
 const weeklyViewState = {
     weekStartISO: '',
@@ -642,11 +643,27 @@ function updateWeeklyFaixaHoursDisplay() {
     const totalEl = document.getElementById('weekly-faixa-total-ch');
     if (totalEl) totalEl.textContent = String(total);
 
-    const disciplina = normalizeDisciplinaInputValue(inputConfig.disciplina?.value || '');
+    const disciplina = getWeeklyFaixasTitleDisciplinaAtiva();
     const info = disciplina ? getDisciplinaInfo(disciplina) : null;
     const targetCH = info ? (parseInt(info.ch, 10) || 0) : 0;
     const targetEl = document.getElementById('weekly-faixa-target-ch');
     if (targetEl) targetEl.textContent = targetCH > 0 ? String(targetCH) : '-';
+    const remainingWrapEl = document.getElementById('weekly-faixa-remaining-wrap');
+    const remainingEl = document.getElementById('weekly-faixa-remaining-ch');
+    if (remainingWrapEl && remainingEl) {
+        remainingWrapEl.classList.remove('state-under', 'state-ok', 'state-over');
+        if (targetCH > 0) {
+            const remaining = targetCH - total;
+            remainingEl.textContent = String(remaining);
+            if (remaining > 0) remainingWrapEl.classList.add('state-under');
+            else if (remaining < 0) remainingWrapEl.classList.add('state-over');
+            else remainingWrapEl.classList.add('state-ok');
+            remainingWrapEl.classList.remove('hidden');
+        } else {
+            remainingEl.textContent = '-';
+            remainingWrapEl.classList.add('hidden');
+        }
+    }
 
     const consistencyEl = document.getElementById('weekly-faixa-consistency');
     if (!consistencyEl) return;
@@ -1320,6 +1337,140 @@ function clearFaixaState(faixaNum, options = {}) {
     setFaixaStatus(faixaNum, 0);
 }
 
+function getFaixaQuickActionWarningText(faixaNum) {
+    const idx = parseInt(faixaNum, 10);
+    if (Number.isNaN(idx) || idx < 1 || idx > 3) return '';
+    if (idx === 1) return 'Zerar faixa 1? (apaga tudo)';
+    const affectedHours = idx === 2 ? (calcFaixaCH(2) + calcFaixaCH(3)) : calcFaixaCH(3);
+    return affectedHours > 0
+        ? `Remover faixa ${idx}? (apaga ${affectedHours}h)`
+        : `Remover faixa ${idx}?`;
+}
+
+function closeFaixaQuickActionConfirm() {
+    if (!pendingFaixaQuickActionConfirm) return;
+    const row = document.getElementById(`faixa-${pendingFaixaQuickActionConfirm}`);
+    if (row) row.classList.remove('faixa-quick-action-open');
+    pendingFaixaQuickActionConfirm = null;
+}
+
+function openFaixaQuickActionConfirm(faixaNum) {
+    const idx = parseInt(faixaNum, 10);
+    if (Number.isNaN(idx) || idx < 1 || idx > 3) return;
+    if (pendingFaixaQuickActionConfirm && pendingFaixaQuickActionConfirm !== idx) {
+        closeFaixaQuickActionConfirm();
+    }
+
+    const row = document.getElementById(`faixa-${idx}`);
+    if (!row) return;
+    row.classList.add('faixa-quick-action-open');
+    pendingFaixaQuickActionConfirm = idx;
+
+    const confirmBtn = row.querySelector('.faixa-quick-action-confirm');
+    const warningText = getFaixaQuickActionWarningText(idx);
+    if (confirmBtn && warningText) {
+        confirmBtn.title = warningText;
+        confirmBtn.setAttribute('aria-label', `${confirmBtn.textContent} - ${warningText}`);
+    }
+}
+
+function executeFaixaQuickAction(faixaNum) {
+    const idx = parseInt(faixaNum, 10);
+    if (Number.isNaN(idx) || idx < 1 || idx > 3) return;
+
+    closeFaixaQuickActionConfirm();
+
+    if (idx === 1) {
+        endDrawingDrag();
+        if (pendingFaixaStartPick) clearPendingFaixaStartPick();
+        window.isDrawingFaixa = null;
+        weeklyViewState.followActiveFaixa = false;
+
+        ['inp-data-inicio-f1', 'inp-data-fim-f1', 'inp-data-inicio-f2', 'inp-data-fim-f2', 'inp-data-inicio-f3', 'inp-data-fim-f3']
+            .forEach((id) => {
+                const el = document.getElementById(id);
+                if (el) el.value = '';
+            });
+
+        faixasPatterns[1] = [];
+        faixasPatterns[2] = [];
+        faixasPatterns[3] = [];
+        activeFaixaIndex = 1;
+
+        setFaixaStatus(1, 0);
+        setFaixaStatus(2, 0);
+        setFaixaStatus(3, 0);
+
+        updateWeeklySavePatternButton();
+        refreshPendingFaixaStartPickUI();
+        updateWeeklyContextNote();
+        updateWeeklyFaixaHoursDisplay();
+        if (store.selectedTurma) renderWeeklyGrid();
+        showToastWarning('Faixa 1 zerada. Defina novamente o inicio para planejar.', 'warning', 2200);
+        return;
+    }
+
+    if (idx === 2) {
+        clearFaixaState(2);
+        clearFaixaState(3);
+        activeFaixaIndex = 1;
+        if (window.isDrawingFaixa && parseInt(window.isDrawingFaixa, 10) > 1) window.isDrawingFaixa = 1;
+    } else {
+        clearFaixaState(3);
+        if (window.isDrawingFaixa && parseInt(window.isDrawingFaixa, 10) === 3) window.isDrawingFaixa = 2;
+        if (activeFaixaIndex === 3) activeFaixaIndex = 2;
+    }
+
+    applyFaixaDateAutofill();
+    refreshPendingFaixaStartPickUI();
+    updateWeeklyContextNote();
+    updateWeeklySavePatternButton();
+    if (store.selectedTurma) renderWeeklyGrid();
+    showToastWarning(`Faixa ${idx} removida.`, 'success', 1800);
+}
+
+function setupFaixaQuickActions() {
+    if (!document.body.dataset.faixaQuickActionOutsideBound) {
+        document.body.dataset.faixaQuickActionOutsideBound = '1';
+        document.addEventListener('pointerdown', (evt) => {
+            if (!pendingFaixaQuickActionConfirm) return;
+            const row = document.getElementById(`faixa-${pendingFaixaQuickActionConfirm}`);
+            if (row && row.contains(evt.target)) return;
+            closeFaixaQuickActionConfirm();
+        });
+        document.addEventListener('keydown', (evt) => {
+            if (evt.key === 'Escape' && pendingFaixaQuickActionConfirm) {
+                closeFaixaQuickActionConfirm();
+            }
+        });
+    }
+
+    for (let i = 1; i <= 3; i++) {
+        const row = document.getElementById(`faixa-${i}`);
+        if (!row) continue;
+        const triggerBtn = row.querySelector('.faixa-quick-action-trigger');
+        const confirmBtn = row.querySelector('.faixa-quick-action-confirm');
+        if (!triggerBtn || !confirmBtn || triggerBtn.dataset.quickActionBound === '1') continue;
+
+        triggerBtn.dataset.quickActionBound = '1';
+        triggerBtn.addEventListener('click', (evt) => {
+            evt.preventDefault();
+            evt.stopPropagation();
+            if (pendingFaixaQuickActionConfirm === i) {
+                closeFaixaQuickActionConfirm();
+                return;
+            }
+            openFaixaQuickActionConfirm(i);
+        });
+
+        confirmBtn.addEventListener('click', (evt) => {
+            evt.preventDefault();
+            evt.stopPropagation();
+            executeFaixaQuickAction(i);
+        });
+    }
+}
+
 function applyFaixasConfigToSidebar(faixasConfig = []) {
     const sorted = Array.isArray(faixasConfig)
         ? faixasConfig.map(normalizeFaixaEntry).filter(Boolean).sort((a, b) => a.inicio.localeCompare(b.inicio))
@@ -1376,6 +1527,102 @@ function getPreferredStartDateForCurrentTurma() {
     const termStart = store.settings.termStart || inpTermStart?.value || calStart?.value || '';
     const turmaPreferred = store.selectedTurma ? store.getTurmaLastStart(store.selectedTurma) : '';
     return turmaPreferred || termStart;
+}
+
+function getWeekAutoPositionMode() {
+    const enabled = !!store.settings?.weekAutoPositionEnabled;
+    if (enabled && store.settings?.weekAutoPositionMode === 'intensiva') return 'intensiva';
+    return 'regular';
+}
+
+function getLatestAllocatedComponentForCurrentTurma() {
+    if (!store.selectedTurma || !Array.isArray(store.allocations)) return null;
+
+    for (let i = store.allocations.length - 1; i >= 0; i--) {
+        const alloc = store.allocations[i];
+        if (String(alloc?.turmaId) !== String(store.selectedTurma)) continue;
+        if (String(alloc?.tipo || '').toLowerCase() === 'pendente') continue;
+        return alloc;
+    }
+
+    return null;
+}
+
+function getWeekAutoPositionAnchorDate() {
+    const latestAlloc = getLatestAllocatedComponentForCurrentTurma();
+    if (latestAlloc) {
+        const mode = getWeekAutoPositionMode();
+        if (mode === 'intensiva') {
+            return latestAlloc.dataFim || latestAlloc.dataInicio || '';
+        }
+        return latestAlloc.dataInicio || latestAlloc.dataFim || '';
+    }
+
+    return getPreferredStartDateForCurrentTurma();
+}
+
+function applyWeekAutoPositionForComponentChange(options = {}) {
+    const { render = false } = options;
+    const anchorDate = getWeekAutoPositionAnchorDate();
+    if (!anchorDate) return;
+    setWeeklyViewByDate(anchorDate, { followFaixa: false, render });
+}
+
+function syncWeekAutoPositionControls() {
+    const chk = document.getElementById('chk-auto-week-position');
+    const modesWrap = document.getElementById('auto-week-position-modes');
+    const radioRegular = document.getElementById('radio-auto-week-regular');
+    const radioIntensiva = document.getElementById('radio-auto-week-intensiva');
+    if (!chk || !modesWrap || !radioRegular || !radioIntensiva) return;
+
+    const enabled = !!store.settings?.weekAutoPositionEnabled;
+    const mode = getWeekAutoPositionMode();
+
+    chk.checked = enabled;
+    radioRegular.checked = mode === 'regular';
+    radioIntensiva.checked = mode === 'intensiva';
+    modesWrap.classList.toggle('hidden', !enabled);
+}
+
+function persistWeekAutoPositionSettings(enabled, mode) {
+    store.settings.weekAutoPositionEnabled = !!enabled;
+    store.settings.weekAutoPositionMode = mode === 'intensiva' ? 'intensiva' : 'regular';
+    store.saveSettings();
+}
+
+function setupWeekAutoPositionControls() {
+    const chk = document.getElementById('chk-auto-week-position');
+    const radioRegular = document.getElementById('radio-auto-week-regular');
+    const radioIntensiva = document.getElementById('radio-auto-week-intensiva');
+    if (!chk || !radioRegular || !radioIntensiva) return;
+    if (chk.dataset.bound === '1') {
+        syncWeekAutoPositionControls();
+        return;
+    }
+
+    chk.dataset.bound = '1';
+
+    if (typeof store.settings.weekAutoPositionEnabled !== 'boolean') {
+        store.settings.weekAutoPositionEnabled = false;
+    }
+    if (!store.settings.weekAutoPositionMode) {
+        store.settings.weekAutoPositionMode = 'regular';
+    }
+    syncWeekAutoPositionControls();
+
+    chk.addEventListener('change', () => {
+        const selectedMode = radioIntensiva.checked ? 'intensiva' : 'regular';
+        persistWeekAutoPositionSettings(chk.checked, selectedMode);
+        syncWeekAutoPositionControls();
+    });
+
+    [radioRegular, radioIntensiva].forEach((radio) => {
+        radio.addEventListener('change', () => {
+            if (!radio.checked) return;
+            persistWeekAutoPositionSettings(chk.checked, radio.value);
+            syncWeekAutoPositionControls();
+        });
+    });
 }
 
 function applyFaixaDateAutofill(options = {}) {
@@ -1472,6 +1719,7 @@ function resolveInlineEditableFaixaIndex() {
 }
 
 function setupFaixaControls() {
+    setupFaixaQuickActions();
     for (let i = 1; i <= 3; i++) {
         const iniEl = document.getElementById(`inp-data-inicio-f${i}`);
         const fimEl = document.getElementById(`inp-data-fim-f${i}`);
@@ -1533,11 +1781,12 @@ function setupFaixaControls() {
     }
 
     for (let i = 2; i <= 3; i++) {
-        const faixaNumCell = document.querySelector(`#faixa-${i} .faixa-num`);
-        if (!faixaNumCell || faixaNumCell.dataset.startPickBound === '1') continue;
+        const faixaNumValue = document.querySelector(`#faixa-${i} .faixa-num .faixa-num-value`);
+        if (!faixaNumValue || faixaNumValue.dataset.startPickBound === '1') continue;
 
-        faixaNumCell.dataset.startPickBound = '1';
-        faixaNumCell.addEventListener('click', () => {
+        faixaNumValue.dataset.startPickBound = '1';
+        faixaNumValue.addEventListener('click', () => {
+            closeFaixaQuickActionConfirm();
             if (pendingFaixaStartPick === i) {
                 clearPendingFaixaStartPick();
                 showToastWarning(`Selecao de inicio da Faixa ${i} cancelada.`, 'warning', 1800);
@@ -2940,6 +3189,14 @@ function handleImportBloco() {
     }
 }
 
+function updateImportBlocoButtonState() {
+    const btnImportBloco = document.getElementById('btn-import-bloco');
+    if (!btnImportBloco) return;
+
+    btnImportBloco.innerHTML = 'Inser&ccedil;&atilde;o por Bloco (PPC)';
+    btnImportBloco.disabled = !(store.selectedCurso && store.selectedTurma);
+}
+
 export function initUI() {
     setupFaixaControls();
     setupWeeklyWeekNavigator();
@@ -2948,6 +3205,7 @@ export function initUI() {
     if (selTurma) selTurma.addEventListener('change', onTurmaChange);
 
     initPeriodoLetivoETurno();
+    setupWeekAutoPositionControls();
 
     // ORDEM IMPORTANTE: Primeiro conserta o layout e encapsula os selects
     applySidebarLayoutFixes();
@@ -2961,6 +3219,7 @@ export function initUI() {
     // Botão de Importar Bloco
     const btnImportBloco = document.getElementById('btn-import-bloco');
     if (btnImportBloco) btnImportBloco.addEventListener('click', handleImportBloco);
+    updateImportBlocoButtonState();
 
     enforceCanonicalFaixaMode();
 
@@ -2994,7 +3253,10 @@ export function initUI() {
             lastDisciplinaInputNormalized = discNome;
             updateWeeklyFaixasTitleDisciplina();
             updateWeeklyFaixaHoursDisplay();
-            if (store.selectedTurma) renderWeeklyGrid();
+            if (store.selectedTurma) {
+                applyWeekAutoPositionForComponentChange({ render: false });
+                renderWeeklyGrid();
+            }
             const containerSub = document.getElementById('container-sub-turma');
             const inpSub = document.getElementById('inp-sub-turma');
             const preview = document.getElementById('preview-sub-turma');
@@ -3255,6 +3517,7 @@ function onCursoChange() {
     syncAllRegularDates();
     syncAllIntensiveDates();
 
+    updateImportBlocoButtonState();
     renderWeeklyGrid();
     renderOfertasList();
 }
@@ -3319,6 +3582,7 @@ function onTurmaChange() {
     deactivateDrawingMode();
     editingDisciplinaDraft = '';
     updateWeeklyFaixasTitleDisciplina();
+    updateWeeklyFaixaHoursDisplay();
     collapseFaixasForNewComponent();
 
     faixasPatterns = { 1: [], 2: [], 3: [] };
@@ -3326,10 +3590,7 @@ function onTurmaChange() {
     setFaixaStatus(2, 0);
     setFaixaStatus(3, 0);
 
-    const btnImportBloco = document.getElementById('btn-import-bloco');
-    if (btnImportBloco) {
-        btnImportBloco.style.display = store.selectedTurma ? 'block' : 'none';
-    }
+    updateImportBlocoButtonState();
 
     const alocacoesTurma = store.allocations.filter(a => String(a.turmaId) === String(store.selectedTurma));
     const primeiraIntensiva = alocacoesTurma.find(a => a.tipo === 'intensiva' && Array.isArray(a.horariosOcupados) && a.horariosOcupados.length > 0);
@@ -3350,6 +3611,7 @@ function onTurmaChange() {
         hydrateFaixasFromIntensiva(intensivas[0]);
         editingDisciplinaDraft = normalizeDisciplinaInputValue(intensivas[0].disciplina || '');
         updateWeeklyFaixasTitleDisciplina();
+        updateWeeklyFaixaHoursDisplay();
         const datas = intensivas.map(a => a.dataInicio).sort();
         if (calStart && datas[0] < calStart.value) {
             calStart.value = datas[0];
@@ -3373,7 +3635,7 @@ function onTurmaChange() {
     applyFaixaDateAutofill({ forceSingleBounds: true });
     refreshPendingFaixaStartPickUI();
     updateWeeklyContextNote();
-    setWeeklyViewByDate(preferredStart || store.settings.termStart || calStart?.value || '', { followFaixa: false, render: false });
+    applyWeekAutoPositionForComponentChange({ render: false });
 
     renderWeeklyGrid();
     renderOfertasList();
@@ -3424,14 +3686,23 @@ function renderWeeklyGrid() {
     const feriadosSet = new Set(feriadosMap.keys());
 
     if (!store.selectedTurma || horariosUI.length === 0) {
-        const turnoAtual = store.settings?.turnoOferta || "Manha";
         gridContainer.innerHTML = `
             <div style="grid-column: 1/-1; padding: 22px; background:#bdc3c7; border-radius: 6px;">
                 <ul style="margin:0; padding-left: 20px; color:#2c3e50; font-size: 1.05rem; line-height: 1.55; text-align:left; width:100%; display:block; margin-left:0;">
                     <li>Selecione um curso do IECOS</li>
-                    <li>Selecione uma turma valida do seu curso</li>
-                    <li>Insira data de inicio e fim do Periodo Letivo</li>
-                    <li>Selecione um turno <span style="color:#34495e; font-size:0.95rem; opacity:0.9;">(Turno Atual: ${turnoAtual})</span></li>
+                    <li>Selecione uma turma v&aacute;lida desse curso</li>
+                    <li>Informe o Per&iacute;odo letivo, incluindo:
+                        <ul style="margin:6px 0 0 0; padding-left:22px; list-style:disc;">
+                            <li>Data de in&iacute;cio e data de fim</li>
+                            <li>Per&iacute;odo: 1P, 2P, 3P ou 4P</li>
+                        </ul>
+                    </li>
+                    <li>Escolha a forma de oferta das componentes, com duas op&ccedil;&otilde;es:
+                        <ul style="margin:6px 0 0 0; padding-left:22px; list-style:disc;">
+                            <li>Inser&ccedil;&atilde;o por Bloco</li>
+                            <li>Inser&ccedil;&atilde;o Individual</li>
+                        </ul>
+                    </li>
                 </ul>
             </div>
         `;
@@ -4369,6 +4640,7 @@ function renderOfertasList() {
                     }
                 }
 
+                applyWeekAutoPositionForComponentChange({ render: false });
                 idsToRemove.forEach((id) => store.removeAllocation(id));
                 syncAllRegularDates();
                 renderWeeklyGrid();
