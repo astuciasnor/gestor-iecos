@@ -292,7 +292,7 @@ function exportarJSONCurso(sigla) {
       showToastWarning(
         "Arquivo '" + fileName + "' gerado com sucesso.<br>" +
         "Publicação automática recomendada na raiz do projeto:<br>" +
-        "<code>python tools/publish_online.py --from-download \"%USERPROFILE%\\Downloads\\alocacoes_publicas.json\" --push</code>",
+        "<code>python tools/publish_online.py --push</code>",
         'success',
         7000
       );

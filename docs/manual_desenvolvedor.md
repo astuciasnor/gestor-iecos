@@ -216,16 +216,30 @@ Fluxo oficial para publicar a grade online com seguranca:
 2. No terminal (raiz do repositorio), execute:
 
 ```bash
-python tools/publish_online.py --from-download "%USERPROFILE%\Downloads\alocacoes_publicas.json" --push
+python tools/publish_online.py
 ```
 
 3. O script:
+   - procura automaticamente o arquivo mais recente `alocacoes_publicas*.json` em `Downloads`;
+   - tambem aceita um caminho manual com `--from-download "%USERPROFILE%\Downloads\alocacoes_publicas.json"`;
    - valida estrutura e datas do JSON publico;
-   - bloqueia publicacao em branch errada (por padrao exige `main`);
-   - bloqueia publicacao com arvore suja (a menos que use `--allow-dirty`);
-   - faz `git add`, `git commit` e `git push origin main` com confirmacao.
+   - cria ou sobrescreve `alocacoes_publicas.json` na raiz do repositorio, mesmo se o arquivo ainda nao existir;
+   - permite teste de copia/validacao mesmo com arvore Git suja;
+   - bloqueia apenas a etapa de `git add` / `commit` / `push` quando a branch nao for `main` ou quando a arvore estiver suja, a menos que use `--allow-non-main` e/ou `--allow-dirty`.
 
-4. URLs oficiais:
+4. Para publicar de fato no GitHub Pages, execute:
+
+```bash
+python tools/publish_online.py --push
+```
+
+5. Opcoes uteis:
+   - `--debug`: mostra `repo_root`, origem, destino, tamanhos de arquivo, branch e status Git;
+   - `--yes`: pula confirmacoes interativas;
+   - `--allow-dirty`: permite seguir com commit/push mesmo com alteracoes locais;
+   - `--allow-non-main`: permite seguir fora da branch `main`.
+
+6. URLs oficiais:
    - Sistema: `https://astuciasnor.github.io/gestor-iecos/`
    - JSON publico: `https://astuciasnor.github.io/gestor-iecos/alocacoes_publicas.json`
 

@@ -2,17 +2,20 @@
 """
 Publica o arquivo alocacoes_publicas.json com validacoes e travas de seguranca.
 
-Uso típico:
-  python tools/publish_online.py --from-download "%USERPROFILE%\\Downloads\\alocacoes_publicas.json" --push
+Uso tipico:
+  python tools/publish_online.py
+  python tools/publish_online.py --push
 """
 
 from __future__ import annotations
 
 import argparse
 import json
+import os
 import subprocess
 import sys
 from datetime import datetime
+from os import PathLike
 from pathlib import Path
 from typing import Any
 
@@ -26,6 +29,7 @@ REQUIRED_WEB_FILES = (
 
 PUBLIC_URL = "https://astuciasnor.github.io/gestor-iecos/"
 PUBLIC_JSON_URL = "https://astuciasnor.github.io/gestor-iecos/alocacoes_publicas.json"
+PUBLIC_DOWNLOAD_GLOB = "alocacoes_publicas*.json"
 
 
 def run_git(repo_root: Path, args: list[str], check: bool = True) -> subprocess.CompletedProcess:
@@ -89,8 +93,21 @@ def ensure_required_files(repo_root: Path) -> list[str]:
     return missing
 
 
-def require_clean_tree(repo_root: Path, allow_dirty: bool) -> None:
-    status = run_git(repo_root, ["status", "--porcelain"], check=True).stdout.strip()
+def get_git_status(repo_root: Path) -> str:
+    return run_git(repo_root, ["status", "--porcelain"], check=True).stdout.strip()
+
+
+def get_git_branch(repo_root: Path) -> str:
+    return run_git(repo_root, ["branch", "--show-current"], check=True).stdout.strip()
+
+
+def debug_print(enabled: bool, label: str, value: Any) -> None:
+    if enabled:
+        print(f"[debug] {label}: {value}")
+
+
+def require_clean_tree(repo_root: Path, allow_dirty: bool, status: str | None = None) -> None:
+    status = get_git_status(repo_root) if status is None else status
     if status and not allow_dirty:
         print("Erro: repositorio com alteracoes pendentes.", file=sys.stderr)
         print("Use --allow-dirty para ignorar esta trava.", file=sys.stderr)
@@ -100,14 +117,28 @@ def require_clean_tree(repo_root: Path, allow_dirty: bool) -> None:
         raise SystemExit(1)
 
 
-def require_main_branch(repo_root: Path, allow_non_main: bool) -> None:
-    branch = run_git(repo_root, ["branch", "--show-current"], check=True).stdout.strip()
+def require_main_branch(repo_root: Path, allow_non_main: bool, branch: str | None = None) -> None:
+    branch = get_git_branch(repo_root) if branch is None else branch
     if branch != "main" and not allow_non_main:
         print(
             f"Erro: branch atual e '{branch}'. Publique em 'main' ou use --allow-non-main.",
             file=sys.stderr,
         )
         raise SystemExit(1)
+
+
+def can_run_git_publish(
+    allow_dirty: bool,
+    allow_non_main: bool,
+    branch: str,
+    git_status: str,
+) -> tuple[bool, list[str]]:
+    reasons: list[str] = []
+    if branch != "main" and not allow_non_main:
+        reasons.append(f"branch atual e '{branch}' (use --allow-non-main para ignorar)")
+    if git_status and not allow_dirty:
+        reasons.append("repositorio com alteracoes pendentes (use --allow-dirty para ignorar)")
+    return (not reasons), reasons
 
 
 def write_public_file(payload: Any, target_path: Path) -> None:
@@ -122,14 +153,66 @@ def has_staged_changes(repo_root: Path, relpath: str) -> bool:
     return result.returncode == 1
 
 
+def file_size_or_none(path: Path) -> int | None:
+    if not path.exists() or not path.is_file():
+        return None
+    return path.stat().st_size
+
+
 def confirm(prompt: str) -> bool:
     answer = input(f"{prompt} [s/N]: ").strip().lower()
     return answer in {"s", "sim", "y", "yes"}
 
 
+def get_downloads_dir() -> Path:
+    return Path.home() / "Downloads"
+
+
+def expand_path_string(value: str | PathLike[str]) -> str:
+    return os.path.expandvars(str(value))
+
+
+def resolve_input_path(value: str | PathLike[str]) -> Path:
+    expanded = expand_path_string(value)
+    return Path(expanded).expanduser().resolve()
+
+
+def find_latest_public_download(downloads_dir: Path) -> Path | None:
+    if not downloads_dir.exists():
+        return None
+
+    candidates = [p for p in downloads_dir.glob(PUBLIC_DOWNLOAD_GLOB) if p.is_file()]
+    if not candidates:
+        return None
+
+    candidates.sort(key=lambda p: (p.stat().st_mtime, p.name.lower()), reverse=True)
+    return candidates[0]
+
+
+def resolve_source_path(
+    source_arg: str | PathLike[str] | None,
+    repo_default: Path,
+) -> tuple[Path | None, str]:
+    if source_arg:
+        source_path = resolve_input_path(source_arg)
+        return source_path, "manual"
+
+    latest_download = find_latest_public_download(get_downloads_dir())
+    if latest_download is not None:
+        return latest_download.resolve(), "downloads"
+
+    if repo_default.exists():
+        return repo_default.resolve(), "repo"
+
+    return None, "missing"
+
+
+def build_target_content(payload: Any) -> str:
+    return json.dumps(payload, ensure_ascii=False, indent=2) + "\n"
+
+
 def main() -> int:
     repo_root = Path(__file__).resolve().parent.parent
-    default_source = repo_root / "alocacoes_publicas.json"
     default_target = repo_root / "alocacoes_publicas.json"
 
     parser = argparse.ArgumentParser(
@@ -138,8 +221,8 @@ def main() -> int:
     parser.add_argument(
         "--from-download",
         dest="source",
-        default=str(default_source),
-        help="Caminho do JSON gerado pelo botao Publicar Online.",
+        default=None,
+        help="Caminho do JSON gerado pelo botao Publicar Online. Se omitido, usa o mais recente em Downloads.",
     )
     parser.add_argument(
         "--target",
@@ -171,10 +254,48 @@ def main() -> int:
         action="store_true",
         help="Permite rodar em branch diferente de main.",
     )
+    parser.add_argument(
+        "--debug",
+        action="store_true",
+        help="Exibe detalhes internos do fluxo de publicacao.",
+    )
     args = parser.parse_args()
 
-    source_path = Path(args.source).expanduser().resolve()
-    target_path = Path(args.target).expanduser().resolve()
+    source_path, source_mode = resolve_source_path(args.source, default_target)
+    target_path = resolve_input_path(args.target)
+
+    branch = get_git_branch(repo_root)
+    git_status = get_git_status(repo_root)
+    target_existed_before = target_path.exists()
+    git_publish_allowed, git_publish_reasons = can_run_git_publish(
+        allow_dirty=args.allow_dirty,
+        allow_non_main=args.allow_non_main,
+        branch=branch,
+        git_status=git_status,
+    )
+
+    debug_print(args.debug, "repo_root", repo_root)
+    debug_print(args.debug, "source_mode", source_mode)
+    debug_print(args.debug, "source_path", source_path if source_path is not None else "<nenhum>")
+    debug_print(args.debug, "source_exists", bool(source_path and source_path.exists()))
+    debug_print(args.debug, "target_path", target_path)
+    debug_print(args.debug, "target_exists_before", target_existed_before)
+    debug_print(args.debug, "target_size_before", file_size_or_none(target_path))
+    debug_print(args.debug, "branch_atual", branch)
+    debug_print(args.debug, "git_status", git_status or "<limpo>")
+
+    if source_mode == "missing" or source_path is None:
+        print("Erro: nenhuma origem valida encontrada.", file=sys.stderr)
+        print(
+            "Nao foi encontrado nenhum arquivo compatível em Downloads e tambem nao existe "
+            "alocacoes_publicas.json na raiz do repositorio.",
+            file=sys.stderr,
+        )
+        print(
+            "Informe manualmente com --from-download ou gere o arquivo pelo botao Publicar Online.",
+            file=sys.stderr,
+        )
+        return 1
 
     if not source_path.exists():
         print(f"Erro: arquivo de origem nao encontrado: {source_path}", file=sys.stderr)
@@ -187,21 +308,23 @@ def main() -> int:
             print(f"  - {rel}", file=sys.stderr)
         return 1
 
-    require_main_branch(repo_root, allow_non_main=args.allow_non_main)
-    require_clean_tree(repo_root, allow_dirty=args.allow_dirty)
-
     try:
+        print(f"Arquivo de origem encontrado: {source_path}")
+        debug_print(args.debug, "source_size", file_size_or_none(source_path))
+        print("Lendo conteudo do JSON de origem...")
         payload = json.loads(source_path.read_text(encoding="utf-8"))
     except json.JSONDecodeError as exc:
         print(f"Erro: JSON invalido em {source_path}: {exc}", file=sys.stderr)
         return 1
 
+    print("JSON lido com sucesso.")
     errors = validate_public_json(payload)
     if errors:
         print("Erro: validacao falhou. Publicacao cancelada.", file=sys.stderr)
         for item in errors:
             print(f"  - {item}", file=sys.stderr)
         return 1
+    print("JSON validado com sucesso.")
 
     allocations_count = len(payload.get("allocations", []))
     settings = payload.get("settings", {})
@@ -209,6 +332,10 @@ def main() -> int:
     term_end = settings.get("termEnd")
 
     print("Resumo da publicacao:")
+    if source_mode == "downloads":
+        print("  Origem detectada automaticamente em Downloads.")
+    elif source_mode == "repo":
+        print("  Origem automatica nao encontrada em Downloads; usando arquivo atual do repositorio.")
     print(f"  Origem: {source_path}")
     print(f"  Destino: {target_path}")
     print(f"  Alocações: {allocations_count}")
@@ -218,12 +345,51 @@ def main() -> int:
         print("Operacao cancelada.")
         return 0
 
-    write_public_file(payload, target_path)
+    target_content = build_target_content(payload)
+    target_parent = target_path.parent
+    if not target_parent.exists():
+        print(f"Criando diretorio de destino: {target_parent}")
+        target_parent.mkdir(parents=True, exist_ok=True)
+
+    target_had_same_content = False
+    if target_existed_before and target_path.is_file():
+        try:
+            target_had_same_content = target_path.read_text(encoding="utf-8") == target_content
+        except OSError:
+            target_had_same_content = False
+
+    if target_existed_before:
+        print(f"Arquivo de destino ja existia e sera sobrescrito: {target_path}")
+    else:
+        print(f"Arquivo de destino sera criado na raiz do projeto: {target_path}")
+
+    if not target_had_same_content:
+        write_public_file(payload, target_path)
+        print("Arquivo de destino gravado com sucesso.")
+    else:
+        print("Arquivo de destino ja continha conteudo identico; nenhuma regravacao foi necessaria.")
+
+    debug_print(args.debug, "target_exists_after", target_path.exists())
+    debug_print(args.debug, "target_size_after", file_size_or_none(target_path))
+
+    if not git_publish_allowed:
+        print("Arquivo de destino resolvido e gravado/localmente atualizado com sucesso.")
+        print("Etapa Git bloqueada pelas travas de seguranca:")
+        for reason in git_publish_reasons:
+            print(f"  - {reason}")
+        print("O arquivo no repositorio local foi preservado; regularize o Git e rode novamente para commitar.")
+        print(f"URL pública: {PUBLIC_URL}")
+        print(f"JSON público: {PUBLIC_JSON_URL}")
+        return 0
+
     rel_target = target_path.relative_to(repo_root).as_posix()
 
     run_git(repo_root, ["add", "--", rel_target], check=True)
     if not has_staged_changes(repo_root, rel_target):
-        print("Nenhuma alteracao detectada em alocacoes_publicas.json. Nada para commitar.")
+        print(
+            "O arquivo publico foi resolvido corretamente, mas o conteudo final esta identico ao que ja "
+            "estava no repositorio. Nao ha alteracao para commitar."
+        )
         print(f"URL pública: {PUBLIC_URL}")
         print(f"JSON público: {PUBLIC_JSON_URL}")
         return 0

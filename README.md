@@ -81,10 +81,17 @@ O sistema é robustamente abastecido via pipeline estático ETL. Ele utiliza a b
 2. No terminal, execute:
 
 ```bash
-python tools/publish_online.py --from-download "%USERPROFILE%\\Downloads\\alocacoes_publicas.json" --push
+python tools/publish_online.py
 ```
 
-3. O script aplica validacoes, cria commit e faz `push` (com confirmacao), atualizando o GitHub Pages.
+3. O script procura automaticamente o arquivo mais recente em `Downloads`, valida o JSON e cria ou atualiza `alocacoes_publicas.json` na raiz do projeto.
+4. Para commitar e publicar no GitHub Pages, execute:
+
+```bash
+python tools/publish_online.py --push
+```
+
+5. Se o repositorio estiver sujo, a copia local continua permitida; a etapa de Git fica bloqueada ate voce limpar a arvore ou usar `--allow-dirty`.
 
 URL publica:
 - `https://astuciasnor.github.io/gestor-iecos/`
