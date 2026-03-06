@@ -1529,6 +1529,141 @@ function getPreferredStartDateForCurrentTurma() {
     return turmaPreferred || termStart;
 }
 
+function normalizeConflictSlotLabel(value) {
+    return String(value || '')
+        .trim()
+        .replace(/\s+/g, ' ')
+        .replace(/\s*[-–]\s*/g, ' - ');
+}
+
+function getAllocationTeachersForConflict(alloc) {
+    if (alloc?.docentes && Array.isArray(alloc.docentes) && alloc.docentes.length > 0) {
+        return alloc.docentes
+            .map((d) => String(d?.nome || d || '').trim())
+            .filter((name) => name && name.toUpperCase() !== 'A DEFINIR');
+    }
+
+    const single = String(alloc?.docente || '').trim();
+    return single && single.toUpperCase() !== 'A DEFINIR' ? [single] : [];
+}
+
+function resolveTeacherForAllocationHour(alloc, hourIndex) {
+    if (!Number.isFinite(hourIndex) || hourIndex <= 0) {
+        return String(alloc?.docente || '').trim();
+    }
+
+    if (alloc?.docentes && Array.isArray(alloc.docentes) && alloc.docentes.length > 0) {
+        let accumulatedHours = 0;
+        for (const docente of alloc.docentes) {
+            const docenteHours = parseFloat(String(docente?.ch ?? 0).replace(',', '.'));
+            accumulatedHours += Number.isFinite(docenteHours) ? docenteHours : 0;
+            if (hourIndex <= accumulatedHours) {
+                return String(docente?.nome || '').trim();
+            }
+        }
+
+        const lastTeacher = alloc.docentes[alloc.docentes.length - 1]?.nome;
+        if (lastTeacher) return String(lastTeacher).trim();
+    }
+
+    return String(alloc?.docente || '').trim();
+}
+
+function buildIntensiveTeacherConflictEntries(intense, teacherName) {
+    if (!intense?.dataInicio || !intense?.dataFim || !teacherName) return [];
+
+    const normalizedTeacher = normalizeTeacherNameForMatch(teacherName);
+    const faixas = buildIntensiveConflictFaixas(intense, intense.dataInicio, intense.dataFim);
+    if (faixas.length === 0) return [];
+
+    const feriados = new Set((store.rawData?.feriados || []).map((f) => String(f?.data || f || '')));
+    const finalDaySlots = new Set(
+        (Array.isArray(intense.horariosUltimoDia) ? intense.horariosUltimoDia : [])
+            .map((slot) => normalizeConflictSlotLabel(slot))
+            .filter(Boolean)
+    );
+
+    const totalHours = parseFloat(String(intense.ch ?? 0).replace(',', '.'));
+    const hasHourLimit = Number.isFinite(totalHours) && totalHours > 0;
+    const entries = [];
+    let currentHour = 0;
+
+    for (let currentDate = intense.dataInicio; currentDate && currentDate <= intense.dataFim; currentDate = addDaysISO(currentDate, 1)) {
+        if (feriados.has(currentDate)) continue;
+
+        const dayOfWeek = new Date(currentDate + 'T12:00:00').getDay();
+        if (dayOfWeek === 0) continue;
+
+        const faixaAtiva = faixas.find((faixa) => currentDate >= faixa.inicio && currentDate <= faixa.fim);
+        if (!faixaAtiva) continue;
+
+        const rawSlots = faixaAtiva.byDay?.[dayOfWeek] || [];
+        if (!Array.isArray(rawSlots) || rawSlots.length === 0) continue;
+
+        for (const rawSlot of rawSlots) {
+            const slot = normalizeConflictSlotLabel(rawSlot);
+            if (!slot) continue;
+
+            if (currentDate === intense.dataFim && finalDaySlots.size > 0 && !finalDaySlots.has(slot)) {
+                continue;
+            }
+
+            if (hasHourLimit && currentHour >= totalHours) break;
+
+            currentHour += 1;
+            const resolvedTeacher = resolveTeacherForAllocationHour(intense, currentHour);
+            if (normalizeTeacherNameForMatch(resolvedTeacher) !== normalizedTeacher) continue;
+
+            entries.push({
+                date: currentDate,
+                horario: slot,
+                docente: resolvedTeacher
+            });
+        }
+    }
+
+    return entries;
+}
+
+function findConfirmedTeacherConflictForCandidate(candidateAlloc, teacherNames = []) {
+    if (!candidateAlloc?.dataInicio || !candidateAlloc?.dataFim || !Array.isArray(teacherNames) || teacherNames.length === 0) {
+        return null;
+    }
+
+    for (const teacherName of teacherNames) {
+        const candidateEntries = buildIntensiveTeacherConflictEntries(candidateAlloc, teacherName);
+        if (candidateEntries.length === 0) continue;
+
+        const existingEventsByDate = getCalendarEvents(null, candidateAlloc.dataInicio, candidateAlloc.dataFim, teacherName);
+        const existingByKey = new Map();
+
+        Object.entries(existingEventsByDate || {}).forEach(([dateStr, events]) => {
+            (events || []).forEach((event) => {
+                if (!event || String(event.turmaId) === String(store.selectedTurma)) return;
+                const slot = normalizeConflictSlotLabel(event.horario || '');
+                if (!slot) return;
+                const key = `${dateStr}|${slot}`;
+                if (!existingByKey.has(key)) existingByKey.set(key, event);
+            });
+        });
+
+        for (const entry of candidateEntries) {
+            const key = `${entry.date}|${entry.horario}`;
+            const existingEvent = existingByKey.get(key);
+            if (!existingEvent) continue;
+
+            return {
+                teacherName,
+                date: entry.date,
+                horario: entry.horario,
+                event: existingEvent
+            };
+        }
+    }
+
+    return null;
+}
+
 function getWeekAutoPositionMode() {
     const enabled = !!store.settings?.weekAutoPositionEnabled;
     if (enabled && store.settings?.weekAutoPositionMode === 'intensiva') return 'intensiva';
@@ -4168,43 +4303,20 @@ function handleAddManual() {
         const teachersToCheck = (docData.mode === 'single' ? [docData.docente] : docData.docentesList.map(d => d.nome)).filter(n => n && n.trim().toUpperCase() !== 'A DEFINIR');
 
         if (teachersToCheck.length > 0) {
-            const teacherConflictGlobal = store.allocations.find(a => {
-                if (String(a.turmaId) === String(store.selectedTurma)) return false;
+            const confirmedTeacherConflict = findConfirmedTeacherConflictForCandidate(
+                candidateIntensiveForConflict,
+                teachersToCheck
+            );
 
-                let hasTeacherConflict = false;
-                if (a.docentes && a.docentes.length > 0) {
-                    hasTeacherConflict = a.docentes.some(d => teachersToCheck.includes(d.nome));
-                } else {
-                    hasTeacherConflict = teachersToCheck.includes(a.docente);
-                }
-                if (!hasTeacherConflict) return false;
-
-                const aStart = a.dataInicio || store.settings.termStart;
-                const aEnd = a.dataFim || store.settings.termEnd;
-                if (!isDateOverlap(inicioCalculado, dataFimCalculada, aStart, aEnd)) return false;
-
-                if (a.tipo === 'intensiva') {
-                    return hasIntensiveConflictByDay(
-                        candidateIntensiveForConflict,
-                        a,
-                        { start: inicioCalculado, end: dataFimCalculada },
-                        { start: aStart, end: aEnd }
-                    );
-                }
-
-                if (slotsIntensiva.includes(a.horario)) {
-                    if (parseInt(a.diaSemana, 10) === 6 && !usaSabado) return false;
-                    return true;
-                }
-                return false;
-            });
-
-            if (teacherConflictGlobal) {
-                const turmaNomeConflito = getTurmaLabel(teacherConflictGlobal.turmaId);
-                const profNomes = teachersToCheck.join(', ');
+            if (confirmedTeacherConflict) {
+                const turmaNomeConflito = getTurmaLabel(
+                    confirmedTeacherConflict.event.turmaId,
+                    confirmedTeacherConflict.event.subGrupo
+                );
+                const profNomes = confirmedTeacherConflict.teacherName;
                 const forceImport = confirm(
                     `Conflito de professor detectado.\n\n` +
-                    `${profNomes} ja tem aula de ${teacherConflictGlobal.disciplina} na turma ${turmaNomeConflito} no mesmo periodo/horario.\n\n` +
+                    `${profNomes} ja tem aula de ${confirmedTeacherConflict.event.disciplina} na turma ${turmaNomeConflito} em ${formatDateBR(confirmedTeacherConflict.date)} no horario ${confirmedTeacherConflict.horario}.\n\n` +
                     `Deseja importar/alocar mesmo assim?`
                 );
                 if (!forceImport) return;
@@ -5562,26 +5674,26 @@ function detectGlobalTeacherConflicts() {
 }
 
 function detectGlobalTeacherConflictsStable() {
-    // Retorna Map<nomeDocente, [{dia, horario, dataInicio, discA, discB}]>
     const conflictMap = new Map();
-    const allocs = (store.allocations || []).filter((a) => a && a.tipo !== 'pendente');
+    const allocs = (store.allocations || []).filter((alloc) => alloc && alloc.tipo !== 'pendente');
+    if (allocs.length === 0) return conflictMap;
+
     const diasNomes = ['', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab'];
+    const allTeachers = [...new Set(allocs.flatMap((alloc) => getAllocationTeachersForConflict(alloc)))];
+    if (allTeachers.length === 0) return conflictMap;
 
-    function getInvolvedTeachers(alloc) {
-        if (alloc.docentes && alloc.docentes.length > 0) {
-            return alloc.docentes
-                .map((d) => String(d.nome || '').trim())
-                .filter((n) => n && n.toUpperCase() !== 'A DEFINIR');
-        }
-        const n = String(alloc.docente || '').trim();
-        return n && n.toUpperCase() !== 'A DEFINIR' ? [n] : [];
-    }
-
-    function getAllocRange(alloc) {
+    const auditStart = allocs.reduce((minDate, alloc) => {
         const start = alloc.dataInicio || store.settings.termStart || '';
-        const end = alloc.dataFim || store.settings.termEnd || start;
-        return { start, end };
-    }
+        if (!start) return minDate;
+        return !minDate || start < minDate ? start : minDate;
+    }, '');
+    const auditEnd = allocs.reduce((maxDate, alloc) => {
+        const end = alloc.dataFim || alloc.dataInicio || store.settings.termEnd || '';
+        if (!end) return maxDate;
+        return !maxDate || end > maxDate ? end : maxDate;
+    }, '');
+
+    if (!auditStart || !auditEnd) return conflictMap;
 
     function formatSlotSummary(slotSet) {
         const ordered = [...slotSet].sort((x, y) => timeToMinutes(x) - timeToMinutes(y));
@@ -5596,129 +5708,99 @@ function detectGlobalTeacherConflictsStable() {
         return `${ordered.slice(0, 3).map((d) => diasNomes[d] || String(d)).join(', ')}...`;
     }
 
-    function summarizeIntensiveVsIntensive(intA, intB, rangeA, rangeB) {
-        const faixasA = buildIntensiveConflictFaixas(intA, rangeA.start, rangeA.end);
-        const faixasB = buildIntensiveConflictFaixas(intB, rangeB.start, rangeB.end);
-        if (faixasA.length === 0 || faixasB.length === 0) return null;
-
-        const conflictDays = new Set();
-        const conflictSlots = new Set();
-        let firstConflictStart = '';
-
-        for (const faixaA of faixasA) {
-            for (const faixaB of faixasB) {
-                if (!isDateOverlap(faixaA.inicio, faixaA.fim, faixaB.inicio, faixaB.fim)) continue;
-                const overlapStart = faixaA.inicio > faixaB.inicio ? faixaA.inicio : faixaB.inicio;
-                const daysA = Object.keys(faixaA.byDay).map((d) => parseInt(d, 10)).filter((d) => d >= 1 && d <= 6);
-
-                for (const day of daysA) {
-                    const sharedSlots = (faixaA.byDay[day] || []).filter((h) => (faixaB.byDay[day] || []).includes(h));
-                    if (sharedSlots.length === 0) continue;
-                    conflictDays.add(day);
-                    sharedSlots.forEach((h) => conflictSlots.add(h));
-                    if (!firstConflictStart || overlapStart < firstConflictStart) firstConflictStart = overlapStart;
-                }
-            }
-        }
-
-        if (conflictDays.size === 0 || conflictSlots.size === 0) return null;
-        return {
-            dia: formatDaySummary(conflictDays),
-            horario: formatSlotSummary(conflictSlots),
-            dataInicio: firstConflictStart || (rangeA.start > rangeB.start ? rangeA.start : rangeB.start)
-        };
+    function getTeacherEventIdentity(event, slotKey) {
+        return [
+            String(event?.id || ''),
+            String(event?.turmaId || ''),
+            String(event?.disciplina || ''),
+            String(event?.tipo || ''),
+            String(event?.subGrupo || ''),
+            slotKey
+        ].join('|');
     }
 
-    function summarizeRegularVsIntensive(regAlloc, intAlloc, rangeReg, rangeInt) {
-        const regDay = parseInt(regAlloc.diaSemana, 10);
-        const regSlot = String(regAlloc.horario || '').trim();
-        if (Number.isNaN(regDay) || regDay < 1 || regDay > 6 || !regSlot) return null;
+    function getTeacherEventLabel(event) {
+        return `${getTurmaLabel(event.turmaId, event.subGrupo)} - ${event.disciplina}`;
+    }
 
-        const faixasInt = buildIntensiveConflictFaixas(intAlloc, rangeInt.start, rangeInt.end);
-        if (faixasInt.length === 0) return null;
+    allTeachers.forEach((teacherName) => {
+        const eventsByDate = getCalendarEvents(null, auditStart, auditEnd, teacherName);
+        const pairAggregates = new Map();
 
-        let firstConflictStart = '';
-        faixasInt.forEach((faixa) => {
-            if (!isDateOverlap(rangeReg.start, rangeReg.end, faixa.inicio, faixa.fim)) return;
-            const slotsDay = faixa.byDay?.[regDay] || [];
-            if (!slotsDay.includes(regSlot)) return;
-            const overlapStart = rangeReg.start > faixa.inicio ? rangeReg.start : faixa.inicio;
-            if (!firstConflictStart || overlapStart < firstConflictStart) firstConflictStart = overlapStart;
+        Object.entries(eventsByDate || {}).forEach(([dateStr, events]) => {
+            const slotMap = new Map();
+
+            (events || []).forEach((event) => {
+                const slotKey = normalizeConflictSlotLabel(event?.horario || '');
+                if (!slotKey) return;
+
+                if (!slotMap.has(slotKey)) slotMap.set(slotKey, []);
+                const items = slotMap.get(slotKey);
+                const identity = getTeacherEventIdentity(event, slotKey);
+                if (!items.some((item) => item.identity === identity)) {
+                    items.push({ identity, event });
+                }
+            });
+
+            slotMap.forEach((items, slotKey) => {
+                if (items.length < 2) return;
+
+                for (let i = 0; i < items.length; i++) {
+                    for (let j = i + 1; j < items.length; j++) {
+                        const eventA = items[i].event;
+                        const eventB = items[j].event;
+
+                        if (
+                            String(eventA?.turmaId) === String(eventB?.turmaId) &&
+                            String(eventA?.disciplina || '') === String(eventB?.disciplina || '') &&
+                            String(eventA?.tipo || '') === String(eventB?.tipo || '')
+                        ) {
+                            continue;
+                        }
+
+                        const labelA = getTeacherEventLabel(eventA);
+                        const labelB = getTeacherEventLabel(eventB);
+                        const orderedLabels = [labelA, labelB].sort((a, b) => a.localeCompare(b, 'pt-BR', { sensitivity: 'base' }));
+                        const pairKey = `${orderedLabels[0]}|||${orderedLabels[1]}`;
+                        const dayOfWeek = new Date(dateStr + 'T12:00:00').getDay();
+
+                        if (!pairAggregates.has(pairKey)) {
+                            pairAggregates.set(pairKey, {
+                                discA: orderedLabels[0],
+                                discB: orderedLabels[1],
+                                firstDate: dateStr,
+                                daySet: new Set(),
+                                slotSet: new Set()
+                            });
+                        }
+
+                        const aggregate = pairAggregates.get(pairKey);
+                        if (dateStr < aggregate.firstDate) aggregate.firstDate = dateStr;
+                        if (dayOfWeek >= 1 && dayOfWeek <= 6) aggregate.daySet.add(dayOfWeek);
+                        aggregate.slotSet.add(slotKey);
+                    }
+                }
+            });
         });
 
-        if (!firstConflictStart) return null;
-        return {
-            dia: diasNomes[regDay] || String(regDay),
-            horario: regSlot,
-            dataInicio: firstConflictStart
-        };
-    }
+        if (pairAggregates.size === 0) return;
 
-    for (let i = 0; i < allocs.length; i++) {
-        for (let j = i + 1; j < allocs.length; j++) {
-            const a = allocs[i];
-            const b = allocs[j];
-
-            if (String(a.turmaId) === String(b.turmaId) && a.disciplina === b.disciplina && a.tipo === b.tipo) continue;
-
-            const teachersA = getInvolvedTeachers(a);
-            const teachersB = getInvolvedTeachers(b);
-            const sharedTeachers = teachersA.filter((t) => teachersB.includes(t));
-            if (sharedTeachers.length === 0) continue;
-
-            const rangeA = getAllocRange(a);
-            const rangeB = getAllocRange(b);
-            if (!rangeA.start || !rangeA.end || !rangeB.start || !rangeB.end) continue;
-            if (!isDateOverlap(rangeA.start, rangeA.end, rangeB.start, rangeB.end)) continue;
-
-            let summary = null;
-
-            if (a.tipo !== 'intensiva' && b.tipo !== 'intensiva') {
-                const dayA = parseInt(a.diaSemana, 10);
-                const dayB = parseInt(b.diaSemana, 10);
-                const slotA = String(a.horario || '').trim();
-                const slotB = String(b.horario || '').trim();
-                if (dayA === dayB && slotA && slotA === slotB) {
-                    summary = {
-                        dia: diasNomes[dayA] || String(dayA),
-                        horario: slotA,
-                        dataInicio: rangeA.start > rangeB.start ? rangeA.start : rangeB.start
-                    };
-                }
-            } else if (a.tipo === 'intensiva' && b.tipo === 'intensiva') {
-                summary = summarizeIntensiveVsIntensive(a, b, rangeA, rangeB);
-            } else {
-                const intAlloc = a.tipo === 'intensiva' ? a : b;
-                const regAlloc = a.tipo === 'intensiva' ? b : a;
-                const rangeReg = a.tipo === 'intensiva' ? rangeB : rangeA;
-                const rangeInt = a.tipo === 'intensiva' ? rangeA : rangeB;
-                summary = summarizeRegularVsIntensive(regAlloc, intAlloc, rangeReg, rangeInt);
-            }
-
-            if (!summary) continue;
-
-            const detail = {
-                dia: summary.dia,
-                horario: summary.horario,
-                dataInicio: summary.dataInicio,
-                discA: `${getTurmaLabel(a.turmaId)} - ${a.disciplina}`,
-                discB: `${getTurmaLabel(b.turmaId)} - ${b.disciplina}`,
-            };
-
-            sharedTeachers.forEach((t) => {
-                if (!conflictMap.has(t)) conflictMap.set(t, []);
-                const existing = conflictMap.get(t);
-                const isDup = existing.some((e) =>
-                    e.dia === detail.dia &&
-                    e.horario === detail.horario &&
-                    e.dataInicio === detail.dataInicio &&
-                    ((e.discA === detail.discA && e.discB === detail.discB) ||
-                        (e.discA === detail.discB && e.discB === detail.discA))
-                );
-                if (!isDup) existing.push(detail);
+        const details = [...pairAggregates.values()]
+            .map((item) => ({
+                dia: formatDaySummary(item.daySet),
+                horario: formatSlotSummary(item.slotSet),
+                dataInicio: item.firstDate,
+                discA: item.discA,
+                discB: item.discB
+            }))
+            .sort((a, b) => {
+                if (a.dataInicio !== b.dataInicio) return a.dataInicio.localeCompare(b.dataInicio);
+                if (a.discA !== b.discA) return a.discA.localeCompare(b.discA, 'pt-BR', { sensitivity: 'base' });
+                return a.discB.localeCompare(b.discB, 'pt-BR', { sensitivity: 'base' });
             });
-        }
-    }
+
+        if (details.length > 0) conflictMap.set(teacherName, details);
+    });
 
     return conflictMap;
 }
