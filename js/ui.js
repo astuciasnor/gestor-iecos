@@ -1303,7 +1303,9 @@ function normalizeDisciplinaInputValue(rawValue) {
 }
 
 function collapseFaixasForNewComponent() {
-    ['inp-data-inicio-f2', 'inp-data-fim-f2', 'inp-data-inicio-f3', 'inp-data-fim-f3'].forEach((id) => {
+    const preferredStart = getPreferredStartDateForCurrentTurma({ useCurrentUI: true });
+
+    ['inp-data-inicio-f1', 'inp-data-fim-f1', 'inp-data-inicio-f2', 'inp-data-fim-f2', 'inp-data-inicio-f3', 'inp-data-fim-f3'].forEach((id) => {
         const el = document.getElementById(id);
         if (el) el.value = '';
     });
@@ -1318,7 +1320,7 @@ function collapseFaixasForNewComponent() {
     setFaixaStatus(2, 0);
     setFaixaStatus(3, 0);
 
-    applyFaixaDateAutofill({ forceSingleBounds: true });
+    applyFaixaDateAutofill({ forceSingleBounds: true, preferredStart });
     refreshPendingFaixaStartPickUI();
     updateWeeklyContextNote();
     if (store.selectedTurma) renderWeeklyGrid();
@@ -1523,8 +1525,85 @@ function rangeOverlaps(rangeA, rangeB) {
     return isDateOverlap(rangeA.start, rangeA.end, rangeB.start, rangeB.end);
 }
 
-function getPreferredStartDateForCurrentTurma() {
+function isValidISODateValue(value) {
+    const text = String(value || '').trim();
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(text)) return false;
+    const date = new Date(`${text}T12:00:00`);
+    return !Number.isNaN(date.getTime());
+}
+
+function getLastValidFaixaFromUI() {
+    const faixas = [];
+
+    for (let i = 1; i <= 3; i++) {
+        const inicio = String(document.getElementById(`inp-data-inicio-f${i}`)?.value || '').trim();
+        const rawFim = String(document.getElementById(`inp-data-fim-f${i}`)?.value || '').trim();
+        const nextInicio = String(document.getElementById(`inp-data-inicio-f${i + 1}`)?.value || '').trim();
+        const patternCount = normalizeFaixaPattern(faixasPatterns[i]).length;
+
+        if (!isValidISODateValue(inicio)) continue;
+        if (i > 1 && patternCount === 0 && !isValidISODateValue(rawFim) && !isValidISODateValue(nextInicio)) continue;
+
+        let fim = rawFim;
+        if (!isValidISODateValue(fim) && isValidISODateValue(nextInicio)) {
+            fim = shiftISODate(nextInicio, -1);
+        }
+        if (!isValidISODateValue(fim)) fim = inicio;
+        if (fim < inicio) fim = inicio;
+
+        faixas.push({ idx: i, inicio, fim });
+    }
+
+    faixas.sort((a, b) => {
+        if (a.fim !== b.fim) return a.fim.localeCompare(b.fim);
+        if (a.inicio !== b.inicio) return a.inicio.localeCompare(b.inicio);
+        return a.idx - b.idx;
+    });
+
+    return faixas.length > 0 ? faixas[faixas.length - 1] : null;
+}
+
+function getLastValidAllocationEndForCurrentTurma() {
+    if (!store.selectedTurma || !Array.isArray(store.allocations)) return '';
+
+    let latestEnd = '';
+
+    store.allocations.forEach((alloc) => {
+        if (String(alloc?.turmaId) !== String(store.selectedTurma)) return;
+        if (String(alloc?.tipo || '').toLowerCase() === 'pendente') return;
+
+        let candidateEnd = '';
+        if (alloc?.tipo === 'intensiva') {
+            const faixas = getNormalizedIntensiveFaixas(alloc);
+            const lastFaixa = faixas.length > 0 ? faixas[faixas.length - 1] : null;
+            candidateEnd = String(lastFaixa?.fim || lastFaixa?.inicio || alloc?.dataFim || alloc?.dataInicio || '').trim();
+        } else {
+            candidateEnd = String(alloc?.dataFim || alloc?.dataInicio || '').trim();
+        }
+
+        if (!isValidISODateValue(candidateEnd)) return;
+        if (!latestEnd || candidateEnd > latestEnd) latestEnd = candidateEnd;
+    });
+
+    return latestEnd;
+}
+
+function getPreferredStartDateForCurrentTurma(options = {}) {
+    const { useCurrentUI = false } = options;
     const termStart = store.settings.termStart || inpTermStart?.value || calStart?.value || '';
+
+    if (useCurrentUI) {
+        const lastUiFaixa = getLastValidFaixaFromUI();
+        if (lastUiFaixa?.fim) {
+            return shiftISODate(lastUiFaixa.fim, 1) || lastUiFaixa.fim;
+        }
+    }
+
+    const latestAllocationEnd = getLastValidAllocationEndForCurrentTurma();
+    if (latestAllocationEnd) {
+        return shiftISODate(latestAllocationEnd, 1) || latestAllocationEnd;
+    }
+
     const turmaPreferred = store.selectedTurma ? store.getTurmaLastStart(store.selectedTurma) : '';
     return turmaPreferred || termStart;
 }
@@ -1761,7 +1840,7 @@ function setupWeekAutoPositionControls() {
 }
 
 function applyFaixaDateAutofill(options = {}) {
-    const { forceSingleBounds = false } = options;
+    const { forceSingleBounds = false, preferredStart = '' } = options;
 
     const f1Ini = document.getElementById('inp-data-inicio-f1');
     const f1Fim = document.getElementById('inp-data-fim-f1');
@@ -1770,9 +1849,9 @@ function applyFaixaDateAutofill(options = {}) {
     const f3Ini = document.getElementById('inp-data-inicio-f3');
     const f3Fim = document.getElementById('inp-data-fim-f3');
 
-    const preferredStart = getPreferredStartDateForCurrentTurma();
+    const resolvedPreferredStart = preferredStart || getPreferredStartDateForCurrentTurma();
     const isEditingF1Start = f1Ini && document.activeElement === f1Ini;
-    if (preferredStart && f1Ini && !f1Ini.value && !isEditingF1Start) f1Ini.value = preferredStart;
+    if (resolvedPreferredStart && f1Ini && !f1Ini.value && !isEditingF1Start) f1Ini.value = resolvedPreferredStart;
 
     const hasF2 = !!(f2Ini && f2Ini.value);
     const hasF3 = !!(f3Ini && f3Ini.value);
@@ -4723,10 +4802,12 @@ function renderOfertasList() {
                     setTimeout(() => { inputConfig.cor.value = a.cor; }, 50);
                 }
                 enforceCanonicalFaixaMode();
-                if (inputConfig.inicio && a.dataInicio) inputConfig.inicio.value = a.dataInicio;
 
                 if (a.tipo === 'intensiva') {
+                    if (inputConfig.inicio && a.dataInicio) inputConfig.inicio.value = a.dataInicio;
                     hydrateFaixasFromIntensiva(a);
+                } else {
+                    collapseFaixasForNewComponent();
                 }
 
                 const chkMulti = document.getElementById('chk-multi-docente');
