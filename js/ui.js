@@ -301,6 +301,68 @@ export function showToastWarning(message, type = 'error', customDuration = null)
     }, duration);
 }
 
+async function copyTextToClipboard(text) {
+    if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(text);
+        return;
+    }
+
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+}
+
+function flashButtonCopyState(btn, label = 'Copiado', duration = 2000) {
+    if (!btn) return;
+
+    const origHtml = btn.innerHTML;
+    const origBg = btn.style.backgroundColor;
+    const origColor = btn.style.color;
+    const origBorder = btn.style.borderColor;
+
+    btn.innerHTML = label;
+    btn.style.backgroundColor = '#27ae60';
+    btn.style.color = '#ffffff';
+    btn.style.borderColor = '#27ae60';
+
+    setTimeout(() => {
+        btn.innerHTML = origHtml;
+        btn.style.backgroundColor = origBg;
+        btn.style.color = origColor;
+        btn.style.borderColor = origBorder;
+    }, duration);
+}
+
+function setupPublishHelpCopyButton() {
+    const btn = document.getElementById('btn-copy-publish-command');
+    const feedback = document.getElementById('publish-command-feedback');
+    if (!btn || btn.dataset.bound === '1') return;
+
+    btn.dataset.bound = '1';
+    btn.addEventListener('click', async () => {
+        const command = btn.dataset.command || 'python tools/publish_online.py --push';
+        try {
+            await copyTextToClipboard(command);
+            flashButtonCopyState(btn, 'Comando copiado');
+            if (feedback) {
+                feedback.textContent = 'Comando copiado.';
+                setTimeout(() => {
+                    if (feedback.textContent === 'Comando copiado.') feedback.innerHTML = '&nbsp;';
+                }, 2200);
+            }
+        } catch (err) {
+            console.error('Falha ao copiar comando de publicacao', err);
+            if (feedback) feedback.textContent = 'Nao foi possivel copiar. Copie manualmente.';
+            showToastWarning('Nao foi possivel copiar o comando. Copie manualmente.', 'warning', 2600);
+        }
+    });
+}
+
 function timeToMinutes(str) {
     if (!str) return 99999;
     const match = str.match(/(\d{1,2}):(\d{2})/);
@@ -3597,6 +3659,7 @@ export function initUI() {
 
     initPeriodoLetivoETurno();
     setupComponentStartControl();
+    setupPublishHelpCopyButton();
 
     // ORDEM IMPORTANTE: Primeiro conserta o layout e encapsula os selects
     applySidebarLayoutFixes();
@@ -4984,33 +5047,9 @@ function renderOfertasList() {
 
     const handleCopySigaa = async (btn) => {
         const textToCopy = btn.dataset.code;
-        const origHtml = btn.innerHTML;
-        const origBg = btn.style.backgroundColor;
-        const origColor = btn.style.color;
-        const origBorder = btn.style.borderColor;
         try {
-            if (navigator.clipboard && window.isSecureContext) {
-                await navigator.clipboard.writeText(textToCopy);
-            } else {
-                const ta = document.createElement('textarea');
-                ta.value = textToCopy;
-                ta.style.position = 'fixed';
-                ta.style.opacity = '0';
-                document.body.appendChild(ta);
-                ta.select();
-                document.execCommand('copy');
-                document.body.removeChild(ta);
-            }
-            btn.innerHTML = 'Copiado';
-            btn.style.backgroundColor = '#27ae60';
-            btn.style.color = '#ffffff';
-            btn.style.borderColor = '#27ae60';
-            setTimeout(() => {
-                btn.innerHTML = origHtml;
-                btn.style.backgroundColor = origBg;
-                btn.style.color = origColor;
-                btn.style.borderColor = origBorder;
-            }, 2000);
+            await copyTextToClipboard(textToCopy);
+            flashButtonCopyState(btn);
         } catch (err) {
             console.error('Falha ao copiar', err);
         }

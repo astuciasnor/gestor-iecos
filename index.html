@@ -1083,10 +1083,9 @@
                                     Calendário (Turma/Professor) e Gráfico Gantt, use os botões azuis <b>🔄
                                         Atualizar</b> sempre que fizer uma mudança, para renderizar as novidades
                                     imediatamente.</li>
-                                <li>🌐 <strong>Publicação:</strong><br>O botão verde <b>"Publicar Online"</b> valida e
-                                    gera o arquivo final (`alocacoes_publicas.json`). Depois, execute o script
-                                    `python tools/publish_online.py --push`
-                                    para commit/push com segurança.</li>
+                                <li>🌐 <strong>Publicação:</strong><br>O botão verde <b>"Publicar Online"</b> gera o
+                                    arquivo final <code>alocacoes_publicas.json</code> para publicacao controlada no
+                                    repositório.</li>
                             </ul>
                         </div>
 
@@ -1099,6 +1098,28 @@
                             <p style="font-weight: bold; color: #2c3e50; margin-top: 5px;">👨‍💻 Prof. Evaldo Silva</p>
                         </div>
 
+                        <div class="help-card help-card-tip"
+                            style="background: #edf7ed; border: 1px solid #b7dfb9; padding:15px; border-radius:8px; margin-top:15px;">
+                            <h4 style="margin-top:0; color:#1e7e34;">Publicacao do arquivo publico</h4>
+                            <p style="font-size: 0.92em; margin-bottom:10px;">
+                                Para publicar o arquivo <code>alocacoes_publicas.json</code> com validacao e envio ao
+                                GitHub, execute no terminal, a partir da raiz do projeto:
+                            </p>
+                            <div
+                                style="background:#173f35; color:#f4fff7; border-radius:8px; padding:12px; font-family:Consolas, 'Courier New', monospace; font-size:0.94em; line-height:1.5; word-break:break-all;">
+                                python tools/publish_online.py --push
+                            </div>
+                            <div style="display:flex; align-items:center; gap:10px; margin-top:12px; flex-wrap:wrap;">
+                                <button type="button" id="btn-copy-publish-command"
+                                    data-command="python tools/publish_online.py --push"
+                                    style="background:#1e7e34; color:#fff; border:none; border-radius:6px; padding:8px 12px; font-weight:bold; cursor:pointer;">
+                                    Copiar comando
+                                </button>
+                                <span id="publish-command-feedback"
+                                    style="font-size:0.85em; color:#2f6f3e; min-height:1.2em;">&nbsp;</span>
+                            </div>
+                        </div>
+
                         <div style="margin-top: 20px; font-size: 0.8em; color: #999; text-align: center;">
                             <p>Nota Técnica: Os dados base operam via pipeline Python. Não limpe o cache de navegação
                                 antes de exportar seu trabalho diário (JSON).</p>
@@ -1109,7 +1130,7 @@
         </main>
     </div>
 
-    <script type="module" src="js/main.js?v=20260307b"></script>
+    <script type="module" src="js/main.js?v=20260307c"></script>
 </body>
 
 </html>

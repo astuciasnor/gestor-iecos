@@ -4,6 +4,8 @@ Publica o arquivo alocacoes_publicas.json com validacoes e travas de seguranca.
 
 Uso tipico:
   python tools/publish_online.py
+  python tools/publish_online.py --check
+  python tools/publish_online.py --no-git
   python tools/publish_online.py --push
 """
 
@@ -211,6 +213,37 @@ def build_target_content(payload: Any) -> str:
     return json.dumps(payload, ensure_ascii=False, indent=2) + "\n"
 
 
+def describe_source_mode(source_mode: str) -> str:
+    if source_mode == "manual":
+        return "Origem informada manualmente."
+    if source_mode == "downloads":
+        return "Origem detectada automaticamente em Downloads."
+    if source_mode == "repo":
+        return "Origem automatica nao encontrada em Downloads; usando arquivo atual do repositorio."
+    return "Origem nao identificada."
+
+
+def print_publication_summary(
+    source_mode: str,
+    source_path: Path,
+    target_path: Path,
+    allocations_count: int,
+    term_start: Any,
+    term_end: Any,
+) -> None:
+    print("Resumo da publicacao:")
+    print(f"  {describe_source_mode(source_mode)}")
+    print(f"  Origem: {source_path}")
+    print(f"  Destino: {target_path}")
+    print(f"  Alocacoes: {allocations_count}")
+    print(f"  Periodo: {term_start} a {term_end}")
+
+
+def print_public_urls() -> None:
+    print(f"URL publica: {PUBLIC_URL}")
+    print(f"JSON publico: {PUBLIC_JSON_URL}")
+
+
 def main() -> int:
     repo_root = Path(__file__).resolve().parent.parent
     default_target = repo_root / "alocacoes_publicas.json"
@@ -238,6 +271,16 @@ def main() -> int:
         "--push",
         action="store_true",
         help="Executa git push origin main apos commit.",
+    )
+    parser.add_argument(
+        "--check",
+        action="store_true",
+        help="Apenas localiza, valida e resume a publicacao, sem gravar ou executar Git.",
+    )
+    parser.add_argument(
+        "--no-git",
+        action="store_true",
+        help="Grava o arquivo localmente, mas pula git add, commit e push.",
     )
     parser.add_argument(
         "--yes",
@@ -285,20 +328,25 @@ def main() -> int:
     debug_print(args.debug, "git_status", git_status or "<limpo>")
 
     if source_mode == "missing" or source_path is None:
-        print("Erro: nenhuma origem valida encontrada.", file=sys.stderr)
+        print("Erro: nenhuma origem valida foi encontrada.", file=sys.stderr)
         print(
-            "Nao foi encontrado nenhum arquivo compatível em Downloads e tambem nao existe "
+            "Nao foi encontrado nenhum arquivo compativel em Downloads e tambem nao existe "
             "alocacoes_publicas.json na raiz do repositorio.",
             file=sys.stderr,
         )
         print(
-            "Informe manualmente com --from-download ou gere o arquivo pelo botao Publicar Online.",
+            "Proximo passo: gere o arquivo pelo botao Publicar Online ou informe a origem com "
+            "--from-download.",
             file=sys.stderr,
         )
         return 1
 
     if not source_path.exists():
         print(f"Erro: arquivo de origem nao encontrado: {source_path}", file=sys.stderr)
+        print(
+            "Proximo passo: confirme o caminho informado ou gere um novo download antes de rodar o script.",
+            file=sys.stderr,
+        )
         return 1
 
     missing = ensure_required_files(repo_root)
@@ -315,14 +363,22 @@ def main() -> int:
         payload = json.loads(source_path.read_text(encoding="utf-8"))
     except json.JSONDecodeError as exc:
         print(f"Erro: JSON invalido em {source_path}: {exc}", file=sys.stderr)
+        print(
+            "Proximo passo: gere novamente o arquivo pelo botao Publicar Online e repita a validacao.",
+            file=sys.stderr,
+        )
         return 1
 
     print("JSON lido com sucesso.")
     errors = validate_public_json(payload)
     if errors:
-        print("Erro: validacao falhou. Publicacao cancelada.", file=sys.stderr)
+        print("Erro: a validacao do JSON falhou. Publicacao cancelada.", file=sys.stderr)
         for item in errors:
             print(f"  - {item}", file=sys.stderr)
+        print(
+            "Proximo passo: corrija o arquivo de origem ou gere um novo export antes de publicar.",
+            file=sys.stderr,
+        )
         return 1
     print("JSON validado com sucesso.")
 
@@ -331,17 +387,26 @@ def main() -> int:
     term_start = settings.get("termStart")
     term_end = settings.get("termEnd")
 
-    print("Resumo da publicacao:")
-    if source_mode == "downloads":
-        print("  Origem detectada automaticamente em Downloads.")
-    elif source_mode == "repo":
-        print("  Origem automatica nao encontrada em Downloads; usando arquivo atual do repositorio.")
-    print(f"  Origem: {source_path}")
-    print(f"  Destino: {target_path}")
-    print(f"  Alocações: {allocations_count}")
-    print(f"  Período: {term_start} a {term_end}")
+    print_publication_summary(
+        source_mode=source_mode,
+        source_path=source_path,
+        target_path=target_path,
+        allocations_count=allocations_count,
+        term_start=term_start,
+        term_end=term_end,
+    )
 
-    if not args.yes and not confirm("Confirmar gravacao e commit do arquivo publico?"):
+    if args.check:
+        print("Verificacao concluida com sucesso. Nenhum arquivo foi gravado e nenhuma etapa Git foi executada.")
+        print("Se desejar publicar depois, rode: python tools/publish_online.py --push")
+        print_public_urls()
+        return 0
+
+    confirm_prompt = "Confirmar gravacao do arquivo publico?"
+    if not args.no_git:
+        confirm_prompt = "Confirmar gravacao e commit do arquivo publico?"
+
+    if not args.yes and not confirm(confirm_prompt):
         print("Operacao cancelada.")
         return 0
 
@@ -372,14 +437,22 @@ def main() -> int:
     debug_print(args.debug, "target_exists_after", target_path.exists())
     debug_print(args.debug, "target_size_after", file_size_or_none(target_path))
 
+    if args.no_git:
+        print("Atualizacao local concluida com sucesso.")
+        print("Nenhuma etapa Git foi executada porque voce usou --no-git.")
+        print("Quando quiser publicar, rode novamente sem --no-git ou use --push.")
+        if args.push:
+            print("Observacao: --push foi ignorado porque --no-git desativa git add, commit e push.")
+        print_public_urls()
+        return 0
+
     if not git_publish_allowed:
-        print("Arquivo de destino resolvido e gravado/localmente atualizado com sucesso.")
-        print("Etapa Git bloqueada pelas travas de seguranca:")
+        print("Arquivo de destino resolvido e atualizado localmente com sucesso.")
+        print("A etapa Git foi bloqueada pelas travas de seguranca:")
         for reason in git_publish_reasons:
             print(f"  - {reason}")
-        print("O arquivo no repositorio local foi preservado; regularize o Git e rode novamente para commitar.")
-        print(f"URL pública: {PUBLIC_URL}")
-        print(f"JSON público: {PUBLIC_JSON_URL}")
+        print("Proximo passo: regularize o Git e rode novamente para commitar ou publicar.")
+        print_public_urls()
         return 0
 
     rel_target = target_path.relative_to(repo_root).as_posix()
@@ -387,11 +460,11 @@ def main() -> int:
     run_git(repo_root, ["add", "--", rel_target], check=True)
     if not has_staged_changes(repo_root, rel_target):
         print(
-            "O arquivo publico foi resolvido corretamente, mas o conteudo final esta identico ao que ja "
-            "estava no repositorio. Nao ha alteracao para commitar."
+            "O arquivo publico foi validado e comparado com o repositorio, mas o conteudo final ja era "
+            "identico ao existente. Nao ha alteracao para commitar."
         )
-        print(f"URL pública: {PUBLIC_URL}")
-        print(f"JSON público: {PUBLIC_JSON_URL}")
+        print("Proximo passo: nenhum. O repositorio ja estava atualizado.")
+        print_public_urls()
         return 0
 
     run_git(repo_root, ["commit", "-m", args.message], check=True)
@@ -400,12 +473,13 @@ def main() -> int:
     if args.push:
         if args.yes or confirm("Deseja enviar para origin/main agora?"):
             run_git(repo_root, ["push", "origin", "main"], check=True)
-            print("Push concluido. Publicacao no GitHub Pages sera atualizada.")
+            print("Push concluido. A publicacao no GitHub Pages sera atualizada em seguida.")
         else:
-            print("Push nao executado. Faca manualmente quando desejar.")
+            print("Push nao executado. Proximo passo: rode git push origin main quando desejar.")
+    else:
+        print("Commit pronto. Proximo passo: rode git push origin main quando quiser publicar.")
 
-    print(f"URL pública: {PUBLIC_URL}")
-    print(f"JSON público: {PUBLIC_JSON_URL}")
+    print_public_urls()
     return 0
 
 
