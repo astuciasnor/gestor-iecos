@@ -353,46 +353,30 @@ input[type="date"] { color-scheme: dark; }
     line-height: 1.4;
 }
 
-.week-autopos-row {
+#auto-week-position-row {
+    display: none !important;
+}
+
+.component-start-row {
     display: flex;
-    align-items: center;
-    gap: 10px;
+    flex-direction: column;
+    gap: 4px;
     margin-top: 6px;
-    min-height: 18px;
-    color: #d8efe3;
+}
+
+.component-start-label {
+    margin: 0;
     font-size: 0.78rem;
     line-height: 1.1;
+    color: #d8efe3;
 }
 
-.week-autopos-toggle,
-.week-autopos-mode {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    margin: 0;
-    cursor: pointer;
-    user-select: none;
-}
-
-.week-autopos-toggle input,
-.week-autopos-mode input {
-    width: auto;
-    margin: 0;
-    accent-color: #d8efe3;
-    transform: scale(0.9);
-}
-
-.week-autopos-toggle span,
-.week-autopos-mode span {
-    white-space: nowrap;
-}
-
-.week-autopos-modes {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    color: #feffcc;
-    font-size: 0.75rem;
+.component-start-input {
+    width: 100%;
+    max-width: 210px;
+    height: 32px;
+    padding: 4px 8px;
+    font-size: 0.88rem;
 }
 
 .weekly-faixas-panel {

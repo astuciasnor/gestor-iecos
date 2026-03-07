@@ -1839,6 +1839,80 @@ function setupWeekAutoPositionControls() {
     });
 }
 
+function syncComponentStartInputFromFaixa1() {
+    if (!inputConfig.inicio) return;
+    const faixa1Start = document.getElementById('inp-data-inicio-f1')?.value || '';
+    inputConfig.inicio.value = faixa1Start;
+}
+
+function restoreComponentStartPickerValueIfNeeded() {
+    if (!inputConfig.inicio) return;
+    const restoreValue = inputConfig.inicio.dataset.restorePickerValue || '';
+    const anchorValue = inputConfig.inicio.dataset.pickerAnchorValue || '';
+    if (restoreValue && inputConfig.inicio.value === anchorValue) {
+        inputConfig.inicio.value = restoreValue;
+    }
+    delete inputConfig.inicio.dataset.restorePickerValue;
+    delete inputConfig.inicio.dataset.pickerAnchorValue;
+}
+
+function primeComponentStartPickerAnchor() {
+    if (!inputConfig.inicio || !store.selectedTurma) return;
+
+    const anchorValue = store.getTurmaLastStart(store.selectedTurma);
+    const currentValue = String(inputConfig.inicio.value || '').trim();
+    if (!anchorValue || !currentValue || anchorValue === currentValue) return;
+
+    inputConfig.inicio.dataset.restorePickerValue = currentValue;
+    inputConfig.inicio.dataset.pickerAnchorValue = anchorValue;
+    inputConfig.inicio.value = anchorValue;
+}
+
+function setupComponentStartControl() {
+    if (!inputConfig.inicio || inputConfig.inicio.dataset.bound === '1') return;
+    inputConfig.inicio.dataset.bound = '1';
+    syncComponentStartInputFromFaixa1();
+
+    inputConfig.inicio.addEventListener('pointerdown', () => {
+        primeComponentStartPickerAnchor();
+    });
+
+    inputConfig.inicio.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter' || event.key === ' ' || event.key === 'ArrowDown') {
+            primeComponentStartPickerAnchor();
+        }
+    });
+
+    inputConfig.inicio.addEventListener('change', () => {
+        const value = String(inputConfig.inicio.value || '').trim();
+        const faixa1StartEl = document.getElementById('inp-data-inicio-f1');
+        if (!faixa1StartEl) return;
+
+        delete inputConfig.inicio.dataset.restorePickerValue;
+        delete inputConfig.inicio.dataset.pickerAnchorValue;
+        faixa1StartEl.value = value;
+        if (value && store.selectedTurma) {
+            store.setTurmaLastStart(store.selectedTurma, value);
+        }
+
+        applyFaixaDateAutofill({ forceSingleBounds: true, preferredStart: value });
+        setFaixaStatus(1, getFaixaSlotsAndDays(1).pattern.length);
+        setFaixaStatus(2, getFaixaSlotsAndDays(2).pattern.length);
+        setFaixaStatus(3, getFaixaSlotsAndDays(3).pattern.length);
+
+        if (value) {
+            activeFaixaIndex = 1;
+            autoEnterWeeklyEditingForFaixa(1);
+        } else if (store.selectedTurma) {
+            renderWeeklyGrid();
+        }
+    });
+
+    inputConfig.inicio.addEventListener('blur', () => {
+        restoreComponentStartPickerValueIfNeeded();
+    });
+}
+
 function applyFaixaDateAutofill(options = {}) {
     const { forceSingleBounds = false, preferredStart = '' } = options;
 
@@ -1882,6 +1956,7 @@ function applyFaixaDateAutofill(options = {}) {
         if (f3Ini) f3Ini.value = '';
     }
 
+    syncComponentStartInputFromFaixa1();
     updateWeeklyFaixaHoursDisplay();
 }
 
@@ -1961,6 +2036,9 @@ function setupFaixaControls() {
                     }
 
                     if (pendingFaixaStartPick === i && iniEl.value) clearPendingFaixaStartPick();
+                    if (i === 1 && iniEl.value && store.selectedTurma) {
+                        store.setTurmaLastStart(store.selectedTurma, iniEl.value);
+                    }
                     applyFaixaDateAutofill();
                     setFaixaStatus(1, getFaixaSlotsAndDays(1).pattern.length);
                     setFaixaStatus(2, getFaixaSlotsAndDays(2).pattern.length);
@@ -2774,6 +2852,105 @@ function alignFaixasToExecutionEnd(faixasInput, executionEnd) {
     return clipped;
 }
 
+function buildFinalAdjustmentFaixaSuggestion(faixasConfig = [], execution = {}) {
+    const normalized = Array.isArray(faixasConfig)
+        ? faixasConfig.map(normalizeFaixaEntry).filter(Boolean).sort((a, b) => a.inicio.localeCompare(b.inicio))
+        : [];
+
+    if (normalized.length !== 1) return null;
+
+    const finalDate = String(execution?.dataFim || '').trim();
+    if (!finalDate) return null;
+
+    const aligned = alignFaixasToExecutionEnd(normalized, finalDate);
+    const baseFaixa = aligned[0];
+    if (!baseFaixa?.inicio || finalDate <= baseFaixa.inicio) return null;
+
+    const usedDates = Object.keys(execution?.byDate || {}).sort();
+    if (usedDates.length < 2) return null;
+
+    const adjustmentStart = usedDates[usedDates.length - 2];
+    if (!adjustmentStart || adjustmentStart <= baseFaixa.inicio) return null;
+
+    const adjustmentStartDow = new Date(`${adjustmentStart}T12:00:00`).getDay();
+    const finalDow = new Date(`${finalDate}T12:00:00`).getDay();
+    if (adjustmentStartDow < 1 || adjustmentStartDow > 6) return null;
+    if (finalDow < 1 || finalDow > 6) return null;
+    if (adjustmentStartDow === finalDow) return null;
+
+    const usedSlots = Array.isArray(execution?.byDate?.[finalDate]) ? execution.byDate[finalDate].slice() : [];
+    const fullDaySlots = (baseFaixa.drawnSlotsByDay?.[finalDow] || baseFaixa.slots || []).slice();
+    if (usedSlots.length === 0 || fullDaySlots.length === 0) return null;
+
+    const partialFinalDay = usedSlots.length < fullDaySlots.length;
+    const finalWeekStart = getWeekStartISO(finalDate);
+    const isolatedFinalDay = usedDates.length > 1
+        && finalWeekStart
+        && usedDates.filter((dateStr) => getWeekStartISO(dateStr) === finalWeekStart).length === 1;
+
+    if (!partialFinalDay && !isolatedFinalDay) return null;
+
+    const mainFaixaEnd = addDaysISO(adjustmentStart, -1);
+    if (!mainFaixaEnd || mainFaixaEnd < baseFaixa.inicio) return null;
+
+    const mainFaixa = {
+        ...baseFaixa,
+        fim: mainFaixaEnd
+    };
+
+    const drawnSlotsByDay = {};
+    usedDates
+        .filter((dateStr) => dateStr >= adjustmentStart && dateStr <= finalDate)
+        .forEach((dateStr) => {
+            const dateSlots = Array.isArray(execution?.byDate?.[dateStr]) ? execution.byDate[dateStr].slice() : [];
+            if (dateSlots.length === 0) return;
+            const dow = new Date(`${dateStr}T12:00:00`).getDay();
+            if (dow < 1 || dow > 6) return;
+            drawnSlotsByDay[dow] = [...new Set(dateSlots)];
+        });
+
+    const adjustmentFaixa = normalizeFaixaEntry({
+        inicio: adjustmentStart,
+        fim: finalDate,
+        drawnSlotsByDay
+    });
+
+    if (!adjustmentFaixa) return null;
+
+    return {
+        faixas: [mainFaixa, adjustmentFaixa],
+        adjustmentFaixaIndex: 2,
+        reason: partialFinalDay ? 'partial-day' : 'isolated-day'
+    };
+}
+
+function applyFinalAdjustmentFaixaSuggestion(suggestion) {
+    if (!suggestion?.faixas || suggestion.faixas.length === 0) return;
+
+    const previewAlloc = {
+        tipo: 'intensiva',
+        faixas: suggestion.faixas
+    };
+
+    if (inputConfig.inicio) {
+        inputConfig.inicio.value = suggestion.faixas[0]?.inicio || '';
+    }
+
+    hydrateFaixasFromIntensiva(previewAlloc);
+    activeFaixaIndex = suggestion.adjustmentFaixaIndex || suggestion.faixas.length;
+    autoEnterWeeklyEditingForFaixa(activeFaixaIndex);
+    updateWeeklyContextNote();
+    updateWeeklyFaixaHoursDisplay();
+    renderWeeklyGrid();
+    switchTab('weekly');
+
+    const message = suggestion.reason === 'isolated-day'
+        ? 'Criamos uma ultima faixa de ajuste para voce refinar o ultimo dia sem alterar a faixa anterior. Clique nos slots finais para ajustar a CH.'
+        : 'Criamos uma ultima faixa de ajuste para voce finalizar a distribuicao sem alterar a faixa anterior. Clique nos slots finais para ajustar a CH.';
+
+    showToastWarning(message, 'warning', 9000);
+}
+
 function buildIntensiveConflictFaixas(intense, rangeStart, rangeEnd) {
     if (!intense) return [];
 
@@ -3419,7 +3596,7 @@ export function initUI() {
     if (selTurma) selTurma.addEventListener('change', onTurmaChange);
 
     initPeriodoLetivoETurno();
-    setupWeekAutoPositionControls();
+    setupComponentStartControl();
 
     // ORDEM IMPORTANTE: Primeiro conserta o layout e encapsula os selects
     applySidebarLayoutFixes();
@@ -4414,6 +4591,12 @@ function handleAddManual() {
         const execution = computeIntensiveExecution(previewIntensive, { respectPriority: true });
         if (execution.totalHours === 0) {
             showToastWarning('Nenhuma aula foi gerada com as faixas configuradas.', 'error', 3000);
+            return;
+        }
+
+        const finalAdjustmentSuggestion = buildFinalAdjustmentFaixaSuggestion(faixasConfig, execution);
+        if (finalAdjustmentSuggestion) {
+            applyFinalAdjustmentFaixaSuggestion(finalAdjustmentSuggestion);
             return;
         }
 
