@@ -338,28 +338,32 @@ function flashButtonCopyState(btn, label = 'Copiado', duration = 2000) {
     }, duration);
 }
 
-function setupPublishHelpCopyButton() {
-    const btn = document.getElementById('btn-copy-publish-command');
-    const feedback = document.getElementById('publish-command-feedback');
-    if (!btn || btn.dataset.bound === '1') return;
+function setupCopyActionButtons() {
+    document.querySelectorAll('[data-copy-text]').forEach((btn) => {
+        if (btn.dataset.bound === '1') return;
 
-    btn.dataset.bound = '1';
-    btn.addEventListener('click', async () => {
-        const command = btn.dataset.command || 'python tools/publish_online.py --push';
-        try {
-            await copyTextToClipboard(command);
-            flashButtonCopyState(btn, 'Comando copiado');
-            if (feedback) {
-                feedback.textContent = 'Comando copiado.';
-                setTimeout(() => {
-                    if (feedback.textContent === 'Comando copiado.') feedback.innerHTML = '&nbsp;';
-                }, 2200);
+        btn.dataset.bound = '1';
+        btn.addEventListener('click', async () => {
+            const text = btn.dataset.copyText || '';
+            const successLabel = btn.dataset.copySuccessLabel || 'Copiado';
+            const feedbackId = btn.dataset.copyFeedbackTarget || '';
+            const feedback = feedbackId ? document.getElementById(feedbackId) : null;
+
+            try {
+                await copyTextToClipboard(text);
+                flashButtonCopyState(btn, successLabel);
+                if (feedback) {
+                    feedback.textContent = `${successLabel}.`;
+                    setTimeout(() => {
+                        if (feedback.textContent === `${successLabel}.`) feedback.innerHTML = '&nbsp;';
+                    }, 2200);
+                }
+            } catch (err) {
+                console.error('Falha ao copiar texto', err);
+                if (feedback) feedback.textContent = 'Nao foi possivel copiar. Copie manualmente.';
+                showToastWarning('Nao foi possivel copiar o conteudo. Copie manualmente.', 'warning', 2600);
             }
-        } catch (err) {
-            console.error('Falha ao copiar comando de publicacao', err);
-            if (feedback) feedback.textContent = 'Nao foi possivel copiar. Copie manualmente.';
-            showToastWarning('Nao foi possivel copiar o comando. Copie manualmente.', 'warning', 2600);
-        }
+        });
     });
 }
 
@@ -3659,7 +3663,7 @@ export function initUI() {
 
     initPeriodoLetivoETurno();
     setupComponentStartControl();
-    setupPublishHelpCopyButton();
+    setupCopyActionButtons();
 
     // ORDEM IMPORTANTE: Primeiro conserta o layout e encapsula os selects
     applySidebarLayoutFixes();

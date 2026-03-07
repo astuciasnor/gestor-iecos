@@ -1,5 +1,5 @@
 import { store } from './store.js';
-import { initUI, exportSigaaMetadataJSON, showToastWarning } from './ui.js?v=20260307c';
+import { initUI, exportSigaaMetadataJSON, showToastWarning } from './ui.js?v=20260307d';
 
 const EXPORT_CURSOS_UNIDADE = ['EP', 'CB', 'CN'];
 
