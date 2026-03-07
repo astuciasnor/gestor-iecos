@@ -3612,8 +3612,15 @@ export function initUI() {
         });
     }
 
-    const inpImport = document.getElementById('inp-import');
-    if (inpImport) inpImport.addEventListener('change', handleFileSelect);
+    const inpImport = sanitizeImportInputElement();
+    if (inpImport) {
+        // Neutraliza handlers legados e impede bind duplicado no input de importacao.
+        inpImport.onchange = null;
+        if (inpImport.dataset.importBound !== '1') {
+            inpImport.dataset.importBound = '1';
+            inpImport.addEventListener('change', handleFileSelect);
+        }
+    }
 
     const btnReplace = document.getElementById('btn-modal-replace');
     if (btnReplace) {
@@ -3660,12 +3667,27 @@ export function initUI() {
 }
 
 function handleFileSelect(event) {
+    if (typeof event.stopImmediatePropagation === 'function') {
+        event.stopImmediatePropagation();
+    }
     const file = event.target.files[0];
     if (!file) return;
     const reader = new FileReader();
     reader.onload = function (e) {
         try {
-            tempImportData = JSON.parse(e.target.result);
+            const parsed = JSON.parse(e.target.result);
+            const normalized = Array.isArray(parsed)
+                ? parsed
+                : (Array.isArray(parsed?.allocations) ? parsed.allocations : null);
+
+            if (!normalized) {
+                showToastWarning('Arquivo inválido. O formato não é suportado.', 'error', 3000);
+                tempImportData = null;
+                event.target.value = '';
+                return;
+            }
+
+            tempImportData = normalized;
             const modal = document.getElementById('import-modal');
             if (modal) modal.style.display = 'flex';
         } catch (err) {
@@ -3681,6 +3703,19 @@ function closeModal() {
     tempImportData = null;
     const inp = document.getElementById('inp-import');
     if (inp) inp.value = '';
+}
+
+function sanitizeImportInputElement() {
+    const current = document.getElementById('inp-import');
+    if (!current) return null;
+    if (current.dataset.importSanitized === '1') return current;
+
+    const clone = current.cloneNode(true);
+    clone.value = '';
+    clone.onchange = null;
+    clone.dataset.importSanitized = '1';
+    current.replaceWith(clone);
+    return clone;
 }
 
 function populateCursos() {
@@ -4198,6 +4233,7 @@ function renderSlotContent(cell, allocs) {
 
         card.className = 'mini-card';
         card.style.backgroundColor = alloc.cor;
+        card.style.cursor = 'pointer';
         if (alloc.tipo === 'regular_prioritaria') {
             card.style.border = '2px dashed #000';
         }
@@ -4210,6 +4246,8 @@ function renderSlotContent(cell, allocs) {
             <span class="remove-btn" title="Remover">×</span>
         `;
 
+        card.title = `${alloc.disciplina}${docenteNome ? ` - ${docenteNome}` : ''}\nDuplo clique para editar esta alocacao.`;
+
         card.querySelector('.remove-btn').onclick = (e) => {
             e.stopPropagation();
             if (confirm(`Remover alocação de ${alloc.disciplina}?`)) {
@@ -4221,6 +4259,12 @@ function renderSlotContent(cell, allocs) {
             }
         };
 
+        card.addEventListener('dblclick', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            loadAllocationIntoEditor(alloc, [alloc.id]);
+        });
+
         container.appendChild(card);
     });
 
@@ -4229,6 +4273,65 @@ function renderSlotContent(cell, allocs) {
 
 function handleSlotClick() {
     showToastWarning('Clique direto na Grade Semanal para montar o padrao da faixa ativa.', 'success', 2200);
+}
+
+function loadAllocationIntoEditor(allocation, idsToRemove = []) {
+    const a = allocation;
+    if (!a) return;
+
+    const info = getDisciplinaInfo(a.disciplina);
+    if (!confirm('Carregar para edicao? A oferta antiga sera removida e voce devera redesenhar os slots da faixa.')) return;
+
+    editingDisciplinaDraft = normalizeDisciplinaInputValue(a.disciplina);
+    updateWeeklyFaixasTitleDisciplina();
+
+    if (inputConfig.disciplina) {
+        inputConfig.disciplina.value = `${a.disciplina} (${info.ch}h)`;
+        inputConfig.disciplina.dispatchEvent(new Event('input'));
+    }
+    if (inputConfig.cor && a.cor) {
+        inputConfig.cor.value = a.cor;
+        setTimeout(() => { inputConfig.cor.value = a.cor; }, 50);
+    }
+    enforceCanonicalFaixaMode();
+
+    if (a.tipo === 'intensiva') {
+        if (inputConfig.inicio && a.dataInicio) inputConfig.inicio.value = a.dataInicio;
+        hydrateFaixasFromIntensiva(a);
+    } else {
+        collapseFaixasForNewComponent();
+    }
+
+    const chkMulti = document.getElementById('chk-multi-docente');
+    if (a.docentes && a.docentes.length > 0) {
+        if (chkMulti && !chkMulti.checked) {
+            chkMulti.checked = true;
+            chkMulti.dispatchEvent(new Event('change'));
+        }
+        const listMulti = document.getElementById('multi-docente-list');
+        if (listMulti) {
+            listMulti.innerHTML = '';
+            a.docentes.forEach((d) => addTeacherRow(d.nome, d.ch));
+            updateTotalCHDisplay();
+        }
+    } else {
+        if (chkMulti && chkMulti.checked) {
+            chkMulti.checked = false;
+            chkMulti.dispatchEvent(new Event('change'));
+        }
+        if (inputConfig.docente) {
+            inputConfig.docente.value = a.docente === 'A definir' ? '' : (a.docente || '');
+            inputConfig.docente.dispatchEvent(new Event('input'));
+        }
+    }
+
+    applyWeekAutoPositionForComponentChange({ render: false });
+    idsToRemove.forEach((id) => store.removeAllocation(id));
+    syncAllRegularDates();
+    renderWeeklyGrid();
+    renderOfertasList();
+    switchTab('weekly');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 function handleAddManual() {
@@ -4787,59 +4890,7 @@ function renderOfertasList() {
         const btnEdit = tr.querySelector('.btn-edit-row');
         if (btnEdit) {
             btnEdit.onclick = () => {
-                const a = row.baseAlloc;
-                const info = getDisciplinaInfo(a.disciplina);
-                if (!confirm('Carregar para edição? A oferta antiga será removida e você deverá redesenhar os slots da faixa.')) return;
-                editingDisciplinaDraft = normalizeDisciplinaInputValue(a.disciplina);
-                updateWeeklyFaixasTitleDisciplina();
-
-                if (inputConfig.disciplina) {
-                    inputConfig.disciplina.value = `${a.disciplina} (${info.ch}h)`;
-                    inputConfig.disciplina.dispatchEvent(new Event('input'));
-                }
-                if (inputConfig.cor && a.cor) {
-                    inputConfig.cor.value = a.cor;
-                    setTimeout(() => { inputConfig.cor.value = a.cor; }, 50);
-                }
-                enforceCanonicalFaixaMode();
-
-                if (a.tipo === 'intensiva') {
-                    if (inputConfig.inicio && a.dataInicio) inputConfig.inicio.value = a.dataInicio;
-                    hydrateFaixasFromIntensiva(a);
-                } else {
-                    collapseFaixasForNewComponent();
-                }
-
-                const chkMulti = document.getElementById('chk-multi-docente');
-                if (a.docentes && a.docentes.length > 0) {
-                    if (chkMulti && !chkMulti.checked) {
-                        chkMulti.checked = true;
-                        chkMulti.dispatchEvent(new Event('change'));
-                    }
-                    const listMulti = document.getElementById('multi-docente-list');
-                    if (listMulti) {
-                        listMulti.innerHTML = '';
-                        a.docentes.forEach((d) => addTeacherRow(d.nome, d.ch));
-                        updateTotalCHDisplay();
-                    }
-                } else {
-                    if (chkMulti && chkMulti.checked) {
-                        chkMulti.checked = false;
-                        chkMulti.dispatchEvent(new Event('change'));
-                    }
-                    if (inputConfig.docente) {
-                        inputConfig.docente.value = a.docente === 'A definir' ? '' : (a.docente || '');
-                        inputConfig.docente.dispatchEvent(new Event('input'));
-                    }
-                }
-
-                applyWeekAutoPositionForComponentChange({ render: false });
-                idsToRemove.forEach((id) => store.removeAllocation(id));
-                syncAllRegularDates();
-                renderWeeklyGrid();
-                renderOfertasList();
-                switchTab('weekly');
-                window.scrollTo({ top: 0, behavior: 'smooth' });
+                loadAllocationIntoEditor(row.baseAlloc, idsToRemove);
             };
         }
 

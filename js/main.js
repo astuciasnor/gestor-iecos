@@ -1,5 +1,5 @@
 import { store } from './store.js';
-import { initUI, exportSigaaMetadataJSON, showToastWarning } from './ui.js';
+import { initUI, exportSigaaMetadataJSON, showToastWarning } from './ui.js?v=20260307b';
 
 const EXPORT_CURSOS_UNIDADE = ['EP', 'CB', 'CN'];
 
@@ -303,47 +303,6 @@ function exportarJSONCurso(sigla) {
   if (btnExportSigaa) {
     btnExportSigaa.onclick = () => exportSigaaMetadataJSON();
   }
-
-  // Importar (Mesclar/Substituir)
-  document.getElementById('inp-import').onchange = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      try {
-        const json = JSON.parse(event.target.result);
-
-        // Verifica se é o formato antigo de backup (Array) ou o novo do portal público (Objeto)
-        const dataToImport = Array.isArray(json) ? json : (json.allocations ? json.allocations : null);
-
-        if (dataToImport && Array.isArray(dataToImport)) {
-          const mode = confirm(
-            "Deseja MESCLAR estes dados com os atuais?\n\n[OK] = MESCLAR\n[CANCELAR] = SUBSTITUIR"
-          );
-
-          if (mode) {
-            const count = store.mergeAllocations(dataToImport);
-            showToastWarning(`Processo concluído! ${count} novas alocações foram adicionadas.`, 'success', 2200);
-          } else {
-            store.allocations = dataToImport;
-            store.saveAllocations();
-            showToastWarning('Dados substituídos com sucesso!', 'success', 2200);
-          }
-
-          setTimeout(() => window.location.reload(), 350);
-        } else {
-          showToastWarning('Arquivo inválido. O formato não é suportado.', 'error', 3200);
-        }
-      } catch (err) {
-        console.error(err);
-        showToastWarning('Erro ao ler o arquivo JSON.', 'error', 3200);
-      }
-    };
-
-    reader.readAsText(file);
-    e.target.value = '';
-  };
 
   document.getElementById('btn-clear').onclick = () => store.clearData();
 })();
