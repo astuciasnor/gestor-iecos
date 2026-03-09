@@ -280,208 +280,6 @@
       "id": "240e2a0a-114c-4cc8-9800-5b67b03a4436"
     },
     {
-      "turmaId": "EP2025",
-      "disciplina": "ELETROMAGNETISMO",
-      "docente": "Leonnan Oliveira",
-      "docentes": null,
-      "tipo": "regular",
-      "diaSemana": 2,
-      "horario": "15:10 - 16:00",
-      "dataInicio": "2026-03-23",
-      "dataFim": "2026-06-23",
-      "cor": "#25e98e",
-      "id": "78d40cea-023b-4c33-ba9c-48f6c016889f",
-      "horariosUltimoDia": [
-        "15:10 - 16:00",
-        "16:20 - 17:10",
-        "17:10 - 18:00"
-      ]
-    },
-    {
-      "turmaId": "EP2025",
-      "disciplina": "ELETROMAGNETISMO",
-      "docente": "Leonnan Oliveira",
-      "docentes": null,
-      "tipo": "regular",
-      "diaSemana": 2,
-      "horario": "16:20 - 17:10",
-      "dataInicio": "2026-03-23",
-      "dataFim": "2026-06-23",
-      "cor": "#25e98e",
-      "id": "2a6e3bad-a17e-40df-b7ee-d99bf568d346",
-      "horariosUltimoDia": [
-        "15:10 - 16:00",
-        "16:20 - 17:10",
-        "17:10 - 18:00"
-      ]
-    },
-    {
-      "turmaId": "EP2025",
-      "disciplina": "ELETROMAGNETISMO",
-      "docente": "Leonnan Oliveira",
-      "docentes": null,
-      "tipo": "regular",
-      "diaSemana": 2,
-      "horario": "17:10 - 18:00",
-      "dataInicio": "2026-03-23",
-      "dataFim": "2026-06-23",
-      "cor": "#25e98e",
-      "id": "91d493a4-cd35-41fa-88bd-49c77267a0e3",
-      "horariosUltimoDia": [
-        "15:10 - 16:00",
-        "16:20 - 17:10",
-        "17:10 - 18:00"
-      ]
-    },
-    {
-      "turmaId": "EP2025",
-      "disciplina": "ELETROMAGNETISMO",
-      "docente": "Leonnan Oliveira",
-      "docentes": null,
-      "tipo": "regular",
-      "diaSemana": 2,
-      "horario": "14:20 - 15:10",
-      "dataInicio": "2026-03-23",
-      "dataFim": "2026-06-23",
-      "cor": "#25e98e",
-      "id": "16281fe8-0fb2-4f99-b88b-9c1f7236e464",
-      "horariosUltimoDia": [
-        "15:10 - 16:00",
-        "16:20 - 17:10",
-        "17:10 - 18:00"
-      ]
-    },
-    {
-      "turmaId": "EP2025",
-      "disciplina": "ELETROMAGNETISMO",
-      "docente": "Leonnan Oliveira",
-      "docentes": null,
-      "tipo": "regular",
-      "diaSemana": 4,
-      "horario": "17:10 - 18:00",
-      "dataInicio": "2026-03-23",
-      "dataFim": "2026-06-23",
-      "cor": "#25e98e",
-      "id": "fe95b940-9ceb-4fb0-bd4c-eebfce9a7090"
-    },
-    {
-      "turmaId": "EP2025",
-      "disciplina": "ELETROMAGNETISMO",
-      "docente": "Leonnan Oliveira",
-      "docentes": null,
-      "tipo": "regular",
-      "diaSemana": 4,
-      "horario": "18:00 - 18:50",
-      "dataInicio": "2026-03-23",
-      "dataFim": "2026-06-23",
-      "cor": "#25e98e",
-      "id": "3ff0f1b4-60d0-4d50-aa59-918634e2fb2d"
-    },
-    {
-      "turmaId": "EP2025",
-      "disciplina": "ECONOMIA",
-      "docente": "Marcos Ferreira Brabo",
-      "docentes": null,
-      "tipo": "regular",
-      "diaSemana": 4,
-      "horario": "14:20 - 15:10",
-      "dataInicio": "2026-03-23",
-      "dataFim": "2026-07-09",
-      "cor": "#4f25e9",
-      "id": "0184020a-f9c8-40be-8bee-8e0184864e38"
-    },
-    {
-      "turmaId": "EP2025",
-      "disciplina": "ECONOMIA",
-      "docente": "Marcos Ferreira Brabo",
-      "docentes": null,
-      "tipo": "regular",
-      "diaSemana": 4,
-      "horario": "15:10 - 16:00",
-      "dataInicio": "2026-03-23",
-      "dataFim": "2026-07-09",
-      "cor": "#4f25e9",
-      "id": "ac9847ae-7319-41fb-a16d-43733bb02fc8"
-    },
-    {
-      "turmaId": "EP2025",
-      "disciplina": "ECONOMIA",
-      "docente": "Marcos Ferreira Brabo",
-      "docentes": null,
-      "tipo": "regular",
-      "diaSemana": 4,
-      "horario": "16:20 - 17:10",
-      "dataInicio": "2026-03-23",
-      "dataFim": "2026-07-09",
-      "cor": "#4f25e9",
-      "id": "1813e44f-ebd4-4540-855e-f892127d72e4"
-    },
-    {
-      "turmaId": "EP2025",
-      "disciplina": "MICROBIOLOGIA DO PESCADO",
-      "docente": "Simoni Santos da Silva",
-      "docentes": null,
-      "tipo": "regular",
-      "diaSemana": 5,
-      "horario": "14:20 - 15:10",
-      "dataInicio": "2026-03-23",
-      "dataFim": "2026-06-26",
-      "cor": "#25c2e9",
-      "id": "0a322bdd-2342-4ed6-9f9a-70afe4cfbc04"
-    },
-    {
-      "turmaId": "EP2025",
-      "disciplina": "MICROBIOLOGIA DO PESCADO",
-      "docente": "Simoni Santos da Silva",
-      "docentes": null,
-      "tipo": "regular",
-      "diaSemana": 5,
-      "horario": "15:10 - 16:00",
-      "dataInicio": "2026-03-23",
-      "dataFim": "2026-06-26",
-      "cor": "#25c2e9",
-      "id": "5554f9c5-bbf0-4cef-b3b9-5a24be39c129"
-    },
-    {
-      "turmaId": "EP2025",
-      "disciplina": "MICROBIOLOGIA DO PESCADO",
-      "docente": "Simoni Santos da Silva",
-      "docentes": null,
-      "tipo": "regular",
-      "diaSemana": 5,
-      "horario": "16:20 - 17:10",
-      "dataInicio": "2026-03-23",
-      "dataFim": "2026-06-26",
-      "cor": "#25c2e9",
-      "id": "14b8f20f-38e1-401d-ac93-c59aa8ef583b"
-    },
-    {
-      "turmaId": "EP2025",
-      "disciplina": "MICROBIOLOGIA DO PESCADO",
-      "docente": "Simoni Santos da Silva",
-      "docentes": null,
-      "tipo": "regular",
-      "diaSemana": 5,
-      "horario": "17:10 - 18:00",
-      "dataInicio": "2026-03-23",
-      "dataFim": "2026-06-26",
-      "cor": "#25c2e9",
-      "id": "1baf00b6-85cb-4ddb-b37f-55afa59be590"
-    },
-    {
-      "turmaId": "EP2025",
-      "disciplina": "MICROBIOLOGIA DO PESCADO",
-      "docente": "Simoni Santos da Silva",
-      "docentes": null,
-      "tipo": "regular",
-      "diaSemana": 5,
-      "horario": "18:00 - 18:50",
-      "dataInicio": "2026-03-23",
-      "dataFim": "2026-06-26",
-      "cor": "#25c2e9",
-      "id": "8f1a7a35-2059-4b6a-bdbc-018f3fc792d9"
-    },
-    {
       "turmaId": "EP2023",
       "disciplina": "NAVEGACAO BASICA",
       "docente": "Carlos Eduardo Rangel Andrade",
@@ -668,70 +466,6 @@
       "dataFim": "2026-07-09",
       "cor": "#ebacec",
       "id": "ad5806ac-dc2f-4310-8ef2-3130e15ffa6d"
-    },
-    {
-      "turmaId": "EP2025",
-      "disciplina": "ICTIOLOGIA",
-      "docente": "Grazielle Fernanda Evangelista Gomes",
-      "docentes": null,
-      "tipo": "regular",
-      "diaSemana": 1,
-      "horario": "15:10 - 16:00",
-      "dataInicio": "2026-03-23",
-      "dataFim": "2026-06-08",
-      "cor": "#9bc149",
-      "id": "83af1646-676f-434e-9dda-f06e30bb6eee",
-      "horariosUltimoDia": [
-        "15:10 - 16:00"
-      ]
-    },
-    {
-      "turmaId": "EP2025",
-      "disciplina": "ICTIOLOGIA",
-      "docente": "Grazielle Fernanda Evangelista Gomes",
-      "docentes": null,
-      "tipo": "regular",
-      "diaSemana": 1,
-      "horario": "14:20 - 15:10",
-      "dataInicio": "2026-03-23",
-      "dataFim": "2026-06-08",
-      "cor": "#9bc149",
-      "id": "379617ca-bd5f-43f6-9b94-6410836473f0",
-      "horariosUltimoDia": [
-        "15:10 - 16:00"
-      ]
-    },
-    {
-      "turmaId": "EP2025",
-      "disciplina": "ICTIOLOGIA",
-      "docente": "Grazielle Fernanda Evangelista Gomes",
-      "docentes": null,
-      "tipo": "regular",
-      "diaSemana": 1,
-      "horario": "16:20 - 17:10",
-      "dataInicio": "2026-03-23",
-      "dataFim": "2026-06-08",
-      "cor": "#9bc149",
-      "id": "8d0aa8db-437d-474c-bb5d-68a93666f42a",
-      "horariosUltimoDia": [
-        "15:10 - 16:00"
-      ]
-    },
-    {
-      "turmaId": "EP2025",
-      "disciplina": "ICTIOLOGIA",
-      "docente": "Grazielle Fernanda Evangelista Gomes",
-      "docentes": null,
-      "tipo": "regular",
-      "diaSemana": 1,
-      "horario": "17:10 - 18:00",
-      "dataInicio": "2026-03-23",
-      "dataFim": "2026-06-08",
-      "cor": "#9bc149",
-      "id": "1954e1bf-30e1-4fb7-bdde-405cdb3a4700",
-      "horariosUltimoDia": [
-        "15:10 - 16:00"
-      ]
     },
     {
       "turmaId": "EP2022",
@@ -1343,86 +1077,6 @@
         "10:20 - 11:10",
         "11:10 - 12:00",
         "12:00 - 12:50"
-      ],
-      "diasMarcados": [
-        1,
-        2,
-        3,
-        4,
-        5,
-        6
-      ],
-      "faixas": [
-        {
-          "inicio": "2026-03-23",
-          "fim": "2026-04-02",
-          "dias": [
-            1,
-            2,
-            3,
-            4,
-            5,
-            6
-          ],
-          "slots": [
-            "07:30 - 08:20",
-            "08:20 - 09:10",
-            "09:10 - 10:00",
-            "10:20 - 11:10",
-            "11:10 - 12:00",
-            "12:00 - 12:50"
-          ],
-          "drawnSlotsByDay": {
-            "1": [
-              "07:30 - 08:20",
-              "08:20 - 09:10",
-              "09:10 - 10:00",
-              "10:20 - 11:10",
-              "11:10 - 12:00",
-              "12:00 - 12:50"
-            ],
-            "2": [
-              "07:30 - 08:20",
-              "08:20 - 09:10",
-              "09:10 - 10:00",
-              "10:20 - 11:10",
-              "11:10 - 12:00",
-              "12:00 - 12:50"
-            ],
-            "3": [
-              "07:30 - 08:20",
-              "08:20 - 09:10",
-              "09:10 - 10:00",
-              "10:20 - 11:10",
-              "11:10 - 12:00",
-              "12:00 - 12:50"
-            ],
-            "4": [
-              "07:30 - 08:20",
-              "08:20 - 09:10",
-              "09:10 - 10:00",
-              "10:20 - 11:10",
-              "11:10 - 12:00",
-              "12:00 - 12:50"
-            ],
-            "5": [
-              "07:30 - 08:20",
-              "08:20 - 09:10",
-              "09:10 - 10:00",
-              "10:20 - 11:10",
-              "11:10 - 12:00",
-              "12:00 - 12:50"
-            ],
-            "6": [
-              "07:30 - 08:20",
-              "08:20 - 09:10",
-              "09:10 - 10:00",
-              "10:20 - 11:10",
-              "11:10 - 12:00",
-              "12:00 - 12:50"
-            ]
-          }
-        }
       ]
     },
     {
@@ -1903,71 +1557,6 @@
       "id": "f01031cf-9611-4634-88e3-e88a213ab7f1"
     },
     {
-      "turmaId": "EP2025",
-      "disciplina": "DESENHO COMPUTACIONAL",
-      "docente": "Daniel Abreu Vasconcelos Campelo",
-      "docentes": null,
-      "tipo": "regular",
-      "diaSemana": 3,
-      "horario": "18:00 - 18:50",
-      "dataInicio": "2026-03-23",
-      "dataFim": "2026-06-10",
-      "cor": "#e9164b",
-      "id": "69037cb3-5146-42a4-8ef7-ee2bd14f4174"
-    },
-    {
-      "turmaId": "EP2025",
-      "disciplina": "DESENHO COMPUTACIONAL",
-      "docente": "Daniel Abreu Vasconcelos Campelo",
-      "docentes": null,
-      "tipo": "regular",
-      "diaSemana": 3,
-      "horario": "17:10 - 18:00",
-      "dataInicio": "2026-03-23",
-      "dataFim": "2026-06-10",
-      "cor": "#e9164b",
-      "id": "144c075e-9984-4af8-a13e-443b00c43f9a"
-    },
-    {
-      "turmaId": "EP2025",
-      "disciplina": "DESENHO COMPUTACIONAL",
-      "docente": "Daniel Abreu Vasconcelos Campelo",
-      "docentes": null,
-      "tipo": "regular",
-      "diaSemana": 3,
-      "horario": "16:20 - 17:10",
-      "dataInicio": "2026-03-23",
-      "dataFim": "2026-06-10",
-      "cor": "#e9164b",
-      "id": "0ee3c0ed-6596-4e72-8e03-5ffc6cdf595b"
-    },
-    {
-      "turmaId": "EP2025",
-      "disciplina": "DESENHO COMPUTACIONAL",
-      "docente": "Daniel Abreu Vasconcelos Campelo",
-      "docentes": null,
-      "tipo": "regular",
-      "diaSemana": 3,
-      "horario": "15:10 - 16:00",
-      "dataInicio": "2026-03-23",
-      "dataFim": "2026-06-10",
-      "cor": "#e9164b",
-      "id": "7e86d47f-0fd0-4527-99a4-45fe44f02c90"
-    },
-    {
-      "turmaId": "EP2025",
-      "disciplina": "DESENHO COMPUTACIONAL",
-      "docente": "Daniel Abreu Vasconcelos Campelo",
-      "docentes": null,
-      "tipo": "regular",
-      "diaSemana": 3,
-      "horario": "14:20 - 15:10",
-      "dataInicio": "2026-03-23",
-      "dataFim": "2026-06-10",
-      "cor": "#e9164b",
-      "id": "466df765-112d-483e-98ba-7ed0f7fe90ce"
-    },
-    {
       "turmaId": "EP2026",
       "disciplina": "QUIMICA GERAL E ANALITICA",
       "docente": "Marileide / Evaldo (Múltiplos)",
@@ -2104,6 +1693,269 @@
       "subGrupo": null,
       "cor": "#25aee9",
       "id": "89741430-d310-42cf-af92-cb659d754a31"
+    },
+    {
+      "turmaId": "CB2024",
+      "disciplina": "DIVERSIDADE ANIMAL I",
+      "docente": "A definir",
+      "tipo": "pendente",
+      "cor": "#c0fcff",
+      "dataInicio": "2026-03-23",
+      "dataFim": "2026-07-23",
+      "id": "73e43876-b2fb-4052-93ee-9058f6a9608f"
+    },
+    {
+      "turmaId": "CB2025",
+      "disciplina": "FISICA BASICA",
+      "docente": "A definir",
+      "tipo": "pendente",
+      "cor": "#8daeda",
+      "dataInicio": "2026-03-23",
+      "dataFim": "2026-07-23",
+      "id": "d400ba9a-8ceb-444b-90db-9e91798a134e"
+    },
+    {
+      "turmaId": "CB2026",
+      "disciplina": "ECOLOGIA GERAL",
+      "docente": "A definir",
+      "tipo": "pendente",
+      "cor": "#ffd6a5",
+      "dataInicio": "2026-03-23",
+      "dataFim": "2026-07-23",
+      "id": "327b00bf-81ee-4a62-b717-ef976aa0cefe"
+    },
+    {
+      "turmaId": "CB2026",
+      "disciplina": "BIOLOGIA EVOLUTIVA DO DESENVOLVIMENTO",
+      "docente": "A definir",
+      "tipo": "pendente",
+      "cor": "#a0c4ff",
+      "dataInicio": "2026-03-23",
+      "dataFim": "2026-07-23",
+      "id": "2147d876-308f-4c44-be08-c4c151376354"
+    },
+    {
+      "turmaId": "CB2026",
+      "disciplina": "FILOSOFIA E HISTORIA DA CIENCIA",
+      "docente": "A definir",
+      "tipo": "pendente",
+      "cor": "#bdb2ff",
+      "dataInicio": "2026-03-23",
+      "dataFim": "2026-07-23",
+      "id": "2279637e-d12b-4119-a020-acc0d1da4d90"
+    },
+    {
+      "turmaId": "CB2026",
+      "disciplina": "AVALIACAO NO PROCESSO EDUCACIONAL",
+      "docente": "A definir",
+      "tipo": "pendente",
+      "cor": "#ffc6ff",
+      "dataInicio": "2026-03-23",
+      "dataFim": "2026-07-23",
+      "id": "da991278-630a-4cfb-adb1-0aee28912399"
+    },
+    {
+      "turmaId": "CB2026",
+      "disciplina": "DIVERSIDADE DE ALGAS",
+      "docente": "A definir",
+      "tipo": "pendente",
+      "cor": "#e0bbe4",
+      "dataInicio": "2026-03-23",
+      "dataFim": "2026-07-23",
+      "id": "24f666f6-0bf1-483e-ba20-65a9ed695fdc"
+    },
+    {
+      "turmaId": "CB2026",
+      "disciplina": "TEMAS CONTEMPORANEOS PARA A EDUCACAO",
+      "docente": "A definir",
+      "tipo": "pendente",
+      "cor": "#ffdfd3",
+      "dataInicio": "2026-03-23",
+      "dataFim": "2026-07-23",
+      "id": "4dae79b4-dd5e-4bee-bff9-7763b9979ce8"
+    },
+    {
+      "turmaId": "CB2026",
+      "disciplina": "TEMAS SOCIOAMBIENTAIS E CULTURAIS",
+      "docente": "A definir",
+      "tipo": "pendente",
+      "cor": "#ffc2c2",
+      "dataInicio": "2026-03-23",
+      "dataFim": "2026-07-23",
+      "id": "2b2eb8ae-dd8f-45e1-af4a-3365169f8488"
+    },
+    {
+      "turmaId": "CB2026",
+      "disciplina": "TOPICOS ESPECIAIS: ENSINO DE ECOLOGIA",
+      "docente": "A definir",
+      "tipo": "pendente",
+      "cor": "#ffe2b9",
+      "dataInicio": "2026-03-23",
+      "dataFim": "2026-07-23",
+      "id": "52ba463f-736c-4061-bd27-38b6ff80ee2b"
+    },
+    {
+      "turmaId": "CB2026",
+      "disciplina": "TOPICOS ESPECIAIS: ENSINO EM EDUCACAO",
+      "docente": "A definir",
+      "tipo": "pendente",
+      "cor": "#feffcc",
+      "dataInicio": "2026-03-23",
+      "dataFim": "2026-07-23",
+      "id": "c084b33d-096f-4d65-8c64-a146415dafcc"
+    },
+    {
+      "turmaId": "CB2026",
+      "disciplina": "INICIACAO A COMPUTACAO",
+      "docente": "A definir",
+      "tipo": "pendente",
+      "cor": "#9bf6ff",
+      "dataInicio": "2026-03-23",
+      "dataFim": "2026-07-23",
+      "id": "e6f0c717-ac84-4c93-9685-ce63ed63efc3"
+    },
+    {
+      "turmaId": "CB2025",
+      "disciplina": "BIOLOGIA CELULAR E MOLECULAR",
+      "docente": "A definir",
+      "tipo": "pendente",
+      "cor": "#ffadad",
+      "dataInicio": "2025-03-24",
+      "dataFim": "2026-07-24",
+      "subGrupo": "BLI",
+      "id": "9d7151f0-5b6b-4f39-9c7c-09d3f16c3e14"
+    },
+    {
+      "turmaId": "CB2025",
+      "disciplina": "ECOLOGIA GERAL",
+      "docente": "A definir",
+      "tipo": "pendente",
+      "cor": "#ffd6a5",
+      "dataInicio": "2025-03-24",
+      "dataFim": "2026-07-24",
+      "subGrupo": "BLI",
+      "id": "6ba1a388-db5d-466e-9a7e-24eaa8e9b6a0"
+    },
+    {
+      "turmaId": "CB2025",
+      "disciplina": "MATEMATICA BASICA",
+      "docente": "A definir",
+      "tipo": "pendente",
+      "cor": "#fdffb6",
+      "dataInicio": "2025-03-24",
+      "dataFim": "2026-07-24",
+      "subGrupo": "BLI",
+      "id": "0e356360-8868-4d8a-a97b-8d9064ce1d86"
+    },
+    {
+      "turmaId": "CB2025",
+      "disciplina": "DIDATICA APLICADA A FORMACAO DOCENTE",
+      "docente": "A definir",
+      "tipo": "pendente",
+      "cor": "#caffbf",
+      "dataInicio": "2025-03-24",
+      "dataFim": "2026-07-24",
+      "subGrupo": "BLI",
+      "id": "7fb818fe-e026-4e5c-b079-8f1ed57b2a17"
+    },
+    {
+      "turmaId": "CB2025",
+      "disciplina": "INICIACAO A COMPUTACAO",
+      "docente": "A definir",
+      "tipo": "pendente",
+      "cor": "#9bf6ff",
+      "dataInicio": "2025-03-24",
+      "dataFim": "2026-07-24",
+      "subGrupo": "BLI",
+      "id": "847ee019-cb48-44aa-9171-d731480f7743"
+    },
+    {
+      "turmaId": "CB2025",
+      "disciplina": "BIOLOGIA EVOLUTIVA DO DESENVOLVIMENTO",
+      "docente": "A definir",
+      "tipo": "pendente",
+      "cor": "#a0c4ff",
+      "dataInicio": "2025-03-24",
+      "dataFim": "2026-07-24",
+      "subGrupo": "BLI",
+      "id": "c179e952-f6af-48f2-88a6-d092cdf172df"
+    },
+    {
+      "turmaId": "CB2025",
+      "disciplina": "FILOSOFIA E HISTORIA DA CIENCIA",
+      "docente": "A definir",
+      "tipo": "pendente",
+      "cor": "#bdb2ff",
+      "dataInicio": "2025-03-24",
+      "dataFim": "2026-07-24",
+      "subGrupo": "BLI",
+      "id": "384f706e-70f4-4477-9dd0-4ed9c04129bb"
+    },
+    {
+      "turmaId": "CB2025",
+      "disciplina": "AVALIACAO NO PROCESSO EDUCACIONAL",
+      "docente": "A definir",
+      "tipo": "pendente",
+      "cor": "#ffc6ff",
+      "dataInicio": "2025-03-24",
+      "dataFim": "2026-07-24",
+      "subGrupo": "BLI",
+      "id": "2d6c773d-9efb-4c2f-93a2-423a6ab7c79e"
+    },
+    {
+      "turmaId": "CB2025",
+      "disciplina": "DIVERSIDADE DE ALGAS",
+      "docente": "A definir",
+      "tipo": "pendente",
+      "cor": "#e0bbe4",
+      "dataInicio": "2025-03-24",
+      "dataFim": "2026-07-24",
+      "subGrupo": "BLI",
+      "id": "395965a7-3d5d-45bd-8ae7-a9f929c25086"
+    },
+    {
+      "turmaId": "CB2025",
+      "disciplina": "TEMAS CONTEMPORANEOS PARA A EDUCACAO",
+      "docente": "A definir",
+      "tipo": "pendente",
+      "cor": "#ffdfd3",
+      "dataInicio": "2025-03-24",
+      "dataFim": "2026-07-24",
+      "subGrupo": "BLI",
+      "id": "1174135a-aab1-4d75-bb7d-361755f6b643"
+    },
+    {
+      "turmaId": "CB2025",
+      "disciplina": "TEMAS SOCIOAMBIENTAIS E CULTURAIS",
+      "docente": "A definir",
+      "tipo": "pendente",
+      "cor": "#ffc2c2",
+      "dataInicio": "2025-03-24",
+      "dataFim": "2026-07-24",
+      "subGrupo": "BLI",
+      "id": "5183ef35-e33e-4fc6-9a85-f1f2cc45828d"
+    },
+    {
+      "turmaId": "CB2025",
+      "disciplina": "TOPICOS ESPECIAIS: ENSINO DE ECOLOGIA",
+      "docente": "A definir",
+      "tipo": "pendente",
+      "cor": "#ffe2b9",
+      "dataInicio": "2025-03-24",
+      "dataFim": "2026-07-24",
+      "subGrupo": "BLI",
+      "id": "f0cc2e5b-8313-4d23-addd-fb4e0fc26ccf"
+    },
+    {
+      "turmaId": "CB2025",
+      "disciplina": "TOPICOS ESPECIAIS: ENSINO EM EDUCACAO",
+      "docente": "A definir",
+      "tipo": "pendente",
+      "cor": "#feffcc",
+      "dataInicio": "2025-03-24",
+      "dataFim": "2026-07-24",
+      "subGrupo": "BLI",
+      "id": "2ce036d2-d6ea-428c-9977-effe2ddcc21a"
     },
     {
       "turmaId": "CB2026",
@@ -2657,6 +2509,125 @@
       "subGrupo": null,
       "cor": "#fdffb6",
       "id": "881fdf47-cbd4-4f03-a5ca-d5d94b19ccad"
+    },
+    {
+      "turmaId": "CB2026",
+      "disciplina": "BIOLOGIA CELULAR E MOLECULAR",
+      "docente": "Simoni Santos da Silva",
+      "docentes": null,
+      "tipo": "intensiva",
+      "ch": 75,
+      "dataInicio": "2026-05-25",
+      "dataFim": "2026-06-16",
+      "modelo": "Automatico",
+      "horariosOcupados": [
+        "08:20 - 09:10",
+        "09:10 - 10:00",
+        "10:20 - 11:10",
+        "11:10 - 12:00"
+      ],
+      "horariosUltimoDia": [
+        "08:20 - 09:10",
+        "09:10 - 10:00",
+        "10:20 - 11:10"
+      ],
+      "diasMarcados": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "usaSabado": true,
+      "faixas": [
+        {
+          "inicio": "2026-05-25",
+          "fim": "2026-06-14",
+          "dias": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6
+          ],
+          "slots": [
+            "08:20 - 09:10",
+            "09:10 - 10:00",
+            "10:20 - 11:10",
+            "11:10 - 12:00"
+          ],
+          "drawnSlotsByDay": {
+            "1": [
+              "08:20 - 09:10",
+              "09:10 - 10:00",
+              "10:20 - 11:10",
+              "11:10 - 12:00"
+            ],
+            "2": [
+              "08:20 - 09:10",
+              "09:10 - 10:00",
+              "10:20 - 11:10",
+              "11:10 - 12:00"
+            ],
+            "3": [
+              "08:20 - 09:10",
+              "09:10 - 10:00",
+              "10:20 - 11:10",
+              "11:10 - 12:00"
+            ],
+            "4": [
+              "08:20 - 09:10",
+              "09:10 - 10:00",
+              "10:20 - 11:10",
+              "11:10 - 12:00"
+            ],
+            "5": [
+              "08:20 - 09:10",
+              "09:10 - 10:00",
+              "10:20 - 11:10",
+              "11:10 - 12:00"
+            ],
+            "6": [
+              "08:20 - 09:10",
+              "09:10 - 10:00",
+              "10:20 - 11:10",
+              "11:10 - 12:00"
+            ]
+          }
+        },
+        {
+          "inicio": "2026-06-15",
+          "fim": "2026-06-16",
+          "dias": [
+            1,
+            2
+          ],
+          "slots": [
+            "08:20 - 09:10",
+            "09:10 - 10:00",
+            "10:20 - 11:10",
+            "11:10 - 12:00"
+          ],
+          "drawnSlotsByDay": {
+            "1": [
+              "08:20 - 09:10",
+              "09:10 - 10:00",
+              "10:20 - 11:10",
+              "11:10 - 12:00"
+            ],
+            "2": [
+              "08:20 - 09:10",
+              "09:10 - 10:00",
+              "10:20 - 11:10"
+            ]
+          }
+        }
+      ],
+      "subGrupo": null,
+      "cor": "#ffadad",
+      "id": "c46a6f26-1785-419e-a683-99c61564e1e3"
     },
     {
       "turmaId": "CB2026",
@@ -5376,6 +5347,226 @@
       "id": "4dc04dcf-f05e-4edc-a46e-757292284c10"
     },
     {
+      "turmaId": "CN2026",
+      "disciplina": "BIOLOGIA CELULAR",
+      "docente": "A definir",
+      "tipo": "pendente",
+      "cor": "#a0c4ff",
+      "dataInicio": "2026-03-23",
+      "dataFim": "2026-07-27",
+      "subGrupo": "BLI",
+      "id": "99a2ed4e-62b4-4f45-85e3-3e30eeb2ad11"
+    },
+    {
+      "turmaId": "CN2026",
+      "disciplina": "AVALIACAO NO PROCESSO EDUCACIONAL",
+      "docente": "A definir",
+      "tipo": "pendente",
+      "cor": "#e0bbe4",
+      "dataInicio": "2026-03-23",
+      "dataFim": "2026-07-27",
+      "subGrupo": "BLI",
+      "id": "69a84270-7b02-4105-afba-6ecc27db0dab"
+    },
+    {
+      "turmaId": "CN2026",
+      "disciplina": "DIVERSIDADE DE ALGAS",
+      "docente": "A definir",
+      "tipo": "pendente",
+      "cor": "#ffdfd3",
+      "dataInicio": "2026-03-23",
+      "dataFim": "2026-07-27",
+      "subGrupo": "BLI",
+      "id": "505dc2dd-7ffc-4946-97ee-278a2278ddae"
+    },
+    {
+      "turmaId": "CN2026",
+      "disciplina": "ESTRATEGIAS ALTERNATIVAS NO ENSINO DE CIENCIAS E BIOLOGIA",
+      "docente": "A definir",
+      "tipo": "pendente",
+      "cor": "#ffc2c2",
+      "dataInicio": "2026-03-23",
+      "dataFim": "2026-07-27",
+      "subGrupo": "BLI",
+      "id": "7123d1f4-6014-4439-8b2e-0c5584aeb1ad"
+    },
+    {
+      "turmaId": "CN2026",
+      "disciplina": "ESTRATEGIAS ALTERNATIVAS NO ENSINO DE FISICA",
+      "docente": "A definir",
+      "tipo": "pendente",
+      "cor": "#ffe2b9",
+      "dataInicio": "2026-03-23",
+      "dataFim": "2026-07-27",
+      "subGrupo": "BLI",
+      "id": "b21f94e0-8cf2-41ff-8cfc-9a3574c6c8b7"
+    },
+    {
+      "turmaId": "CN2026",
+      "disciplina": "ESTRATEGIAS ALTERNATIVAS NO ENSINO DE QUIMICA",
+      "docente": "A definir",
+      "tipo": "pendente",
+      "cor": "#feffcc",
+      "dataInicio": "2026-03-23",
+      "dataFim": "2026-07-27",
+      "subGrupo": "BLI",
+      "id": "e3ff4da5-3743-4ff7-8211-e0119ea8e732"
+    },
+    {
+      "turmaId": "CN2026",
+      "disciplina": "INOVACAO E EMPREENDEDORISMO NA LICENCIATURA",
+      "docente": "A definir",
+      "tipo": "pendente",
+      "cor": "#d9ffcf",
+      "dataInicio": "2026-03-23",
+      "dataFim": "2026-07-27",
+      "subGrupo": "BLI",
+      "id": "be3ea95a-e12d-4e89-832b-eb67c98939ef"
+    },
+    {
+      "turmaId": "CN2026",
+      "disciplina": "SEMINARIOS INTEGRADORES NA EDUCACAO CIENTIFICA",
+      "docente": "A definir",
+      "tipo": "pendente",
+      "cor": "#adf9ff",
+      "dataInicio": "2026-03-23",
+      "dataFim": "2026-07-27",
+      "subGrupo": "BLI",
+      "id": "02b0000d-8298-48e4-ba95-870ebcd8eee2"
+    },
+    {
+      "turmaId": "CN2026",
+      "disciplina": "TEMAS CONTEMPORANEOS PARA A EDUCACAO",
+      "docente": "A definir",
+      "tipo": "pendente",
+      "cor": "#b4d1ff",
+      "dataInicio": "2026-03-23",
+      "dataFim": "2026-07-27",
+      "subGrupo": "BLI",
+      "id": "047cd1cb-08ef-4150-8eed-c0bf9c72d65e"
+    },
+    {
+      "turmaId": "CN2026",
+      "disciplina": "TEMAS SOCIOAMBIENTAIS E CULTURAIS",
+      "docente": "A definir",
+      "tipo": "pendente",
+      "cor": "#ccc6ff",
+      "dataInicio": "2026-03-23",
+      "dataFim": "2026-07-27",
+      "subGrupo": "BLI",
+      "id": "6c7ab4cd-06ca-4237-9dc0-91394150b6d5"
+    },
+    {
+      "turmaId": "CN2026",
+      "disciplina": "TOPICOS ESPECIAIS E ENSINO DE BIOLOGIA CELULAR E EVOLUCAO",
+      "docente": "A definir",
+      "tipo": "pendente",
+      "cor": "#ffd3ff",
+      "dataInicio": "2026-03-23",
+      "dataFim": "2026-07-27",
+      "subGrupo": "BLI",
+      "id": "0a36932f-a311-44ca-a5a1-d3ed47a7b439"
+    },
+    {
+      "turmaId": "CN2026",
+      "disciplina": "TOPICOS ESPECIAIS E ENSINO DE DIVERSIDADE BIOLOGICA ANIMAL",
+      "docente": "A definir",
+      "tipo": "pendente",
+      "cor": "#eccfe9",
+      "dataInicio": "2026-03-23",
+      "dataFim": "2026-07-27",
+      "subGrupo": "BLI",
+      "id": "6c1d28ea-a5a1-4fbd-b127-39c41595d3ee"
+    },
+    {
+      "turmaId": "CN2026",
+      "disciplina": "TOPICOS ESPECIAIS E ENSINO DE DIVERSIDADE BIOLOGICA VEGETAL",
+      "docente": "A definir",
+      "tipo": "pendente",
+      "cor": "#ffe8de",
+      "dataInicio": "2026-03-23",
+      "dataFim": "2026-07-27",
+      "subGrupo": "BLI",
+      "id": "4d73e269-aaaf-46c1-a014-b5517ec0b7fe"
+    },
+    {
+      "turmaId": "CN2026",
+      "disciplina": "TOPICOS ESPECIAIS E ENSINO DE MICROBIOLOGIA",
+      "docente": "A definir",
+      "tipo": "pendente",
+      "cor": "#f29898",
+      "dataInicio": "2026-03-23",
+      "dataFim": "2026-07-27",
+      "subGrupo": "BLI",
+      "id": "24d8793c-db8a-452b-99c3-cd3dbe22387d"
+    },
+    {
+      "turmaId": "CN2026",
+      "disciplina": "TOPICOS ESPECIAIS E ENSINO EM EDUCACAO AMBIENTAL",
+      "docente": "A definir",
+      "tipo": "pendente",
+      "cor": "#f2c08f",
+      "dataInicio": "2026-03-23",
+      "dataFim": "2026-07-27",
+      "subGrupo": "BLI",
+      "id": "ee5d6e94-198a-4cfa-b9bf-e5867264f9dc"
+    },
+    {
+      "turmaId": "CN2026",
+      "disciplina": "TOPICOS ESPECIAIS EM ENSINO DE BIOLOGIA FUNCIONAL",
+      "docente": "A definir",
+      "tipo": "pendente",
+      "cor": "#f0f2a0",
+      "dataInicio": "2026-03-23",
+      "dataFim": "2026-07-27",
+      "subGrupo": "BLI",
+      "id": "b187dbb1-f6a6-427d-a2fb-18062a492e51"
+    },
+    {
+      "turmaId": "CN2026",
+      "disciplina": "TOPICOS ESPECIAIS EM ENSINO DE CIENCIAS EXATAS E DA TERRA",
+      "docente": "A definir",
+      "tipo": "pendente",
+      "cor": "#b7f2ab",
+      "dataInicio": "2026-03-23",
+      "dataFim": "2026-07-27",
+      "subGrupo": "BLI",
+      "id": "e677226c-b213-4d48-891d-f64248161fda"
+    },
+    {
+      "turmaId": "CN2026",
+      "disciplina": "TOPICOS ESPECIAIS EM ENSINO DE ECOLOGIA",
+      "docente": "A definir",
+      "tipo": "pendente",
+      "cor": "#88e0ea",
+      "dataInicio": "2026-03-23",
+      "dataFim": "2026-07-27",
+      "subGrupo": "BLI",
+      "id": "b74d5bfd-94c4-4d2a-b707-c602711c5ca1"
+    },
+    {
+      "turmaId": "CN2024",
+      "disciplina": "FUNDAMENTOS DE FISICA II",
+      "docente": "A definir",
+      "tipo": "pendente",
+      "cor": "#e5b9a5",
+      "dataInicio": "2026-03-23",
+      "dataFim": "2026-07-27",
+      "subGrupo": "BLV",
+      "id": "48c2e1c6-2d33-42ac-a1bd-89d1c2ae966b"
+    },
+    {
+      "turmaId": "CN2023",
+      "disciplina": "PALEONTOLOGIA",
+      "docente": "A definir",
+      "tipo": "pendente",
+      "cor": "#61a0e5",
+      "dataInicio": "2026-03-23",
+      "dataFim": "2026-07-27",
+      "subGrupo": "BLVII",
+      "id": "6e4be5b5-c936-4616-8f9c-accff10e73ba"
+    },
+    {
       "turmaId": "CN2022",
       "disciplina": "TEMAS SOCIOAMBIENTAIS E CULTURAIS",
       "docente": "Lucinaldo da Silva Bandtt",
@@ -6422,6 +6613,217 @@
       "subGrupo": null,
       "cor": "#599ccf",
       "id": "c81119e4-7c39-463c-8b7f-944361d89a71"
+    },
+    {
+      "turmaId": "CN2026",
+      "disciplina": "MATEMATICA BASICA",
+      "docente": "Carlos Murilo Tenório Maciel",
+      "docentes": null,
+      "tipo": "intensiva",
+      "ch": 60,
+      "dataInicio": "2026-06-10",
+      "dataFim": "2026-06-26",
+      "modelo": "Automatico",
+      "horariosOcupados": [
+        "14:20 - 15:10",
+        "15:10 - 16:00",
+        "16:20 - 17:10",
+        "17:10 - 18:00"
+      ],
+      "horariosUltimoDia": [
+        "14:20 - 15:10",
+        "15:10 - 16:00",
+        "16:20 - 17:10",
+        "17:10 - 18:00"
+      ],
+      "diasMarcados": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "usaSabado": true,
+      "faixas": [
+        {
+          "inicio": "2026-06-10",
+          "fim": "2026-06-26",
+          "dias": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6
+          ],
+          "slots": [
+            "14:20 - 15:10",
+            "15:10 - 16:00",
+            "16:20 - 17:10",
+            "17:10 - 18:00"
+          ],
+          "drawnSlotsByDay": {
+            "1": [
+              "14:20 - 15:10",
+              "15:10 - 16:00",
+              "16:20 - 17:10",
+              "17:10 - 18:00"
+            ],
+            "2": [
+              "14:20 - 15:10",
+              "15:10 - 16:00",
+              "16:20 - 17:10",
+              "17:10 - 18:00"
+            ],
+            "3": [
+              "14:20 - 15:10",
+              "15:10 - 16:00",
+              "16:20 - 17:10",
+              "17:10 - 18:00"
+            ],
+            "4": [
+              "14:20 - 15:10",
+              "15:10 - 16:00",
+              "16:20 - 17:10",
+              "17:10 - 18:00"
+            ],
+            "5": [
+              "14:20 - 15:10",
+              "15:10 - 16:00",
+              "16:20 - 17:10",
+              "17:10 - 18:00"
+            ],
+            "6": [
+              "14:20 - 15:10",
+              "15:10 - 16:00",
+              "16:20 - 17:10",
+              "17:10 - 18:00"
+            ]
+          }
+        }
+      ],
+      "subGrupo": null,
+      "cor": "#9bf6ff",
+      "id": "aa5ee6bd-5a3a-48d0-97ee-f3252db28f74"
+    },
+    {
+      "turmaId": "CN2026",
+      "disciplina": "POLITICAS E LEGISLACAO DA EDUCACAO BASICA",
+      "docente": "Neide Ramos",
+      "docentes": null,
+      "tipo": "intensiva",
+      "ch": 45,
+      "dataInicio": "2026-06-27",
+      "dataFim": "2026-07-10",
+      "modelo": "Automatico",
+      "horariosOcupados": [
+        "14:20 - 15:10",
+        "15:10 - 16:00",
+        "16:20 - 17:10",
+        "17:10 - 18:00",
+        "18:00 - 18:50"
+      ],
+      "horariosUltimoDia": [
+        "14:20 - 15:10",
+        "15:10 - 16:00",
+        "16:20 - 17:10",
+        "17:10 - 18:00",
+        "18:00 - 18:50"
+      ],
+      "diasMarcados": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "usaSabado": true,
+      "faixas": [
+        {
+          "inicio": "2026-06-27",
+          "fim": "2026-07-09",
+          "dias": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6
+          ],
+          "slots": [
+            "14:20 - 15:10",
+            "15:10 - 16:00",
+            "16:20 - 17:10",
+            "17:10 - 18:00"
+          ],
+          "drawnSlotsByDay": {
+            "1": [
+              "14:20 - 15:10",
+              "15:10 - 16:00",
+              "16:20 - 17:10",
+              "17:10 - 18:00"
+            ],
+            "2": [
+              "14:20 - 15:10",
+              "15:10 - 16:00",
+              "16:20 - 17:10",
+              "17:10 - 18:00"
+            ],
+            "3": [
+              "14:20 - 15:10",
+              "15:10 - 16:00",
+              "16:20 - 17:10",
+              "17:10 - 18:00"
+            ],
+            "4": [
+              "14:20 - 15:10",
+              "15:10 - 16:00",
+              "16:20 - 17:10",
+              "17:10 - 18:00"
+            ],
+            "5": [
+              "14:20 - 15:10",
+              "15:10 - 16:00",
+              "16:20 - 17:10",
+              "17:10 - 18:00"
+            ],
+            "6": [
+              "14:20 - 15:10",
+              "15:10 - 16:00",
+              "16:20 - 17:10",
+              "17:10 - 18:00"
+            ]
+          }
+        },
+        {
+          "inicio": "2026-07-10",
+          "fim": "2026-07-10",
+          "dias": [
+            5
+          ],
+          "slots": [
+            "14:20 - 15:10",
+            "15:10 - 16:00",
+            "16:20 - 17:10",
+            "17:10 - 18:00",
+            "18:00 - 18:50"
+          ],
+          "drawnSlotsByDay": {
+            "5": [
+              "14:20 - 15:10",
+              "15:10 - 16:00",
+              "16:20 - 17:10",
+              "17:10 - 18:00",
+              "18:00 - 18:50"
+            ]
+          }
+        }
+      ],
+      "subGrupo": null,
+      "cor": "#fdffb6",
+      "id": "ee858b3c-cafc-4fbe-875d-d6ab29f74ebe"
     },
     {
       "turmaId": "CN2025",
@@ -8666,14 +9068,14 @@
       "id": "24a1bd0a-febf-4d8a-86d2-3147a7c141f9"
     },
     {
-      "turmaId": "CN2026",
-      "disciplina": "MATEMATICA BASICA",
-      "docente": "Carlos Murilo Tenório Maciel",
+      "turmaId": "EP2025",
+      "disciplina": "ICTIOLOGIA",
+      "docente": "Grazielle Fernanda Evangelista Gomes",
       "docentes": null,
       "tipo": "intensiva",
-      "ch": 60,
-      "dataInicio": "2026-06-10",
-      "dataFim": "2026-06-26",
+      "ch": 45,
+      "dataInicio": "2026-04-06",
+      "dataFim": "2026-06-22",
       "modelo": "Automatico",
       "horariosOcupados": [
         "14:20 - 15:10",
@@ -8682,31 +9084,18 @@
         "17:10 - 18:00"
       ],
       "horariosUltimoDia": [
-        "14:20 - 15:10",
-        "15:10 - 16:00",
-        "16:20 - 17:10",
-        "17:10 - 18:00"
+        "14:20 - 15:10"
       ],
       "diasMarcados": [
-        1,
-        2,
-        3,
-        4,
-        5,
-        6
+        1
       ],
-      "usaSabado": true,
+      "usaSabado": false,
       "faixas": [
         {
-          "inicio": "2026-06-10",
-          "fim": "2026-06-26",
+          "inicio": "2026-04-06",
+          "fim": "2026-06-22",
           "dias": [
-            1,
-            2,
-            3,
-            4,
-            5,
-            6
+            1
           ],
           "slots": [
             "14:20 - 15:10",
@@ -8716,36 +9105,6 @@
           ],
           "drawnSlotsByDay": {
             "1": [
-              "14:20 - 15:10",
-              "15:10 - 16:00",
-              "16:20 - 17:10",
-              "17:10 - 18:00"
-            ],
-            "2": [
-              "14:20 - 15:10",
-              "15:10 - 16:00",
-              "16:20 - 17:10",
-              "17:10 - 18:00"
-            ],
-            "3": [
-              "14:20 - 15:10",
-              "15:10 - 16:00",
-              "16:20 - 17:10",
-              "17:10 - 18:00"
-            ],
-            "4": [
-              "14:20 - 15:10",
-              "15:10 - 16:00",
-              "16:20 - 17:10",
-              "17:10 - 18:00"
-            ],
-            "5": [
-              "14:20 - 15:10",
-              "15:10 - 16:00",
-              "16:20 - 17:10",
-              "17:10 - 18:00"
-            ],
-            "6": [
               "14:20 - 15:10",
               "15:10 - 16:00",
               "16:20 - 17:10",
@@ -8755,101 +9114,96 @@
         }
       ],
       "subGrupo": null,
-      "cor": "#2594e9",
-      "id": "2c7e0319-d370-4da5-a92b-9821346cd1c9"
+      "cor": "#9bc149",
+      "id": "389065ee-da20-41b7-9e91-e94ea47007ba"
     },
     {
-      "turmaId": "CN2026",
-      "disciplina": "POLITICAS E LEGISLACAO DA EDUCACAO BASICA",
-      "docente": "Neide Ramos",
+      "turmaId": "EP2025",
+      "disciplina": "DESENHO COMPUTACIONAL",
+      "docente": "Daniel Abreu Vasconcelos Campelo",
       "docentes": null,
       "tipo": "intensiva",
-      "ch": 45,
-      "dataInicio": "2026-06-27",
-      "dataFim": "2026-07-11",
+      "ch": 60,
+      "dataInicio": "2026-04-08",
+      "dataFim": "2026-06-24",
       "modelo": "Automatico",
       "horariosOcupados": [
         "14:20 - 15:10",
         "15:10 - 16:00",
         "16:20 - 17:10",
-        "17:10 - 18:00"
+        "17:10 - 18:00",
+        "18:00 - 18:50"
       ],
       "horariosUltimoDia": [
         "14:20 - 15:10",
-        "15:10 - 16:00"
+        "15:10 - 16:00",
+        "16:20 - 17:10",
+        "17:10 - 18:00",
+        "18:00 - 18:50"
       ],
       "diasMarcados": [
-        1,
-        2,
-        3,
-        4,
-        5,
-        6
+        3
       ],
-      "usaSabado": true,
+      "usaSabado": false,
       "faixas": [
         {
-          "inicio": "2026-06-27",
-          "fim": "2026-07-09",
+          "inicio": "2026-04-08",
+          "fim": "2026-06-24",
           "dias": [
-            1,
-            2,
-            3,
-            4,
-            5,
-            6
+            3
           ],
           "slots": [
             "14:20 - 15:10",
             "15:10 - 16:00",
             "16:20 - 17:10",
-            "17:10 - 18:00"
+            "17:10 - 18:00",
+            "18:00 - 18:50"
           ],
           "drawnSlotsByDay": {
-            "1": [
-              "14:20 - 15:10",
-              "15:10 - 16:00",
-              "16:20 - 17:10",
-              "17:10 - 18:00"
-            ],
-            "2": [
-              "14:20 - 15:10",
-              "15:10 - 16:00",
-              "16:20 - 17:10",
-              "17:10 - 18:00"
-            ],
             "3": [
               "14:20 - 15:10",
               "15:10 - 16:00",
               "16:20 - 17:10",
-              "17:10 - 18:00"
-            ],
-            "4": [
-              "14:20 - 15:10",
-              "15:10 - 16:00",
-              "16:20 - 17:10",
-              "17:10 - 18:00"
-            ],
-            "5": [
-              "14:20 - 15:10",
-              "15:10 - 16:00",
-              "16:20 - 17:10",
-              "17:10 - 18:00"
-            ],
-            "6": [
-              "14:20 - 15:10",
-              "15:10 - 16:00",
-              "16:20 - 17:10",
-              "17:10 - 18:00"
+              "17:10 - 18:00",
+              "18:00 - 18:50"
             ]
           }
-        },
+        }
+      ],
+      "subGrupo": null,
+      "cor": "#e9164b",
+      "id": "2e968265-d9ac-42d6-9eb1-b7caf2ff7229"
+    },
+    {
+      "turmaId": "EP2025",
+      "disciplina": "ECONOMIA",
+      "docente": "Marcos Ferreira Brabo",
+      "docentes": null,
+      "tipo": "intensiva",
+      "ch": 45,
+      "dataInicio": "2026-04-09",
+      "dataFim": "2026-07-23",
+      "modelo": "Automatico",
+      "horariosOcupados": [
+        "14:20 - 15:10",
+        "15:10 - 16:00",
+        "16:20 - 17:10"
+      ],
+      "horariosUltimoDia": [
+        "14:20 - 15:10",
+        "15:10 - 16:00",
+        "16:20 - 17:10"
+      ],
+      "diasMarcados": [
+        4
+      ],
+      "usaSabado": false,
+      "faixas": [
         {
-          "inicio": "2026-07-10",
-          "fim": "2026-07-11",
+          "inicio": "2026-04-09",
+          "fim": "2026-07-23",
           "dias": [
-            5,
-            6
+            4
           ],
           "slots": [
             "14:20 - 15:10",
@@ -8857,144 +9211,78 @@
             "16:20 - 17:10"
           ],
           "drawnSlotsByDay": {
-            "5": [
+            "4": [
               "14:20 - 15:10",
               "15:10 - 16:00",
               "16:20 - 17:10"
-            ],
-            "6": [
-              "14:20 - 15:10",
-              "15:10 - 16:00"
             ]
           }
         }
       ],
       "subGrupo": null,
-      "cor": "#25e9d2",
-      "id": "30df6653-caa9-42d0-ade8-9b8104122281"
+      "cor": "#4f25e9",
+      "id": "0b836b02-3a6a-49b0-bea0-30850c428e55"
     },
     {
-      "turmaId": "CB2026",
-      "disciplina": "BIOLOGIA CELULAR E MOLECULAR",
+      "turmaId": "EP2025",
+      "disciplina": "MICROBIOLOGIA DO PESCADO",
       "docente": "Simoni Santos da Silva",
       "docentes": null,
       "tipo": "intensiva",
-      "ch": 75,
-      "dataInicio": "2026-05-25",
-      "dataFim": "2026-06-16",
+      "ch": 60,
+      "dataInicio": "2026-04-10",
+      "dataFim": "2026-07-03",
       "modelo": "Automatico",
       "horariosOcupados": [
-        "08:20 - 09:10",
-        "09:10 - 10:00",
-        "10:20 - 11:10",
-        "11:10 - 12:00"
+        "14:20 - 15:10",
+        "15:10 - 16:00",
+        "16:20 - 17:10",
+        "17:10 - 18:00",
+        "18:00 - 18:50"
       ],
       "horariosUltimoDia": [
-        "08:20 - 09:10",
-        "09:10 - 10:00",
-        "10:20 - 11:10"
+        "14:20 - 15:10",
+        "15:10 - 16:00",
+        "16:20 - 17:10",
+        "17:10 - 18:00",
+        "18:00 - 18:50"
       ],
       "diasMarcados": [
-        1,
-        2,
-        3,
-        4,
-        5,
-        6
+        5
       ],
-      "usaSabado": true,
+      "usaSabado": false,
       "faixas": [
         {
-          "inicio": "2026-05-25",
-          "fim": "2026-06-14",
+          "inicio": "2026-04-10",
+          "fim": "2026-07-03",
           "dias": [
-            1,
-            2,
-            3,
-            4,
-            5,
-            6
+            5
           ],
           "slots": [
-            "08:20 - 09:10",
-            "09:10 - 10:00",
-            "10:20 - 11:10",
-            "11:10 - 12:00"
+            "14:20 - 15:10",
+            "15:10 - 16:00",
+            "16:20 - 17:10",
+            "17:10 - 18:00",
+            "18:00 - 18:50"
           ],
           "drawnSlotsByDay": {
-            "1": [
-              "08:20 - 09:10",
-              "09:10 - 10:00",
-              "10:20 - 11:10",
-              "11:10 - 12:00"
-            ],
-            "2": [
-              "08:20 - 09:10",
-              "09:10 - 10:00",
-              "10:20 - 11:10",
-              "11:10 - 12:00"
-            ],
-            "3": [
-              "08:20 - 09:10",
-              "09:10 - 10:00",
-              "10:20 - 11:10",
-              "11:10 - 12:00"
-            ],
-            "4": [
-              "08:20 - 09:10",
-              "09:10 - 10:00",
-              "10:20 - 11:10",
-              "11:10 - 12:00"
-            ],
             "5": [
-              "08:20 - 09:10",
-              "09:10 - 10:00",
-              "10:20 - 11:10",
-              "11:10 - 12:00"
-            ],
-            "6": [
-              "08:20 - 09:10",
-              "09:10 - 10:00",
-              "10:20 - 11:10",
-              "11:10 - 12:00"
-            ]
-          }
-        },
-        {
-          "inicio": "2026-06-15",
-          "fim": "2026-06-16",
-          "dias": [
-            1,
-            2
-          ],
-          "slots": [
-            "08:20 - 09:10",
-            "09:10 - 10:00",
-            "10:20 - 11:10",
-            "11:10 - 12:00"
-          ],
-          "drawnSlotsByDay": {
-            "1": [
-              "08:20 - 09:10",
-              "09:10 - 10:00",
-              "10:20 - 11:10",
-              "11:10 - 12:00"
-            ],
-            "2": [
-              "08:20 - 09:10",
-              "09:10 - 10:00",
-              "10:20 - 11:10"
+              "14:20 - 15:10",
+              "15:10 - 16:00",
+              "16:20 - 17:10",
+              "17:10 - 18:00",
+              "18:00 - 18:50"
             ]
           }
         }
       ],
       "subGrupo": null,
-      "cor": "#25e9d2",
-      "id": "f06034fd-d6c6-4d41-aae7-9fba675a77c4"
+      "cor": "#25c2e9",
+      "id": "a2af5e90-a5d8-4922-a53d-7b8604e8f6b0"
     }
   ],
   "settings": {
     "termStart": "2026-03-23",
-    "termEnd": "2026-07-24"
+    "termEnd": "2026-07-23"
   }
 }
