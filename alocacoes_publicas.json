@@ -9093,7 +9093,7 @@
       "faixas": [
         {
           "inicio": "2026-04-06",
-          "fim": "2026-06-22",
+          "fim": "2026-06-21",
           "dias": [
             1
           ],
@@ -9111,174 +9111,28 @@
               "17:10 - 18:00"
             ]
           }
+        },
+        {
+          "inicio": "2026-06-22",
+          "fim": "2026-06-22",
+          "dias": [
+            1
+          ],
+          "slots": [
+            "14:20 - 15:10",
+            "15:10 - 16:00"
+          ],
+          "drawnSlotsByDay": {
+            "1": [
+              "14:20 - 15:10",
+              "15:10 - 16:00"
+            ]
+          }
         }
       ],
       "subGrupo": null,
       "cor": "#9bc149",
-      "id": "389065ee-da20-41b7-9e91-e94ea47007ba"
-    },
-    {
-      "turmaId": "EP2025",
-      "disciplina": "DESENHO COMPUTACIONAL",
-      "docente": "Daniel Abreu Vasconcelos Campelo",
-      "docentes": null,
-      "tipo": "intensiva",
-      "ch": 60,
-      "dataInicio": "2026-04-08",
-      "dataFim": "2026-06-24",
-      "modelo": "Automatico",
-      "horariosOcupados": [
-        "14:20 - 15:10",
-        "15:10 - 16:00",
-        "16:20 - 17:10",
-        "17:10 - 18:00",
-        "18:00 - 18:50"
-      ],
-      "horariosUltimoDia": [
-        "14:20 - 15:10",
-        "15:10 - 16:00",
-        "16:20 - 17:10",
-        "17:10 - 18:00",
-        "18:00 - 18:50"
-      ],
-      "diasMarcados": [
-        3
-      ],
-      "usaSabado": false,
-      "faixas": [
-        {
-          "inicio": "2026-04-08",
-          "fim": "2026-06-24",
-          "dias": [
-            3
-          ],
-          "slots": [
-            "14:20 - 15:10",
-            "15:10 - 16:00",
-            "16:20 - 17:10",
-            "17:10 - 18:00",
-            "18:00 - 18:50"
-          ],
-          "drawnSlotsByDay": {
-            "3": [
-              "14:20 - 15:10",
-              "15:10 - 16:00",
-              "16:20 - 17:10",
-              "17:10 - 18:00",
-              "18:00 - 18:50"
-            ]
-          }
-        }
-      ],
-      "subGrupo": null,
-      "cor": "#e9164b",
-      "id": "2e968265-d9ac-42d6-9eb1-b7caf2ff7229"
-    },
-    {
-      "turmaId": "EP2025",
-      "disciplina": "ECONOMIA",
-      "docente": "Marcos Ferreira Brabo",
-      "docentes": null,
-      "tipo": "intensiva",
-      "ch": 45,
-      "dataInicio": "2026-04-09",
-      "dataFim": "2026-07-23",
-      "modelo": "Automatico",
-      "horariosOcupados": [
-        "14:20 - 15:10",
-        "15:10 - 16:00",
-        "16:20 - 17:10"
-      ],
-      "horariosUltimoDia": [
-        "14:20 - 15:10",
-        "15:10 - 16:00",
-        "16:20 - 17:10"
-      ],
-      "diasMarcados": [
-        4
-      ],
-      "usaSabado": false,
-      "faixas": [
-        {
-          "inicio": "2026-04-09",
-          "fim": "2026-07-23",
-          "dias": [
-            4
-          ],
-          "slots": [
-            "14:20 - 15:10",
-            "15:10 - 16:00",
-            "16:20 - 17:10"
-          ],
-          "drawnSlotsByDay": {
-            "4": [
-              "14:20 - 15:10",
-              "15:10 - 16:00",
-              "16:20 - 17:10"
-            ]
-          }
-        }
-      ],
-      "subGrupo": null,
-      "cor": "#4f25e9",
-      "id": "0b836b02-3a6a-49b0-bea0-30850c428e55"
-    },
-    {
-      "turmaId": "EP2025",
-      "disciplina": "MICROBIOLOGIA DO PESCADO",
-      "docente": "Simoni Santos da Silva",
-      "docentes": null,
-      "tipo": "intensiva",
-      "ch": 60,
-      "dataInicio": "2026-04-10",
-      "dataFim": "2026-07-03",
-      "modelo": "Automatico",
-      "horariosOcupados": [
-        "14:20 - 15:10",
-        "15:10 - 16:00",
-        "16:20 - 17:10",
-        "17:10 - 18:00",
-        "18:00 - 18:50"
-      ],
-      "horariosUltimoDia": [
-        "14:20 - 15:10",
-        "15:10 - 16:00",
-        "16:20 - 17:10",
-        "17:10 - 18:00",
-        "18:00 - 18:50"
-      ],
-      "diasMarcados": [
-        5
-      ],
-      "usaSabado": false,
-      "faixas": [
-        {
-          "inicio": "2026-04-10",
-          "fim": "2026-07-03",
-          "dias": [
-            5
-          ],
-          "slots": [
-            "14:20 - 15:10",
-            "15:10 - 16:00",
-            "16:20 - 17:10",
-            "17:10 - 18:00",
-            "18:00 - 18:50"
-          ],
-          "drawnSlotsByDay": {
-            "5": [
-              "14:20 - 15:10",
-              "15:10 - 16:00",
-              "16:20 - 17:10",
-              "17:10 - 18:00",
-              "18:00 - 18:50"
-            ]
-          }
-        }
-      ],
-      "subGrupo": null,
-      "cor": "#25c2e9",
-      "id": "a2af5e90-a5d8-4922-a53d-7b8604e8f6b0"
+      "id": "57bb7435-cec9-4dbf-9960-3b5c1457e0b7"
     },
     {
       "turmaId": "EP2025",
@@ -9363,12 +9217,175 @@
         }
       ],
       "subGrupo": null,
-      "cor": "#25e960",
-      "id": "b59e9095-f966-4e0b-9fbb-3eafce0bea25"
+      "cor": "#25e98e",
+      "id": "81ffc076-3eb2-4612-b507-cfcfaed89851"
+    },
+    {
+      "turmaId": "EP2025",
+      "disciplina": "DESENHO COMPUTACIONAL",
+      "docente": "Daniel Abreu Vasconcelos Campelo",
+      "docentes": null,
+      "tipo": "intensiva",
+      "ch": 60,
+      "dataInicio": "2026-04-08",
+      "dataFim": "2026-06-24",
+      "modelo": "Automatico",
+      "horariosOcupados": [
+        "14:20 - 15:10",
+        "15:10 - 16:00",
+        "16:20 - 17:10",
+        "17:10 - 18:00",
+        "18:00 - 18:50"
+      ],
+      "horariosUltimoDia": [
+        "14:20 - 15:10",
+        "15:10 - 16:00",
+        "16:20 - 17:10",
+        "17:10 - 18:00",
+        "18:00 - 18:50"
+      ],
+      "diasMarcados": [
+        3
+      ],
+      "usaSabado": false,
+      "faixas": [
+        {
+          "inicio": "2026-04-08",
+          "fim": "2026-06-24",
+          "dias": [
+            3
+          ],
+          "slots": [
+            "14:20 - 15:10",
+            "15:10 - 16:00",
+            "16:20 - 17:10",
+            "17:10 - 18:00",
+            "18:00 - 18:50"
+          ],
+          "drawnSlotsByDay": {
+            "3": [
+              "14:20 - 15:10",
+              "15:10 - 16:00",
+              "16:20 - 17:10",
+              "17:10 - 18:00",
+              "18:00 - 18:50"
+            ]
+          }
+        }
+      ],
+      "subGrupo": null,
+      "cor": "#e9164b",
+      "id": "32fab1d0-43a2-4aea-b619-78b6e5bc6821"
+    },
+    {
+      "turmaId": "EP2025",
+      "disciplina": "ECONOMIA",
+      "docente": "Marcos Ferreira Brabo",
+      "docentes": null,
+      "tipo": "intensiva",
+      "ch": 45,
+      "dataInicio": "2026-04-09",
+      "dataFim": "2026-07-23",
+      "modelo": "Automatico",
+      "horariosOcupados": [
+        "14:20 - 15:10",
+        "15:10 - 16:00",
+        "16:20 - 17:10"
+      ],
+      "horariosUltimoDia": [
+        "14:20 - 15:10",
+        "15:10 - 16:00",
+        "16:20 - 17:10"
+      ],
+      "diasMarcados": [
+        4
+      ],
+      "usaSabado": false,
+      "faixas": [
+        {
+          "inicio": "2026-04-09",
+          "fim": "2026-07-23",
+          "dias": [
+            4
+          ],
+          "slots": [
+            "14:20 - 15:10",
+            "15:10 - 16:00",
+            "16:20 - 17:10"
+          ],
+          "drawnSlotsByDay": {
+            "4": [
+              "14:20 - 15:10",
+              "15:10 - 16:00",
+              "16:20 - 17:10"
+            ]
+          }
+        }
+      ],
+      "subGrupo": null,
+      "cor": "#4f25e9",
+      "id": "794d9a2c-9c6b-4ccf-a2b8-06661ddc8796"
+    },
+    {
+      "turmaId": "EP2025",
+      "disciplina": "MICROBIOLOGIA DO PESCADO",
+      "docente": "Simoni Santos da Silva",
+      "docentes": null,
+      "tipo": "intensiva",
+      "ch": 60,
+      "dataInicio": "2026-04-10",
+      "dataFim": "2026-07-03",
+      "modelo": "Automatico",
+      "horariosOcupados": [
+        "14:20 - 15:10",
+        "15:10 - 16:00",
+        "16:20 - 17:10",
+        "17:10 - 18:00",
+        "18:00 - 18:50"
+      ],
+      "horariosUltimoDia": [
+        "14:20 - 15:10",
+        "15:10 - 16:00",
+        "16:20 - 17:10",
+        "17:10 - 18:00",
+        "18:00 - 18:50"
+      ],
+      "diasMarcados": [
+        5
+      ],
+      "usaSabado": false,
+      "faixas": [
+        {
+          "inicio": "2026-04-10",
+          "fim": "2026-07-03",
+          "dias": [
+            5
+          ],
+          "slots": [
+            "14:20 - 15:10",
+            "15:10 - 16:00",
+            "16:20 - 17:10",
+            "17:10 - 18:00",
+            "18:00 - 18:50"
+          ],
+          "drawnSlotsByDay": {
+            "5": [
+              "14:20 - 15:10",
+              "15:10 - 16:00",
+              "16:20 - 17:10",
+              "17:10 - 18:00",
+              "18:00 - 18:50"
+            ]
+          }
+        }
+      ],
+      "subGrupo": null,
+      "cor": "#25c2e9",
+      "id": "e01020a7-4655-41b7-bc39-573cd15d7e0f"
     }
   ],
   "settings": {
     "termStart": "2026-03-23",
-    "termEnd": "2026-07-23"
+    "termEnd": "2026-07-24"
   }
 }
