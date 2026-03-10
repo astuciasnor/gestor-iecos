@@ -358,7 +358,7 @@ input[type="date"] { color-scheme: dark; }
 }
 
 .component-start-row {
-    display: flex;
+    display: none !important;
     flex-direction: column;
     gap: 4px;
     margin-top: 6px;
@@ -377,6 +377,14 @@ input[type="date"] { color-scheme: dark; }
     height: 32px;
     padding: 4px 8px;
     font-size: 0.88rem;
+    cursor: pointer;
+}
+
+.component-start-input::-webkit-calendar-picker-indicator {
+    opacity: 0;
+    width: 0;
+    margin: 0;
+    padding: 0;
 }
 
 .weekly-faixas-panel {
@@ -405,9 +413,9 @@ input[type="date"] { color-scheme: dark; }
 
 .weekly-faixas-main {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-columns: minmax(0, 1fr) 132px;
     align-items: center;
-    gap: 12px;
+    gap: 8px;
 }
 
 .weekly-faixas-title {
@@ -455,7 +463,7 @@ input[type="date"] { color-scheme: dark; }
 }
 
 .weekly-faixas-table .col-faixa-ch {
-    width: 72px;
+    width: 58px;
 }
 
 .weekly-faixas-table th,
@@ -567,17 +575,82 @@ input[type="date"] { color-scheme: dark; }
     justify-content: center;
 }
 
-.weekly-faixas-table input[type="date"] {
+.weekly-faixas-table .faixa-date-compact {
+    position: relative;
     width: 100%;
     min-width: 0;
-    max-width: 100%;
-    background: rgba(255, 255, 255, 0.85);
-    border: 1px solid #6e8ef2;
-    color: #123ab5;
-    font-weight: 700;
-    padding: 3px 5px;
-    font-size: 0.81rem;
-    border-radius: 5px;
+    min-height: 34px;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+    padding: 4px 5px 4px 10px;
+    background: linear-gradient(180deg, #0c7f45 0%, #056b39 100%);
+    border: 1px solid #0a8e4c;
+    border-radius: 8px;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+    transition: border-color 0.16s ease, box-shadow 0.16s ease, transform 0.16s ease;
+}
+
+.weekly-faixas-table .faixa-date-compact:hover {
+    border-color: #15b361;
+}
+
+.weekly-faixas-table .faixa-date-compact:focus-within {
+    border-color: #6ef0a2;
+    box-shadow: 0 0 0 2px rgba(110, 240, 162, 0.18);
+    transform: translateY(-1px);
+}
+
+.weekly-faixas-table .faixa-date-native {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.weekly-faixas-table .faixa-date-display {
+    flex: 1 1 auto;
+    min-width: 0;
+    color: #f4fff7;
+    font-weight: 800;
+    font-size: 0.79rem;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+    text-align: left;
+    white-space: nowrap;
+}
+
+.weekly-faixas-table .faixa-date-display.is-placeholder {
+    opacity: 0.9;
+}
+
+.weekly-faixas-table .faixa-date-trigger {
+    flex: 0 0 auto;
+    width: 18px;
+    height: 18px;
+    margin: 0;
+    padding: 0;
+    border: none;
+    background: transparent;
+    color: #f4fff7;
+    font-size: 0.88rem;
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.weekly-faixas-table .faixa-date-trigger:hover {
+    color: #ffffff;
+}
+
+.weekly-faixas-table .faixa-date-trigger:focus {
+    outline: none;
 }
 
 .weekly-faixas-table .faixa-ch-cell {
@@ -587,21 +660,21 @@ input[type="date"] { color-scheme: dark; }
 }
 
 .weekly-faixas-total {
-    min-width: 152px;
+    min-width: 132px;
     margin-top: 0;
-    margin-left: 4px;
+    margin-left: 0;
     display: flex;
     flex-direction: column;
     justify-content: center;
-    gap: 6px;
+    gap: 5px;
 }
 
 .weekly-faixas-metric-card {
     width: 100%;
-    min-height: 46px;
-    padding: 5px 8px;
+    min-height: 40px;
+    padding: 4px 6px;
     border: 1px solid rgba(196, 210, 225, 0.95);
-    border-radius: 10px;
+    border-radius: 9px;
     background: rgba(252, 253, 255, 0.95);
     box-shadow: 0 2px 9px rgba(16, 35, 52, 0.08);
     display: flex;
@@ -614,21 +687,21 @@ input[type="date"] { color-scheme: dark; }
 
 .weekly-faixas-metric-label {
     color: #28435b;
-    font-size: 0.76rem;
+    font-size: 0.69rem;
     font-weight: 700;
     letter-spacing: 0.1px;
 }
 
 .weekly-faixas-metric-value {
     color: #0f2232;
-    font-size: 1.9rem;
+    font-size: 1.6rem;
     font-weight: 900;
     line-height: 0.95;
 }
 
 .weekly-faixas-metric-sub {
-    margin-top: 2px;
-    font-size: 0.72rem;
+    margin-top: 1px;
+    font-size: 0.66rem;
     font-weight: 700;
     color: #2f4d65;
 }
@@ -646,13 +719,13 @@ input[type="date"] { color-scheme: dark; }
 }
 
 .weekly-faixas-total #weekly-faixa-total-ch {
-    font-size: 2.25rem;
+    font-size: 1.85rem;
     font-weight: 800;
     color: #0f2232;
 }
 
 .weekly-faixas-total #weekly-faixa-target-ch {
-    font-size: 1.95rem;
+    font-size: 1.65rem;
     font-weight: 800;
     color: #0f3fc0;
 }
@@ -745,18 +818,19 @@ input[type="date"] { color-scheme: dark; }
     background: #ffffff;
     color: #2f4c5a;
     border-radius: 6px;
-    height: 36px;
+    height: 42px;
     width: 100%;
-    padding: 0 10px;
+    padding: 0 6px;
     cursor: pointer;
     font-weight: 700;
     font-size: 0.81rem;
-    line-height: 1;
-    white-space: nowrap;
+    line-height: 1.05;
+    white-space: normal;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     flex: 0 0 auto;
+    text-align: center;
 }
 
 .btn-week-nav:hover {
@@ -830,18 +904,20 @@ input[type="date"] { color-scheme: dark; }
     background: #c94334;
 }
 
-.btn-week-save-comp .btn-label-two-line {
+.btn-week-nav .btn-label-two-line {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
+    width: 100%;
+    min-width: 0;
     max-width: 100%;
     line-height: 1.05;
     text-align: center;
     white-space: normal;
 }
 
-.btn-week-save-comp .btn-label-two-line > span {
+.btn-week-nav .btn-label-two-line > span {
     display: block;
 }
 
@@ -1110,10 +1186,20 @@ input[type="date"] { color-scheme: dark; }
         width: auto;
     }
 
-    .weekly-faixas-table input[type="date"] {
-        width: 100%;
-        min-width: 0;
-        font-size: 0.78rem;
+    .weekly-faixas-table .faixa-date-compact {
+        min-height: 32px;
+        gap: 5px;
+        padding: 4px 4px 4px 8px;
+    }
+
+    .weekly-faixas-table .faixa-date-display {
+        font-size: 0.73rem;
+    }
+
+    .weekly-faixas-table .faixa-date-trigger {
+        width: 16px;
+        height: 16px;
+        font-size: 0.8rem;
     }
 
     .weekly-week-actions {

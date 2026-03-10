@@ -756,8 +756,20 @@
                                                 <button type="button" class="faixa-quick-action-trigger faixa-quick-action-reset" data-faixa-action="1" aria-label="Zerar faixa 1" title="Zerar faixa 1">&#8635;</button>
                                                 <button type="button" class="faixa-quick-action-confirm" data-faixa-confirm="1">Confirmar</button>
                                             </td>
-                                            <td><input type="date" id="inp-data-inicio-f1" class="inp-data-inicio"></td>
-                                            <td><input type="date" id="inp-data-fim-f1" class="inp-data-fim"></td>
+                                            <td>
+                                                <div class="faixa-date-compact">
+                                                    <input type="date" id="inp-data-inicio-f1" class="inp-data-inicio faixa-date-native" aria-label="Inicio da faixa 1">
+                                                    <span class="faixa-date-display is-placeholder" data-date-display-for="inp-data-inicio-f1">dd/mm/aa</span>
+                                                    <button type="button" class="faixa-date-trigger" data-date-target="inp-data-inicio-f1" aria-label="Selecionar data de inicio da faixa 1" title="Selecionar data">&#128197;</button>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div class="faixa-date-compact">
+                                                    <input type="date" id="inp-data-fim-f1" class="inp-data-fim faixa-date-native" aria-label="Fim da faixa 1">
+                                                    <span class="faixa-date-display is-placeholder" data-date-display-for="inp-data-fim-f1">dd/mm/aa</span>
+                                                    <button type="button" class="faixa-date-trigger" data-date-target="inp-data-fim-f1" aria-label="Selecionar data de fim da faixa 1" title="Selecionar data">&#128197;</button>
+                                                </div>
+                                            </td>
                                             <td id="faixa-ch-f1" class="faixa-ch-cell">0</td>
                                         </tr>
                                         <tr id="faixa-2" class="faixa-item">
@@ -766,8 +778,20 @@
                                                 <button type="button" class="faixa-quick-action-trigger faixa-quick-action-remove" data-faixa-action="2" aria-label="Remover faixa 2" title="Remover faixa 2">&#10005;</button>
                                                 <button type="button" class="faixa-quick-action-confirm" data-faixa-confirm="2">Confirmar</button>
                                             </td>
-                                            <td><input type="date" id="inp-data-inicio-f2" class="inp-data-inicio"></td>
-                                            <td><input type="date" id="inp-data-fim-f2" class="inp-data-fim"></td>
+                                            <td>
+                                                <div class="faixa-date-compact">
+                                                    <input type="date" id="inp-data-inicio-f2" class="inp-data-inicio faixa-date-native" aria-label="Inicio da faixa 2">
+                                                    <span class="faixa-date-display is-placeholder" data-date-display-for="inp-data-inicio-f2">dd/mm/aa</span>
+                                                    <button type="button" class="faixa-date-trigger" data-date-target="inp-data-inicio-f2" aria-label="Selecionar data de inicio da faixa 2" title="Selecionar data">&#128197;</button>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div class="faixa-date-compact">
+                                                    <input type="date" id="inp-data-fim-f2" class="inp-data-fim faixa-date-native" aria-label="Fim da faixa 2">
+                                                    <span class="faixa-date-display is-placeholder" data-date-display-for="inp-data-fim-f2">dd/mm/aa</span>
+                                                    <button type="button" class="faixa-date-trigger" data-date-target="inp-data-fim-f2" aria-label="Selecionar data de fim da faixa 2" title="Selecionar data">&#128197;</button>
+                                                </div>
+                                            </td>
                                             <td id="faixa-ch-f2" class="faixa-ch-cell">0</td>
                                         </tr>
                                         <tr id="faixa-3" class="faixa-item">
@@ -776,8 +800,20 @@
                                                 <button type="button" class="faixa-quick-action-trigger faixa-quick-action-remove" data-faixa-action="3" aria-label="Remover faixa 3" title="Remover faixa 3">&#10005;</button>
                                                 <button type="button" class="faixa-quick-action-confirm" data-faixa-confirm="3">Confirmar</button>
                                             </td>
-                                            <td><input type="date" id="inp-data-inicio-f3" class="inp-data-inicio"></td>
-                                            <td><input type="date" id="inp-data-fim-f3" class="inp-data-fim"></td>
+                                            <td>
+                                                <div class="faixa-date-compact">
+                                                    <input type="date" id="inp-data-inicio-f3" class="inp-data-inicio faixa-date-native" aria-label="Inicio da faixa 3">
+                                                    <span class="faixa-date-display is-placeholder" data-date-display-for="inp-data-inicio-f3">dd/mm/aa</span>
+                                                    <button type="button" class="faixa-date-trigger" data-date-target="inp-data-inicio-f3" aria-label="Selecionar data de inicio da faixa 3" title="Selecionar data">&#128197;</button>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div class="faixa-date-compact">
+                                                    <input type="date" id="inp-data-fim-f3" class="inp-data-fim faixa-date-native" aria-label="Fim da faixa 3">
+                                                    <span class="faixa-date-display is-placeholder" data-date-display-for="inp-data-fim-f3">dd/mm/aa</span>
+                                                    <button type="button" class="faixa-date-trigger" data-date-target="inp-data-fim-f3" aria-label="Selecionar data de fim da faixa 3" title="Selecionar data">&#128197;</button>
+                                                </div>
+                                            </td>
                                             <td id="faixa-ch-f3" class="faixa-ch-cell">0</td>
                                         </tr>
                                     </tbody>
@@ -806,10 +842,10 @@
                         <div id="weekly-week-nav" class="weekly-week-nav no-print">
                             <div id="weekly-week-label" class="weekly-week-label">Semana nao definida</div>
                             <div class="weekly-week-actions">
-                                <button id="btn-week-prev" type="button" class="btn-week-nav btn-week-shift">Semana Anterior</button>
-                                <button id="btn-week-next" type="button" class="btn-week-nav btn-week-shift">Proxima Semana</button>
-                                <button id="btn-faixa-prev" type="button" class="btn-week-nav btn-week-faixa" disabled>Faixa Anterior</button>
-                                <button id="btn-faixa-next" type="button" class="btn-week-nav btn-week-faixa" disabled>Proxima Faixa</button>
+                                <button id="btn-week-prev" type="button" class="btn-week-nav btn-week-shift"><span class="btn-label-two-line"><span>Semana</span><span>Anterior</span></span></button>
+                                <button id="btn-week-next" type="button" class="btn-week-nav btn-week-shift"><span class="btn-label-two-line"><span>Proxima</span><span>Semana</span></span></button>
+                                <button id="btn-faixa-prev" type="button" class="btn-week-nav btn-week-faixa" disabled><span class="btn-label-two-line"><span>Faixa</span><span>Anterior</span></span></button>
+                                <button id="btn-faixa-next" type="button" class="btn-week-nav btn-week-faixa" disabled><span class="btn-label-two-line"><span>Proxima</span><span>Faixa</span></span></button>
                                 <button id="btn-add-oferta" type="button" class="btn-week-nav btn-week-save-comp"><span class="btn-label-two-line"><span>Salvar</span><span>Componente</span></span></button>
                             </div>
                         </div>
@@ -1111,6 +1147,21 @@
                             </ol>
                             <div
                                 style="background:#174b3d; color:#f4fff7; border-radius:10px; padding:14px 16px; font-family:Consolas, 'Courier New', monospace; font-size:0.94em; line-height:1.55; word-break:break-all; margin:0 0 14px 24px;">
+                                git add .; git commit -m "adiciona pequenos ajustes"; git push
+                            </div>
+                            <div style="display:flex; align-items:center; gap:10px; margin:0 0 18px 24px; flex-wrap:wrap;">
+                                <button type="button"
+                                    data-copy-text="git add .; git commit -m &quot;adiciona pequenos ajustes&quot;; git push"
+                                    data-copy-feedback-target="publish-command-feedback"
+                                    data-copy-success-label="Comando copiado"
+                                    style="background:#2b9140; color:#fff; border:none; border-radius:7px; padding:8px 14px; font-weight:bold; cursor:pointer;">
+                                    Copiar comando Git
+                                </button>
+                                <span id="publish-command-feedback"
+                                    style="font-size:0.85em; color:#2f6f3e; min-height:1.2em;">&nbsp;</span>
+                            </div>
+                            <div
+                                style="background:#174b3d; color:#f4fff7; border-radius:10px; padding:14px 16px; font-family:Consolas, 'Courier New', monospace; font-size:0.94em; line-height:1.55; word-break:break-all; margin:0 0 14px 24px;">
                                 python tools/publish_online.py --push
                             </div>
                             <div style="display:flex; align-items:center; gap:10px; margin:0 0 18px 24px; flex-wrap:wrap;">
@@ -1119,10 +1170,8 @@
                                     data-copy-feedback-target="publish-command-feedback"
                                     data-copy-success-label="Comando copiado"
                                     style="background:#2b9140; color:#fff; border:none; border-radius:7px; padding:8px 14px; font-weight:bold; cursor:pointer;">
-                                    Copiar comando
+                                    Copiar comando Python
                                 </button>
-                                <span id="publish-command-feedback"
-                                    style="font-size:0.85em; color:#2f6f3e; min-height:1.2em;">&nbsp;</span>
                             </div>
                             <ol start="3"
                                 style="padding-left:24px; font-size:0.98em; line-height:1.7; margin:0; color:#34495e;">

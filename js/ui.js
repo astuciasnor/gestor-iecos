@@ -1911,6 +1911,101 @@ function syncComponentStartInputFromFaixa1() {
     inputConfig.inicio.value = faixa1Start;
 }
 
+function formatCompactFaixaDate(value) {
+    const raw = String(value || '').trim();
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(raw)) return 'dd/mm/aa';
+    return `${raw.slice(8, 10)}/${raw.slice(5, 7)}/${raw.slice(2, 4)}`;
+}
+
+function refreshCompactFaixaDateDisplay(input) {
+    if (!input?.id) return;
+    const display = document.querySelector(`[data-date-display-for="${input.id}"]`);
+    if (!display) return;
+    const hasValue = !!String(input.value || '').trim();
+    display.textContent = formatCompactFaixaDate(input.value);
+    display.classList.toggle('is-placeholder', !hasValue);
+}
+
+function refreshAllCompactFaixaDateDisplays() {
+    [
+        'inp-data-inicio-f1',
+        'inp-data-fim-f1',
+        'inp-data-inicio-f2',
+        'inp-data-fim-f2',
+        'inp-data-inicio-f3',
+        'inp-data-fim-f3'
+    ].forEach((id) => refreshCompactFaixaDateDisplay(document.getElementById(id)));
+}
+
+function openCompactFaixaDatePicker(input) {
+    if (!input) return;
+    input.focus({ preventScroll: true });
+    if (typeof input.showPicker === 'function') {
+        try {
+            input.showPicker();
+            return;
+        } catch (_) {
+            // Fallback abaixo para navegadores sem suporte total.
+        }
+    }
+    input.click();
+}
+
+function setupCompactFaixaDateFields() {
+    const ids = [
+        'inp-data-inicio-f1',
+        'inp-data-fim-f1',
+        'inp-data-inicio-f2',
+        'inp-data-fim-f2',
+        'inp-data-inicio-f3',
+        'inp-data-fim-f3'
+    ];
+
+    ids.forEach((id) => {
+        const input = document.getElementById(id);
+        if (!input) return;
+
+        refreshCompactFaixaDateDisplay(input);
+
+        if (input.dataset.compactDateBound !== '1') {
+            input.dataset.compactDateBound = '1';
+            ['input', 'change'].forEach((evt) => {
+                input.addEventListener(evt, () => refreshCompactFaixaDateDisplay(input));
+            });
+        }
+    });
+
+    document.querySelectorAll('.faixa-date-trigger').forEach((btn) => {
+        if (btn.dataset.bound === '1') return;
+        btn.dataset.bound = '1';
+        btn.addEventListener('click', (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            const input = document.getElementById(btn.dataset.dateTarget || '');
+            openCompactFaixaDatePicker(input);
+        });
+    });
+
+    document.querySelectorAll('.faixa-date-display').forEach((display) => {
+        if (display.dataset.bound === '1') return;
+        display.dataset.bound = '1';
+        display.addEventListener('click', () => {
+            const input = document.getElementById(display.dataset.dateDisplayFor || '');
+            openCompactFaixaDatePicker(input);
+        });
+    });
+
+    document.querySelectorAll('.faixa-date-compact').forEach((wrapper) => {
+        if (wrapper.dataset.bound === '1') return;
+        wrapper.dataset.bound = '1';
+        wrapper.addEventListener('click', (event) => {
+            if (event.target.closest('.faixa-date-trigger')) return;
+            const input = wrapper.querySelector('.faixa-date-native');
+            openCompactFaixaDatePicker(input);
+        });
+    });
+}
+
 function restoreComponentStartPickerValueIfNeeded() {
     if (!inputConfig.inicio) return;
     const restoreValue = inputConfig.inicio.dataset.restorePickerValue || '';
@@ -2023,6 +2118,7 @@ function applyFaixaDateAutofill(options = {}) {
     }
 
     syncComponentStartInputFromFaixa1();
+    refreshAllCompactFaixaDateDisplays();
     updateWeeklyFaixaHoursDisplay();
 }
 
@@ -2031,7 +2127,9 @@ function enforceCanonicalFaixaMode() {
     if (faixasContainer) faixasContainer.classList.remove('hidden');
 
     const btnAddOferta = document.getElementById('btn-add-oferta');
-    if (btnAddOferta) btnAddOferta.textContent = 'Salvar Componente';
+    if (btnAddOferta) {
+        btnAddOferta.innerHTML = '<span class="btn-label-two-line"><span>Salvar</span><span>Componente</span></span>';
+    }
 
     const preferredStart = getPreferredStartDateForCurrentTurma();
     if (preferredStart && inputConfig.inicio) {
@@ -3655,6 +3753,7 @@ function updateImportBlocoButtonState() {
 }
 
 export function initUI() {
+    setupCompactFaixaDateFields();
     setupFaixaControls();
     setupWeeklyWeekNavigator();
     setWeeklyViewByDate(store.settings.termStart || calStart?.value || '', { followFaixa: false, render: false });
