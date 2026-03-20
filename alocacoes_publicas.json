@@ -105,116 +105,6 @@
       "id": "d271051f-ca28-4d30-a863-ed26a2a39ff0"
     },
     {
-      "turmaId": "EP2022",
-      "disciplina": "AVALIACAO DE ESTOQUES PESQUEIROS",
-      "docente": "Leonnan Oliveira",
-      "docentes": null,
-      "tipo": "regular",
-      "diaSemana": 4,
-      "horario": "09:10 - 10:00",
-      "dataInicio": "2026-03-23",
-      "dataFim": "2026-06-18",
-      "cor": "#d884d8",
-      "id": "f6964eb5-b286-4ea8-9607-658c2292c221",
-      "horariosUltimoDia": [
-        "09:10 - 10:00"
-      ]
-    },
-    {
-      "turmaId": "EP2022",
-      "disciplina": "AVALIACAO DE ESTOQUES PESQUEIROS",
-      "docente": "Leonnan Oliveira",
-      "docentes": null,
-      "tipo": "regular",
-      "diaSemana": 4,
-      "horario": "08:20 - 09:10",
-      "dataInicio": "2026-03-23",
-      "dataFim": "2026-06-18",
-      "cor": "#d884d8",
-      "id": "c50ae7c7-f908-471a-b74c-f4df8a606415",
-      "horariosUltimoDia": [
-        "09:10 - 10:00"
-      ]
-    },
-    {
-      "turmaId": "EP2022",
-      "disciplina": "PARASITOLOGIA DE ORGANISMOS AQUATICOS",
-      "docente": "Lorena Batista de Moura",
-      "docentes": null,
-      "tipo": "regular",
-      "diaSemana": 2,
-      "horario": "08:20 - 09:10",
-      "dataInicio": "2026-03-23",
-      "dataFim": "2026-07-07",
-      "cor": "#e91e63",
-      "id": "2e9e882b-8eb0-473f-9f7f-efc0c4db4a98"
-    },
-    {
-      "turmaId": "EP2022",
-      "disciplina": "PARASITOLOGIA DE ORGANISMOS AQUATICOS",
-      "docente": "Lorena Batista de Moura",
-      "docentes": null,
-      "tipo": "regular",
-      "diaSemana": 2,
-      "horario": "09:10 - 10:00",
-      "dataInicio": "2026-03-23",
-      "dataFim": "2026-07-07",
-      "cor": "#e91e63",
-      "id": "d702fb75-a0c9-43b2-87c4-dfde8194ace9"
-    },
-    {
-      "turmaId": "EP2022",
-      "disciplina": "PARASITOLOGIA DE ORGANISMOS AQUATICOS",
-      "docente": "Lorena Batista de Moura",
-      "docentes": null,
-      "tipo": "regular",
-      "diaSemana": 2,
-      "horario": "10:20 - 11:10",
-      "dataInicio": "2026-03-23",
-      "dataFim": "2026-07-07",
-      "cor": "#e91e63",
-      "id": "56764c16-658a-4ecc-9b67-c9e9430f9a2e"
-    },
-    {
-      "turmaId": "EP2022",
-      "disciplina": "SISTEMAS DE PESCA",
-      "docente": "Francisco Carlos Alberto Fonteles Holanda",
-      "docentes": null,
-      "tipo": "regular",
-      "diaSemana": 1,
-      "horario": "08:20 - 09:10",
-      "dataInicio": "2026-03-23",
-      "dataFim": "2026-06-29",
-      "cor": "#61a0e5",
-      "id": "e6d20f8c-856e-4f26-9da5-e240bb61ffc8"
-    },
-    {
-      "turmaId": "EP2022",
-      "disciplina": "SISTEMAS DE PESCA",
-      "docente": "Francisco Carlos Alberto Fonteles Holanda",
-      "docentes": null,
-      "tipo": "regular",
-      "diaSemana": 1,
-      "horario": "09:10 - 10:00",
-      "dataInicio": "2026-03-23",
-      "dataFim": "2026-06-29",
-      "cor": "#61a0e5",
-      "id": "3807a4e2-bead-4f31-b0fc-e60fd99375ff"
-    },
-    {
-      "turmaId": "EP2022",
-      "disciplina": "SISTEMAS DE PESCA",
-      "docente": "Francisco Carlos Alberto Fonteles Holanda",
-      "docentes": null,
-      "tipo": "regular",
-      "diaSemana": 1,
-      "horario": "10:20 - 11:10",
-      "dataInicio": "2026-03-23",
-      "dataFim": "2026-06-29",
-      "cor": "#61a0e5",
-      "id": "6332b93e-286c-4197-b6c0-300f6b193405"
-    },
-    {
       "turmaId": "EP2024",
       "disciplina": "ELABORACAO E AVALIACAO DE PROJETOS PESQUEIROS E AQUICOLAS",
       "docente": "Marcos Ferreira Brabo",
@@ -239,45 +129,6 @@
       "dataFim": "2026-07-17",
       "cor": "#c9deff",
       "id": "71727915-6f2f-4818-be18-60fba721af61"
-    },
-    {
-      "turmaId": "EP2022",
-      "disciplina": "MARKETING",
-      "docente": "Marcos Ferreira Brabo",
-      "docentes": null,
-      "tipo": "regular",
-      "diaSemana": 3,
-      "horario": "08:20 - 09:10",
-      "dataInicio": "2026-03-23",
-      "dataFim": "2026-05-27",
-      "cor": "#32e925",
-      "id": "f1a7e5f5-5e62-44f4-bd56-3ee0a9995c13"
-    },
-    {
-      "turmaId": "EP2022",
-      "disciplina": "MARKETING",
-      "docente": "Marcos Ferreira Brabo",
-      "docentes": null,
-      "tipo": "regular",
-      "diaSemana": 3,
-      "horario": "09:10 - 10:00",
-      "dataInicio": "2026-03-23",
-      "dataFim": "2026-05-27",
-      "cor": "#32e925",
-      "id": "f69f9290-44d6-4579-8b1a-ece38d99d0ce"
-    },
-    {
-      "turmaId": "EP2022",
-      "disciplina": "MARKETING",
-      "docente": "Marcos Ferreira Brabo",
-      "docentes": null,
-      "tipo": "regular",
-      "diaSemana": 3,
-      "horario": "10:20 - 11:10",
-      "dataInicio": "2026-03-23",
-      "dataFim": "2026-05-27",
-      "cor": "#32e925",
-      "id": "240e2a0a-114c-4cc8-9800-5b67b03a4436"
     },
     {
       "turmaId": "EP2023",
@@ -466,71 +317,6 @@
       "dataFim": "2026-07-09",
       "cor": "#ebacec",
       "id": "ad5806ac-dc2f-4310-8ef2-3130e15ffa6d"
-    },
-    {
-      "turmaId": "EP2022",
-      "disciplina": "ADMINISTRACAO E LEGISLACAO PESQUEIRA E AQUICOLA",
-      "docente": "Leonnan Oliveira",
-      "docentes": null,
-      "tipo": "regular",
-      "diaSemana": 5,
-      "horario": "08:20 - 09:10",
-      "dataInicio": "2026-03-23",
-      "dataFim": "2026-06-26",
-      "cor": "#d2e925",
-      "id": "5351c9c1-a87d-4fbb-8454-aab367dca5f0"
-    },
-    {
-      "turmaId": "EP2022",
-      "disciplina": "ADMINISTRACAO E LEGISLACAO PESQUEIRA E AQUICOLA",
-      "docente": "Leonnan Oliveira",
-      "docentes": null,
-      "tipo": "regular",
-      "diaSemana": 5,
-      "horario": "09:10 - 10:00",
-      "dataInicio": "2026-03-23",
-      "dataFim": "2026-06-26",
-      "cor": "#d2e925",
-      "id": "d451996e-fb56-490b-b106-3866f20a4bea"
-    },
-    {
-      "turmaId": "EP2022",
-      "disciplina": "ADMINISTRACAO E LEGISLACAO PESQUEIRA E AQUICOLA",
-      "docente": "Leonnan Oliveira",
-      "docentes": null,
-      "tipo": "regular",
-      "diaSemana": 5,
-      "horario": "10:20 - 11:10",
-      "dataInicio": "2026-03-23",
-      "dataFim": "2026-06-26",
-      "cor": "#d2e925",
-      "id": "4cd8f22a-44df-4a1e-a0da-fb784dc316e9"
-    },
-    {
-      "turmaId": "EP2022",
-      "disciplina": "ADMINISTRACAO E LEGISLACAO PESQUEIRA E AQUICOLA",
-      "docente": "Leonnan Oliveira",
-      "docentes": null,
-      "tipo": "regular",
-      "diaSemana": 5,
-      "horario": "11:10 - 12:00",
-      "dataInicio": "2026-03-23",
-      "dataFim": "2026-06-26",
-      "cor": "#d2e925",
-      "id": "f8e33d3b-db4c-47d3-ab86-45f9313b53d3"
-    },
-    {
-      "turmaId": "EP2022",
-      "disciplina": "ADMINISTRACAO E LEGISLACAO PESQUEIRA E AQUICOLA",
-      "docente": "Leonnan Oliveira",
-      "docentes": null,
-      "tipo": "regular",
-      "diaSemana": 5,
-      "horario": "12:00 - 12:50",
-      "dataInicio": "2026-03-23",
-      "dataFim": "2026-06-26",
-      "cor": "#d2e925",
-      "id": "85ba3d32-129e-4924-8935-d9cd919bad0b"
     },
     {
       "turmaId": "EP2024",
@@ -1077,6 +863,86 @@
         "10:20 - 11:10",
         "11:10 - 12:00",
         "12:00 - 12:50"
+      ],
+      "diasMarcados": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "faixas": [
+        {
+          "inicio": "2026-03-23",
+          "fim": "2026-04-02",
+          "dias": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6
+          ],
+          "slots": [
+            "07:30 - 08:20",
+            "08:20 - 09:10",
+            "09:10 - 10:00",
+            "10:20 - 11:10",
+            "11:10 - 12:00",
+            "12:00 - 12:50"
+          ],
+          "drawnSlotsByDay": {
+            "1": [
+              "07:30 - 08:20",
+              "08:20 - 09:10",
+              "09:10 - 10:00",
+              "10:20 - 11:10",
+              "11:10 - 12:00",
+              "12:00 - 12:50"
+            ],
+            "2": [
+              "07:30 - 08:20",
+              "08:20 - 09:10",
+              "09:10 - 10:00",
+              "10:20 - 11:10",
+              "11:10 - 12:00",
+              "12:00 - 12:50"
+            ],
+            "3": [
+              "07:30 - 08:20",
+              "08:20 - 09:10",
+              "09:10 - 10:00",
+              "10:20 - 11:10",
+              "11:10 - 12:00",
+              "12:00 - 12:50"
+            ],
+            "4": [
+              "07:30 - 08:20",
+              "08:20 - 09:10",
+              "09:10 - 10:00",
+              "10:20 - 11:10",
+              "11:10 - 12:00",
+              "12:00 - 12:50"
+            ],
+            "5": [
+              "07:30 - 08:20",
+              "08:20 - 09:10",
+              "09:10 - 10:00",
+              "10:20 - 11:10",
+              "11:10 - 12:00",
+              "12:00 - 12:50"
+            ],
+            "6": [
+              "07:30 - 08:20",
+              "08:20 - 09:10",
+              "09:10 - 10:00",
+              "10:20 - 11:10",
+              "11:10 - 12:00",
+              "12:00 - 12:50"
+            ]
+          }
+        }
       ]
     },
     {
@@ -1214,38 +1080,6 @@
       "dataFim": "2026-07-21",
       "cor": "#ea281a",
       "id": "0263a462-27b9-4dc4-97ed-dc82ae4d226b"
-    },
-    {
-      "turmaId": "EP2022",
-      "disciplina": "AVALIACAO DE ESTOQUES PESQUEIROS",
-      "docente": "Leonnan Oliveira",
-      "docentes": null,
-      "tipo": "regular",
-      "diaSemana": 4,
-      "horario": "10:20 - 11:10",
-      "dataInicio": "2026-03-23",
-      "dataFim": "2026-06-18",
-      "cor": "#d884d8",
-      "id": "2666deba-98d2-4df4-b1ec-2113cd72e68a",
-      "horariosUltimoDia": [
-        "09:10 - 10:00"
-      ]
-    },
-    {
-      "turmaId": "EP2022",
-      "disciplina": "AVALIACAO DE ESTOQUES PESQUEIROS",
-      "docente": "Leonnan Oliveira",
-      "docentes": null,
-      "tipo": "regular",
-      "diaSemana": 4,
-      "horario": "11:10 - 12:00",
-      "dataInicio": "2026-03-23",
-      "dataFim": "2026-06-18",
-      "cor": "#d884d8",
-      "id": "d9333fd4-a038-4700-904f-970aed08f431",
-      "horariosUltimoDia": [
-        "09:10 - 10:00"
-      ]
     },
     {
       "turmaId": "EP2024",
@@ -9093,7 +8927,7 @@
       "faixas": [
         {
           "inicio": "2026-04-06",
-          "fim": "2026-06-21",
+          "fim": "2026-06-22",
           "dias": [
             1
           ],
@@ -9111,28 +8945,301 @@
               "17:10 - 18:00"
             ]
           }
-        },
+        }
+      ],
+      "subGrupo": null,
+      "cor": "#9bc149",
+      "id": "389065ee-da20-41b7-9e91-e94ea47007ba"
+    },
+    {
+      "turmaId": "EP2025",
+      "disciplina": "DESENHO COMPUTACIONAL",
+      "docente": "Daniel Abreu Vasconcelos Campelo",
+      "docentes": null,
+      "tipo": "intensiva",
+      "ch": 60,
+      "dataInicio": "2026-04-08",
+      "dataFim": "2026-06-24",
+      "modelo": "Automatico",
+      "horariosOcupados": [
+        "14:20 - 15:10",
+        "15:10 - 16:00",
+        "16:20 - 17:10",
+        "17:10 - 18:00",
+        "18:00 - 18:50"
+      ],
+      "horariosUltimoDia": [
+        "14:20 - 15:10",
+        "15:10 - 16:00",
+        "16:20 - 17:10",
+        "17:10 - 18:00",
+        "18:00 - 18:50"
+      ],
+      "diasMarcados": [
+        3
+      ],
+      "usaSabado": false,
+      "faixas": [
         {
-          "inicio": "2026-06-22",
-          "fim": "2026-06-22",
+          "inicio": "2026-04-08",
+          "fim": "2026-06-24",
           "dias": [
-            1
+            3
           ],
           "slots": [
             "14:20 - 15:10",
-            "15:10 - 16:00"
+            "15:10 - 16:00",
+            "16:20 - 17:10",
+            "17:10 - 18:00",
+            "18:00 - 18:50"
           ],
           "drawnSlotsByDay": {
-            "1": [
+            "3": [
               "14:20 - 15:10",
-              "15:10 - 16:00"
+              "15:10 - 16:00",
+              "16:20 - 17:10",
+              "17:10 - 18:00",
+              "18:00 - 18:50"
             ]
           }
         }
       ],
       "subGrupo": null,
-      "cor": "#9bc149",
-      "id": "57bb7435-cec9-4dbf-9960-3b5c1457e0b7"
+      "cor": "#e9164b",
+      "id": "2e968265-d9ac-42d6-9eb1-b7caf2ff7229"
+    },
+    {
+      "turmaId": "EP2025",
+      "disciplina": "ECONOMIA",
+      "docente": "Marcos Ferreira Brabo",
+      "docentes": null,
+      "tipo": "intensiva",
+      "ch": 45,
+      "dataInicio": "2026-04-09",
+      "dataFim": "2026-07-23",
+      "modelo": "Automatico",
+      "horariosOcupados": [
+        "14:20 - 15:10",
+        "15:10 - 16:00",
+        "16:20 - 17:10"
+      ],
+      "horariosUltimoDia": [
+        "14:20 - 15:10",
+        "15:10 - 16:00",
+        "16:20 - 17:10"
+      ],
+      "diasMarcados": [
+        4
+      ],
+      "usaSabado": false,
+      "faixas": [
+        {
+          "inicio": "2026-04-09",
+          "fim": "2026-07-23",
+          "dias": [
+            4
+          ],
+          "slots": [
+            "14:20 - 15:10",
+            "15:10 - 16:00",
+            "16:20 - 17:10"
+          ],
+          "drawnSlotsByDay": {
+            "4": [
+              "14:20 - 15:10",
+              "15:10 - 16:00",
+              "16:20 - 17:10"
+            ]
+          }
+        }
+      ],
+      "subGrupo": null,
+      "cor": "#4f25e9",
+      "id": "0b836b02-3a6a-49b0-bea0-30850c428e55"
+    },
+    {
+      "turmaId": "EP2025",
+      "disciplina": "MICROBIOLOGIA DO PESCADO",
+      "docente": "Simoni Santos da Silva",
+      "docentes": null,
+      "tipo": "intensiva",
+      "ch": 60,
+      "dataInicio": "2026-04-10",
+      "dataFim": "2026-07-03",
+      "modelo": "Automatico",
+      "horariosOcupados": [
+        "14:20 - 15:10",
+        "15:10 - 16:00",
+        "16:20 - 17:10",
+        "17:10 - 18:00",
+        "18:00 - 18:50"
+      ],
+      "horariosUltimoDia": [
+        "14:20 - 15:10",
+        "15:10 - 16:00",
+        "16:20 - 17:10",
+        "17:10 - 18:00",
+        "18:00 - 18:50"
+      ],
+      "diasMarcados": [
+        5
+      ],
+      "usaSabado": false,
+      "faixas": [
+        {
+          "inicio": "2026-04-10",
+          "fim": "2026-07-03",
+          "dias": [
+            5
+          ],
+          "slots": [
+            "14:20 - 15:10",
+            "15:10 - 16:00",
+            "16:20 - 17:10",
+            "17:10 - 18:00",
+            "18:00 - 18:50"
+          ],
+          "drawnSlotsByDay": {
+            "5": [
+              "14:20 - 15:10",
+              "15:10 - 16:00",
+              "16:20 - 17:10",
+              "17:10 - 18:00",
+              "18:00 - 18:50"
+            ]
+          }
+        }
+      ],
+      "subGrupo": null,
+      "cor": "#25c2e9",
+      "id": "a2af5e90-a5d8-4922-a53d-7b8604e8f6b0"
+    },
+    {
+      "turmaId": "EP2022",
+      "disciplina": "AVALIACAO DE ESTOQUES PESQUEIROS",
+      "docente": "Leonnan Oliveira",
+      "docentes": null,
+      "tipo": "intensiva",
+      "ch": 45,
+      "dataInicio": "2026-04-09",
+      "dataFim": "2026-07-02",
+      "modelo": "Automatico",
+      "horariosOcupados": [
+        "08:20 - 09:10",
+        "09:10 - 10:00",
+        "10:20 - 11:10",
+        "11:10 - 12:00"
+      ],
+      "horariosUltimoDia": [
+        "08:20 - 09:10",
+        "09:10 - 10:00"
+      ],
+      "diasMarcados": [
+        4
+      ],
+      "usaSabado": false,
+      "faixas": [
+        {
+          "inicio": "2026-04-09",
+          "fim": "2026-06-24",
+          "dias": [
+            4
+          ],
+          "slots": [
+            "08:20 - 09:10",
+            "09:10 - 10:00",
+            "10:20 - 11:10",
+            "11:10 - 12:00"
+          ],
+          "drawnSlotsByDay": {
+            "4": [
+              "08:20 - 09:10",
+              "09:10 - 10:00",
+              "10:20 - 11:10",
+              "11:10 - 12:00"
+            ]
+          }
+        },
+        {
+          "inicio": "2026-06-25",
+          "fim": "2026-07-02",
+          "dias": [
+            4
+          ],
+          "slots": [
+            "08:20 - 09:10",
+            "09:10 - 10:00",
+            "10:20 - 11:10"
+          ],
+          "drawnSlotsByDay": {
+            "4": [
+              "08:20 - 09:10",
+              "09:10 - 10:00",
+              "10:20 - 11:10"
+            ]
+          }
+        }
+      ],
+      "subGrupo": null,
+      "cor": "#d884d8",
+      "id": "3b13201e-f626-42e4-a750-d011daa0c8fa"
+    },
+    {
+      "turmaId": "EP2022",
+      "disciplina": "ADMINISTRACAO E LEGISLACAO PESQUEIRA E AQUICOLA",
+      "docente": "Leonnan Oliveira",
+      "docentes": null,
+      "tipo": "intensiva",
+      "ch": 60,
+      "dataInicio": "2026-04-10",
+      "dataFim": "2026-07-03",
+      "modelo": "Automatico",
+      "horariosOcupados": [
+        "08:20 - 09:10",
+        "09:10 - 10:00",
+        "10:20 - 11:10",
+        "11:10 - 12:00",
+        "12:00 - 12:50"
+      ],
+      "horariosUltimoDia": [
+        "08:20 - 09:10",
+        "09:10 - 10:00",
+        "10:20 - 11:10",
+        "11:10 - 12:00",
+        "12:00 - 12:50"
+      ],
+      "diasMarcados": [
+        5
+      ],
+      "usaSabado": false,
+      "faixas": [
+        {
+          "inicio": "2026-04-10",
+          "fim": "2026-07-03",
+          "dias": [
+            5
+          ],
+          "slots": [
+            "08:20 - 09:10",
+            "09:10 - 10:00",
+            "10:20 - 11:10",
+            "11:10 - 12:00",
+            "12:00 - 12:50"
+          ],
+          "drawnSlotsByDay": {
+            "5": [
+              "08:20 - 09:10",
+              "09:10 - 10:00",
+              "10:20 - 11:10",
+              "11:10 - 12:00",
+              "12:00 - 12:50"
+            ]
+          }
+        }
+      ],
+      "subGrupo": null,
+      "cor": "#d2e925",
+      "id": "326f12fc-0d9b-4715-82ce-6d6dca33658f"
     },
     {
       "turmaId": "EP2025",
@@ -9217,32 +9324,126 @@
         }
       ],
       "subGrupo": null,
-      "cor": "#25e98e",
-      "id": "81ffc076-3eb2-4612-b507-cfcfaed89851"
+      "cor": "#25e960",
+      "id": "0454114a-7604-45a4-a6be-5dfc367e2947"
     },
     {
-      "turmaId": "EP2025",
-      "disciplina": "DESENHO COMPUTACIONAL",
-      "docente": "Daniel Abreu Vasconcelos Campelo",
+      "turmaId": "EP2022",
+      "disciplina": "SISTEMAS DE PESCA",
+      "docente": "Francisco Carlos Alberto Fonteles Holanda",
       "docentes": null,
       "tipo": "intensiva",
-      "ch": 60,
-      "dataInicio": "2026-04-08",
-      "dataFim": "2026-06-24",
+      "ch": 45,
+      "dataInicio": "2026-04-06",
+      "dataFim": "2026-07-13",
       "modelo": "Automatico",
       "horariosOcupados": [
-        "14:20 - 15:10",
-        "15:10 - 16:00",
-        "16:20 - 17:10",
-        "17:10 - 18:00",
-        "18:00 - 18:50"
+        "08:20 - 09:10",
+        "09:10 - 10:00",
+        "10:20 - 11:10"
       ],
       "horariosUltimoDia": [
-        "14:20 - 15:10",
-        "15:10 - 16:00",
-        "16:20 - 17:10",
-        "17:10 - 18:00",
-        "18:00 - 18:50"
+        "08:20 - 09:10",
+        "09:10 - 10:00",
+        "10:20 - 11:10"
+      ],
+      "diasMarcados": [
+        1
+      ],
+      "usaSabado": false,
+      "faixas": [
+        {
+          "inicio": "2026-04-06",
+          "fim": "2026-07-13",
+          "dias": [
+            1
+          ],
+          "slots": [
+            "08:20 - 09:10",
+            "09:10 - 10:00",
+            "10:20 - 11:10"
+          ],
+          "drawnSlotsByDay": {
+            "1": [
+              "08:20 - 09:10",
+              "09:10 - 10:00",
+              "10:20 - 11:10"
+            ]
+          }
+        }
+      ],
+      "subGrupo": null,
+      "cor": "#61a0e5",
+      "id": "84aa4a43-359f-4711-af37-dbf184298ad0"
+    },
+    {
+      "turmaId": "EP2022",
+      "disciplina": "PARASITOLOGIA DE ORGANISMOS AQUATICOS",
+      "docente": "Lorena Batista de Moura",
+      "docentes": null,
+      "tipo": "intensiva",
+      "ch": 45,
+      "dataInicio": "2026-04-07",
+      "dataFim": "2026-07-21",
+      "modelo": "Automatico",
+      "horariosOcupados": [
+        "08:20 - 09:10",
+        "09:10 - 10:00",
+        "10:20 - 11:10"
+      ],
+      "horariosUltimoDia": [
+        "08:20 - 09:10",
+        "09:10 - 10:00",
+        "10:20 - 11:10"
+      ],
+      "diasMarcados": [
+        2
+      ],
+      "usaSabado": false,
+      "faixas": [
+        {
+          "inicio": "2026-04-07",
+          "fim": "2026-07-21",
+          "dias": [
+            2
+          ],
+          "slots": [
+            "08:20 - 09:10",
+            "09:10 - 10:00",
+            "10:20 - 11:10"
+          ],
+          "drawnSlotsByDay": {
+            "2": [
+              "08:20 - 09:10",
+              "09:10 - 10:00",
+              "10:20 - 11:10"
+            ]
+          }
+        }
+      ],
+      "subGrupo": null,
+      "cor": "#e91e63",
+      "id": "21fee4df-4b37-44d9-a224-a710cf3dda7a"
+    },
+    {
+      "turmaId": "EP2022",
+      "disciplina": "MARKETING",
+      "docente": "Marcos Ferreira Brabo",
+      "docentes": null,
+      "tipo": "intensiva",
+      "ch": 30,
+      "dataInicio": "2026-04-08",
+      "dataFim": "2026-06-10",
+      "modelo": "Automatico",
+      "horariosOcupados": [
+        "08:20 - 09:10",
+        "09:10 - 10:00",
+        "10:20 - 11:10"
+      ],
+      "horariosUltimoDia": [
+        "08:20 - 09:10",
+        "09:10 - 10:00",
+        "10:20 - 11:10"
       ],
       "diasMarcados": [
         3
@@ -9251,141 +9452,31 @@
       "faixas": [
         {
           "inicio": "2026-04-08",
-          "fim": "2026-06-24",
+          "fim": "2026-06-10",
           "dias": [
             3
           ],
           "slots": [
-            "14:20 - 15:10",
-            "15:10 - 16:00",
-            "16:20 - 17:10",
-            "17:10 - 18:00",
-            "18:00 - 18:50"
+            "08:20 - 09:10",
+            "09:10 - 10:00",
+            "10:20 - 11:10"
           ],
           "drawnSlotsByDay": {
             "3": [
-              "14:20 - 15:10",
-              "15:10 - 16:00",
-              "16:20 - 17:10",
-              "17:10 - 18:00",
-              "18:00 - 18:50"
+              "08:20 - 09:10",
+              "09:10 - 10:00",
+              "10:20 - 11:10"
             ]
           }
         }
       ],
       "subGrupo": null,
-      "cor": "#e9164b",
-      "id": "32fab1d0-43a2-4aea-b619-78b6e5bc6821"
-    },
-    {
-      "turmaId": "EP2025",
-      "disciplina": "ECONOMIA",
-      "docente": "Marcos Ferreira Brabo",
-      "docentes": null,
-      "tipo": "intensiva",
-      "ch": 45,
-      "dataInicio": "2026-04-09",
-      "dataFim": "2026-07-23",
-      "modelo": "Automatico",
-      "horariosOcupados": [
-        "14:20 - 15:10",
-        "15:10 - 16:00",
-        "16:20 - 17:10"
-      ],
-      "horariosUltimoDia": [
-        "14:20 - 15:10",
-        "15:10 - 16:00",
-        "16:20 - 17:10"
-      ],
-      "diasMarcados": [
-        4
-      ],
-      "usaSabado": false,
-      "faixas": [
-        {
-          "inicio": "2026-04-09",
-          "fim": "2026-07-23",
-          "dias": [
-            4
-          ],
-          "slots": [
-            "14:20 - 15:10",
-            "15:10 - 16:00",
-            "16:20 - 17:10"
-          ],
-          "drawnSlotsByDay": {
-            "4": [
-              "14:20 - 15:10",
-              "15:10 - 16:00",
-              "16:20 - 17:10"
-            ]
-          }
-        }
-      ],
-      "subGrupo": null,
-      "cor": "#4f25e9",
-      "id": "794d9a2c-9c6b-4ccf-a2b8-06661ddc8796"
-    },
-    {
-      "turmaId": "EP2025",
-      "disciplina": "MICROBIOLOGIA DO PESCADO",
-      "docente": "Simoni Santos da Silva",
-      "docentes": null,
-      "tipo": "intensiva",
-      "ch": 60,
-      "dataInicio": "2026-04-10",
-      "dataFim": "2026-07-03",
-      "modelo": "Automatico",
-      "horariosOcupados": [
-        "14:20 - 15:10",
-        "15:10 - 16:00",
-        "16:20 - 17:10",
-        "17:10 - 18:00",
-        "18:00 - 18:50"
-      ],
-      "horariosUltimoDia": [
-        "14:20 - 15:10",
-        "15:10 - 16:00",
-        "16:20 - 17:10",
-        "17:10 - 18:00",
-        "18:00 - 18:50"
-      ],
-      "diasMarcados": [
-        5
-      ],
-      "usaSabado": false,
-      "faixas": [
-        {
-          "inicio": "2026-04-10",
-          "fim": "2026-07-03",
-          "dias": [
-            5
-          ],
-          "slots": [
-            "14:20 - 15:10",
-            "15:10 - 16:00",
-            "16:20 - 17:10",
-            "17:10 - 18:00",
-            "18:00 - 18:50"
-          ],
-          "drawnSlotsByDay": {
-            "5": [
-              "14:20 - 15:10",
-              "15:10 - 16:00",
-              "16:20 - 17:10",
-              "17:10 - 18:00",
-              "18:00 - 18:50"
-            ]
-          }
-        }
-      ],
-      "subGrupo": null,
-      "cor": "#25c2e9",
-      "id": "e01020a7-4655-41b7-bc39-573cd15d7e0f"
+      "cor": "#32e925",
+      "id": "8c91a1f3-f525-48b5-ba8f-dbeb2e8b6325"
     }
   ],
   "settings": {
     "termStart": "2026-03-23",
-    "termEnd": "2026-07-24"
+    "termEnd": "2026-07-23"
   }
 }
