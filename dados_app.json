@@ -1,6 +1,6 @@
 {
   "meta": {
-    "generated_at": "2026-03-05T21:05:58",
+    "generated_at": "2026-03-20T18:54:47",
     "source_file": "planilha_base.xlsx"
   },
   "docentes": [
@@ -13,11 +13,6 @@
       "docente": "Carlos Alberto Martins Cordeiro",
       "unidade": "IECOS",
       "subunidade": "FEPESCA"
-    },
-    {
-      "docente": "Carlos Alessandro da Costa Baldez",
-      "unidade": "CBRAG",
-      "subunidade": "FAMAT"
     },
     {
       "docente": "Carlos Eduardo Rangel Andrade",
@@ -293,6 +288,76 @@
       "docente": "Gabriel Lima",
       "unidade": "IECOS",
       "subunidade": "Pos-Doutorando"
+    },
+    {
+      "docente": "Alessandra Mariana dos Santos Oliveira",
+      "unidade": "CBRAG",
+      "subunidade": "FAMAT"
+    },
+    {
+      "docente": "Carlos Alessandro da Costa Baldez",
+      "unidade": "CBRAG",
+      "subunidade": "FAMAT"
+    },
+    {
+      "docente": "Deiziane Mendes Wanzeler",
+      "unidade": "CBRAG",
+      "subunidade": "FAMAT"
+    },
+    {
+      "docente": "Edilene Farias Rozal",
+      "unidade": "CBRAG",
+      "subunidade": "FAMAT"
+    },
+    {
+      "docente": "Edson Jorge de Matos",
+      "unidade": "CBRAG",
+      "subunidade": "FAMAT"
+    },
+    {
+      "docente": "Elizardo Fabricio Lima Lucena",
+      "unidade": "CBRAG",
+      "subunidade": "FAMAT"
+    },
+    {
+      "docente": "Leandro Santos Ribeiro",
+      "unidade": "CBRAG",
+      "subunidade": "FAMAT"
+    },
+    {
+      "docente": "Marcos Lazaro de Souza Albuquerque",
+      "unidade": "CBRAG",
+      "subunidade": "FAMAT"
+    },
+    {
+      "docente": "Maria Augusta Raposo de Barros Brito",
+      "unidade": "CBRAG",
+      "subunidade": "FAMAT"
+    },
+    {
+      "docente": "Marly dos Anjos Nunes",
+      "unidade": "CBRAG",
+      "subunidade": "FAMAT"
+    },
+    {
+      "docente": "Oseas Guimarães Ferreira Neto",
+      "unidade": "CBRAG",
+      "subunidade": "FAMAT"
+    },
+    {
+      "docente": "Silvia Helen Ferreira dos Santos",
+      "unidade": "CBRAG",
+      "subunidade": "FAMAT"
+    },
+    {
+      "docente": "Ana Mabell Seixas Alves Santos",
+      "unidade": "CBRAG",
+      "subunidade": "FAMAT"
+    },
+    {
+      "docente": "Leila Saraiva Mota",
+      "unidade": "CBRAG",
+      "subunidade": "FAMAT"
     }
   ],
   "cursos": [
@@ -2401,6 +2466,456 @@
       "componente": "ATIVIDADES COMPLEMENTARES",
       "abreviacao": "Ativ Complem",
       "ch": 80
+    },
+    {
+      "sigla": "MT",
+      "periodo": "I",
+      "codigo": "MT04059",
+      "cor": "#f2b0f2",
+      "componente": "MATEMÁTICA BÁSICA 1",
+      "abreviacao": "MB1",
+      "ch": 60
+    },
+    {
+      "sigla": "MT",
+      "periodo": "I",
+      "codigo": "MT04060",
+      "cor": "#cba5d0",
+      "componente": "COMPUTAÇÃO BÁSICA",
+      "abreviacao": "COM",
+      "ch": 60
+    },
+    {
+      "sigla": "MT",
+      "periodo": "I",
+      "codigo": "MT04061",
+      "cor": "#f2c9bb",
+      "componente": "VETORES E GEOMETRIA ANALÍTICA",
+      "abreviacao": "VGA",
+      "ch": 60
+    },
+    {
+      "sigla": "MT",
+      "periodo": "I",
+      "codigo": "MT04063",
+      "cor": "#ffd7d7",
+      "componente": "LABORATÓRIO DE ENSINO DE MATEMÁTICA BÁSICA 1",
+      "abreviacao": "LM1",
+      "ch": 30
+    },
+    {
+      "sigla": "MT",
+      "periodo": "I",
+      "codigo": "MT04064",
+      "cor": "#ffefcd",
+      "componente": "LABORATÓRIO DE ENSINO DE VETORES E GEOMETRIA ANALÍTICA",
+      "abreviacao": "LVG",
+      "ch": 30
+    },
+    {
+      "sigla": "MT",
+      "periodo": "II",
+      "codigo": "MT04065",
+      "cor": "#feffd9",
+      "componente": "GEOMETRIA PLANA",
+      "abreviacao": "GP",
+      "ch": 60
+    },
+    {
+      "sigla": "MT",
+      "periodo": "II",
+      "codigo": "MT04066",
+      "cor": "#e3ffdd",
+      "componente": "LINGUA PORTUGUESA",
+      "abreviacao": "LP",
+      "ch": 60
+    },
+    {
+      "sigla": "MT",
+      "periodo": "II",
+      "codigo": "MT04067",
+      "cor": "#c0fcff",
+      "componente": "INTRODUCAO A EDUCACAO",
+      "abreviacao": "IEDUC",
+      "ch": 60
+    },
+    {
+      "sigla": "MT",
+      "periodo": "II",
+      "codigo": "MT04068",
+      "cor": "#c9deff",
+      "componente": "MATEMATICA BASICA 2",
+      "abreviacao": "MB2",
+      "ch": 60
+    },
+    {
+      "sigla": "MT",
+      "periodo": "II",
+      "codigo": "MT04069",
+      "cor": "#dcd5ff",
+      "componente": "LOGICA MATEMATICA",
+      "abreviacao": "LOG",
+      "ch": 60
+    },
+    {
+      "sigla": "MT",
+      "periodo": "II",
+      "codigo": "MT04070",
+      "cor": "#ffe0ff",
+      "componente": "LABORATORIO DE ENSINO EM GEOMETRIA PLANA",
+      "abreviacao": "LGP",
+      "ch": 30
+    },
+    {
+      "sigla": "MT",
+      "periodo": "II",
+      "codigo": "MT04071",
+      "cor": "#f9e6ef",
+      "componente": "LABORATORIO DE ENSINO EM MATEMATICA BASICA 2",
+      "abreviacao": "LM2",
+      "ch": 30
+    },
+    {
+      "sigla": "MT",
+      "periodo": "III",
+      "codigo": "MT04072",
+      "cor": "#fff2ec",
+      "componente": "CÁLCULO DIFERENCIAL E INTEGRAL 1",
+      "abreviacao": "CA1",
+      "ch": 60
+    },
+    {
+      "sigla": "MT",
+      "periodo": "III",
+      "codigo": "MT04073",
+      "cor": "#e58383",
+      "componente": "ÁLGEBRA LINEAR ELEMENTAR",
+      "abreviacao": "AL",
+      "ch": 60
+    },
+    {
+      "sigla": "MT",
+      "periodo": "III",
+      "codigo": "MT04075",
+      "cor": "#e5ac79",
+      "componente": "INFORMÁTICA NO ENSINO DA MATEMÁTICA",
+      "abreviacao": "INF",
+      "ch": 60
+    },
+    {
+      "sigla": "MT",
+      "periodo": "III",
+      "codigo": "MT04076",
+      "cor": "#e3e58a",
+      "componente": "LABORATÓRIO DE ENSINO DE CÁLCULO 1",
+      "abreviacao": "LC1",
+      "ch": 30
+    },
+    {
+      "sigla": "MT",
+      "periodo": "III",
+      "codigo": "MT04077",
+      "cor": "#a1e595",
+      "componente": "LABORATÓRIO DE ENSINO DE ÁLGEBRA LINEAR ELEMENTAR",
+      "abreviacao": "LAL",
+      "ch": 30
+    },
+    {
+      "sigla": "MT",
+      "periodo": "IV",
+      "codigo": "MT04007",
+      "cor": "#72cbd4",
+      "componente": "DIDATICA GERAL",
+      "abreviacao": "DID",
+      "ch": 60
+    },
+    {
+      "sigla": "MT",
+      "periodo": "IV",
+      "codigo": "MT04078",
+      "cor": "#77b2f2",
+      "componente": "CALCULO DIFERENCIAL E INTEGRAL II",
+      "abreviacao": "CALC2",
+      "ch": 60
+    },
+    {
+      "sigla": "MT",
+      "periodo": "IV",
+      "codigo": "MT04079",
+      "cor": "#9186f2",
+      "componente": "CONSTRUCOES GEOMETRICAS",
+      "abreviacao": "CGEO",
+      "ch": 60
+    },
+    {
+      "sigla": "MT",
+      "periodo": "IV",
+      "codigo": "MT04080",
+      "cor": "#e59ae5",
+      "componente": "METODOLOGIA DO ENSINO DE MATEMATICA",
+      "abreviacao": "MTC",
+      "ch": 60
+    },
+    {
+      "sigla": "MT",
+      "periodo": "IV",
+      "codigo": "MT04081",
+      "cor": "#b68fb9",
+      "componente": "LABORATORIO DE ENSINO DE CALCULO II",
+      "abreviacao": "LC2",
+      "ch": 30
+    },
+    {
+      "sigla": "MT",
+      "periodo": "IV",
+      "codigo": "MT04082",
+      "cor": "#e5b9a5",
+      "componente": "LABORATORIO DE ENSINO DE CONSTRUCOES GEOMETRICAS",
+      "abreviacao": "LCG",
+      "ch": 30
+    },
+    {
+      "sigla": "MT",
+      "periodo": "IV",
+      "codigo": "MT04097",
+      "cor": "#ffeded",
+      "componente": "ATIVIDADE ACADEMICO-CIENTIFICA I",
+      "abreviacao": "AAC1",
+      "ch": 60
+    },
+    {
+      "sigla": "MT",
+      "periodo": "V",
+      "codigo": "MT04084",
+      "cor": "#fffcf1",
+      "componente": "CÁLCULO DIFERENCIAL E INTEGRAL 3",
+      "abreviacao": "CA3",
+      "ch": 60
+    },
+    {
+      "sigla": "MT",
+      "periodo": "V",
+      "codigo": "MT04085",
+      "cor": "#feffe6",
+      "componente": "ANÁLISE COMBINATÓRIA",
+      "abreviacao": "AC",
+      "ch": 60
+    },
+    {
+      "sigla": "MT",
+      "periodo": "V",
+      "codigo": "MT04087",
+      "cor": "#f1ffeb",
+      "componente": "TEORIA DOS NÚMEROS",
+      "abreviacao": "TNU",
+      "ch": 90
+    },
+    {
+      "sigla": "MT",
+      "periodo": "V",
+      "codigo": "MT04088",
+      "cor": "#e1fdff",
+      "componente": "LABORATÓRIO DE ENSINO DE CÁLCULO 3",
+      "abreviacao": "LC3",
+      "ch": 30
+    },
+    {
+      "sigla": "MT",
+      "periodo": "V",
+      "codigo": "MT04089",
+      "cor": "#e6f0ff",
+      "componente": "LABORATÓRIO DE ENSINO DE ANÁLISE COMBINATÓRIA",
+      "abreviacao": "LAC",
+      "ch": 30
+    },
+    {
+      "sigla": "MT",
+      "periodo": "V",
+      "codigo": "MT04090",
+      "cor": "#f1eeff",
+      "componente": "ESTÁGIO 1",
+      "abreviacao": "E1",
+      "ch": 90
+    },
+    {
+      "sigla": "MT",
+      "periodo": "VI",
+      "codigo": "MT04091",
+      "cor": "#fff1ff",
+      "componente": "CALCULO DIFERENCIAL E INTEGRAL IV",
+      "abreviacao": "CAL4",
+      "ch": 60
+    },
+    {
+      "sigla": "MT",
+      "periodo": "VI",
+      "codigo": "MT04092",
+      "cor": "#fff9fc",
+      "componente": "FISICA FUNDAMENTAL I",
+      "abreviacao": "FF1",
+      "ch": 60
+    },
+    {
+      "sigla": "MT",
+      "periodo": "VI",
+      "codigo": "MT04093",
+      "cor": "#fffbf8",
+      "componente": "FILOSOFIA DA EDUCACAO",
+      "abreviacao": "FILO",
+      "ch": 60
+    },
+    {
+      "sigla": "MT",
+      "periodo": "VI",
+      "codigo": "MT04094",
+      "cor": "#d86e6e",
+      "componente": "LIBRAS",
+      "abreviacao": "LIB",
+      "ch": 60
+    },
+    {
+      "sigla": "MT",
+      "periodo": "VI",
+      "codigo": "MT04095",
+      "cor": "#d89663",
+      "componente": "LABORATORIO DE ENSINO DE CALCULO IV",
+      "abreviacao": "LC4",
+      "ch": 60
+    },
+    {
+      "sigla": "MT",
+      "periodo": "VI",
+      "codigo": "MT04096",
+      "cor": "#d6d874",
+      "componente": "LABORATORIO DE ENSINO DE FISICA I",
+      "abreviacao": "LF1",
+      "ch": 30
+    },
+    {
+      "sigla": "MT",
+      "periodo": "VI",
+      "codigo": "MT04098",
+      "cor": "#8bcc7f",
+      "componente": "ESTAGIO II",
+      "abreviacao": "E2",
+      "ch": 90
+    },
+    {
+      "sigla": "MT",
+      "periodo": "VI",
+      "codigo": "MT04101",
+      "cor": "#5cc0be",
+      "componente": "ATIVIDADE ACADEMICO-CIENTIFICA II",
+      "abreviacao": "AAC2",
+      "ch": 60
+    },
+    {
+      "sigla": "MT",
+      "periodo": "VII",
+      "codigo": "MT04099",
+      "cor": "#61a0e5",
+      "componente": "FÍSICA FUNDAMENTAL 3",
+      "abreviacao": "FF3",
+      "ch": 60
+    },
+    {
+      "sigla": "MT",
+      "periodo": "VII",
+      "codigo": "MT04100",
+      "cor": "#7b70e5",
+      "componente": "CÁLCULO NUMÉRICO",
+      "abreviacao": "CN",
+      "ch": 60
+    },
+    {
+      "sigla": "MT",
+      "periodo": "VII",
+      "codigo": "MT04102",
+      "cor": "#d884d8",
+      "componente": "LABORATÓRIO DE ENSINO DE FÍSICA 3",
+      "abreviacao": "LF3",
+      "ch": 30
+    },
+    {
+      "sigla": "MT",
+      "periodo": "VII",
+      "codigo": "MT04103",
+      "cor": "#a079a2",
+      "componente": "LABORATÓRIO DE ENSINO DE CÁLCULO NUMÉRICO",
+      "abreviacao": "LCN",
+      "ch": 30
+    },
+    {
+      "sigla": "MT",
+      "periodo": "VII",
+      "codigo": "MT04104",
+      "cor": "#d8a38f",
+      "componente": "ESTATÍSTICA",
+      "abreviacao": "ETT",
+      "ch": 60
+    },
+    {
+      "sigla": "MT",
+      "periodo": "VII",
+      "codigo": "MT04105",
+      "cor": "#ffb7b7",
+      "componente": "ESTÁGIO 3",
+      "abreviacao": "E3",
+      "ch": 105
+    },
+    {
+      "sigla": "MT",
+      "periodo": "VIII",
+      "codigo": "MT04001",
+      "cor": "#ffdbb0",
+      "componente": "ÁLGEBRA 1",
+      "abreviacao": "A1",
+      "ch": 90
+    },
+    {
+      "sigla": "MT",
+      "periodo": "VIII",
+      "codigo": "MT04106",
+      "cor": "#fdffc0",
+      "componente": "ANÁLISE REAL ELEMENTAR",
+      "abreviacao": "AR",
+      "ch": 90
+    },
+    {
+      "sigla": "MT",
+      "periodo": "VIII",
+      "codigo": "MT04107",
+      "cor": "#d4ffca",
+      "componente": "EVOLUÇÃO DA MATEMÁTICA",
+      "abreviacao": "EVO",
+      "ch": 60
+    },
+    {
+      "sigla": "MT",
+      "periodo": "VIII",
+      "codigo": "MT04109",
+      "cor": "#a5f7ff",
+      "componente": "ESTÁGIO 4",
+      "abreviacao": "E4",
+      "ch": 120
+    },
+    {
+      "sigla": "MT",
+      "periodo": "VIII",
+      "codigo": "MT04062",
+      "cor": "#aecbff",
+      "componente": "INGLÊS BÁSICO",
+      "abreviacao": "ING",
+      "ch": 60
+    },
+    {
+      "sigla": "MT",
+      "periodo": "VIII",
+      "codigo": "MT04094",
+      "cor": "#c7bdff",
+      "componente": "LIBRAS",
+      "abreviacao": "LIB",
+      "ch": 60
     }
   ],
   "turmas": [
@@ -2508,6 +3023,41 @@
       "turno": "Tarde",
       "turma_id": "CN2026",
       "turma_label": "CN2026"
+    },
+    {
+      "sigla": "MT",
+      "ano": 2022,
+      "turno": "Manhã",
+      "turma_id": "MT2022",
+      "turma_label": "MT2022"
+    },
+    {
+      "sigla": "MT",
+      "ano": 2023,
+      "turno": "Tarde",
+      "turma_id": "MT2023",
+      "turma_label": "MT2023"
+    },
+    {
+      "sigla": "MT",
+      "ano": 2024,
+      "turno": "Tarde",
+      "turma_id": "MT2024",
+      "turma_label": "MT2024"
+    },
+    {
+      "sigla": "MT",
+      "ano": 2025,
+      "turno": "noite",
+      "turma_id": "MT2025",
+      "turma_label": "MT2025"
+    },
+    {
+      "sigla": "MT",
+      "ano": 2026,
+      "turno": "tarde",
+      "turma_id": "MT2026",
+      "turma_label": "MT2026"
     }
   ],
   "horarios": [
@@ -2545,6 +3095,26 @@
       "turno": "Manhã",
       "ordem": 7,
       "faixa": "12:00 - 12:50"
+    },
+    {
+      "turno": "Noite",
+      "ordem": 1,
+      "faixa": "18:30 - 19:20"
+    },
+    {
+      "turno": "Noite",
+      "ordem": 2,
+      "faixa": "19:20 - 20:10"
+    },
+    {
+      "turno": "Noite",
+      "ordem": 3,
+      "faixa": "20:10 - 21:00"
+    },
+    {
+      "turno": "Noite",
+      "ordem": 4,
+      "faixa": "21:00 -21:50"
     },
     {
       "turno": "Tarde",
@@ -2591,6 +3161,12 @@
       "10:20 - 11:10",
       "11:10 - 12:00",
       "12:00 - 12:50"
+    ],
+    "Noite": [
+      "18:30 - 19:20",
+      "19:20 - 20:10",
+      "20:10 - 21:00",
+      "21:00 -21:50"
     ],
     "Tarde": [
       "13:30 - 14:20",
