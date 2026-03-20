@@ -5446,6 +5446,48 @@ function getRegularExecutionSnapshot(turmaId, startDate, endDate) {
     return { hoursByAlloc, datesByAlloc };
 }
 
+function getAllocationExecutionRangeMap(allocations, startDate, endDate) {
+    const rangeByAlloc = new Map();
+    if (!Array.isArray(allocations) || allocations.length === 0 || !startDate || !endDate) {
+        return rangeByAlloc;
+    }
+
+    const allocIds = new Set(
+        allocations
+            .map((a) => a?.id)
+            .filter((id) => id !== undefined && id !== null)
+    );
+    if (allocIds.size === 0) return rangeByAlloc;
+
+    const turmaIds = [...new Set(
+        allocations
+            .map((a) => String(a?.turmaId || '').trim())
+            .filter(Boolean)
+    )];
+
+    turmaIds.forEach((turmaId) => {
+        const eventsByDate = getCalendarEvents(turmaId, startDate, endDate);
+        Object.keys(eventsByDate).forEach((dateStr) => {
+            const events = eventsByDate[dateStr] || [];
+            events.forEach((event) => {
+                const id = event?.id;
+                if (!allocIds.has(id)) return;
+
+                const current = rangeByAlloc.get(id);
+                if (!current) {
+                    rangeByAlloc.set(id, { firstDate: dateStr, lastDate: dateStr });
+                    return;
+                }
+
+                if (dateStr < current.firstDate) current.firstDate = dateStr;
+                if (dateStr > current.lastDate) current.lastDate = dateStr;
+            });
+        });
+    });
+
+    return rangeByAlloc;
+}
+
 function getIntensiveExecutionSnapshot(turmaId, startDate, endDate) {
     const dateHoursByAlloc = new Map();
     if (!turmaId || !startDate || !endDate) {
@@ -5562,6 +5604,8 @@ function renderGanttChart() {
             if (a.dataFim && a.dataFim > maxDateStr) maxDateStr = a.dataFim;
         });
 
+        const executionRangeByAlloc = getAllocationExecutionRangeMap(allocs, minDateStr, maxDateStr);
+
         const minTime = new Date(minDateStr + "T12:00:00").getTime();
         const maxTime = new Date(maxDateStr + "T12:00:00").getTime();
         const totalTime = maxTime - minTime || 1;
@@ -5658,12 +5702,15 @@ function renderGanttChart() {
                 let dayRangeStart = a.dataInicio || minDateStr;
                 let dayRangeEnd = a.dataFim || maxDateStr;
                 let intensiveSlotsForDay = [];
+                const executionRange = executionRangeByAlloc.get(a.id);
 
                 if (a.tipo === 'regular' || a.tipo === 'regular_prioritaria') {
                     if (parseInt(a.diaSemana) === d.id) {
                         add = true;
                         shift = timeToMinutes(a.horario) < 780 ? 'M' : 'T';
                         slotsToAdd = 1;
+                        if (executionRange?.firstDate) dayRangeStart = executionRange.firstDate;
+                        if (executionRange?.lastDate) dayRangeEnd = executionRange.lastDate;
                     }
                 }
                 else if (a.tipo === 'intensiva') {
