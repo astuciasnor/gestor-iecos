@@ -210,6 +210,16 @@ function renderizarAgenda() {
 }
 
 // FUNÇÃO ANTIGA MANTIDA COMO BACKUP
+function formatarHoraInicialPublica(horario) {
+    const raw = String(horario || '').trim();
+    const match = raw.match(/(\d{1,2}):(\d{2})/);
+    if (!match) return raw || '--:--';
+
+    const hh = match[1].padStart(2, '0');
+    const mm = match[2];
+    return `${hh}h${mm}`;
+}
+
 function gerarCartoesHTML(calendarData) {
     let html = '';
     const diasDaSemana = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
@@ -246,6 +256,7 @@ function gerarCartoesHTML(calendarData) {
         } else {
             eventosAtivos.forEach(ev => {
                 const horario = ev.horario || (ev.horariosOcupados ? ev.horariosOcupados[0] : '--:--');
+                const horarioExibicao = formatarHoraInicialPublica(horario);
                 const titulo = ev.title || ev.disciplina;
                 const docente = ev.docente || 'A definir';
                 const cor = ev.cor || '#bdc3c7';
@@ -256,7 +267,7 @@ function gerarCartoesHTML(calendarData) {
 
                 html += `
                 <div class="aula-item" style="border-left: 5px solid ${cor}">
-                    <div class="aula-horario">${horario}</div>
+                    <div class="aula-horario">${horarioExibicao}</div>
                     <div class="aula-info">
                         <div class="aula-titulo">${titulo} ${labelTipo}</div>
                         <div class="aula-docente">👨‍🏫 ${docente}</div>
@@ -375,7 +386,7 @@ function gerarGradeSemanalHTML(calendarData, ano, mes) {
                     // ================================================================
 
                     // Pega só a hora de início para economizar espaço
-                    const horaCurta = horario.split(':')[0] + 'h';
+                    const horaCurta = formatarHoraInicialPublica(horario);
                     const dataExibicao = `${diaFormatado}/${String(dataAtual.getMonth() + 1).padStart(2, '0')}/${dataAtual.getFullYear()}`;
 
                     // O QUADRADINHO MÁGICO COM DADOS EMBUTIDOS

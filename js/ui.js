@@ -5488,6 +5488,63 @@ function getAllocationExecutionRangeMap(allocations, startDate, endDate) {
     return rangeByAlloc;
 }
 
+function buildNonIntensiveExecutionSignature(entry) {
+    if (!entry) return '';
+    const tipo = String(entry.tipo || '').trim();
+    if (tipo !== 'regular' && tipo !== 'regular_prioritaria') return '';
+
+    const turmaId = String(entry.turmaId || '').trim();
+    const disciplina = String(entry.disciplina || '').trim();
+    const subGrupo = String(entry.subGrupo || '').trim();
+    const diaSemana = String(parseInt(entry.diaSemana, 10));
+    const horario = String(entry.horario || '').trim();
+
+    if (!turmaId || !disciplina || !horario || diaSemana === 'NaN') return '';
+    return [turmaId, disciplina, tipo, subGrupo, diaSemana, horario].join('|');
+}
+
+function getNonIntensiveExecutionRangeMap(allocations, startDate, endDate) {
+    const rangeBySignature = new Map();
+    if (!Array.isArray(allocations) || allocations.length === 0 || !startDate || !endDate) {
+        return rangeBySignature;
+    }
+
+    const signatures = new Set(
+        allocations
+            .map((a) => buildNonIntensiveExecutionSignature(a))
+            .filter(Boolean)
+    );
+    if (signatures.size === 0) return rangeBySignature;
+
+    const turmaIds = [...new Set(
+        allocations
+            .map((a) => String(a?.turmaId || '').trim())
+            .filter(Boolean)
+    )];
+
+    turmaIds.forEach((turmaId) => {
+        const eventsByDate = getCalendarEvents(turmaId, startDate, endDate);
+        Object.keys(eventsByDate).forEach((dateStr) => {
+            const events = eventsByDate[dateStr] || [];
+            events.forEach((event) => {
+                const signature = buildNonIntensiveExecutionSignature(event);
+                if (!signatures.has(signature)) return;
+
+                const current = rangeBySignature.get(signature);
+                if (!current) {
+                    rangeBySignature.set(signature, { firstDate: dateStr, lastDate: dateStr });
+                    return;
+                }
+
+                if (dateStr < current.firstDate) current.firstDate = dateStr;
+                if (dateStr > current.lastDate) current.lastDate = dateStr;
+            });
+        });
+    });
+
+    return rangeBySignature;
+}
+
 function getIntensiveExecutionSnapshot(turmaId, startDate, endDate) {
     const dateHoursByAlloc = new Map();
     if (!turmaId || !startDate || !endDate) {
@@ -5605,6 +5662,7 @@ function renderGanttChart() {
         });
 
         const executionRangeByAlloc = getAllocationExecutionRangeMap(allocs, minDateStr, maxDateStr);
+        const executionRangeBySignature = getNonIntensiveExecutionRangeMap(allocs, minDateStr, maxDateStr);
 
         const minTime = new Date(minDateStr + "T12:00:00").getTime();
         const maxTime = new Date(maxDateStr + "T12:00:00").getTime();
@@ -5703,14 +5761,18 @@ function renderGanttChart() {
                 let dayRangeEnd = a.dataFim || maxDateStr;
                 let intensiveSlotsForDay = [];
                 const executionRange = executionRangeByAlloc.get(a.id);
+                const executionSignature = buildNonIntensiveExecutionSignature(a);
+                const signatureRange = executionSignature ? executionRangeBySignature.get(executionSignature) : null;
 
                 if (a.tipo === 'regular' || a.tipo === 'regular_prioritaria') {
                     if (parseInt(a.diaSemana) === d.id) {
                         add = true;
                         shift = timeToMinutes(a.horario) < 780 ? 'M' : 'T';
                         slotsToAdd = 1;
-                        if (executionRange?.firstDate) dayRangeStart = executionRange.firstDate;
-                        if (executionRange?.lastDate) dayRangeEnd = executionRange.lastDate;
+                        if (signatureRange?.firstDate) dayRangeStart = signatureRange.firstDate;
+                        else if (executionRange?.firstDate) dayRangeStart = executionRange.firstDate;
+                        if (signatureRange?.lastDate) dayRangeEnd = signatureRange.lastDate;
+                        else if (executionRange?.lastDate) dayRangeEnd = executionRange.lastDate;
                     }
                 }
                 else if (a.tipo === 'intensiva') {
