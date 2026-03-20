@@ -422,17 +422,20 @@
 
         .chip-hora {
             font-size: 0.55rem;
-            opacity: 0.9;
+            color: rgba(245, 245, 245, 0.82);
             line-height: 1.2;
             font-weight: bold;
         }
 
-        /* Tamanho da fonte ajustado para 4 letras */
+        /* Rotulo principal do chip */
         .chip-sigla {
-            font-size: 0.65rem;
-            font-weight: 900;
-            line-height: 1.2;
-            letter-spacing: 0.2px;
+            font-size: 0.58rem;
+            font-weight: 800;
+            line-height: 1.15;
+            letter-spacing: 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .feriado-chip {

@@ -220,6 +220,28 @@ function formatarHoraInicialPublica(horario) {
     return `${hh}h${mm}`;
 }
 
+function formatarRotuloChipPublico(texto) {
+    const raw = String(texto || '').trim();
+    if (!raw) return '';
+    if (raw.length <= 4 && raw === raw.toUpperCase()) return raw;
+    return raw.charAt(0).toUpperCase() + raw.slice(1).toLowerCase();
+}
+
+function obterSiglaPublicaComFallback(componenteNome, fallbackTitulo = '') {
+    const componente = String(componenteNome || '').trim();
+    const fallback = String(fallbackTitulo || '').trim();
+
+    const info = (store.rawData?.componentes || []).find((item) => String(item.componente || '').trim() === componente);
+    const abreviacao = String(info?.abreviacao || '').trim();
+    if (abreviacao && abreviacao.length <= 15) {
+        return formatarRotuloChipPublico(abreviacao);
+    }
+
+    const tituloLimpo = fallback.replace(/^\([a-zA-Z]\)\s*/, '').trim();
+    const baseFallback = tituloLimpo || componente;
+    return formatarRotuloChipPublico(baseFallback.substring(0, 4));
+}
+
 function gerarCartoesHTML(calendarData) {
     let html = '';
     const diasDaSemana = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
@@ -377,13 +399,8 @@ function gerarGradeSemanalHTML(calendarData, ano, mes) {
                         docente = ev.docentes.map(d => d.nome || d).join(' / ');
                     }
 
-                    // ====== NOVIDADE AQUI: LÓGICA DE 4 LETRAS E REMOÇÃO DO (I) ======
-                    // Remove a marcação "(I) " ou similares do início para a sigla não quebrar
-                    let tituloLimpo = titulo.replace(/^\([a-zA-Z]\)\s*/, '').trim();
-
-                    // Pega as 4 primeiras letras do nome limpo
-                    const sigla = tituloLimpo.substring(0, 4).toUpperCase();
-                    // ================================================================
+                    // Usa a abreviação oficial quando ela cabe no chip.
+                    const sigla = obterSiglaPublicaComFallback(ev.disciplina, titulo);
 
                     // Pega só a hora de início para economizar espaço
                     const horaCurta = formatarHoraInicialPublica(horario);
