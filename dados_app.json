@@ -1,6 +1,6 @@
 {
   "meta": {
-    "generated_at": "2026-03-20T18:54:47",
+    "generated_at": "2026-03-20T19:05:08",
     "source_file": "planilha_base.xlsx"
   },
   "docentes": [
@@ -808,7 +808,7 @@
       "codigo": "EP05042",
       "cor": "#77b2f2",
       "componente": "ESTATISTICA APLICADA A PESCA E AQUICULTURA",
-      "abreviacao": "Estat Aplic Pesc",
+      "abreviacao": "Estat Aplic",
       "ch": 45
     },
     {
@@ -943,7 +943,7 @@
       "codigo": "EP05072",
       "cor": "#d6d874",
       "componente": "TOPICOS ESPECIAIS EM TECNOLOGIA E ORDENAMENTO PESQUEIRO",
-      "abreviacao": "TE Orden. Pesq",
+      "abreviacao": "Siste Naveg",
       "ch": 30
     },
     {
