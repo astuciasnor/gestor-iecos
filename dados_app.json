@@ -1,6 +1,6 @@
 {
   "meta": {
-    "generated_at": "2026-03-21T11:17:06",
+    "generated_at": "2026-03-21T17:41:22",
     "source_file": "planilha_base.xlsx"
   },
   "docentes": [
@@ -3244,12 +3244,6 @@
       "feriado": "Independência do Brasil",
       "dia": "Segunda-feira",
       "tipo": "Nacional"
-    },
-    {
-      "data": "2026-10-07",
-      "feriado": "N. Sra. do Rosário (Padroeira)",
-      "dia": "Quarta-feira",
-      "tipo": "Municipal"
     },
     {
       "data": "2026-10-12",

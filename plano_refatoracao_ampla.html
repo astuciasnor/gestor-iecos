@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Plano de Execução da Refatoração Ampla</title>
+  <style>
+    :root {
+      --bg: #f3f5f2;
+      --panel: #ffffff;
+      --ink: #163126;
+      --muted: #5f6f66;
+      --line: #d7ddd8;
+      --accent: #0b6b3a;
+      --accent-soft: #e6f3eb;
+      --warn: #a14b10;
+      --shadow: 0 10px 30px rgba(13, 39, 26, 0.08);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at top right, rgba(11, 107, 58, 0.08), transparent 22rem),
+        linear-gradient(180deg, #f7faf7 0%, var(--bg) 100%);
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 320px minmax(0, 1fr);
+      min-height: 100vh;
+    }
+
+    .sidebar {
+      position: sticky;
+      top: 0;
+      align-self: start;
+      height: 100vh;
+      overflow-y: auto;
+      padding: 24px 18px 32px;
+      border-right: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.88);
+      backdrop-filter: blur(8px);
+    }
+
+    .brand {
+      margin-bottom: 22px;
+      padding: 18px;
+      border-radius: 18px;
+      background: linear-gradient(145deg, #0a5e34, #0d7a43);
+      color: #fff;
+      box-shadow: var(--shadow);
+    }
+
+    .brand h1 {
+      margin: 0 0 8px;
+      font-size: 1.12rem;
+      line-height: 1.25;
+    }
+
+    .brand p {
+      margin: 0;
+      font-size: 0.92rem;
+      line-height: 1.45;
+      color: rgba(255, 255, 255, 0.92);
+    }
+
+    .meta {
+      margin-top: 14px;
+      font-size: 0.82rem;
+      color: rgba(255, 255, 255, 0.84);
+    }
+
+    .nav-group {
+      margin: 16px 0 0;
+    }
+
+    .nav-title {
+      margin: 14px 0 8px;
+      font-size: 0.76rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .nav-group a {
+      display: block;
+      margin: 4px 0;
+      padding: 8px 10px;
+      border-radius: 10px;
+      color: var(--ink);
+      text-decoration: none;
+      line-height: 1.35;
+    }
+
+    .nav-group a:hover,
+    .nav-group a:focus-visible {
+      background: var(--accent-soft);
+      color: var(--accent);
+    }
+
+    .content {
+      padding: 34px 34px 60px;
+    }
+
+    .hero,
+    section {
+      max-width: 1020px;
+      margin: 0 auto 22px;
+      padding: 26px;
+      background: var(--panel);
+      border: 1px solid rgba(215, 221, 216, 0.9);
+      border-radius: 22px;
+      box-shadow: var(--shadow);
+    }
+
+    .hero {
+      background:
+        linear-gradient(135deg, rgba(11, 107, 58, 0.07), rgba(11, 107, 58, 0.02)),
+        #fff;
+    }
+
+    h2 {
+      margin: 0 0 14px;
+      font-size: 1.52rem;
+      line-height: 1.2;
+    }
+
+    h3 {
+      margin: 22px 0 10px;
+      font-size: 1.05rem;
+    }
+
+    p {
+      margin: 0 0 12px;
+      line-height: 1.62;
+    }
+
+    ul,
+    ol {
+      margin: 0 0 12px 20px;
+      line-height: 1.62;
+    }
+
+    li + li {
+      margin-top: 6px;
+    }
+
+    .badge-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 7px 11px;
+      border-radius: 999px;
+      font-size: 0.84rem;
+      font-weight: 700;
+      background: var(--accent-soft);
+      color: var(--accent);
+    }
+
+    .note {
+      padding: 14px 16px;
+      border-left: 4px solid var(--warn);
+      border-radius: 12px;
+      background: #fff4eb;
+      color: #66320d;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 14px;
+      margin-top: 16px;
+    }
+
+    .card {
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: #fcfdfc;
+    }
+
+    .card h4 {
+      margin: 0 0 8px;
+      font-size: 1rem;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 8px;
+    }
+
+    th,
+    td {
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top;
+      line-height: 1.5;
+    }
+
+    th {
+      color: var(--muted);
+      font-size: 0.84rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    code {
+      padding: 0.12rem 0.35rem;
+      border-radius: 6px;
+      background: #eef2ef;
+      font-family: Consolas, "Courier New", monospace;
+      font-size: 0.92em;
+    }
+
+    .small {
+      font-size: 0.92rem;
+      color: var(--muted);
+    }
+
+    @media (max-width: 980px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar {
+        position: relative;
+        height: auto;
+        border-right: 0;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .content {
+        padding: 22px 16px 44px;
+      }
+
+      .hero,
+      section {
+        padding: 20px;
+        border-radius: 18px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand">
+        <h1>Refatoração Ampla</h1>
+        <p>Plano consolidado de execução para reorganizar o núcleo do app sem perder o fluxo maduro já validado em produção.</p>
+        <div class="meta">
+          Consolidação em 21/03/2026<br />
+          Branch alvo: <code>refactor-canonical-execution-night-turn</code>
+        </div>
+      </div>
+
+      <nav>
+        <div class="nav-group">
+          <div class="nav-title">Visão Geral</div>
+          <a href="#status">Status Real</a>
+          <a href="#decisoes">Decisões Consolidadas</a>
+          <a href="#principios">Princípios de Execução</a>
+        </div>
+
+        <div class="nav-group">
+          <div class="nav-title">Núcleo</div>
+          <a href="#armazenamento">Períodos Letivos e Salvamento</a>
+          <a href="#weekly">Grade Semanal</a>
+          <a href="#turnos">Turnos</a>
+          <a href="#motor">Motor Canônico</a>
+          <a href="#conflitos">Conflitos</a>
+        </div>
+
+        <div class="nav-group">
+          <div class="nav-title">Saídas</div>
+          <a href="#calendarios">Calendários</a>
+          <a href="#gantt">Gantt</a>
+          <a href="#dados">Importação, Exportação e Publicação</a>
+          <a href="#sigaa">SIGAA e Metadados</a>
+        </div>
+
+        <div class="nav-group">
+          <div class="nav-title">Execução</div>
+          <a href="#fases">Fases Técnicas</a>
+          <a href="#arquivos">Arquivos e Módulos</a>
+          <a href="#validacao">Checklist de Validação</a>
+          <a href="#abertos">Itens Deixados para Depois</a>
+        </div>
+      </nav>
+    </aside>
+
+    <main class="content">
+      <section class="hero" id="status">
+        <h2>Status Real</h2>
+        <p>A refatoração ampla vai começar a partir do estado atual do app, e não de um ramo estrutural já avançado. A branch de refatoração existe, mas o código funcional relevante ainda está essencialmente no mesmo ponto da linha principal.</p>
+        <p>Isso muda a natureza do trabalho: não é desmontar um núcleo novo incompleto, e sim extrair, consolidar e limpar um núcleo que hoje já existe espalhado em <code>ui.js</code>, <code>calendar.js</code>, <code>store.js</code> e nas rotinas de exportação.</p>
+        <div class="badge-row">
+          <span class="badge">Preservar UX madura</span>
+          <span class="badge">Remover remendos internos</span>
+          <span class="badge">Reestruturar sem perda funcional</span>
+        </div>
+      </section>
+
+      <section id="decisoes">
+        <h2>Decisões Consolidadas</h2>
+        <ul>
+          <li>A refatoração ampla não deve redesenhar o produto. Ela deve reorganizar o código e preservar o fluxo funcional já amadurecido.</li>
+          <li>A <strong>Grade Semanal</strong> é a área mais crítica do sistema e terá prioridade máxima de estabilidade, clareza e cobertura na refatoração.</li>
+          <li>O sistema passará a operar com um núcleo canônico único para execução, turnos, conflitos, serialização e saídas públicas.</li>
+          <li>Os turnos reais continuarão vindo de <code>horarios_por_turno</code>, mas a prioridade de desenho para docentes será <code>Manhã</code> e <code>Tarde</code>. <code>Noite</code> só aparecerá quando houver uso real no recorte consultado.</li>
+          <li>Conflito de professor, conflito interno da turma e conflito geral passarão a ser derivados da mesma base de ocorrências reais.</li>
+          <li>Quando o fim da execução quebrar o padrão semanal por incompletude de slots, a faixa de ajuste automática deverá cobrir o <strong>penúltimo</strong> e o <strong>último</strong> dia de aula reais, já preenchendo início e fim na Grade Semanal.</li>
+          <li>Períodos letivos novos não devem sobrescrever semestres anteriores. Cada semestre/plano deverá ser salvo separadamente.</li>
+          <li>Importação, exportação, publicação online e metadados SIGAA deverão sair de um formato canônico estável, preparado para evoluir.</li>
+          <li>A agenda pública de docentes ficará preparada, mas a entrega visual amigável para professor será feita depois, sem travar a reestruturação atual.</li>
+        </ul>
+      </section>
+
+      <section id="principios">
+        <h2>Princípios de Execução</h2>
+        <div class="grid">
+          <div class="card">
+            <h4>Paridade antes da limpeza</h4>
+            <p>O código antigo só sai depois que o novo caminho reproduzir o comportamento esperado com segurança.</p>
+          </div>
+          <div class="card">
+            <h4>UX preservada</h4>
+            <p>O fluxo do usuário final continua familiar. A refatoração acontece por baixo, não à custa da operação diária.</p>
+          </div>
+          <div class="card">
+            <h4>Núcleo único</h4>
+            <p>Execução, conflitos, calendários, Gantt, exportação e SIGAA devem depender da mesma fonte de verdade.</p>
+          </div>
+          <div class="card">
+            <h4>Fases reversíveis</h4>
+            <p>Cada etapa deve ser pequena o bastante para permitir revisão, teste e rollback sem desorganizar o projeto.</p>
+          </div>
+        </div>
+      </section>
+
+      <section id="armazenamento">
+        <h2>Períodos Letivos e Salvamento</h2>
+        <p>O comportamento atual salva tudo em um único <code>academic_allocations</code> no navegador. Isso não é suficiente para suportar semestres independentes com segurança.</p>
+        <h3>Diretriz nova</h3>
+        <ul>
+          <li>Cada período letivo passará a ser um <strong>plano independente</strong>, com identificador próprio.</li>
+          <li>Ao selecionar um novo semestre, como agosto/2026 e <code>4P</code>, o sistema deverá abrir ou criar um novo plano, sem apagar os anteriores.</li>
+          <li>O contexto global continuará guardando preferências de uso, mas as alocações passarão a ser persistidas por plano.</li>
+          <li>Importação e exportação deverão carregar também os metadados do plano, e não apenas o array de alocações.</li>
+        </ul>
+        <div class="note">
+          Meta estrutural: o usuário deve conseguir alternar entre semestres sem misturar dados de calendários diferentes no mesmo armazenamento local.
+        </div>
+      </section>
+
+      <section id="weekly">
+        <h2>Grade Semanal</h2>
+        <p>A Grade Semanal continuará sendo o centro operacional do sistema. É nela que o diretor ou técnico administrativo monta a componente, define faixas, ajusta datas e salva a execução.</p>
+        <h3>Regras que ficam oficiais</h3>
+        <ul>
+          <li>Cadastro e edição de componente permanecem ancorados na Grade Semanal.</li>
+          <li>As faixas da interface devem refletir exatamente o que o motor canônico reconhece como execução real.</li>
+          <li>Qualquer ajuste automático relevante deve aparecer imediatamente nos campos da tabela de faixas.</li>
+          <li>A aba deve permanecer simples para o usuário, mesmo que o núcleo interno fique mais sofisticado.</li>
+        </ul>
+        <h3>Ajuste automático final</h3>
+        <ul>
+          <li>Se a execução exigir faixa extra por quebra do padrão semanal no fechamento da CH, a faixa de ajuste deve começar no penúltimo dia real de aula e terminar no último dia real.</li>
+          <li>Esses dois dias passam a pertencer à faixa extra, como <code>Faixa 2</code> ou <code>Faixa 3</code>, conforme o caso.</li>
+          <li>O sistema deve preencher automaticamente os campos de início e fim dessa faixa na Grade Semanal.</li>
+          <li>Depois disso, a UI deve posicionar o usuário nessa faixa para que ele refine a logística pedagógica final, incluindo aulas e avaliações.</li>
+        </ul>
+      </section>
+
+      <section id="turnos">
+        <h2>Turnos</h2>
+        <p>O app deve suportar todos os turnos reais do JSON, mas a prioridade de apresentação para docentes será diurna.</p>
+        <ul>
+          <li>Os turnos válidos continuarão sendo lidos dinamicamente de <code>horarios_por_turno</code>.</li>
+          <li><code>Manhã</code> e <code>Tarde</code> serão a prioridade de desenho para calendário docente e Gantt.</li>
+          <li><code>Noite</code> não será removido; ele apenas não deve aparecer por padrão quando não houver uso real.</li>
+          <li>Quando um docente tiver ocorrência noturna no período filtrado, o turno <code>Noite</code> deverá aparecer automaticamente.</li>
+          <li>A resolução de <code>slot -&gt; turno</code> deve sair de um módulo único, e não de regras manuais espalhadas pela UI.</li>
+        </ul>
+      </section>
+
+      <section id="motor">
+        <h2>Motor Canônico</h2>
+        <p>O núcleo canônico será responsável por transformar o modelo salvo em execuções reais de aula, respeitando faixas, dias, slots, CH, feriados, último dia parcial e ajustes finais.</p>
+        <h3>Saídas esperadas do motor</h3>
+        <ul>
+          <li>Ocorrências reais por <code>data + slot</code>.</li>
+          <li>Intervalo real de execução por componente.</li>
+          <li>Turnos usados de fato por componente, turma e docente.</li>
+          <li>Resumo de horas por faixa.</li>
+          <li>Sugestão formal de faixa de ajuste final quando a distribuição semanal for quebrada no fechamento.</li>
+        </ul>
+      </section>
+
+      <section id="conflitos">
+        <h2>Conflitos</h2>
+        <p>As regras de conflito deixarão de ficar divididas entre fluxo de cadastro, calendário e auditoria. Todas passarão a depender do mesmo modelo de ocorrências reais.</p>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Escopo</th>
+                <th>Regra oficial</th>
+                <th>Comportamento esperado</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Professor</td>
+                <td><code>docente + data + slot</code></td>
+                <td>Bloqueio ou confirmação explícita no cadastro, com auditoria pós-importação.</td>
+              </tr>
+              <tr>
+                <td>Turma</td>
+                <td><code>turma + data + slot</code></td>
+                <td>Bloqueio de choque interno real dentro da mesma grade.</td>
+              </tr>
+              <tr>
+                <td>Geral</td>
+                <td>Registro normalizado de conflito</td>
+                <td>Base pronta para banner, tabela, modal ou export futuro sem duplicar regra.</td>
+              </tr>
+              <tr>
+                <td>Distribuição final</td>
+                <td>Execução real por faixa</td>
+                <td>Detectar quando a quebra do padrão exige faixa extra final.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="calendarios">
+        <h2>Calendários</h2>
+        <p>Calendário da turma e calendário docente continuarão existindo, mas deixarão de recalcular regras centrais por conta própria.</p>
+        <ul>
+          <li>O calendário da turma deve permanecer estável e coerente com o turno predominante da turma.</li>
+          <li>O calendário docente deve ser gerado a partir das ocorrências reais do professor.</li>
+          <li>O esqueleto de slots do docente deverá priorizar <code>Manhã</code> e <code>Tarde</code>, trazendo <code>Noite</code> apenas quando houver necessidade real.</li>
+          <li>Choques destacados visualmente devem sair do mesmo motor de conflitos usado no cadastro.</li>
+        </ul>
+      </section>
+
+      <section id="gantt">
+        <h2>Gantt</h2>
+        <p>O Gantt passará a usar o mesmo núcleo de turnos e execução. Ele não deve continuar baseado em pistas fixas <code>M/T</code> nem em inferências manuais espalhadas.</p>
+        <ul>
+          <li>Exibir apenas os turnos realmente usados pelo docente no período filtrado.</li>
+          <li>Manter prioridade visual para manhã e tarde.</li>
+          <li>Suportar noite quando houver ocorrência real, sem hack específico.</li>
+          <li>Usar intervalos reais de execução, e não apenas <code>dataInicio/dataFim</code> brutos.</li>
+          <li>Ficar estruturalmente preparado para evoluções futuras da visão docente pública, sem acoplamento desnecessário.</li>
+        </ul>
+      </section>
+
+      <section id="dados">
+        <h2>Importação, Exportação e Publicação</h2>
+        <p>Importação, merge, backup, export público e publicação online continuarão existindo, mas passarão a usar uma camada de serialização própria.</p>
+        <h3>Diretrizes</h3>
+        <ul>
+          <li>Backup por plano letivo, com possibilidade de exportar também conjuntos maiores quando necessário.</li>
+          <li>Merge orientado por plano e metadados, e não apenas por <code>id</code> de alocação.</li>
+          <li>Formato público separado da estrutura interna do editor.</li>
+          <li>Publicação discente mantida como fluxo oficial já existente.</li>
+          <li>Preparação estrutural para publicação docente futura, sem implementar ainda a nova interface amigável.</li>
+        </ul>
+      </section>
+
+      <section id="sigaa">
+        <h2>SIGAA e Metadados</h2>
+        <p>A geração de metadados SIGAA já existe, mas será reorganizada para depender do mesmo modelo canônico das execuções e faixas.</p>
+        <ul>
+          <li>O payload SIGAA deve sair de um módulo próprio, desacoplado da renderização da tabela de ofertas.</li>
+          <li>A estrutura precisa estar pronta para receber campos extras sem reabrir a arquitetura.</li>
+          <li>Faixas, datas, códigos e horários exportados devem refletir exatamente a execução final reconhecida pelo motor.</li>
+          <li>A preparação para melhorias futuras no SIGAA deve acontecer agora no nível estrutural, e não como remendo posterior.</li>
+        </ul>
+      </section>
+
+      <section id="fases">
+        <h2>Fases Técnicas</h2>
+        <ol>
+          <li>Introduzir salvamento por plano letivo e chave de contexto, preservando semestres anteriores.</li>
+          <li>Extrair a resolução de turnos para módulo próprio.</li>
+          <li>Extrair o motor canônico de execução e ajuste final de faixas.</li>
+          <li>Extrair o módulo unificado de conflitos.</li>
+          <li>Religar a Grade Semanal ao núcleo novo, mantendo paridade funcional.</li>
+          <li>Religar calendário da turma e calendário docente ao mesmo núcleo.</li>
+          <li>Refatorar o Gantt para usar turnos reais e intervalos reais.</li>
+          <li>Extrair serialização, importação, exportação, payload público e metadados SIGAA.</li>
+          <li>Remover gradualmente caminhos legados, hardcodes e duplicações.</li>
+        </ol>
+      </section>
+
+      <section id="arquivos">
+        <h2>Arquivos e Módulos Alvo</h2>
+        <div class="grid">
+          <div class="card">
+            <h4><code>js/turns.js</code></h4>
+            <p>Normalização de nomes de turno, leitura de <code>horarios_por_turno</code>, ordem preferencial de exibição e resolução de slot para turno.</p>
+          </div>
+          <div class="card">
+            <h4><code>js/execution_engine.js</code></h4>
+            <p>Geração canônica das ocorrências, cálculo de CH, fechamento por faixa, último dia parcial e sugestão da faixa final de ajuste.</p>
+          </div>
+          <div class="card">
+            <h4><code>js/conflicts.js</code></h4>
+            <p>Detecção unificada de conflito de professor, conflito de turma e registros gerais de auditoria.</p>
+          </div>
+          <div class="card">
+            <h4><code>js/plan_storage.js</code></h4>
+            <p>Persistência por período letivo/plano, índice de planos e troca segura de contexto sem mistura entre semestres.</p>
+          </div>
+          <div class="card">
+            <h4><code>js/serialization.js</code></h4>
+            <p>Formato canônico de importação, exportação, merge e payload público.</p>
+          </div>
+          <div class="card">
+            <h4><code>js/sigaa_metadata.js</code></h4>
+            <p>Geração dos metadados SIGAA a partir do núcleo canônico, desacoplada da UI.</p>
+          </div>
+          <div class="card">
+            <h4><code>js/ui.js</code></h4>
+            <p>Permanecerá como camada de interação e renderização, perdendo responsabilidades de motor e conflito.</p>
+          </div>
+          <div class="card">
+            <h4><code>js/calendar.js</code> e saídas públicas</h4>
+            <p>Consumidores do núcleo novo para turma, docente, publicação discente e futura evolução da agenda docente.</p>
+          </div>
+        </div>
+      </section>
+
+      <section id="validacao">
+        <h2>Checklist de Validação</h2>
+        <ul>
+          <li>Selecionar agosto/2026 e <code>4P</code> cria ou abre um plano novo sem apagar o semestre anterior.</li>
+          <li>Trocar de plano letivo não mistura alocações de períodos diferentes.</li>
+          <li>A Grade Semanal continua permitindo cadastro e edição completa sem perda de usabilidade.</li>
+          <li>A faixa extra final cobre o penúltimo e o último dia reais quando a distribuição precisar ser ajustada.</li>
+          <li>Os campos de início e fim da faixa extra aparecem automaticamente preenchidos na Grade Semanal.</li>
+          <li>Conflito de professor é detectado pelo mesmo núcleo tanto no cadastro quanto na auditoria.</li>
+          <li>Conflito interno de turma continua bloqueando choques reais.</li>
+          <li>O calendário docente mostra apenas manhã e tarde quando não houver aula noturna.</li>
+          <li>O turno noite aparece automaticamente quando houver ocorrência real no período filtrado.</li>
+          <li>O Gantt passa a usar turnos reais e não depende mais de trilhas fixas <code>M/T</code>.</li>
+          <li>Backup, merge, export público e metadados SIGAA continuam funcionando após a reorganização.</li>
+        </ul>
+      </section>
+
+      <section id="abertos">
+        <h2>Itens Deixados para Depois</h2>
+        <ul>
+          <li>Definição visual final da futura agenda pública amigável para docentes.</li>
+          <li>Escolha definitiva entre visão por chips/dia, agenda enxuta ou outra alternativa para o portal docente.</li>
+          <li>Expansões específicas do payload SIGAA que ainda dependam de integração externa ou de regra institucional não fechada.</li>
+        </ul>
+        <div class="note">
+          Recomendação de execução: começar por <strong>salvamento por período letivo</strong>, <strong>turnos</strong> e <strong>motor canônico</strong>. Sem esse trio, qualquer ajuste em Gantt, calendário docente ou publicação continuará produzindo lógica em retalhos.
+        </div>
+      </section>
+    </main>
+  </div>
+</body>
+</html>
