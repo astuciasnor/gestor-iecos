@@ -230,7 +230,7 @@ function formatarRotuloChipPublico(texto) {
 function obterSiglaPublicaComFallback(componenteNome, fallbackTitulo = '') {
     const componente = String(componenteNome || '').trim();
     const fallback = String(fallbackTitulo || '').trim();
-    const limiteChip = 12;
+    const limiteChip = 10;
 
     const info = (store.rawData?.componentes || []).find((item) => String(item.componente || '').trim() === componente);
     const abreviacao = String(info?.abreviacao || '').trim();
