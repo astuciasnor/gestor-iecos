@@ -54,6 +54,26 @@ const weeklyViewState = {
     followActiveFaixa: true
 };
 
+function getAllocationTipo(alloc) {
+    return String(alloc?.tipo || '').trim().toLowerCase();
+}
+
+function isFaixaAllocation(alloc) {
+    return getAllocationTipo(alloc) === 'intensiva';
+}
+
+function isPriorityRegularAllocation(alloc) {
+    return getAllocationTipo(alloc) === 'regular_prioritaria';
+}
+
+function isRegularAllocation(alloc) {
+    return getAllocationTipo(alloc) === 'regular';
+}
+
+function isScheduledRegularAllocation(alloc) {
+    return isRegularAllocation(alloc) || isPriorityRegularAllocation(alloc);
+}
+
 // ==========================================
 // AJUSTES VISUAIS DA BARRA LATERAL (SIDEBAR)
 // ==========================================
@@ -1687,7 +1707,7 @@ function getLastValidAllocationEndForCurrentTurma() {
         if (String(alloc?.tipo || '').toLowerCase() === 'pendente') return;
 
         let candidateEnd = '';
-        if (alloc?.tipo === 'intensiva') {
+        if (isFaixaAllocation(alloc)) {
             const faixas = getNormalizedIntensiveFaixas(alloc);
             const lastFaixa = faixas.length > 0 ? faixas[faixas.length - 1] : null;
             candidateEnd = String(lastFaixa?.fim || lastFaixa?.inicio || alloc?.dataFim || alloc?.dataInicio || '').trim();
@@ -2530,7 +2550,7 @@ function setupFaixaControls() {
 }
 
 function hydrateFaixa1FromComponente(allocation) {
-    if (!allocation || allocation.tipo !== 'intensiva') return;
+    if (!allocation || !isFaixaAllocation(allocation)) return;
 
     const dias = Array.isArray(allocation.diasMarcados) && allocation.diasMarcados.length > 0
         ? allocation.diasMarcados
@@ -2552,7 +2572,7 @@ function hydrateFaixa1FromComponente(allocation) {
 }
 
 function hydrateFaixasFromComponente(allocation, options = {}) {
-    if (!allocation || allocation.tipo !== 'intensiva') return;
+    if (!allocation || !isFaixaAllocation(allocation)) return;
     const { useStoredExecution = false } = options || {};
 
     faixasPatterns = { 1: [], 2: [], 3: [] };
@@ -2897,7 +2917,7 @@ function isDateInsideRange(dateStr, start, end) {
 function isAllocationActiveInWeeklyCell(alloc, dayNumber, dateStr, horarioStr) {
     if (!alloc || !dateStr || !horarioStr) return false;
 
-    if (alloc.tipo === 'intensiva') {
+    if (isFaixaAllocation(alloc)) {
         if (Array.isArray(alloc.faixas) && alloc.faixas.length > 0) {
             const slots = getIntensiveSlotsForDate(alloc, dateStr, { dayOfWeek: dayNumber });
             return Array.isArray(slots) && slots.includes(horarioStr);
@@ -2914,7 +2934,7 @@ function isAllocationActiveInWeeklyCell(alloc, dayNumber, dateStr, horarioStr) {
         return dias.includes(dayNumber) && slots.includes(horarioStr);
     }
 
-    if (alloc.tipo === 'regular' || alloc.tipo === 'regular_prioritaria') {
+    if (isScheduledRegularAllocation(alloc)) {
         const start = alloc.dataInicio || store.settings.termStart || dateStr;
         const end = alloc.dataFim || store.settings.termEnd || start;
         if (!isDateInsideRange(dateStr, start, end)) return false;
@@ -3050,7 +3070,7 @@ function computeIntensiveExecution(intense, options = {}) {
     const priorityRegulars = options.respectPriority
         ? store.allocations.filter((a) =>
             String(a.turmaId) === String(intense.turmaId) &&
-            a.tipo === 'regular_prioritaria' &&
+            isPriorityRegularAllocation(a) &&
             a.disciplina !== intense.disciplina)
         : [];
 
@@ -3762,7 +3782,7 @@ function syncAllRegularDates() {
 
     const regularGroups = {};
     store.allocations.forEach(a => {
-        if (a.tipo === 'regular' || a.tipo === 'regular_prioritaria') {
+        if (isScheduledRegularAllocation(a)) {
             const key = `${a.turmaId}|${a.disciplina}`;
             if (!regularGroups[key]) regularGroups[key] = [];
             regularGroups[key].push(a);
@@ -3808,7 +3828,7 @@ function syncAllRegularDates() {
 
                     if (dStr >= oStart && dStr <= oEnd) {
                         // No modelo canônico atual, regular não é suspensa por intensiva.
-                        if (other.tipo === 'regular_prioritaria' && parseInt(other.diaSemana) === dow && other.disciplina !== disciplina) {
+                        if (isPriorityRegularAllocation(other) && parseInt(other.diaSemana) === dow && other.disciplina !== disciplina) {
                             return slotsToday.some(slot => other.horario === slot.horario);
                         }
                     }
@@ -3859,7 +3879,7 @@ function syncAllRegularDates() {
 function syncAllIntensiveDates() {
     // Filtra todas as ofertas por faixas da turma selecionada
     const ofertasPorFaixa = store.allocations.filter(a =>
-        String(a.turmaId) === String(store.selectedTurma) && a.tipo === 'intensiva'
+        String(a.turmaId) === String(store.selectedTurma) && isFaixaAllocation(a)
     );
 
     ofertasPorFaixa.forEach(intense => {
@@ -3903,11 +3923,11 @@ function getSigaaCode(allocsForClass) {
 
     const slotsList = [];
     allocsForClass.forEach(a => {
-        if (a.tipo === 'regular' || a.tipo === 'regular_prioritaria') {
+        if (isScheduledRegularAllocation(a)) {
             const dSigaa = parseInt(a.diaSemana) + 1;
             const sInfo = getSlot(a.horario);
             if (sInfo) slotsList.push({ day: dSigaa, shift: sInfo.s, slot: sInfo.sl });
-        } else if (a.tipo === 'intensiva') {
+        } else if (isFaixaAllocation(a)) {
             const execution = computeIntensiveExecution(a, { respectPriority: true, respectTurmaOccupancy: true });
             const byDate = execution.byDate || {};
             Object.keys(byDate).sort().forEach((dStr) => {
@@ -4887,7 +4907,7 @@ function onTurmaChange() {
     updateImportBlocoButtonState();
 
     const alocacoesTurma = store.allocations.filter(a => String(a.turmaId) === String(store.selectedTurma));
-    const primeiraOfertaPorFaixa = alocacoesTurma.find(a => a.tipo === 'intensiva' && Array.isArray(a.horariosOcupados) && a.horariosOcupados.length > 0);
+    const primeiraOfertaPorFaixa = alocacoesTurma.find(a => isFaixaAllocation(a) && Array.isArray(a.horariosOcupados) && a.horariosOcupados.length > 0);
 
     if (primeiraOfertaPorFaixa) {
         const slotRef = String(primeiraOfertaPorFaixa.horariosOcupados[0] || '');
@@ -4901,7 +4921,7 @@ function onTurmaChange() {
         if (t?.turno) store.setTurnoOferta(resolveTurnoOfertaValue(t.turno));
     }
 
-    const ofertasPorFaixa = alocacoesTurma.filter(a => a.tipo === 'intensiva' && a.dataInicio);
+    const ofertasPorFaixa = alocacoesTurma.filter(a => isFaixaAllocation(a) && a.dataInicio);
     if (ofertasPorFaixa.length > 0) {
         hydrateFaixasFromComponente(ofertasPorFaixa[0], { useStoredExecution: true });
         editingDisciplinaDraft = normalizeDisciplinaInputValue(ofertasPorFaixa[0].disciplina || '');
@@ -5067,7 +5087,7 @@ function renderWeeklyGrid() {
             if (hasAnyDraftPattern && drawingDisciplina && normalizeDisciplinaInputValue(a.disciplina || '') === drawingDisciplina) return;
             if (!isAllocationActiveInWeeklyCell(a, dayNumber, dateStr, slotLabel)) return;
 
-            if (a.tipo === 'intensiva' && a.dataFim === dateStr && Array.isArray(a.horariosUltimoDia) && a.horariosUltimoDia.length > 0) {
+            if (isFaixaAllocation(a) && a.dataFim === dateStr && Array.isArray(a.horariosUltimoDia) && a.horariosUltimoDia.length > 0) {
                 if (!a.horariosUltimoDia.some((h) => slotKey(h) === key)) return;
             }
 
@@ -5280,7 +5300,7 @@ function renderSlotContent(cell, allocs) {
         card.className = 'mini-card';
         card.style.backgroundColor = alloc.cor;
         card.style.cursor = 'pointer';
-        if (alloc.tipo === 'regular_prioritaria') {
+        if (isPriorityRegularAllocation(alloc)) {
             card.style.border = '2px dashed #000';
         }
 
@@ -5342,7 +5362,7 @@ function loadAllocationIntoEditor(allocation, idsToRemove = []) {
     }
     enforceCanonicalFaixaMode();
 
-    if (a.tipo === 'intensiva') {
+    if (isFaixaAllocation(a)) {
         if (inputConfig.inicio && a.dataInicio) inputConfig.inicio.value = a.dataInicio;
         const hydrated = hydrateFaixasFromComponente(a, { useStoredExecution: true }) || {};
         editorFaixasAdjusted = !!hydrated.wasAdjusted;
@@ -5415,7 +5435,7 @@ function handleAddManual() {
         return;
     }
 
-    if (tipo === 'intensiva') {
+    if (String(tipo || '').trim().toLowerCase() === 'intensiva') {
         if (!inicio) {
             showToastWarning('Defina a data de início.', 'warning', 2200);
             return;
@@ -5621,7 +5641,7 @@ function handleAddManual() {
         syncAllIntensiveDates();
         const allocAtualizada = [...store.allocations].reverse().find((a) =>
             String(a.turmaId) === String(store.selectedTurma) &&
-            a.tipo === 'intensiva' &&
+            isFaixaAllocation(a) &&
             a.disciplina === disciplina &&
             String(a.subGrupo || '') === String(subGrupo || '')
         );
@@ -5679,8 +5699,8 @@ function renderOfertasList() {
     const intensiveExec = getIntensiveExecutionSnapshot(String(store.selectedTurma), semesterStart, semesterEnd);
 
     const list = store.allocations.filter((a) => String(a.turmaId) === String(store.selectedTurma));
-    const regular = list.filter((a) => a.tipo === 'regular' || a.tipo === 'regular_prioritaria');
-    const intensivas = list.filter((a) => a.tipo === 'intensiva');
+    const regular = list.filter((a) => isScheduledRegularAllocation(a));
+    const intensivas = list.filter((a) => isFaixaAllocation(a));
     const pendentes = list.filter((a) => a.tipo === 'pendente');
 
     const appendSeparator = (label) => {
@@ -6007,8 +6027,8 @@ function buildSigaaMetadataPayload() {
 
     const turmaId = String(store.selectedTurma);
     const list = store.allocations.filter((a) => String(a.turmaId) === turmaId);
-    const regular = list.filter((a) => a.tipo === 'regular' || a.tipo === 'regular_prioritaria');
-    const intensivas = list.filter((a) => a.tipo === 'intensiva');
+    const regular = list.filter((a) => isScheduledRegularAllocation(a));
+    const intensivas = list.filter((a) => isFaixaAllocation(a));
     const pendentes = list.filter((a) => a.tipo === 'pendente');
     const semesterStart = calStart ? calStart.value : (store.settings.termStart || '2025-01-01');
     const semesterEnd = calEnd ? calEnd.value : (store.settings.termEnd || '2025-12-31');
@@ -6506,7 +6526,7 @@ function renderGanttChart() {
                 const executionSignature = buildNonIntensiveExecutionSignature(a);
                 const signatureRange = executionSignature ? executionRangeBySignature.get(executionSignature) : null;
 
-                if (a.tipo === 'regular' || a.tipo === 'regular_prioritaria') {
+                if (isScheduledRegularAllocation(a)) {
                     if (parseInt(a.diaSemana) === d.id) {
                         add = true;
                         shift = timeToMinutes(a.horario) < 780 ? 'M' : 'T';
@@ -6517,7 +6537,7 @@ function renderGanttChart() {
                         else if (executionRange?.lastDate) dayRangeEnd = executionRange.lastDate;
                     }
                 }
-                else if (a.tipo === 'intensiva') {
+                else if (isFaixaAllocation(a)) {
                     const faixas = buildIntensiveConflictFaixas(
                         a,
                         a.dataInicio || minDateStr,
@@ -6570,7 +6590,7 @@ function renderGanttChart() {
                             dataInicio: dayRangeStart,
                             dataFim: dayRangeEnd,
                             slotCount: slotsToAdd,
-                            timeRanges: a.tipo === 'intensiva' ? [...intensiveSlotsForDay] : [a.horario]
+                            timeRanges: isFaixaAllocation(a) ? [...intensiveSlotsForDay] : [a.horario]
                         };
                     } else {
                         if (a.tipo !== 'intensiva') {
@@ -6583,7 +6603,7 @@ function renderGanttChart() {
                             dayItemsMap[key].dataFim = dayRangeEnd;
                         }
 
-                        if (a.tipo === 'intensiva') {
+                        if (isFaixaAllocation(a)) {
                             dayItemsMap[key].timeRanges.push(...intensiveSlotsForDay);
                         } else {
                             dayItemsMap[key].timeRanges.push(a.horario);
@@ -6927,13 +6947,13 @@ function detectGlobalTeacherConflicts() {
             let diaConflito = '';
             let horarioConflito = '';
 
-            if (a.tipo !== 'intensiva' && b.tipo !== 'intensiva') {
+            if (!isFaixaAllocation(a) && !isFaixaAllocation(b)) {
                 if (parseInt(a.diaSemana) === parseInt(b.diaSemana) && a.horario === b.horario) {
                     isSlotConflict = true;
                     diaConflito = diasNomes[parseInt(a.diaSemana)] || a.diaSemana;
                     horarioConflito = a.horario;
                 }
-            } else if (a.tipo === 'intensiva' && b.tipo === 'intensiva') {
+            } else if (isFaixaAllocation(a) && isFaixaAllocation(b)) {
                 if (a.horariosOcupados && b.horariosOcupados) {
                     const sharedSlots = a.horariosOcupados.filter(h => b.horariosOcupados.includes(h));
                     if (sharedSlots.length > 0) {
@@ -6943,8 +6963,8 @@ function detectGlobalTeacherConflicts() {
                     }
                 }
             } else {
-                const intAlloc = a.tipo === 'intensiva' ? a : b;
-                const regAlloc = a.tipo === 'intensiva' ? b : a;
+                const intAlloc = isFaixaAllocation(a) ? a : b;
+                const regAlloc = isFaixaAllocation(a) ? b : a;
                 const regDay = parseInt(regAlloc.diaSemana);
 
                 // Fallback de retrocompatibilidade
@@ -7306,7 +7326,7 @@ function generateCalendarGrid(container, turmaId, docenteName, start, end, title
                             if (e.horario && normalizeTime(e.horario) === slotTimeNorm) return true;
 
                             // NOVO: RESPEITA OS SLOTS LIMITADOS NO ÚLTIMO DIA DA INTENSIVA
-                            if (e.tipo === 'intensiva' && e.dataFim === dayData.date && e.horariosUltimoDia) {
+                            if (isFaixaAllocation(e) && e.dataFim === dayData.date && e.horariosUltimoDia) {
                                 return e.horariosUltimoDia.some(h => normalizeTime(h) === slotTimeNorm);
                             }
 

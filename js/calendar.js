@@ -1,6 +1,22 @@
 import { store } from './store.js';
 import { getDaysArray, toLocalDateString } from './utils.js';
 
+function getAllocationTipo(alloc) {
+  return String(alloc?.tipo || '').trim().toLowerCase();
+}
+
+function isFaixaAllocation(alloc) {
+  return getAllocationTipo(alloc) === 'intensiva';
+}
+
+function isPriorityRegularAllocation(alloc) {
+  return getAllocationTipo(alloc) === 'regular_prioritaria';
+}
+
+function isRegularAllocation(alloc) {
+  return getAllocationTipo(alloc) === 'regular';
+}
+
 export function getCalendarEvents(turmaId, startDate, endDate, docenteFilter = null) {
   const days = getDaysArray(startDate, endDate);
   const calendarData = {};
@@ -46,9 +62,9 @@ export function getCalendarEvents(turmaId, startDate, endDate, docenteFilter = n
     return turmaId ? true : false;
   });
 
-  const myIntensives = myAllocations.filter(a => a.tipo === 'intensiva');
-  const myRegulars = myAllocations.filter(a => a.tipo === 'regular');
-  const myPriorityRegulars = myAllocations.filter(a => a.tipo === 'regular_prioritaria');
+  const myIntensives = myAllocations.filter(a => isFaixaAllocation(a));
+  const myRegulars = myAllocations.filter(a => isRegularAllocation(a));
+  const myPriorityRegulars = myAllocations.filter(a => isPriorityRegularAllocation(a));
 
   const feriadosList = store.rawData?.feriados || [];
 
