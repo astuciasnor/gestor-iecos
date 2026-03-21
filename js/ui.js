@@ -1720,7 +1720,7 @@ function getLastValidAllocationEndForCurrentTurma() {
 
     store.allocations.forEach((alloc) => {
         if (String(alloc?.turmaId) !== String(store.selectedTurma)) return;
-        if (String(alloc?.tipo || '').toLowerCase() === 'pendente') return;
+        if (isPendingAllocation(alloc)) return;
 
         let candidateEnd = '';
         if (isFaixaAllocation(alloc)) {
@@ -2015,7 +2015,7 @@ function getLatestAllocatedComponentForCurrentTurma() {
     for (let i = store.allocations.length - 1; i >= 0; i--) {
         const alloc = store.allocations[i];
         if (String(alloc?.turmaId) !== String(store.selectedTurma)) continue;
-        if (String(alloc?.tipo || '').toLowerCase() === 'pendente') continue;
+        if (isPendingAllocation(alloc)) continue;
         return alloc;
     }
 
@@ -5763,7 +5763,7 @@ function renderOfertasList() {
     const list = store.allocations.filter((a) => String(a.turmaId) === String(store.selectedTurma));
     const regular = list.filter((a) => isScheduledRegularAllocation(a));
     const intensivas = list.filter((a) => isFaixaAllocation(a));
-    const pendentes = list.filter((a) => a.tipo === 'pendente');
+    const pendentes = list.filter((a) => isPendingAllocation(a));
 
     const appendSeparator = (label) => {
         const tr = document.createElement('tr');
@@ -6091,7 +6091,7 @@ function buildSigaaMetadataPayload() {
     const list = store.allocations.filter((a) => String(a.turmaId) === turmaId);
     const regular = list.filter((a) => isScheduledRegularAllocation(a));
     const intensivas = list.filter((a) => isFaixaAllocation(a));
-    const pendentes = list.filter((a) => a.tipo === 'pendente');
+    const pendentes = list.filter((a) => isPendingAllocation(a));
     const semesterStart = calStart ? calStart.value : (store.settings.termStart || '2025-01-01');
     const semesterEnd = calEnd ? calEnd.value : (store.settings.termEnd || '2025-12-31');
 
@@ -7065,7 +7065,7 @@ function detectGlobalTeacherConflicts() {
 
 function detectGlobalTeacherConflictsStable() {
     const conflictMap = new Map();
-    const allocs = (store.allocations || []).filter((alloc) => alloc && alloc.tipo !== 'pendente');
+    const allocs = (store.allocations || []).filter((alloc) => alloc && !isPendingAllocation(alloc));
     if (allocs.length === 0) return conflictMap;
 
     const diasNomes = ['', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab'];
