@@ -221,6 +221,57 @@ export function getCalendarEvents(turmaId, startDate, endDate, docenteFilter = n
 
     myActiveIntensives.forEach(intense => {
       // === CÁLCULO DE HORAS ACUMULADAS ===
+      const storedExecutionByDate = intense.executionByDate && typeof intense.executionByDate === 'object'
+        ? intense.executionByDate
+        : null;
+      const storedExecutionDates = storedExecutionByDate ? Object.keys(storedExecutionByDate).sort() : [];
+
+      if (storedExecutionDates.length > 0) {
+        if (!storedExecutionByDate[dateStr]) return;
+
+        let hoursBeforeToday = 0;
+        storedExecutionDates.forEach((execDate) => {
+          if (execDate >= dateStr) return;
+          hoursBeforeToday += Array.isArray(storedExecutionByDate[execDate]) ? storedExecutionByDate[execDate].length : 0;
+        });
+
+        const slotsToday = Array.isArray(storedExecutionByDate[dateStr]) ? storedExecutionByDate[dateStr].slice() : [];
+        if (slotsToday.length === 0) return;
+
+        slotsToday.forEach((slotTime, slotIndex) => {
+          const currentHourNum = hoursBeforeToday + slotIndex + 1;
+          if (intense.ch && currentHourNum > intense.ch) return;
+
+          let slotDocente = intense.docente;
+          if (intense.docentes && intense.docentes.length > 0) {
+            let acc = 0;
+            for (const d of intense.docentes) {
+              acc += parseInt(d.ch);
+              if (currentHourNum <= acc) {
+                slotDocente = d.nome;
+                break;
+              }
+            }
+          }
+
+          if (docenteFilter && (slotDocente || '').trim() !== docenteFilter) return;
+
+          const isOverriding = myRegularsTodaySlots.has(normalizeTime(slotTime));
+
+          events.push({
+            ...intense,
+            priority: 2,
+            title: intense.disciplina,
+            docente: slotDocente,
+            horario: slotTime,
+            horariosOcupados: null,
+            isOverriding: isOverriding
+          });
+        });
+
+        return;
+      }
+
       let hoursBeforeToday = 0;
       let cursor = new Date(intense.dataInicio + 'T12:00:00');
       const targetDate = new Date(dateStr + 'T12:00:00');
@@ -292,7 +343,7 @@ export function getCalendarEvents(turmaId, startDate, endDate, docenteFilter = n
         events.push({
           ...intense,
           priority: 2,
-          title: `(I) ${intense.disciplina}`,
+          title: intense.disciplina,
           docente: slotDocente,
           horario: slotTime,
           horariosOcupados: null,

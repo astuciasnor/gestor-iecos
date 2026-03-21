@@ -689,32 +689,53 @@ function buildEffectiveFaixaPatternMap(overrideFaixaIndex = null, overridePatter
     return map;
 }
 
+function seedFaixaPatternFromPrevious(faixaIndex) {
+    const idx = parseInt(faixaIndex, 10);
+    if (Number.isNaN(idx) || idx < 2 || idx > 3) return false;
+
+    const currentPattern = normalizeFaixaPattern(faixasPatterns[idx]);
+    if (currentPattern.length > 0) return false;
+
+    const effectivePatterns = buildEffectiveFaixaPatternMap();
+    const sourcePattern = normalizeFaixaPattern(effectivePatterns[idx - 1] || []);
+    if (sourcePattern.length === 0) return false;
+
+    faixasPatterns[idx] = sourcePattern.map((entry) => ({ ...entry }));
+    return true;
+}
+
 function setFaixaStatus(faixaIndex, count) {
     const status = document.getElementById(`status-draw-f${faixaIndex}`);
     const effectivePatterns = buildEffectiveFaixaPatternMap();
     const slotCount = (effectivePatterns[faixaIndex] || []).length || count || 0;
+    const preview = buildWeeklyFaixaExecutionPreview();
     if (status) {
-        const summary = buildFaixaSummaryText(faixaIndex, slotCount);
+        const summary = buildFaixaSummaryText(faixaIndex, slotCount, preview);
         status.textContent = summary;
         status.style.color = '#27ae60';
     }
-    updateWeeklyFaixaHoursDisplay();
+    updateWeeklyFaixaHoursDisplay(preview);
 }
 
-function updateWeeklyFaixaHoursDisplay() {
-    let total = 0;
+function updateWeeklyFaixaHoursDisplay(previewData = null) {
+    const preview = previewData || buildWeeklyFaixaExecutionPreview();
+    const summaryHoursByFaixa = new Map(
+        Array.isArray(preview?.summary)
+            ? preview.summary.map((item) => [parseInt(item.faixa, 10), parseInt(item.horas, 10) || 0])
+            : []
+    );
+    let total = preview?.execution ? (parseInt(preview.execution.totalHours, 10) || 0) : 0;
     for (let i = 1; i <= 3; i++) {
-        const ch = calcFaixaCH(i);
+        const ch = summaryHoursByFaixa.has(i) ? summaryHoursByFaixa.get(i) : calcFaixaCH(i);
         const chEl = document.getElementById(`faixa-ch-f${i}`);
         if (chEl) chEl.textContent = String(ch);
-        total += ch;
+        if (!preview?.execution) total += ch;
     }
     const totalEl = document.getElementById('weekly-faixa-total-ch');
     if (totalEl) totalEl.textContent = String(total);
 
-    const disciplina = getWeeklyFaixasTitleDisciplinaAtiva();
-    const info = disciplina ? getDisciplinaInfo(disciplina) : null;
-    const targetCH = info ? (parseInt(info.ch, 10) || 0) : 0;
+    const disciplina = preview?.disciplina || getWeeklyFaixasTitleDisciplinaAtiva();
+    const targetCH = parseInt(preview?.targetCH, 10) || 0;
     const targetEl = document.getElementById('weekly-faixa-target-ch');
     if (targetEl) targetEl.textContent = targetCH > 0 ? String(targetCH) : '-';
     const remainingWrapEl = document.getElementById('weekly-faixa-remaining-wrap');
@@ -753,6 +774,10 @@ function updateWeeklyFaixaHoursDisplay() {
         return;
     }
 
+    if (preview?.error) {
+        setConsistency(preview.error, 'state-warn');
+        return;
+    }
 
     if (total === targetCH && total > 0) {
         setConsistency('CH consistente com a meta da componente.', 'state-ok');
@@ -760,34 +785,8 @@ function updateWeeklyFaixaHoursDisplay() {
     }
 
     if (total === 0) {
-        let executionPreview = null;
-        const fallbackInicio = document.getElementById('inp-data-inicio-f1')?.value
-            || inputConfig.inicio?.value
-            || getPreferredStartDateForCurrentTurma()
-            || '';
-        try {
-            const faixas = collectIntensiveFaixasFromUI(fallbackInicio);
-            if (faixas.length > 0) {
-                const diasMarcados = [...new Set(faixas.flatMap((f) => f.dias || []))].sort((a, b) => a - b);
-                executionPreview = computeIntensiveExecution({
-                    turmaId: store.selectedTurma,
-                    disciplina,
-                    tipo: 'intensiva',
-                    ch: targetCH,
-                    dataInicio: faixas[0].inicio,
-                    dataFim: faixas[0].inicio,
-                    horariosOcupados: [],
-                    diasMarcados,
-                    usaSabado: diasMarcados.includes(6),
-                    faixas
-                }, { respectPriority: true });
-            }
-        } catch (_) {
-            executionPreview = null;
-        }
-
-        if (executionPreview && executionPreview.totalHours === targetCH && executionPreview.dataFim) {
-            setConsistency(`Padrao pronto. Fim previsto: ${formatDateBR(executionPreview.dataFim)}.`, 'state-ok');
+        if (preview?.execution && preview.execution.totalHours === targetCH && preview.execution.dataFim) {
+            setConsistency(`Padrao pronto. Fim previsto: ${formatDateBR(preview.execution.dataFim)}.`, 'state-ok');
         } else {
             setConsistency('Defina datas e marque slots para calcular a CH.', 'state-warn');
         }
@@ -861,6 +860,9 @@ function calcFaixaCH(faixaIndex) {
 }
 
 function calcTotalConfiguredCHWithOverride(faixaIndex, overridePattern) {
+    const preview = buildWeeklyFaixaExecutionPreview({ overrideFaixaIndex: faixaIndex, overridePattern });
+    if (preview.execution) return parseInt(preview.execution.totalHours, 10) || 0;
+
     const patterns = buildEffectiveFaixaPatternMap(faixaIndex, overridePattern);
     let total = 0;
     for (let i = 1; i <= 3; i++) {
@@ -874,6 +876,57 @@ function getDisciplinaTargetCHForDrawing() {
     if (!disciplina) return 0;
     const info = getDisciplinaInfo(disciplina);
     return parseInt(info?.ch, 10) || 0;
+}
+
+function buildWeeklyFaixaExecutionPreview(options = {}) {
+    const { overrideFaixaIndex = null, overridePattern = null } = options || {};
+    const disciplina = getWeeklyFaixasTitleDisciplinaAtiva();
+    const targetCH = getDisciplinaTargetCHForDrawing();
+    const fallbackInicio = document.getElementById('inp-data-inicio-f1')?.value
+        || inputConfig.inicio?.value
+        || getPreferredStartDateForCurrentTurma()
+        || '';
+
+    const preview = {
+        disciplina,
+        targetCH,
+        faixas: [],
+        execution: null,
+        summary: [],
+        error: ''
+    };
+
+    if (!disciplina || targetCH <= 0) return preview;
+
+    try {
+        const patterns = buildEffectiveFaixaPatternMap(overrideFaixaIndex, overridePattern);
+        const faixas = collectIntensiveFaixasFromPatternMap(patterns, fallbackInicio);
+        preview.faixas = faixas;
+        if (faixas.length === 0) return preview;
+
+        const diasMarcados = [...new Set(faixas.flatMap((f) => f.dias || []))].sort((a, b) => a - b);
+        const subGrupo = (document.getElementById('inp-sub-turma')?.value ?? '').trim();
+        const execution = computeIntensiveExecution({
+            turmaId: store.selectedTurma,
+            disciplina,
+            subGrupo: subGrupo || null,
+            tipo: 'intensiva',
+            ch: targetCH,
+            dataInicio: faixas[0].inicio,
+            dataFim: faixas[0].inicio,
+            horariosOcupados: [],
+            diasMarcados,
+            usaSabado: diasMarcados.includes(6),
+            faixas
+        }, { respectPriority: true, respectTurmaOccupancy: true });
+
+        preview.execution = execution;
+        preview.summary = buildFaixaHoursSummaryFromExecution(faixas, execution.byDate);
+        return preview;
+    } catch (err) {
+        preview.error = err?.message || 'Defina datas e marque slots para calcular a CH.';
+        return preview;
+    }
 }
 
 function canSelectSlotWithoutExceedingTarget(faixaIndex, candidatePattern) {
@@ -982,7 +1035,7 @@ function applyPendingFaixaStartByDate(dateStr) {
     clearPendingFaixaStartPick();
     activeFaixaIndex = idx;
     autoEnterWeeklyEditingForFaixa(idx);
-    showToastWarning(`Inicio da Faixa ${idx} definido em ${formatDateBR(dateStr)}.`, 'success', 2000);
+    showToastWarning(`Inicio da Faixa ${idx} definido em ${formatDateBR(dateStr)}. A nova faixa passa a substituir a anterior a partir desta data; ajuste apenas o que mudou.`, 'success', 3200);
     return true;
 }
 
@@ -1016,6 +1069,7 @@ function syncFaixaStartFromGridClick(faixaIndex, cellDate, currentPattern = [], 
     iniEl.value = dateStr;
     if (idx === 1 && inputConfig.inicio) inputConfig.inicio.value = dateStr;
     if (idx === 1 && store.selectedTurma) store.setTurmaLastStart(store.selectedTurma, dateStr);
+    if (idx > 1) seedFaixaPatternFromPrevious(idx);
 
     applyFaixaDateAutofill();
     setFaixaStatus(1, getFaixaSlotsAndDays(1).pattern.length);
@@ -1078,10 +1132,14 @@ function resolveFaixaTurno(faixaIndex) {
     return '-';
 }
 
-function buildFaixaSummaryText(faixaIndex, count) {
+function buildFaixaSummaryText(faixaIndex, count, previewData = null) {
     const start = document.getElementById(`inp-data-inicio-f${faixaIndex}`)?.value || '';
     const end = document.getElementById(`inp-data-fim-f${faixaIndex}`)?.value || '';
-    const ch = calcFaixaCH(faixaIndex);
+    const preview = previewData || buildWeeklyFaixaExecutionPreview();
+    const summaryEntry = Array.isArray(preview?.summary)
+        ? preview.summary.find((item) => parseInt(item.faixa, 10) === faixaIndex)
+        : null;
+    const ch = summaryEntry ? (parseInt(summaryEntry.horas, 10) || 0) : calcFaixaCH(faixaIndex);
     if (!start) return 'Aguardando inicio';
     const endTxt = end ? formatDateBR(end) : 'fim automatico';
     return `${count} slots | ${formatDateBR(start)} a ${endTxt} | ${ch}h`;
@@ -1418,7 +1476,14 @@ function getFaixaQuickActionWarningText(faixaNum) {
     const idx = parseInt(faixaNum, 10);
     if (Number.isNaN(idx) || idx < 1 || idx > 3) return '';
     if (idx === 1) return 'Zerar faixa 1? (apaga tudo)';
-    const affectedHours = idx === 2 ? (calcFaixaCH(2) + calcFaixaCH(3)) : calcFaixaCH(3);
+    const preview = buildWeeklyFaixaExecutionPreview();
+    const getFaixaHours = (faixaIndex) => {
+        const summaryEntry = Array.isArray(preview?.summary)
+            ? preview.summary.find((item) => parseInt(item.faixa, 10) === faixaIndex)
+            : null;
+        return summaryEntry ? (parseInt(summaryEntry.horas, 10) || 0) : calcFaixaCH(faixaIndex);
+    };
+    const affectedHours = idx === 2 ? (getFaixaHours(2) + getFaixaHours(3)) : getFaixaHours(3);
     return affectedHours > 0
         ? `Remover faixa ${idx}? (apaga ${affectedHours}h)`
         : `Remover faixa ${idx}?`;
@@ -1690,6 +1755,42 @@ function normalizeConflictSlotLabel(value) {
         .replace(/\s*[-–]\s*/g, ' - ');
 }
 
+function shouldIgnoreTurmaEventForCandidate(event, candidateAlloc) {
+    if (!event || !candidateAlloc) return false;
+    if (candidateAlloc.id !== undefined && candidateAlloc.id !== null && event.id !== undefined && event.id !== null) {
+        if (String(event.id) === String(candidateAlloc.id)) return true;
+    }
+
+    const sameTurma = String(event.turmaId || '') === String(candidateAlloc.turmaId || '');
+    if (!sameTurma) return false;
+
+    const candidateDisciplina = String(candidateAlloc.disciplina || '').trim();
+    const eventDisciplina = String(event.disciplina || '').trim();
+    const candidateSubGrupo = String(candidateAlloc.subGrupo || '').trim();
+    const eventSubGrupo = String(event.subGrupo || '').trim();
+
+    return !!candidateDisciplina && eventDisciplina === candidateDisciplina && eventSubGrupo === candidateSubGrupo;
+}
+
+function buildTurmaOccupiedSlotsByDate(candidateAlloc, startDate, endDate) {
+    const occupiedByDate = new Map();
+    if (!candidateAlloc?.turmaId || !startDate || !endDate) return occupiedByDate;
+
+    const eventsByDate = getCalendarEvents(String(candidateAlloc.turmaId), startDate, endDate);
+    Object.entries(eventsByDate || {}).forEach(([dateStr, events]) => {
+        (events || []).forEach((event) => {
+            const slot = normalizeConflictSlotLabel(event?.horario || '');
+            if (!slot) return;
+            if (shouldIgnoreTurmaEventForCandidate(event, candidateAlloc)) return;
+
+            if (!occupiedByDate.has(dateStr)) occupiedByDate.set(dateStr, new Set());
+            occupiedByDate.get(dateStr).add(slot);
+        });
+    });
+
+    return occupiedByDate;
+}
+
 function getAllocationTeachersForConflict(alloc) {
     if (alloc?.docentes && Array.isArray(alloc.docentes) && alloc.docentes.length > 0) {
         return alloc.docentes
@@ -1727,6 +1828,40 @@ function buildIntensiveTeacherConflictEntries(intense, teacherName) {
     if (!intense?.dataInicio || !intense?.dataFim || !teacherName) return [];
 
     const normalizedTeacher = normalizeTeacherNameForMatch(teacherName);
+    const storedExecutionByDate = intense?.executionByDate && typeof intense.executionByDate === 'object'
+        ? intense.executionByDate
+        : null;
+    const storedExecutionDates = storedExecutionByDate ? Object.keys(storedExecutionByDate).sort() : [];
+    const totalHours = parseFloat(String(intense.ch ?? 0).replace(',', '.'));
+    const hasHourLimit = Number.isFinite(totalHours) && totalHours > 0;
+
+    if (storedExecutionDates.length > 0) {
+        const entries = [];
+        let currentHour = 0;
+
+        for (const currentDate of storedExecutionDates) {
+            const slots = (storedExecutionByDate[currentDate] || [])
+                .map((slot) => normalizeConflictSlotLabel(slot))
+                .filter(Boolean);
+
+            for (const slot of slots) {
+                if (hasHourLimit && currentHour >= totalHours) break;
+                currentHour += 1;
+
+                const resolvedTeacher = resolveTeacherForAllocationHour(intense, currentHour);
+                if (normalizeTeacherNameForMatch(resolvedTeacher) !== normalizedTeacher) continue;
+
+                entries.push({
+                    date: currentDate,
+                    horario: slot,
+                    docente: resolvedTeacher
+                });
+            }
+        }
+
+        return entries;
+    }
+
     const faixas = buildIntensiveConflictFaixas(intense, intense.dataInicio, intense.dataFim);
     if (faixas.length === 0) return [];
 
@@ -1736,9 +1871,6 @@ function buildIntensiveTeacherConflictEntries(intense, teacherName) {
             .map((slot) => normalizeConflictSlotLabel(slot))
             .filter(Boolean)
     );
-
-    const totalHours = parseFloat(String(intense.ch ?? 0).replace(',', '.'));
-    const hasHourLimit = Number.isFinite(totalHours) && totalHours > 0;
     const entries = [];
     let currentHour = 0;
 
@@ -1818,10 +1950,53 @@ function findConfirmedTeacherConflictForCandidate(candidateAlloc, teacherNames =
     return null;
 }
 
+function findTurmaConflictForCandidateExecution(candidateAlloc, execution = {}) {
+    if (!candidateAlloc?.turmaId || !execution?.dataInicio || !execution?.dataFim) {
+        return null;
+    }
+
+    const existingEventsByDate = getCalendarEvents(String(candidateAlloc.turmaId), execution.dataInicio, execution.dataFim);
+    const existingByKey = new Map();
+
+    Object.entries(existingEventsByDate || {}).forEach(([dateStr, events]) => {
+        (events || []).forEach((event) => {
+            if (shouldIgnoreTurmaEventForCandidate(event, candidateAlloc)) return;
+
+            const slot = normalizeConflictSlotLabel(event?.horario || '');
+            if (!slot) return;
+
+            const key = `${dateStr}|${slot}`;
+            if (!existingByKey.has(key)) existingByKey.set(key, event);
+        });
+    });
+
+    const usedDates = getExecutionUsedDates(execution);
+    for (const dateStr of usedDates) {
+        const slots = getExecutionSlotsForDate(execution, dateStr);
+        for (const slot of slots) {
+            const key = `${dateStr}|${normalizeConflictSlotLabel(slot)}`;
+            const event = existingByKey.get(key);
+            if (!event) continue;
+
+            return {
+                date: dateStr,
+                horario: slot,
+                disciplina: event?.disciplina || '',
+                event
+            };
+        }
+    }
+
+    return null;
+}
+
 function getWeekAutoPositionMode() {
     const enabled = !!store.settings?.weekAutoPositionEnabled;
-    if (enabled && store.settings?.weekAutoPositionMode === 'intensiva') return 'intensiva';
-    return 'regular';
+    if (!enabled) return 'inicio';
+
+    const rawMode = String(store.settings?.weekAutoPositionMode || '').toLowerCase();
+    if (rawMode === 'fim' || rawMode === 'intensiva') return 'fim';
+    return 'inicio';
 }
 
 function getLatestAllocatedComponentForCurrentTurma() {
@@ -1841,7 +2016,7 @@ function getWeekAutoPositionAnchorDate() {
     const latestAlloc = getLatestAllocatedComponentForCurrentTurma();
     if (latestAlloc) {
         const mode = getWeekAutoPositionMode();
-        if (mode === 'intensiva') {
+        if (mode === 'fim') {
             return latestAlloc.dataFim || latestAlloc.dataInicio || '';
         }
         return latestAlloc.dataInicio || latestAlloc.dataFim || '';
@@ -1860,30 +2035,30 @@ function applyWeekAutoPositionForComponentChange(options = {}) {
 function syncWeekAutoPositionControls() {
     const chk = document.getElementById('chk-auto-week-position');
     const modesWrap = document.getElementById('auto-week-position-modes');
-    const radioRegular = document.getElementById('radio-auto-week-regular');
-    const radioIntensiva = document.getElementById('radio-auto-week-intensiva');
-    if (!chk || !modesWrap || !radioRegular || !radioIntensiva) return;
+    const radioStart = document.getElementById('radio-auto-week-start');
+    const radioEnd = document.getElementById('radio-auto-week-end');
+    if (!chk || !modesWrap || !radioStart || !radioEnd) return;
 
     const enabled = !!store.settings?.weekAutoPositionEnabled;
     const mode = getWeekAutoPositionMode();
 
     chk.checked = enabled;
-    radioRegular.checked = mode === 'regular';
-    radioIntensiva.checked = mode === 'intensiva';
+    radioStart.checked = mode === 'inicio';
+    radioEnd.checked = mode === 'fim';
     modesWrap.classList.toggle('hidden', !enabled);
 }
 
 function persistWeekAutoPositionSettings(enabled, mode) {
     store.settings.weekAutoPositionEnabled = !!enabled;
-    store.settings.weekAutoPositionMode = mode === 'intensiva' ? 'intensiva' : 'regular';
+    store.settings.weekAutoPositionMode = mode === 'fim' ? 'fim' : 'inicio';
     store.saveSettings();
 }
 
 function setupWeekAutoPositionControls() {
     const chk = document.getElementById('chk-auto-week-position');
-    const radioRegular = document.getElementById('radio-auto-week-regular');
-    const radioIntensiva = document.getElementById('radio-auto-week-intensiva');
-    if (!chk || !radioRegular || !radioIntensiva) return;
+    const radioStart = document.getElementById('radio-auto-week-start');
+    const radioEnd = document.getElementById('radio-auto-week-end');
+    if (!chk || !radioStart || !radioEnd) return;
     if (chk.dataset.bound === '1') {
         syncWeekAutoPositionControls();
         return;
@@ -1895,17 +2070,17 @@ function setupWeekAutoPositionControls() {
         store.settings.weekAutoPositionEnabled = false;
     }
     if (!store.settings.weekAutoPositionMode) {
-        store.settings.weekAutoPositionMode = 'regular';
+        store.settings.weekAutoPositionMode = 'inicio';
     }
     syncWeekAutoPositionControls();
 
     chk.addEventListener('change', () => {
-        const selectedMode = radioIntensiva.checked ? 'intensiva' : 'regular';
+        const selectedMode = radioEnd.checked ? 'fim' : 'inicio';
         persistWeekAutoPositionSettings(chk.checked, selectedMode);
         syncWeekAutoPositionControls();
     });
 
-    [radioRegular, radioIntensiva].forEach((radio) => {
+    [radioStart, radioEnd].forEach((radio) => {
         radio.addEventListener('change', () => {
             if (!radio.checked) return;
             persistWeekAutoPositionSettings(chk.checked, radio.value);
@@ -2212,6 +2387,7 @@ function setupFaixaControls() {
                     if (i === 1 && iniEl.value && store.selectedTurma) {
                         store.setTurmaLastStart(store.selectedTurma, iniEl.value);
                     }
+                    if (i > 1 && iniEl.value) seedFaixaPatternFromPrevious(i);
                     applyFaixaDateAutofill();
                     setFaixaStatus(1, getFaixaSlotsAndDays(1).pattern.length);
                     setFaixaStatus(2, getFaixaSlotsAndDays(2).pattern.length);
@@ -2570,28 +2746,35 @@ function updateWeeklyContextNote() {
 
     if (pendingFaixaStartPick) {
         noteEl.classList.add('is-pending');
-        noteEl.textContent = `Clique em um slot da grade para definir o inicio da Faixa ${pendingFaixaStartPick}.`;
+        const previousFaixa = pendingFaixaStartPick - 1;
+        noteEl.textContent = `Clique em um slot da grade para definir o inicio da Faixa ${pendingFaixaStartPick}. Ela passara a substituir a Faixa ${previousFaixa} a partir desta data.`;
         return;
     }
 
     noteEl.classList.remove('is-pending');
 
-    if (!window.isDrawingFaixa) {
+    const idx = parseInt(window.isDrawingFaixa || activeFaixaIndex, 10);
+    if (Number.isNaN(idx) || idx < 1 || idx > 3) {
         noteEl.textContent = '';
         noteEl.style.display = 'none';
         return;
     }
-
-    const idx = parseInt(window.isDrawingFaixa, 10);
     const ini = document.getElementById(`inp-data-inicio-f${idx}`)?.value || '';
 
     if (!ini) {
-        noteEl.textContent = 'Defina o inicio da faixa ativa para alinhar a alocacao com a semana real.';
+        noteEl.textContent = idx === 1
+            ? 'Faixa = regime de funcionamento em um intervalo de datas. Defina o inicio da Faixa 1 para alinhar a alocacao com a semana real.'
+            : `Defina o inicio da Faixa ${idx} para criar o novo regime que substituira a Faixa ${idx - 1}.`;
         return;
     }
 
-    noteEl.textContent = '';
-    noteEl.style.display = 'none';
+    if (idx === 1) {
+        noteEl.textContent = `Faixa 1 define o regime inicial da componente a partir de ${formatDateBR(ini)}.`;
+        return;
+    }
+
+    const previousEnd = document.getElementById(`inp-data-fim-f${idx - 1}`)?.value || shiftISODate(ini, -1);
+    noteEl.textContent = `Faixa ${idx} substitui a Faixa ${idx - 1} a partir de ${formatDateBR(ini)}. O fim da Faixa ${idx - 1} fica automaticamente em ${formatDateBR(previousEnd)}. A Faixa ${idx} comeca herdando o padrao anterior; ajuste apenas o que mudou.`;
 }
 
 function setupWeeklyWeekNavigator() {
@@ -2777,6 +2960,9 @@ function getActiveFaixaForDate(faixas, dStr) {
 function getIntensiveSlotsForDate(intense, dStr, opts = {}) {
     const dow = opts.dayOfWeek ?? new Date(dStr + 'T12:00:00').getDay();
     if (dow === 0) return [];
+    if (intense?.executionByDate && typeof intense.executionByDate === 'object') {
+        return Array.isArray(intense.executionByDate[dStr]) ? intense.executionByDate[dStr].slice() : [];
+    }
 
     const faixas = getNormalizedIntensiveFaixas(intense);
     const faixa = getActiveFaixaForDate(faixas, dStr);
@@ -2788,7 +2974,7 @@ function getIntensiveSlotsForDate(intense, dStr, opts = {}) {
 }
 
 function computeIntensiveExecution(intense, options = {}) {
-        const result = {
+    const result = {
         totalHours: 0,
         dataInicio: intense?.dataInicio || '',
         dataFim: intense?.dataInicio || '',
@@ -2821,6 +3007,28 @@ function computeIntensiveExecution(intense, options = {}) {
     let loops = 0;
     const maxLoops = options.maxLoops || 800;
     const lastFaixaEnd = faixas[faixas.length - 1]?.fim || '';
+    const occupancyEnd = lastFaixaEnd || store.settings.termEnd || faixas[faixas.length - 1]?.inicio || faixas[0].inicio;
+    const occupiedSlotsByDate = options.respectTurmaOccupancy
+        ? buildTurmaOccupiedSlotsByDate(intense, result.dataInicio, occupancyEnd)
+        : new Map();
+    const filterFreeSlotsForDate = (dateStr, daySlots = [], dayOfWeek = 0) => {
+        let freeSlots = Array.isArray(daySlots) ? daySlots.slice() : [];
+
+        if (options.respectPriority) {
+            freeSlots = freeSlots.filter((slot) => !priorityRegulars.some((p) => {
+                const pStart = p.dataInicio || store.settings.termStart;
+                const pEnd = p.dataFim || store.settings.termEnd;
+                return parseInt(p.diaSemana, 10) === dayOfWeek && dateStr >= pStart && dateStr <= pEnd && p.horario === slot;
+            }));
+        }
+
+        const occupied = occupiedSlotsByDate.get(dateStr);
+        if (occupied && occupied.size > 0) {
+            freeSlots = freeSlots.filter((slot) => !occupied.has(normalizeConflictSlotLabel(slot)));
+        }
+
+        return freeSlots;
+    };
     const findRemainingCapacityAfter = (currentDateStr) => {
         if (!lastFaixaEnd || !currentDateStr || currentDateStr >= lastFaixaEnd) return null;
 
@@ -2836,13 +3044,7 @@ function computeIntensiveExecution(intense, options = {}) {
             const probeFaixa = getActiveFaixaForDate(faixas, probeDate);
             if (probeFaixa && !feriadosSet.has(probeDate) && probeDow !== 0 && probeFaixa.dias.includes(probeDow)) {
                 const probeDaySlots = (probeFaixa.drawnSlotsByDay?.[probeDow] || probeFaixa.slots || []).slice();
-                const probeFreeSlots = options.respectPriority
-                    ? probeDaySlots.filter((slot) => !priorityRegulars.some((p) => {
-                        const pStart = p.dataInicio || store.settings.termStart;
-                        const pEnd = p.dataFim || store.settings.termEnd;
-                        return parseInt(p.diaSemana, 10) === probeDow && probeDate >= pStart && probeDate <= pEnd && p.horario === slot;
-                    }))
-                    : probeDaySlots;
+                const probeFreeSlots = filterFreeSlotsForDate(probeDate, probeDaySlots, probeDow);
 
                 if (probeFreeSlots.length > 0) {
                     return { date: probeDate, slots: probeFreeSlots.length };
@@ -2871,13 +3073,7 @@ function computeIntensiveExecution(intense, options = {}) {
 
         if (!feriadosSet.has(dStr) && dow !== 0 && faixa.dias.includes(dow)) {
             const daySlots = (faixa.drawnSlotsByDay?.[dow] || faixa.slots || []).slice();
-            const freeSlots = options.respectPriority
-                ? daySlots.filter((slot) => !priorityRegulars.some((p) => {
-                    const pStart = p.dataInicio || store.settings.termStart;
-                    const pEnd = p.dataFim || store.settings.termEnd;
-                    return parseInt(p.diaSemana, 10) === dow && dStr >= pStart && dStr <= pEnd && p.horario === slot;
-                }))
-                : daySlots;
+            const freeSlots = filterFreeSlotsForDate(dStr, daySlots, dow);
 
             if (freeSlots.length > 0) {
                 const remaining = totalCH > 0 ? (totalCH - result.totalHours) : freeSlots.length;
@@ -2929,14 +3125,14 @@ function computeIntensiveExecution(intense, options = {}) {
     return result;
 }
 
-function collectIntensiveFaixasFromUI(fallbackInicio) {
+function collectIntensiveFaixasFromPatternMap(patternsMap = {}, fallbackInicio) {
     const faixas = [];
     let lastEffectivePattern = [];
 
     for (let i = 1; i <= 3; i++) {
         const inicio = (document.getElementById(`inp-data-inicio-f${i}`)?.value || (i === 1 ? fallbackInicio : '')).trim();
         const fim = (document.getElementById(`inp-data-fim-f${i}`)?.value || '').trim() || null;
-        const pattern = normalizeFaixaPattern(faixasPatterns[i]);
+        const pattern = normalizeFaixaPattern(patternsMap?.[i]);
 
         if (!inicio) {
             if (i === 1) throw new Error('Defina a data de inicio da Faixa 1.');
@@ -2972,6 +3168,10 @@ function collectIntensiveFaixasFromUI(fallbackInicio) {
     return sorted;
 }
 
+function collectIntensiveFaixasFromUI(fallbackInicio) {
+    return collectIntensiveFaixasFromPatternMap(buildEffectiveFaixaPatternMap(), fallbackInicio);
+}
+
 function buildFaixaHoursSummaryFromExecution(faixas = [], executionByDate = {}) {
     const list = Array.isArray(faixas) ? faixas : [];
     const byDate = executionByDate && typeof executionByDate === "object" ? executionByDate : {};
@@ -2996,6 +3196,16 @@ function buildFaixaHoursSummaryFromExecution(faixas = [], executionByDate = {}) 
             horas: total
         };
     });
+}
+
+function getExecutionUsedDates(execution = {}) {
+    return Object.keys(execution?.byDate || {})
+        .filter((dateStr) => /^\d{4}-\d{2}-\d{2}$/.test(String(dateStr || '').trim()))
+        .sort();
+}
+
+function getExecutionSlotsForDate(execution = {}, dateStr = '') {
+    return Array.isArray(execution?.byDate?.[dateStr]) ? execution.byDate[dateStr].slice() : [];
 }
 
 function alignFaixasToExecutionEnd(faixasInput, executionEnd) {
@@ -3038,30 +3248,26 @@ function buildFinalAdjustmentFaixaSuggestion(faixasConfig = [], execution = {}) 
     const aligned = alignFaixasToExecutionEnd(normalized, finalDate);
     const baseFaixa = aligned[0];
     if (!baseFaixa?.inicio || finalDate <= baseFaixa.inicio) return null;
+    if (!execution?.wasTruncatedByCH || execution?.truncationType !== 'partial-day') return null;
+    if (execution?.truncationDate && String(execution.truncationDate).trim() !== finalDate) return null;
 
-    const usedDates = Object.keys(execution?.byDate || {}).sort();
+    const usedDates = getExecutionUsedDates(execution);
     if (usedDates.length < 2) return null;
 
     const adjustmentStart = usedDates[usedDates.length - 2];
     if (!adjustmentStart || adjustmentStart <= baseFaixa.inicio) return null;
 
-    const adjustmentStartDow = new Date(`${adjustmentStart}T12:00:00`).getDay();
-    const finalDow = new Date(`${finalDate}T12:00:00`).getDay();
-    if (adjustmentStartDow < 1 || adjustmentStartDow > 6) return null;
-    if (finalDow < 1 || finalDow > 6) return null;
-    if (adjustmentStartDow === finalDow) return null;
+    const tailDates = usedDates.filter((dateStr) => dateStr >= adjustmentStart && dateStr <= finalDate);
+    if (tailDates.length < 2) return null;
 
-    const usedSlots = Array.isArray(execution?.byDate?.[finalDate]) ? execution.byDate[finalDate].slice() : [];
+    const finalDow = new Date(`${finalDate}T12:00:00`).getDay();
+    if (finalDow < 1 || finalDow > 6) return null;
+
+    const usedSlots = getExecutionSlotsForDate(execution, finalDate);
     const fullDaySlots = (baseFaixa.drawnSlotsByDay?.[finalDow] || baseFaixa.slots || []).slice();
     if (usedSlots.length === 0 || fullDaySlots.length === 0) return null;
-
     const partialFinalDay = usedSlots.length < fullDaySlots.length;
-    const finalWeekStart = getWeekStartISO(finalDate);
-    const isolatedFinalDay = usedDates.length > 1
-        && finalWeekStart
-        && usedDates.filter((dateStr) => getWeekStartISO(dateStr) === finalWeekStart).length === 1;
-
-    if (!partialFinalDay && !isolatedFinalDay) return null;
+    if (!partialFinalDay) return null;
 
     const mainFaixaEnd = addDaysISO(adjustmentStart, -1);
     if (!mainFaixaEnd || mainFaixaEnd < baseFaixa.inicio) return null;
@@ -3071,16 +3277,32 @@ function buildFinalAdjustmentFaixaSuggestion(faixasConfig = [], execution = {}) 
         fim: mainFaixaEnd
     };
 
-    const drawnSlotsByDay = {};
-    usedDates
-        .filter((dateStr) => dateStr >= adjustmentStart && dateStr <= finalDate)
-        .forEach((dateStr) => {
-            const dateSlots = Array.isArray(execution?.byDate?.[dateStr]) ? execution.byDate[dateStr].slice() : [];
-            if (dateSlots.length === 0) return;
+    const tailEntries = tailDates
+        .map((dateStr) => {
+            const slots = getExecutionSlotsForDate(execution, dateStr);
+            if (slots.length === 0) return null;
             const dow = new Date(`${dateStr}T12:00:00`).getDay();
-            if (dow < 1 || dow > 6) return;
-            drawnSlotsByDay[dow] = [...new Set(dateSlots)];
-        });
+            if (dow < 1 || dow > 6) return null;
+            return {
+                date: dateStr,
+                dow,
+                slots,
+                signature: slots.slice().sort((a, b) => timeToMinutes(a) - timeToMinutes(b)).join('|')
+            };
+        })
+        .filter(Boolean);
+
+    if (tailEntries.length < 2) return null;
+
+    const drawnSlotsByDay = {};
+    tailEntries.forEach((entry) => {
+        if (!drawnSlotsByDay[entry.dow]) drawnSlotsByDay[entry.dow] = [];
+        drawnSlotsByDay[entry.dow].push(...entry.slots);
+    });
+    Object.keys(drawnSlotsByDay).forEach((dayKey) => {
+        drawnSlotsByDay[dayKey] = [...new Set(drawnSlotsByDay[dayKey])]
+            .sort((a, b) => timeToMinutes(a) - timeToMinutes(b));
+    });
 
     const adjustmentFaixa = normalizeFaixaEntry({
         inicio: adjustmentStart,
@@ -3093,7 +3315,12 @@ function buildFinalAdjustmentFaixaSuggestion(faixasConfig = [], execution = {}) 
     return {
         faixas: [mainFaixa, adjustmentFaixa],
         adjustmentFaixaIndex: 2,
-        reason: partialFinalDay ? 'partial-day' : 'isolated-day'
+        reason: tailEntries.some((entry, idx, arr) => idx > 0 && entry.dow === arr[idx - 1].dow)
+            ? 'partial-day-same-dow'
+            : 'partial-day',
+        adjustmentStart,
+        adjustmentEnd: finalDate,
+        adjustmentDates: tailDates
     };
 }
 
@@ -3117,9 +3344,20 @@ function applyFinalAdjustmentFaixaSuggestion(suggestion) {
     renderWeeklyGrid();
     switchTab('weekly');
 
-    const message = suggestion.reason === 'isolated-day'
-        ? 'Criamos uma ultima faixa de ajuste para voce refinar o ultimo dia sem alterar a faixa anterior. Clique nos slots finais para ajustar a CH.'
-        : 'Criamos uma ultima faixa de ajuste para voce finalizar a distribuicao sem alterar a faixa anterior. Clique nos slots finais para ajustar a CH.';
+    const rangeLabel = suggestion.adjustmentStart && suggestion.adjustmentEnd
+        ? `${formatDateBR(suggestion.adjustmentStart)} a ${formatDateBR(suggestion.adjustmentEnd)}`
+        : '';
+    let message = '';
+
+    if (suggestion.reason === 'partial-day-same-dow') {
+        message = rangeLabel
+            ? `Criamos automaticamente a Faixa 2 cobrindo ${rangeLabel}, do penultimo ao ultimo dia real de aula. Como os dois dias caem no mesmo dia da semana, refine manualmente se precisar diferenciar o fechamento final.`
+            : 'Criamos automaticamente a Faixa 2 do penultimo ao ultimo dia real de aula. Como os dois dias caem no mesmo dia da semana, refine manualmente se precisar diferenciar o fechamento final.';
+    } else {
+        message = rangeLabel
+            ? `Criamos automaticamente a Faixa 2 cobrindo ${rangeLabel}, do penultimo ao ultimo dia real de aula. Ajuste os slots finais se quiser refinar a distribuicao.`
+            : 'Criamos automaticamente a Faixa 2 do penultimo ao ultimo dia real de aula. Ajuste os slots finais se quiser refinar a distribuicao.';
+    }
 
     showToastWarning(message, 'warning', 9000);
 }
@@ -3466,10 +3704,11 @@ function syncAllIntensiveDates() {
     );
 
     intensivas.forEach(intense => {
-        const execution = computeIntensiveExecution(intense, { respectPriority: true });
+        const execution = computeIntensiveExecution(intense, { respectPriority: true, respectTurmaOccupancy: true });
         if (execution.dataInicio) intense.dataInicio = execution.dataInicio;
         if (execution.dataFim) intense.dataFim = execution.dataFim;
         intense.horariosUltimoDia = execution.horariosUltimoDia || [];
+        intense.executionByDate = execution.byDate || {};
         intense.horariosOcupados = execution.unionSlots || intense.horariosOcupados || [];
         intense.diasMarcados = execution.unionDias || intense.diasMarcados || [];
         intense.usaSabado = (intense.diasMarcados || []).includes(6);
@@ -3510,7 +3749,7 @@ function getSigaaCode(allocsForClass) {
             const sInfo = getSlot(a.horario);
             if (sInfo) slotsList.push({ day: dSigaa, shift: sInfo.s, slot: sInfo.sl });
         } else if (a.tipo === 'intensiva') {
-            const execution = computeIntensiveExecution(a, { respectPriority: true });
+            const execution = computeIntensiveExecution(a, { respectPriority: true, respectTurmaOccupancy: true });
             const byDate = execution.byDate || {};
             Object.keys(byDate).sort().forEach((dStr) => {
                 const dSigaa = new Date(dStr + "T12:00:00").getDay() + 1;
@@ -3676,6 +3915,22 @@ function getSuggestedOfficialPeriodoLetivoPlan() {
     return nextPlan || plans[plans.length - 1];
 }
 
+function resolveOfficialPeriodoLetivoPlan(preferredMeta = null) {
+    const plans = getOfficialPeriodoLetivoPlans();
+    if (!plans.length) {
+        return preferredMeta ? store.getPlanMetaFromSettings(preferredMeta) : store.getPlanMetaFromSettings();
+    }
+
+    const preferred = preferredMeta ? store.getPlanMetaFromSettings(preferredMeta) : store.getPlanMetaFromSettings();
+    const preferredYear = String(preferred?.termStart || '').split('-')[0] || '';
+    return plans.find((plan) => plan.key === preferred.key)
+        || plans.find((plan) => plan.periodo === preferred.periodo && plan.termStart === preferred.termStart && plan.termEnd === preferred.termEnd)
+        || plans.find((plan) => plan.ano && preferredYear && String(plan.ano) === preferredYear && plan.periodo === preferred.periodo)
+        || plans.find((plan) => plan.periodo === preferred.periodo)
+        || getSuggestedOfficialPeriodoLetivoPlan()
+        || plans[0];
+}
+
 function formatDateBRShortYear(dateStr) {
     if (!dateStr || typeof dateStr !== 'string') return '';
     const parts = dateStr.split('-');
@@ -3694,7 +3949,7 @@ function populatePeriodoLetivoOptions() {
     const selPeriodo = document.getElementById('sel-periodo-letivo');
     if (!selPeriodo) return;
 
-    const currentMeta = store.getPlanMetaFromSettings();
+    const currentMeta = resolveOfficialPeriodoLetivoPlan();
     const officialPlans = getOfficialPeriodoLetivoPlans();
     selPeriodo.innerHTML = '';
 
@@ -3709,18 +3964,7 @@ function populatePeriodoLetivoOptions() {
             selPeriodo.appendChild(opt);
         });
 
-        const matched = officialPlans.some((plan) => plan.key === currentMeta.key);
-        if (!matched && currentMeta.key) {
-            const customOpt = document.createElement('option');
-            customOpt.value = currentMeta.key;
-            customOpt.textContent = `Personalizado: ${buildPeriodoLetivoOptionLabel(currentMeta)}`;
-            customOpt.dataset.periodo = currentMeta.periodo;
-            customOpt.dataset.termStart = currentMeta.termStart;
-            customOpt.dataset.termEnd = currentMeta.termEnd;
-            selPeriodo.appendChild(customOpt);
-        }
-
-        selPeriodo.value = currentMeta.key || officialPlans[0].key;
+        selPeriodo.value = currentMeta?.key || officialPlans[0].key;
         return;
     }
 
@@ -3737,13 +3981,13 @@ function populatePeriodoLetivoOptions() {
 function getSelectedPeriodoLetivoMeta() {
     const selPeriodo = document.getElementById('sel-periodo-letivo');
     const option = selPeriodo?.selectedOptions?.[0];
-    if (!option) return null;
+    if (!option) return resolveOfficialPeriodoLetivoPlan();
 
     const periodo = normalizePeriodoLetivoCode(option.dataset.periodo || option.value || store.settings.periodo);
-    const termStart = option.dataset.termStart || inpTermStart?.value || calStart?.value || store.settings.termStart;
-    const termEnd = option.dataset.termEnd || inpTermEnd?.value || calEnd?.value || store.settings.termEnd;
+    const termStart = option.dataset.termStart || store.settings.termStart;
+    const termEnd = option.dataset.termEnd || store.settings.termEnd;
 
-    return store.getPlanMetaFromSettings({
+    return resolveOfficialPeriodoLetivoPlan({
         periodo,
         termStart,
         termEnd
@@ -3759,7 +4003,7 @@ function syncPlanInputsFromStore() {
     populatePeriodoLetivoOptions();
     populateTurnoOfertaOptions(store.settings.turnoOferta || 'Tarde');
     if (selPeriodo) {
-        const currentMeta = store.getPlanMetaFromSettings();
+        const currentMeta = resolveOfficialPeriodoLetivoPlan();
         const optionValues = Array.from(selPeriodo.options).map((opt) => opt.value);
         const preferredValue =
             optionValues.find((value) => value === currentMeta.key) ||
@@ -3851,23 +4095,19 @@ function applyPlanContextToUI(planMeta = {}, options = {}) {
 }
 
 function applyPlanContextFromInputs(overrides = {}) {
-    const selectedMeta = getSelectedPeriodoLetivoMeta();
-    return applyPlanContextToUI({
-        termStart: overrides.termStart !== undefined
-            ? overrides.termStart
-            : (selectedMeta?.termStart || inpTermStart?.value || calStart?.value || store.settings.termStart),
-        termEnd: overrides.termEnd !== undefined
-            ? overrides.termEnd
-            : (selectedMeta?.termEnd || inpTermEnd?.value || calEnd?.value || store.settings.termEnd),
+    const selectedMeta = resolveOfficialPeriodoLetivoPlan({
         periodo: overrides.periodo !== undefined
             ? normalizePeriodoLetivoCode(overrides.periodo)
-            : (selectedMeta?.periodo || store.settings.periodo || 'PL1')
-    }, overrides.options || {});
+            : (getSelectedPeriodoLetivoMeta()?.periodo || store.settings.periodo || 'PL1'),
+        termStart: overrides.termStart !== undefined ? overrides.termStart : store.settings.termStart,
+        termEnd: overrides.termEnd !== undefined ? overrides.termEnd : store.settings.termEnd
+    });
+    return applyPlanContextToUI(selectedMeta, overrides.options || {});
 }
 
 
 function initPeriodoLetivoETurno() {
-    const suggestedOfficialPlan = getSuggestedOfficialPeriodoLetivoPlan();
+    const suggestedOfficialPlan = resolveOfficialPeriodoLetivoPlan();
     const defaultStart = calStart && calStart.value ? calStart.value : '';
     const defaultEnd = calEnd && calEnd.value ? calEnd.value : '';
     const selPeriodo = document.getElementById('sel-periodo-letivo');
@@ -3892,33 +4132,6 @@ function initPeriodoLetivoETurno() {
         });
     }
     applyPlanContextFromInputs({ options: { resetDraftOnChange: false } });
-
-    if (inpTermStart) {
-        inpTermStart.addEventListener('change', () => {
-            if (calStart) calStart.value = inpTermStart.value;
-            if (inputConfig.inicio) inputConfig.inicio.value = inpTermStart.value;
-            applyPlanContextFromInputs({ termStart: inpTermStart.value });
-        });
-    }
-    if (inpTermEnd) {
-        inpTermEnd.addEventListener('change', () => {
-            if (calEnd) calEnd.value = inpTermEnd.value;
-            applyPlanContextFromInputs({ termEnd: inpTermEnd.value });
-        });
-    }
-    if (calStart) {
-        calStart.addEventListener('change', () => {
-            if (inpTermStart) inpTermStart.value = calStart.value;
-            if (inputConfig.inicio && !inputConfig.inicio.value) inputConfig.inicio.value = calStart.value;
-            applyPlanContextFromInputs({ termStart: calStart.value });
-        });
-    }
-    if (calEnd) {
-        calEnd.addEventListener('change', () => {
-            if (inpTermEnd) inpTermEnd.value = calEnd.value;
-            applyPlanContextFromInputs({ termEnd: calEnd.value });
-        });
-    }
     if (selTurnoOferta) {
         selTurnoOferta.addEventListener('change', () => {
             store.setTurnoOferta(selTurnoOferta.value);
@@ -4327,7 +4540,7 @@ function extractImportPlanMeta(payload) {
 
     if (!rawPlan) return null;
 
-    const normalized = store.getPlanMetaFromSettings(rawPlan);
+    const normalized = resolveOfficialPeriodoLetivoPlan(rawPlan);
     return normalized?.key ? normalized : null;
 }
 
@@ -5061,11 +5274,11 @@ function handleAddManual() {
         try {
             faixasConfig = collectIntensiveFaixasFromUI(inicio);
         } catch (err) {
-            showToastWarning(err.message || 'Erro ao ler as faixas da intensiva.', 'error', 3200);
+            showToastWarning(err.message || 'Erro ao ler as faixas da componente.', 'error', 3200);
             return;
         }
         if (faixasConfig.length === 0) {
-            showToastWarning('Configure ao menos uma faixa da intensiva.', 'warning', 2600);
+            showToastWarning('Configure ao menos uma faixa da componente.', 'warning', 2600);
             return;
         }
 
@@ -5075,6 +5288,7 @@ function handleAddManual() {
         const previewIntensive = {
             turmaId: store.selectedTurma,
             disciplina,
+            subGrupo: subGrupo || null,
             tipo: 'intensiva',
             ch: effectiveCH,
             dataInicio: faixasConfig[0].inicio,
@@ -5085,7 +5299,7 @@ function handleAddManual() {
             faixas: faixasConfig
         };
 
-        const execution = computeIntensiveExecution(previewIntensive, { respectPriority: true });
+        const execution = computeIntensiveExecution(previewIntensive, { respectPriority: true, respectTurmaOccupancy: true });
         if (execution.totalHours === 0) {
             showToastWarning('Nenhuma aula foi gerada com as faixas configuradas.', 'error', 3000);
             return;
@@ -5140,22 +5354,14 @@ function handleAddManual() {
             ...previewIntensive,
             dataInicio: inicioCalculado,
             dataFim: dataFimCalculada,
+            executionByDate: execution.byDate || {},
             horariosOcupados: slotsIntensiva,
             diasMarcados,
             usaSabado,
             faixas: faixasConfigAjustadas
         };
 
-        const intensiveConflict = store.allocations.find(a => {
-            if (String(a.turmaId) !== String(store.selectedTurma)) return false;
-            if (a.tipo !== 'intensiva' || a.disciplina === disciplina) return false;
-            return hasIntensiveConflictByDay(
-                candidateIntensiveForConflict,
-                a,
-                { start: inicioCalculado, end: dataFimCalculada },
-                { start: a.dataInicio || store.settings.termStart, end: a.dataFim || store.settings.termEnd }
-            );
-        });
+        const intensiveConflict = findTurmaConflictForCandidateExecution(candidateIntensiveForConflict, execution);
 
         if (intensiveConflict) {
             showToastWarning(`Conflito de horário: "${intensiveConflict.disciplina}" já usa esse horário no mesmo período.`, 'error', 3600);
@@ -5215,6 +5421,7 @@ function handleAddManual() {
             dataInicio: inicioCalculado,
             dataFim: dataFimCalculada,
             modelo: 'Automatico',
+            executionByDate: execution.byDate || {},
             horariosOcupados: slotsIntensiva,
             horariosUltimoDia: horariosUltimoDia,
             diasMarcados: diasMarcados,
@@ -5364,7 +5571,7 @@ function renderOfertasList() {
                 disciplina: first.disciplina,
                 codigo: info.codigo || '-',
                 docente: first.docente,
-                tipoLabel: first.tipo === 'regular_prioritaria' ? '<b>Regular (Prioritária)</b>' : 'regular',
+                tipoLabel: 'componente',
                 start,
                 end,
                 horarioTxt: `${formatDateBR(start)} a ${ensureWarningEndDate(end)}<br><small>${horariosResumo}</small>`,
@@ -5442,7 +5649,7 @@ function renderOfertasList() {
                         disciplina: base.disciplina,
                         codigo: info.codigo || '-',
                         docente: base.docente,
-                        tipoLabel: resolvedFaixas.length > 1 ? `intensiva <small>(Faixa ${idx + 1})</small>` : 'intensiva',
+                        tipoLabel: resolvedFaixas.length > 1 ? `componente <small>(Faixa ${idx + 1})</small>` : 'componente',
                         start: faixaStart,
                         end: faixaEnd,
                         horarioTxt: `${formatDateBR(faixaStart)} a ${ensureWarningEndDate(faixaEnd)}<br><small>Faixa ${idx + 1}</small>`,
@@ -6529,7 +6736,7 @@ function detectGlobalTeacherConflicts() {
                     const sharedSlots = a.horariosOcupados.filter(h => b.horariosOcupados.includes(h));
                     if (sharedSlots.length > 0) {
                         isSlotConflict = true;
-                        diaConflito = 'Intensiva';
+                        diaConflito = 'Faixas';
                         horarioConflito = sharedSlots.slice(0, 2).join(', ');
                     }
                 }

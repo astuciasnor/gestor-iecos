@@ -577,12 +577,12 @@
             <div class="compact-row periodo-letivo-dates">
                 <div class="form-group">
                     <label>Início</label>
-                    <input type="date" id="term-start">
+                    <input type="date" id="term-start" disabled title="Definido pelo perÃ­odo letivo oficial">
                 </div>
 
                 <div class="form-group">
                     <label>Fim</label>
-                    <input type="date" id="term-end">
+                    <input type="date" id="term-end" disabled title="Definido pelo perÃ­odo letivo oficial">
                 </div>
             </div>
 
@@ -688,15 +688,15 @@
                             <span>Auto-posicionar semana</span>
                         </label>
                         <div id="auto-week-position-modes" class="week-autopos-modes hidden">
-                            <label class="week-autopos-mode" for="radio-auto-week-regular">
-                                <input type="radio" id="radio-auto-week-regular" name="auto-week-position-mode"
-                                    value="regular" checked>
-                                <span>Regular</span>
+                            <label class="week-autopos-mode" for="radio-auto-week-start">
+                                <input type="radio" id="radio-auto-week-start" name="auto-week-position-mode"
+                                    value="inicio" checked>
+                                <span>InÃ­cio</span>
                             </label>
-                            <label class="week-autopos-mode" for="radio-auto-week-intensiva">
-                                <input type="radio" id="radio-auto-week-intensiva" name="auto-week-position-mode"
-                                    value="intensiva">
-                                <span>Intensiva</span>
+                            <label class="week-autopos-mode" for="radio-auto-week-end">
+                                <input type="radio" id="radio-auto-week-end" name="auto-week-position-mode"
+                                    value="fim">
+                                <span>Fim</span>
                             </label>
                         </div>
                     </div>
@@ -777,9 +777,11 @@
                             <h3>Instru&ccedil;&otilde;es de preenchimento</h3>
                             <ul>
                                 <li>&#128218; Selecione o curso, a turma, a componente curricular e o(s) docente(s).</li>
+                                <li>&#129517; <strong>Observa&ccedil;&atilde;o importante:</strong> <strong>Faixa = regime de funcionamento em um intervalo de datas.</strong> Quando uma nova faixa come&ccedil;a, ela substitui o padr&atilde;o anterior.</li>
                                 <li>&#128197;&#65039; Defina o in&iacute;cio da 1&ordf; faixa clicando no primeiro slot do dia desejado na Grade Semanal.</li>
                                 <li>&#128433;&#65039; Desenhe o padr&atilde;o de hor&aacute;rios clicando ou arrastando sobre os slots dos dias.</li>
-                                <li>&#128256; Se necess&aacute;rio, crie nova faixa para redistribuir melhor a carga hor&aacute;ria (raz&otilde;es pedag&oacute;gicas e log&iacute;sticas): clique no n&uacute;mero 2 ou 3 e depois no slot do dia correspondente &agrave; data de in&iacute;cio do novo padr&atilde;o de hor&aacute;rio.</li>
+                                <li>&#128256; Se necess&aacute;rio, crie nova faixa para redistribuir melhor a carga hor&aacute;ria (raz&otilde;es pedag&oacute;gicas e log&iacute;sticas): clique no n&uacute;mero 2 ou 3 e depois no slot do dia correspondente &agrave; data de in&iacute;cio do novo padr&atilde;o de hor&aacute;rio. A nova faixa come&ccedil;a herdando o padr&atilde;o da faixa anterior, para que voc&ecirc; ajuste apenas o que mudou.</li>
+                                <li>&#10024; Ao salvar, se o &uacute;ltimo dia ficar quebrado, o sistema prepara automaticamente a Faixa 2 cobrindo o pen&uacute;ltimo e o &uacute;ltimo dia real de aula para ajuste fino.</li>
                             </ul>
                         </div>
                     </div>
