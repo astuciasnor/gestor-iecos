@@ -230,16 +230,20 @@ function formatarRotuloChipPublico(texto) {
 function obterSiglaPublicaComFallback(componenteNome, fallbackTitulo = '') {
     const componente = String(componenteNome || '').trim();
     const fallback = String(fallbackTitulo || '').trim();
+    const limiteChip = 12;
 
     const info = (store.rawData?.componentes || []).find((item) => String(item.componente || '').trim() === componente);
     const abreviacao = String(info?.abreviacao || '').trim();
-    if (abreviacao && abreviacao.length <= 15) {
+    if (abreviacao && abreviacao.length <= limiteChip) {
         return formatarRotuloChipPublico(abreviacao);
+    }
+    if (abreviacao) {
+        return formatarRotuloChipPublico(abreviacao.substring(0, limiteChip));
     }
 
     const tituloLimpo = fallback.replace(/^\([a-zA-Z]\)\s*/, '').trim();
     const baseFallback = tituloLimpo || componente;
-    return formatarRotuloChipPublico(baseFallback.substring(0, 4));
+    return formatarRotuloChipPublico(baseFallback.substring(0, limiteChip));
 }
 
 function gerarCartoesHTML(calendarData) {
