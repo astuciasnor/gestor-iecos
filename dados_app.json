@@ -1,6 +1,6 @@
 {
   "meta": {
-    "generated_at": "2026-03-20T19:05:08",
+    "generated_at": "2026-03-21T11:17:06",
     "source_file": "planilha_base.xlsx"
   },
   "docentes": [
@@ -3382,6 +3382,36 @@
       "feriado": "Dia de São Benedito",
       "dia": "Domingo",
       "tipo": "Municipal"
+    }
+  ],
+  "periodos_letivos": [
+    {
+      "ano": 2026,
+      "periodo_letivo": "PL1",
+      "inicio": "2026-01-05",
+      "fim": "2026-03-06",
+      "label": "2026 - PL1"
+    },
+    {
+      "ano": 2026,
+      "periodo_letivo": "PL2",
+      "inicio": "2026-03-23",
+      "fim": "2026-07-23",
+      "label": "2026 - PL2"
+    },
+    {
+      "ano": 2026,
+      "periodo_letivo": "PL3",
+      "inicio": "2026-07-01",
+      "fim": "2026-08-28",
+      "label": "2026 - PL3"
+    },
+    {
+      "ano": 2026,
+      "periodo_letivo": "PL4",
+      "inicio": "2026-08-24",
+      "fim": "2026-12-23",
+      "label": "2026 - PL4"
     }
   ]
 }

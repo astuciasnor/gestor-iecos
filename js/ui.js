@@ -1,4 +1,5 @@
 import { store } from './store.js';
+import { normalizePeriodo as normalizePeriodoLetivoCode } from './plan_storage.js';
 import { getCalendarEvents } from './calendar.js';
 import { countBusinessDays, countWeekdaysInPeriod, addBusinessDays, isDateOverlap, calculateEndDateByWeekday } from './utils.js';
 
@@ -13,6 +14,7 @@ const selViewDocente = document.getElementById('sel-view-docente');
 const inpTermStart = document.getElementById('term-start');
 const inpTermEnd = document.getElementById('term-end');
 const selTurnoOferta = document.getElementById('sel-turno_oferta') || document.getElementById('sel-turno-oferta');
+const activePlanStatus = document.getElementById('active-plan-status');
 
 const calStart = document.getElementById('cal-start');
 const calEnd = document.getElementById('cal-end');
@@ -26,6 +28,7 @@ const inputConfig = {
 };
 
 let tempImportData = null;
+let tempImportPlanMeta = null;
 let activeFaixaIndex = 1;
 let faixasPatterns = {
     1: [],
@@ -3206,24 +3209,24 @@ function getDisciplinaCHGlobal(disciplina, turmaId) {
 /**
  * Deriva o bloco curricular automaticamente a partir do turmaId e do período letivo.
  * @param {string} turmaId - Ex: 'EP2026', 'CB2024'
- * @param {string} periodo - '1P', '2P', '3P' ou '4P'
+ * @param {string} periodo - 'PL1', 'PL2', 'PL3' ou 'PL4'
  * @param {string} termStart - Data de início do semestre (YYYY-MM-DD), usada para obter o ano de referência
- * @returns {string} - Ex: 'BL1', 'BL5', ou '' para 1P/3P
+ * @returns {string} - Ex: 'BL1', 'BL5', ou '' para PL1/PL3
  */
 function derivarBloco(turmaId, periodo, termStart) {
-    const p = (periodo || '').toUpperCase();
-    if (p !== '2P' && p !== '4P') return '';  // 1P e 3P nao usam blocos
+    const p = normalizePeriodoLetivoCode(periodo);
+    if (p !== 'PL2' && p !== 'PL4') return '';
 
     const anoEntrada = parseInt(String(turmaId).slice(-4));
     const anoRef = parseInt((termStart || String(new Date().getFullYear())).slice(0, 4));
-    if (isNaN(anoEntrada) || isNaN(anoRef)) return '';
+    if (Number.isNaN(anoEntrada) || Number.isNaN(anoRef)) return '';
 
     const anosDecorridos = anoRef - anoEntrada;
-    if (anosDecorridos < 0) return '';  // turma do futuro: sem bloco
+    if (anosDecorridos < 0) return '';
 
-    const numBloco = p === '2P'
-        ? 2 * anosDecorridos + 1   // BL1, BL3, BL5 ... (impares)
-        : 2 * anosDecorridos + 2;  // BL2, BL4, BL6 ... (pares)
+    const numBloco = p === 'PL2'
+        ? 2 * anosDecorridos + 1
+        : 2 * anosDecorridos + 2;
 
     return `BL${numBloco}`;
 }
@@ -3236,7 +3239,7 @@ function getTurmaSelectLabel(turmaId) {
         if (t) base = t.turma_label;
     }
 
-    const periodo = String(store.settings?.periodo || '1P').toUpperCase();
+    const periodo = normalizePeriodoLetivoCode(store.settings?.periodo || 'PL1');
     const bloco = derivarBloco(turmaId, store.settings?.periodo, store.settings?.termStart);
     const blocoNum = String(bloco || '').match(/^BL(\d+)$/i)?.[1];
     return blocoNum ? (base + '-' + periodo + '-BL.' + blocoNum) : (base + '-' + periodo);
@@ -3267,9 +3270,7 @@ function getTurmaBaseLabel(turmaId) {
 }
 
 function getPeriodoExtenso(periodo) {
-    const p = String(periodo || '').toUpperCase();
-    const n = p.match(/\d+/)?.[0];
-    return n ? (n + 'P') : '-';
+    return normalizePeriodoLetivoCode(periodo) || '-';
 }
 
 function getBlocoPpcExtenso(turmaId) {
@@ -3557,19 +3558,232 @@ function getSigaaCode(allocsForClass) {
     return parts.join(' ');
 }
 
+function getOfficialPeriodoLetivoPlans() {
+    const rawPlans = Array.isArray(store.rawData?.periodos_letivos) ? store.rawData.periodos_letivos : [];
+    const plans = rawPlans
+        .map((item) => {
+            const periodo = normalizePeriodoLetivoCode(item?.periodo_letivo || item?.periodo || '');
+            const termStart = String(item?.inicio || '').trim();
+            const termEnd = String(item?.fim || '').trim();
+            const ano = String(item?.ano || '').trim();
+            const normalized = store.getPlanMetaFromSettings({ periodo, termStart, termEnd });
+            if (!normalized?.key) return null;
+            return {
+                ...normalized,
+                ano,
+                label: item?.label || `${ano ? `${ano} - ` : ''}${normalized.periodo}`
+            };
+        })
+        .filter(Boolean)
+        .sort((a, b) => {
+            const byStart = String(a.termStart || '').localeCompare(String(b.termStart || ''));
+            if (byStart !== 0) return byStart;
+            return String(a.periodo || '').localeCompare(String(b.periodo || ''));
+        });
+
+    return plans;
+}
+
+function getSuggestedOfficialPeriodoLetivoPlan() {
+    const plans = getOfficialPeriodoLetivoPlans();
+    if (!plans.length) return null;
+
+    const today = new Date().toISOString().slice(0, 10);
+    const currentPlan = plans.find((plan) => plan.termStart <= today && plan.termEnd >= today);
+    if (currentPlan) return currentPlan;
+
+    const nextPlan = plans.find((plan) => plan.termStart >= today);
+    return nextPlan || plans[plans.length - 1];
+}
+
+function buildPeriodoLetivoOptionLabel(plan) {
+    if (!plan) return 'Periodo letivo';
+    const prefix = plan.ano ? `${plan.ano} - ` : '';
+    return `${prefix}${plan.periodo} (${formatDateBR(plan.termStart)} a ${formatDateBR(plan.termEnd)})`;
+}
+
+function populatePeriodoLetivoOptions() {
+    const selPeriodo = document.getElementById('sel-periodo-letivo');
+    if (!selPeriodo) return;
+
+    const currentMeta = store.getPlanMetaFromSettings();
+    const officialPlans = getOfficialPeriodoLetivoPlans();
+    selPeriodo.innerHTML = '';
+
+    if (officialPlans.length > 0) {
+        officialPlans.forEach((plan) => {
+            const opt = document.createElement('option');
+            opt.value = plan.key;
+            opt.textContent = buildPeriodoLetivoOptionLabel(plan);
+            opt.dataset.periodo = plan.periodo;
+            opt.dataset.termStart = plan.termStart;
+            opt.dataset.termEnd = plan.termEnd;
+            selPeriodo.appendChild(opt);
+        });
+
+        const matched = officialPlans.some((plan) => plan.key === currentMeta.key);
+        if (!matched && currentMeta.key) {
+            const customOpt = document.createElement('option');
+            customOpt.value = currentMeta.key;
+            customOpt.textContent = `Personalizado: ${buildPeriodoLetivoOptionLabel(currentMeta)}`;
+            customOpt.dataset.periodo = currentMeta.periodo;
+            customOpt.dataset.termStart = currentMeta.termStart;
+            customOpt.dataset.termEnd = currentMeta.termEnd;
+            selPeriodo.appendChild(customOpt);
+        }
+
+        selPeriodo.value = currentMeta.key || officialPlans[0].key;
+        return;
+    }
+
+    ['PL1', 'PL2', 'PL3', 'PL4'].forEach((code) => {
+        const opt = document.createElement('option');
+        opt.value = code;
+        opt.textContent = code;
+        selPeriodo.appendChild(opt);
+    });
+
+    selPeriodo.value = currentMeta.periodo || 'PL1';
+}
+
+function getSelectedPeriodoLetivoMeta() {
+    const selPeriodo = document.getElementById('sel-periodo-letivo');
+    const option = selPeriodo?.selectedOptions?.[0];
+    if (!option) return null;
+
+    const periodo = normalizePeriodoLetivoCode(option.dataset.periodo || option.value || store.settings.periodo);
+    const termStart = option.dataset.termStart || inpTermStart?.value || calStart?.value || store.settings.termStart;
+    const termEnd = option.dataset.termEnd || inpTermEnd?.value || calEnd?.value || store.settings.termEnd;
+
+    return store.getPlanMetaFromSettings({
+        periodo,
+        termStart,
+        termEnd
+    });
+}
+
+function syncPlanInputsFromStore() {
+    const selPeriodo = document.getElementById('sel-periodo-letivo');
+    if (inpTermStart) inpTermStart.value = store.settings.termStart || '';
+    if (inpTermEnd) inpTermEnd.value = store.settings.termEnd || '';
+    if (calStart) calStart.value = store.settings.termStart || '';
+    if (calEnd) calEnd.value = store.settings.termEnd || '';
+    populatePeriodoLetivoOptions();
+    if (selPeriodo) {
+        const currentMeta = store.getPlanMetaFromSettings();
+        const optionValues = Array.from(selPeriodo.options).map((opt) => opt.value);
+        const preferredValue =
+            optionValues.find((value) => value === currentMeta.key) ||
+            optionValues.find((value) => value === currentMeta.periodo) ||
+            optionValues[0] ||
+            '';
+        selPeriodo.value = preferredValue;
+    }
+}
+
+function getPlanDisplayLabel(meta) {
+    if (!meta?.key) return 'Plano letivo ainda nao definido.';
+    return `${meta.periodo} | ${formatDateBR(meta.termStart)} a ${formatDateBR(meta.termEnd)}`;
+}
+
+function updateActivePlanStatus() {
+    if (!activePlanStatus) return;
+    const activeMeta = store.getActivePlanMeta();
+    if (!activeMeta?.key) {
+        activePlanStatus.textContent = 'Plano ativo ainda nao definido.';
+        return;
+    }
+    const total = Array.isArray(store.allocations) ? store.allocations.length : 0;
+    activePlanStatus.textContent = `Plano ativo: ${getPlanDisplayLabel(activeMeta)} | ${total} oferta(s)`;
+}
+
+function resetWeeklyDraftStateForPlanSwitch() {
+    deactivateDrawingMode();
+    editingDisciplinaDraft = '';
+    lastDisciplinaInputNormalized = '';
+    pendingFaixaStartPick = null;
+    pendingFaixaQuickActionConfirm = null;
+    faixasPatterns = { 1: [], 2: [], 3: [] };
+    setFaixaStatus(1, 0);
+    setFaixaStatus(2, 0);
+    setFaixaStatus(3, 0);
+    collapseFaixasForNewComponent();
+    updateWeeklyFaixasTitleDisciplina();
+    updateWeeklyFaixaHoursDisplay();
+}
+
+function rerenderPlanBoundViews() {
+    renderWeeklyGrid();
+    renderOfertasList();
+
+    const activeTab = document.querySelector('.tab-btn.active')?.dataset.tab;
+    if (activeTab === 'monthly') {
+        renderMonthlyCalendar();
+    } else if (activeTab === 'teacher' && selViewDocente?.value) {
+        renderTeacherCalendar();
+    } else if (activeTab === 'gantt') {
+        const inpGanttDocente = document.getElementById('inp-gantt-docente');
+        if (inpGanttDocente?.value?.trim()) renderGanttChart();
+    }
+}
+
+function applyPlanContextToUI(planMeta = {}, options = {}) {
+    const previousKey = store.getActivePlanMeta().key;
+    const result = store.applyPlanContext(planMeta);
+
+    syncPlanInputsFromStore();
+    updateActivePlanStatus();
+
+    if (options.resetDraftOnChange !== false && result.meta.key !== previousKey) {
+        resetWeeklyDraftStateForPlanSwitch();
+    }
+
+    const preferredStart = getPreferredStartDateForCurrentTurma();
+    if (inputConfig.inicio && preferredStart) {
+        inputConfig.inicio.value = preferredStart;
+    }
+
+    applyFaixaDateAutofill({ forceSingleBounds: true });
+    refreshPendingFaixaStartPickUI();
+    updateWeeklyContextNote();
+    syncAllRegularDates();
+    syncAllIntensiveDates();
+    populateDocentes();
+    updateDisciplinaDatalist();
+    rerenderPlanBoundViews();
+
+    return result;
+}
+
+function applyPlanContextFromInputs(overrides = {}) {
+    const selectedMeta = getSelectedPeriodoLetivoMeta();
+    return applyPlanContextToUI({
+        termStart: overrides.termStart !== undefined
+            ? overrides.termStart
+            : (selectedMeta?.termStart || inpTermStart?.value || calStart?.value || store.settings.termStart),
+        termEnd: overrides.termEnd !== undefined
+            ? overrides.termEnd
+            : (selectedMeta?.termEnd || inpTermEnd?.value || calEnd?.value || store.settings.termEnd),
+        periodo: overrides.periodo !== undefined
+            ? normalizePeriodoLetivoCode(overrides.periodo)
+            : (selectedMeta?.periodo || store.settings.periodo || 'PL1')
+    }, overrides.options || {});
+}
+
 
 function initPeriodoLetivoETurno() {
+    const suggestedOfficialPlan = getSuggestedOfficialPeriodoLetivoPlan();
     const defaultStart = calStart && calStart.value ? calStart.value : '';
     const defaultEnd = calEnd && calEnd.value ? calEnd.value : '';
     const selPeriodo = document.getElementById('sel-periodo-letivo');
 
-    if (!store.settings.termStart && defaultStart) store.settings.termStart = defaultStart;
-    if (!store.settings.termEnd && defaultEnd) store.settings.termEnd = defaultEnd;
+    if (!store.settings.termStart) store.settings.termStart = suggestedOfficialPlan?.termStart || defaultStart;
+    if (!store.settings.termEnd) store.settings.termEnd = suggestedOfficialPlan?.termEnd || defaultEnd;
+    if (!store.settings.periodo) store.settings.periodo = suggestedOfficialPlan?.periodo || 'PL1';
     if (!store.settings.turnoOferta) store.settings.turnoOferta = 'Tarde';
     store.saveSettings();
 
-    if (inpTermStart && store.settings.termStart) inpTermStart.value = store.settings.termStart;
-    if (inpTermEnd && store.settings.termEnd) inpTermEnd.value = store.settings.termEnd;
+    syncPlanInputsFromStore();
     if (selTurnoOferta) selTurnoOferta.value = store.settings.turnoOferta || 'Tarde';
 
     if (inputConfig.inicio && store.settings.termStart && !inputConfig.inicio.value) {
@@ -3577,59 +3791,39 @@ function initPeriodoLetivoETurno() {
     }
 
     if (selPeriodo) {
-        if (store.settings.periodo) selPeriodo.value = store.settings.periodo;
         selPeriodo.addEventListener('change', () => {
-            store.setPeriodo(selPeriodo.value);
+            const selectedMeta = getSelectedPeriodoLetivoMeta();
+            applyPlanContextToUI(selectedMeta || { periodo: selPeriodo.value });
         });
     }
-
-    if (calStart && store.settings.termStart) calStart.value = store.settings.termStart;
-    if (calEnd && store.settings.termEnd) calEnd.value = store.settings.termEnd;
+    applyPlanContextFromInputs({ options: { resetDraftOnChange: false } });
 
     if (inpTermStart) {
         inpTermStart.addEventListener('change', () => {
-            store.setTermDates(inpTermStart.value, store.settings.termEnd);
             if (calStart) calStart.value = inpTermStart.value;
             if (inputConfig.inicio) inputConfig.inicio.value = inpTermStart.value;
-            applyFaixaDateAutofill({ forceSingleBounds: true });
-    refreshPendingFaixaStartPickUI();
-    updateWeeklyContextNote();
-            renderOfertasList();
+            applyPlanContextFromInputs({ termStart: inpTermStart.value });
         });
     }
     if (inpTermEnd) {
         inpTermEnd.addEventListener('change', () => {
-            store.setTermDates(store.settings.termStart, inpTermEnd.value);
             if (calEnd) calEnd.value = inpTermEnd.value;
-            applyFaixaDateAutofill({ forceSingleBounds: true });
-    refreshPendingFaixaStartPickUI();
-    updateWeeklyContextNote();
-            renderOfertasList();
+            applyPlanContextFromInputs({ termEnd: inpTermEnd.value });
         });
     }
     if (calStart) {
         calStart.addEventListener('change', () => {
-            store.setTermDates(calStart.value, store.settings.termEnd || (calEnd ? calEnd.value : ''));
             if (inpTermStart) inpTermStart.value = calStart.value;
-            applyFaixaDateAutofill({ forceSingleBounds: true });
-    refreshPendingFaixaStartPickUI();
-    updateWeeklyContextNote();
-            renderOfertasList();
+            if (inputConfig.inicio && !inputConfig.inicio.value) inputConfig.inicio.value = calStart.value;
+            applyPlanContextFromInputs({ termStart: calStart.value });
         });
     }
     if (calEnd) {
         calEnd.addEventListener('change', () => {
-            store.setTermDates(store.settings.termStart || (calStart ? calStart.value : ''), calEnd.value);
             if (inpTermEnd) inpTermEnd.value = calEnd.value;
-            applyFaixaDateAutofill({ forceSingleBounds: true });
-    refreshPendingFaixaStartPickUI();
-    updateWeeklyContextNote();
-            renderOfertasList();
+            applyPlanContextFromInputs({ termEnd: calEnd.value });
         });
     }
-    applyFaixaDateAutofill({ forceSingleBounds: true });
-    refreshPendingFaixaStartPickUI();
-    updateWeeklyContextNote();
     if (selTurnoOferta) {
         selTurnoOferta.addEventListener('change', () => {
             store.setTurnoOferta(selTurnoOferta.value);
@@ -3917,7 +4111,7 @@ export function initUI() {
                 const t = store.rawData.turmas.find(x => String(x.turma_id) === String(store.selectedTurma));
                 if (t) turmaLabel = t.turma_label;
             }
-            const periodo = store.settings.periodo || '1P';
+            const periodo = normalizePeriodoLetivoCode(store.settings.periodo || 'PL1');
             const activeTab = document.querySelector('.tab-btn.active')?.dataset.tab;
 
             if (activeTab === 'teacher' && selViewDocente && selViewDocente.value) {
@@ -3969,11 +4163,16 @@ export function initUI() {
     if (btnReplace) {
         btnReplace.addEventListener('click', () => {
             if (tempImportData) {
-                store.allocations = tempImportData;
+                if (tempImportPlanMeta?.key) {
+                    applyPlanContextToUI(tempImportPlanMeta, { resetDraftOnChange: true });
+                }
+                store.replaceAllocations(tempImportData);
                 syncAllRegularDates();
                 syncAllIntensiveDates();
-                showToastWarning('Dados importados com datas recalculadas com sucesso.', 'success', 1800);
-                setTimeout(() => window.location.reload(), 450);
+                populateDocentes();
+                rerenderPlanBoundViews();
+                const planLabel = tempImportPlanMeta?.key ? ` no plano ${getPlanDisplayLabel(tempImportPlanMeta)}` : '';
+                showToastWarning(`Dados importados${planLabel} com datas recalculadas com sucesso.`, 'success', 2200);
             }
             closeModal();
         });
@@ -3983,12 +4182,20 @@ export function initUI() {
     if (btnMerge) {
         btnMerge.addEventListener('click', () => {
             if (tempImportData) {
+                if (tempImportPlanMeta?.key && tempImportPlanMeta.key !== store.getActivePlanMeta().key) {
+                    const shouldSwitch = confirm(
+                        `O arquivo pertence ao plano ${getPlanDisplayLabel(tempImportPlanMeta)}.\n\n` +
+                        `Deseja trocar para esse plano antes de mesclar as alocacoes?`
+                    );
+                    if (!shouldSwitch) return;
+                    applyPlanContextToUI(tempImportPlanMeta, { resetDraftOnChange: true });
+                }
                 const count = store.mergeAllocations(tempImportData);
                 syncAllRegularDates();
                 syncAllIntensiveDates();
-                showToastWarning(`Mesclagem concluída! ${count} novas alocações adicionadas com datas corrigidas.`, 'success', 3000);
-                renderWeeklyGrid();
-                renderOfertasList();
+                populateDocentes();
+                showToastWarning(`Mesclagem concluida! ${count} novas alocacoes adicionadas com datas corrigidas.`, 'success', 3000);
+                rerenderPlanBoundViews();
             }
             closeModal();
         });
@@ -3998,6 +4205,7 @@ export function initUI() {
     if (btnCancel) {
         btnCancel.addEventListener('click', () => {
             tempImportData = null;
+            tempImportPlanMeta = null;
             if (inpImport) inpImport.value = '';
             closeModal();
         });
@@ -4007,6 +4215,25 @@ export function initUI() {
     populateDocentes();
     renderOfertasList();
     updateWeeklyFaixasTitleDisciplina();
+}
+
+function extractImportPlanMeta(payload) {
+    if (!payload || typeof payload !== 'object' || Array.isArray(payload)) return null;
+
+    const rawPlan = payload.plan && typeof payload.plan === 'object'
+        ? payload.plan
+        : (payload.settings && typeof payload.settings === 'object'
+            ? {
+                termStart: payload.settings.termStart,
+                termEnd: payload.settings.termEnd,
+                periodo: payload.settings.periodo || payload.periodoLetivo || store.settings.periodo
+            }
+            : null);
+
+    if (!rawPlan) return null;
+
+    const normalized = store.getPlanMetaFromSettings(rawPlan);
+    return normalized?.key ? normalized : null;
 }
 
 function handleFileSelect(event) {
@@ -4026,14 +4253,21 @@ function handleFileSelect(event) {
             if (!normalized) {
                 showToastWarning('Arquivo inválido. O formato não é suportado.', 'error', 3000);
                 tempImportData = null;
+                tempImportPlanMeta = null;
                 event.target.value = '';
                 return;
             }
 
             tempImportData = normalized;
+            tempImportPlanMeta = extractImportPlanMeta(parsed);
+            if (tempImportPlanMeta?.key) {
+                showToastWarning(`Arquivo reconhecido para o plano ${getPlanDisplayLabel(tempImportPlanMeta)}.`, 'success', 2400);
+            }
             const modal = document.getElementById('import-modal');
             if (modal) modal.style.display = 'flex';
         } catch (err) {
+            tempImportData = null;
+            tempImportPlanMeta = null;
             showToastWarning('Erro ao ler arquivo JSON. Verifique o formato.', 'error', 3000);
         }
     };
@@ -4044,6 +4278,7 @@ function closeModal() {
     const modal = document.getElementById('import-modal');
     if (modal) modal.style.display = 'none';
     tempImportData = null;
+    tempImportPlanMeta = null;
     const inp = document.getElementById('inp-import');
     if (inp) inp.value = '';
 }
@@ -4286,7 +4521,7 @@ function renderWeeklyGrid() {
                     <li>Informe o Per&iacute;odo letivo, incluindo:
                         <ul style="margin:6px 0 0 0; padding-left:22px; list-style:disc;">
                             <li>Data de in&iacute;cio e data de fim</li>
-                            <li>Per&iacute;odo: 1P, 2P, 3P ou 4P</li>
+                            <li>Per&iacute;odo: PL1, PL2, PL3 ou PL4</li>
                         </ul>
                     </li>
                     <li>Escolha a forma de oferta das componentes, com duas op&ccedil;&otilde;es:
@@ -4938,6 +5173,7 @@ function updateListPrintHeader() {
 function renderOfertasList() {
     const tbody = document.querySelector('#ofertas-table tbody');
     if (!tbody) return;
+    updateActivePlanStatus();
     updateListPrintHeader();
 
     const theadTr = document.querySelector('#ofertas-table thead tr');
@@ -5394,6 +5630,7 @@ function buildSigaaMetadataPayload() {
 
     return {
         generatedAt: new Date().toISOString(),
+        plan: store.getActivePlanMeta()?.key ? store.getActivePlanMeta() : null,
         cursoSigla: store.selectedCurso || '',
         turmaId,
         turmaLabel,

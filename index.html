@@ -540,11 +540,13 @@
             <div class="inline-control">
                 <label for="sel-periodo-letivo">Per&iacute;odo:</label>
                 <select id="sel-periodo-letivo">
-                    <option value="1P">1P</option>
-                    <option value="2P">2P</option>
-                    <option value="3P">3P</option>
-                    <option value="4P">4P</option>
+                    <option value="">Carregando...</option>
                 </select>
+            </div>
+
+            <div id="active-plan-status"
+                style="margin: 8px 0 14px; padding: 10px 12px; border-radius: 8px; background: rgba(44, 62, 80, 0.08); color: var(--primary); font-size: 0.9rem; line-height: 1.35;">
+                Plano ativo ainda nao definido.
             </div>
 
             <div class="form-group" style="margin-top: 15px;">
@@ -969,7 +971,7 @@
                             <h4>🚀 Começando Agora</h4>
                             <ul style="padding-left: 20px; line-height: 1.6; list-style-type: none;">
                                 <li style="margin-bottom: 10px;"><strong>1. Configuração Inicial:</strong> Defina
-                                    primeiro o <b>Período Letivo</b> (1P a 4P) e o <b>Turno</b>. Só depois, selecione o
+                                    primeiro o <b>Período Letivo</b> (PL1 a PL4) e o <b>Turno</b>. Só depois, selecione o
                                     <b>Curso</b> e a <b>Turma</b> no menu lateral.
                                 </li>
                                 <li style="margin-bottom: 10px;"><strong>2. Limites do Semestre:</strong> Insira as
@@ -1040,8 +1042,7 @@
                                     Ideal para a coordenação geral.</li>
                             </ul>
                             <p style="font-size:0.92em; background:#dbe9ff; padding:8px; border-radius:6px;">
-                                📁 O nome do arquivo gerado reflete o escopo: <code>EP_2026_1P.json</code> ou
-                                <code>IECOS_TODOS_2026_1P.json</code>.
+                                📁 O nome do arquivo gerado reflete o escopo: <code>backup_iecos_EP_PL1_2026-01-05_2026-03-06_2026-03-21_10-30.json</code>.
                             </p>
                         </div>
 
@@ -1068,12 +1069,12 @@
                                 selecionado:
                             </p>
                             <ul style="padding-left:20px; font-size:0.95em; line-height:1.8;">
-                                <li><strong>2P → Blocos Ímpares</strong> (BL1, BL3, BL5...)</li>
-                                <li><strong>4P → Blocos Pares</strong> (BL2, BL4, BL6...)</li>
-                                <li>1P e 3P → turma exibida sem bloco (períodos curtos)</li>
+                                <li><strong>PL2 → Blocos Ímpares</strong> (BL1, BL3, BL5...)</li>
+                                <li><strong>PL4 → Blocos Pares</strong> (BL2, BL4, BL6...)</li>
+                                <li>PL1 e PL3 → turma exibida sem bloco (períodos curtos)</li>
                             </ul>
                             <p style="font-size:0.92em; background:#d1f2eb; padding:8px; border-radius:6px;">
-                                📌 Exemplo: <code>EP2026</code> no <strong>2P</strong> de 2026 aparece como
+                                📌 Exemplo: <code>EP2026</code> no <strong>PL2</strong> de 2026 aparece como
                                 <strong>EP2026_BL1</strong>. A turma <code>EP2025</code> no mesmo período aparece como
                                 <strong>EP2025_BL3</strong>.
                             </p>

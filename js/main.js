@@ -53,10 +53,47 @@ function formatTimestampForFileName(date = new Date()) {
   return `${yyyy}-${mm}-${dd}_${hh}-${mi}`;
 }
 
+function sanitizeFilePart(value) {
+  return String(value || '')
+    .trim()
+    .replace(/[^A-Za-z0-9_-]+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '');
+}
+
+function buildPlanFileFragment(planMeta = store.getActivePlanMeta()) {
+  if (!planMeta?.key) return '';
+  const parts = [
+    sanitizeFilePart(planMeta.periodo || 'P'),
+    sanitizeFilePart(planMeta.termStart || ''),
+    sanitizeFilePart(planMeta.termEnd || '')
+  ].filter(Boolean);
+  return parts.length ? `${parts.join('_')}_` : '';
+}
+
 function buildBackupFilename(scope = 'TODOS') {
   const stamp = formatTimestampForFileName(new Date());
-  if (scope === 'TODOS') return `backup_iecos_${stamp}.json`;
-  return `backup_iecos_${scope}_${stamp}.json`;
+  const planPart = buildPlanFileFragment();
+  if (scope === 'TODOS') return `backup_iecos_${planPart}${stamp}.json`;
+  return `backup_iecos_${scope}_${planPart}${stamp}.json`;
+}
+
+function buildPlanScopedPayload(scope, allocations, extra = {}) {
+  const activePlan = store.getActivePlanMeta();
+  return {
+    version: 2,
+    scope,
+    exportedAt: new Date().toISOString(),
+    plan: activePlan?.key ? activePlan : null,
+    settings: {
+      termStart: store.settings.termStart,
+      termEnd: store.settings.termEnd,
+      periodo: store.settings.periodo,
+      turnoOferta: store.settings.turnoOferta || ''
+    },
+    allocations,
+    ...extra
+  };
 }
 
 function buildTurmaParaCursoMap() {
@@ -106,7 +143,13 @@ function downloadJSONFile(payload, fileName) {
 function exportarJSONTodosCursos(snapshot = null) {
   const effective = snapshot || buildTodosCursosExportSnapshot();
   const fileName = buildBackupFilename('TODOS');
-  downloadJSONFile(effective.allocations, fileName);
+  downloadJSONFile(
+    buildPlanScopedPayload('TODOS', effective.allocations, {
+      porCurso: effective.porCurso,
+      total: effective.total
+    }),
+    fileName
+  );
 }
 
 function exportarJSONCurso(sigla) {
@@ -119,7 +162,13 @@ function exportarJSONCurso(sigla) {
   const turmaParaCurso = buildTurmaParaCursoMap();
   const dadosExportar = collectAllocationsByCurso(cursoSigla, turmaParaCurso);
   const fileName = buildBackupFilename(cursoSigla);
-  downloadJSONFile(dadosExportar, fileName);
+  downloadJSONFile(
+    buildPlanScopedPayload(cursoSigla, dadosExportar, {
+      curso: cursoSigla,
+      total: dadosExportar.length
+    }),
+    fileName
+  );
 }
 
 // Executar imediatamente (scripts type="module" já são diferidos e o DOM já deve estar pronto)
@@ -252,10 +301,14 @@ function exportarJSONCurso(sigla) {
       const fileName = 'alocacoes_publicas.json';
 
       const exportData = {
+        version: 2,
+        plan: store.getActivePlanMeta()?.key ? store.getActivePlanMeta() : null,
         allocations: store.allocations,
         settings: {
           termStart: store.settings.termStart,
-          termEnd: store.settings.termEnd
+          termEnd: store.settings.termEnd,
+          periodo: store.settings.periodo,
+          turnoOferta: store.settings.turnoOferta || ''
         }
       };
 
@@ -273,7 +326,7 @@ function exportarJSONCurso(sigla) {
       const shouldExport = confirm(
         `Confirmar publicação online?\n\n` +
         `Alocações: ${exportData.allocations.length}\n` +
-        `Período: ${exportData.settings.termStart} a ${exportData.settings.termEnd}\n\n` +
+        `Plano: ${exportData.settings.periodo || 'P'} | ${exportData.settings.termStart} a ${exportData.settings.termEnd}\n\n` +
         `Clique em OK para gerar o arquivo público.`
       );
       if (!shouldExport) return;
