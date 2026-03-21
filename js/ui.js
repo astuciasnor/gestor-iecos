@@ -3388,6 +3388,96 @@ function buildStoredExecutionSnapshot(intense) {
     };
 }
 
+function buildGanttFaixaDaySnapshots(intense, rangeStart, rangeEnd) {
+    const fallbackStart = String(rangeStart || intense?.dataInicio || store.settings.termStart || '').trim();
+    const fallbackEnd = String(rangeEnd || intense?.dataFim || store.settings.termEnd || fallbackStart).trim();
+    const storedExecution = buildStoredExecutionSnapshot(intense);
+
+    if (storedExecution?.byDate && Object.keys(storedExecution.byDate).length > 0) {
+        const grouped = new Map();
+
+        Object.keys(storedExecution.byDate)
+            .sort()
+            .forEach((dateStr) => {
+                if (fallbackStart && dateStr < fallbackStart) return;
+                if (fallbackEnd && dateStr > fallbackEnd) return;
+
+                const dow = new Date(`${dateStr}T12:00:00`).getDay();
+                if (dow < 1 || dow > 6) return;
+
+                const slots = Array.isArray(storedExecution.byDate[dateStr])
+                    ? storedExecution.byDate[dateStr].filter(Boolean).map(String)
+                    : [];
+                if (slots.length === 0) return;
+
+                if (!grouped.has(dow)) {
+                    grouped.set(dow, {
+                        dow,
+                        inicio: dateStr,
+                        fim: dateStr,
+                        slotsSet: new Set()
+                    });
+                }
+
+                const entry = grouped.get(dow);
+                if (!entry.inicio || dateStr < entry.inicio) entry.inicio = dateStr;
+                if (!entry.fim || dateStr > entry.fim) entry.fim = dateStr;
+                slots.forEach((slot) => entry.slotsSet.add(slot));
+            });
+
+        return Array.from(grouped.values())
+            .map((entry) => ({
+                dow: entry.dow,
+                inicio: entry.inicio,
+                fim: entry.fim,
+                slots: [...entry.slotsSet].sort((a, b) => timeToMinutes(a) - timeToMinutes(b))
+            }))
+            .filter((entry) => entry.slots.length > 0)
+            .sort((a, b) => a.dow - b.dow);
+    }
+
+    const faixas = buildIntensiveConflictFaixas(intense, fallbackStart, fallbackEnd);
+    const grouped = new Map();
+
+    faixas.forEach((faixa) => {
+        if (!faixa?.inicio || !faixa?.fim || !faixa.byDay) return;
+
+        Object.keys(faixa.byDay).forEach((dayKey) => {
+            const dow = parseInt(dayKey, 10);
+            if (Number.isNaN(dow) || dow < 1 || dow > 6) return;
+
+            const slots = Array.isArray(faixa.byDay[dow])
+                ? faixa.byDay[dow].filter(Boolean).map(String)
+                : [];
+            if (slots.length === 0) return;
+
+            if (!grouped.has(dow)) {
+                grouped.set(dow, {
+                    dow,
+                    inicio: faixa.inicio,
+                    fim: faixa.fim,
+                    slotsSet: new Set()
+                });
+            }
+
+            const entry = grouped.get(dow);
+            if (faixa.inicio < entry.inicio) entry.inicio = faixa.inicio;
+            if (faixa.fim > entry.fim) entry.fim = faixa.fim;
+            slots.forEach((slot) => entry.slotsSet.add(slot));
+        });
+    });
+
+    return Array.from(grouped.values())
+        .map((entry) => ({
+            dow: entry.dow,
+            inicio: entry.inicio,
+            fim: entry.fim,
+            slots: [...entry.slotsSet].sort((a, b) => timeToMinutes(a) - timeToMinutes(b))
+        }))
+        .filter((entry) => entry.slots.length > 0)
+        .sort((a, b) => a.dow - b.dow);
+}
+
 function buildComparableFaixasSignature(faixas = []) {
     const normalized = (Array.isArray(faixas) ? faixas : [])
         .map(normalizeFaixaEntry)
@@ -6434,7 +6524,110 @@ function renderTeacherCalendar() {
     generateCalendarGrid(container, null, docente, start, end, title);
 }
 
-function getShiftTimeRangeStr(timeRanges, shiftCode) {
+function getGanttTurnoCode(turnoValue = '') {
+    const normalized = normalizeTurnoOfertaKey(turnoValue);
+    if (normalized === 'manha') return 'M';
+    if (normalized === 'tarde') return 'T';
+    if (normalized === 'noite') return 'N';
+    const label = formatTurnoOfertaLabel(turnoValue).replace(/[^A-Za-zÀ-ÿ0-9]/g, '');
+    return String(label || 'T').slice(0, 2).toUpperCase();
+}
+
+function getGanttTurnoConfigs() {
+    const hp = store.rawData?.horarios_por_turno || {};
+    return getAvailableTurnoOfertaOptions().map((option) => {
+        const rawSlots = Array.isArray(hp?.[option.value]) ? hp[option.value] : [];
+        const normalizedSlots = rawSlots
+            .filter((slot) => !String(slot || '').toUpperCase().includes('INTERVALO'))
+            .map((slot) => normalizeConflictSlotLabel(slot))
+            .filter(Boolean);
+        const timeEntries = normalizedSlots
+            .map((slot) => {
+                const match = String(slot).match(/\d{1,2}:\d{2}/);
+                return match ? match[0] : '';
+            })
+            .filter(Boolean);
+        const minuteEntries = timeEntries
+            .map((time) => timeToMinutes(time))
+            .filter((mins) => Number.isFinite(mins) && mins < 99999)
+            .sort((a, b) => a - b);
+
+        return {
+            value: option.value,
+            label: option.label,
+            normalized: option.normalized,
+            shortCode: getGanttTurnoCode(option.value),
+            slotSet: new Set(normalizedSlots),
+            timeSet: new Set(timeEntries),
+            minMinutes: minuteEntries.length ? minuteEntries[0] : null,
+            maxMinutes: minuteEntries.length ? minuteEntries[minuteEntries.length - 1] : null
+        };
+    });
+}
+
+function resolveGanttTurnoForSlot(slot, turnoConfigs = getGanttTurnoConfigs()) {
+    const normalizedSlot = normalizeConflictSlotLabel(slot);
+    if (!normalizedSlot) return null;
+
+    const timeMatch = normalizedSlot.match(/\d{1,2}:\d{2}/);
+    const firstTime = timeMatch ? timeMatch[0] : '';
+
+    const exact = turnoConfigs.find((config) =>
+        config.slotSet.has(normalizedSlot) || (firstTime && config.timeSet.has(firstTime))
+    );
+    if (exact) return exact;
+
+    const mins = timeToMinutes(normalizedSlot);
+    if (!Number.isFinite(mins) || mins >= 99999) return null;
+
+    return turnoConfigs.find((config) =>
+        Number.isFinite(config.minMinutes)
+        && Number.isFinite(config.maxMinutes)
+        && mins >= (config.minMinutes - 10)
+        && mins <= (config.maxMinutes + 50)
+    ) || null;
+}
+
+function resolveGanttTurnosForSlots(slots = [], turnoConfigs = getGanttTurnoConfigs()) {
+    const used = new Set();
+
+    (Array.isArray(slots) ? slots : []).forEach((slot) => {
+        const config = resolveGanttTurnoForSlot(slot, turnoConfigs);
+        if (config?.value) used.add(config.value);
+    });
+
+    return turnoConfigs.filter((config) => used.has(config.value));
+}
+
+function getGanttVisibleTurnos(allocs = [], minDateStr = '', maxDateStr = '', turnoConfigs = getGanttTurnoConfigs()) {
+    const used = new Set();
+
+    (Array.isArray(allocs) ? allocs : []).forEach((alloc) => {
+        if (isScheduledRegularAllocation(alloc)) {
+            resolveGanttTurnosForSlots([alloc.horario], turnoConfigs).forEach((config) => used.add(config.value));
+            return;
+        }
+
+        if (!isFaixaAllocation(alloc)) return;
+
+        const snapshots = buildGanttFaixaDaySnapshots(
+            alloc,
+            alloc.dataInicio || minDateStr,
+            alloc.dataFim || maxDateStr
+        );
+        snapshots.forEach((entry) => {
+            resolveGanttTurnosForSlots(entry.slots, turnoConfigs).forEach((config) => used.add(config.value));
+        });
+    });
+
+    const visible = turnoConfigs.filter((config) => used.has(config.value));
+    if (visible.length > 0) return visible;
+
+    const preferred = turnoConfigs.filter((config) => ['manha', 'tarde'].includes(config.normalized));
+    return preferred.length > 0 ? preferred : turnoConfigs.slice(0, 2);
+}
+
+function getShiftTimeRangeStr(timeRanges, turnoValue, turnoConfigs = getGanttTurnoConfigs()) {
     if (!timeRanges || timeRanges.length === 0) return '';
     const times = [];
 
@@ -6444,9 +6637,13 @@ function getShiftTimeRangeStr(timeRanges, shiftCode) {
         if (matches) times.push(...matches);
     });
 
-    const filteredTimes = times.filter(t => {
-        const m = timeToMinutes(t);
-        return shiftCode === 'M' ? m < 780 : m >= 780;
+    const turnoConfig = turnoConfigs.find((config) => config.value === turnoValue)
+        || turnoConfigs.find((config) => config.normalized === normalizeTurnoOfertaKey(turnoValue));
+    if (!turnoConfig) return '';
+
+    const filteredTimes = times.filter((time) => {
+        const config = resolveGanttTurnoForSlot(time, turnoConfigs);
+        return config?.value === turnoConfig.value;
     });
 
     if (filteredTimes.length === 0) return '';
@@ -6487,6 +6684,8 @@ function renderGanttChart() {
 
         const executionRangeByAlloc = getAllocationExecutionRangeMap(allocs, minDateStr, maxDateStr);
         const executionRangeBySignature = getNonIntensiveExecutionRangeMap(allocs, minDateStr, maxDateStr);
+        const ganttTurnoConfigs = getGanttTurnoConfigs();
+        const visibleTurnos = getGanttVisibleTurnos(allocs, minDateStr, maxDateStr, ganttTurnoConfigs);
 
         const minTime = new Date(minDateStr + "T12:00:00").getTime();
         const maxTime = new Date(maxDateStr + "T12:00:00").getTime();
@@ -6575,11 +6774,11 @@ function renderGanttChart() {
         ];
 
         weekDays.forEach(d => {
-            let dayItemsMap = {};
+            const dayItemsMap = {};
 
             allocs.forEach(a => {
                 let add = false;
-                let shift = '';
+                let turnos = [];
                 let slotsToAdd = 1;
                 let dayRangeStart = a.dataInicio || minDateStr;
                 let dayRangeEnd = a.dataFim || maxDateStr;
@@ -6591,8 +6790,7 @@ function renderGanttChart() {
                 if (isScheduledRegularAllocation(a)) {
                     if (parseInt(a.diaSemana) === d.id) {
                         add = true;
-                        shift = timeToMinutes(a.horario) < 780 ? 'M' : 'T';
-                        slotsToAdd = 1;
+                        turnos = resolveGanttTurnosForSlots([a.horario], ganttTurnoConfigs).map((config) => config.value);
                         if (signatureRange?.firstDate) dayRangeStart = signatureRange.firstDate;
                         else if (executionRange?.firstDate) dayRangeStart = executionRange.firstDate;
                         if (signatureRange?.lastDate) dayRangeEnd = signatureRange.lastDate;
@@ -6600,168 +6798,147 @@ function renderGanttChart() {
                     }
                 }
                 else if (isFaixaAllocation(a)) {
-                    const faixas = buildIntensiveConflictFaixas(
+                    const daySnapshots = buildGanttFaixaDaySnapshots(
                         a,
                         a.dataInicio || minDateStr,
                         a.dataFim || maxDateStr
                     );
-                    let faixaStart = '';
-                    let faixaEnd = '';
-                    const occsSet = new Set();
-
-                    faixas.forEach((faixa) => {
-                        if (!faixa || !faixa.inicio || !faixa.fim) return;
-                        if (!isDateOverlap(faixa.inicio, faixa.fim, minDateStr, maxDateStr)) return;
-                        const daySlots = faixa.byDay?.[d.id] || [];
-                        if (daySlots.length === 0) return;
-                        daySlots.forEach((slot) => occsSet.add(slot));
-                        if (!faixaStart || faixa.inicio < faixaStart) faixaStart = faixa.inicio;
-                        if (!faixaEnd || faixa.fim > faixaEnd) faixaEnd = faixa.fim;
-                    });
-
-                    const occs = [...occsSet].sort((x, y) => timeToMinutes(x) - timeToMinutes(y));
+                    const daySnapshot = daySnapshots.find((entry) => entry.dow === d.id);
+                    const occs = Array.isArray(daySnapshot?.slots) ? daySnapshot.slots.slice() : [];
                     if (occs.length > 0) {
                         add = true;
-                        const isM = occs.some(h => timeToMinutes(h) < 780);
-                        const isT = occs.some(h => timeToMinutes(h) >= 780);
-                        shift = (isM && isT) ? 'M/T' : (isM ? 'M' : 'T');
+                        turnos = resolveGanttTurnosForSlots(occs, ganttTurnoConfigs).map((config) => config.value);
                         slotsToAdd = occs.length;
                         intensiveSlotsForDay = occs;
-                        if (faixaStart) dayRangeStart = faixaStart;
-                        if (faixaEnd) dayRangeEnd = faixaEnd;
+                        if (daySnapshot?.inicio) dayRangeStart = daySnapshot.inicio;
+                        if (daySnapshot?.fim) dayRangeEnd = daySnapshot.fim;
                     }
                 }
 
-                if (add) {
-                    const key = `${a.turmaId}|${a.disciplina}|${shift}|${a.tipo}`;
-                    if (!dayItemsMap[key]) {
-                        let chProf = 0;
-                        const chTotal = getDisciplinaCHGlobal(a.disciplina, a.turmaId);
-                        if (a.docentes && a.docentes.length > 0) {
-                            const doc = a.docentes.find(doc => teacherNamesMatch(doc?.nome, docenteName));
-                            if (doc) chProf = parseInt(doc.ch) || 0;
-                        } else if (teacherNamesMatch(a.docente, docenteName)) {
-                            chProf = chTotal;
-                        }
+                if (!add) return;
+                if (!turnos.length && visibleTurnos[0]?.value) turnos = [visibleTurnos[0].value];
 
-                        dayItemsMap[key] = {
-                            ...a,
-                            shift: shift,
-                            chTotal: chTotal,
-                            chProf: chProf,
-                            dataInicio: dayRangeStart,
-                            dataFim: dayRangeEnd,
-                            slotCount: slotsToAdd,
-                            timeRanges: isFaixaAllocation(a) ? [...intensiveSlotsForDay] : [a.horario]
-                        };
-                    } else {
-                        if (!isFaixaAllocation(a)) {
-                            dayItemsMap[key].slotCount += slotsToAdd;
-                        }
-                        if (dayRangeStart && dayRangeStart < dayItemsMap[key].dataInicio) {
-                            dayItemsMap[key].dataInicio = dayRangeStart;
-                        }
-                        if (dayRangeEnd && dayRangeEnd > dayItemsMap[key].dataFim) {
-                            dayItemsMap[key].dataFim = dayRangeEnd;
-                        }
-
-                        if (isFaixaAllocation(a)) {
-                            dayItemsMap[key].timeRanges.push(...intensiveSlotsForDay);
-                        } else {
-                            dayItemsMap[key].timeRanges.push(a.horario);
-                        }
+                const key = `${a.turmaId}|${a.disciplina}|${turnos.join('/')}|${a.tipo}`;
+                if (!dayItemsMap[key]) {
+                    let chProf = 0;
+                    const chTotal = getDisciplinaCHGlobal(a.disciplina, a.turmaId);
+                    if (a.docentes && a.docentes.length > 0) {
+                        const doc = a.docentes.find(doc => teacherNamesMatch(doc?.nome, docenteName));
+                        if (doc) chProf = parseInt(doc.ch) || 0;
+                    } else if (teacherNamesMatch(a.docente, docenteName)) {
+                        chProf = chTotal;
                     }
+
+                    dayItemsMap[key] = {
+                        ...a,
+                        turnos: [...turnos],
+                        chTotal: chTotal,
+                        chProf: chProf,
+                        dataInicio: dayRangeStart,
+                        dataFim: dayRangeEnd,
+                        slotCount: slotsToAdd,
+                        timeRanges: isFaixaAllocation(a) ? [...intensiveSlotsForDay] : [a.horario]
+                    };
+                    return;
+                }
+
+                if (!isFaixaAllocation(a)) {
+                    dayItemsMap[key].slotCount += slotsToAdd;
+                }
+                if (dayRangeStart && dayRangeStart < dayItemsMap[key].dataInicio) {
+                    dayItemsMap[key].dataInicio = dayRangeStart;
+                }
+                if (dayRangeEnd && dayRangeEnd > dayItemsMap[key].dataFim) {
+                    dayItemsMap[key].dataFim = dayRangeEnd;
+                }
+
+                if (isFaixaAllocation(a)) {
+                    dayItemsMap[key].timeRanges.push(...intensiveSlotsForDay);
+                } else {
+                    dayItemsMap[key].timeRanges.push(a.horario);
                 }
             });
 
-            let dayItems = Object.values(dayItemsMap);
+            const dayItems = Object.values(dayItemsMap);
 
-            let mItems = dayItems.filter(i => i.shift === 'M' || i.shift === 'M/T');
-            let tItems = dayItems.filter(i => i.shift === 'T' || i.shift === 'M/T');
+            function renderTurnoLane(turnoConfig, isLastLane) {
+                const laneItems = dayItems.filter((item) => Array.isArray(item.turnos) && item.turnos.includes(turnoConfig.value));
+                let currentTop = 4;
+                let barsHtml = '';
 
-            let currentTopM = 4;
-            let mBarsHtml = '';
+                laneItems.forEach((item) => {
+                    const startT = new Date(item.dataInicio + "T12:00:00").getTime();
+                    const endT = new Date(item.dataFim + "T12:00:00").getTime();
+                    const timeSpan = endT - startT;
+                    let leftPct = ((startT - minTime) / totalTime) * 100;
+                    let widthPct = (timeSpan / totalTime) * 100;
+                    if (leftPct < 0) leftPct = 0;
+                    if (widthPct < 1) widthPct = 1;
 
-            mItems.forEach((item) => {
-                const startT = new Date(item.dataInicio + "T12:00:00").getTime();
-                const endT = new Date(item.dataFim + "T12:00:00").getTime();
-                const timeSpan = endT - startT;
-                let leftPct = ((startT - minTime) / totalTime) * 100;
-                let widthPct = (timeSpan / totalTime) * 100;
-                if (leftPct < 0) leftPct = 0;
-                if (widthPct < 1) widthPct = 1;
+                    const turmaNome = getTurmaLabel(item.turmaId, item.subGrupo);
+                    const baseLabel = store.rawData?.turmas?.find(x => String(x.turma_id) === String(item.turmaId))?.turma_label || item.turmaId;
+                    const tMatch = (item.subGrupo || '').match(/_?(T\d+)$/i);
+                    const tPrefix = tMatch ? `[${tMatch[1]}] ` : '';
+                    const isOutOfBounds = store.settings.termEnd && item.dataFim > store.settings.termEnd;
+                    const boxBorder = isOutOfBounds ? 'border: 2px solid #900;' : `border: 1px solid ${item.cor || '#ccc'};`;
+                    const barHeight = 36;
+                    const timeRangeStr = getShiftTimeRangeStr(item.timeRanges, turnoConfig.value, ganttTurnoConfigs);
 
-                const turmaNome = getTurmaLabel(item.turmaId, item.subGrupo);
-                // Label compacto para as barras: base sem bloco + prefixo [T01] apenas se subdividido
-                const baseLabel = store.rawData?.turmas?.find(x => String(x.turma_id) === String(item.turmaId))?.turma_label || item.turmaId;
-                const tMatch = (item.subGrupo || '').match(/_?(T\d+)$/i);
-                const tPrefix = tMatch ? `[${tMatch[1]}] ` : '';
-                const info = getDisciplinaInfo(item.disciplina);
-                const isOutOfBounds = store.settings.termEnd && item.dataFim > store.settings.termEnd;
-                let boxBorder = isOutOfBounds ? 'border: 2px solid #900;' : `border: 1px solid ${item.cor || '#ccc'};`;
+                    let segmentsHtml = '';
+                    let externalLabelsHtml = '';
+                    let currentSegmentT = startT;
+                    const docentesList = (item.docentes && item.docentes.length > 0) ? item.docentes : [{ nome: item.docente, ch: item.chTotal }];
 
-                const barHeight = 36;
+                    docentesList.forEach((d, idx) => {
+                        const isTarget = teacherNamesMatch(d.nome, docenteName);
+                        const segCH = parseFloat(d.ch) || 0;
+                        const totalCH = parseFloat(item.chTotal) || 0;
+                        const rawShare = totalCH > 0 ? (segCH / totalCH) : 1;
+                        const safeShare = rawShare > 0 ? rawShare : (totalCH > 0 ? (1 / totalCH) : 1);
+                        const flexUnits = segCH > 0 ? segCH : 1;
 
-                const timeRangeStr = getShiftTimeRangeStr(item.timeRanges, 'M');
+                        let segStartT = currentSegmentT;
+                        let segEndT = currentSegmentT + (timeSpan * safeShare);
+                        let sDate = new Date(segStartT).toISOString().split('T')[0];
+                        let eDate = new Date(segEndT).toISOString().split('T')[0];
 
-                let segmentsHtml = '';
-                let externalLabelsHtml = '';
-                let currentSegmentT = startT;
-                const docentesList = (item.docentes && item.docentes.length > 0) ? item.docentes : [{ nome: item.docente, ch: item.chTotal }];
+                        if (idx === 0) sDate = item.dataInicio;
+                        if (idx === docentesList.length - 1) eDate = item.dataFim;
 
-                docentesList.forEach((d, idx) => {
-                    const isTarget = teacherNamesMatch(d.nome, docenteName);
-                    const segCH = parseFloat(d.ch) || 0;
-                    const totalCH = parseFloat(item.chTotal) || 0;
-                    const rawShare = totalCH > 0 ? (segCH / totalCH) : 1;
-                    const safeShare = rawShare > 0 ? rawShare : (totalCH > 0 ? (1 / totalCH) : 1);
-                    const flexUnits = segCH > 0 ? segCH : 1;
+                        const fmtStart = sDate.split('-').reverse().slice(0, 2).join('/');
+                        const fmtEnd = eDate.split('-').reverse().slice(0, 2).join('/');
+                        const bgColor = isTarget ? (item.cor || '#3498db') : '#ffffff';
+                        const txtColor = isTarget ? '#000000' : '#666666';
+                        const borderStyle = isTarget ? 'none' : `1px dashed ${item.cor || '#ccc'}`;
+                        const zIndex = isTarget ? '2' : '1';
+                        const segmentPct = widthPct * safeShare;
+                        const isShortSegment = segmentPct < 16;
+                        const chProfessor = parseFloat(String(d.ch).replace(',', '.'));
+                        const chProfessorTxt = Number.isFinite(chProfessor) ? String(chProfessor).replace(/\.0+$/, '') : String(d.ch || '0');
+                        const labelMain = `${baseLabel} ${tPrefix}${item.disciplina} (${chProfessorTxt}h)`.replace(/\s+/g, ' ').trim();
+                        const horarioSmall = timeRangeStr.replace(/^\s*:\s*/, '').trim();
+                        const outsideLabel = `${baseLabel} ${tPrefix}${item.disciplina} (${chProfessorTxt}h)${timeRangeStr}`.replace(/\s+/g, ' ').trim();
 
-                    let segStartT = currentSegmentT;
-                    let segEndT = currentSegmentT + (timeSpan * safeShare);
-                    let sDate = new Date(segStartT).toISOString().split('T')[0];
-                    let eDate = new Date(segEndT).toISOString().split('T')[0];
-
-                    if (idx === 0) sDate = item.dataInicio;
-                    if (idx === docentesList.length - 1) eDate = item.dataFim;
-
-                    const fmtStart = sDate.split('-').reverse().slice(0, 2).join('/');
-                    const fmtEnd = eDate.split('-').reverse().slice(0, 2).join('/');
-
-                    const bgColor = isTarget ? (item.cor || '#3498db') : '#ffffff';
-                    const txtColor = isTarget ? '#000000' : '#666666';
-                    const borderStyle = isTarget ? 'none' : `1px dashed ${item.cor || '#ccc'}`;
-                    const zIndex = isTarget ? '2' : '1';
-
-                    const segmentPct = widthPct * safeShare;
-                    const isShortSegment = segmentPct < 16;
-                    const chProfessor = parseFloat(String(d.ch).replace(',', '.'));
-                    const chProfessorTxt = Number.isFinite(chProfessor) ? String(chProfessor).replace(/\.0+$/, '') : String(d.ch || '0');
-                    const labelMain = `${baseLabel} ${tPrefix}${item.disciplina} (${chProfessorTxt}h)`.replace(/\s+/g, ' ').trim();
-                    const horarioSmall = timeRangeStr.replace(/^\s*:\s*/, '').trim();
-                    const outsideLabel = `${baseLabel} ${tPrefix}${item.disciplina} (${chProfessorTxt}h)${timeRangeStr}`.replace(/\s+/g, ' ').trim();
-
-                    let content = '';
-                    if (isTarget) {
-                        if (isShortSegment) {
-                            content = `
+                        let content = '';
+                        if (isTarget) {
+                            if (isShortSegment) {
+                                content = `
                             <div style="display:flex; justify-content:space-between; align-items:center; width:100%; padding:0 4px; gap:4px;">
                                 <span style="font-size:0.68em; opacity:0.95; flex-shrink:0; letter-spacing:-0.4px;">${fmtStart}</span>
                                 <span style="font-size:0.68em; opacity:0.95; flex-shrink:0; letter-spacing:-0.4px;">${fmtEnd}</span>
                             </div>
                         `;
 
-                            const textPos = (leftPct + widthPct > 75)
-                                ? `right: calc(100% - ${leftPct}% + 6px);`
-                                : `left: calc(${leftPct + widthPct}% + 6px);`;
-                            const textColor = '#000000';
-                            externalLabelsHtml += `
-                            <div style="position:absolute; top:${currentTopM}px; height:${barHeight}px; display:flex; align-items:center; ${textPos} color:${textColor}; font-weight:800; font-size:0.82em; white-space:nowrap; z-index:10; text-shadow:1px 1px 0 #fff, -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff;">
+                                const textPos = (leftPct + widthPct > 75)
+                                    ? `right: calc(100% - ${leftPct}% + 6px);`
+                                    : `left: calc(${leftPct + widthPct}% + 6px);`;
+                                externalLabelsHtml += `
+                            <div style="position:absolute; top:${currentTop}px; height:${barHeight}px; display:flex; align-items:center; ${textPos} color:#000000; font-weight:800; font-size:0.82em; white-space:nowrap; z-index:10; text-shadow:1px 1px 0 #fff, -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff;">
                                 ${outsideLabel}
                             </div>
                         `;
-                        } else {
-                            content = `
+                            } else {
+                                content = `
                             <div style="display:flex; flex-direction:column; justify-content:center; width:100%; padding:0 4px; line-height:1.05; gap:1px;">
                                 <div style="position:relative; display:flex; align-items:center; justify-content:space-between; width:100%; min-height:1.05em; gap:4px;">
                                     <span style="font-size:0.66em; font-weight:700; opacity:0.98; letter-spacing:-0.2px; flex-shrink:0;">${fmtStart}</span>
@@ -6775,159 +6952,53 @@ function renderGanttChart() {
                                 </div>
                             </div>
                         `;
-                        }
-                    } else {
-                        const firstName = (d.nome || '').split(' ')[0] || 'Docente';
-                        content = segmentPct < 8
-                            ? `<span style="font-size:0.8em; font-weight:normal; opacity:0.8; letter-spacing: -0.2px;">${firstName}</span>`
-                            : `<span style="font-size:0.8em; font-weight:normal; opacity:0.8; letter-spacing: -0.3px;">${firstName} (${chProfessorTxt}h)</span>`;
-                    }
-
-                    segmentsHtml += `
-                    <div style="flex: ${flexUnits}; background-color: ${bgColor}; color: ${txtColor}; border-right: ${borderStyle}; border-left: ${borderStyle}; height: 100%; display: flex; align-items: center; justify-content: center; overflow: hidden; min-width: 0; box-sizing: border-box; z-index: ${zIndex};">
-                        ${content}
-                    </div>
-                `;
-                    currentSegmentT = segEndT;
-                });
-
-                mBarsHtml += `
-                    <div class="gantt-bar" 
-                         style="left: ${leftPct}%; width: ${widthPct}%; top: ${currentTopM}px; height: ${barHeight}px; padding: 0; display: flex; flex-direction: row; ${boxBorder}"
-                         title="${item.disciplina}\nTurma: ${turmaNome}\nTurno: Manhã\nPeríodo Geral: ${formatDateBR(item.dataInicio)} a ${formatDateBR(item.dataFim)}\nAulas no Dia: ${item.slotCount}">
-                        ${segmentsHtml}
-                    </div>
-                    ${externalLabelsHtml}
-            `;
-                currentTopM += barHeight + 6;
-            });
-
-            const laneMHeight = Math.max(30, currentTopM);
-
-            let currentTopT = 4;
-            let tBarsHtml = '';
-
-            tItems.forEach((item) => {
-                const startT = new Date(item.dataInicio + "T12:00:00").getTime();
-                const endT = new Date(item.dataFim + "T12:00:00").getTime();
-                const timeSpan = endT - startT;
-                let leftPct = ((startT - minTime) / totalTime) * 100;
-                let widthPct = (timeSpan / totalTime) * 100;
-                if (leftPct < 0) leftPct = 0;
-                if (widthPct < 1) widthPct = 1;
-
-                const turmaNome = getTurmaLabel(item.turmaId, item.subGrupo);
-                const baseLabel = store.rawData?.turmas?.find(x => String(x.turma_id) === String(item.turmaId))?.turma_label || item.turmaId;
-                const tMatch = (item.subGrupo || '').match(/_?(T\d+)$/i);
-                const tPrefix = tMatch ? `[${tMatch[1]}] ` : '';
-                const info = getDisciplinaInfo(item.disciplina);
-                const isOutOfBounds = store.settings.termEnd && item.dataFim > store.settings.termEnd;
-                let boxBorder = isOutOfBounds ? 'border: 2px solid #900;' : `border: 1px solid ${item.cor || '#ccc'};`;
-
-                const barHeight = 36;
-
-                const timeRangeStr = getShiftTimeRangeStr(item.timeRanges, 'T');
-
-                let segmentsHtml = '';
-                let externalLabelsHtml = '';
-                let currentSegmentT = startT;
-                const docentesList = (item.docentes && item.docentes.length > 0) ? item.docentes : [{ nome: item.docente, ch: item.chTotal }];
-
-                docentesList.forEach((d, idx) => {
-                    const isTarget = teacherNamesMatch(d.nome, docenteName);
-                    const segCH = parseFloat(d.ch) || 0;
-                    const totalCH = parseFloat(item.chTotal) || 0;
-                    const rawShare = totalCH > 0 ? (segCH / totalCH) : 1;
-                    const safeShare = rawShare > 0 ? rawShare : (totalCH > 0 ? (1 / totalCH) : 1);
-                    const flexUnits = segCH > 0 ? segCH : 1;
-
-                    let segStartT = currentSegmentT;
-                    let segEndT = currentSegmentT + (timeSpan * safeShare);
-                    let sDate = new Date(segStartT).toISOString().split('T')[0];
-                    let eDate = new Date(segEndT).toISOString().split('T')[0];
-
-                    if (idx === 0) sDate = item.dataInicio;
-                    if (idx === docentesList.length - 1) eDate = item.dataFim;
-
-                    const fmtStart = sDate.split('-').reverse().slice(0, 2).join('/');
-                    const fmtEnd = eDate.split('-').reverse().slice(0, 2).join('/');
-
-                    const bgColor = isTarget ? (item.cor || '#3498db') : '#ffffff';
-                    const txtColor = isTarget ? '#000000' : '#666666';
-                    const borderStyle = isTarget ? 'none' : `1px dashed ${item.cor || '#ccc'}`;
-                    const zIndex = isTarget ? '2' : '1';
-
-                    const segmentPct = widthPct * safeShare;
-                    const isShortSegment = segmentPct < 16;
-                    const chProfessor = parseFloat(String(d.ch).replace(',', '.'));
-                    const chProfessorTxt = Number.isFinite(chProfessor) ? String(chProfessor).replace(/\.0+$/, '') : String(d.ch || '0');
-                    const labelMain = `${baseLabel} ${tPrefix}${item.disciplina} (${chProfessorTxt}h)`.replace(/\s+/g, ' ').trim();
-                    const horarioSmall = timeRangeStr.replace(/^\s*:\s*/, '').trim();
-                    const outsideLabel = `${baseLabel} ${tPrefix}${item.disciplina} (${chProfessorTxt}h)${timeRangeStr}`.replace(/\s+/g, ' ').trim();
-
-                    let content = '';
-                    if (isTarget) {
-                        if (isShortSegment) {
-                            content = `
-                            <div style="display:flex; justify-content:space-between; align-items:center; width:100%; padding:0 4px; gap:4px;">
-                                <span style="font-size:0.68em; opacity:0.95; flex-shrink:0; letter-spacing:-0.4px;">${fmtStart}</span>
-                                <span style="font-size:0.68em; opacity:0.95; flex-shrink:0; letter-spacing:-0.4px;">${fmtEnd}</span>
-                            </div>
-                        `;
-
-                            const textPos = (leftPct + widthPct > 75)
-                                ? `right: calc(100% - ${leftPct}% + 6px);`
-                                : `left: calc(${leftPct + widthPct}% + 6px);`;
-                            const textColor = '#000000';
-                            externalLabelsHtml += `
-                            <div style="position:absolute; top:${currentTopT}px; height:${barHeight}px; display:flex; align-items:center; ${textPos} color:${textColor}; font-weight:800; font-size:0.82em; white-space:nowrap; z-index:10; text-shadow:1px 1px 0 #fff, -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff;">
-                                ${outsideLabel}
-                            </div>
-                        `;
+                            }
                         } else {
-                            content = `
-                            <div style="display:flex; flex-direction:column; justify-content:center; width:100%; padding:0 4px; line-height:1.05; gap:1px;">
-                                <div style="position:relative; display:flex; align-items:center; justify-content:space-between; width:100%; min-height:1.05em; gap:4px;">
-                                    <span style="font-size:0.66em; font-weight:700; opacity:0.98; letter-spacing:-0.2px; flex-shrink:0;">${fmtStart}</span>
-                                    <span style="position:absolute; left:50%; transform:translateX(-50%); max-width:calc(100% - 64px); font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; text-align:center; font-size:0.8em; letter-spacing:-0.3px;">
-                                        ${labelMain}
-                                    </span>
-                                    <span style="font-size:0.66em; font-weight:700; opacity:0.98; letter-spacing:-0.2px; flex-shrink:0;">${fmtEnd}</span>
-                                </div>
-                                <div style="font-size:0.66em; opacity:0.95; letter-spacing:-0.2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; width:100%; text-align:center;">
-                                    ${horarioSmall || ''}
-                                </div>
-                            </div>
-                        `;
+                            const firstName = (d.nome || '').split(' ')[0] || 'Docente';
+                            content = segmentPct < 8
+                                ? `<span style="font-size:0.8em; font-weight:normal; opacity:0.8; letter-spacing: -0.2px;">${firstName}</span>`
+                                : `<span style="font-size:0.8em; font-weight:normal; opacity:0.8; letter-spacing: -0.3px;">${firstName} (${chProfessorTxt}h)</span>`;
                         }
-                    } else {
-                        const firstName = (d.nome || '').split(' ')[0] || 'Docente';
-                        content = segmentPct < 8
-                            ? `<span style="font-size:0.8em; font-weight:normal; opacity:0.8; letter-spacing: -0.2px;">${firstName}</span>`
-                            : `<span style="font-size:0.8em; font-weight:normal; opacity:0.8; letter-spacing: -0.3px;">${firstName} (${chProfessorTxt}h)</span>`;
-                    }
 
-                    segmentsHtml += `
+                        segmentsHtml += `
                     <div style="flex: ${flexUnits}; background-color: ${bgColor}; color: ${txtColor}; border-right: ${borderStyle}; border-left: ${borderStyle}; height: 100%; display: flex; align-items: center; justify-content: center; overflow: hidden; min-width: 0; box-sizing: border-box; z-index: ${zIndex};">
                         ${content}
                     </div>
                 `;
-                    currentSegmentT = segEndT;
-                });
+                        currentSegmentT = segEndT;
+                    });
 
-                tBarsHtml += `
+                    barsHtml += `
                     <div class="gantt-bar" 
-                         style="left: ${leftPct}%; width: ${widthPct}%; top: ${currentTopT}px; height: ${barHeight}px; padding: 0; display: flex; flex-direction: row; ${boxBorder}"
-                         title="${item.disciplina}\nTurma: ${turmaNome}\nTurno: Tarde\nPeríodo Geral: ${formatDateBR(item.dataInicio)} a ${formatDateBR(item.dataFim)}\nAulas no Dia: ${item.slotCount}">
+                         style="left: ${leftPct}%; width: ${widthPct}%; top: ${currentTop}px; height: ${barHeight}px; padding: 0; display: flex; flex-direction: row; ${boxBorder}"
+                         title="${item.disciplina}\nTurma: ${turmaNome}\nTurno: ${turnoConfig.label}\nPer�odo Geral: ${formatDateBR(item.dataInicio)} a ${formatDateBR(item.dataFim)}\nAulas no Dia: ${item.slotCount}">
                         ${segmentsHtml}
                     </div>
                     ${externalLabelsHtml}
             `;
-                currentTopT += barHeight + 6;
-            });
+                    currentTop += barHeight + 6;
+                });
 
-            const laneTHeight = Math.max(30, currentTopT);
-            const totalRowHeight = laneMHeight + laneTHeight;
+                const laneHeight = Math.max(30, currentTop);
+                const laneBorder = isLastLane ? '' : 'border-bottom: 2px dashed #cbd5e1;';
+
+                return {
+                    height: laneHeight,
+                    html: `
+                    <div style="display: flex; height: ${laneHeight}px; ${laneBorder} position: relative;">
+                        <div style="width: 30px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 0.8em; color: #64748b; border-right: 1px solid #cbd5e1; background: #e2e8f0; flex-shrink: 0;">
+                            ${turnoConfig.shortCode}
+                        </div>
+                        <div class="gantt-timeline" style="flex: 1; position: relative; background: transparent; border: none;">
+                            ${barsHtml}
+                        </div>
+                    </div>
+                `
+                };
+            }
+
+            const laneRenders = visibleTurnos.map((turnoConfig, idx) => renderTurnoLane(turnoConfig, idx === visibleTurnos.length - 1));
+            const totalRowHeight = laneRenders.reduce((sum, lane) => sum + lane.height, 0);
 
             html += `
             <div class="gantt-row" style="display: flex; border-bottom: 1px solid #2c3e50; margin: 0; padding: 0; min-height: ${totalRowHeight}px; position: relative; z-index: 1;">
@@ -6935,30 +7006,11 @@ function renderGanttChart() {
                     ${d.name}
                 </div>
                 <div style="flex: 1; display: flex; flex-direction: column;">
-                    
-                    <div style="display: flex; height: ${laneMHeight}px; border-bottom: 2px dashed #cbd5e1; position: relative;">
-                        <div style="width: 30px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 0.8em; color: #64748b; border-right: 1px solid #cbd5e1; background: #e2e8f0; flex-shrink: 0;">
-                            M
-                        </div>
-                        <div class="gantt-timeline" style="flex: 1; position: relative; background: transparent; border: none;">
-                            ${mBarsHtml}
-                        </div>
-                    </div>
-
-                    <div style="display: flex; height: ${laneTHeight}px; position: relative;">
-                        <div style="width: 30px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 0.8em; color: #64748b; border-right: 1px solid #cbd5e1; background: #e2e8f0; flex-shrink: 0;">
-                            T
-                        </div>
-                        <div class="gantt-timeline" style="flex: 1; position: relative; background: transparent; border: none;">
-                            ${tBarsHtml}
-                        </div>
-                    </div>
-
+                    ${laneRenders.map((lane) => lane.html).join('')}
                 </div>
             </div>
         `;
         });
-
         html += '</div>';
         container.innerHTML = html;
     } catch (err) {
