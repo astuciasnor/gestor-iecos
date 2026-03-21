@@ -2355,7 +2355,7 @@ function applyFaixaDateAutofill(options = {}) {
 }
 
 function enforceCanonicalFaixaMode() {
-    const faixasContainer = document.getElementById('container-faixas-intensiva');
+    const faixasContainer = document.getElementById('container-faixas-componente');
     if (faixasContainer) faixasContainer.classList.remove('hidden');
 
     const btnAddOferta = document.getElementById('btn-add-oferta');
@@ -2529,7 +2529,7 @@ function setupFaixaControls() {
     updateWeeklyContextNote();
 }
 
-function hydrateFaixa1FromIntensiva(allocation) {
+function hydrateFaixa1FromComponente(allocation) {
     if (!allocation || allocation.tipo !== 'intensiva') return;
 
     const dias = Array.isArray(allocation.diasMarcados) && allocation.diasMarcados.length > 0
@@ -2551,15 +2551,19 @@ function hydrateFaixa1FromIntensiva(allocation) {
     applyFaixaDateAutofill();
 }
 
-function hydrateFaixasFromIntensiva(allocation) {
+function hydrateFaixasFromComponente(allocation, options = {}) {
     if (!allocation || allocation.tipo !== 'intensiva') return;
+    const { useStoredExecution = false } = options || {};
 
     faixasPatterns = { 1: [], 2: [], 3: [] };
 
-    const faixas = getNormalizedIntensiveFaixas(allocation);
+    const resolved = useStoredExecution
+        ? resolveEditableFaixasFromStoredExecution(allocation)
+        : { faixas: getNormalizedIntensiveFaixas(allocation), wasAdjusted: false, adjustmentReason: '' };
+    const faixas = resolved.faixas;
     if (faixas.length === 0) {
-        hydrateFaixa1FromIntensiva(allocation);
-        return;
+        hydrateFaixa1FromComponente(allocation);
+        return resolved;
     }
 
     for (let i = 1; i <= 3; i++) {
@@ -2586,6 +2590,7 @@ function hydrateFaixasFromIntensiva(allocation) {
     });
 
     applyFaixaDateAutofill();
+    return resolved;
 }
 
 function toISODate(dateObj) {
@@ -3256,6 +3261,95 @@ function buildSortedSlotSignature(slots = []) {
         .join('|');
 }
 
+function getFaixaSlotsForDay(faixa, dow) {
+    const day = parseInt(dow, 10);
+    if (Number.isNaN(day) || day < 1 || day > 6) return [];
+
+    const rawSlots = Array.isArray(faixa?.drawnSlotsByDay?.[day])
+        ? faixa.drawnSlotsByDay[day]
+        : [];
+
+    return [...new Set(rawSlots.filter(Boolean).map(String))]
+        .sort((a, b) => timeToMinutes(a) - timeToMinutes(b));
+}
+
+function buildStoredExecutionSnapshot(intense) {
+    const raw = intense?.executionByDate && typeof intense.executionByDate === 'object'
+        ? intense.executionByDate
+        : null;
+    if (!raw) return null;
+
+    const byDate = {};
+    Object.keys(raw)
+        .sort()
+        .forEach((dateStr) => {
+            const slots = Array.isArray(raw[dateStr])
+                ? raw[dateStr].filter(Boolean).map(String).sort((a, b) => timeToMinutes(a) - timeToMinutes(b))
+                : [];
+            if (slots.length > 0) byDate[dateStr] = slots;
+        });
+
+    const usedDates = Object.keys(byDate).sort();
+    if (usedDates.length === 0) return null;
+
+    let totalHours = 0;
+    usedDates.forEach((dateStr) => {
+        totalHours += byDate[dateStr].length;
+    });
+
+    const dataInicio = String(intense?.dataInicio || usedDates[0] || '').trim() || usedDates[0];
+    const dataFim = String(intense?.dataFim || usedDates[usedDates.length - 1] || '').trim() || usedDates[usedDates.length - 1];
+    const horariosUltimoDia = Array.isArray(intense?.horariosUltimoDia) && intense.horariosUltimoDia.length > 0
+        ? intense.horariosUltimoDia.slice()
+        : (Array.isArray(byDate[dataFim]) ? byDate[dataFim].slice() : []);
+
+    return {
+        totalHours,
+        dataInicio,
+        dataFim,
+        horariosUltimoDia,
+        byDate
+    };
+}
+
+function buildComparableFaixasSignature(faixas = []) {
+    const normalized = (Array.isArray(faixas) ? faixas : [])
+        .map(normalizeFaixaEntry)
+        .filter(Boolean)
+        .sort((a, b) => a.inicio.localeCompare(b.inicio));
+
+    return JSON.stringify(normalized.map((faixa) => ({
+        inicio: faixa.inicio,
+        fim: faixa.fim || '',
+        drawnSlotsByDay: normalizeDrawnSlotsByDay(faixa.drawnSlotsByDay || {})
+    })));
+}
+
+function resolveEditableFaixasFromStoredExecution(intense) {
+    const normalized = getNormalizedIntensiveFaixas(intense);
+    const execution = buildStoredExecutionSnapshot(intense);
+    const aligned = alignFaixasToExecutionEnd(normalized, execution?.dataFim || intense?.dataFim || '');
+
+    if (!execution) {
+        return {
+            faixas: aligned,
+            wasAdjusted: buildComparableFaixasSignature(aligned) !== buildComparableFaixasSignature(normalized),
+            adjustmentReason: ''
+        };
+    }
+
+    const suggestion = buildFinalAdjustmentFaixaSuggestion(aligned, execution);
+    const resolved = suggestion?.faixas?.length
+        ? suggestion.faixas.map(normalizeFaixaEntry).filter(Boolean)
+        : aligned;
+
+    return {
+        faixas: resolved,
+        wasAdjusted: buildComparableFaixasSignature(resolved) !== buildComparableFaixasSignature(normalized),
+        adjustmentReason: suggestion?.reason || ''
+    };
+}
+
 function alignFaixasToExecutionEnd(faixasInput, executionEnd) {
     const end = String(executionEnd || '').trim();
     const normalized = Array.isArray(faixasInput)
@@ -3310,8 +3404,8 @@ function buildFinalAdjustmentFaixaSuggestion(faixasConfig = [], execution = {}) 
     if (finalDow < 1 || finalDow > 6) return null;
 
     const usedSlots = getExecutionSlotsForDate(execution, finalDate);
-    const fullDaySlots = (baseFaixa.drawnSlotsByDay?.[finalDow] || baseFaixa.slots || []).slice();
-    if (usedSlots.length === 0 || fullDaySlots.length === 0) return null;
+    const fullDaySlots = getFaixaSlotsForDay(baseFaixa, finalDow);
+    if (usedSlots.length === 0) return null;
 
     const mainFaixaEnd = addDaysISO(adjustmentStart, -1);
     if (!mainFaixaEnd || mainFaixaEnd < baseFaixa.inicio) return null;
@@ -3327,7 +3421,7 @@ function buildFinalAdjustmentFaixaSuggestion(faixasConfig = [], execution = {}) 
             if (slots.length === 0) return null;
             const dow = new Date(`${dateStr}T12:00:00`).getDay();
             if (dow < 1 || dow > 6) return null;
-            const expectedSlots = (baseFaixa.drawnSlotsByDay?.[dow] || baseFaixa.slots || []).slice();
+            const expectedSlots = getFaixaSlotsForDay(baseFaixa, dow);
             return {
                 date: dateStr,
                 dow,
@@ -3341,7 +3435,7 @@ function buildFinalAdjustmentFaixaSuggestion(faixasConfig = [], execution = {}) 
 
     if (tailEntries.length < 2) return null;
 
-    const partialFinalDay = usedSlots.length < fullDaySlots.length;
+    const partialFinalDay = fullDaySlots.length > 0 && usedSlots.length < fullDaySlots.length;
     const tailDiffersFromBase = tailEntries.some((entry) => entry.signature !== entry.expectedSignature);
     const isCanonicalPartialDay = execution?.wasTruncatedByCH
         && execution?.truncationType === 'partial-day'
@@ -3414,7 +3508,7 @@ function applyFinalAdjustmentFaixaSuggestion(suggestion, options = {}) {
         inputConfig.inicio.value = suggestion.faixas[0]?.inicio || '';
     }
 
-    hydrateFaixasFromIntensiva(previewAlloc);
+    hydrateFaixasFromComponente(previewAlloc);
     activeFaixaIndex = suggestion.adjustmentFaixaIndex || suggestion.faixas.length;
     autoEnterWeeklyEditingForFaixa(activeFaixaIndex);
     updateWeeklyContextNote();
@@ -3759,16 +3853,16 @@ function syncAllRegularDates() {
 }
 
 /**
- * Sincroniza as datas de TODAS as Intensivas da turma atual.
+ * Sincroniza as datas de todas as ofertas por faixas da turma atual.
  * Robusto e genérico para qualquer CH e combinação de horários.
  */
 function syncAllIntensiveDates() {
-    // Filtra todas as intensivas da turma selecionada
-    const intensivas = store.allocations.filter(a =>
+    // Filtra todas as ofertas por faixas da turma selecionada
+    const ofertasPorFaixa = store.allocations.filter(a =>
         String(a.turmaId) === String(store.selectedTurma) && a.tipo === 'intensiva'
     );
 
-    intensivas.forEach(intense => {
+    ofertasPorFaixa.forEach(intense => {
         const execution = computeIntensiveExecution(intense, { respectPriority: true, respectTurmaOccupancy: true });
         if (execution.dataInicio) intense.dataInicio = execution.dataInicio;
         if (execution.dataFim) intense.dataFim = execution.dataFim;
@@ -4793,10 +4887,10 @@ function onTurmaChange() {
     updateImportBlocoButtonState();
 
     const alocacoesTurma = store.allocations.filter(a => String(a.turmaId) === String(store.selectedTurma));
-    const primeiraIntensiva = alocacoesTurma.find(a => a.tipo === 'intensiva' && Array.isArray(a.horariosOcupados) && a.horariosOcupados.length > 0);
+    const primeiraOfertaPorFaixa = alocacoesTurma.find(a => a.tipo === 'intensiva' && Array.isArray(a.horariosOcupados) && a.horariosOcupados.length > 0);
 
-    if (primeiraIntensiva) {
-        const slotRef = String(primeiraIntensiva.horariosOcupados[0] || '');
+    if (primeiraOfertaPorFaixa) {
+        const slotRef = String(primeiraOfertaPorFaixa.horariosOcupados[0] || '');
         const hora = parseInt(slotRef.split(':')[0], 10);
         if (hora < 13) store.setTurnoOferta(resolveTurnoOfertaValue('Manhã'));
         else if (hora < 18) store.setTurnoOferta(resolveTurnoOfertaValue('Tarde'));
@@ -4807,18 +4901,18 @@ function onTurmaChange() {
         if (t?.turno) store.setTurnoOferta(resolveTurnoOfertaValue(t.turno));
     }
 
-    const intensivas = alocacoesTurma.filter(a => a.tipo === 'intensiva' && a.dataInicio);
-    if (intensivas.length > 0) {
-        hydrateFaixasFromIntensiva(intensivas[0]);
-        editingDisciplinaDraft = normalizeDisciplinaInputValue(intensivas[0].disciplina || '');
+    const ofertasPorFaixa = alocacoesTurma.filter(a => a.tipo === 'intensiva' && a.dataInicio);
+    if (ofertasPorFaixa.length > 0) {
+        hydrateFaixasFromComponente(ofertasPorFaixa[0], { useStoredExecution: true });
+        editingDisciplinaDraft = normalizeDisciplinaInputValue(ofertasPorFaixa[0].disciplina || '');
         updateWeeklyFaixasTitleDisciplina();
         updateWeeklyFaixaHoursDisplay();
-        const datas = intensivas.map(a => a.dataInicio).sort();
+        const datas = ofertasPorFaixa.map(a => a.dataInicio).sort();
         if (calStart && datas[0] < calStart.value) {
             calStart.value = datas[0];
             calStart.dispatchEvent(new Event('change'));
         }
-        const dataFim = intensivas.map(a => a.dataFim).sort().pop();
+        const dataFim = ofertasPorFaixa.map(a => a.dataFim).sort().pop();
         if (calEnd && dataFim > calEnd.value) {
             calEnd.value = dataFim;
             calEnd.dispatchEvent(new Event('change'));
@@ -5232,10 +5326,11 @@ function loadAllocationIntoEditor(allocation, idsToRemove = []) {
     if (!a) return;
 
     const info = getDisciplinaInfo(a.disciplina);
-    if (!confirm('Carregar para edicao? A oferta antiga sera removida e voce devera redesenhar os slots da faixa.')) return;
+    if (!confirm('Carregar para edicao? A oferta antiga sera removida e a Grade Semanal sera aberta para ajuste desta componente.')) return;
 
     editingDisciplinaDraft = normalizeDisciplinaInputValue(a.disciplina);
     updateWeeklyFaixasTitleDisciplina();
+    let editorFaixasAdjusted = false;
 
     if (inputConfig.disciplina) {
         inputConfig.disciplina.value = `${a.disciplina} (${info.ch}h)`;
@@ -5249,7 +5344,8 @@ function loadAllocationIntoEditor(allocation, idsToRemove = []) {
 
     if (a.tipo === 'intensiva') {
         if (inputConfig.inicio && a.dataInicio) inputConfig.inicio.value = a.dataInicio;
-        hydrateFaixasFromIntensiva(a);
+        const hydrated = hydrateFaixasFromComponente(a, { useStoredExecution: true }) || {};
+        editorFaixasAdjusted = !!hydrated.wasAdjusted;
     } else {
         collapseFaixasForNewComponent();
     }
@@ -5277,11 +5373,16 @@ function loadAllocationIntoEditor(allocation, idsToRemove = []) {
         }
     }
 
+    updateWeeklyContextNote();
+    updateWeeklyFaixaHoursDisplay();
     applyWeekAutoPositionForComponentChange({ render: false });
     idsToRemove.forEach((id) => store.removeAllocation(id));
     syncAllRegularDates();
     renderWeeklyGrid();
     renderOfertasList();
+    if (editorFaixasAdjusted) {
+        showToastWarning('A oferta foi carregada com faixas ajustadas para refletir a execucao real ja salva.', 'success', 3200);
+    }
     switchTab('weekly');
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
