@@ -1,140 +1,153 @@
-# 🐟 Cardume – Planejador Acadêmico | IECOS/UFPA
+# Cardume - Planejador Academico | IECOS/UFPA
 
 ![Capa do Projeto](img/capa_projeto.png)
 
-Sistema web desenvolvido sob medida para a gestão, alocação e visualização de grades horárias acadêmicas do IECOS/UFPA. Ferramenta essencial para diretores de curso e secretaria acadêmica na montagem e cruzamento de horários dos semestres letivos.
+Sistema web para montagem, revisao e publicacao de grades academicas do IECOS/UFPA. O app roda no navegador, usa `localStorage` como persistencia local e trabalha com um modelo canonico por faixas.
 
-🔗 **Acesse o Sistema Online:** [CLIQUE AQUI PARA ACESSAR](https://astuciasnor.github.io/gestor-iecos/)
+Link publico do sistema:
+- https://astuciasnor.github.io/gestor-iecos/
 
-📘 **Documentação Técnica Oficial:** [`docs/manual_desenvolvedor.md`](docs/manual_desenvolvedor.md)
-
----
-
-## 🎯 Funcionalidades Principais
-
-O sistema foi desenhado para resolver a complexidade de alocar componentes acadêmicas em um mesmo calendário de forma harmônica e matematicamente estrita:
-
-* **Importação de Bloco de PPC:** Puxe todas as disciplinas de um período inteiro para a grade pendente com apenas um clique.
-* **Grade Semanal Interativa:** Interface visual de "clicar e alocar" slots no modelo canônico por faixas.
-* **Matemática do Último Dia (Intensivas):** Suporte a disciplinas blocadas e híbridas. O sistema calcula a data de término exata e **recorta (amputa)** os slots excedentes do último dia de aula para que as horas do sistema batam perfeitamente com a Carga Horária do Plano de Curso.
-* **Regra Canônica de Conflito por Faixa:** O sistema considera conflito real apenas quando há sobreposição simultânea de período, dia da semana e slot de horário. Sem mecanismo de "suspensão" de componente.
-* **Auditoria Global de Professores:** A barreira de inserção cruza o banco inteiro e impede que aulas sejam criadas se um professor já estiver em sala em *outro curso* no mesmo horário.
-* **Auditoria Visual Pós-Importação:** Alert box inteligente na Visão do Professor que denuncia sobreposição cruzada após o "merge" de arquivos JSON de coordenações diferentes.
-* **Gráfico de Gantt Interativo:** Um mapa de calor no tempo mostrando a jornada fluida do semestre de cada professor e equipe letiva (múltiplos docentes).
-* **Visão do Professor e Calendário:** Telas individualizadas com botão 🔄 **Refresh Dinâmico** que recalcula a visualização visual com as atualizações instantâneas feitas no painel lateral.
-* **Offline-First:** O servidor é o próprio navegador. Funciona em total privacidade e velocidade com uso intensivo de `localStorage`.
+Documentacao tecnica:
+- [`docs/manual_desenvolvedor.md`](docs/manual_desenvolvedor.md)
 
 ---
 
-## 📚 Guia de Uso Detalhado
+## Funcionalidades principais
 
-### 1. Início e Configuração
-1.  **Acesse o Link:** Abra o sistema no navegador (Chrome, Edge ou Firefox preferencialmente).
-2.  **Login:** Utilize a senha de acesso restrito da coordenação.
-3.  **Configuração Inicial:** No menu lateral esquerdo, selecione o **Período Letivo** (1P a 4P) e o **Turno**. Depois escolha o **Curso** e a **Turma** que deseja trabalhar (nesta exata ordem).
-
-### 2. Alocacao de Aulas
-* **Fluxo canonico (exclusivo na Grade Semanal):** selecione disciplina/cor/docente(s) na barra lateral e faca toda a marcacao de slots na aba **Grade Semanal**.
-* **Faixas na Grade Semanal:** defina inicio/fim de cada faixa na tabela superior da propria grade; o sistema ajusta consistencia de datas e CH na execucao.
-* **Salvar Componente:** consolida as faixas e aplica a alocacao no calendario; a aba **Lista de Ofertas** passa a ser painel de revisao/edicao/exclusao (nao de desenho de slots).
-* **Fechamento de Carga Horaria:** o sistema calcula a execucao no calendario e mantem consistencia de CH com tratamento do ultimo dia quando necessario.
-
-### 3. Visualização e Relatórios de Output (Versão 3.1)
-
-#### 📅 Calendário da Turma
-Para visualizar o cronograma letivo final a ser enviado aos alunos:
-1.  Vá até a aba **"Calendário da Turma"**.
-2.  Verifique o período de datas no painel (início e fim do semestre).
-3.  Sempre clique no botão azul 🔄 **"Atualizar"** ao fazer modificações na aba lateral para renderizar o layout do zero.
-4.  Para gerar o arquivo limpo, clique no botão cinza **"Imprimir"** (canto superior direito).
-
-#### 👨‍🏫 Visão do Professor (Evitando o Caos)
-Para conferir o mapa total de aulas e horas contratadas de um docente específico:
-1.  Abra a aba **"Visão do Professor"**.
-2.  *O Radar Anti-Choque atuará aqui!* Se você puxou grades de outros cursos na aba lateral, o sistema listará no topo a presença de Professores clonados/em conflito global em vermelho escuro.
-3.  Busque o nome do docente para identificar o dia fatídico marcado com "⚠️". Clique em 🔄 para atualizar após corrigir as sobreposições na grade.
+- **Periodos letivos oficiais:** o seletor lateral consome `periodos_letivos` do `dados_app.json` e preenche automaticamente inicio e fim do periodo.
+- **Persistencia por plano letivo:** cada combinacao `periodo + inicio + fim` e salva separadamente no navegador.
+- **Grade Semanal como centro operacional:** toda marcacao de slots, datas e faixas acontece na aba **Grade Semanal**.
+- **Faixas como modelo unico:** cada faixa representa um regime de funcionamento em um intervalo de datas.
+- **Fechamento automatico da faixa final:** quando os dois ultimos dias reais de aula fogem do regime principal, o sistema cria automaticamente a `Faixa 2` para manter a estrutura consistente.
+- **Conflitos canonicos:** so existe conflito real com sobreposicao simultanea de periodo, dia da semana e slot.
+- **Lista de Ofertas organizada para revisao:** componentes em ordem alfabetica, faixas consecutivas e separacao visual entre faixas e entre componentes.
+- **Calendario da turma, visao docente e Gantt:** o app usa a mesma base de execucao para leitura e auditoria.
+- **Exportacao/importacao e publicacao online:** backups, JSON publico e metadados SIGAA partem do plano letivo ativo.
 
 ---
 
-## ⚠️ Workflow: Integração e Mesclagem entre Diretorias
+## Fluxo de uso
 
-A fim de cruzar horários entre Eng. de Pesca, Ciências Biológicas e Naturais:
+### 1. Configuracao inicial
 
-1.  O Diretor "A" deve concluir a etapa primária e clicar em **Exportar (JSON)** salvando o seu arquivo de curso.
-2.  A Coordenação/Direção central clica no botão vermelho **Limpar Tudo** em sua própria máquina para preparar a prancheta de análise.
-3.  Clica em **Importar** e seleciona o primeiro arquivo local.
-4.  Clica em **Importar** de novo selecionando o segundo arquivo.
-5.  No modal que sobe na tela, aciona o botão **MESCLAR (Juntar)** (nunca Substituir).
-6.  Com as matrizes unificadas na memória do navegador, basta conferir a aba **"Visão do Professor"** para visualizar os relatórios de conflito de turmas e os ajustes necessários.
+1. Abra o sistema no navegador.
+2. Selecione o **Periodo Letivo** oficial na lateral. O app preenche automaticamente as datas de inicio e fim.
+3. Escolha o **Turno**, depois o **Curso** e a **Turma**.
+
+### 2. Montagem da grade
+
+1. Selecione a componente, a cor e o(s) docente(s) na lateral.
+2. Va para a aba **Grade Semanal**.
+3. Defina o inicio da `Faixa 1` clicando no primeiro slot do dia desejado.
+4. Desenhe os slots diretamente na grade.
+5. Se precisar mudar o regime ao longo do periodo, crie a `Faixa 2` ou `Faixa 3` e desenhe explicitamente o novo padrao.
+6. Clique em **Salvar Componente**.
+
+### 3. Revisao e administracao
+
+- Use a aba **Lista de Ofertas** para revisar, editar ou excluir ofertas.
+- A lista e exibida em ordem alfabetica por componente.
+- Faixas da mesma componente aparecem uma abaixo da outra.
+- A **Lista de Ofertas** nao e lugar de desenhar slots; isso fica restrito a **Grade Semanal**.
+
+### 4. Publicacao e exportacoes
+
+- **Exportar JSON:** gera backup do plano letivo ativo.
+- **Importar JSON:** restaura ou mescla dados no contexto do plano selecionado.
+- **Exportar Metadados SIGAA:** gera os metadados do plano ativo, no recorte institucional correto do periodo letivo.
+- **Publicar Online:** gera `alocacoes_publicas.json` para a agenda publica.
 
 ---
 
-## 🛠️ Manutenção (Exclusivo para o Administrador Mantenedor)
+## Modelo canonico
 
-O sistema é robustamente abastecido via pipeline estático ETL. Ele utiliza a base `dados_app.json`, a qual é cronicamente compilada a partir de planilhas locais Excel (`planilha_base.xlsx`) na máquina do administrador. 
+### Faixa
 
-⚠️ Para a rotina de manipulação via script Python, arquitetura da árvore de códigos ou Setup inicial, dirija-se exclusivamente ao doc principal em: `docs/manual_desenvolvedor.md`.
+Faixa significa:
 
-### Publicacao Online (Fluxo Seguro)
+> **regime de funcionamento em um intervalo de datas**
 
-1. No painel principal, clique em `Publicar Online` para validar os dados e gerar `alocacoes_publicas.json`.
+Regra operacional:
+
+- a nova faixa substitui a faixa anterior a partir de sua data de inicio;
+- o fim da faixa anterior e ajustado automaticamente;
+- os slots da nova faixa so existem se forem desenhados pelo usuario;
+- o calculo de CH, conflitos e exportacoes parte da execucao real gerada por essas faixas.
+
+### Conflitos
+
+Um conflito real existe somente quando houver, ao mesmo tempo:
+
+1. sobreposicao de periodo;
+2. sobreposicao de dia da semana;
+3. sobreposicao de slot.
+
+Formula:
+
+`conflito = overlap(periodo) AND overlap(dia) AND overlap(slot)`
+
+---
+
+## Dados e manutencao
+
+O arquivo `dados_app.json` e gerado a partir de `dados/planilha_base.xlsx` pelo script:
+
+```bash
+python tools/convert_data.py
+```
+
+Abas principais esperadas no Excel:
+
+- `docentes`
+- `componentes`
+- `turmas`
+- `cursos`
+- `horarios`
+- `feriados`
+- `periodos_letivos`
+
+A aba `periodos_letivos` e a fonte oficial dos periodos institucionais. Exemplo:
+
+| ano | periodo_letivo | inicio | fim |
+|---|---|---|---|
+| 2026 | PL1 | 05/01/2026 | 06/03/2026 |
+| 2026 | PL2 | 23/03/2026 | 23/07/2026 |
+
+Observacao importante:
+
+- o app nao depende mais de datas padrao escritas manualmente no `index.html`;
+- o seletor lateral passa a consumir os periodos oficiais gerados no JSON.
+
+---
+
+## Publicacao online
+
+1. No app, clique em **Publicar Online**.
 2. No terminal, execute:
 
 ```bash
 python tools/publish_online.py
 ```
 
-3. O script procura automaticamente o arquivo mais recente em `Downloads`, valida o JSON e cria ou atualiza `alocacoes_publicas.json` na raiz do projeto.
-4. Para commitar e publicar no GitHub Pages, execute:
+Para publicar no GitHub Pages:
 
 ```bash
 python tools/publish_online.py --push
 ```
 
-5. Se o repositorio estiver sujo, a copia local continua permitida; a etapa de Git fica bloqueada ate voce limpar a arvore ou usar `--allow-dirty`.
-
-URL publica:
-- `https://astuciasnor.github.io/gestor-iecos/`
-- `https://astuciasnor.github.io/gestor-iecos/alocacoes_publicas.json`
+URLs publicas:
+- https://astuciasnor.github.io/gestor-iecos/
+- https://astuciasnor.github.io/gestor-iecos/alocacoes_publicas.json
 
 ---
 
-## Regra Oficial (Modelo Canonico)
+## Estado atual da refatoracao
 
-### Filosofia
-O projeto passa a adotar a diretriz:
+Diretrizes ja consolidadas:
 
-**"Toda oferta e modelada por faixas."**
-
-Isso reduz bifurcacao de regras legadas, unifica validacoes de conflito e simplifica manutencao.
-
-### Regra Unica de Conflito
-
-Um conflito real existe somente quando houver, ao mesmo tempo:
-
-1. sobreposicao de periodo (datas),
-2. sobreposicao de dia da semana,
-3. sobreposicao de slot (horario).
-
-Em formula:
-
-`conflito = overlap(periodo) AND overlap(dia) AND overlap(slot)`
-
-### Tabela de Conflitos (Unificada)
-
-| Escopo | Regra | Bloqueia |
-|---|---|---|
-| Turma | Duas ofertas com intersecao de periodo + dia + slot | Sim |
-| Turma | Mesmo periodo e mesmo slot, mas dias diferentes | Nao |
-| Turma | Periodos sem sobreposicao | Nao |
-| Professor (global) | Mesmo professor, em turmas diferentes, com intersecao de periodo + dia + slot | Sim |
-| Professor (global) | Mesmo professor, periodo/slot iguais, mas dias diferentes | Nao |
-| Professor (global) | Professor "A definir" | Nao (pode haver aviso) |
-
-### Estrategia de Migracao (Em Etapas)
-
-1. Tornar "oferta por faixa" o modelo canonico interno.
-2. Manter leitura de legado por compatibilidade temporaria.
-3. Migrar UX de alocacao manual para um atalho padronizado de criacao de faixa.
-4. Ajustar exportacoes/relatorios (incluindo SIGAA) para o modelo unificado.
-5. Remover tipos antigos da UI apos estabilizacao.
+- periodos letivos oficiais `PL1..PL4` vindos do Excel/JSON;
+- armazenamento por plano letivo;
+- Grade Semanal como unico ponto de desenho de slots;
+- Lista de Ofertas como painel de revisao;
+- exportacoes e publicacao apoiadas no plano ativo;
+- modelo unico por faixas, sem depender da UX antiga de tipos de oferta.

@@ -1,294 +1,379 @@
-# 📘 Manual Técnico do Desenvolvedor — Cardume – Planejador Acadêmico (IECOS)
+# Manual Tecnico do Desenvolvedor - Cardume Planejador Academico (IECOS)
 
-**Versão do Sistema:** 3.2 (Release Fevereiro 2026 — Identificação de Turmas por Bloco)  
-**Status do Projeto:** 🟢 Estável / Em Produção  
-**Responsável Técnico:** Prof. Dr. Evaldo Silva  
-**Tecnologia:** Vanilla JavaScript (ES6+), HTML5, CSS3 Grid/Flexbox, Python (ETL)
-
----
-
-## 1. 🌐 Visão Geral e Filosofia da Arquitetura
-
-Este projeto foi concebido seguindo a filosofia de arquitetura **"Serverless & Offline-First"**. Ao contrário de sistemas acadêmicos tradicionais que dependem de servidores pesados, bancos de dados SQL complexos e instalação de backends, o Gestor Acadêmico IECOS roda **100% no navegador do cliente (Client-Side)**.
-
-### 🚀 Pilares Técnicos Fundamentais:
-
-1.  **Persistência Local (Local Storage):**
-    * O "banco de dados" é o próprio navegador do usuário. Utilizamos a API `localStorage` para salvar o estado da aplicação (alocações, configurações de data, turno e período).
-    * **Vantagem:** Os dados sobrevivem ao fechamento da aba ou reinício do computador sem necessidade de login em nuvem.
-    * **Segurança:** Os dados ficam restritos ao dispositivo do usuário, garantindo privacidade e velocidade instantânea.
-
-2.  **Fonte de Dados Estática (Master Data):**
-    * Toda a inteligência de Cursos, Turmas, Disciplinas, Cargas Horárias e Docentes provém de um arquivo estático: **`dados_app.json`**.
-    * Este JSON é gerado a partir de uma planilha Excel (`dados/planilha_base.xlsx`) processada por um script Python (`tools/convert_data.py`), garantindo que a secretaria possa gerenciar os dados em uma ferramenta familiar (Excel) antes de subir para o sistema.
-
-3.  **Modularidade (ES6 Modules):**
-    * O código JavaScript é dividido em módulos com responsabilidades únicas (`import`/`export`), facilitando a manutenção e a escalabilidade sem criar um "código espaguete".
+**Versao do sistema:** 3.3
+**Status:** estavel em producao, com refatoracao estrutural em andamento
+**Stack:** HTML5, CSS3, JavaScript ES modules, Python ETL, `localStorage`
 
 ---
 
-## 2. 📂 Estrutura de Arquivos e Responsabilidades ("A Anatomia")
+## 1. Visao geral
 
-A estrutura de arquivos foi desenhada para separar a lógica de processamento de dados (Backend ETL) da interface visual (Frontend Web). Abaixo está o mapeamento exato do repositório:
+O Cardume e um app web offline-first para montagem de grades academicas. O sistema roda 100% no navegador e usa uma combinacao de:
+
+- `dados_app.json` como base estatica institucional;
+- `localStorage` como persistencia local do trabalho da coordenacao;
+- um modelo canonico por **faixas** para execucao, conflitos, visualizacao e exportacao.
+
+O principio atual do produto e:
+
+> **toda oferta deve ser tratada como oferta por faixas**
+
+Isso vale para Grade Semanal, Lista de Ofertas, calendario, exportacoes e SIGAA.
+
+---
+
+## 2. Pilares tecnicos
+
+### 2.1. Persistencia local
+
+O sistema salva o trabalho diretamente no navegador do usuario. A persistencia principal fica em:
+
+- `academic_settings`
+- `academic_plan_index_v1`
+- `academic_plan_v1::<chave_do_plano>`
+
+O estado nao fica mais concentrado em um unico repositario global de alocacoes. Cada plano letivo possui sua propria area de armazenamento.
+
+### 2.2. Fonte de dados estatica
+
+Toda a estrutura institucional vem de `dados_app.json`, gerado a partir de `dados/planilha_base.xlsx` pelo script `tools/convert_data.py`.
+
+Esse JSON hoje inclui:
+
+- `meta`
+- `docentes`
+- `cursos`
+- `componentes`
+- `turmas`
+- `horarios`
+- `horarios_por_turno`
+- `feriados`
+- `periodos_letivos`
+
+### 2.3. Modelo unico por faixas
+
+Faixa significa:
+
+> **regime de funcionamento em um intervalo de datas**
+
+Regras:
+
+- cada data da execucao pertence a uma faixa vigente;
+- quando uma nova faixa comeca, ela substitui a faixa anterior a partir daquela data;
+- o usuario desenha explicitamente os slots da nova faixa;
+- CH, conflitos, calendario e exportacoes derivam da execucao real calculada a partir dessas faixas.
+
+---
+
+## 3. Estrutura do repositorio
 
 ```text
-/GESTOR-IECOS
-│
-├── .venv/                       (Ambiente virtual Python - Ignorado no Git)
-│   ├── Scripts/
-│   ├── .gitignore
-│   └── pyvenv.cfg
-│
-├── css/                         (🎨 Estilos, Cores e Regras de Impressão)
-│   └── style.css           
-│
-├── dados/
-│   └── planilha_base.xlsx       (📊 Arquivo mestre Excel gerenciado pela secretaria)
-│
-├── docs/                        (📚 Documentação Oficial e Outputs)
-│   ├── pdfs/                    (Pasta destinada para salvar os calendários gerados)
-│   └── manual_desenvolvedor.md
-│
-├── img/                         (🖼️ Logos e Favicons)
-│   └── logo_iecos.png
-│
-├── js/                          (🧠 O Núcleo do Sistema Frontend)
-│   ├── agenda_discente.js       (Lógica da página pública de alunos)
-│   ├── agenda_docente.js        (Lógica da página pública de professores)
-│   ├── main.js                  (Inicialização e exportação)
-│   ├── store.js                 (Gerenciamento de Estado e LocalStorage)
-│   ├── ui.js                    (Auditor Global e renderização da interface)
-│   └── utils.js                 (Funções auxiliares e cálculo de dias úteis)
-│
-├── tools/
-│   ├── convert_data.py          (⚙️ O script conversor Python Excel -> JSON)
-│   ├── instalar_pacotes.py      (🚀 Script de automação de instalação)
-│   ├── publish_online.py        (🚀 Publicacao segura do alocacoes_publicas.json)
-│   └── requirements.txt         (📄 Pacotes Python necessários: openpyxl)
-│
-├── .gitignore                   (Regras de ignorar pastas de ambiente)
-├── alocacoes_publicas.json      (💾 Arquivo final gerado via "Publicar Grade Online")
-├── agenda_discente.html         (🌐 Página de portal para os alunos visualizarem)
-├── agenda_docente.html          (👨‍🏫 Página de portal para os professores visualizarem)
-├── dados_app.json               (💾 O Banco de Dados estático gerado via Python)
-├── index.html                   (🏠 App principal de Coordenação Restrito)
-└── README.md                    (📖 Apresentação Front-page GitHub)
+/gestor-iecos
+|-- css/
+|   `-- style.css
+|-- dados/
+|   `-- planilha_base.xlsx
+|-- docs/
+|   `-- manual_desenvolvedor.md
+|-- img/
+|-- js/
+|   |-- agenda_discente.js
+|   |-- agenda_docente.js
+|   |-- calendar.js
+|   |-- main.js
+|   |-- plan_storage.js
+|   |-- store.js
+|   |-- ui.js
+|   `-- utils.js
+|-- tools/
+|   |-- convert_data.py
+|   |-- publish_online.py
+|   `-- requirements.txt
+|-- agenda_discente.html
+|-- agenda_docente.html
+|-- alocacoes_publicas.json
+|-- dados_app.json
+|-- index.html
+`-- README.md
 ```
+
+### Responsabilidades principais
+
+- `tools/convert_data.py`: converte o Excel institucional para `dados_app.json`.
+- `js/plan_storage.js`: normalizacao de periodo letivo e persistencia por plano.
+- `js/store.js`: estado principal, leitura do JSON e gravação das alocacoes no plano ativo.
+- `js/ui.js`: fluxo principal da interface, Grade Semanal, Lista de Ofertas, conflitos e exportacoes.
+- `js/calendar.js`: renderizacao de calendario a partir da execucao real.
+- `js/main.js`: bootstrap, importacao/exportacao e publicacao.
 
 ---
 
-## 3. 🔄 Fluxo de Importação e Mesclagem (Workflow de Coordenação)
+## 4. Modelo de dados
 
-O sistema foi desenhado para que múltiplos diretores de faculdade trabalhem em seus computadores localmente (em modo offline) e, no fim do dia, realizem um "Merge" do semestre inteiro de forma limpa.
+### 4.1. Periodos letivos oficiais
 
-1. O Diretor do **Curso A** salva seu trabalho clicando no botão **Exportar (JSON)**.
-2. O Diretor do **Curso B** (ou Diretor Geral) clica em **Importar (JSON)** e seleciona o arquivo do Curso A.
-3. A tela modal surge perguntando a ação. A opção **➕ Mesclar (Juntar)** lê o array `allocations[]` do arquivo e injeta no `localStorage` os dados sem destruir as alocações locais.
-4. Com a grade unificada na máquina, as ferramentas de auditoria entram em ação (Ver item 4.2).
+O app passou a consumir periodos oficiais a partir da aba `periodos_letivos` do Excel.
+
+Estrutura esperada:
+
+| coluna | descricao |
+|---|---|
+| `ano` | ano institucional |
+| `periodo_letivo` | codigo como `PL1`, `PL2`, `PL3`, `PL4` |
+| `inicio` | inicio oficial do periodo |
+| `fim` | fim oficial do periodo |
+
+No `dados_app.json`, o bloco resultante tem o formato:
+
+```json
+{
+  "ano": 2026,
+  "periodo_letivo": "PL2",
+  "inicio": "2026-03-23",
+  "fim": "2026-07-23",
+  "label": "2026 - PL2"
+}
+```
+
+### 4.2. Chave do plano letivo
+
+O plano ativo e identificado por:
+
+```text
+PLx__YYYY-MM-DD__YYYY-MM-DD
+```
+
+Exemplo:
+
+```text
+PL2__2026-03-23__2026-07-23
+```
+
+Essa chave e usada para:
+
+- isolar alocacoes por periodo letivo;
+- indexar o historico de planos locais;
+- escopar `lastStartByTurma`;
+- amarrar importacao, exportacao, publicacao e metadados SIGAA ao plano correto.
+
+### 4.3. Compatibilidade legada
+
+O sistema continua entendendo codigos antigos como `1P`, `2P`, `3P`, `4P`, mas os normaliza internamente para `PL1`, `PL2`, `PL3`, `PL4`.
 
 ---
 
-## 4. 💎 Lógicas e Algoritmos Críticos da v3.1 (O "Pulo do Gato")
+## 5. Fluxo do usuario no app
 
-Esta versão blindou o aplicativo contra o erro humano com matemática de datas rigorosa.
+### 5.1. Sidebar
 
-### 4.1. 🧭 Modelo Canônico de Conflito por Faixa
-No modelo atual, componentes não entram em estado de "suspensão". O motor de validação usa uma regra única:
+Ordem esperada de uso:
 
-* Há conflito apenas com sobreposição simultânea de **período**, **dia da semana** e **slot**.
-* Não há deslocamento em cascata entre ofertas comuns.
-* Quando há colisão, o ajuste é explícito (data/horário), preservando previsibilidade de calendário e manutenção do código.
+1. selecionar o **Periodo Letivo**;
+2. deixar o app preencher `Inicio` e `Fim` automaticamente;
+3. selecionar o **Turno**;
+4. selecionar **Curso**;
+5. selecionar **Turma**;
+6. selecionar componente, cor e docente(s).
 
-### 4.2. 🛡️ Barreiras de Conflito Global (Escudo do Docente)
-O sistema aplica a "Lei da Física": um professor não pode estar em dois lugares ao mesmo tempo.
+O periodo letivo da sidebar nao deve ser tratado como campo livre. Ele vem do cadastro oficial do Excel/JSON.
 
-1. **Barreira de Inserção (Real-time):** Ao tentar inserir ou editar uma oferta, o sistema varre **todas as turmas de todos os cursos** no banco de dados local. Se o professor já tiver alocação no mesmo dia/horário/período, o sistema **barra a inserção** com um alerta vermelho.
-2. **Barreira de Auditoria (Pós-Importação):** Se um choque ocorrer após mesclar JSONs de outros diretores, o sistema usa o Hook na aba **Visão do Professor** (`detectGlobalTeacherConflicts()`) para localizar duplicações e avisar a direção através de um Banner de Alerta Crítico.
+### 5.2. Grade Semanal
 
-### 4.3. 🧮 Amputação Cirúrgica do Último Dia (Intensivas)
-Componentes intensivos nem sempre cravam um número múltiplo exato de horários. (Ex: 17h, 5 aulas/dia = 3 dias cheios + 1 dia com apenas 2 slots).
+A Grade Semanal e o centro operacional do sistema. O fluxo canonico atual e:
 
-* O `handleAddManual()` processa a Carga Horária através de módulo: `effectiveCH % slotsIntensiva.length`.
-* Se houver resto da divisão, ele recorta o vetor de horários (`slice`) salvando na chave `horariosUltimoDia`. O `calendar.js` intercepta a leitura final renderizando as aulas apenas nas primeiras horas da manhã e liberando o docente no restante daquele dia específico.
+1. definir a data de inicio da `Faixa 1`;
+2. desenhar os slots por clique ou arraste;
+3. criar `Faixa 2` ou `Faixa 3` se o regime mudar;
+4. salvar a componente;
+5. usar a Lista de Ofertas apenas para revisao, edicao e exclusao.
 
-### 4.4. 🏷️ Identificação Automática de Turmas por Bloco Curricular
+Regras importantes:
 
-A partir da v3.2, a nomenclatura de turma exibida na UI incorpora o **bloco curricular do PPC** de forma automática.
+- nova faixa substitui a anterior a partir de sua data de inicio;
+- nao ha heranca automatica de slots entre faixas;
+- a nova faixa so passa a ter slots depois que o usuario os desenha;
+- a CH mostrada na tabela de faixas deve bater com a execucao real.
 
-#### Regra de Derivação (`derivarBloco`)
+### 5.3. Faixa final automatica
 
-A função `derivarBloco(turmaId, periodo, termStart)` em `ui.js` calcula o bloco usando:
+Ao salvar uma componente, o sistema pode criar automaticamente a `Faixa 2` quando:
 
-```
-anoEntrada = últimos 4 dígitos do turmaId (ex: EP2026 → 2026)
-anoRef     = ano extraído de termStart (ex: 2026-02-27 → 2026)
-anosDecorridos = anoRef - anoEntrada
+- o ultimo dia fica quebrado por truncamento de CH; ou
+- os dois ultimos dias reais de aula ja nao seguem o regime principal da `Faixa 1`.
 
-periodo = '2P': bloco = (2 × anosDecorridos) + 1  → BL1, BL3, BL5... (ímpares)
-periodo = '4P': bloco = (2 × anosDecorridos) + 2  → BL2, BL4, BL6... (pares)
-periodo = '1P' ou '3P': retorna '' (sem bloco — períodos curtos)
-```
+Nesse caso:
 
-**Exemplos (ano de referência 2026):**
+- a `Faixa 2` cobre do penultimo ao ultimo dia real de aula;
+- o salvamento continua no mesmo clique;
+- se o usuario fizer novos ajustes depois, precisa salvar novamente.
 
-| Turma | Período | Bloco | Exibido como |
-|-------|---------|-------|--------|
-| EP2026 | 2P | BL1 | `EP2026_BL1` |
-| EP2026 | 4P | BL2 | `EP2026_BL2` |
-| EP2025 | 2P | BL3 | `EP2025_BL3` |
-| CB2024 | 2P | BL5 | `CB2024_BL5` |
+### 5.4. Lista de Ofertas
 
-#### Sub-grupos de Turma (`subGrupo`)
+A Lista de Ofertas tem funcao administrativa e de revisao. O comportamento esperado atual e:
 
-O campo `subGrupo` é salvo em cada alocação (`store.allocations[]`) para identificar grupos menores:
+- ordenar componentes alfabeticamente;
+- manter faixas da mesma componente consecutivas;
+- usar separador fino entre faixas da mesma componente;
+- usar separador mais forte entre componentes diferentes;
+- nao agrupar mais por mes.
 
-- **Bloco simples:** `BL1` → rótulo `EP2026_BL1`
-- **Sub-turma de laboratório:** `BL1_T01` ou `BL1_T02` → rótulos `EP2026_BL1_T01` / `EP2026_BL1_T02`
+### 5.5. Calendario e visoes
 
-`getTurmaLabel(turmaId, subGrupo)` usa o `subGrupo` explícito com prioridade; caso vazio, aplica `derivarBloco` como fallback automático.
+- **Calendario da Turma**: leitura do cronograma final da turma.
+- **Visao do Professor**: leitura e auditoria de ocupacao docente.
+- **Gantt**: leitura temporal do semestre por docente/equipe.
 
-#### No Gráfico de Gantt
-
-- **Label compacto:** `EP2026 EP05003 Ecologia (60h)` — sem BL, economiza espaço
-- **Com sub-turma:** `EP2026 [T01] EP05003 LabInfo (30h)` — prefixo `[T01]` aparece só quando `subGrupo` contém `_T##`
-- **Tooltip (hover):** exibe o rótulo completo `EP2026_BL1_T01`
-
-Detecção do sufixo T: regex `/_?(T\d+)$/i`
-
-#### Importação em Bloco
-
-Ao usar **"Importar Componentes em Bloco"**, o sistema extrai o número do período e atribui `subGrupo = 'BLx'` automaticamente a todas as disciplinas importadas. Ex: período `2` → `subGrupo = 'BL2'`.
-
-### 4.5. Fluxo Canonico de Alocacao na UI (Grade Semanal)
-
-A arquitetura de UX atual consolida a alocacao de slots em um unico ponto de entrada:
-
-1. selecao de curso/turma/componente/docente(s) na sidebar;
-2. definicao de faixas (inicio/fim/CH) na tabela superior da **Grade Semanal**;
-3. desenho do padrao semanal por clique/arraste diretamente nos slots da grade;
-4. consolidacao via **Salvar Componente**.
-
-Diretriz de produto:
-
-- **Grade Semanal** = montagem e edicao de alocacao;
-- **Lista de Ofertas** = revisao, ajuste administrativo, edicao pontual e exclusao;
-- **Calendario da Turma / Visao do Professor / Gantt** = leitura e auditoria da execucao.
-
-Essa separacao reduz ambiguidade de fluxo, diminui regressao de UI e concentra regras temporais/canonicas em um unico renderizador de edicao.
+Essas telas devem consumir a mesma base canonica de execucao.
 
 ---
 
+## 6. Conflitos
 
- 🛠️ Guia de Manutenção de Dados (ETL e Deploy)
+### 6.1. Formula canonica
 
-Como mantenedor, você precisará preparar o sistema a cada virada de semestre ou ingresso de novos professores concursados. Siga o roteiro:
+Um conflito real existe apenas quando houver:
 
-### 5.1. Atualizando a Planilha Base (A Fonte da Verdade)
-Vá até `dados/planilha_base.xlsx` e abra no Excel.
-
-* **Docentes:** Adicione o nome dos novos professores.
-* **Componentes:** Atualize Carga Horária (CH), Períodos do PPC ou Cursos novos.
-* **Feriados:** Atualize as datas bloqueadas com o calendário oficial (`YYYY-MM-DD`).
-
-### 5.2. Executando o Pipeline de Conversão (ETL Python)
-Abra seu terminal na pasta raiz do projeto.
-
-```bash
-# 1. Ative seu ambiente virtual 
-.venv\Scripts\activate   # (Windows)
-# ou
-source .venv/bin/activate # (Mac/Linux)
-
-# 2. Acesse a pasta tools e rode o conversor
-cd tools
-python convert_data.py
-```
-O script consumirá a planilha e atualizará de forma automática e minificada o arquivo `dados_app.json` no núcleo do sistema web.
-
-### 5.3. Atualização das Datas Padrão da UI (Setup de Semestre)
-Para evitar que os diretores comecem configurando a data errada, modifique os atributos `value` dos inputs de data padrão no `index.html`.
-*Exemplo: Troque de `2025-10-13` para o novo calendário letivo na linha respectiva do `<input type="date" id="cal-start">`.*
-
-### 5.4. Publicacao e Deploy (GitHub Pages)
-Fluxo oficial para publicar a grade online com seguranca:
-
-1. No painel principal, clique em **Publicar Online** para validar e gerar `alocacoes_publicas.json`.
-2. No terminal (raiz do repositorio), execute:
-
-```bash
-python tools/publish_online.py
-```
-
-3. O script:
-   - procura automaticamente o arquivo mais recente `alocacoes_publicas*.json` em `Downloads`;
-   - tambem aceita um caminho manual com `--from-download "%USERPROFILE%\Downloads\alocacoes_publicas.json"`;
-   - valida estrutura e datas do JSON publico;
-   - cria ou sobrescreve `alocacoes_publicas.json` na raiz do repositorio, mesmo se o arquivo ainda nao existir;
-   - permite teste de copia/validacao mesmo com arvore Git suja;
-   - bloqueia apenas a etapa de `git add` / `commit` / `push` quando a branch nao for `main` ou quando a arvore estiver suja, a menos que use `--allow-non-main` e/ou `--allow-dirty`.
-
-4. Para publicar de fato no GitHub Pages, execute:
-
-```bash
-python tools/publish_online.py --push
-```
-
-5. Opcoes uteis:
-   - `--debug`: mostra `repo_root`, origem, destino, tamanhos de arquivo, branch e status Git;
-   - `--yes`: pula confirmacoes interativas;
-   - `--allow-dirty`: permite seguir com commit/push mesmo com alteracoes locais;
-   - `--allow-non-main`: permite seguir fora da branch `main`.
-
-6. URLs oficiais:
-   - Sistema: `https://astuciasnor.github.io/gestor-iecos/`
-   - JSON publico: `https://astuciasnor.github.io/gestor-iecos/alocacoes_publicas.json`
-
-> **⚠️ PROTOCOLO DE SEGURANÇA NA VIRADA DE SEMESTRE:**
-> Sempre que fizer um Push estrutural, comunique a equipe: *“Caros diretores, salvem o JSON de suas disciplinas finalizadas. Ao abrirem o sistema na nova versão, cliquem impreterivelmente no botão vermelho **Limpar Tudo** para apagar o cache antigo do navegador antes de recomeçar.”*
-
----
-
-## 6. Regra Oficial de Conflitos (Modelo "Todas por Faixas")
-
-### 6.1. Diretriz de Arquitetura
-
-A partir da estrategia atual do projeto, a filosofia oficial e:
-
-**"Toda oferta deve ser tratada como oferta por faixas."**
-
-Impacto esperado:
-
-1. elimina bifurcacao de logica por modos legados;
-2. unifica motor de conflito para turma e professor;
-3. reduz superficie de regressao e custo de manutencao.
-
-### 6.2. Formula Canonica de Conflito
-
-Um conflito real existe apenas quando os tres eixos abaixo se intersectam:
-
-1. periodo (datas);
-2. dia da semana;
-3. slot (horario).
+1. sobreposicao de periodo;
+2. sobreposicao de dia da semana;
+3. sobreposicao de slot.
 
 Formula:
 
 `conflito = overlap(periodo) AND overlap(dia) AND overlap(slot)`
 
-### 6.3. Tabela de Conflitos (Turma e Professor)
+### 6.2. Escopos
 
-| Escopo | Regra de Avaliacao | Bloqueia? | Observacao |
+| Escopo | Regra | Bloqueia? |
+|---|---|---|
+| Turma | duas ofertas com intersecao de periodo + dia + slot | Sim |
+| Turma | mesmo slot em dias diferentes | Nao |
+| Turma | periodos sem sobreposicao | Nao |
+| Professor global | mesmo professor em turmas diferentes com intersecao de periodo + dia + slot | Sim |
+| Professor global | mesmo slot em dias diferentes | Nao |
+| Professor "A definir" | sem identificacao docente definitiva | Nao |
+
+---
+
+## 7. Bloco curricular da turma
+
+O rotulo automatico da turma continua usando o bloco curricular derivado do PPC. A funcao `derivarBloco(turmaId, periodo, termStart)` hoje trabalha com os codigos `PLx`.
+
+Regra:
+
+```text
+anoEntrada = ultimos 4 digitos do turmaId
+anoRef = ano de termStart
+anosDecorridos = anoRef - anoEntrada
+
+periodo = PL2 -> bloco = (2 x anosDecorridos) + 1
+periodo = PL4 -> bloco = (2 x anosDecorridos) + 2
+periodo = PL1 ou PL3 -> retorna '' (periodos curtos)
+```
+
+Exemplos:
+
+| Turma | Periodo | Bloco | Exibicao |
 |---|---|---|---|
-| Turma | Intersecao de periodo + dia + slot entre duas ofertas | Sim | Conflito real de sala/grade |
-| Turma | Mesmo periodo e mesmo slot, mas dias diferentes | Nao | Convivencia permitida |
-| Turma | Periodos sem sobreposicao | Nao | Sem conflito temporal |
-| Professor (global) | Mesmo professor em turmas diferentes com intersecao de periodo + dia + slot | Sim | Conflito global docente |
-| Professor (global) | Mesmo professor com periodo/slot iguais, mas dias diferentes | Nao | Escalas compativeis |
-| Professor (global) | Professor "A definir" | Nao | Opcionalmente avisar |
+| EP2026 | PL2 | BL1 | `EP2026_BL1` |
+| EP2026 | PL4 | BL2 | `EP2026_BL2` |
+| EP2025 | PL2 | BL3 | `EP2025_BL3` |
+| CB2024 | PL2 | BL5 | `CB2024_BL5` |
 
-### 6.4. Roadmap de Simplificacao (Etapas)
+Se `subGrupo` existir, ele tem prioridade sobre a derivacao automatica.
 
-1. Promover "oferta por faixa" a modelo canonico interno.
-2. Preservar leitura de dados legados por periodo de transicao.
-3. Transformar UX de alocacao manual em atalho padronizado para criar faixa.
-4. Adaptar exportacoes/relatorios (SIGAA e correlatos) ao modelo unificado.
-5. Remover tipos antigos da UI somente apos validacao operacional.
+---
+
+## 8. ETL e manutencao de dados
+
+### 8.1. Abas esperadas no Excel
+
+O arquivo `dados/planilha_base.xlsx` deve conter:
+
+- `docentes`
+- `componentes`
+- `turmas`
+- `cursos`
+- `horarios`
+- `feriados`
+- `periodos_letivos`
+
+### 8.2. Conversao Excel -> JSON
+
+Com o ambiente Python ativo:
+
+```bash
+python tools/convert_data.py
+```
+
+O script:
+
+- le o Excel institucional;
+- normaliza horarios e intervalos;
+- gera `horarios_por_turno`;
+- converte feriados para ISO;
+- gera `periodos_letivos`;
+- salva `dados_app.json`.
+
+### 8.3. Mudanca de semestre
+
+Nao e mais necessario editar datas padrao no `index.html`.
+
+O procedimento correto agora e:
+
+1. atualizar a aba `periodos_letivos` no Excel;
+2. rodar `python tools/convert_data.py`;
+3. validar `dados_app.json`;
+4. abrir o app e selecionar o novo periodo letivo na sidebar.
+
+---
+
+## 9. Importacao, exportacao, SIGAA e publicacao
+
+### 9.1. Importacao e exportacao local
+
+- o backup JSON representa o plano ativo;
+- a importacao deve respeitar o plano letivo selecionado;
+- mesclagens entre diretorias devem ser feitas com atencao ao plano institucional correto.
+
+### 9.2. Exportacao SIGAA
+
+Os metadados para o SIGAA devem sair do **plano letivo ativo**, porque o cadastro institucional e feito por periodo letivo.
+
+Consequencias:
+
+- o export nao deve misturar semestres;
+- o payload deve carregar `periodoLetivo`, `termStart` e `termEnd`;
+- a base de execucao usada no SIGAA deve ser a mesma da Grade Semanal.
+
+### 9.3. Publicacao online
+
+Fluxo:
+
+1. clicar em **Publicar Online** no app;
+2. executar `python tools/publish_online.py`;
+3. opcionalmente publicar com `python tools/publish_online.py --push`.
+
+Arquivos envolvidos:
+
+- `alocacoes_publicas.json`
+- `agenda_discente.html`
+- `agenda_docente.html`
+
+---
+
+## 10. Diretrizes de refatoracao em curso
+
+Direcoes ja assumidas:
+
+- preservar o comportamento funcional maduro do produto;
+- remover regras espalhadas e remendos da UI;
+- concentrar logica temporal e de conflitos em nucleo compartilhado;
+- tratar Grade Semanal como principal ponto de entrada operacional;
+- manter Lista de Ofertas como painel de revisao;
+- preparar exportacoes e publicacao para evolucoes futuras sem reabrir a arquitetura.
+
+Itens ainda em observacao tecnica:
+
+- limpeza final de nomenclaturas internas legadas;
+- extracao mais explicita do motor canonico de execucao;
+- evolucao futura da agenda docente publica.
