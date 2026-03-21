@@ -48,6 +48,10 @@ const drawingDragState = {
 let chLimitWarningLockUntil = 0;
 let pendingFaixaStartPick = null;
 let pendingFaixaQuickActionConfirm = null;
+let pendingWeeklyShiftDirection = 0;
+let weeklyShiftAnimationFrame = 0;
+let weeklyShiftAnimationTimer = 0;
+const WEEKLY_SHIFT_ANIMATION_MS = 360;
 
 const weeklyViewState = {
     weekStartISO: '',
@@ -72,6 +76,10 @@ function isRegularAllocation(alloc) {
 
 function isScheduledRegularAllocation(alloc) {
     return isRegularAllocation(alloc) || isPriorityRegularAllocation(alloc);
+}
+
+function isPendingAllocation(alloc) {
+    return getAllocationTipo(alloc) === 'pendente';
 }
 
 // ==========================================
@@ -1533,16 +1541,24 @@ function executeFaixaQuickAction(faixaNum) {
         faixasPatterns[3] = [];
         activeFaixaIndex = 1;
 
+        const termStart = String(store.settings.termStart || inpTermStart?.value || calStart?.value || '').trim();
+        const f1Ini = document.getElementById('inp-data-inicio-f1');
+        const f1Fim = document.getElementById('inp-data-fim-f1');
+        if (f1Ini && termStart) f1Ini.value = termStart;
+        if (f1Fim) f1Fim.value = '';
+
         setFaixaStatus(1, 0);
         setFaixaStatus(2, 0);
         setFaixaStatus(3, 0);
 
+        applyFaixaDateAutofill({ forceSingleBounds: true, preferredStart: termStart });
+        autoEnterWeeklyEditingForFaixa(1);
         updateWeeklySavePatternButton();
         refreshPendingFaixaStartPickUI();
         updateWeeklyContextNote();
         updateWeeklyFaixaHoursDisplay();
         if (store.selectedTurma) renderWeeklyGrid();
-        showToastWarning('Faixa 1 zerada. Defina novamente o inicio para planejar.', 'warning', 2200);
+        showToastWarning('Faixa 1 reiniciada a partir do inicio do periodo letivo. Redesenhe os slots para essa componente.', 'warning', 2600);
         return;
     }
 
@@ -2759,6 +2775,45 @@ function setWeeklyViewByDate(dateStr, options = {}) {
     if (render) renderWeeklyGrid();
 }
 
+function queueWeeklyShiftAnimation(direction = 0) {
+    pendingWeeklyShiftDirection = direction < 0 ? -1 : direction > 0 ? 1 : 0;
+}
+
+function clearWeeklyShiftAnimation() {
+    if (weeklyShiftAnimationFrame) {
+        cancelAnimationFrame(weeklyShiftAnimationFrame);
+        weeklyShiftAnimationFrame = 0;
+    }
+    if (weeklyShiftAnimationTimer) {
+        clearTimeout(weeklyShiftAnimationTimer);
+        weeklyShiftAnimationTimer = 0;
+    }
+    const labelEl = document.getElementById('weekly-week-label');
+    if (!labelEl) return;
+    labelEl.classList.remove('is-week-sliding', 'slide-forward', 'slide-backward');
+}
+
+function playWeeklyShiftAnimation() {
+    const direction = pendingWeeklyShiftDirection;
+    pendingWeeklyShiftDirection = 0;
+    const labelEl = document.getElementById('weekly-week-label');
+    if (!direction || !labelEl) return;
+    if (window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches) return;
+
+    clearWeeklyShiftAnimation();
+    const directionClass = direction > 0 ? 'slide-forward' : 'slide-backward';
+    void labelEl.offsetWidth;
+
+    weeklyShiftAnimationFrame = requestAnimationFrame(() => {
+        labelEl.classList.add('is-week-sliding', directionClass);
+
+        weeklyShiftAnimationTimer = setTimeout(() => {
+            clearWeeklyShiftAnimation();
+        }, WEEKLY_SHIFT_ANIMATION_MS + 50);
+        weeklyShiftAnimationFrame = 0;
+    });
+}
+
 function resolveWeeklyViewWeekStart() {
     if (!weeklyViewState.weekStartISO) {
         setWeeklyViewByDate(getDefaultWeeklyAnchorDate(), { followFaixa: !!window.isDrawingFaixa, render: false });
@@ -2771,6 +2826,7 @@ function moveWeeklyViewWeek(weekDelta = 0) {
     const currentStart = resolveWeeklyViewWeekStart();
     if (!currentStart) return;
     const nextDate = addDaysISO(currentStart, weekDelta * 7);
+    queueWeeklyShiftAnimation(weekDelta);
     setWeeklyViewByDate(nextDate, { followFaixa: false, render: true });
 }
 
@@ -4246,16 +4302,21 @@ function applyPlanContextToUI(planMeta = {}, options = {}) {
     const previousKey = store.getActivePlanMeta().key;
     const result = store.applyPlanContext(planMeta);
     const didChangePlan = result.meta.key !== previousKey;
+    const planStart = result.meta.termStart || store.settings.termStart || '';
 
     syncPlanInputsFromStore();
     updateActivePlanStatus();
 
     if (options.resetDraftOnChange !== false && didChangePlan) {
-        resetWeeklyDraftStateForPlanSwitch(result.meta.termStart || store.settings.termStart || '');
+        resetWeeklyDraftStateForPlanSwitch(planStart);
+    }
+
+    if (didChangePlan && planStart) {
+        setWeeklyViewByDate(planStart, { followFaixa: false, render: false });
     }
 
     const preferredStart = didChangePlan
-        ? (result.meta.termStart || store.settings.termStart || '')
+        ? planStart
         : getPreferredStartDateForCurrentTurma();
     if (inputConfig.inicio && preferredStart) {
         inputConfig.inicio.value = preferredStart;
@@ -5278,6 +5339,7 @@ function renderWeeklyGrid() {
 
     applyWeeklyGridRowHeightScale();
     updateWeeklySavePatternButton();
+    playWeeklyShiftAnimation();
 }
 
 function createCell(classNames, text) {
@@ -5598,7 +5660,7 @@ function handleAddManual() {
         const idsToRemove = store.allocations
             .filter((a) => {
                 if (String(a.turmaId) !== String(store.selectedTurma)) return false;
-                if (a.disciplina !== disciplina || a.tipo !== 'intensiva') return false;
+                if (a.disciplina !== disciplina || !isFaixaAllocation(a)) return false;
                 if (String(a.subGrupo || '') !== String(subGrupo || '')) return false;
                 return isDateOverlap(
                     inicioCalculado,
@@ -6195,7 +6257,7 @@ function getRegularExecutionSnapshot(turmaId, startDate, endDate) {
     Object.keys(eventsByDate).forEach((dateStr) => {
         const events = eventsByDate[dateStr] || [];
         events.forEach((e) => {
-            if (e.tipo !== 'regular' && e.tipo !== 'regular_prioritaria') return;
+            if (!isScheduledRegularAllocation(e)) return;
             if (e.id === undefined || e.id === null) return;
 
             const id = e.id;
@@ -6253,7 +6315,7 @@ function getAllocationExecutionRangeMap(allocations, startDate, endDate) {
 function buildNonIntensiveExecutionSignature(entry) {
     if (!entry) return '';
     const tipo = String(entry.tipo || '').trim();
-    if (tipo !== 'regular' && tipo !== 'regular_prioritaria') return '';
+    if (!isScheduledRegularAllocation({ tipo })) return '';
 
     const turmaId = String(entry.turmaId || '').trim();
     const disciplina = String(entry.disciplina || '').trim();
@@ -6317,7 +6379,7 @@ function getIntensiveExecutionSnapshot(turmaId, startDate, endDate) {
     Object.keys(eventsByDate).forEach((dateStr) => {
         const events = eventsByDate[dateStr] || [];
         events.forEach((e) => {
-            if (e.tipo !== 'intensiva') return;
+            if (!isFaixaAllocation(e)) return;
             if (e.id === undefined || e.id === null) return;
 
             const id = e.id;
@@ -6593,7 +6655,7 @@ function renderGanttChart() {
                             timeRanges: isFaixaAllocation(a) ? [...intensiveSlotsForDay] : [a.horario]
                         };
                     } else {
-                        if (a.tipo !== 'intensiva') {
+                        if (!isFaixaAllocation(a)) {
                             dayItemsMap[key].slotCount += slotsToAdd;
                         }
                         if (dayRangeStart && dayRangeStart < dayItemsMap[key].dataInicio) {

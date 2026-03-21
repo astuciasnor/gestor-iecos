@@ -3,6 +3,30 @@
 import { store } from './store.js';
 import { getCalendarEvents } from './calendar.js';
 
+function getAllocationTipo(value) {
+    return String(value?.tipo || value || '').trim().toLowerCase();
+}
+
+function isFaixaAllocation(value) {
+    return getAllocationTipo(value) === 'intensiva';
+}
+
+function isPriorityRegularAllocation(value) {
+    return getAllocationTipo(value) === 'regular_prioritaria';
+}
+
+function getAgendaTipoBadge(evento) {
+    if (isFaixaAllocation(evento)) return '<span class="badge intensiva">Por Faixas</span>';
+    if (isPriorityRegularAllocation(evento)) return '<span class="badge prioritaria">Prioritária</span>';
+    return '';
+}
+
+function getAgendaTipoTexto(tipo) {
+    if (isFaixaAllocation(tipo)) return 'Oferta por Faixas';
+    if (isPriorityRegularAllocation(tipo)) return 'Regular Prioritária';
+    return 'Aula Regular';
+}
+
 // Capturando os elementos do HTML (Inclui os novos containers dos botões)
 const selCurso = document.getElementById('public-sel-curso');
 const selTurma = document.getElementById('public-sel-turma'); // Mantido oculto
@@ -287,9 +311,7 @@ function gerarCartoesHTML(calendarData) {
                 const docente = ev.docente || 'A definir';
                 const cor = ev.cor || '#bdc3c7';
 
-                let labelTipo = '';
-                if (ev.tipo === 'intensiva') labelTipo = '<span class="badge intensiva">Intensiva</span>';
-                if (ev.tipo === 'regular_prioritaria') labelTipo = '<span class="badge prioritaria">Prioritária</span>';
+                const labelTipo = getAgendaTipoBadge(ev);
 
                 html += `
                 <div class="aula-item" style="border-left: 5px solid ${cor}">
@@ -472,10 +494,7 @@ function ativarInteracaoChips() {
             document.getElementById('sheet-horario').textContent = horario;
             document.getElementById('sheet-data').textContent = data;
 
-            let tipoTexto = 'Aula Regular';
-            if (tipo === 'intensiva') tipoTexto = 'Aula Intensiva (Blocada)';
-            if (tipo === 'regular_prioritaria') tipoTexto = 'Regular Prioritária';
-            document.getElementById('sheet-tipo').textContent = tipoTexto;
+            document.getElementById('sheet-tipo').textContent = getAgendaTipoTexto(tipo);
 
             // Mostra o Modal com animação suave
             overlay.classList.add('active');

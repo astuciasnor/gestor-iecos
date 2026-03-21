@@ -226,7 +226,7 @@ export function getCalendarEvents(turmaId, startDate, endDate, docenteFilter = n
     // PREPARAR MAPA DE REGULARES DESTA TURMA PARA HOJE (Para borda visual de sobreposição)
     const myRegularsTodaySlots = new Set();
     const allRegularsOfTurma = store.allocations.filter(a => {
-      if (a.tipo !== 'regular' || a.diaSemana != dayOfWeek) return false;
+      if (!isRegularAllocation(a) || a.diaSemana != dayOfWeek) return false;
       if (String(a.turmaId) !== String(turmaId || (myActiveIntensives[0]?.turmaId))) return false;
       const start = a.dataInicio || store.settings.termStart;
       const end = a.dataFim || store.settings.termEnd;

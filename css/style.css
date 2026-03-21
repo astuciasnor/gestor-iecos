@@ -935,9 +935,10 @@ input[type="date"] { color-scheme: dark; }
 .week-day-header .week-day-date {
     display: block;
     margin-top: 2px;
-    font-size: 0.74em;
-    color: #607d8b;
+    font-size: 0.82em;
+    color: #51656f;
     font-weight: 600;
+    line-height: 1;
 }
 
 .week-day-header.week-day-holiday .week-day-date {
