@@ -32,8 +32,8 @@
             object-fit: contain;
         }
 
-        /* Separador de mês na tabela "Ofertas Cadastradas" (visual tipo dataframe) */
-        #ofertas-table tr.month-sep td {
+        /* Separadores da tabela "Ofertas Cadastradas" */
+        #ofertas-table tr.list-section-sep td {
             background: var(--primary);
             color: #fff;
             font-weight: bold;
@@ -41,6 +41,12 @@
             text-transform: uppercase;
             padding: 10px 12px;
             border-radius: 6px;
+        }
+        #ofertas-table tr.oferta-sep-component td {
+            border-top: 3px solid #bfc8cf;
+        }
+        #ofertas-table tr.oferta-sep-faixa td {
+            border-top: 1px solid #dfe6eb;
         }
 
         /* ===== Sidebar: controles compactos (Período letivo + Turno) ===== */
@@ -780,7 +786,7 @@
                                 <li>&#129517; <strong>Observa&ccedil;&atilde;o importante:</strong> <strong>Faixa = regime de funcionamento em um intervalo de datas.</strong> Quando uma nova faixa come&ccedil;a, ela substitui o padr&atilde;o anterior.</li>
                                 <li>&#128197;&#65039; Defina o in&iacute;cio da 1&ordf; faixa clicando no primeiro slot do dia desejado na Grade Semanal.</li>
                                 <li>&#128433;&#65039; Desenhe o padr&atilde;o de hor&aacute;rios clicando ou arrastando sobre os slots dos dias.</li>
-                                <li>&#128256; Se necess&aacute;rio, crie nova faixa para redistribuir melhor a carga hor&aacute;ria (raz&otilde;es pedag&oacute;gicas e log&iacute;sticas): clique no n&uacute;mero 2 ou 3 e depois no slot do dia correspondente &agrave; data de in&iacute;cio do novo padr&atilde;o de hor&aacute;rio. A nova faixa come&ccedil;a herdando o padr&atilde;o da faixa anterior, para que voc&ecirc; ajuste apenas o que mudou.</li>
+                                <li>&#128256; Se precisar redistribuir a carga hor&aacute;ria, clique no n&uacute;mero 2 ou 3 e depois no slot da data de in&iacute;cio do novo padr&atilde;o. Depois, desenhe explicitamente os slots dessa nova faixa.</li>
                                 <li>&#10024; Ao salvar, se o &uacute;ltimo dia ficar quebrado, o sistema prepara automaticamente a Faixa 2 cobrindo o pen&uacute;ltimo e o &uacute;ltimo dia real de aula para ajuste fino.</li>
                             </ul>
                         </div>

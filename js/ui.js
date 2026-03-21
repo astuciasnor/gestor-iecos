@@ -667,41 +667,16 @@ function getFaixaSlotsAndDays(faixaIndex = 1) {
 
 function buildEffectiveFaixaPatternMap(overrideFaixaIndex = null, overridePattern = null) {
     const map = {};
-    let lastPattern = [];
 
     for (let i = 1; i <= 3; i++) {
-        let pattern = (i === overrideFaixaIndex)
+        const pattern = (i === overrideFaixaIndex)
             ? normalizeFaixaPattern(overridePattern)
             : normalizeFaixaPattern(faixasPatterns[i]);
-        const hasStart = !!document.getElementById(`inp-data-inicio-f${i}`)?.value;
-
-        if (pattern.length === 0 && hasStart && lastPattern.length > 0) {
-            pattern = lastPattern.map((p) => ({ ...p }));
-        }
-
-        if (pattern.length > 0) {
-            lastPattern = pattern.map((p) => ({ ...p }));
-        }
 
         map[i] = pattern;
     }
 
     return map;
-}
-
-function seedFaixaPatternFromPrevious(faixaIndex) {
-    const idx = parseInt(faixaIndex, 10);
-    if (Number.isNaN(idx) || idx < 2 || idx > 3) return false;
-
-    const currentPattern = normalizeFaixaPattern(faixasPatterns[idx]);
-    if (currentPattern.length > 0) return false;
-
-    const effectivePatterns = buildEffectiveFaixaPatternMap();
-    const sourcePattern = normalizeFaixaPattern(effectivePatterns[idx - 1] || []);
-    if (sourcePattern.length === 0) return false;
-
-    faixasPatterns[idx] = sourcePattern.map((entry) => ({ ...entry }));
-    return true;
 }
 
 function setFaixaStatus(faixaIndex, count) {
@@ -1035,7 +1010,7 @@ function applyPendingFaixaStartByDate(dateStr) {
     clearPendingFaixaStartPick();
     activeFaixaIndex = idx;
     autoEnterWeeklyEditingForFaixa(idx);
-    showToastWarning(`Inicio da Faixa ${idx} definido em ${formatDateBR(dateStr)}. A nova faixa passa a substituir a anterior a partir desta data; ajuste apenas o que mudou.`, 'success', 3200);
+    showToastWarning(`Inicio da Faixa ${idx} definido em ${formatDateBR(dateStr)}. A nova faixa passa a substituir a anterior a partir desta data.`, 'success', 2800);
     return true;
 }
 
@@ -1069,7 +1044,6 @@ function syncFaixaStartFromGridClick(faixaIndex, cellDate, currentPattern = [], 
     iniEl.value = dateStr;
     if (idx === 1 && inputConfig.inicio) inputConfig.inicio.value = dateStr;
     if (idx === 1 && store.selectedTurma) store.setTurmaLastStart(store.selectedTurma, dateStr);
-    if (idx > 1) seedFaixaPatternFromPrevious(idx);
 
     applyFaixaDateAutofill();
     setFaixaStatus(1, getFaixaSlotsAndDays(1).pattern.length);
@@ -2121,8 +2095,65 @@ function refreshAllCompactFaixaDateDisplays() {
     ].forEach((id) => refreshCompactFaixaDateDisplay(document.getElementById(id)));
 }
 
+function resolveCompactFaixaPickerAnchor(input) {
+    if (!input?.id) return '';
+
+    const termStart = String(store.settings.termStart || inpTermStart?.value || calStart?.value || '').trim();
+    if (!input.id.startsWith('inp-data-inicio-f')) return '';
+
+    if (input.id === 'inp-data-inicio-f1') return termStart;
+    if (input.id === 'inp-data-inicio-f2') {
+        return String(document.getElementById('inp-data-inicio-f1')?.value || termStart || '').trim();
+    }
+    if (input.id === 'inp-data-inicio-f3') {
+        return String(
+            document.getElementById('inp-data-inicio-f2')?.value
+            || document.getElementById('inp-data-inicio-f1')?.value
+            || termStart
+            || ''
+        ).trim();
+    }
+
+    return '';
+}
+
+function primeCompactFaixaDatePickerAnchor(input) {
+    if (!input?.id) return;
+    if (!input.id.startsWith('inp-data-inicio-f')) return;
+
+    const currentValue = String(input.value || '').trim();
+    if (currentValue) return;
+
+    const anchorValue = resolveCompactFaixaPickerAnchor(input);
+    if (!anchorValue) return;
+
+    input.dataset.restorePickerValue = currentValue;
+    input.dataset.pickerAnchorValue = anchorValue;
+    input.value = anchorValue;
+    refreshCompactFaixaDateDisplay(input);
+}
+
+function restoreCompactFaixaDatePickerValueIfNeeded(input) {
+    if (!input?.id) return;
+
+    const restoreValue = input.dataset.restorePickerValue;
+    const anchorValue = input.dataset.pickerAnchorValue;
+    if (restoreValue === undefined && anchorValue === undefined) return;
+
+    const currentValue = String(input.value || '').trim();
+    const keepAnchorForFaixa1 = input.id === 'inp-data-inicio-f1';
+    if (!keepAnchorForFaixa1 && anchorValue && currentValue === anchorValue) {
+        input.value = restoreValue || '';
+        refreshCompactFaixaDateDisplay(input);
+    }
+
+    delete input.dataset.restorePickerValue;
+    delete input.dataset.pickerAnchorValue;
+}
+
 function openCompactFaixaDatePicker(input) {
     if (!input) return;
+    primeCompactFaixaDatePickerAnchor(input);
     input.focus({ preventScroll: true });
     if (typeof input.showPicker === 'function') {
         try {
@@ -2154,7 +2185,24 @@ function setupCompactFaixaDateFields() {
         if (input.dataset.compactDateBound !== '1') {
             input.dataset.compactDateBound = '1';
             ['input', 'change'].forEach((evt) => {
-                input.addEventListener(evt, () => refreshCompactFaixaDateDisplay(input));
+                input.addEventListener(evt, () => {
+                    refreshCompactFaixaDateDisplay(input);
+                    if (evt === 'change') {
+                        delete input.dataset.restorePickerValue;
+                        delete input.dataset.pickerAnchorValue;
+                    }
+                });
+            });
+            input.addEventListener('pointerdown', () => {
+                primeCompactFaixaDatePickerAnchor(input);
+            });
+            input.addEventListener('keydown', (event) => {
+                if (event.key === 'Enter' || event.key === ' ' || event.key === 'ArrowDown') {
+                    primeCompactFaixaDatePickerAnchor(input);
+                }
+            });
+            input.addEventListener('blur', () => {
+                restoreCompactFaixaDatePickerValueIfNeeded(input);
             });
         }
     });
@@ -2387,7 +2435,6 @@ function setupFaixaControls() {
                     if (i === 1 && iniEl.value && store.selectedTurma) {
                         store.setTurmaLastStart(store.selectedTurma, iniEl.value);
                     }
-                    if (i > 1 && iniEl.value) seedFaixaPatternFromPrevious(i);
                     applyFaixaDateAutofill();
                     setFaixaStatus(1, getFaixaSlotsAndDays(1).pattern.length);
                     setFaixaStatus(2, getFaixaSlotsAndDays(2).pattern.length);
@@ -2774,7 +2821,7 @@ function updateWeeklyContextNote() {
     }
 
     const previousEnd = document.getElementById(`inp-data-fim-f${idx - 1}`)?.value || shiftISODate(ini, -1);
-    noteEl.textContent = `Faixa ${idx} substitui a Faixa ${idx - 1} a partir de ${formatDateBR(ini)}. O fim da Faixa ${idx - 1} fica automaticamente em ${formatDateBR(previousEnd)}. A Faixa ${idx} comeca herdando o padrao anterior; ajuste apenas o que mudou.`;
+    noteEl.textContent = `Faixa ${idx} substitui a Faixa ${idx - 1} a partir de ${formatDateBR(ini)}. O fim da Faixa ${idx - 1} fica automaticamente em ${formatDateBR(previousEnd)}. Desenhe explicitamente o novo padrao desta faixa na grade.`;
 }
 
 function setupWeeklyWeekNavigator() {
@@ -3127,7 +3174,6 @@ function computeIntensiveExecution(intense, options = {}) {
 
 function collectIntensiveFaixasFromPatternMap(patternsMap = {}, fallbackInicio) {
     const faixas = [];
-    let lastEffectivePattern = [];
 
     for (let i = 1; i <= 3; i++) {
         const inicio = (document.getElementById(`inp-data-inicio-f${i}`)?.value || (i === 1 ? fallbackInicio : '')).trim();
@@ -3140,13 +3186,8 @@ function collectIntensiveFaixasFromPatternMap(patternsMap = {}, fallbackInicio) 
             continue;
         }
 
-        let effectivePattern = pattern;
-        if (effectivePattern.length === 0 && lastEffectivePattern.length > 0) {
-            effectivePattern = lastEffectivePattern.map((p) => ({ ...p }));
-        }
-
         let drawnSlotsByDay = {};
-        effectivePattern.forEach((p) => {
+        pattern.forEach((p) => {
             if (!drawnSlotsByDay[p.dia]) drawnSlotsByDay[p.dia] = [];
             drawnSlotsByDay[p.dia].push(p.slot);
         });
@@ -3157,7 +3198,6 @@ function collectIntensiveFaixasFromPatternMap(patternsMap = {}, fallbackInicio) 
             throw new Error(`Desenhe horarios validos para a Faixa ${i}.`);
         }
 
-        lastEffectivePattern = effectivePattern.map((p) => ({ ...p }));
         faixas.push(normFaixa);
     }
 
@@ -3208,6 +3248,14 @@ function getExecutionSlotsForDate(execution = {}, dateStr = '') {
     return Array.isArray(execution?.byDate?.[dateStr]) ? execution.byDate[dateStr].slice() : [];
 }
 
+function buildSortedSlotSignature(slots = []) {
+    return (Array.isArray(slots) ? slots : [])
+        .filter(Boolean)
+        .map(String)
+        .sort((a, b) => timeToMinutes(a) - timeToMinutes(b))
+        .join('|');
+}
+
 function alignFaixasToExecutionEnd(faixasInput, executionEnd) {
     const end = String(executionEnd || '').trim();
     const normalized = Array.isArray(faixasInput)
@@ -3248,8 +3296,6 @@ function buildFinalAdjustmentFaixaSuggestion(faixasConfig = [], execution = {}) 
     const aligned = alignFaixasToExecutionEnd(normalized, finalDate);
     const baseFaixa = aligned[0];
     if (!baseFaixa?.inicio || finalDate <= baseFaixa.inicio) return null;
-    if (!execution?.wasTruncatedByCH || execution?.truncationType !== 'partial-day') return null;
-    if (execution?.truncationDate && String(execution.truncationDate).trim() !== finalDate) return null;
 
     const usedDates = getExecutionUsedDates(execution);
     if (usedDates.length < 2) return null;
@@ -3266,8 +3312,6 @@ function buildFinalAdjustmentFaixaSuggestion(faixasConfig = [], execution = {}) 
     const usedSlots = getExecutionSlotsForDate(execution, finalDate);
     const fullDaySlots = (baseFaixa.drawnSlotsByDay?.[finalDow] || baseFaixa.slots || []).slice();
     if (usedSlots.length === 0 || fullDaySlots.length === 0) return null;
-    const partialFinalDay = usedSlots.length < fullDaySlots.length;
-    if (!partialFinalDay) return null;
 
     const mainFaixaEnd = addDaysISO(adjustmentStart, -1);
     if (!mainFaixaEnd || mainFaixaEnd < baseFaixa.inicio) return null;
@@ -3283,16 +3327,27 @@ function buildFinalAdjustmentFaixaSuggestion(faixasConfig = [], execution = {}) 
             if (slots.length === 0) return null;
             const dow = new Date(`${dateStr}T12:00:00`).getDay();
             if (dow < 1 || dow > 6) return null;
+            const expectedSlots = (baseFaixa.drawnSlotsByDay?.[dow] || baseFaixa.slots || []).slice();
             return {
                 date: dateStr,
                 dow,
                 slots,
-                signature: slots.slice().sort((a, b) => timeToMinutes(a) - timeToMinutes(b)).join('|')
+                signature: buildSortedSlotSignature(slots),
+                expectedSlots,
+                expectedSignature: buildSortedSlotSignature(expectedSlots)
             };
         })
         .filter(Boolean);
 
     if (tailEntries.length < 2) return null;
+
+    const partialFinalDay = usedSlots.length < fullDaySlots.length;
+    const tailDiffersFromBase = tailEntries.some((entry) => entry.signature !== entry.expectedSignature);
+    const isCanonicalPartialDay = execution?.wasTruncatedByCH
+        && execution?.truncationType === 'partial-day'
+        && (!execution?.truncationDate || String(execution.truncationDate).trim() === finalDate);
+
+    if (!partialFinalDay && !tailDiffersFromBase && !isCanonicalPartialDay) return null;
 
     const drawnSlotsByDay = {};
     tailEntries.forEach((entry) => {
@@ -3317,14 +3372,37 @@ function buildFinalAdjustmentFaixaSuggestion(faixasConfig = [], execution = {}) 
         adjustmentFaixaIndex: 2,
         reason: tailEntries.some((entry, idx, arr) => idx > 0 && entry.dow === arr[idx - 1].dow)
             ? 'partial-day-same-dow'
-            : 'partial-day',
+            : (tailDiffersFromBase && !isCanonicalPartialDay ? 'tail-regime-change' : 'partial-day'),
         adjustmentStart,
         adjustmentEnd: finalDate,
         adjustmentDates: tailDates
     };
 }
 
-function applyFinalAdjustmentFaixaSuggestion(suggestion) {
+function buildFinalAdjustmentSuggestionMessage(suggestion) {
+    const rangeLabel = suggestion?.adjustmentStart && suggestion?.adjustmentEnd
+        ? `${formatDateBR(suggestion.adjustmentStart)} a ${formatDateBR(suggestion.adjustmentEnd)}`
+        : '';
+
+    if (suggestion?.reason === 'partial-day-same-dow') {
+        return rangeLabel
+            ? `Criamos automaticamente a Faixa 2 cobrindo ${rangeLabel}, do penultimo ao ultimo dia real de aula. Como os dois dias caem no mesmo dia da semana, refine manualmente se precisar diferenciar o fechamento final.`
+            : 'Criamos automaticamente a Faixa 2 do penultimo ao ultimo dia real de aula. Como os dois dias caem no mesmo dia da semana, refine manualmente se precisar diferenciar o fechamento final.';
+    }
+
+    if (suggestion?.reason === 'tail-regime-change') {
+        return rangeLabel
+            ? `Criamos automaticamente a Faixa 2 cobrindo ${rangeLabel}, porque os dois ultimos dias reais de aula ja nao seguem o regime principal da faixa anterior. Ajuste os slots finais se quiser refinar a distribuicao e a exportacao.`
+            : 'Criamos automaticamente a Faixa 2 porque os dois ultimos dias reais de aula ja nao seguem o regime principal da faixa anterior. Ajuste os slots finais se quiser refinar a distribuicao e a exportacao.';
+    }
+
+    return rangeLabel
+        ? `Criamos automaticamente a Faixa 2 cobrindo ${rangeLabel}, do penultimo ao ultimo dia real de aula. Ajuste os slots finais se quiser refinar a distribuicao.`
+        : 'Criamos automaticamente a Faixa 2 do penultimo ao ultimo dia real de aula. Ajuste os slots finais se quiser refinar a distribuicao.';
+}
+
+function applyFinalAdjustmentFaixaSuggestion(suggestion, options = {}) {
+    const { showToast = true } = options;
     if (!suggestion?.faixas || suggestion.faixas.length === 0) return;
 
     const previewAlloc = {
@@ -3344,22 +3422,9 @@ function applyFinalAdjustmentFaixaSuggestion(suggestion) {
     renderWeeklyGrid();
     switchTab('weekly');
 
-    const rangeLabel = suggestion.adjustmentStart && suggestion.adjustmentEnd
-        ? `${formatDateBR(suggestion.adjustmentStart)} a ${formatDateBR(suggestion.adjustmentEnd)}`
-        : '';
-    let message = '';
-
-    if (suggestion.reason === 'partial-day-same-dow') {
-        message = rangeLabel
-            ? `Criamos automaticamente a Faixa 2 cobrindo ${rangeLabel}, do penultimo ao ultimo dia real de aula. Como os dois dias caem no mesmo dia da semana, refine manualmente se precisar diferenciar o fechamento final.`
-            : 'Criamos automaticamente a Faixa 2 do penultimo ao ultimo dia real de aula. Como os dois dias caem no mesmo dia da semana, refine manualmente se precisar diferenciar o fechamento final.';
-    } else {
-        message = rangeLabel
-            ? `Criamos automaticamente a Faixa 2 cobrindo ${rangeLabel}, do penultimo ao ultimo dia real de aula. Ajuste os slots finais se quiser refinar a distribuicao.`
-            : 'Criamos automaticamente a Faixa 2 do penultimo ao ultimo dia real de aula. Ajuste os slots finais se quiser refinar a distribuicao.';
+    if (showToast) {
+        showToastWarning(buildFinalAdjustmentSuggestionMessage(suggestion), 'warning', 9000);
     }
-
-    showToastWarning(message, 'warning', 9000);
 }
 
 function buildIntensiveConflictFaixas(intense, rangeStart, rangeEnd) {
@@ -5282,38 +5347,55 @@ function handleAddManual() {
             return;
         }
 
-        diasMarcados = [...new Set(faixasConfig.flatMap((f) => f.dias || []))].sort((a, b) => a - b);
-        if (diasMarcados.length === 0) diasMarcados = [1, 2, 3, 4, 5];
+        let previewIntensive = null;
+        let execution = null;
+        let finalAdjustmentNotice = '';
 
-        const previewIntensive = {
-            turmaId: store.selectedTurma,
-            disciplina,
-            subGrupo: subGrupo || null,
-            tipo: 'intensiva',
-            ch: effectiveCH,
-            dataInicio: faixasConfig[0].inicio,
-            dataFim: faixasConfig[0].inicio,
-            horariosOcupados: [],
-            diasMarcados,
-            usaSabado: diasMarcados.includes(6),
-            faixas: faixasConfig
-        };
+        for (let attempt = 0; attempt < 2; attempt++) {
+            diasMarcados = [...new Set(faixasConfig.flatMap((f) => f.dias || []))].sort((a, b) => a - b);
+            if (diasMarcados.length === 0) diasMarcados = [1, 2, 3, 4, 5];
 
-        const execution = computeIntensiveExecution(previewIntensive, { respectPriority: true, respectTurmaOccupancy: true });
-        if (execution.totalHours === 0) {
-            showToastWarning('Nenhuma aula foi gerada com as faixas configuradas.', 'error', 3000);
-            return;
-        }
+            previewIntensive = {
+                turmaId: store.selectedTurma,
+                disciplina,
+                subGrupo: subGrupo || null,
+                tipo: 'intensiva',
+                ch: effectiveCH,
+                dataInicio: faixasConfig[0].inicio,
+                dataFim: faixasConfig[0].inicio,
+                horariosOcupados: [],
+                diasMarcados,
+                usaSabado: diasMarcados.includes(6),
+                faixas: faixasConfig
+            };
 
-        const finalAdjustmentSuggestion = buildFinalAdjustmentFaixaSuggestion(faixasConfig, execution);
-        if (finalAdjustmentSuggestion) {
-            applyFinalAdjustmentFaixaSuggestion(finalAdjustmentSuggestion);
-            return;
+            execution = computeIntensiveExecution(previewIntensive, { respectPriority: true, respectTurmaOccupancy: true });
+            if (execution.totalHours === 0) {
+                showToastWarning('Nenhuma aula foi gerada com as faixas configuradas.', 'error', 3000);
+                return;
+            }
+
+            const finalAdjustmentSuggestion = buildFinalAdjustmentFaixaSuggestion(faixasConfig, execution);
+            if (!finalAdjustmentSuggestion || attempt > 0) {
+                break;
+            }
+
+            applyFinalAdjustmentFaixaSuggestion(finalAdjustmentSuggestion, { showToast: false });
+            faixasConfig = Array.isArray(finalAdjustmentSuggestion.faixas)
+                ? finalAdjustmentSuggestion.faixas.map(normalizeFaixaEntry).filter(Boolean)
+                : faixasConfig;
+            finalAdjustmentNotice = `${buildFinalAdjustmentSuggestionMessage(finalAdjustmentSuggestion)} A componente sera salva com essa Faixa 2 automatica; se voce fizer novos ajustes depois, sera preciso salvar novamente.`;
         }
 
         let nonBlockingDistributionNotice = '';
+        if (finalAdjustmentNotice) {
+            nonBlockingDistributionNotice = finalAdjustmentNotice;
+        }
         if (execution.wasTruncatedByCH) {
-            nonBlockingDistributionNotice = 'A componente foi inserida, mas a ultima semana ficou parcial. Se desejar, voce pode criar uma segunda faixa para ajustar melhor a distribuicao final.';
+            const truncatedMsg = 'A componente foi inserida, mas a ultima semana ficou parcial. Se desejar, voce pode criar uma segunda faixa para ajustar melhor a distribuicao final.';
+            nonBlockingDistributionNotice = nonBlockingDistributionNotice
+                ? `${nonBlockingDistributionNotice} ${truncatedMsg}`
+                : truncatedMsg;
         }
 
         if (execution.totalHours !== effectiveCH) {
@@ -5502,15 +5584,9 @@ function renderOfertasList() {
 
     const appendSeparator = (label) => {
         const tr = document.createElement('tr');
-        tr.className = 'month-sep';
+        tr.className = 'list-section-sep';
         tr.innerHTML = `<td colspan="${getColCount()}">${label}</td>`;
         tbody.appendChild(tr);
-    };
-
-    const appendMonthSeparator = (monthKey) => {
-        const [y, m] = monthKey.split('-').map((n) => parseInt(n, 10));
-        const nomeMes = new Date(y, m - 1, 2).toLocaleString('pt-BR', { month: 'long', year: 'numeric' });
-        appendSeparator(nomeMes.toUpperCase());
     };
 
     const ensureWarningEndDate = (end) => {
@@ -5569,6 +5645,7 @@ function renderOfertasList() {
                 baseAlloc: first,
                 groupIds: sorted.map((a) => a.id),
                 disciplina: first.disciplina,
+                componentKey: String(first.disciplina || '').trim().toLocaleUpperCase('pt-BR'),
                 codigo: info.codigo || '-',
                 docente: first.docente,
                 tipoLabel: 'componente',
@@ -5578,11 +5655,12 @@ function renderOfertasList() {
                 totalHoras,
                 chMax: first.ch || info.ch,
                 details: `${maxSemanas} semanas`,
-                sigaaCode: getSigaaCode(sorted)
+                sigaaCode: getSigaaCode(sorted),
+                faixaIndex: 0
             });
         });
 
-        rows.sort((a, b) => (a.disciplina || '').localeCompare(b.disciplina || ''));
+        rows.sort((a, b) => (a.componentKey || '').localeCompare(b.componentKey || ''));
         return rows;
     };
 
@@ -5647,6 +5725,7 @@ function renderOfertasList() {
                         baseAlloc: base,
                         groupIds: [base.id],
                         disciplina: base.disciplina,
+                        componentKey: String(base.disciplina || '').trim().toLocaleUpperCase('pt-BR'),
                         codigo: info.codigo || '-',
                         docente: base.docente,
                         tipoLabel: resolvedFaixas.length > 1 ? `componente <small>(Faixa ${idx + 1})</small>` : 'componente',
@@ -5657,11 +5736,20 @@ function renderOfertasList() {
                         chMax: base.ch || info.ch,
                         details: `${faixaDaysSet.size} dias`,
                         sigaaCode,
-                        sabadoLabel
+                        sabadoLabel,
+                        faixaIndex: idx + 1
                     });
                 });
             });
 
+        rows.sort((a, b) => {
+            const comp = (a.componentKey || '').localeCompare(b.componentKey || '');
+            if (comp !== 0) return comp;
+            const startA = a.start || '9999-12-31';
+            const startB = b.start || '9999-12-31';
+            if (startA !== startB) return startA.localeCompare(startB);
+            return (a.faixaIndex || 0) - (b.faixaIndex || 0);
+        });
         return rows;
     };
 
@@ -5673,6 +5761,7 @@ function renderOfertasList() {
                 baseAlloc: a,
                 groupIds: [a.id],
                 disciplina: a.disciplina,
+                componentKey: String(a.disciplina || '').trim().toLocaleUpperCase('pt-BR'),
                 codigo: info.codigo || '-',
                 docente: a.docente,
                 tipoLabel: '<span style="background:#f1c40f; color:#000; padding:2px 6px; border-radius:4px; font-size:0.85em; font-weight:bold;">Pendente</span>',
@@ -5682,9 +5771,10 @@ function renderOfertasList() {
                 totalHoras: 0,
                 chMax: a.ch || info.ch,
                 details: 'Aguardando grade',
-                sigaaCode: '-'
+                sigaaCode: '-',
+                faixaIndex: 0
             };
-        });
+        }).sort((a, b) => (a.componentKey || '').localeCompare(b.componentKey || ''));
     };
 
     const handleCopySigaa = async (btn) => {
@@ -5697,8 +5787,15 @@ function renderOfertasList() {
         }
     };
 
-    const appendRow = (row) => {
+    const appendRow = (row, previousRow = null) => {
         const tr = document.createElement('tr');
+        if (previousRow && previousRow.rowType !== 'pendente' && row.rowType !== 'pendente') {
+            if ((previousRow.componentKey || '') === (row.componentKey || '')) {
+                tr.classList.add('oferta-sep-faixa');
+            } else {
+                tr.classList.add('oferta-sep-component');
+            }
+        }
         let color = '#2c3e50';
         if (row.chMax > 0) {
             if (row.totalHoras < row.chMax) color = '#d35400';
@@ -5765,30 +5862,34 @@ function renderOfertasList() {
     const intensiveRows = buildIntensiveRows();
     const pendenteRows = buildPendenteRows();
     const canonicalRows = [...regularRows, ...intensiveRows].sort((a, b) => {
+        const comp = (a.componentKey || '').localeCompare(b.componentKey || '');
+        if (comp !== 0) return comp;
         const startA = a.start || '9999-12-31';
         const startB = b.start || '9999-12-31';
         if (startA !== startB) return startA.localeCompare(startB);
-        return (a.disciplina || '').localeCompare(b.disciplina || '');
+        const endA = a.end || '9999-12-31';
+        const endB = b.end || '9999-12-31';
+        if (endA !== endB) return endA.localeCompare(endB);
+        const faixaA = a.faixaIndex || 0;
+        const faixaB = b.faixaIndex || 0;
+        if (faixaA !== faixaB) return faixaA - faixaB;
+        return String(a.docente || '').localeCompare(String(b.docente || ''));
     });
 
     tbody.innerHTML = '';
-    let currentMonth = null;
+    let previousCanonicalRow = null;
     canonicalRows.forEach((row) => {
-        const monthKey = row.start ? row.start.substring(0, 7) : '';
-        if (monthKey && monthKey !== currentMonth) {
-            appendMonthSeparator(monthKey);
-            currentMonth = monthKey;
-        }
-        if (!monthKey && currentMonth !== 'SEM DATA') {
-            appendSeparator('SEM DATA');
-            currentMonth = 'SEM DATA';
-        }
-        appendRow(row);
+        appendRow(row, previousCanonicalRow);
+        previousCanonicalRow = row;
     });
 
     if (pendenteRows.length > 0) {
         appendSeparator('AGUARDANDO ALOCAÇÃO NA GRADE (PENDENTES)');
-        pendenteRows.forEach(appendRow);
+        let previousPendingRow = null;
+        pendenteRows.forEach((row) => {
+            appendRow(row, previousPendingRow);
+            previousPendingRow = row;
+        });
     }
 
     if (canonicalRows.length === 0 && pendenteRows.length === 0) {
