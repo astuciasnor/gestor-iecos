@@ -74,6 +74,55 @@
             max-width: 180px;
         }
 
+        .sidebar .periodo-letivo-title {
+            order: 1;
+        }
+
+        .sidebar .periodo-letivo-title~* {
+            order: 10;
+        }
+
+        .sidebar .inline-control.periodo-letivo-control {
+            order: 2;
+            justify-content: flex-start;
+            align-items: center;
+            gap: 8px;
+            margin-top: 2px;
+            margin-bottom: 10px;
+        }
+
+        .sidebar .inline-control.periodo-letivo-control label {
+            color: #fff;
+            font-size: 0.95rem;
+            font-weight: 700;
+        }
+
+        .sidebar .inline-control.periodo-letivo-control select {
+            flex: 1;
+            max-width: none;
+            min-width: 0;
+            padding: 7px 10px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            line-height: 1.15;
+        }
+
+        .sidebar .compact-row.periodo-letivo-dates {
+            order: 3;
+        }
+
+        .sidebar .periodo-letivo-divider {
+            order: 3.5;
+            width: 100%;
+            border: none;
+            border-top: 2px solid rgba(189, 195, 199, 0.75);
+            margin: 0 0 1px;
+        }
+
+        .sidebar #active-plan-status {
+            order: 4;
+        }
+
         .publish-clear-row {
             display: flex;
             gap: 8px;
@@ -522,10 +571,10 @@
                 <hr style="width: 100%; border: none; border-top: 3px solid #95a5a6; margin: 0;">
             </div>
 
-            <h3 style="margin-top: 20px; margin-bottom: 10px; text-transform: uppercase; font-size: 0.9em;">Período
+            <h3 class="periodo-letivo-title" style="margin-top: 20px; margin-bottom: 10px; text-transform: uppercase; font-size: 0.9em;">Período
                 Letivo</h3>
 
-            <div class="compact-row">
+            <div class="compact-row periodo-letivo-dates">
                 <div class="form-group">
                     <label>Início</label>
                     <input type="date" id="term-start">
@@ -537,7 +586,9 @@
                 </div>
             </div>
 
-            <div class="inline-control">
+            <hr class="periodo-letivo-divider">
+
+            <div class="inline-control periodo-letivo-control">
                 <label for="sel-periodo-letivo">Per&iacute;odo:</label>
                 <select id="sel-periodo-letivo">
                     <option value="">Carregando...</option>
@@ -545,11 +596,13 @@
             </div>
 
             <div id="active-plan-status"
-                style="margin: 8px 0 14px; padding: 10px 12px; border-radius: 8px; background: rgba(44, 62, 80, 0.08); color: var(--primary); font-size: 0.9rem; line-height: 1.35;">
+                style="margin: 1px 0 1px; padding: 3px 10px; border-radius: 8px; background: rgba(44, 62, 80, 0.08); color: var(--primary); font-size: 0.78rem; line-height: 1.1;">
                 Plano ativo ainda nao definido.
             </div>
 
-            <div class="form-group" style="margin-top: 15px;">
+            <h3 style="margin-top: 0; margin-bottom: 5px; text-transform: uppercase; font-size: 0.9em;">IDENTIFICA&Ccedil;&Atilde;O DA TURMA</h3>
+
+            <div class="form-group" style="margin-top: 0;">
                 <label>Curso</label>
                 <select id="sel-curso">
                     <option value="">Selecione...</option>
@@ -568,6 +621,7 @@
                 <select id="sel-turno-oferta">
                     <option value="Manhã">Manhã</option>
                     <option value="Tarde">Tarde</option>
+                    <option value="Noite">Noite</option>
                 </select>
             </div>
 

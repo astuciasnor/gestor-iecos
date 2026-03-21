@@ -1371,8 +1371,14 @@ function normalizeDisciplinaInputValue(rawValue) {
     return String(rawValue || '').replace(/\s*\(\s*\d+\s*h\s*\)\s*$/i, '').trim();
 }
 
-function collapseFaixasForNewComponent() {
-    const preferredStart = getPreferredStartDateForCurrentTurma({ useCurrentUI: true });
+function collapseFaixasForNewComponent(options = {}) {
+    const {
+        preferredStart: explicitPreferredStart,
+        useCurrentUI = true
+    } = options;
+    const preferredStart = explicitPreferredStart !== undefined
+        ? explicitPreferredStart
+        : getPreferredStartDateForCurrentTurma({ useCurrentUI });
 
     ['inp-data-inicio-f1', 'inp-data-fim-f1', 'inp-data-inicio-f2', 'inp-data-fim-f2', 'inp-data-inicio-f3', 'inp-data-fim-f3'].forEach((id) => {
         const el = document.getElementById(id);
@@ -3584,6 +3590,80 @@ function getOfficialPeriodoLetivoPlans() {
     return plans;
 }
 
+function normalizeTurnoOfertaKey(value) {
+    return String(value || '')
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase()
+        .replace(/[^a-z0-9]/g, '');
+}
+
+function formatTurnoOfertaLabel(value) {
+    const normalized = normalizeTurnoOfertaKey(value);
+    if (normalized === 'manha') return 'Manhã';
+    if (normalized === 'tarde') return 'Tarde';
+    if (normalized === 'noite') return 'Noite';
+    return String(value || '').trim() || 'Turno';
+}
+
+function getAvailableTurnoOfertaOptions() {
+    const byTurnoMap = store.rawData?.horarios_por_turno;
+    if (byTurnoMap && typeof byTurnoMap === 'object') {
+        const options = Object.keys(byTurnoMap)
+            .filter((key) => Array.isArray(byTurnoMap[key]) && byTurnoMap[key].length > 0)
+            .map((value) => ({
+                value,
+                label: formatTurnoOfertaLabel(value),
+                normalized: normalizeTurnoOfertaKey(value)
+            }));
+
+        if (options.length > 0) {
+            const deduped = [];
+            const seen = new Set();
+            options.forEach((option) => {
+                if (seen.has(option.normalized)) return;
+                seen.add(option.normalized);
+                deduped.push(option);
+            });
+            const order = { manha: 1, tarde: 2, noite: 3 };
+            return deduped.sort((a, b) => {
+                const orderA = order[a.normalized] || 99;
+                const orderB = order[b.normalized] || 99;
+                if (orderA !== orderB) return orderA - orderB;
+                return a.label.localeCompare(b.label, 'pt-BR');
+            });
+        }
+    }
+
+    return ['Manhã', 'Tarde', 'Noite'].map((value) => ({
+        value,
+        label: value,
+        normalized: normalizeTurnoOfertaKey(value)
+    }));
+}
+
+function resolveTurnoOfertaValue(preferredValue = '') {
+    const options = getAvailableTurnoOfertaOptions();
+    const normalizedPreferred = normalizeTurnoOfertaKey(preferredValue);
+    const matched = options.find((option) => option.normalized === normalizedPreferred);
+    return matched?.value || preferredValue || options[0]?.value || '';
+}
+
+function populateTurnoOfertaOptions(preferredValue = store.settings.turnoOferta || '') {
+    if (!selTurnoOferta) return;
+    const options = getAvailableTurnoOfertaOptions();
+    selTurnoOferta.innerHTML = '';
+
+    options.forEach((option) => {
+        const opt = document.createElement('option');
+        opt.value = option.value;
+        opt.textContent = option.label;
+        selTurnoOferta.appendChild(opt);
+    });
+
+    selTurnoOferta.value = resolveTurnoOfertaValue(preferredValue);
+}
+
 function getSuggestedOfficialPeriodoLetivoPlan() {
     const plans = getOfficialPeriodoLetivoPlans();
     if (!plans.length) return null;
@@ -3596,10 +3676,18 @@ function getSuggestedOfficialPeriodoLetivoPlan() {
     return nextPlan || plans[plans.length - 1];
 }
 
+function formatDateBRShortYear(dateStr) {
+    if (!dateStr || typeof dateStr !== 'string') return '';
+    const parts = dateStr.split('-');
+    if (parts.length !== 3) return dateStr;
+    const [yyyy, mm, dd] = parts;
+    return `${dd}/${mm}/${yyyy.slice(-2)}`;
+}
+
 function buildPeriodoLetivoOptionLabel(plan) {
     if (!plan) return 'Periodo letivo';
     const prefix = plan.ano ? `${plan.ano} - ` : '';
-    return `${prefix}${plan.periodo} (${formatDateBR(plan.termStart)} a ${formatDateBR(plan.termEnd)})`;
+    return `${prefix}${plan.periodo} (${formatDateBRShortYear(plan.termStart)} a ${formatDateBRShortYear(plan.termEnd)})`;
 }
 
 function populatePeriodoLetivoOptions() {
@@ -3669,6 +3757,7 @@ function syncPlanInputsFromStore() {
     if (calStart) calStart.value = store.settings.termStart || '';
     if (calEnd) calEnd.value = store.settings.termEnd || '';
     populatePeriodoLetivoOptions();
+    populateTurnoOfertaOptions(store.settings.turnoOferta || 'Tarde');
     if (selPeriodo) {
         const currentMeta = store.getPlanMetaFromSettings();
         const optionValues = Array.from(selPeriodo.options).map((opt) => opt.value);
@@ -3697,7 +3786,7 @@ function updateActivePlanStatus() {
     activePlanStatus.textContent = `Plano ativo: ${getPlanDisplayLabel(activeMeta)} | ${total} oferta(s)`;
 }
 
-function resetWeeklyDraftStateForPlanSwitch() {
+function resetWeeklyDraftStateForPlanSwitch(preferredStart = '') {
     deactivateDrawingMode();
     editingDisciplinaDraft = '';
     lastDisciplinaInputNormalized = '';
@@ -3707,7 +3796,10 @@ function resetWeeklyDraftStateForPlanSwitch() {
     setFaixaStatus(1, 0);
     setFaixaStatus(2, 0);
     setFaixaStatus(3, 0);
-    collapseFaixasForNewComponent();
+    collapseFaixasForNewComponent({
+        preferredStart,
+        useCurrentUI: false
+    });
     updateWeeklyFaixasTitleDisciplina();
     updateWeeklyFaixaHoursDisplay();
 }
@@ -3730,20 +3822,23 @@ function rerenderPlanBoundViews() {
 function applyPlanContextToUI(planMeta = {}, options = {}) {
     const previousKey = store.getActivePlanMeta().key;
     const result = store.applyPlanContext(planMeta);
+    const didChangePlan = result.meta.key !== previousKey;
 
     syncPlanInputsFromStore();
     updateActivePlanStatus();
 
-    if (options.resetDraftOnChange !== false && result.meta.key !== previousKey) {
-        resetWeeklyDraftStateForPlanSwitch();
+    if (options.resetDraftOnChange !== false && didChangePlan) {
+        resetWeeklyDraftStateForPlanSwitch(result.meta.termStart || store.settings.termStart || '');
     }
 
-    const preferredStart = getPreferredStartDateForCurrentTurma();
+    const preferredStart = didChangePlan
+        ? (result.meta.termStart || store.settings.termStart || '')
+        : getPreferredStartDateForCurrentTurma();
     if (inputConfig.inicio && preferredStart) {
         inputConfig.inicio.value = preferredStart;
     }
 
-    applyFaixaDateAutofill({ forceSingleBounds: true });
+    applyFaixaDateAutofill({ forceSingleBounds: true, preferredStart });
     refreshPendingFaixaStartPickUI();
     updateWeeklyContextNote();
     syncAllRegularDates();
@@ -3780,11 +3875,11 @@ function initPeriodoLetivoETurno() {
     if (!store.settings.termStart) store.settings.termStart = suggestedOfficialPlan?.termStart || defaultStart;
     if (!store.settings.termEnd) store.settings.termEnd = suggestedOfficialPlan?.termEnd || defaultEnd;
     if (!store.settings.periodo) store.settings.periodo = suggestedOfficialPlan?.periodo || 'PL1';
-    if (!store.settings.turnoOferta) store.settings.turnoOferta = 'Tarde';
+    if (!store.settings.turnoOferta) store.settings.turnoOferta = resolveTurnoOfertaValue('Tarde');
     store.saveSettings();
 
     syncPlanInputsFromStore();
-    if (selTurnoOferta) selTurnoOferta.value = store.settings.turnoOferta || 'Tarde';
+    populateTurnoOfertaOptions(store.settings.turnoOferta || 'Tarde');
 
     if (inputConfig.inicio && store.settings.termStart && !inputConfig.inicio.value) {
         inputConfig.inicio.value = store.settings.termStart;
@@ -4425,12 +4520,13 @@ function onTurmaChange() {
     if (primeiraIntensiva) {
         const slotRef = String(primeiraIntensiva.horariosOcupados[0] || '');
         const hora = parseInt(slotRef.split(':')[0], 10);
-        if (hora < 13) store.setTurnoOferta('Manh\u00E3');
-        else store.setTurnoOferta('Tarde');
+        if (hora < 13) store.setTurnoOferta(resolveTurnoOfertaValue('Manhã'));
+        else if (hora < 18) store.setTurnoOferta(resolveTurnoOfertaValue('Tarde'));
+        else store.setTurnoOferta(resolveTurnoOfertaValue('Noite'));
     }
     else if (store.rawData?.turmas && store.selectedTurma) {
         const t = store.rawData.turmas.find(x => String(x.turma_id) === String(store.selectedTurma));
-        if (t?.turno) store.setTurnoOferta(t.turno);
+        if (t?.turno) store.setTurnoOferta(resolveTurnoOfertaValue(t.turno));
     }
 
     const intensivas = alocacoesTurma.filter(a => a.tipo === 'intensiva' && a.dataInicio);
@@ -4452,7 +4548,7 @@ function onTurmaChange() {
     }
 
     if (selTurnoOferta) {
-        selTurnoOferta.value = store.settings.turnoOferta || 'Tarde';
+        populateTurnoOfertaOptions(store.settings.turnoOferta || 'Tarde');
     }
 
     const preferredStart = getPreferredStartDateForCurrentTurma();

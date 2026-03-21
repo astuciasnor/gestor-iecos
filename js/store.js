@@ -11,6 +11,14 @@ import {
 } from './plan_storage.js';
 import { generateUUID } from './utils.js';
 
+function normalizeTurnoKey(value) {
+  return String(value || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, '');
+}
+
 class Store {
   constructor() {
     this.rawData = null;
@@ -76,11 +84,20 @@ class Store {
     this.saveSettings();
   }
 
+  getTurmaLastStartKey(turmaId) {
+    if (!turmaId) return '';
+    const planKey = this.activePlanMeta?.key || this.getPlanMetaFromSettings()?.key || '';
+    return planKey ? `${planKey}::${String(turmaId)}` : String(turmaId);
+  }
+
   getTurmaLastStart(turmaId) {
     if (!turmaId) return '';
     const map = this.settings?.lastStartByTurma;
     if (!map || typeof map !== 'object') return '';
-    return String(map[String(turmaId)] || '');
+    const scopedKey = this.getTurmaLastStartKey(turmaId);
+    if (scopedKey && map[scopedKey]) return String(map[scopedKey] || '');
+    if (!this.activePlanMeta?.key && map[String(turmaId)]) return String(map[String(turmaId)] || '');
+    return '';
   }
 
   setTurmaLastStart(turmaId, startDate) {
@@ -88,7 +105,8 @@ class Store {
     if (!this.settings.lastStartByTurma || typeof this.settings.lastStartByTurma !== 'object') {
       this.settings.lastStartByTurma = {};
     }
-    this.settings.lastStartByTurma[String(turmaId)] = String(startDate);
+    const scopedKey = this.getTurmaLastStartKey(turmaId);
+    this.settings.lastStartByTurma[scopedKey || String(turmaId)] = String(startDate);
     this.saveSettings();
   }
 
@@ -268,13 +286,14 @@ class Store {
     const hp = this.rawData.horarios_por_turno;
     if (hp && typeof hp === 'object') {
       if (Array.isArray(hp[turno])) return hp[turno];
-      const key = Object.keys(hp).find((k) => k.toLowerCase() === String(turno).toLowerCase());
+      const normalizedTurno = normalizeTurnoKey(turno);
+      const key = Object.keys(hp).find((k) => normalizeTurnoKey(k) === normalizedTurno);
       if (key && Array.isArray(hp[key])) return hp[key];
     }
 
     if (Array.isArray(this.rawData.horarios)) {
       return this.rawData.horarios
-        .filter((h) => String(h.turno) === String(turno))
+        .filter((h) => normalizeTurnoKey(h.turno) === normalizeTurnoKey(turno))
         .sort((a, b) => (a.ordem ?? 0) - (b.ordem ?? 0))
         .map((h) => h.faixa)
         .filter((x) => typeof x === 'string');
