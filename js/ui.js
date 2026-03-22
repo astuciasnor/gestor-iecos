@@ -3388,10 +3388,10 @@ function buildStoredExecutionSnapshot(intense) {
     };
 }
 
-function buildGanttFaixaDaySnapshots(intense, rangeStart, rangeEnd) {
-    const fallbackStart = String(rangeStart || intense?.dataInicio || store.settings.termStart || '').trim();
-    const fallbackEnd = String(rangeEnd || intense?.dataFim || store.settings.termEnd || fallbackStart).trim();
-    const storedExecution = buildStoredExecutionSnapshot(intense);
+function buildGanttFaixaDaySnapshots(faixaAlloc, rangeStart, rangeEnd) {
+    const fallbackStart = String(rangeStart || faixaAlloc?.dataInicio || store.settings.termStart || '').trim();
+    const fallbackEnd = String(rangeEnd || faixaAlloc?.dataFim || store.settings.termEnd || fallbackStart).trim();
+    const storedExecution = buildStoredExecutionSnapshot(faixaAlloc);
 
     if (storedExecution?.byDate && Object.keys(storedExecution.byDate).length > 0) {
         const grouped = new Map();
@@ -3436,7 +3436,7 @@ function buildGanttFaixaDaySnapshots(intense, rangeStart, rangeEnd) {
             .sort((a, b) => a.dow - b.dow);
     }
 
-    const faixas = buildIntensiveConflictFaixas(intense, fallbackStart, fallbackEnd);
+    const faixas = buildIntensiveConflictFaixas(faixaAlloc, fallbackStart, fallbackEnd);
     const grouped = new Map();
 
     faixas.forEach((faixa) => {
@@ -3478,6 +3478,49 @@ function buildGanttFaixaDaySnapshots(intense, rangeStart, rangeEnd) {
         .sort((a, b) => a.dow - b.dow);
 }
 
+function buildGanttFaixaTurnoSnapshots(faixaAlloc, rangeStart, rangeEnd, turnoConfigs = getGanttTurnoConfigs()) {
+    const grouped = new Map();
+
+    buildGanttFaixaDaySnapshots(faixaAlloc, rangeStart, rangeEnd).forEach((entry) => {
+        const slotsByTurno = new Map();
+
+        (Array.isArray(entry?.slots) ? entry.slots : []).forEach((slot) => {
+            const turnoConfig = resolveGanttTurnoForSlot(slot, turnoConfigs);
+            if (!turnoConfig?.value) return;
+            if (!slotsByTurno.has(turnoConfig.value)) slotsByTurno.set(turnoConfig.value, []);
+            slotsByTurno.get(turnoConfig.value).push(String(slot));
+        });
+
+        slotsByTurno.forEach((slots, turnoValue) => {
+            const key = `${entry.dow}|${turnoValue}`;
+            if (!grouped.has(key)) {
+                grouped.set(key, {
+                    dow: entry.dow,
+                    turno: turnoValue,
+                    inicio: entry.inicio,
+                    fim: entry.fim,
+                    slotsSet: new Set()
+                });
+            }
+
+            const groupedEntry = grouped.get(key);
+            if (entry.inicio < groupedEntry.inicio) groupedEntry.inicio = entry.inicio;
+            if (entry.fim > groupedEntry.fim) groupedEntry.fim = entry.fim;
+            slots.forEach((slot) => groupedEntry.slotsSet.add(slot));
+        });
+    });
+
+    return Array.from(grouped.values())
+        .map((entry) => ({
+            dow: entry.dow,
+            turno: entry.turno,
+            inicio: entry.inicio,
+            fim: entry.fim,
+            slots: [...entry.slotsSet].sort((a, b) => timeToMinutes(a) - timeToMinutes(b))
+        }))
+        .filter((entry) => entry.slots.length > 0)
+        .sort((a, b) => (a.dow - b.dow) || String(a.turno).localeCompare(String(b.turno)));
+}
 function buildComparableFaixasSignature(faixas = []) {
     const normalized = (Array.isArray(faixas) ? faixas : [])
         .map(normalizeFaixaEntry)
@@ -6653,292 +6696,268 @@ function getShiftTimeRangeStr(timeRanges, turnoValue, turnoConfigs = getGanttTur
 }
 
 
-function renderGanttChart() {
-    try {
-        const container = document.getElementById('gantt-container');
-        const inputDocente = document.getElementById('inp-gantt-docente');
-        if (!container || !inputDocente) return;
+function buildGanttTimelineLinesHtml(minTime, maxTime, totalTime) {
+    const weekLines = [];
+    const weekWalker = new Date(minTime);
+    while (weekWalker.getDay() !== 1) {
+        weekWalker.setDate(weekWalker.getDate() + 1);
+    }
 
-        const docenteName = inputDocente.value.trim();
-        if (!docenteName) {
-            container.innerHTML = '<div style="text-align: center; color: #7f8c8d; margin-top: 50px; font-size: 1.1em;">Por favor, digite o nome de um professor.</div>';
-            return;
+    while (weekWalker.getTime() <= maxTime) {
+        const leftPct = ((weekWalker.getTime() - minTime) / totalTime) * 100;
+        if (leftPct >= 0 && leftPct <= 100) weekLines.push(leftPct);
+        weekWalker.setDate(weekWalker.getDate() + 7);
+    }
+
+    return weekLines.map((pct) => `<div class="gantt-grid-line-week" style="left: ${pct}%;"></div>`).join('');
+}
+
+function buildGanttMonthOverlaysHtml(minTime, maxTime, totalTime) {
+    const monthLines = [];
+    let curMonthWalker = new Date(minTime);
+    curMonthWalker.setDate(1);
+
+    while (curMonthWalker.getTime() <= maxTime) {
+        if (curMonthWalker.getTime() >= minTime) {
+            const leftPct = ((curMonthWalker.getTime() - minTime) / totalTime) * 100;
+            if (leftPct > 0.1) monthLines.push(leftPct);
         }
+        curMonthWalker = new Date(curMonthWalker.getFullYear(), curMonthWalker.getMonth() + 1, 1, 12, 0, 0);
+    }
 
-        const allocs = store.allocations.filter((a) => allocationHasTeacherMatch(a, docenteName));
-
-        if (allocs.length === 0) {
-            container.innerHTML = `<div style="text-align: center; color: #7f8c8d; margin-top: 50px; font-size: 1.1em;">Nenhuma disciplina encontrada para <b>${docenteName}</b>.</div>`;
-            return;
-        }
-
-        const totalCH = calculateTeacherTotalCH(docenteName);
-
-        let minDateStr = store.settings.termStart || '2025-01-01';
-        let maxDateStr = store.settings.termEnd || '2025-12-31';
-
-        allocs.forEach(a => {
-            if (a.dataInicio && a.dataInicio < minDateStr) minDateStr = a.dataInicio;
-            if (a.dataFim && a.dataFim > maxDateStr) maxDateStr = a.dataFim;
-        });
-
-        const executionRangeByAlloc = getAllocationExecutionRangeMap(allocs, minDateStr, maxDateStr);
-        const executionRangeBySignature = getNonIntensiveExecutionRangeMap(allocs, minDateStr, maxDateStr);
-        const ganttTurnoConfigs = getGanttTurnoConfigs();
-        const visibleTurnos = getGanttVisibleTurnos(allocs, minDateStr, maxDateStr, ganttTurnoConfigs);
-
-        const minTime = new Date(minDateStr + "T12:00:00").getTime();
-        const maxTime = new Date(maxDateStr + "T12:00:00").getTime();
-        const totalTime = maxTime - minTime || 1;
-
-        const weekLines = [];
-        let weekWalker = new Date(minTime);
-        while (weekWalker.getDay() !== 1) {
-            weekWalker.setDate(weekWalker.getDate() + 1);
-        }
-
-        while (weekWalker.getTime() <= maxTime) {
-            let leftPct = ((weekWalker.getTime() - minTime) / totalTime) * 100;
-            if (leftPct >= 0 && leftPct <= 100) {
-                weekLines.push(leftPct);
-            }
-            weekWalker.setDate(weekWalker.getDate() + 7);
-        }
-        const timelineLinesHtml = weekLines.map(pct => `<div class="gantt-grid-line-week" style="left: ${pct}%;"></div>`).join('');
-
-        const monthLines = [];
-        let curMonthWalker = new Date(minTime);
-        curMonthWalker.setDate(1);
-
-        while (curMonthWalker.getTime() <= maxTime) {
-            if (curMonthWalker.getTime() >= minTime) {
-                let leftPct = ((curMonthWalker.getTime() - minTime) / totalTime) * 100;
-                if (leftPct > 0.1) {
-                    monthLines.push(leftPct);
-                }
-            }
-            curMonthWalker = new Date(curMonthWalker.getFullYear(), curMonthWalker.getMonth() + 1, 1, 12, 0, 0);
-        }
-
-        const monthOverlaysHtml = monthLines.map(pct => `
+    return monthLines.map((pct) => `
         <div style="position: absolute; left: ${pct}%; top: 0; bottom: 0; border-left: 2px solid #2c3e50; z-index: 10; pointer-events: none;"></div>
     `).join('');
+}
 
-        let html = `
-        <div style="margin-bottom: 20px; text-align: center;">
-            <h3 style="color: var(--primary); margin: 0; font-size: 1.4em; text-transform: uppercase;">Cronograma: ${docenteName} (${totalCH}h)</h3>
-        </div>
-        
-        <div class="gantt-container" style="position: relative; border: 1px solid #ddd; border-radius: 6px; overflow: hidden; background: #f0f3f5;">
-            
-            <div style="position: absolute; top: 0; bottom: 0; left: 80px; right: 0; pointer-events: none; z-index: 0;">
-                ${timelineLinesHtml}
-            </div>
+function buildGanttMonthHeaderColumnsHtml(minTime, maxTime, totalTime) {
+    let html = '<div class="gantt-header-row" style="display: flex; border-bottom: 2px solid var(--primary); padding: 10px 0; background: #e2e8f0; margin: 0; position: relative; z-index: 6;">';
+    html += '<div style="width: 80px; flex-shrink: 0;"></div>';
+    html += '<div style="flex: 1; display: flex; position: relative;">';
 
-            <div style="position: absolute; top: 0; bottom: 0; left: 80px; right: 0; pointer-events: none; z-index: 10;">
-                ${monthOverlaysHtml}
-            </div>
-    `;
+    let cur = new Date(minTime);
+    cur.setDate(1);
 
-        html += '<div class="gantt-header-row" style="display: flex; border-bottom: 2px solid var(--primary); padding: 10px 0; background: #e2e8f0; margin: 0; position: relative; z-index: 6;">';
-        html += '<div style="width: 80px; flex-shrink: 0;"></div>';
+    while (cur.getTime() <= maxTime || (cur.getFullYear() === new Date(maxTime).getFullYear() && cur.getMonth() === new Date(maxTime).getMonth())) {
+        const nomeCurto = cur.toLocaleString('pt-BR', { month: 'short' }).replace('.', '');
+        const mesNome = nomeCurto.charAt(0).toUpperCase() + nomeCurto.slice(1) + '/' + String(cur.getFullYear()).slice(-2);
+        const startOfMonth = Math.max(cur.getTime(), minTime);
+        const nextMonth = new Date(cur.getFullYear(), cur.getMonth() + 1, 1, 12, 0, 0);
+        const endOfMonth = Math.min(nextMonth.getTime() - 1, maxTime);
+        const widthPct = ((endOfMonth - startOfMonth) / totalTime) * 100;
 
-        html += '<div style="flex: 1; display: flex; position: relative;">';
-
-        let cur = new Date(minTime);
-        cur.setDate(1);
-
-        while (cur.getTime() <= maxTime || (cur.getFullYear() === new Date(maxTime).getFullYear() && cur.getMonth() === new Date(maxTime).getMonth())) {
-            let nomeCurto = cur.toLocaleString('pt-BR', { month: 'short' }).replace('.', '');
-            const mesNome = nomeCurto.charAt(0).toUpperCase() + nomeCurto.slice(1) + '/' + String(cur.getFullYear()).slice(-2);
-
-            let startOfMonth = Math.max(cur.getTime(), minTime);
-            let nextM = new Date(cur.getFullYear(), cur.getMonth() + 1, 1, 12, 0, 0);
-            let endOfMonth = Math.min(nextM.getTime() - 1, maxTime);
-            let wPct = ((endOfMonth - startOfMonth) / totalTime) * 100;
-
-            if (wPct > 0) {
-                html += `<div class="gantt-month-col" style="width: ${wPct}%; flex: none; background: transparent; text-align: center; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.1em; color: var(--primary); border: none;">${mesNome}</div>`;
-            }
-            cur = nextM;
+        if (widthPct > 0) {
+            html += `<div class="gantt-month-col" style="width: ${widthPct}%; flex: none; background: transparent; text-align: center; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.1em; color: var(--primary); border: none;">${mesNome}</div>`;
         }
-        html += '</div></div>';
+        cur = nextMonth;
+    }
 
-        const weekDays = [
-            { id: 1, name: 'SEG' },
-            { id: 2, name: 'TER' },
-            { id: 3, name: 'QUA' },
-            { id: 4, name: 'QUI' },
-            { id: 5, name: 'SEX' },
-            { id: 6, name: 'SÁB' }
-        ];
+    html += '</div></div>';
+    return html;
+}
 
-        weekDays.forEach(d => {
-            const dayItemsMap = {};
+function collectGanttDayItems({
+    dayId,
+    allocs,
+    docenteName,
+    minDateStr,
+    maxDateStr,
+    ganttTurnoConfigs,
+    visibleTurnos,
+    executionRangeByAlloc,
+    scheduledExecutionRangeByAlloc
+}) {
+    const dayItemsMap = {};
 
-            allocs.forEach(a => {
-                let add = false;
-                let turnos = [];
-                let slotsToAdd = 1;
-                let dayRangeStart = a.dataInicio || minDateStr;
-                let dayRangeEnd = a.dataFim || maxDateStr;
-                let intensiveSlotsForDay = [];
-                const executionRange = executionRangeByAlloc.get(a.id);
-                const executionSignature = buildNonIntensiveExecutionSignature(a);
-                const signatureRange = executionSignature ? executionRangeBySignature.get(executionSignature) : null;
+    function mergeTimeRanges(currentRanges = [], nextRanges = []) {
+        return [...new Set([
+            ...(Array.isArray(currentRanges) ? currentRanges : []),
+            ...(Array.isArray(nextRanges) ? nextRanges : [])
+        ].filter(Boolean).map(String))].sort((a, b) => timeToMinutes(a) - timeToMinutes(b));
+    }
 
-                if (isScheduledRegularAllocation(a)) {
-                    if (parseInt(a.diaSemana) === d.id) {
-                        add = true;
-                        turnos = resolveGanttTurnosForSlots([a.horario], ganttTurnoConfigs).map((config) => config.value);
-                        if (signatureRange?.firstDate) dayRangeStart = signatureRange.firstDate;
-                        else if (executionRange?.firstDate) dayRangeStart = executionRange.firstDate;
-                        if (signatureRange?.lastDate) dayRangeEnd = signatureRange.lastDate;
-                        else if (executionRange?.lastDate) dayRangeEnd = executionRange.lastDate;
-                    }
-                }
-                else if (isFaixaAllocation(a)) {
-                    const daySnapshots = buildGanttFaixaDaySnapshots(
-                        a,
-                        a.dataInicio || minDateStr,
-                        a.dataFim || maxDateStr
-                    );
-                    const daySnapshot = daySnapshots.find((entry) => entry.dow === d.id);
-                    const occs = Array.isArray(daySnapshot?.slots) ? daySnapshot.slots.slice() : [];
-                    if (occs.length > 0) {
-                        add = true;
-                        turnos = resolveGanttTurnosForSlots(occs, ganttTurnoConfigs).map((config) => config.value);
-                        slotsToAdd = occs.length;
-                        intensiveSlotsForDay = occs;
-                        if (daySnapshot?.inicio) dayRangeStart = daySnapshot.inicio;
-                        if (daySnapshot?.fim) dayRangeEnd = daySnapshot.fim;
-                    }
-                }
+    function getProfessorCarga(alloc) {
+        let chProf = 0;
+        const chTotal = getDisciplinaCHGlobal(alloc.disciplina, alloc.turmaId);
+        if (alloc.docentes && alloc.docentes.length > 0) {
+            const doc = alloc.docentes.find((entry) => teacherNamesMatch(entry?.nome, docenteName));
+            if (doc) chProf = parseInt(doc.ch, 10) || 0;
+        } else if (teacherNamesMatch(alloc.docente, docenteName)) {
+            chProf = chTotal;
+        }
+        return { chProf, chTotal };
+    }
 
-                if (!add) return;
-                if (!turnos.length && visibleTurnos[0]?.value) turnos = [visibleTurnos[0].value];
+    allocs.forEach((alloc) => {
+        const snapshots = [];
+        const executionRange = executionRangeByAlloc.get(alloc.id);
+        const executionSignature = buildNonIntensiveExecutionSignature(alloc);
+        const scheduledRange = executionSignature ? scheduledExecutionRangeByAlloc.get(executionSignature) : null;
 
-                const key = `${a.turmaId}|${a.disciplina}|${turnos.join('/')}|${a.tipo}`;
-                if (!dayItemsMap[key]) {
-                    let chProf = 0;
-                    const chTotal = getDisciplinaCHGlobal(a.disciplina, a.turmaId);
-                    if (a.docentes && a.docentes.length > 0) {
-                        const doc = a.docentes.find(doc => teacherNamesMatch(doc?.nome, docenteName));
-                        if (doc) chProf = parseInt(doc.ch) || 0;
-                    } else if (teacherNamesMatch(a.docente, docenteName)) {
-                        chProf = chTotal;
-                    }
+        if (isScheduledRegularAllocation(alloc)) {
+            if (parseInt(alloc.diaSemana, 10) !== dayId) return;
+            const turnos = resolveGanttTurnosForSlots([alloc.horario], ganttTurnoConfigs);
+            const safeTurnos = turnos.length > 0 ? turnos : (visibleTurnos[0] ? [visibleTurnos[0]] : []);
+            const dayRangeStart = scheduledRange?.firstDate || executionRange?.firstDate || alloc.dataInicio || minDateStr;
+            const dayRangeEnd = scheduledRange?.lastDate || executionRange?.lastDate || alloc.dataFim || maxDateStr;
 
-                    dayItemsMap[key] = {
-                        ...a,
-                        turnos: [...turnos],
-                        chTotal: chTotal,
-                        chProf: chProf,
-                        dataInicio: dayRangeStart,
-                        dataFim: dayRangeEnd,
-                        slotCount: slotsToAdd,
-                        timeRanges: isFaixaAllocation(a) ? [...intensiveSlotsForDay] : [a.horario]
-                    };
-                    return;
-                }
-
-                if (!isFaixaAllocation(a)) {
-                    dayItemsMap[key].slotCount += slotsToAdd;
-                }
-                if (dayRangeStart && dayRangeStart < dayItemsMap[key].dataInicio) {
-                    dayItemsMap[key].dataInicio = dayRangeStart;
-                }
-                if (dayRangeEnd && dayRangeEnd > dayItemsMap[key].dataFim) {
-                    dayItemsMap[key].dataFim = dayRangeEnd;
-                }
-
-                if (isFaixaAllocation(a)) {
-                    dayItemsMap[key].timeRanges.push(...intensiveSlotsForDay);
-                } else {
-                    dayItemsMap[key].timeRanges.push(a.horario);
-                }
+            safeTurnos.forEach((turnoConfig) => {
+                snapshots.push({
+                    turno: turnoConfig.value,
+                    dataInicio: dayRangeStart,
+                    dataFim: dayRangeEnd,
+                    slotCount: 1,
+                    timeRanges: [alloc.horario],
+                    regimeLabel: 'Regular'
+                });
             });
+        } else if (isFaixaAllocation(alloc)) {
+            buildGanttFaixaTurnoSnapshots(
+                alloc,
+                alloc.dataInicio || minDateStr,
+                alloc.dataFim || maxDateStr,
+                ganttTurnoConfigs
+            )
+                .filter((entry) => entry.dow === dayId)
+                .forEach((entry) => {
+                    snapshots.push({
+                        turno: entry.turno,
+                        dataInicio: entry.inicio,
+                        dataFim: entry.fim,
+                        slotCount: entry.slots.length,
+                        timeRanges: entry.slots.slice(),
+                        regimeLabel: 'Por faixas'
+                    });
+                });
+        }
 
-            const dayItems = Object.values(dayItemsMap);
+        if (snapshots.length === 0) return;
 
-            function renderTurnoLane(turnoConfig, isLastLane) {
-                const laneItems = dayItems.filter((item) => Array.isArray(item.turnos) && item.turnos.includes(turnoConfig.value));
-                let currentTop = 4;
-                let barsHtml = '';
+        const { chProf, chTotal } = getProfessorCarga(alloc);
 
-                laneItems.forEach((item) => {
-                    const startT = new Date(item.dataInicio + "T12:00:00").getTime();
-                    const endT = new Date(item.dataFim + "T12:00:00").getTime();
-                    const timeSpan = endT - startT;
-                    let leftPct = ((startT - minTime) / totalTime) * 100;
-                    let widthPct = (timeSpan / totalTime) * 100;
-                    if (leftPct < 0) leftPct = 0;
-                    if (widthPct < 1) widthPct = 1;
+        snapshots.forEach((snapshot) => {
+            const itemKey = [
+                alloc.turmaId,
+                alloc.disciplina,
+                snapshot.turno,
+                alloc.tipo,
+                snapshot.dataInicio,
+                snapshot.dataFim
+            ].join('|');
 
-                    const turmaNome = getTurmaLabel(item.turmaId, item.subGrupo);
-                    const baseLabel = store.rawData?.turmas?.find(x => String(x.turma_id) === String(item.turmaId))?.turma_label || item.turmaId;
-                    const tMatch = (item.subGrupo || '').match(/_?(T\d+)$/i);
-                    const tPrefix = tMatch ? `[${tMatch[1]}] ` : '';
-                    const isOutOfBounds = store.settings.termEnd && item.dataFim > store.settings.termEnd;
-                    const boxBorder = isOutOfBounds ? 'border: 2px solid #900;' : `border: 1px solid ${item.cor || '#ccc'};`;
-                    const barHeight = 36;
-                    const timeRangeStr = getShiftTimeRangeStr(item.timeRanges, turnoConfig.value, ganttTurnoConfigs);
+            if (!dayItemsMap[itemKey]) {
+                dayItemsMap[itemKey] = {
+                    ...alloc,
+                    turno: snapshot.turno,
+                    chTotal,
+                    chProf,
+                    dataInicio: snapshot.dataInicio,
+                    dataFim: snapshot.dataFim,
+                    slotCount: snapshot.slotCount,
+                    timeRanges: mergeTimeRanges([], snapshot.timeRanges),
+                    regimeLabel: snapshot.regimeLabel
+                };
+                return;
+            }
 
-                    let segmentsHtml = '';
-                    let externalLabelsHtml = '';
-                    let currentSegmentT = startT;
-                    const docentesList = (item.docentes && item.docentes.length > 0) ? item.docentes : [{ nome: item.docente, ch: item.chTotal }];
+            dayItemsMap[itemKey].dataInicio = snapshot.dataInicio && snapshot.dataInicio < dayItemsMap[itemKey].dataInicio
+                ? snapshot.dataInicio
+                : dayItemsMap[itemKey].dataInicio;
+            dayItemsMap[itemKey].dataFim = snapshot.dataFim && snapshot.dataFim > dayItemsMap[itemKey].dataFim
+                ? snapshot.dataFim
+                : dayItemsMap[itemKey].dataFim;
+            dayItemsMap[itemKey].timeRanges = mergeTimeRanges(dayItemsMap[itemKey].timeRanges, snapshot.timeRanges);
+            dayItemsMap[itemKey].slotCount = dayItemsMap[itemKey].timeRanges.length;
+        });
+    });
 
-                    docentesList.forEach((d, idx) => {
-                        const isTarget = teacherNamesMatch(d.nome, docenteName);
-                        const segCH = parseFloat(d.ch) || 0;
-                        const totalCH = parseFloat(item.chTotal) || 0;
-                        const rawShare = totalCH > 0 ? (segCH / totalCH) : 1;
-                        const safeShare = rawShare > 0 ? rawShare : (totalCH > 0 ? (1 / totalCH) : 1);
-                        const flexUnits = segCH > 0 ? segCH : 1;
+    return Object.values(dayItemsMap).sort((a, b) => {
+        const startCmp = String(a.dataInicio || '').localeCompare(String(b.dataInicio || ''));
+        if (startCmp !== 0) return startCmp;
+        const endCmp = String(a.dataFim || '').localeCompare(String(b.dataFim || ''));
+        if (endCmp !== 0) return endCmp;
+        return String(a.disciplina || '').localeCompare(String(b.disciplina || ''));
+    });
+}
 
-                        let segStartT = currentSegmentT;
-                        let segEndT = currentSegmentT + (timeSpan * safeShare);
-                        let sDate = new Date(segStartT).toISOString().split('T')[0];
-                        let eDate = new Date(segEndT).toISOString().split('T')[0];
+function renderGanttTurnoLane({ turnoConfig, dayItems, docenteName, minTime, totalTime, ganttTurnoConfigs, isLastLane }) {
+    const laneItems = dayItems.filter((item) => item.turno === turnoConfig.value);
+    let currentTop = 4;
+    let barsHtml = '';
 
-                        if (idx === 0) sDate = item.dataInicio;
-                        if (idx === docentesList.length - 1) eDate = item.dataFim;
+    laneItems.forEach((item) => {
+        const startT = new Date(item.dataInicio + 'T12:00:00').getTime();
+        const endT = new Date(item.dataFim + 'T12:00:00').getTime();
+        const timeSpan = endT - startT;
+        let leftPct = ((startT - minTime) / totalTime) * 100;
+        let widthPct = (timeSpan / totalTime) * 100;
+        if (leftPct < 0) leftPct = 0;
+        if (widthPct < 1) widthPct = 1;
 
-                        const fmtStart = sDate.split('-').reverse().slice(0, 2).join('/');
-                        const fmtEnd = eDate.split('-').reverse().slice(0, 2).join('/');
-                        const bgColor = isTarget ? (item.cor || '#3498db') : '#ffffff';
-                        const txtColor = isTarget ? '#000000' : '#666666';
-                        const borderStyle = isTarget ? 'none' : `1px dashed ${item.cor || '#ccc'}`;
-                        const zIndex = isTarget ? '2' : '1';
-                        const segmentPct = widthPct * safeShare;
-                        const isShortSegment = segmentPct < 16;
-                        const chProfessor = parseFloat(String(d.ch).replace(',', '.'));
-                        const chProfessorTxt = Number.isFinite(chProfessor) ? String(chProfessor).replace(/\.0+$/, '') : String(d.ch || '0');
-                        const labelMain = `${baseLabel} ${tPrefix}${item.disciplina} (${chProfessorTxt}h)`.replace(/\s+/g, ' ').trim();
-                        const horarioSmall = timeRangeStr.replace(/^\s*:\s*/, '').trim();
-                        const outsideLabel = `${baseLabel} ${tPrefix}${item.disciplina} (${chProfessorTxt}h)${timeRangeStr}`.replace(/\s+/g, ' ').trim();
+        const turmaNome = getTurmaLabel(item.turmaId, item.subGrupo);
+        const baseLabel = store.rawData?.turmas?.find((entry) => String(entry.turma_id) === String(item.turmaId))?.turma_label || item.turmaId;
+        const tMatch = (item.subGrupo || '').match(/_?(T\d+)$/i);
+        const tPrefix = tMatch ? `[${tMatch[1]}] ` : '';
+        const isOutOfBounds = store.settings.termEnd && item.dataFim > store.settings.termEnd;
+        const boxBorder = isOutOfBounds ? 'border: 2px solid #900;' : `border: 1px solid ${item.cor || '#ccc'};`;
+        const barHeight = 36;
+        const timeRangeStr = getShiftTimeRangeStr(item.timeRanges, turnoConfig.value, ganttTurnoConfigs);
 
-                        let content = '';
-                        if (isTarget) {
-                            if (isShortSegment) {
-                                content = `
+        let segmentsHtml = '';
+        let externalLabelsHtml = '';
+        let currentSegmentT = startT;
+        const docentesList = (item.docentes && item.docentes.length > 0) ? item.docentes : [{ nome: item.docente, ch: item.chTotal }];
+
+        docentesList.forEach((docente, idx) => {
+            const isTarget = teacherNamesMatch(docente.nome, docenteName);
+            const segCH = parseFloat(docente.ch) || 0;
+            const totalCH = parseFloat(item.chTotal) || 0;
+            const rawShare = totalCH > 0 ? (segCH / totalCH) : 1;
+            const safeShare = rawShare > 0 ? rawShare : (totalCH > 0 ? (1 / totalCH) : 1);
+            const flexUnits = segCH > 0 ? segCH : 1;
+
+            const segStartT = currentSegmentT;
+            const segEndT = currentSegmentT + (timeSpan * safeShare);
+            let startDate = new Date(segStartT).toISOString().split('T')[0];
+            let endDate = new Date(segEndT).toISOString().split('T')[0];
+
+            if (idx === 0) startDate = item.dataInicio;
+            if (idx === docentesList.length - 1) endDate = item.dataFim;
+
+            const fmtStart = startDate.split('-').reverse().slice(0, 2).join('/');
+            const fmtEnd = endDate.split('-').reverse().slice(0, 2).join('/');
+            const bgColor = isTarget ? (item.cor || '#3498db') : '#ffffff';
+            const txtColor = isTarget ? '#000000' : '#666666';
+            const borderStyle = isTarget ? 'none' : `1px dashed ${item.cor || '#ccc'}`;
+            const zIndex = isTarget ? '2' : '1';
+            const segmentPct = widthPct * safeShare;
+            const isShortSegment = segmentPct < 16;
+            const chProfessor = parseFloat(String(docente.ch).replace(',', '.'));
+            const chProfessorTxt = Number.isFinite(chProfessor) ? String(chProfessor).replace(/\.0+$/, '') : String(docente.ch || '0');
+            const labelMain = `${baseLabel} ${tPrefix}${item.disciplina} (${chProfessorTxt}h)`.replace(/\s+/g, ' ').trim();
+            const horarioSmall = timeRangeStr.replace(/^\s*:\s*/, '').trim();
+            const outsideLabel = `${baseLabel} ${tPrefix}${item.disciplina} (${chProfessorTxt}h)${timeRangeStr}`.replace(/\s+/g, ' ').trim();
+
+            let content = '';
+            if (isTarget) {
+                if (isShortSegment) {
+                    content = `
                             <div style="display:flex; justify-content:space-between; align-items:center; width:100%; padding:0 4px; gap:4px;">
                                 <span style="font-size:0.68em; opacity:0.95; flex-shrink:0; letter-spacing:-0.4px;">${fmtStart}</span>
                                 <span style="font-size:0.68em; opacity:0.95; flex-shrink:0; letter-spacing:-0.4px;">${fmtEnd}</span>
                             </div>
                         `;
 
-                                const textPos = (leftPct + widthPct > 75)
-                                    ? `right: calc(100% - ${leftPct}% + 6px);`
-                                    : `left: calc(${leftPct + widthPct}% + 6px);`;
-                                externalLabelsHtml += `
+                    const textPos = (leftPct + widthPct > 75)
+                        ? `right: calc(100% - ${leftPct}% + 6px);`
+                        : `left: calc(${leftPct + widthPct}% + 6px);`;
+                    externalLabelsHtml += `
                             <div style="position:absolute; top:${currentTop}px; height:${barHeight}px; display:flex; align-items:center; ${textPos} color:#000000; font-weight:800; font-size:0.82em; white-space:nowrap; z-index:10; text-shadow:1px 1px 0 #fff, -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff;">
                                 ${outsideLabel}
                             </div>
                         `;
-                            } else {
-                                content = `
+                } else {
+                    content = `
                             <div style="display:flex; flex-direction:column; justify-content:center; width:100%; padding:0 4px; line-height:1.05; gap:1px;">
                                 <div style="position:relative; display:flex; align-items:center; justify-content:space-between; width:100%; min-height:1.05em; gap:4px;">
                                     <span style="font-size:0.66em; font-weight:700; opacity:0.98; letter-spacing:-0.2px; flex-shrink:0;">${fmtStart}</span>
@@ -6952,41 +6971,41 @@ function renderGanttChart() {
                                 </div>
                             </div>
                         `;
-                            }
-                        } else {
-                            const firstName = (d.nome || '').split(' ')[0] || 'Docente';
-                            content = segmentPct < 8
-                                ? `<span style="font-size:0.8em; font-weight:normal; opacity:0.8; letter-spacing: -0.2px;">${firstName}</span>`
-                                : `<span style="font-size:0.8em; font-weight:normal; opacity:0.8; letter-spacing: -0.3px;">${firstName} (${chProfessorTxt}h)</span>`;
-                        }
+                }
+            } else {
+                const firstName = (docente.nome || '').split(' ')[0] || 'Docente';
+                content = segmentPct < 8
+                    ? `<span style="font-size:0.8em; font-weight:normal; opacity:0.8; letter-spacing: -0.2px;">${firstName}</span>`
+                    : `<span style="font-size:0.8em; font-weight:normal; opacity:0.8; letter-spacing: -0.3px;">${firstName} (${chProfessorTxt}h)</span>`;
+            }
 
-                        segmentsHtml += `
+            segmentsHtml += `
                     <div style="flex: ${flexUnits}; background-color: ${bgColor}; color: ${txtColor}; border-right: ${borderStyle}; border-left: ${borderStyle}; height: 100%; display: flex; align-items: center; justify-content: center; overflow: hidden; min-width: 0; box-sizing: border-box; z-index: ${zIndex};">
                         ${content}
                     </div>
                 `;
-                        currentSegmentT = segEndT;
-                    });
+            currentSegmentT = segEndT;
+        });
 
-                    barsHtml += `
-                    <div class="gantt-bar" 
+        barsHtml += `
+                    <div class="gantt-bar"
                          style="left: ${leftPct}%; width: ${widthPct}%; top: ${currentTop}px; height: ${barHeight}px; padding: 0; display: flex; flex-direction: row; ${boxBorder}"
-                         title="${item.disciplina}\nTurma: ${turmaNome}\nTurno: ${turnoConfig.label}\nPer�odo Geral: ${formatDateBR(item.dataInicio)} a ${formatDateBR(item.dataFim)}\nAulas no Dia: ${item.slotCount}">
+                         title="${item.disciplina}\nTurma: ${turmaNome}\nTurno: ${turnoConfig.label}${timeRangeStr}\nRegime: ${item.regimeLabel}\nPeriodo efetivo: ${formatDateBR(item.dataInicio)} a ${formatDateBR(item.dataFim)}\nAulas no dia: ${item.slotCount}">
                         ${segmentsHtml}
                     </div>
                     ${externalLabelsHtml}
             `;
-                    currentTop += barHeight + 6;
-                });
+        currentTop += barHeight + 6;
+    });
 
-                const laneHeight = Math.max(30, currentTop);
-                const laneBorder = isLastLane ? '' : 'border-bottom: 2px dashed #cbd5e1;';
+    const laneHeight = Math.max(30, currentTop);
+    const laneBorder = isLastLane ? '' : 'border-bottom: 2px dashed #cbd5e1;';
 
-                return {
-                    height: laneHeight,
-                    html: `
+    return {
+        height: laneHeight,
+        html: `
                     <div style="display: flex; height: ${laneHeight}px; ${laneBorder} position: relative;">
-                        <div style="width: 30px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 0.8em; color: #64748b; border-right: 1px solid #cbd5e1; background: #e2e8f0; flex-shrink: 0;">
+                        <div style="width: 30px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 0.8em; color: #64748b; border-right: 1px solid #cbd5e1; background: #e2e8f0; flex-shrink: 0;" title="${turnoConfig.label}">
                             ${turnoConfig.shortCode}
                         </div>
                         <div class="gantt-timeline" style="flex: 1; position: relative; background: transparent; border: none;">
@@ -6994,32 +7013,118 @@ function renderGanttChart() {
                         </div>
                     </div>
                 `
-                };
-            }
+    };
+}
 
-            const laneRenders = visibleTurnos.map((turnoConfig, idx) => renderTurnoLane(turnoConfig, idx === visibleTurnos.length - 1));
-            const totalRowHeight = laneRenders.reduce((sum, lane) => sum + lane.height, 0);
-
-            html += `
+function renderGanttDayRow(dayConfig, laneRenders) {
+    const totalRowHeight = laneRenders.reduce((sum, lane) => sum + lane.height, 0);
+    return `
             <div class="gantt-row" style="display: flex; border-bottom: 1px solid #2c3e50; margin: 0; padding: 0; min-height: ${totalRowHeight}px; position: relative; z-index: 1;">
                 <div style="width: 50px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.9em; color: var(--primary); background: #e2e8f0; border-right: 1px solid #cbd5e1; flex-shrink: 0;">
-                    ${d.name}
+                    ${dayConfig.name}
                 </div>
                 <div style="flex: 1; display: flex; flex-direction: column;">
                     ${laneRenders.map((lane) => lane.html).join('')}
                 </div>
             </div>
         `;
+}
+
+function renderGanttChart() {
+    try {
+        const container = document.getElementById('gantt-container');
+        const inputDocente = document.getElementById('inp-gantt-docente');
+        if (!container || !inputDocente) return;
+
+        const docenteName = inputDocente.value.trim();
+        if (!docenteName) {
+            container.innerHTML = '<div style="text-align: center; color: #7f8c8d; margin-top: 50px; font-size: 1.1em;">Por favor, digite o nome de um professor.</div>';
+            return;
+        }
+
+        const allocs = store.allocations.filter((alloc) => allocationHasTeacherMatch(alloc, docenteName));
+        if (allocs.length === 0) {
+            container.innerHTML = `<div style="text-align: center; color: #7f8c8d; margin-top: 50px; font-size: 1.1em;">Nenhuma disciplina encontrada para <b>${docenteName}</b>.</div>`;
+            return;
+        }
+
+        const totalCH = calculateTeacherTotalCH(docenteName);
+        let minDateStr = store.settings.termStart || '2025-01-01';
+        let maxDateStr = store.settings.termEnd || '2025-12-31';
+
+        allocs.forEach((alloc) => {
+            if (alloc.dataInicio && alloc.dataInicio < minDateStr) minDateStr = alloc.dataInicio;
+            if (alloc.dataFim && alloc.dataFim > maxDateStr) maxDateStr = alloc.dataFim;
         });
+
+        const executionRangeByAlloc = getAllocationExecutionRangeMap(allocs, minDateStr, maxDateStr);
+        const scheduledExecutionRangeByAlloc = getNonIntensiveExecutionRangeMap(allocs, minDateStr, maxDateStr);
+        const ganttTurnoConfigs = getGanttTurnoConfigs();
+        const visibleTurnos = getGanttVisibleTurnos(allocs, minDateStr, maxDateStr, ganttTurnoConfigs);
+        const minTime = new Date(minDateStr + 'T12:00:00').getTime();
+        const maxTime = new Date(maxDateStr + 'T12:00:00').getTime();
+        const totalTime = maxTime - minTime || 1;
+
+        const weekDays = [
+            { id: 1, name: 'SEG' },
+            { id: 2, name: 'TER' },
+            { id: 3, name: 'QUA' },
+            { id: 4, name: 'QUI' },
+            { id: 5, name: 'SEX' },
+            { id: 6, name: 'SAB' }
+        ];
+
+        let html = `
+        <div style="margin-bottom: 20px; text-align: center;">
+            <h3 style="color: var(--primary); margin: 0; font-size: 1.4em; text-transform: uppercase;">Cronograma: ${docenteName} (${totalCH}h)</h3>
+        </div>
+
+        <div class="gantt-container" style="position: relative; border: 1px solid #ddd; border-radius: 6px; overflow: hidden; background: #f0f3f5;">
+            <div style="position: absolute; top: 0; bottom: 0; left: 80px; right: 0; pointer-events: none; z-index: 0;">
+                ${buildGanttTimelineLinesHtml(minTime, maxTime, totalTime)}
+            </div>
+
+            <div style="position: absolute; top: 0; bottom: 0; left: 80px; right: 0; pointer-events: none; z-index: 10;">
+                ${buildGanttMonthOverlaysHtml(minTime, maxTime, totalTime)}
+            </div>
+
+            ${buildGanttMonthHeaderColumnsHtml(minTime, maxTime, totalTime)}
+        `;
+
+        weekDays.forEach((dayConfig) => {
+            const dayItems = collectGanttDayItems({
+                dayId: dayConfig.id,
+                allocs,
+                docenteName,
+                minDateStr,
+                maxDateStr,
+                ganttTurnoConfigs,
+                visibleTurnos,
+                executionRangeByAlloc,
+                scheduledExecutionRangeByAlloc
+            });
+
+            const laneRenders = visibleTurnos.map((turnoConfig, idx) => renderGanttTurnoLane({
+                turnoConfig,
+                dayItems,
+                docenteName,
+                minTime,
+                totalTime,
+                ganttTurnoConfigs,
+                isLastLane: idx === visibleTurnos.length - 1
+            }));
+
+            html += renderGanttDayRow(dayConfig, laneRenders);
+        });
+
         html += '</div>';
         container.innerHTML = html;
     } catch (err) {
-        console.error("Erro renderGanttChart:", err);
+        console.error('Erro renderGanttChart:', err);
         const container = document.getElementById('gantt-container');
-        if (container) container.innerHTML = `<div style="color:red; margin-top:20px;"><b>Erro Inesperado no Gráfico:</b><br>${err.message}</div>`;
+        if (container) container.innerHTML = `<div style="color:red; margin-top:20px;"><b>Erro Inesperado no Grafico:</b><br>${err.message}</div>`;
     }
 }
-
 // ==== NOVO MOTOR: AUDITORIA GLOBAL DE PROFESSORES ====
 function detectGlobalTeacherConflicts() {
     // Retorna Map<nomeDocente, [{dia, horario, dataInicio, discA, turmaA, discB, turmaB}]>
