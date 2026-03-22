@@ -35,6 +35,19 @@ const btnLimpar = document.getElementById('btn-limpar-docente');
 let docenteSelecionadoAtual = '';
 let mesSelecionadoAtual = '';
 let docentesDisponiveis = [];
+let publicCatalog = null;
+
+function applyPublicPlanSettings(dadosPublicos = {}) {
+    const settings = dadosPublicos.settings && typeof dadosPublicos.settings === 'object' ? dadosPublicos.settings : {};
+    const plan = dadosPublicos.plan && typeof dadosPublicos.plan === 'object' ? dadosPublicos.plan : {};
+    const meta = dadosPublicos.meta && typeof dadosPublicos.meta === 'object' ? dadosPublicos.meta : {};
+
+    store.settings.termStart = settings.termStart || plan.termStart || store.settings.termStart;
+    store.settings.termEnd = settings.termEnd || plan.termEnd || store.settings.termEnd;
+    if (settings.periodo || plan.periodo || meta.periodoLetivo) {
+        store.settings.periodo = settings.periodo || plan.periodo || meta.periodoLetivo;
+    }
+}
 
 // 1. Quando a página carregar
 document.addEventListener('DOMContentLoaded', async () => {
@@ -52,11 +65,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 store.allocations = dadosPublicos;
             } else {
                 store.allocations = dadosPublicos.allocations || [];
-                // Lê dinamicamente as datas do semestre salvas pelo Coordenador
-                if (dadosPublicos.settings) {
-                    store.settings.termStart = dadosPublicos.settings.termStart;
-                    store.settings.termEnd = dadosPublicos.settings.termEnd;
-                }
+                publicCatalog = dadosPublicos.meta && typeof dadosPublicos.meta === 'object' ? dadosPublicos.meta : null;
+                applyPublicPlanSettings(dadosPublicos);
             }
         } else {
             console.warn('Arquivo alocacoes_publicas.json não encontrado. Carregando modo Offline (Local).');
@@ -77,7 +87,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 // 2. Extrai e preenche a lista de professores únicos do JSON
 function preencherListaDocentes() {
-    const docentesSet = new Set();
+    const docentesSet = new Set(Array.isArray(publicCatalog?.docentes) ? publicCatalog.docentes.map((d) => String(d || '').trim()).filter(Boolean) : []);
 
     // Varrer todas as alocações da base de dados e pegar Nomes
     // store.allocations é um array de eventos de aula (não há .eventos internamente)

@@ -40,6 +40,10 @@ function validatePublicExportData(exportData) {
     issues.push('Data inicial do semestre maior que a data final.');
   }
 
+  if (exportData.meta && typeof exportData.meta !== 'object') {
+    issues.push('Campo meta inválido para exportação pública.');
+  }
+
   return issues;
 }
 
@@ -98,10 +102,38 @@ function buildPlanScopedPayload(scope, allocations, extra = {}) {
 
 function buildPublicExportPayload() {
   const activePlan = store.getActivePlanMeta();
+  const docentes = [...new Set(
+    store.allocations.flatMap((alloc) => {
+      const names = [];
+      if (typeof alloc?.docente === 'string') names.push(alloc.docente.trim());
+      else if (alloc?.docente?.nome) names.push(String(alloc.docente.nome).trim());
+      if (Array.isArray(alloc?.docentes)) {
+        alloc.docentes.forEach((entry) => {
+          const nome = entry?.nome || entry;
+          if (nome) names.push(String(nome).trim());
+        });
+      }
+      return names.filter((name) => name && name.toUpperCase() !== 'A DEFINIR');
+    })
+  )].sort((a, b) => a.localeCompare(b, 'pt-BR', { sensitivity: 'base' }));
+  const turmas = [...new Set(
+    store.allocations
+      .map((alloc) => String(alloc?.turmaId || '').trim())
+      .filter(Boolean)
+  )].sort((a, b) => a.localeCompare(b, 'pt-BR', { sensitivity: 'base' }));
+
   return {
     version: 2,
     exportedAt: new Date().toISOString(),
     plan: activePlan?.key ? activePlan : null,
+    meta: {
+      publicationTarget: 'web_public',
+      periodoLetivo: store.settings.periodo || '',
+      docenteCount: docentes.length,
+      turmaCount: turmas.length,
+      docentes,
+      turmas
+    },
     allocations: store.allocations,
     settings: {
       termStart: store.settings.termStart,

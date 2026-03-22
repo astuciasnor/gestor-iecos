@@ -38,6 +38,29 @@ const btnTopo = document.getElementById('btn-topo');
 
 let turmaIdSelecionada = '';
 let mesSelecionadoAtual = '';
+let publicCatalog = null;
+
+function applyPublicPlanSettings(dadosPublicos = {}) {
+    const settings = dadosPublicos.settings && typeof dadosPublicos.settings === 'object' ? dadosPublicos.settings : {};
+    const plan = dadosPublicos.plan && typeof dadosPublicos.plan === 'object' ? dadosPublicos.plan : {};
+    const meta = dadosPublicos.meta && typeof dadosPublicos.meta === 'object' ? dadosPublicos.meta : {};
+
+    store.settings.termStart = settings.termStart || plan.termStart || store.settings.termStart;
+    store.settings.termEnd = settings.termEnd || plan.termEnd || store.settings.termEnd;
+    if (settings.periodo || plan.periodo || meta.periodoLetivo) {
+        store.settings.periodo = settings.periodo || plan.periodo || meta.periodoLetivo;
+    }
+}
+
+function getPublicTurmaIdsSet() {
+    if (!Array.isArray(publicCatalog?.turmas)) return null;
+
+    const ids = publicCatalog.turmas
+        .map((turmaId) => String(turmaId || '').trim())
+        .filter(Boolean);
+
+    return ids.length ? new Set(ids) : null;
+}
 
 // 1. Quando a página carregar, executamos isso:
 document.addEventListener('DOMContentLoaded', async () => {
@@ -55,11 +78,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 store.allocations = dadosPublicos;
             } else {
                 store.allocations = dadosPublicos.allocations || [];
-                // Lê dinamicamente as datas do semestre salvas pelo Coordenador
-                if (dadosPublicos.settings) {
-                    store.settings.termStart = dadosPublicos.settings.termStart;
-                    store.settings.termEnd = dadosPublicos.settings.termEnd;
-                }
+                publicCatalog = dadosPublicos.meta && typeof dadosPublicos.meta === 'object' ? dadosPublicos.meta : null;
+                applyPublicPlanSettings(dadosPublicos);
             }
         } else {
             console.warn('Arquivo alocacoes_publicas.json não encontrado. Carregando modo Offline (Local).');
@@ -110,7 +130,18 @@ function configurarEventos() {
 function preencherCursos() {
     selCurso.innerHTML = '<option value="">Selecione um curso...</option>';
     if (store.rawData && store.rawData.cursos) {
+        const publicTurmaIds = getPublicTurmaIdsSet();
+        const allowedCourseSiglas = publicTurmaIds
+            ? new Set(
+                (store.rawData.turmas || [])
+                    .filter((turma) => publicTurmaIds.has(String(turma.turma_id || '').trim()))
+                    .map((turma) => String(turma.sigla || '').trim())
+                    .filter(Boolean)
+            )
+            : null;
+
         store.rawData.cursos.forEach(c => {
+            if (allowedCourseSiglas && !allowedCourseSiglas.has(String(c.sigla || '').trim())) return;
             const opt = document.createElement('option');
             opt.value = c.sigla;
             opt.textContent = c.curso;
@@ -128,7 +159,11 @@ function preencherTurmas(cursoSigla) {
         return;
     }
 
-    const turmasDoCurso = store.rawData.turmas.filter(t => t.sigla === cursoSigla);
+    const publicTurmaIds = getPublicTurmaIdsSet();
+    const turmasDoCurso = store.rawData.turmas.filter(t => (
+        t.sigla === cursoSigla &&
+        (!publicTurmaIds || publicTurmaIds.has(String(t.turma_id || '').trim()))
+    ));
 
     if (turmasDoCurso.length > 0) {
         turmasDoCurso.forEach(t => {
