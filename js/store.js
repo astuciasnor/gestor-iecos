@@ -12,11 +12,16 @@ import {
 import { generateUUID } from './utils.js';
 
 function normalizeTurnoKey(value) {
-  return String(value || '')
+  const normalized = String(value || '')
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
     .toLowerCase()
     .replace(/[^a-z0-9]/g, '');
+
+  if (normalized.includes('manh')) return 'manha';
+  if (normalized.includes('tard')) return 'tarde';
+  if (normalized.includes('noit')) return 'noite';
+  return normalized;
 }
 
 class Store {
@@ -79,8 +84,8 @@ class Store {
   }
 
   setLastContext(curso, turma) {
-    if (curso) this.settings.lastCurso = curso;
-    if (turma) this.settings.lastTurma = turma;
+    if (curso !== undefined) this.settings.lastCurso = curso || '';
+    if (turma !== undefined) this.settings.lastTurma = turma || '';
     this.saveSettings();
   }
 

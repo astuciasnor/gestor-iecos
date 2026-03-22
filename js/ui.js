@@ -2,6 +2,19 @@ import { store } from './store.js';
 import { normalizePeriodo as normalizePeriodoLetivoCode } from './plan_storage.js';
 import { getCalendarEvents } from './calendar.js';
 import { countBusinessDays, countWeekdaysInPeriod, addBusinessDays, isDateOverlap, calculateEndDateByWeekday } from './utils.js';
+import {
+    buildSigaaExportPayload,
+    computeRemainingFractionalHours,
+    detectTeacherConflicts,
+    filterExportableAllocations,
+    generateAllocationOccurrences,
+    getTeacherActiveShifts,
+    initializeWeeklyScheduleForTurma,
+    reconcileTurmaSelectionAfterPLChange,
+    resetWeeklyViewOnTurmaChange,
+    resolveActiveAcademicPeriod,
+    validateOccurrenceWithinSemesterBounds
+} from './academic_rules.mjs';
 
 const gridContainer = document.getElementById('weekly-grid');
 const selCurso = document.getElementById('sel-curso');
@@ -195,7 +208,7 @@ function wrapTeacherSelect() {
         const btnRefresh = document.createElement('button');
         btnRefresh.id = 'btn-refresh-teacher';
         btnRefresh.innerHTML = '🔄';
-        btnRefresh.title = 'Atualizar calendário deste professor';
+        btnRefresh.title = 'Atualizar vistoria deste professor';
         btnRefresh.style.background = '#3498db';
         btnRefresh.style.color = '#fff';
         btnRefresh.style.border = 'none';
@@ -218,7 +231,7 @@ function wrapTeacherSelect() {
                 btnRefresh.style.transform = `rotate(${btnRefresh.dataset.rot || 360}deg)`;
                 btnRefresh.dataset.rot = parseInt(btnRefresh.dataset.rot || 360) + 360;
             } else {
-                showToastWarning('Selecione um professor primeiro para atualizar a grade.', 'warning', 2200);
+                showToastWarning('Selecione um professor primeiro para atualizar a vistoria.', 'warning', 2200);
             }
         });
     }
@@ -330,6 +343,48 @@ export function showToastWarning(message, type = 'error', customDuration = null)
         fb.style.display = 'none';
         fb.classList.add('hidden');
     }, duration);
+}
+
+function showPersistentStatusMessage(message, type = 'success') {
+    const fb = document.getElementById('feedback-msg');
+    if (!fb) return;
+
+    if (window.toastTimeout) {
+        clearTimeout(window.toastTimeout);
+        window.toastTimeout = null;
+    }
+
+    const backgroundColor = type === 'success'
+        ? '#27ae60'
+        : (type === 'warning' ? '#f39c12' : '#e74c3c');
+
+    fb.classList.remove('hidden');
+    fb.style.display = 'block';
+    fb.style.backgroundColor = backgroundColor;
+    fb.style.color = '#fff';
+    fb.style.padding = '15px 20px';
+    fb.style.borderRadius = '6px';
+    fb.style.marginBottom = '15px';
+    fb.style.fontWeight = 'bold';
+    fb.style.boxShadow = '0 4px 10px rgba(0,0,0,0.3)';
+    fb.style.textAlign = 'center';
+    fb.style.fontSize = '1.05em';
+    fb.style.lineHeight = '1.4';
+    fb.innerHTML = `
+        <div style="display:flex; align-items:center; justify-content:center; gap:12px; flex-wrap:wrap;">
+            <span>${message}</span>
+            <button id="btn-feedback-persistent-ok" type="button" style="background:#ffffff; color:${backgroundColor}; border:none; border-radius:999px; padding:8px 16px; font-weight:800; cursor:pointer;">OK</button>
+        </div>
+    `;
+
+    const btnOk = document.getElementById('btn-feedback-persistent-ok');
+    if (btnOk) {
+        btnOk.onclick = () => {
+            fb.style.display = 'none';
+            fb.classList.add('hidden');
+            fb.innerHTML = '';
+        };
+    }
 }
 
 async function copyTextToClipboard(text) {
@@ -1750,12 +1805,12 @@ function getPreferredStartDateForCurrentTurma(options = {}) {
     }
 
     const latestAllocationEnd = getLastValidAllocationEndForCurrentTurma();
-    if (latestAllocationEnd) {
-        return shiftISODate(latestAllocationEnd, 1) || latestAllocationEnd;
-    }
-
     const turmaPreferred = store.selectedTurma ? store.getTurmaLastStart(store.selectedTurma) : '';
-    return turmaPreferred || termStart;
+    return initializeWeeklyScheduleForTurma({
+        termStart,
+        turmaLastStart: turmaPreferred,
+        latestAllocationEnd
+    }).firstFaixaStart || termStart;
 }
 
 function normalizeConflictSlotLabel(value) {
@@ -3134,11 +3189,18 @@ function computeIntensiveExecution(intense, options = {}) {
     let cursor = new Date(faixas[0].inicio + 'T12:00:00');
     let loops = 0;
     const maxLoops = options.maxLoops || 800;
-    const lastFaixaEnd = faixas[faixas.length - 1]?.fim || '';
-    const occupancyEnd = lastFaixaEnd || store.settings.termEnd || faixas[faixas.length - 1]?.inicio || faixas[0].inicio;
+    const explicitFaixaEnd = String(faixas[faixas.length - 1]?.fim || '').trim();
+    const semesterEnd = String(store.settings.termEnd || faixas[faixas.length - 1]?.inicio || faixas[0].inicio).trim();
+    const executionBoundary = explicitFaixaEnd && semesterEnd
+        ? (explicitFaixaEnd < semesterEnd ? explicitFaixaEnd : semesterEnd)
+        : (explicitFaixaEnd || semesterEnd || faixas[faixas.length - 1]?.inicio || faixas[0].inicio);
+    const occupancyEnd = executionBoundary || faixas[faixas.length - 1]?.inicio || faixas[0].inicio;
     const occupiedSlotsByDate = options.respectTurmaOccupancy
         ? buildTurmaOccupiedSlotsByDate(intense, result.dataInicio, occupancyEnd)
         : new Map();
+    const candidateDates = [];
+    const slotsByDate = {};
+
     const filterFreeSlotsForDate = (dateStr, daySlots = [], dayOfWeek = 0) => {
         let freeSlots = Array.isArray(daySlots) ? daySlots.slice() : [];
 
@@ -3157,43 +3219,20 @@ function computeIntensiveExecution(intense, options = {}) {
 
         return freeSlots;
     };
-    const findRemainingCapacityAfter = (currentDateStr) => {
-        if (!lastFaixaEnd || !currentDateStr || currentDateStr >= lastFaixaEnd) return null;
-
-        const probe = new Date(currentDateStr + 'T12:00:00');
-        probe.setDate(probe.getDate() + 1);
-        let guard = 0;
-
-        while (guard < maxLoops) {
-            const probeDate = toISODate(probe);
-            if (probeDate > lastFaixaEnd) break;
-
-            const probeDow = probe.getDay();
-            const probeFaixa = getActiveFaixaForDate(faixas, probeDate);
-            if (probeFaixa && !feriadosSet.has(probeDate) && probeDow !== 0 && probeFaixa.dias.includes(probeDow)) {
-                const probeDaySlots = (probeFaixa.drawnSlotsByDay?.[probeDow] || probeFaixa.slots || []).slice();
-                const probeFreeSlots = filterFreeSlotsForDate(probeDate, probeDaySlots, probeDow);
-
-                if (probeFreeSlots.length > 0) {
-                    return { date: probeDate, slots: probeFreeSlots.length };
-                }
-            }
-
-            probe.setDate(probe.getDate() + 1);
-            guard++;
-        }
-
-        return null;
-    };
 
     while (loops < maxLoops) {
         const dStr = toISODate(cursor);
+        if (executionBoundary && !validateOccurrenceWithinSemesterBounds({
+            occurrenceDate: dStr,
+            semesterEndDate: executionBoundary
+        })) {
+            break;
+        }
         const dow = cursor.getDay();
 
         const faixa = getActiveFaixaForDate(faixas, dStr);
         if (!faixa) {
-            const lastFaixaEnd = faixas[faixas.length - 1].fim;
-            if (lastFaixaEnd && dStr > lastFaixaEnd) break;
+            if (executionBoundary && dStr > executionBoundary) break;
             cursor.setDate(cursor.getDate() + 1);
             loops++;
             continue;
@@ -3204,40 +3243,43 @@ function computeIntensiveExecution(intense, options = {}) {
             const freeSlots = filterFreeSlotsForDate(dStr, daySlots, dow);
 
             if (freeSlots.length > 0) {
-                const remaining = totalCH > 0 ? (totalCH - result.totalHours) : freeSlots.length;
-                const take = totalCH > 0 ? Math.min(remaining, freeSlots.length) : freeSlots.length;
-                if (totalCH > 0 && remaining > 0 && take < freeSlots.length) {
-                    result.wasTruncatedByCH = true;
-                    result.truncationDate = dStr;
-                    result.truncationDaySlots = freeSlots.length;
-                    result.truncationUsedSlots = take;
-                    result.truncationType = 'partial-day';
-                }
-                if (take > 0) {
-                    const usedSlots = freeSlots.slice(0, take);
-                    result.byDate[dStr] = usedSlots;
-                    result.totalHours += usedSlots.length;
-                    result.dataFim = dStr;
-                    result.horariosUltimoDia = usedSlots;
-                }
+                candidateDates.push(dStr);
+                slotsByDate[dStr] = freeSlots;
             }
         }
 
-        if (totalCH > 0 && result.totalHours >= totalCH) {
-            if (!result.wasTruncatedByCH) {
-                const remainingCapacity = findRemainingCapacityAfter(dStr);
-                if (remainingCapacity) {
-                    result.wasTruncatedByCH = true;
-                    result.truncationDate = remainingCapacity.date;
-                    result.truncationDaySlots = remainingCapacity.slots;
-                    result.truncationUsedSlots = 0;
-                    result.truncationType = 'after-boundary';
-                }
-            }
-            break;
-        }
         cursor.setDate(cursor.getDate() + 1);
         loops++;
+    }
+
+    const occurrences = generateAllocationOccurrences({
+        totalWorkload: totalCH,
+        accumulatedAllocatedHours: 0,
+        nextValidDate: faixas[0].inicio,
+        semesterEndDate: executionBoundary,
+        scheduleDates: candidateDates,
+        slotsByDate
+    });
+
+    result.byDate = occurrences.byDate || {};
+    result.totalHours = occurrences.totalAllocatedHours || 0;
+    result.dataFim = occurrences.lastDate || result.dataInicio;
+    result.horariosUltimoDia = occurrences.lastDaySlots || [];
+
+    if (occurrences.partialFinalDay) {
+        result.wasTruncatedByCH = true;
+        result.truncationDate = occurrences.lastDate || '';
+        result.truncationDaySlots = [...new Set((Array.isArray(slotsByDate?.[occurrences.lastDate]) ? slotsByDate[occurrences.lastDate] : []).filter(Boolean).map(String))].length;
+        result.truncationUsedSlots = occurrences.lastOccurrenceHours || 0;
+        result.truncationType = 'partial-day';
+    } else if (occurrences.wasClippedToSemesterEnd) {
+        result.wasTruncatedByCH = true;
+        result.truncationDate = executionBoundary || '';
+        result.truncationDaySlots = 0;
+        result.truncationUsedSlots = 0;
+        result.truncationType = 'semester-boundary';
+    } else if (computeRemainingFractionalHours(totalCH, result.totalHours) > 0 && executionBoundary) {
+        result.truncationDate = executionBoundary;
     }
 
     const allSlots = new Set();
@@ -4004,6 +4046,7 @@ function syncAllRegularDates() {
         while (classesFound < maxCH && loops < 365) {
             const dow = currentDate.getDay();
             const dStr = currentDate.toISOString().split('T')[0];
+            if (termEnd && dStr > termEnd) break;
 
             const slotsToday = group.filter(a => parseInt(a.diaSemana) === dow);
 
@@ -4066,10 +4109,7 @@ function syncAllRegularDates() {
  * Robusto e genérico para qualquer CH e combinação de horários.
  */
 function syncAllIntensiveDates() {
-    // Filtra todas as ofertas por faixas da turma selecionada
-    const ofertasPorFaixa = store.allocations.filter(a =>
-        String(a.turmaId) === String(store.selectedTurma) && isFaixaAllocation(a)
-    );
+    const ofertasPorFaixa = store.allocations.filter((a) => isFaixaAllocation(a));
 
     ofertasPorFaixa.forEach(intense => {
         const execution = computeIntensiveExecution(intense, { respectPriority: true, respectTurmaOccupancy: true });
@@ -4198,11 +4238,16 @@ function getOfficialPeriodoLetivoPlans() {
 }
 
 function normalizeTurnoOfertaKey(value) {
-    return String(value || '')
+    const normalized = String(value || '')
         .normalize('NFD')
         .replace(/[\u0300-\u036f]/g, '')
         .toLowerCase()
         .replace(/[^a-z0-9]/g, '');
+
+    if (normalized.includes('manh')) return 'manha';
+    if (normalized.includes('tard')) return 'tarde';
+    if (normalized.includes('noit')) return 'noite';
+    return normalized;
 }
 
 function formatTurnoOfertaLabel(value) {
@@ -4285,18 +4330,12 @@ function getSuggestedOfficialPeriodoLetivoPlan() {
 
 function resolveOfficialPeriodoLetivoPlan(preferredMeta = null) {
     const plans = getOfficialPeriodoLetivoPlans();
-    if (!plans.length) {
-        return preferredMeta ? store.getPlanMetaFromSettings(preferredMeta) : store.getPlanMetaFromSettings();
-    }
-
-    const preferred = preferredMeta ? store.getPlanMetaFromSettings(preferredMeta) : store.getPlanMetaFromSettings();
-    const preferredYear = String(preferred?.termStart || '').split('-')[0] || '';
-    return plans.find((plan) => plan.key === preferred.key)
-        || plans.find((plan) => plan.periodo === preferred.periodo && plan.termStart === preferred.termStart && plan.termEnd === preferred.termEnd)
-        || plans.find((plan) => plan.ano && preferredYear && String(plan.ano) === preferredYear && plan.periodo === preferred.periodo)
-        || plans.find((plan) => plan.periodo === preferred.periodo)
-        || getSuggestedOfficialPeriodoLetivoPlan()
-        || plans[0];
+    const fallback = preferredMeta ? store.getPlanMetaFromSettings(preferredMeta) : store.getPlanMetaFromSettings();
+    return resolveActiveAcademicPeriod({
+        plans,
+        preferredMeta: fallback,
+        fallbackMeta: getSuggestedOfficialPeriodoLetivoPlan() || fallback
+    });
 }
 
 function formatDateBRShortYear(dateStr) {
@@ -4313,11 +4352,11 @@ function buildPeriodoLetivoOptionLabel(plan) {
     return `${prefix}${plan.periodo} (${formatDateBRShortYear(plan.termStart)} a ${formatDateBRShortYear(plan.termEnd)})`;
 }
 
-function populatePeriodoLetivoOptions() {
+function populatePeriodoLetivoOptions(preferredMeta = null) {
     const selPeriodo = document.getElementById('sel-periodo-letivo');
     if (!selPeriodo) return;
 
-    const currentMeta = resolveOfficialPeriodoLetivoPlan();
+    const currentMeta = resolveOfficialPeriodoLetivoPlan(preferredMeta || store.getActivePlanMeta());
     const officialPlans = getOfficialPeriodoLetivoPlans();
     selPeriodo.innerHTML = '';
 
@@ -4362,16 +4401,16 @@ function getSelectedPeriodoLetivoMeta() {
     });
 }
 
-function syncPlanInputsFromStore() {
+function syncPlanInputsFromStore(preferredMeta = null) {
     const selPeriodo = document.getElementById('sel-periodo-letivo');
     if (inpTermStart) inpTermStart.value = store.settings.termStart || '';
     if (inpTermEnd) inpTermEnd.value = store.settings.termEnd || '';
     if (calStart) calStart.value = store.settings.termStart || '';
     if (calEnd) calEnd.value = store.settings.termEnd || '';
-    populatePeriodoLetivoOptions();
+    populatePeriodoLetivoOptions(preferredMeta || store.getActivePlanMeta());
     populateTurnoOfertaOptions(store.settings.turnoOferta || 'Tarde');
     if (selPeriodo) {
-        const currentMeta = resolveOfficialPeriodoLetivoPlan();
+        const currentMeta = resolveOfficialPeriodoLetivoPlan(preferredMeta || store.getActivePlanMeta());
         const optionValues = Array.from(selPeriodo.options).map((opt) => opt.value);
         const preferredValue =
             optionValues.find((value) => value === currentMeta.key) ||
@@ -4437,16 +4476,14 @@ function applyPlanContextToUI(planMeta = {}, options = {}) {
     const didChangePlan = result.meta.key !== previousKey;
     const planStart = result.meta.termStart || store.settings.termStart || '';
 
-    syncPlanInputsFromStore();
+    syncPlanInputsFromStore(result.meta);
     updateActivePlanStatus();
 
     if (options.resetDraftOnChange !== false && didChangePlan) {
         resetWeeklyDraftStateForPlanSwitch(planStart);
     }
 
-    if (didChangePlan && planStart) {
-        setWeeklyViewByDate(planStart, { followFaixa: false, render: false });
-    }
+    const selectionState = syncCursoTurmaSelectionAfterPlanChange();
 
     const preferredStart = didChangePlan
         ? planStart
@@ -4455,10 +4492,16 @@ function applyPlanContextToUI(planMeta = {}, options = {}) {
         inputConfig.inicio.value = preferredStart;
     }
 
+    if (didChangePlan) {
+        resetWeeklyEditorForTurma(selectionState.nextTurma, {
+            preferredStart: planStart,
+            resetWeekToPlanStart: true
+        });
+    }
+
     applyFaixaDateAutofill({ forceSingleBounds: true, preferredStart });
     refreshPendingFaixaStartPickUI();
     updateWeeklyContextNote();
-    syncAllRegularDates();
     syncAllIntensiveDates();
     populateDocentes();
     updateDisciplinaDatalist();
@@ -4977,6 +5020,116 @@ function sanitizeImportInputElement() {
     return clone;
 }
 
+function getLatestAllocationEndForTurma(turmaId) {
+    if (!turmaId || !Array.isArray(store.allocations)) return '';
+
+    return store.allocations.reduce((latest, alloc) => {
+        if (String(alloc?.turmaId || '') !== String(turmaId)) return latest;
+        if (isPendingAllocation(alloc)) return latest;
+
+        const candidate = String(alloc?.dataFim || alloc?.dataInicio || '').trim();
+        if (!candidate) return latest;
+        return !latest || candidate > latest ? candidate : latest;
+    }, '');
+}
+
+function populateTurmaOptionsForCurso(cursoSigla, preferredTurma = '') {
+    const reconciled = reconcileTurmaSelectionAfterPLChange({
+        selectedCurso: cursoSigla,
+        selectedTurma: preferredTurma,
+        lastTurma: store.settings.lastTurma,
+        turmas: store.rawData?.turmas || []
+    });
+
+    selTurma.disabled = !cursoSigla;
+    selTurma.innerHTML = '<option value="">Selecione uma Turma</option>';
+
+    reconciled.validTurmas.forEach((turma) => {
+        const option = document.createElement('option');
+        option.value = turma.turma_id;
+        option.textContent = getTurmaSelectLabel(turma.turma_id);
+        selTurma.appendChild(option);
+    });
+
+    selTurma.value = reconciled.selectedTurma || '';
+    return reconciled;
+}
+
+function resetWeeklyEditorForTurma(turmaId, options = {}) {
+    const {
+        preferredStart = '',
+        resetWeekToPlanStart = false
+    } = options;
+    const termStart = String(store.settings.termStart || inpTermStart?.value || calStart?.value || '').trim();
+    const latestAllocationEnd = getLatestAllocationEndForTurma(turmaId);
+    const initialized = initializeWeeklyScheduleForTurma({
+        termStart,
+        turmaLastStart: turmaId ? store.getTurmaLastStart(turmaId) : '',
+        latestAllocationEnd,
+        preferredStart
+    });
+    const resetState = resetWeeklyViewOnTurmaChange({
+        termStart,
+        turmaFirstFaixaStart: initialized.firstFaixaStart,
+        fallbackDate: termStart
+    });
+
+    deactivateDrawingMode();
+    editingDisciplinaDraft = '';
+    lastDisciplinaInputNormalized = '';
+    updateWeeklyFaixasTitleDisciplina();
+    updateWeeklyFaixaHoursDisplay();
+    collapseFaixasForNewComponent({
+        preferredStart: resetState.firstFaixaStart,
+        useCurrentUI: false
+    });
+
+    faixasPatterns = { 1: [], 2: [], 3: [] };
+    setFaixaStatus(1, 0);
+    setFaixaStatus(2, 0);
+    setFaixaStatus(3, 0);
+
+    if (inputConfig.inicio) {
+        inputConfig.inicio.value = initialized.firstFaixaStart || resetState.firstFaixaStart || termStart;
+    }
+
+    const anchorDate = resetWeekToPlanStart
+        ? (resetState.firstFaixaStart || termStart)
+        : (initialized.firstFaixaStart || resetState.firstFaixaStart || termStart);
+    if (anchorDate) {
+        setWeeklyViewByDate(anchorDate, { followFaixa: false, render: false });
+    }
+
+    applyFaixaDateAutofill({
+        forceSingleBounds: true,
+        preferredStart: resetState.firstFaixaStart || initialized.firstFaixaStart || termStart
+    });
+    refreshPendingFaixaStartPickUI();
+    updateWeeklyContextNote();
+}
+
+function syncCursoTurmaSelectionAfterPlanChange() {
+    const cursoSigla = selCurso?.value || store.selectedCurso || store.settings.lastCurso || '';
+    if (selCurso) selCurso.value = cursoSigla;
+    store.selectedCurso = cursoSigla;
+
+    const previousTurma = String(store.selectedTurma || selTurma?.value || '').trim();
+    const reconciled = populateTurmaOptionsForCurso(cursoSigla, previousTurma || store.settings.lastTurma || '');
+    const nextTurma = String(reconciled.selectedTurma || '').trim();
+
+    store.selectedTurma = nextTurma;
+    store.setLastContext(cursoSigla, nextTurma);
+    updateImportBlocoButtonState();
+
+    return {
+        cursoSigla,
+        previousTurma,
+        nextTurma,
+        didChangeTurma: nextTurma !== previousTurma,
+        wasCleared: reconciled.wasCleared
+    };
+}
+
 function populateCursos() {
     if (!store.rawData || !selCurso) return;
     selCurso.innerHTML = '<option value="">Selecione...</option>';
@@ -4990,42 +5143,28 @@ function populateCursos() {
 }
 
 function onCursoChange() {
-    deactivateDrawingMode();
     const cursoSigla = selCurso.value;
     store.selectedCurso = cursoSigla;
-    store.setLastContext(cursoSigla, null);
-    selTurma.disabled = !cursoSigla;
-    selTurma.innerHTML = '<option value="">Selecione uma Turma</option>';
-
-    if (cursoSigla && store.rawData?.turmas) {
-        const turmas = store.rawData.turmas.filter((t) => t.sigla === cursoSigla);
-        turmas.forEach((t) => {
-            const blocoLabel = getTurmaSelectLabel(t.turma_id);
-            selTurma.innerHTML += `<option value="${t.turma_id}">${blocoLabel}</option>`;
-        });
-
-        if (store.settings.lastTurma) {
-            if (turmas.some(t => t.turma_id === store.settings.lastTurma)) {
-                selTurma.value = store.settings.lastTurma;
-                onTurmaChange();
-            }
-        }
-    } else {
-        store.selectedTurma = '';
-    }
+    store.setLastContext(cursoSigla, '');
+    const reconciled = populateTurmaOptionsForCurso(cursoSigla, store.settings.lastTurma || '');
+    store.selectedTurma = reconciled.selectedTurma || '';
 
     updateDisciplinaDatalist();
-
-    const preferredStart = getPreferredStartDateForCurrentTurma();
-    if (inputConfig.inicio && preferredStart) {
-        inputConfig.inicio.value = preferredStart;
-    }
 
     // Recalcula datas ao carregar (corrige dados antigos do localStorage)
     syncAllRegularDates();
     syncAllIntensiveDates();
 
     updateImportBlocoButtonState();
+    if (store.selectedTurma) {
+        onTurmaChange();
+        return;
+    }
+
+    resetWeeklyEditorForTurma('', {
+        preferredStart: store.settings.termStart || '',
+        resetWeekToPlanStart: true
+    });
     renderWeeklyGrid();
     renderOfertasList();
 }
@@ -5086,17 +5225,11 @@ function populateDocentes() {
 
 function onTurmaChange() {
     store.selectedTurma = selTurma.value;
-    store.setLastContext(store.selectedCurso, store.selectedTurma);
-    deactivateDrawingMode();
-    editingDisciplinaDraft = '';
-    updateWeeklyFaixasTitleDisciplina();
-    updateWeeklyFaixaHoursDisplay();
-    collapseFaixasForNewComponent();
-
-    faixasPatterns = { 1: [], 2: [], 3: [] };
-    setFaixaStatus(1, 0);
-    setFaixaStatus(2, 0);
-    setFaixaStatus(3, 0);
+    store.setLastContext(store.selectedCurso, store.selectedTurma || '');
+    resetWeeklyEditorForTurma(store.selectedTurma, {
+        preferredStart: store.settings.termStart || '',
+        resetWeekToPlanStart: true
+    });
 
     updateImportBlocoButtonState();
 
@@ -5115,36 +5248,9 @@ function onTurmaChange() {
         if (t?.turno) store.setTurnoOferta(resolveTurnoOfertaValue(t.turno));
     }
 
-    const ofertasPorFaixa = alocacoesTurma.filter(a => isFaixaAllocation(a) && a.dataInicio);
-    if (ofertasPorFaixa.length > 0) {
-        hydrateFaixasFromComponente(ofertasPorFaixa[0], { useStoredExecution: true });
-        editingDisciplinaDraft = normalizeDisciplinaInputValue(ofertasPorFaixa[0].disciplina || '');
-        updateWeeklyFaixasTitleDisciplina();
-        updateWeeklyFaixaHoursDisplay();
-        const datas = ofertasPorFaixa.map(a => a.dataInicio).sort();
-        if (calStart && datas[0] < calStart.value) {
-            calStart.value = datas[0];
-            calStart.dispatchEvent(new Event('change'));
-        }
-        const dataFim = ofertasPorFaixa.map(a => a.dataFim).sort().pop();
-        if (calEnd && dataFim > calEnd.value) {
-            calEnd.value = dataFim;
-            calEnd.dispatchEvent(new Event('change'));
-        }
-    }
-
     if (selTurnoOferta) {
         populateTurnoOfertaOptions(store.settings.turnoOferta || 'Tarde');
     }
-
-    const preferredStart = getPreferredStartDateForCurrentTurma();
-    if (inputConfig.inicio && preferredStart) {
-        inputConfig.inicio.value = preferredStart;
-    }
-    applyFaixaDateAutofill({ forceSingleBounds: true });
-    refreshPendingFaixaStartPickUI();
-    updateWeeklyContextNote();
-    applyWeekAutoPositionForComponentChange({ render: false });
 
     renderWeeklyGrid();
     renderOfertasList();
@@ -5332,8 +5438,10 @@ function renderWeeklyGrid() {
         const isIntervalo = horarioStr.toUpperCase().includes('INTERVALO');
         const labelPrimeiraColuna = isIntervalo ? cleanHorarioLabel(horarioStr) : horarioStr;
         const hDiv = createCell(isIntervalo ? 'header interval-time' : 'header time', labelPrimeiraColuna);
+        const isTurnoDivider = !isIntervalo && isTurnoDividerSlot(horarioStr);
 
         if (isIntervalo) hDiv.style.background = '#e0e0e0';
+        if (isTurnoDivider) hDiv.style.borderTop = '2px dashed #bdc3c7';
         gridContainer.appendChild(hDiv);
 
         if (isIntervalo) {
@@ -5350,6 +5458,7 @@ function renderWeeklyGrid() {
                 cell.dataset.dia = i;
                 cell.dataset.horario = horarioStr;
                 cell.dataset.date = cellDate;
+                if (isTurnoDivider) cell.style.borderTop = '2px dashed #bdc3c7';
 
                 const isHolidayColumn = !!cellDate && feriadosSet.has(cellDate);
                 const holidayLabelForColumn = isHolidayColumn ? (feriadosMap.get(cellDate) || 'Feriado') : '';
@@ -5480,6 +5589,11 @@ function createCell(classNames, text) {
     div.className = classNames;
     div.textContent = text;
     return div;
+}
+
+function isTurnoDividerSlot(slotLabel = '') {
+    const normalized = String(slotLabel || '').trim();
+    return normalized.includes('13:30') || normalized.includes('18:30');
 }
 
 function renderSlotContent(cell, allocs) {
@@ -5857,6 +5971,10 @@ function handleAddManual() {
 
         if (nonBlockingDistributionNotice) {
             showToastWarning(nonBlockingDistributionNotice, 'warning', 6200);
+        }
+
+        if (execution.wasTruncatedByCH && execution.truncationType === 'partial-day') {
+            showPersistentStatusMessage('Alocacao fracionada concluida com sucesso.', 'success');
         }
 
     }
@@ -6355,10 +6473,11 @@ function buildSigaaMetadataPayload() {
 
     const turmaId = String(store.selectedTurma);
     const planContext = getActiveExportPlanContext();
-    const list = store.allocations.filter((alloc) => String(alloc.turmaId) === turmaId);
+    const list = filterExportableAllocations(
+        store.allocations.filter((alloc) => String(alloc.turmaId) === turmaId)
+    );
     const scheduledRegulars = list.filter((alloc) => isScheduledRegularAllocation(alloc));
     const faixaAllocations = list.filter((alloc) => isFaixaAllocation(alloc));
-    const pendingAllocations = list.filter((alloc) => isPendingAllocation(alloc));
     const regularExec = getRegularExecutionSnapshot(turmaId, planContext.termStart, planContext.termEnd);
     const regularGroups = new Map();
 
@@ -6375,9 +6494,6 @@ function buildSigaaMetadataPayload() {
     faixaAllocations.forEach((alloc) => {
         ofertas.push(buildSigaaFaixaOferta(alloc, planContext));
     });
-    pendingAllocations.forEach((alloc) => {
-        ofertas.push(buildSigaaPendingOferta(alloc));
-    });
 
     let turmaLabel = turmaId;
     if (store.rawData?.turmas) {
@@ -6385,7 +6501,7 @@ function buildSigaaMetadataPayload() {
         if (turma?.turma_label) turmaLabel = turma.turma_label;
     }
 
-    return {
+    return buildSigaaExportPayload({
         generatedAt: new Date().toISOString(),
         plan: planContext.plan,
         cursoSigla: store.selectedCurso || '',
@@ -6395,7 +6511,7 @@ function buildSigaaMetadataPayload() {
         termStart: planContext.termStart,
         termEnd: planContext.termEnd,
         ofertas
-    };
+    });
 }
 
 export function exportSigaaMetadataJSON() {
@@ -6592,6 +6708,94 @@ function renderMonthlyCalendar() {
     generateCalendarGrid(container, store.selectedTurma, null, start, end, title);
 }
 
+function getTeacherCalendarTurnoConfigs() {
+    return getGanttTurnoConfigs().map((config) => ({
+        value: config.value,
+        label: config.label,
+        normalized: config.normalized
+    }));
+}
+
+function resolveTeacherShiftForSlot(slot) {
+    const config = resolveGanttTurnoForSlot(slot, getGanttTurnoConfigs());
+    return config?.value || '';
+}
+
+function collectSlotsForTurnoValues(turnoValues = []) {
+    const normalizedWanted = [...new Set((Array.isArray(turnoValues) ? turnoValues : [])
+        .map((value) => normalizeTurnoOfertaKey(value))
+        .filter(Boolean))];
+    if (normalizedWanted.length === 0) return [];
+
+    const hp = store.rawData?.horarios_por_turno || {};
+    const slots = [];
+
+    normalizedWanted.forEach((wantedTurno) => {
+        const matchedKey = Object.keys(hp).find((turno) => normalizeTurnoOfertaKey(turno) === wantedTurno);
+        if (!matchedKey || !Array.isArray(hp[matchedKey])) return;
+        hp[matchedKey].forEach((slot) => slots.push(slot));
+    });
+
+    return [...new Set(slots)]
+        .map((slot) => {
+            const raw = String(slot ?? '');
+            if (raw.toUpperCase().includes('INTERVALO')) return formatIntervaloLabel(raw);
+            return cleanHorarioLabel(raw);
+        })
+        .filter((slot) => slot && slot.trim().length > 0)
+        .sort((a, b) => timeToMinutes(a) - timeToMinutes(b));
+}
+
+function getSlotsForTeacherShifts(activeShiftValues = []) {
+    return collectSlotsForTurnoValues(activeShiftValues);
+}
+
+function formatConflictDateRange(startDate, endDate) {
+    if (!startDate) return '-';
+    if (!endDate || endDate === startDate) return formatDateBR(startDate);
+    return `${formatDateBR(startDate)} a ${formatDateBR(endDate)}`;
+}
+
+function renderTeacherConflictRows(conflicts = []) {
+    if (!Array.isArray(conflicts) || conflicts.length === 0) {
+        return `
+            <div style="background:#ecfdf3; border:1px solid #b7ebc6; color:#1e7e34; border-radius:8px; padding:12px 14px; margin-bottom:18px; font-weight:700;">
+                Nenhum conflito horario identificado para o docente no intervalo exibido.
+            </div>
+        `;
+    }
+
+    const rows = conflicts.map((conflict) => `
+        <tr>
+            <td style="padding:8px 10px; border-bottom:1px solid #dfe6e9;">${formatConflictDateRange(conflict.startDate, conflict.endDate)}</td>
+            <td style="padding:8px 10px; border-bottom:1px solid #dfe6e9;">${conflict.shift || '-'}</td>
+            <td style="padding:8px 10px; border-bottom:1px solid #dfe6e9;">${conflict.turmas.join(', ') || '-'}</td>
+            <td style="padding:8px 10px; border-bottom:1px solid #dfe6e9;">${conflict.componentes.join(', ') || '-'}</td>
+            <td style="padding:8px 10px; border-bottom:1px solid #dfe6e9;">${conflict.description}</td>
+        </tr>
+    `).join('');
+
+    return `
+        <div style="margin-bottom:18px;">
+            <h4 style="margin:0 0 10px 0; color:var(--primary); text-transform:uppercase; letter-spacing:0.6px;">Tabela de Conflitos</h4>
+            <div style="overflow:auto; border:1px solid #dfe6e9; border-radius:8px; background:#fff;">
+                <table style="width:100%; border-collapse:collapse; min-width:760px;">
+                    <thead>
+                        <tr style="background:#f4f6f8; color:#2c3e50; text-align:left;">
+                            <th style="padding:10px; border-bottom:1px solid #dfe6e9;">Intervalo</th>
+                            <th style="padding:10px; border-bottom:1px solid #dfe6e9;">Turno</th>
+                            <th style="padding:10px; border-bottom:1px solid #dfe6e9;">Turma(s)</th>
+                            <th style="padding:10px; border-bottom:1px solid #dfe6e9;">Componente(s)</th>
+                            <th style="padding:10px; border-bottom:1px solid #dfe6e9;">Descricao</th>
+                        </tr>
+                    </thead>
+                    <tbody>${rows}</tbody>
+                </table>
+            </div>
+        </div>
+    `;
+}
+
 function renderTeacherCalendar() {
     const container = document.getElementById('teacher-calendar-container');
     if (!container || !selViewDocente) return;
@@ -6608,10 +6812,50 @@ function renderTeacherCalendar() {
         end = lastDay.toISOString().split('T')[0];
     }
 
+    const eventsByDate = getCalendarEvents(null, start, end, docente);
+    const turnoConfigs = getTeacherCalendarTurnoConfigs();
+    const activeShiftData = getTeacherActiveShifts({
+        eventsByDate,
+        resolveShift: (slot) => resolveTeacherShiftForSlot(slot),
+        preferredOrder: turnoConfigs.map((config) => config.value)
+    });
+    const activeShiftValues = activeShiftData.map((shift) => shift.value);
+    const conflictRows = detectTeacherConflicts({
+        eventsByDate,
+        resolveShift: (slot) => {
+            const turnoValue = resolveTeacherShiftForSlot(slot);
+            const config = turnoConfigs.find((entry) => entry.value === turnoValue);
+            return config?.label || turnoValue;
+        },
+        formatTurmaLabel: (event) => getTurmaLabel(event?.turmaId, event?.subGrupo)
+    });
+    const visibleSlots = getSlotsForTeacherShifts(activeShiftValues);
     const totalCH = calculateTeacherTotalCH(docente);
     const docenteTitle = totalCH > 0 ? `${docente} (${totalCH}h)` : docente;
-    const title = `<span class="print-title-main">Cronograma Docente</span><br><span class="print-title-sub">${docenteTitle}</span>`;
-    generateCalendarGrid(container, null, docente, start, end, title);
+    const shiftSummary = activeShiftData.length > 0
+        ? activeShiftData.map((shift) => shift.label).join(', ')
+        : 'Sem turnos ativos no intervalo';
+
+    container.innerHTML = `
+        <div style="display:flex; flex-direction:column; gap:16px;">
+            <div class="print-only print-header-container">
+                <span class="print-title-main">Vistoria de Conflitos Horarios</span><br>
+                <span class="print-title-sub">${docenteTitle}</span>
+            </div>
+            <div style="display:flex; flex-wrap:wrap; gap:10px; align-items:center;">
+                <div style="background:#eef6f0; color:#1f5d3a; border:1px solid #cfe8d7; border-radius:999px; padding:8px 14px; font-weight:700;">Turnos ativos: ${shiftSummary}</div>
+                <div style="background:#f4f6f8; color:#2c3e50; border:1px solid #dfe6e9; border-radius:999px; padding:8px 14px; font-weight:700;">Conflitos detectados: ${conflictRows.length}</div>
+            </div>
+            ${renderTeacherConflictRows(conflictRows)}
+            <div id="teacher-calendar-inspection-grid"></div>
+        </div>
+    `;
+
+    const calendarContainer = document.getElementById('teacher-calendar-inspection-grid');
+    const title = `<span class="print-title-main">Vistoria de Conflitos Horarios</span><br><span class="print-title-sub">${docenteTitle}</span>`;
+    generateCalendarGrid(calendarContainer, null, docente, start, end, title, {
+        slotsToRenderOverride: visibleSlots
+    });
 }
 
 function getGanttTurnoCode(turnoValue = '') {
@@ -6927,7 +7171,13 @@ function collectGanttDayItems({
     });
 }
 
-function renderGanttTurnoLane({ turnoConfig, dayItems, docenteName, minTime, totalTime, ganttTurnoConfigs, isLastLane }) {
+function getGanttCompactDisciplinaLabel(item) {
+    const info = getDisciplinaInfo(item?.disciplina || '');
+    const base = String(info?.abrev || item?.disciplina || '').trim();
+    return base || 'Componente';
+}
+
+function renderGanttTurnoLane({ turnoConfig, dayItems, docenteName, dayConfig, minTime, totalTime, ganttTurnoConfigs, isLastLane }) {
     const laneItems = dayItems.filter((item) => item.turno === turnoConfig.value);
     let currentTop = 4;
     let barsHtml = '';
@@ -6982,25 +7232,18 @@ function renderGanttTurnoLane({ turnoConfig, dayItems, docenteName, minTime, tot
             const chProfessor = parseFloat(String(docente.ch).replace(',', '.'));
             const chProfessorTxt = Number.isFinite(chProfessor) ? String(chProfessor).replace(/\.0+$/, '') : String(docente.ch || '0');
             const labelMain = `${baseLabel} ${tPrefix}${item.disciplina} (${chProfessorTxt}h)`.replace(/\s+/g, ' ').trim();
+            const compactLabel = getGanttCompactDisciplinaLabel(item);
             const horarioSmall = timeRangeStr.replace(/^\s*:\s*/, '').trim();
-            const outsideLabel = `${baseLabel} ${tPrefix}${item.disciplina} (${chProfessorTxt}h)${timeRangeStr}`.replace(/\s+/g, ' ').trim();
 
             let content = '';
             if (isTarget) {
                 if (isShortSegment) {
                     content = `
-                            <div style="display:flex; justify-content:space-between; align-items:center; width:100%; padding:0 4px; gap:4px;">
-                                <span style="font-size:0.68em; opacity:0.95; flex-shrink:0; letter-spacing:-0.4px;">${fmtStart}</span>
-                                <span style="font-size:0.68em; opacity:0.95; flex-shrink:0; letter-spacing:-0.4px;">${fmtEnd}</span>
-                            </div>
-                        `;
-
-                    const textPos = (leftPct + widthPct > 75)
-                        ? `right: calc(100% - ${leftPct}% + 6px);`
-                        : `left: calc(${leftPct + widthPct}% + 6px);`;
-                    externalLabelsHtml += `
-                            <div style="position:absolute; top:${currentTop}px; height:${barHeight}px; display:flex; align-items:center; ${textPos} color:#000000; font-weight:800; font-size:0.82em; white-space:nowrap; z-index:10; text-shadow:1px 1px 0 #fff, -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff;">
-                                ${outsideLabel}
+                            <div style="display:flex; align-items:center; justify-content:space-between; width:100%; padding:0 5px; gap:6px;">
+                                <span style="font-size:0.68em; font-weight:800; opacity:0.96; flex-shrink:0; letter-spacing:-0.35px;">${fmtStart}</span>
+                                <span style="flex:1; min-width:0; font-size:0.72em; font-weight:800; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; text-align:center; letter-spacing:-0.25px;">
+                                    ${compactLabel}
+                                </span>
                             </div>
                         `;
                 } else {
@@ -7034,9 +7277,32 @@ function renderGanttTurnoLane({ turnoConfig, dayItems, docenteName, minTime, tot
             currentSegmentT = segEndT;
         });
 
+        const detailPayload = encodeURIComponent(JSON.stringify({
+            disciplina: item.disciplina || '',
+            disciplinaAbrev: getGanttCompactDisciplinaLabel(item),
+            codigo: getDisciplinaInfo(item.disciplina || '').codigo || '',
+            turma: turmaNome || '',
+            turmaBase: baseLabel || '',
+            subGrupo: item.subGrupo || '',
+            dia: dayConfig?.name || '',
+            turno: turnoConfig.label || '',
+            inicio: formatDateBR(item.dataInicio),
+            fim: formatDateBR(item.dataFim),
+            periodo: `${formatDateBR(item.dataInicio)} a ${formatDateBR(item.dataFim)}`,
+            horario: timeRangeStr.replace(/^\s*:\s*/, '').trim() || '-',
+            regime: item.regimeLabel || '',
+            cargaHoraria: item.chTotal || 0,
+            docente: docenteName || '',
+            detalhesDocentes: docentesList.map((docente) => ({
+                nome: docente?.nome || '',
+                ch: docente?.ch || ''
+            }))
+        }));
+
         barsHtml += `
                     <div class="gantt-bar"
-                         style="left: ${leftPct}%; width: ${widthPct}%; top: ${currentTop}px; height: ${barHeight}px; padding: 0; display: flex; flex-direction: row; ${boxBorder}"
+                         data-gantt-detail="${detailPayload}"
+                         style="left: ${leftPct}%; width: ${widthPct}%; top: ${currentTop}px; height: ${barHeight}px; padding: 0; display: flex; flex-direction: row; ${boxBorder} cursor: pointer;"
                          title="${item.disciplina}\nTurma: ${turmaNome}\nTurno: ${turnoConfig.label}${timeRangeStr}\nRegime: ${item.regimeLabel}\nPeriodo efetivo: ${formatDateBR(item.dataInicio)} a ${formatDateBR(item.dataFim)}\nAulas no dia: ${item.slotCount}">
                         ${segmentsHtml}
                     </div>
@@ -7077,6 +7343,88 @@ function renderGanttDayRow(dayConfig, laneRenders) {
         `;
 }
 
+function ensureGanttDetailModal() {
+    let overlay = document.getElementById('gantt-detail-overlay');
+    if (overlay) return overlay;
+
+    overlay = document.createElement('div');
+    overlay.id = 'gantt-detail-overlay';
+    overlay.style.cssText = 'position:fixed; inset:0; background:rgba(15,23,42,0.58); display:none; align-items:center; justify-content:center; z-index:5000; padding:20px;';
+    overlay.innerHTML = `
+        <div style="width:min(560px, 100%); background:#ffffff; border-radius:16px; box-shadow:0 22px 60px rgba(15,23,42,0.28); padding:22px; position:relative;">
+            <button id="btn-gantt-detail-close" type="button" style="position:absolute; top:14px; right:14px; border:none; background:#eef2f7; color:#2c3e50; border-radius:999px; width:34px; height:34px; font-size:20px; cursor:pointer;">×</button>
+            <div id="gantt-detail-body"></div>
+        </div>
+    `;
+    document.body.appendChild(overlay);
+
+    const closeModal = () => {
+        overlay.style.display = 'none';
+    };
+
+    overlay.addEventListener('click', (event) => {
+        if (event.target === overlay) closeModal();
+    });
+    overlay.querySelector('#btn-gantt-detail-close')?.addEventListener('click', closeModal);
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && overlay.style.display === 'flex') closeModal();
+    });
+
+    return overlay;
+}
+
+function openGanttDetailModal(detail) {
+    const overlay = ensureGanttDetailModal();
+    const body = document.getElementById('gantt-detail-body');
+    if (!overlay || !body) return;
+
+    const docentesHtml = Array.isArray(detail?.detalhesDocentes) && detail.detalhesDocentes.length > 0
+        ? detail.detalhesDocentes.map((docente) => `<li><strong>${docente.nome || '-'}</strong> - ${docente.ch || 0}h</li>`).join('')
+        : '<li>-</li>';
+
+    body.innerHTML = `
+        <h3 style="margin:0 0 6px 0; color:var(--primary); text-transform:uppercase; letter-spacing:0.6px;">Detalhes da Oferta no Gantt</h3>
+        <p style="margin:0 0 18px 0; color:#52606d; font-weight:600;">Clique na barra para inspecionar quando o rótulo não couber.</p>
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:12px;">
+            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:12px;"><strong>Componente</strong><br>${detail?.disciplina || '-'}</div>
+            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:12px;"><strong>Turma</strong><br>${detail?.turma || '-'}</div>
+            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:12px;"><strong>Turno</strong><br>${detail?.turno || '-'}</div>
+            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:12px;"><strong>Periodo</strong><br>${detail?.periodo || '-'}</div>
+            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:12px;"><strong>Horario</strong><br>${detail?.horario || '-'}</div>
+            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:12px;"><strong>Regime / CH</strong><br>${detail?.regime || '-'} · ${detail?.cargaHoraria || 0}h</div>
+        </div>
+        <div style="margin-top:12px; display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:12px;">
+            <div style="background:#fffdf3; border:1px solid #efe2a8; border-radius:10px; padding:12px;"><strong>Resumo Compacto</strong><br>${detail?.disciplinaAbrev || detail?.disciplina || '-'}</div>
+            <div style="background:#fffdf3; border:1px solid #efe2a8; border-radius:10px; padding:12px;"><strong>Dia</strong><br>${detail?.dia || '-'}</div>
+            <div style="background:#fffdf3; border:1px solid #efe2a8; border-radius:10px; padding:12px;"><strong>Inicio / Fim</strong><br>${detail?.inicio || '-'} a ${detail?.fim || '-'}</div>
+            <div style="background:#fffdf3; border:1px solid #efe2a8; border-radius:10px; padding:12px;"><strong>Codigo</strong><br>${detail?.codigo || '-'}</div>
+        </div>
+        <div style="margin-top:14px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:12px;">
+            <strong>Docente(s) e distribuicao</strong>
+            <ul style="margin:8px 0 0 18px;">${docentesHtml}</ul>
+        </div>
+    `;
+
+    overlay.style.display = 'flex';
+}
+
+function bindGanttDetailInteractions(container) {
+    if (!container) return;
+
+    container.querySelectorAll('.gantt-bar[data-gantt-detail]').forEach((bar) => {
+        if (bar.dataset.detailBound === '1') return;
+        bar.dataset.detailBound = '1';
+        bar.addEventListener('click', () => {
+            try {
+                const detail = JSON.parse(decodeURIComponent(bar.dataset.ganttDetail || '%7B%7D'));
+                openGanttDetailModal(detail);
+            } catch (err) {
+                console.error('Falha ao abrir detalhes do Gantt', err);
+            }
+        });
+    });
+}
+
 function renderGanttChart() {
     try {
         const container = document.getElementById('gantt-container');
@@ -7089,7 +7437,9 @@ function renderGanttChart() {
             return;
         }
 
-        const allocs = store.allocations.filter((alloc) => allocationHasTeacherMatch(alloc, docenteName));
+        const allocs = filterExportableAllocations(
+            store.allocations.filter((alloc) => allocationHasTeacherMatch(alloc, docenteName))
+        );
         if (allocs.length === 0) {
             container.innerHTML = `<div style="text-align: center; color: #7f8c8d; margin-top: 50px; font-size: 1.1em;">Nenhuma disciplina encontrada para <b>${docenteName}</b>.</div>`;
             return;
@@ -7155,6 +7505,7 @@ function renderGanttChart() {
                 turnoConfig,
                 dayItems,
                 docenteName,
+                dayConfig,
                 minTime,
                 totalTime,
                 ganttTurnoConfigs,
@@ -7166,6 +7517,7 @@ function renderGanttChart() {
 
         html += '</div>';
         container.innerHTML = html;
+        bindGanttDetailInteractions(container);
     } catch (err) {
         console.error('Erro renderGanttChart:', err);
         const container = document.getElementById('gantt-container');
@@ -7470,7 +7822,7 @@ function refreshTeacherConflictsUI() {
 }
 // ========================================================
 
-function generateCalendarGrid(container, turmaId, docenteName, start, end, titleHTML) {
+function generateCalendarGrid(container, turmaId, docenteName, start, end, titleHTML, options = {}) {
     container.innerHTML = '';
 
     const header = document.createElement('div');
@@ -7482,15 +7834,25 @@ function generateCalendarGrid(container, turmaId, docenteName, start, end, title
 
     let slotsToRender = [];
 
-    if (turmaId) {
+    if (Array.isArray(options.slotsToRenderOverride) && options.slotsToRenderOverride.length > 0) {
+        slotsToRender = options.slotsToRenderOverride.slice();
+    }
+    else if (turmaId) {
         slotsToRender = buildHorariosForUI();
     }
     else if (docenteName) {
+        const normalizedSkeleton = collectSlotsForTurnoValues(
+            getTeacherCalendarTurnoConfigs().map((config) => config.value)
+        );
+        if (normalizedSkeleton.length > 0) {
+            slotsToRender = normalizedSkeleton.slice();
+        } else {
         const hp = store.rawData?.horarios_por_turno || {};
         const skeleton = [];
 
         if (hp['Manhã']) skeleton.push(...hp['Manhã']);
         if (hp['Tarde']) skeleton.push(...hp['Tarde']);
+        if (hp['Noite']) skeleton.push(...hp['Noite']);
 
         if (skeleton.length === 0) {
             if (store.allocations) {
@@ -7509,6 +7871,7 @@ function generateCalendarGrid(container, turmaId, docenteName, start, end, title
             })
             .filter(s => s && s.trim().length > 0)
             .sort((a, b) => timeToMinutes(a) - timeToMinutes(b));
+        }
     }
 
     const months = {};
@@ -7668,7 +8031,7 @@ function generateCalendarGrid(container, turmaId, docenteName, start, end, title
                         }
 
                         let rowStyle = '';
-                        if (slotTime.includes('13:30')) {
+                        if (isTurnoDividerSlot(slotTime)) {
                             rowStyle = 'border-top: 2px dashed #bdc3c7; margin-top: 2px; padding-top: 2px;';
                         }
 
