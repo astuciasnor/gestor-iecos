@@ -7,18 +7,18 @@ function getAllocationTipo(value) {
     return String(value?.tipo || value || '').trim().toLowerCase();
 }
 
-function isFaixaAllocation(value) {
+function usesFaixaSchedule(value) {
     return getAllocationTipo(value) === 'intensiva';
 }
 
-function isPriorityRegularAllocation(value) {
+function isPreferredRegularAllocation(value) {
     return getAllocationTipo(value) === 'regular_prioritaria';
 }
 
 function getAgendaTipoTexto(tipo) {
-    if (isFaixaAllocation(tipo)) return 'Oferta por Faixas';
-    if (isPriorityRegularAllocation(tipo)) return 'Regular Prioritária';
-    return 'Aula Regular';
+    if (usesFaixaSchedule(tipo)) return 'Oferta por Faixas';
+    if (isPreferredRegularAllocation(tipo)) return 'Oferta Regular';
+    return 'Oferta Regular';
 }
 
 // Capturando os elementos do HTML da Visão Docente

@@ -7,24 +7,24 @@ function getAllocationTipo(value) {
     return String(value?.tipo || value || '').trim().toLowerCase();
 }
 
-function isFaixaAllocation(value) {
+function usesFaixaSchedule(value) {
     return getAllocationTipo(value) === 'intensiva';
 }
 
-function isPriorityRegularAllocation(value) {
+function isPreferredRegularAllocation(value) {
     return getAllocationTipo(value) === 'regular_prioritaria';
 }
 
 function getAgendaTipoBadge(evento) {
-    if (isFaixaAllocation(evento)) return '<span class="badge intensiva">Por Faixas</span>';
-    if (isPriorityRegularAllocation(evento)) return '<span class="badge prioritaria">Prioritária</span>';
+    if (usesFaixaSchedule(evento)) return '<span class="badge intensiva">Por Faixas</span>';
+
     return '';
 }
 
 function getAgendaTipoTexto(tipo) {
-    if (isFaixaAllocation(tipo)) return 'Oferta por Faixas';
-    if (isPriorityRegularAllocation(tipo)) return 'Regular Prioritária';
-    return 'Aula Regular';
+    if (usesFaixaSchedule(tipo)) return 'Oferta por Faixas';
+    if (isPreferredRegularAllocation(tipo)) return 'Oferta Regular';
+    return 'Oferta Regular';
 }
 
 // Capturando os elementos do HTML (Inclui os novos containers dos botões)
