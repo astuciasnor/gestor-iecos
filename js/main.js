@@ -96,6 +96,22 @@ function buildPlanScopedPayload(scope, allocations, extra = {}) {
   };
 }
 
+function buildPublicExportPayload() {
+  const activePlan = store.getActivePlanMeta();
+  return {
+    version: 2,
+    exportedAt: new Date().toISOString(),
+    plan: activePlan?.key ? activePlan : null,
+    allocations: store.allocations,
+    settings: {
+      termStart: store.settings.termStart,
+      termEnd: store.settings.termEnd,
+      periodo: store.settings.periodo,
+      turnoOferta: store.settings.turnoOferta || ''
+    }
+  };
+}
+
 function buildTurmaParaCursoMap() {
   const turmaParaCurso = {};
   (store.rawData?.turmas || []).forEach((t) => {
@@ -299,18 +315,7 @@ function exportarJSONCurso(sigla) {
   if (btnExportPublic) {
     btnExportPublic.onclick = () => {
       const fileName = 'alocacoes_publicas.json';
-
-      const exportData = {
-        version: 2,
-        plan: store.getActivePlanMeta()?.key ? store.getActivePlanMeta() : null,
-        allocations: store.allocations,
-        settings: {
-          termStart: store.settings.termStart,
-          termEnd: store.settings.termEnd,
-          periodo: store.settings.periodo,
-          turnoOferta: store.settings.turnoOferta || ''
-        }
-      };
+      const exportData = buildPublicExportPayload();
 
       const issues = validatePublicExportData(exportData);
       if (issues.length) {

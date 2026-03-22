@@ -6217,146 +6217,183 @@ function renderOfertasList() {
     refreshTeacherConflictsUI();
 }
 
+function getActiveExportPlanContext() {
+    const activePlan = store.getActivePlanMeta();
+    const plan = activePlan?.key ? activePlan : null;
+    const termStart = plan?.termStart || store.settings.termStart || (calStart ? calStart.value : '2025-01-01');
+    const termEnd = plan?.termEnd || store.settings.termEnd || (calEnd ? calEnd.value : '2025-12-31');
+    const periodoLetivo = plan?.periodo || store.settings.periodo || '';
+    return { plan, termStart, termEnd, periodoLetivo };
+}
+
+function buildSigaaHorarioResumo(faixas = []) {
+    return (Array.isArray(faixas) ? faixas : [])
+        .map((faixa) => `${faixa.sigaa} (${formatDateBR(faixa.inicio)} - ${formatDateBR(faixa.fim)})`)
+        .join(', ');
+}
+
+function buildSigaaOfertaBase(allocation, info = {}) {
+    return {
+        componente: allocation?.disciplina || '',
+        codigo: info.codigo || '',
+        tipo: allocation?.tipo || '',
+        cargaHoraria: allocation?.ch || info.ch || 0,
+        docente: allocation?.docente || '',
+        subGrupo: allocation?.subGrupo || ''
+    };
+}
+
+function buildSigaaRegularOferta(allocs, regularExec, planContext) {
+    const base = allocs[0];
+    const info = getDisciplinaInfo(base.disciplina);
+    const activeDates = new Set();
+
+    allocs.forEach((alloc) => {
+        const datesSet = regularExec.datesByAlloc.get(alloc.id);
+        if (datesSet && datesSet.size > 0) datesSet.forEach((dateStr) => activeDates.add(dateStr));
+    });
+
+    let faixas = [];
+    if (activeDates.size > 0) {
+        const orderedDates = [...activeDates].sort();
+        faixas = [{
+            inicio: orderedDates[0],
+            fim: orderedDates[orderedDates.length - 1],
+            sigaa: getSigaaCode(allocs)
+        }];
+    } else {
+        const byInterval = new Map();
+        allocs.forEach((alloc) => {
+            const start = alloc.dataInicio || planContext.termStart;
+            const end = alloc.dataFim || planContext.termEnd;
+            const intervalKey = `${start}|${end}`;
+            if (!byInterval.has(intervalKey)) byInterval.set(intervalKey, []);
+            byInterval.get(intervalKey).push(alloc);
+        });
+
+        byInterval.forEach((slice, intervalKey) => {
+            const [start, end] = intervalKey.split('|');
+            faixas.push({
+                inicio: start,
+                fim: end,
+                sigaa: getSigaaCode(slice)
+            });
+        });
+    }
+
+    return {
+        ...buildSigaaOfertaBase(base, info),
+        horarioSigaa: buildSigaaHorarioResumo(faixas),
+        faixas
+    };
+}
+
+function buildSigaaFaixaOferta(allocation, planContext) {
+    const info = getDisciplinaInfo(allocation.disciplina);
+    const normalizedFaixas = alignFaixasToExecutionEnd(getNormalizedIntensiveFaixas(allocation), allocation.dataFim || planContext.termEnd);
+    const fallbackDias = Array.isArray(allocation.diasMarcados) && allocation.diasMarcados.length > 0
+        ? allocation.diasMarcados
+        : (allocation.usaSabado ? [1, 2, 3, 4, 5, 6] : [1, 2, 3, 4, 5]);
+    const fallbackSlots = Array.isArray(allocation.horariosOcupados) ? allocation.horariosOcupados : [];
+
+    const faixas = (normalizedFaixas.length > 0 ? normalizedFaixas : [{
+        inicio: allocation.dataInicio || planContext.termStart,
+        fim: allocation.dataFim || planContext.termEnd,
+        dias: fallbackDias,
+        slots: fallbackSlots
+    }]).map((faixa) => {
+        const scoped = {
+            ...allocation,
+            ch: 0,
+            dataInicio: faixa.inicio || allocation.dataInicio || planContext.termStart,
+            dataFim: faixa.fim || allocation.dataFim || planContext.termEnd,
+            diasMarcados: faixa.dias || fallbackDias,
+            horariosOcupados: faixa.slots || fallbackSlots,
+            usaSabado: (faixa.dias || fallbackDias).includes(6),
+            faixas: [faixa]
+        };
+
+        return {
+            inicio: scoped.dataInicio,
+            fim: scoped.dataFim,
+            sigaa: getSigaaCode([scoped])
+        };
+    });
+
+    return {
+        ...buildSigaaOfertaBase(allocation, info),
+        horarioSigaa: buildSigaaHorarioResumo(faixas),
+        faixas
+    };
+}
+
+function buildSigaaPendingOferta(allocation) {
+    const info = getDisciplinaInfo(allocation.disciplina);
+    return {
+        ...buildSigaaOfertaBase(allocation, info),
+        horarioSigaa: '',
+        faixas: []
+    };
+}
+
+function validateSigaaMetadataPayload(payload) {
+    const issues = [];
+    if (!payload || typeof payload !== 'object') return ['Payload invalido para exportacao SIGAA.'];
+    if (!payload.turmaId) issues.push('Turma ausente no payload SIGAA.');
+    if (!payload.periodoLetivo) issues.push('Periodo letivo ausente no payload SIGAA.');
+    if (!payload.termStart || !payload.termEnd) issues.push('Intervalo do plano letivo ausente no payload SIGAA.');
+    if (payload.termStart && payload.termEnd && payload.termStart > payload.termEnd) {
+        issues.push('Intervalo do plano letivo invalido no payload SIGAA.');
+    }
+    if (!Array.isArray(payload.ofertas)) issues.push('Ofertas ausentes no payload SIGAA.');
+    else if (!payload.ofertas.length) issues.push('Nenhuma oferta encontrada para exportar ao SIGAA.');
+    return issues;
+}
+
 function buildSigaaMetadataPayload() {
     if (!store.selectedTurma) return null;
 
     const turmaId = String(store.selectedTurma);
-    const list = store.allocations.filter((a) => String(a.turmaId) === turmaId);
-    const regular = list.filter((a) => isScheduledRegularAllocation(a));
-    const intensivas = list.filter((a) => isFaixaAllocation(a));
-    const pendentes = list.filter((a) => isPendingAllocation(a));
-    const semesterStart = calStart ? calStart.value : (store.settings.termStart || '2025-01-01');
-    const semesterEnd = calEnd ? calEnd.value : (store.settings.termEnd || '2025-12-31');
-
-    const regularExec = getRegularExecutionSnapshot(turmaId, semesterStart, semesterEnd);
+    const planContext = getActiveExportPlanContext();
+    const list = store.allocations.filter((alloc) => String(alloc.turmaId) === turmaId);
+    const scheduledRegulars = list.filter((alloc) => isScheduledRegularAllocation(alloc));
+    const faixaAllocations = list.filter((alloc) => isFaixaAllocation(alloc));
+    const pendingAllocations = list.filter((alloc) => isPendingAllocation(alloc));
+    const regularExec = getRegularExecutionSnapshot(turmaId, planContext.termStart, planContext.termEnd);
     const regularGroups = new Map();
-    regular.forEach((a) => {
-        const key = [a.disciplina, a.docente, a.tipo, a.subGrupo || ''].join('|');
+
+    scheduledRegulars.forEach((alloc) => {
+        const key = [alloc.disciplina, alloc.docente, alloc.tipo, alloc.subGrupo || ''].join('|');
         if (!regularGroups.has(key)) regularGroups.set(key, []);
-        regularGroups.get(key).push(a);
+        regularGroups.get(key).push(alloc);
     });
 
     const ofertas = [];
     regularGroups.forEach((allocs) => {
-        const base = allocs[0];
-        const info = getDisciplinaInfo(base.disciplina);
-        const activeDates = new Set();
-        allocs.forEach((a) => {
-            const datesSet = regularExec.datesByAlloc.get(a.id);
-            if (datesSet && datesSet.size > 0) {
-                datesSet.forEach((d) => activeDates.add(d));
-            }
-        });
-
-        let faixas = [];
-        if (activeDates.size > 0) {
-            const orderedDates = [...activeDates].sort();
-            faixas = [{
-                inicio: orderedDates[0],
-                fim: orderedDates[orderedDates.length - 1],
-                sigaa: getSigaaCode(allocs)
-            }];
-        } else {
-            const byInterval = new Map();
-            allocs.forEach((a) => {
-                const start = a.dataInicio || semesterStart;
-                const end = a.dataFim || semesterEnd;
-                const key = `${start}|${end}`;
-                if (!byInterval.has(key)) byInterval.set(key, []);
-                byInterval.get(key).push(a);
-            });
-            byInterval.forEach((slice, intervalKey) => {
-                const [start, end] = intervalKey.split('|');
-                faixas.push({
-                    inicio: start,
-                    fim: end,
-                    sigaa: getSigaaCode(slice)
-                });
-            });
-        }
-        ofertas.push({
-            componente: base.disciplina,
-            codigo: info.codigo || '',
-            tipo: base.tipo,
-            cargaHoraria: base.ch || info.ch || 0,
-            docente: base.docente || '',
-            subGrupo: base.subGrupo || '',
-            horarioSigaa: faixas.map((f) => `${f.sigaa} (${formatDateBR(f.inicio)} - ${formatDateBR(f.fim)})`).join(', '),
-            faixas
-        });
+        ofertas.push(buildSigaaRegularOferta(allocs, regularExec, planContext));
     });
-
-    intensivas.forEach((a) => {
-        const info = getDisciplinaInfo(a.disciplina);
-        const normalizedFaixas = alignFaixasToExecutionEnd(getNormalizedIntensiveFaixas(a), a.dataFim || semesterEnd);
-        const fallbackDias = Array.isArray(a.diasMarcados) && a.diasMarcados.length > 0
-            ? a.diasMarcados
-            : (a.usaSabado ? [1, 2, 3, 4, 5, 6] : [1, 2, 3, 4, 5]);
-        const fallbackSlots = Array.isArray(a.horariosOcupados) ? a.horariosOcupados : [];
-        const faixas = (normalizedFaixas.length > 0 ? normalizedFaixas : [{
-            inicio: a.dataInicio || semesterStart,
-            fim: a.dataFim || semesterEnd,
-            dias: fallbackDias,
-            slots: fallbackSlots
-        }]).map((faixa) => {
-            const scoped = {
-                ...a,
-                ch: 0,
-                dataInicio: faixa.inicio || a.dataInicio || semesterStart,
-                dataFim: faixa.fim || a.dataFim || semesterEnd,
-                diasMarcados: faixa.dias || fallbackDias,
-                horariosOcupados: faixa.slots || fallbackSlots,
-                usaSabado: (faixa.dias || fallbackDias).includes(6),
-                faixas: [faixa]
-            };
-            return {
-                inicio: scoped.dataInicio,
-                fim: scoped.dataFim,
-                sigaa: getSigaaCode([scoped])
-            };
-        });
-
-        ofertas.push({
-            componente: a.disciplina,
-            codigo: info.codigo || '',
-            tipo: a.tipo,
-            cargaHoraria: a.ch || info.ch || 0,
-            docente: a.docente || '',
-            subGrupo: a.subGrupo || '',
-            horarioSigaa: faixas.map((f) => `${f.sigaa} (${formatDateBR(f.inicio)} - ${formatDateBR(f.fim)})`).join(', '),
-            faixas
-        });
+    faixaAllocations.forEach((alloc) => {
+        ofertas.push(buildSigaaFaixaOferta(alloc, planContext));
     });
-
-    pendentes.forEach((a) => {
-        const info = getDisciplinaInfo(a.disciplina);
-        ofertas.push({
-            componente: a.disciplina,
-            codigo: info.codigo || '',
-            tipo: a.tipo,
-            cargaHoraria: a.ch || info.ch || 0,
-            docente: a.docente || '',
-            subGrupo: a.subGrupo || '',
-            horarioSigaa: '',
-            faixas: []
-        });
+    pendingAllocations.forEach((alloc) => {
+        ofertas.push(buildSigaaPendingOferta(alloc));
     });
 
     let turmaLabel = turmaId;
     if (store.rawData?.turmas) {
-        const t = store.rawData.turmas.find((x) => String(x.turma_id) === turmaId);
-        if (t?.turma_label) turmaLabel = t.turma_label;
+        const turma = store.rawData.turmas.find((entry) => String(entry.turma_id) === turmaId);
+        if (turma?.turma_label) turmaLabel = turma.turma_label;
     }
 
     return {
         generatedAt: new Date().toISOString(),
-        plan: store.getActivePlanMeta()?.key ? store.getActivePlanMeta() : null,
+        plan: planContext.plan,
         cursoSigla: store.selectedCurso || '',
         turmaId,
         turmaLabel,
-        periodoLetivo: store.settings.periodo || '',
-        termStart: semesterStart,
-        termEnd: semesterEnd,
+        periodoLetivo: planContext.periodoLetivo,
+        termStart: planContext.termStart,
+        termEnd: planContext.termEnd,
         ofertas
     };
 }
@@ -6367,6 +6404,17 @@ export function exportSigaaMetadataJSON() {
         showToastWarning('Selecione uma turma antes de exportar os metadados SIGAA.', 'warning', 2600);
         return;
     }
+
+    const issues = validateSigaaMetadataPayload(payload);
+    if (issues.length) {
+        showToastWarning(
+            'Exportacao SIGAA cancelada por inconsistencias:<br>- ' + issues.join('<br>- '),
+            'error',
+            5600
+        );
+        return;
+    }
+
     const ano = (payload.termStart || '').split('-')[0] || '0000';
     const periodo = payload.periodoLetivo || 'P';
     const fileName = `sigaa_metadata_${payload.cursoSigla || 'CURSO'}_${payload.turmaId}_${ano}_${periodo}.json`;
@@ -6378,7 +6426,6 @@ export function exportSigaaMetadataJSON() {
     a.click();
     a.remove();
 }
-
 function getRegularExecutionSnapshot(turmaId, startDate, endDate) {
     const hoursByAlloc = new Map();
     const datesByAlloc = new Map();
