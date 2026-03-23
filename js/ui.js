@@ -6986,6 +6986,30 @@ function getShiftTimeRangeStr(timeRanges, turnoValue, turnoConfigs = getGanttTur
     return ` : ${filteredTimes[0]} - ${filteredTimes[filteredTimes.length - 1]}`;
 }
 
+function getShiftTimeRangeMeta(timeRanges, turnoValue, turnoConfigs = getGanttTurnoConfigs()) {
+    if (!timeRanges || timeRanges.length === 0) return { start: '', end: '' };
+    const times = [];
+
+    timeRanges.forEach((tr) => {
+        if (!tr) return;
+        const matches = String(tr).match(/\d{1,2}:\d{2}/g);
+        if (matches) times.push(...matches);
+    });
+
+    const turnoConfig = turnoConfigs.find((config) => config.value === turnoValue)
+        || turnoConfigs.find((config) => config.normalized === normalizeTurnoOfertaKey(turnoValue));
+    if (!turnoConfig) return { start: '', end: '' };
+
+    const filteredTimes = times.filter((time) => {
+        const config = resolveGanttTurnoForSlot(time, turnoConfigs);
+        return config?.value === turnoConfig.value;
+    });
+    if (filteredTimes.length === 0) return { start: '', end: '' };
+
+    filteredTimes.sort((a, b) => timeToMinutes(a) - timeToMinutes(b));
+    return { start: filteredTimes[0], end: filteredTimes[filteredTimes.length - 1] };
+}
+
 
 function buildGanttTimelineLinesHtml(minTime, maxTime, totalTime) {
     const weekLines = [];
@@ -7177,6 +7201,13 @@ function getGanttCompactDisciplinaLabel(item) {
     return base || 'Componente';
 }
 
+function getGanttCompactRangeLabel(item) {
+    const compactLabel = getGanttCompactDisciplinaLabel(item);
+    const start = formatDateBR(item?.dataInicio || '').slice(0, 5) || '--/--';
+    const end = formatDateBR(item?.dataFim || '').slice(0, 5) || '--/--';
+    return `${compactLabel} (${start} - ${end})`;
+}
+
 function renderGanttTurnoLane({ turnoConfig, dayItems, docenteName, dayConfig, minTime, totalTime, ganttTurnoConfigs, isLastLane }) {
     const laneItems = dayItems.filter((item) => item.turno === turnoConfig.value);
     let currentTop = 4;
@@ -7193,94 +7224,73 @@ function renderGanttTurnoLane({ turnoConfig, dayItems, docenteName, dayConfig, m
 
         const turmaNome = getTurmaLabel(item.turmaId, item.subGrupo);
         const baseLabel = store.rawData?.turmas?.find((entry) => String(entry.turma_id) === String(item.turmaId))?.turma_label || item.turmaId;
-        const tMatch = (item.subGrupo || '').match(/_?(T\d+)$/i);
-        const tPrefix = tMatch ? `[${tMatch[1]}] ` : '';
         const isOutOfBounds = store.settings.termEnd && item.dataFim > store.settings.termEnd;
-        const boxBorder = isOutOfBounds ? 'border: 2px solid #900;' : `border: 1px solid ${item.cor || '#ccc'};`;
+        const baseColor = normalizeHexColor(item.cor || '#3498db');
+        const boxBorder = isOutOfBounds ? 'border: 2px solid #900;' : `border: 1px solid ${baseColor};`;
         const barHeight = 36;
         const timeRangeStr = getShiftTimeRangeStr(item.timeRanges, turnoConfig.value, ganttTurnoConfigs);
+        const timeRangeMeta = getShiftTimeRangeMeta(item.timeRanges, turnoConfig.value, ganttTurnoConfigs);
+        const compactRangeLabel = getGanttCompactRangeLabel(item);
+        const anchorId = `gantt-${String(dayConfig?.name || 'dia').toLowerCase()}-${String(turnoConfig.value || 'turno').toLowerCase()}-${startT}-${currentTop}`
+            .replace(/[^a-z0-9_-]+/gi, '-');
+        const showExternalLabel = widthPct < 15;
+        const freeSpaceLeft = leftPct;
+        const freeSpaceRight = 100 - (leftPct + widthPct);
+        const placeExternalRight = freeSpaceRight >= freeSpaceLeft;
+        const externalLabelPosition = placeExternalRight
+            ? `left:${Math.min(96, leftPct + widthPct + 0.8)}%;`
+            : `right:${Math.min(96, 100 - leftPct + 0.8)}%;`;
+        const insideLabelHtml = showExternalLabel
+            ? ''
+            : `
+                <div style="position:absolute; left:8px; right:8px; top:50%; transform:translateY(-50%); min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; text-align:center; font-size:0.78em; font-weight:800; color:#0f172a; text-shadow:0 1px 0 rgba(255,255,255,0.35); pointer-events:none; z-index:5;">
+                    ${compactRangeLabel}
+                </div>
+            `;
+        const externalLabelHtml = showExternalLabel
+            ? `
+                <button type="button"
+                        class="gantt-external-detail"
+                        data-gantt-anchor="${anchorId}"
+                        data-gantt-detail="${encodeURIComponent(JSON.stringify({
+                            disciplina: item.disciplina || '',
+                            disciplinaAbrev: getGanttCompactDisciplinaLabel(item),
+                            codigo: getDisciplinaInfo(item.disciplina || '').codigo || '',
+                            cor: item.cor || '#3498db',
+                            turma: turmaNome || '',
+                            turmaBase: baseLabel || '',
+                            subGrupo: item.subGrupo || '',
+                            dia: dayConfig?.name || '',
+                            turno: turnoConfig.label || '',
+                            inicio: formatDateBR(item.dataInicio),
+                            fim: formatDateBR(item.dataFim),
+                            periodo: `${formatDateBR(item.dataInicio)} a ${formatDateBR(item.dataFim)}`,
+                            horario: timeRangeStr.replace(/^\s*:\s*/, '').trim() || '-',
+                            horaInicio: timeRangeMeta.start || '',
+                            horaFim: timeRangeMeta.end || '',
+                            regime: item.regimeLabel || '',
+                            cargaHoraria: item.chTotal || 0,
+                            docente: docenteName || '',
+                            detalhesDocentes: ((item.docentes && item.docentes.length > 0) ? item.docentes : [{ nome: item.docente, ch: item.chTotal }]).map((docente) => ({
+                                nome: docente?.nome || '',
+                                ch: docente?.ch || ''
+                            }))
+                        }))}"
+                        aria-label="Abrir detalhes de ${compactRangeLabel}"
+                        style="position:absolute; ${externalLabelPosition} top:${currentTop + 8}px; border:none; background:transparent; box-shadow:none; padding:0; display:block; box-sizing:border-box; font-size:0.79em; font-weight:800; color:#1f2937; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; cursor:pointer; z-index:6; text-shadow:0 1px 0 rgba(255,255,255,0.92);">
+                    ${compactRangeLabel}
+                </button>
+            `
+            : '';
 
         let segmentsHtml = '';
-        let externalLabelsHtml = '';
-        let currentSegmentT = startT;
         const docentesList = (item.docentes && item.docentes.length > 0) ? item.docentes : [{ nome: item.docente, ch: item.chTotal }];
-
-        docentesList.forEach((docente, idx) => {
-            const isTarget = teacherNamesMatch(docente.nome, docenteName);
-            const segCH = parseFloat(docente.ch) || 0;
-            const totalCH = parseFloat(item.chTotal) || 0;
-            const rawShare = totalCH > 0 ? (segCH / totalCH) : 1;
-            const safeShare = rawShare > 0 ? rawShare : (totalCH > 0 ? (1 / totalCH) : 1);
-            const flexUnits = segCH > 0 ? segCH : 1;
-
-            const segStartT = currentSegmentT;
-            const segEndT = currentSegmentT + (timeSpan * safeShare);
-            let startDate = new Date(segStartT).toISOString().split('T')[0];
-            let endDate = new Date(segEndT).toISOString().split('T')[0];
-
-            if (idx === 0) startDate = item.dataInicio;
-            if (idx === docentesList.length - 1) endDate = item.dataFim;
-
-            const fmtStart = startDate.split('-').reverse().slice(0, 2).join('/');
-            const fmtEnd = endDate.split('-').reverse().slice(0, 2).join('/');
-            const bgColor = isTarget ? (item.cor || '#3498db') : '#ffffff';
-            const txtColor = isTarget ? '#000000' : '#666666';
-            const borderStyle = isTarget ? 'none' : `1px dashed ${item.cor || '#ccc'}`;
-            const zIndex = isTarget ? '2' : '1';
-            const segmentPct = widthPct * safeShare;
-            const isShortSegment = segmentPct < 16;
-            const chProfessor = parseFloat(String(docente.ch).replace(',', '.'));
-            const chProfessorTxt = Number.isFinite(chProfessor) ? String(chProfessor).replace(/\.0+$/, '') : String(docente.ch || '0');
-            const labelMain = `${baseLabel} ${tPrefix}${item.disciplina} (${chProfessorTxt}h)`.replace(/\s+/g, ' ').trim();
-            const compactLabel = getGanttCompactDisciplinaLabel(item);
-            const horarioSmall = timeRangeStr.replace(/^\s*:\s*/, '').trim();
-
-            let content = '';
-            if (isTarget) {
-                if (isShortSegment) {
-                    content = `
-                            <div style="display:flex; align-items:center; justify-content:space-between; width:100%; padding:0 5px; gap:6px;">
-                                <span style="font-size:0.68em; font-weight:800; opacity:0.96; flex-shrink:0; letter-spacing:-0.35px;">${fmtStart}</span>
-                                <span style="flex:1; min-width:0; font-size:0.72em; font-weight:800; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; text-align:center; letter-spacing:-0.25px;">
-                                    ${compactLabel}
-                                </span>
-                            </div>
-                        `;
-                } else {
-                    content = `
-                            <div style="display:flex; flex-direction:column; justify-content:center; width:100%; padding:0 4px; line-height:1.05; gap:1px;">
-                                <div style="position:relative; display:flex; align-items:center; justify-content:space-between; width:100%; min-height:1.05em; gap:4px;">
-                                    <span style="font-size:0.66em; font-weight:700; opacity:0.98; letter-spacing:-0.2px; flex-shrink:0;">${fmtStart}</span>
-                                    <span style="position:absolute; left:50%; transform:translateX(-50%); max-width:calc(100% - 64px); font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; text-align:center; font-size:0.8em; letter-spacing:-0.3px;">
-                                        ${labelMain}
-                                    </span>
-                                    <span style="font-size:0.66em; font-weight:700; opacity:0.98; letter-spacing:-0.2px; flex-shrink:0;">${fmtEnd}</span>
-                                </div>
-                                <div style="font-size:0.66em; opacity:0.95; letter-spacing:-0.2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; width:100%; text-align:center;">
-                                    ${horarioSmall || ''}
-                                </div>
-                            </div>
-                        `;
-                }
-            } else {
-                const firstName = (docente.nome || '').split(' ')[0] || 'Docente';
-                content = segmentPct < 8
-                    ? `<span style="font-size:0.8em; font-weight:normal; opacity:0.8; letter-spacing: -0.2px;">${firstName}</span>`
-                    : `<span style="font-size:0.8em; font-weight:normal; opacity:0.8; letter-spacing: -0.3px;">${firstName} (${chProfessorTxt}h)</span>`;
-            }
-
-            segmentsHtml += `
-                    <div style="flex: ${flexUnits}; background-color: ${bgColor}; color: ${txtColor}; border-right: ${borderStyle}; border-left: ${borderStyle}; height: 100%; display: flex; align-items: center; justify-content: center; overflow: hidden; min-width: 0; box-sizing: border-box; z-index: ${zIndex};">
-                        ${content}
-                    </div>
-                `;
-            currentSegmentT = segEndT;
-        });
-
+        let currentSegmentT = startT;
         const detailPayload = encodeURIComponent(JSON.stringify({
             disciplina: item.disciplina || '',
             disciplinaAbrev: getGanttCompactDisciplinaLabel(item),
             codigo: getDisciplinaInfo(item.disciplina || '').codigo || '',
+            cor: item.cor || '#3498db',
             turma: turmaNome || '',
             turmaBase: baseLabel || '',
             subGrupo: item.subGrupo || '',
@@ -7290,6 +7300,8 @@ function renderGanttTurnoLane({ turnoConfig, dayItems, docenteName, dayConfig, m
             fim: formatDateBR(item.dataFim),
             periodo: `${formatDateBR(item.dataInicio)} a ${formatDateBR(item.dataFim)}`,
             horario: timeRangeStr.replace(/^\s*:\s*/, '').trim() || '-',
+            horaInicio: timeRangeMeta.start || '',
+            horaFim: timeRangeMeta.end || '',
             regime: item.regimeLabel || '',
             cargaHoraria: item.chTotal || 0,
             docente: docenteName || '',
@@ -7299,14 +7311,42 @@ function renderGanttTurnoLane({ turnoConfig, dayItems, docenteName, dayConfig, m
             }))
         }));
 
+        docentesList.forEach((docente, idx) => {
+            const isTarget = teacherNamesMatch(docente.nome, docenteName);
+            const segCH = parseFloat(docente.ch) || 0;
+            const totalCH = parseFloat(item.chTotal) || 0;
+            const rawShare = totalCH > 0 ? (segCH / totalCH) : 1;
+            const safeShare = rawShare > 0 ? rawShare : (totalCH > 0 ? (1 / totalCH) : 1);
+            const flexUnits = segCH > 0 ? segCH : 1;
+
+            const segEndT = currentSegmentT + (timeSpan * safeShare);
+
+            const bgColor = isTarget ? (item.cor || '#3498db') : '#ffffff';
+            const txtColor = isTarget ? '#000000' : '#666666';
+            const borderStyle = isTarget ? 'none' : `1px dashed ${item.cor || '#ccc'}`;
+            const zIndex = isTarget ? '2' : '1';
+
+            segmentsHtml += `
+                    <div class="${isTarget ? 'gantt-bar-anchor-segment' : ''}"
+                         data-gantt-anchor="${isTarget ? anchorId : ''}"
+                         style="flex: ${flexUnits}; background-color: ${bgColor}; color: ${txtColor}; border-right: ${borderStyle}; border-left: ${borderStyle}; height: 100%; display: flex; align-items: center; justify-content: center; overflow: hidden; min-width: 0; box-sizing: border-box; z-index: ${zIndex};">
+                    </div>
+                `;
+            currentSegmentT = segEndT;
+        });
+
         barsHtml += `
                     <div class="gantt-bar"
+                         data-gantt-anchor="${anchorId}"
                          data-gantt-detail="${detailPayload}"
-                         style="left: ${leftPct}%; width: ${widthPct}%; top: ${currentTop}px; height: ${barHeight}px; padding: 0; display: flex; flex-direction: row; ${boxBorder} cursor: pointer;"
-                         title="${item.disciplina}\nTurma: ${turmaNome}\nTurno: ${turnoConfig.label}${timeRangeStr}\nRegime: ${item.regimeLabel}\nPeriodo efetivo: ${formatDateBR(item.dataInicio)} a ${formatDateBR(item.dataFim)}\nAulas no dia: ${item.slotCount}">
+                         tabindex="0"
+                         role="button"
+                         style="left: ${leftPct}%; width: ${widthPct}%; top: ${currentTop}px; height: ${barHeight}px; padding: 0; display: flex; flex-direction: row; ${boxBorder} cursor: pointer; z-index:3;"
+                         aria-label="${item.disciplina} | Turma: ${turmaNome} | Turno: ${turnoConfig.label}${timeRangeStr} | Regime: ${item.regimeLabel} | Periodo efetivo: ${formatDateBR(item.dataInicio)} a ${formatDateBR(item.dataFim)} | Aulas no dia: ${item.slotCount}">
                         ${segmentsHtml}
+                        ${insideLabelHtml}
                     </div>
-                    ${externalLabelsHtml}
+                    ${externalLabelHtml}
             `;
         currentTop += barHeight + 6;
     });
@@ -7341,6 +7381,125 @@ function renderGanttDayRow(dayConfig, laneRenders) {
                 </div>
             </div>
         `;
+}
+
+function buildGanttLensHtml(detail, placement = 'above', pinned = false) {
+    const escapeHtml = (value) => String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    const compactLayout = window.innerWidth <= 640;
+    const accent = normalizeHexColor(detail?.cor || '#3498db');
+    const accentSoft = hexToRgba(accent, 0.14);
+    const accentMid = hexToRgba(accent, 0.24);
+    const accentStrong = hexToRgba(accent, 0.92);
+    const pointerStyle = placement === 'below'
+        ? 'top:-8px;'
+        : 'bottom:-8px;';
+    const dockStyle = placement === 'below'
+        ? 'top:-1px; border-radius:0 0 16px 16px;'
+        : 'bottom:-1px; border-radius:16px 16px 0 0;';
+    const headerLayout = compactLayout
+        ? 'display:flex; flex-direction:column; align-items:flex-start; gap:10px;'
+        : 'display:flex; align-items:center; justify-content:space-between; gap:12px;';
+    const upperGrid = compactLayout
+        ? 'grid-template-columns:1fr;'
+        : 'grid-template-columns:1fr 1fr;';
+    const lowerGrid = compactLayout
+        ? 'grid-template-columns:1fr 1fr;'
+        : 'grid-template-columns:1fr 1fr 1fr;';
+    const timingSummary = [detail?.turno || '', detail?.horaInicio && detail?.horaFim ? `${detail.horaInicio} - ${detail.horaFim}` : '']
+        .filter(Boolean)
+        .join(' | ');
+
+    return `
+        <div style="position:absolute; inset:0; border-radius:18px; border:1px solid ${accentMid}; background:linear-gradient(180deg, rgba(255,255,255,0.99), rgba(246,248,251,0.98)); box-shadow:0 18px 34px rgba(15,23,42,0.18), 0 0 0 1px ${hexToRgba(accent, 0.05)};"></div>
+        <div style="position:absolute; left:0; right:0; ${placement === 'below' ? 'top:0;' : 'bottom:0;'} height:18px; background:linear-gradient(90deg, ${hexToRgba(accent, 0)}, ${accentSoft} 20%, ${accentMid} 50%, ${accentSoft} 80%, ${hexToRgba(accent, 0)}); border-radius:${placement === 'below' ? '18px 18px 0 0' : '0 0 18px 18px'};"></div>
+        <div style="position:absolute; ${dockStyle} left:calc(var(--gantt-lens-anchor-x, 50%) - 42px); width:84px; height:10px; background:${accentStrong}; box-shadow:0 0 0 3px ${hexToRgba(accent, 0.12)};"></div>
+        <div style="position:absolute; ${pointerStyle} left:var(--gantt-lens-anchor-x, 50%); width:16px; height:16px; background:linear-gradient(135deg, ${accentStrong}, ${accent}); transform:translateX(-50%) rotate(45deg); box-shadow:0 6px 14px ${hexToRgba(accent, 0.28)};"></div>
+        <div style="position:relative; padding:${compactLayout ? '14px 14px 12px 14px' : '16px 18px 14px 18px'};">
+            ${pinned ? `<button type="button" data-gantt-lens-close="1" aria-label="Fechar lupa" style="position:absolute; top:10px; right:10px; width:28px; height:28px; border:none; border-radius:999px; background:${hexToRgba(accent, 0.1)}; color:#334155; font-size:18px; line-height:1; cursor:pointer; display:inline-flex; align-items:center; justify-content:center;">&times;</button>` : ''}
+            <div style="${headerLayout} margin-bottom:10px; ${pinned ? 'padding-right:34px;' : ''}">
+                <div style="min-width:0;">
+                    <div style="font-size:0.76em; font-weight:800; color:#64748b; text-transform:uppercase; letter-spacing:0.05em;">Lupa da Oferta</div>
+                    <div style="margin-top:4px; font-size:1em; font-weight:800; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(detail?.disciplina || '-')}</div>
+                    ${timingSummary ? `<div style="margin-top:5px; font-size:0.8em; font-weight:700; color:#64748b;">${escapeHtml(timingSummary)}</div>` : ''}
+                </div>
+                <span style="display:inline-flex; align-items:center; border-radius:999px; background:${accent}; color:#0b1722; padding:5px 10px; font-size:0.76em; font-weight:800; white-space:nowrap; box-shadow:0 6px 14px ${hexToRgba(accent, 0.18)};">${escapeHtml(detail?.turmaBase || detail?.turma || '-')}</span>
+            </div>
+            <div style="display:grid; ${upperGrid} gap:10px; margin-bottom:10px;">
+                <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:10px 12px;">
+                    <div style="font-size:0.72em; font-weight:800; color:#64748b; text-transform:uppercase;">Inicio</div>
+                    <div style="margin-top:4px; font-size:0.95em; font-weight:700; color:#0f172a;">${escapeHtml(detail?.inicio || '-')}</div>
+                </div>
+                <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:10px 12px;">
+                    <div style="font-size:0.72em; font-weight:800; color:#64748b; text-transform:uppercase;">Fim</div>
+                    <div style="margin-top:4px; font-size:0.95em; font-weight:700; color:#0f172a;">${escapeHtml(detail?.fim || '-')}</div>
+                </div>
+            </div>
+            <div style="display:grid; ${lowerGrid} gap:10px;">
+                <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:10px 12px;">
+                    <div style="font-size:0.72em; font-weight:800; color:#64748b; text-transform:uppercase;">Hora Inicio</div>
+                    <div style="margin-top:4px; font-size:0.92em; font-weight:700; color:#0f172a;">${escapeHtml(detail?.horaInicio || '-')}</div>
+                </div>
+                <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:10px 12px;">
+                    <div style="font-size:0.72em; font-weight:800; color:#64748b; text-transform:uppercase;">Hora Fim</div>
+                    <div style="margin-top:4px; font-size:0.92em; font-weight:700; color:#0f172a;">${escapeHtml(detail?.horaFim || '-')}</div>
+                </div>
+                <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:10px 12px;">
+                    <div style="font-size:0.72em; font-weight:800; color:#64748b; text-transform:uppercase;">Dia</div>
+                    <div style="margin-top:4px; font-size:0.92em; font-weight:700; color:#0f172a;">${escapeHtml(detail?.dia || '-')}</div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function ensureGanttDetailLens(container) {
+    const host = container?.querySelector('.gantt-container');
+    if (!host) return null;
+
+    let lens = host.querySelector('#gantt-detail-lens');
+    if (lens) return lens;
+
+    lens = document.createElement('div');
+    lens.id = 'gantt-detail-lens';
+    lens.style.cssText = 'position:absolute; width:min(360px, calc(100% - 24px)); min-height:146px; display:none; opacity:0; transform:translateY(8px) scale(0.98); transform-origin:var(--gantt-lens-anchor-x, 50%) var(--gantt-lens-origin-y, 100%); transition:opacity 0.16s ease, transform 0.18s ease; z-index:40; pointer-events:auto;';
+    host.appendChild(lens);
+    return lens;
+}
+
+function positionGanttDetailLens(container, target) {
+    const host = container?.querySelector('.gantt-container');
+    const lens = host?.querySelector('#gantt-detail-lens');
+    if (!host || !lens || !target) return;
+
+    const hostRect = host.getBoundingClientRect();
+    const targetRect = target.getBoundingClientRect();
+    const mobileViewport = window.innerWidth <= 768;
+    const horizontalPadding = mobileViewport ? 8 : 12;
+    const maxAllowedWidth = Math.max(180, hostRect.width - (horizontalPadding * 2));
+    const lensWidth = mobileViewport ? maxAllowedWidth : Math.min(360, maxAllowedWidth);
+    const lensHeight = Math.max(146, lens.offsetHeight || 190);
+    const anchorCenter = targetRect.left - hostRect.left + (targetRect.width / 2);
+    const topAbove = targetRect.top - hostRect.top - lensHeight - 10;
+    const topBelow = targetRect.bottom - hostRect.top + 10;
+    const spaceAbove = targetRect.top - hostRect.top;
+    const spaceBelow = hostRect.bottom - targetRect.bottom;
+    const placement = spaceAbove >= (lensHeight + 18) || spaceAbove >= spaceBelow ? 'above' : 'below';
+    const rawTop = placement === 'above' ? topAbove : topBelow;
+    const top = Math.max(12, Math.min(hostRect.height - lensHeight - 12, rawTop));
+    const left = Math.max(horizontalPadding, Math.min(hostRect.width - lensWidth - horizontalPadding, anchorCenter - (lensWidth / 2)));
+    const anchorPercent = Math.max(14, Math.min(86, ((anchorCenter - left) / lensWidth) * 100));
+
+    lens.style.width = `${lensWidth}px`;
+    lens.style.left = `${left}px`;
+    lens.style.top = `${top}px`;
+    lens.style.setProperty('--gantt-lens-anchor-x', `${anchorPercent}%`);
+    lens.style.setProperty('--gantt-lens-origin-y', placement === 'above' ? '100%' : '0%');
+    return placement;
 }
 
 function ensureGanttDetailModal() {
@@ -7378,6 +7537,86 @@ function openGanttDetailModal(detail) {
     const body = document.getElementById('gantt-detail-body');
     if (!overlay || !body) return;
 
+    {
+        const modalCard = overlay.firstElementChild;
+        const closeButton = overlay.querySelector('#btn-gantt-detail-close');
+        if (modalCard) {
+            modalCard.style.cssText = 'width:min(640px, 100%); max-height:min(88vh, 760px); background:#ffffff; border-radius:18px; box-shadow:0 22px 60px rgba(15,23,42,0.28); position:relative; overflow:hidden;';
+        }
+        if (closeButton) {
+            closeButton.innerHTML = '&times;';
+            closeButton.style.cssText = 'position:absolute; top:14px; right:14px; border:none; background:#eef2f7; color:#2c3e50; border-radius:999px; width:34px; height:34px; font-size:20px; cursor:pointer; z-index:2;';
+        }
+        body.style.cssText = 'overflow:auto; max-height:min(88vh, 760px);';
+
+        const escapeHtml = (value) => String(value ?? '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+
+        const accentColor = escapeHtml(detail?.cor || '#3498db');
+        const turmaLabel = [detail?.turmaBase || detail?.turma || '-', detail?.subGrupo || '']
+            .filter(Boolean)
+            .join(' ')
+            .trim();
+        const docentesHtml = Array.isArray(detail?.detalhesDocentes) && detail.detalhesDocentes.length > 0
+            ? detail.detalhesDocentes.map((docente) => `
+                <li style="display:flex; justify-content:space-between; gap:12px; padding:8px 0; border-bottom:1px solid #e2e8f0;">
+                    <span style="font-weight:600; color:#1f2937;">${escapeHtml(docente.nome || '-')}</span>
+                    <span style="color:#52606d; white-space:nowrap;">${escapeHtml(docente.ch || 0)}h</span>
+                </li>
+            `).join('')
+            : '<li style="padding:8px 0; color:#52606d;">-</li>';
+
+        body.innerHTML = `
+            <div style="height:8px; background:${accentColor};"></div>
+            <div style="padding:24px 24px 20px 24px;">
+                <div style="display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-bottom:12px; padding-right:40px;">
+                    <span style="display:inline-flex; align-items:center; border-radius:999px; background:#eef6ff; color:#1d4ed8; padding:6px 12px; font-size:0.82em; font-weight:800; text-transform:uppercase; letter-spacing:0.04em;">${escapeHtml(detail?.turno || '-')}</span>
+                    <span style="display:inline-flex; align-items:center; border-radius:999px; background:#f8fafc; color:#475569; padding:6px 12px; font-size:0.82em; font-weight:700;">${escapeHtml(detail?.regime || '-')} · ${escapeHtml(detail?.cargaHoraria || 0)}h</span>
+                </div>
+
+                <h3 style="margin:0; color:var(--primary); font-size:1.3em; line-height:1.25; text-transform:uppercase;">${escapeHtml(detail?.disciplina || '-')}</h3>
+                <p style="margin:8px 0 0 0; color:#52606d; font-size:0.98em; font-weight:700;">${escapeHtml(turmaLabel || '-')}</p>
+
+                <div style="margin-top:18px; display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:12px;">
+                    <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:14px;">
+                        <div style="font-size:0.76em; font-weight:800; color:#64748b; text-transform:uppercase; letter-spacing:0.05em;">Periodo</div>
+                        <div style="margin-top:6px; font-size:1em; font-weight:700; color:#0f172a;">${escapeHtml(detail?.periodo || '-')}</div>
+                    </div>
+                    <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:14px;">
+                        <div style="font-size:0.76em; font-weight:800; color:#64748b; text-transform:uppercase; letter-spacing:0.05em;">Horario</div>
+                        <div style="margin-top:6px; font-size:1em; font-weight:700; color:#0f172a;">${escapeHtml(detail?.horario || '-')}</div>
+                    </div>
+                    <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:14px;">
+                        <div style="font-size:0.76em; font-weight:800; color:#64748b; text-transform:uppercase; letter-spacing:0.05em;">Dia</div>
+                        <div style="margin-top:6px; font-size:1em; font-weight:700; color:#0f172a;">${escapeHtml(detail?.dia || '-')}</div>
+                    </div>
+                </div>
+
+                <div style="margin-top:16px; background:#fffdf3; border:1px solid #efe2a8; border-radius:12px; padding:14px;">
+                    <div style="font-size:0.76em; font-weight:800; color:#8a6d1d; text-transform:uppercase; letter-spacing:0.05em;">Resumo da barra curta</div>
+                    <div style="margin-top:6px; font-size:0.98em; font-weight:700; color:#3f3b17;">${escapeHtml(detail?.disciplinaAbrev || detail?.disciplina || '-')}</div>
+                    <div style="margin-top:8px; font-size:0.9em; color:#6b7280;">Inicio ${escapeHtml(detail?.inicio || '-')} · Fim ${escapeHtml(detail?.fim || '-')} · Codigo ${escapeHtml(detail?.codigo || '-')}</div>
+                </div>
+
+                <div style="margin-top:16px; border:1px solid #e2e8f0; border-radius:12px; padding:14px;">
+                    <div style="font-size:0.76em; font-weight:800; color:#64748b; text-transform:uppercase; letter-spacing:0.05em;">Docentes e distribuicao</div>
+                    <ul style="list-style:none; margin:10px 0 0 0; padding:0;">${docentesHtml}</ul>
+                </div>
+
+                <div style="margin-top:16px; font-size:0.86em; color:#64748b; line-height:1.45;">
+                    Versao A para avaliacao: o modal mostra so o essencial da oferta para testar se o clique compensa a reducao do texto dentro da barra.
+                </div>
+            </div>
+        `;
+
+        overlay.style.display = 'flex';
+        return;
+    }
+
     const docentesHtml = Array.isArray(detail?.detalhesDocentes) && detail.detalhesDocentes.length > 0
         ? detail.detalhesDocentes.map((docente) => `<li><strong>${docente.nome || '-'}</strong> - ${docente.ch || 0}h</li>`).join('')
         : '<li>-</li>';
@@ -7411,18 +7650,198 @@ function openGanttDetailModal(detail) {
 function bindGanttDetailInteractions(container) {
     if (!container) return;
 
-    container.querySelectorAll('.gantt-bar[data-gantt-detail]').forEach((bar) => {
-        if (bar.dataset.detailBound === '1') return;
-        bar.dataset.detailBound = '1';
-        bar.addEventListener('click', () => {
+    const lens = ensureGanttDetailLens(container);
+    let hideTimer = 0;
+    let pinnedKey = '';
+    let pinnedAnchor = '';
+
+    const targets = () => container.querySelectorAll('.gantt-bar[data-gantt-detail], .gantt-external-detail[data-gantt-detail]');
+    const getAnchorElements = (anchorId) => anchorId
+        ? Array.from(container.querySelectorAll(`[data-gantt-anchor="${anchorId}"]`))
+        : [];
+    const getAnchorTarget = (target) => {
+        const anchorId = target?.dataset?.ganttAnchor || '';
+        const anchorElements = getAnchorElements(anchorId);
+        return anchorElements.find((el) => el.classList.contains('gantt-bar-anchor-segment'))
+            || anchorElements.find((el) => el.classList.contains('gantt-bar'))
+            || target;
+    };
+    const resetTargetStyles = (el) => {
+        el.style.outline = 'none';
+        el.style.zIndex = el.classList.contains('gantt-external-detail') ? '6' : '3';
+        if (el.classList.contains('gantt-external-detail')) {
+            el.style.textDecoration = 'none';
+            el.style.color = '#1f2937';
+        }
+    };
+    const clearActiveStates = () => {
+        targets().forEach((el) => resetTargetStyles(el));
+    };
+    const applyActiveState = (anchorId, pinned = false) => {
+        getAnchorElements(anchorId).forEach((el) => {
+            el.style.zIndex = el.classList.contains('gantt-external-detail') ? (pinned ? '12' : '8') : (pinned ? '20' : '10');
+            if (el.classList.contains('gantt-external-detail')) {
+                el.style.textDecoration = 'underline';
+                el.style.textUnderlineOffset = '2px';
+                el.style.color = '#0f172a';
+                return;
+            }
+            el.style.outline = pinned ? '2px solid rgba(15,23,42,0.28)' : '1px solid rgba(15,23,42,0.18)';
+        });
+    };
+
+    const clearHideTimer = () => {
+        if (hideTimer) {
+            clearTimeout(hideTimer);
+            hideTimer = 0;
+        }
+    };
+
+    const hideLens = (force = false) => {
+        if (!lens) return;
+        if (!force && pinnedKey) return;
+        clearHideTimer();
+        if (force) {
+            pinnedKey = '';
+            pinnedAnchor = '';
+        }
+        lens.style.opacity = '0';
+        lens.style.transform = 'translateY(8px) scale(0.98)';
+        window.setTimeout(() => {
+            if (!pinnedKey) {
+                lens.style.display = 'none';
+                clearActiveStates();
+            }
+        }, 180);
+    };
+
+    const showLens = (target, detail, pinned = false) => {
+        if (!lens) {
+            openGanttDetailModal(detail);
+            return;
+        }
+
+        clearHideTimer();
+        const anchorId = target?.dataset?.ganttAnchor || '';
+        const anchorTarget = getAnchorTarget(target);
+        if (pinned) {
+            pinnedKey = target.dataset.ganttDetail || '';
+            pinnedAnchor = anchorId;
+        }
+        clearActiveStates();
+        applyActiveState(anchorId, pinned);
+        lens.style.display = 'block';
+        lens.innerHTML = buildGanttLensHtml(detail, 'above', pinned);
+        const placement = positionGanttDetailLens(container, anchorTarget);
+        lens.innerHTML = buildGanttLensHtml(detail, placement, pinned);
+        positionGanttDetailLens(container, anchorTarget);
+        requestAnimationFrame(() => {
+            lens.style.opacity = '1';
+            lens.style.transform = 'translateY(0) scale(1)';
+        });
+    };
+
+    if (lens && lens.dataset.bound !== '1') {
+        lens.dataset.bound = '1';
+        lens.addEventListener('mouseenter', clearHideTimer);
+        lens.addEventListener('mouseleave', () => {
+            hideTimer = window.setTimeout(() => hideLens(false), 140);
+        });
+        lens.addEventListener('click', (event) => {
+            const closeButton = event.target.closest('[data-gantt-lens-close="1"]');
+            if (!closeButton) return;
+            event.preventDefault();
+            event.stopPropagation();
+            hideLens(true);
+        });
+    }
+
+    targets().forEach((target) => {
+        if (target.dataset.detailBound === '1') return;
+        target.dataset.detailBound = '1';
+        target.addEventListener('mouseenter', () => {
             try {
-                const detail = JSON.parse(decodeURIComponent(bar.dataset.ganttDetail || '%7B%7D'));
-                openGanttDetailModal(detail);
+                if (pinnedKey) return;
+                const detail = JSON.parse(decodeURIComponent(target.dataset.ganttDetail || '%7B%7D'));
+                showLens(target, detail, false);
+            } catch (err) {
+                console.error('Falha ao abrir lupa do Gantt', err);
+            }
+        });
+        target.addEventListener('mouseleave', () => {
+            if (pinnedKey) return;
+            hideTimer = window.setTimeout(() => hideLens(false), 140);
+        });
+        target.addEventListener('click', () => {
+            try {
+                const detail = JSON.parse(decodeURIComponent(target.dataset.ganttDetail || '%7B%7D'));
+                const clickedKey = target.dataset.ganttDetail || '';
+                const clickedAnchor = target.dataset.ganttAnchor || '';
+                if (pinnedKey && pinnedKey === clickedKey) {
+                    hideLens(true);
+                    return;
+                }
+                pinnedAnchor = clickedAnchor;
+                showLens(target, detail, true);
             } catch (err) {
                 console.error('Falha ao abrir detalhes do Gantt', err);
             }
         });
+        target.addEventListener('focus', () => {
+            try {
+                if (pinnedKey) return;
+                const detail = JSON.parse(decodeURIComponent(target.dataset.ganttDetail || '%7B%7D'));
+                showLens(target, detail, false);
+            } catch (err) {
+                console.error('Falha ao focar lupa do Gantt', err);
+            }
+        });
+        target.addEventListener('blur', () => {
+            if (pinnedKey) return;
+            hideTimer = window.setTimeout(() => hideLens(false), 140);
+        });
+        target.addEventListener('keydown', (event) => {
+            if (event.key !== 'Enter' && event.key !== ' ') return;
+            event.preventDefault();
+            target.click();
+        });
     });
+
+    if (container.dataset.ganttLensDocBound !== '1') {
+        container.dataset.ganttLensDocBound = '1';
+        document.addEventListener('click', (event) => {
+            if (!container.contains(event.target)) {
+                pinnedKey = '';
+                hideLens(true);
+            }
+        });
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape') hideLens(true);
+        });
+        window.addEventListener('scroll', () => {
+            if (!pinnedKey || !pinnedAnchor) return;
+            const target = getAnchorTarget({ dataset: { ganttAnchor: pinnedAnchor } });
+            if (!target) {
+                hideLens(true);
+                return;
+            }
+            const detail = JSON.parse(decodeURIComponent(pinnedKey || '%7B%7D'));
+            showLens(target, detail, true);
+        }, true);
+        window.addEventListener('resize', () => {
+            if (!pinnedKey || !pinnedAnchor) {
+                hideLens(true);
+                return;
+            }
+            const target = getAnchorTarget({ dataset: { ganttAnchor: pinnedAnchor } });
+            if (!target) {
+                hideLens(true);
+                return;
+            }
+            const detail = JSON.parse(decodeURIComponent(pinnedKey || '%7B%7D'));
+            showLens(target, detail, true);
+        });
+    }
 }
 
 function renderGanttChart() {
