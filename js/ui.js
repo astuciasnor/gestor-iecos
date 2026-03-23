@@ -7010,7 +7010,6 @@ function getShiftTimeRangeMeta(timeRanges, turnoValue, turnoConfigs = getGanttTu
     return { start: filteredTimes[0], end: filteredTimes[filteredTimes.length - 1] };
 }
 
-
 function buildGanttTimelineLinesHtml(minTime, maxTime, totalTime) {
     const weekLines = [];
     const weekWalker = new Date(minTime);
@@ -7198,7 +7197,19 @@ function collectGanttDayItems({
 function getGanttCompactDisciplinaLabel(item) {
     const info = getDisciplinaInfo(item?.disciplina || '');
     const base = String(info?.abrev || item?.disciplina || '').trim();
-    return base || 'Componente';
+    const preferredHours = Number(item?.chProf);
+    const fallbackHours = Number(item?.chTotal);
+    const cargaHoraria = Number.isFinite(preferredHours) && preferredHours > 0
+        ? preferredHours
+        : (Number.isFinite(fallbackHours) && fallbackHours > 0 ? fallbackHours : 0);
+    const hoursLabel = cargaHoraria > 0
+        ? (Number.isInteger(cargaHoraria)
+            ? `${cargaHoraria}h`
+            : `${cargaHoraria.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 1 })}h`)
+        : '';
+
+    if (!base) return hoursLabel || 'Componente';
+    return hoursLabel ? `${base} ${hoursLabel}` : base;
 }
 
 function getGanttCompactRangeLabel(item) {
@@ -7230,21 +7241,27 @@ function renderGanttTurnoLane({ turnoConfig, dayItems, docenteName, dayConfig, m
         const barHeight = 36;
         const timeRangeStr = getShiftTimeRangeStr(item.timeRanges, turnoConfig.value, ganttTurnoConfigs);
         const timeRangeMeta = getShiftTimeRangeMeta(item.timeRanges, turnoConfig.value, ganttTurnoConfigs);
+        const compactLabel = getGanttCompactDisciplinaLabel(item);
         const compactRangeLabel = getGanttCompactRangeLabel(item);
+        const startShort = formatDateBR(item.dataInicio || '').slice(0, 5) || '--/--';
+        const endShort = formatDateBR(item.dataFim || '').slice(0, 5) || '--/--';
         const anchorId = `gantt-${String(dayConfig?.name || 'dia').toLowerCase()}-${String(turnoConfig.value || 'turno').toLowerCase()}-${startT}-${currentTop}`
             .replace(/[^a-z0-9_-]+/gi, '-');
         const showExternalLabel = widthPct < 15;
         const freeSpaceLeft = leftPct;
         const freeSpaceRight = 100 - (leftPct + widthPct);
         const placeExternalRight = freeSpaceRight >= freeSpaceLeft;
+        const externalLabelOffsetPx = 42;
         const externalLabelPosition = placeExternalRight
-            ? `left:${Math.min(96, leftPct + widthPct + 0.8)}%;`
-            : `right:${Math.min(96, 100 - leftPct + 0.8)}%;`;
-        const insideLabelHtml = showExternalLabel
+            ? `left:calc(${Math.min(92, leftPct + widthPct)}% + ${externalLabelOffsetPx}px);`
+            : `right:calc(${Math.min(92, 100 - leftPct)}% + ${externalLabelOffsetPx}px);`;
+        const defaultInsideLabelHtml = showExternalLabel
             ? ''
             : `
-                <div style="position:absolute; left:8px; right:8px; top:50%; transform:translateY(-50%); min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; text-align:center; font-size:0.78em; font-weight:800; color:#0f172a; text-shadow:0 1px 0 rgba(255,255,255,0.35); pointer-events:none; z-index:5;">
-                    ${compactRangeLabel}
+                <div style="position:absolute; inset:0; pointer-events:none; z-index:5;">
+                    <div style="position:absolute; top:50%; left:8px; right:8px; transform:translateY(-50%); min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; text-align:center; font-size:0.78em; font-weight:800; color:#0f172a; text-shadow:0 1px 0 rgba(255,255,255,0.35);">
+                        ${compactLabel}
+                    </div>
                 </div>
             `;
         const externalLabelHtml = showExternalLabel
@@ -7278,13 +7295,22 @@ function renderGanttTurnoLane({ turnoConfig, dayItems, docenteName, dayConfig, m
                         }))}"
                         aria-label="Abrir detalhes de ${compactRangeLabel}"
                         style="position:absolute; ${externalLabelPosition} top:${currentTop + 8}px; border:none; background:transparent; box-shadow:none; padding:0; display:block; box-sizing:border-box; font-size:0.79em; font-weight:800; color:#1f2937; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; cursor:pointer; z-index:6; text-shadow:0 1px 0 rgba(255,255,255,0.92);">
-                    ${compactRangeLabel}
+                    ${compactLabel}
                 </button>
             `
             : '';
 
         let segmentsHtml = '';
         const docentesList = (item.docentes && item.docentes.length > 0) ? item.docentes : [{ nome: item.docente, ch: item.chTotal }];
+        const flexUnitsList = docentesList.map((docente) => {
+            const segCH = parseFloat(docente?.ch) || 0;
+            return segCH > 0 ? segCH : 1;
+        });
+        const totalFlexUnits = flexUnitsList.reduce((sum, value) => sum + value, 0) || 1;
+        let currentFlexOffset = 0;
+        let targetSegmentStartPct = leftPct;
+        let targetSegmentWidthPct = widthPct;
+        let targetSegmentFound = false;
         let currentSegmentT = startT;
         const detailPayload = encodeURIComponent(JSON.stringify({
             disciplina: item.disciplina || '',
@@ -7317,14 +7343,22 @@ function renderGanttTurnoLane({ turnoConfig, dayItems, docenteName, dayConfig, m
             const totalCH = parseFloat(item.chTotal) || 0;
             const rawShare = totalCH > 0 ? (segCH / totalCH) : 1;
             const safeShare = rawShare > 0 ? rawShare : (totalCH > 0 ? (1 / totalCH) : 1);
-            const flexUnits = segCH > 0 ? segCH : 1;
+            const flexUnits = flexUnitsList[idx];
 
             const segEndT = currentSegmentT + (timeSpan * safeShare);
+            const segStartPct = leftPct + ((currentFlexOffset / totalFlexUnits) * widthPct);
+            const segWidthPct = (flexUnits / totalFlexUnits) * widthPct;
 
             const bgColor = isTarget ? (item.cor || '#3498db') : '#ffffff';
             const txtColor = isTarget ? '#000000' : '#666666';
             const borderStyle = isTarget ? 'none' : `1px dashed ${item.cor || '#ccc'}`;
             const zIndex = isTarget ? '2' : '1';
+
+            if (isTarget && !targetSegmentFound) {
+                targetSegmentStartPct = segStartPct;
+                targetSegmentWidthPct = segWidthPct;
+                targetSegmentFound = true;
+            }
 
             segmentsHtml += `
                     <div class="${isTarget ? 'gantt-bar-anchor-segment' : ''}"
@@ -7332,8 +7366,39 @@ function renderGanttTurnoLane({ turnoConfig, dayItems, docenteName, dayConfig, m
                          style="flex: ${flexUnits}; background-color: ${bgColor}; color: ${txtColor}; border-right: ${borderStyle}; border-left: ${borderStyle}; height: 100%; display: flex; align-items: center; justify-content: center; overflow: hidden; min-width: 0; box-sizing: border-box; z-index: ${zIndex};">
                     </div>
                 `;
+            currentFlexOffset += flexUnits;
             currentSegmentT = segEndT;
         });
+
+        const showOutsideDates = targetSegmentWidthPct > 0;
+        const targetSegmentEndPct = targetSegmentStartPct + targetSegmentWidthPct;
+        const targetStartWithinBarPct = widthPct > 0
+            ? Math.max(0, Math.min(100, ((targetSegmentStartPct - leftPct) / widthPct) * 100))
+            : 0;
+        const targetEndWithinBarPct = widthPct > 0
+            ? Math.max(0, Math.min(100, ((targetSegmentEndPct - leftPct) / widthPct) * 100))
+            : 100;
+        const spaceLeftWithinBarPct = targetStartWithinBarPct;
+        const spaceRightWithinBarPct = 100 - targetEndWithinBarPct;
+        const sharedTargetSegment = targetSegmentFound && targetSegmentWidthPct < (widthPct - 0.4);
+        const canPlaceLabelRight = spaceRightWithinBarPct >= 14;
+        const canPlaceLabelLeft = spaceLeftWithinBarPct >= 14;
+        const placeLabelRight = canPlaceLabelRight && (!canPlaceLabelLeft || spaceRightWithinBarPct >= spaceLeftWithinBarPct);
+        const insideLabelHtml = !showExternalLabel && sharedTargetSegment && (canPlaceLabelRight || canPlaceLabelLeft)
+            ? `
+                <div style="position:absolute; inset:0; pointer-events:none; z-index:5;">
+                    <div style="position:absolute; top:50%; left:${placeLabelRight ? `calc(${targetEndWithinBarPct}% + 40px)` : '8px'}; right:${placeLabelRight ? '8px' : `calc(${100 - targetStartWithinBarPct}% + 40px)`}; transform:translateY(-50%); min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; text-align:${placeLabelRight ? 'left' : 'right'}; font-size:0.78em; font-weight:800; color:#0f172a; text-shadow:0 1px 0 rgba(255,255,255,0.35);">
+                        ${placeLabelRight ? `- ${compactLabel}` : `${compactLabel} -`}
+                    </div>
+                </div>
+            `
+            : defaultInsideLabelHtml;
+        const outsideDateLabelsHtml = showOutsideDates
+            ? `
+                <span style="position:absolute; left:${targetSegmentStartPct}%; top:${currentTop + (barHeight / 2)}px; transform:translate(calc(-100% - 6px), -50%); font-size:0.64em; font-weight:900; color:#0f172a; text-shadow:0 1px 0 rgba(255,255,255,0.72); white-space:nowrap; pointer-events:none; z-index:6;">${startShort}</span>
+                <span style="position:absolute; left:${targetSegmentEndPct}%; top:${currentTop + (barHeight / 2)}px; transform:translate(6px, -50%); font-size:0.64em; font-weight:900; color:#0f172a; text-shadow:0 1px 0 rgba(255,255,255,0.72); white-space:nowrap; pointer-events:none; z-index:6;">${endShort}</span>
+            `
+            : '';
 
         barsHtml += `
                     <div class="gantt-bar"
@@ -7342,10 +7407,11 @@ function renderGanttTurnoLane({ turnoConfig, dayItems, docenteName, dayConfig, m
                          tabindex="0"
                          role="button"
                          style="left: ${leftPct}%; width: ${widthPct}%; top: ${currentTop}px; height: ${barHeight}px; padding: 0; display: flex; flex-direction: row; ${boxBorder} cursor: pointer; z-index:3;"
-                         aria-label="${item.disciplina} | Turma: ${turmaNome} | Turno: ${turnoConfig.label}${timeRangeStr} | Regime: ${item.regimeLabel} | Periodo efetivo: ${formatDateBR(item.dataInicio)} a ${formatDateBR(item.dataFim)} | Aulas no dia: ${item.slotCount}">
+                         aria-label="${item.disciplina} | CH docente: ${item.chProf || item.chTotal || 0}h | Turma: ${turmaNome} | Turno: ${turnoConfig.label}${timeRangeStr} | Regime: ${item.regimeLabel} | Periodo efetivo: ${formatDateBR(item.dataInicio)} a ${formatDateBR(item.dataFim)} | Aulas no dia: ${item.slotCount}">
                         ${segmentsHtml}
                         ${insideLabelHtml}
                     </div>
+                    ${outsideDateLabelsHtml}
                     ${externalLabelHtml}
             `;
         currentTop += barHeight + 6;
@@ -7844,27 +7910,25 @@ function bindGanttDetailInteractions(container) {
     }
 }
 
-function renderGanttChart() {
+function renderTeacherGanttInto(container, docenteName) {
     try {
-        const container = document.getElementById('gantt-container');
-        const inputDocente = document.getElementById('inp-gantt-docente');
-        if (!container || !inputDocente) return;
+        if (!container) return;
 
-        const docenteName = inputDocente.value.trim();
-        if (!docenteName) {
+        const teacherName = String(docenteName || '').trim();
+        if (!teacherName) {
             container.innerHTML = '<div style="text-align: center; color: #7f8c8d; margin-top: 50px; font-size: 1.1em;">Por favor, digite o nome de um professor.</div>';
             return;
         }
 
         const allocs = filterExportableAllocations(
-            store.allocations.filter((alloc) => allocationHasTeacherMatch(alloc, docenteName))
+            store.allocations.filter((alloc) => allocationHasTeacherMatch(alloc, teacherName))
         );
         if (allocs.length === 0) {
-            container.innerHTML = `<div style="text-align: center; color: #7f8c8d; margin-top: 50px; font-size: 1.1em;">Nenhuma disciplina encontrada para <b>${docenteName}</b>.</div>`;
+            container.innerHTML = `<div style="text-align: center; color: #7f8c8d; margin-top: 50px; font-size: 1.1em;">Nenhuma disciplina encontrada para <b>${teacherName}</b>.</div>`;
             return;
         }
 
-        const totalCH = calculateTeacherTotalCH(docenteName);
+        const totalCH = calculateTeacherTotalCH(teacherName);
         let minDateStr = store.settings.termStart || '2025-01-01';
         let maxDateStr = store.settings.termEnd || '2025-12-31';
 
@@ -7892,7 +7956,7 @@ function renderGanttChart() {
 
         let html = `
         <div style="margin-bottom: 20px; text-align: center;">
-            <h3 style="color: var(--primary); margin: 0; font-size: 1.4em; text-transform: uppercase;">Cronograma: ${docenteName} (${totalCH}h)</h3>
+            <h3 style="color: var(--primary); margin: 0; font-size: 1.4em; text-transform: uppercase;">Cronograma: ${teacherName} (${totalCH}h)</h3>
         </div>
 
         <div class="gantt-container" style="position: relative; border: 1px solid #ddd; border-radius: 6px; overflow: hidden; background: #f0f3f5;">
@@ -7911,7 +7975,7 @@ function renderGanttChart() {
             const dayItems = collectGanttDayItems({
                 dayId: dayConfig.id,
                 allocs,
-                docenteName,
+                docenteName: teacherName,
                 minDateStr,
                 maxDateStr,
                 ganttTurnoConfigs,
@@ -7923,7 +7987,7 @@ function renderGanttChart() {
             const laneRenders = visibleTurnos.map((turnoConfig, idx) => renderGanttTurnoLane({
                 turnoConfig,
                 dayItems,
-                docenteName,
+                docenteName: teacherName,
                 dayConfig,
                 minTime,
                 totalTime,
@@ -7939,9 +8003,20 @@ function renderGanttChart() {
         bindGanttDetailInteractions(container);
     } catch (err) {
         console.error('Erro renderGanttChart:', err);
-        const container = document.getElementById('gantt-container');
         if (container) container.innerHTML = `<div style="color:red; margin-top:20px;"><b>Erro Inesperado no Grafico:</b><br>${err.message}</div>`;
     }
+}
+
+function renderGanttChart() {
+    const container = document.getElementById('gantt-container');
+    const inputDocente = document.getElementById('inp-gantt-docente');
+    if (!container || !inputDocente) return;
+    renderTeacherGanttInto(container, inputDocente.value);
+}
+
+export function renderPublicTeacherGantt(target, docenteName) {
+    const container = typeof target === 'string' ? document.getElementById(target) : target;
+    renderTeacherGanttInto(container, docenteName);
 }
 // ==== NOVO MOTOR: AUDITORIA GLOBAL DE PROFESSORES ====
 function detectGlobalTeacherConflicts() {

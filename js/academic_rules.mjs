@@ -108,9 +108,13 @@ export function resolveActiveAcademicPeriod({ plans = [], preferredMeta = null, 
   const preferredYear = String(preferred.termStart || '').slice(0, 4);
   const activeNow = officialPlans.find((plan) => plan.termStart <= todayIso && plan.termEnd >= todayIso);
   const nextPlan = officialPlans.find((plan) => plan.termStart >= todayIso);
+  const exactDateMatch = officialPlans.find(
+    (plan) => plan.termStart === preferred.termStart && plan.termEnd === preferred.termEnd
+  );
 
   return officialPlans.find((plan) => plan.key === preferred.key)
     || officialPlans.find((plan) => plan.periodo === preferred.periodo && plan.termStart === preferred.termStart && plan.termEnd === preferred.termEnd)
+    || exactDateMatch
     || officialPlans.find((plan) => String(plan.ano || '') === preferredYear && plan.periodo === preferred.periodo)
     || officialPlans.find((plan) => plan.periodo === preferred.periodo)
     || activeNow

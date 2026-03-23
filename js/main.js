@@ -1,5 +1,6 @@
 import { store } from './store.js';
-import { initUI, exportSigaaMetadataJSON, showToastWarning } from './ui.js?v=20260307d';
+import { initUI, exportSigaaMetadataJSON, showToastWarning } from './ui.js?v=20260323ab';
+import { filterExportableAllocations, resolveActiveAcademicPeriod } from './academic_rules.mjs';
 
 const EXPORT_CURSOS_UNIDADE = ['EP', 'CB', 'CN'];
 
@@ -100,10 +101,45 @@ function buildPlanScopedPayload(scope, allocations, extra = {}) {
   };
 }
 
-function buildPublicExportPayload() {
+function getOfficialPlanCandidates() {
+  return (Array.isArray(store.rawData?.periodos_letivos) ? store.rawData.periodos_letivos : []).map((item) => ({
+    periodo: item?.periodo_letivo || item?.periodo || '',
+    termStart: item?.inicio || '',
+    termEnd: item?.fim || '',
+    ano: item?.ano || ''
+  }));
+}
+
+function resolvePublicPlanMeta() {
   const activePlan = store.getActivePlanMeta();
+  const preferredMeta = activePlan?.key
+    ? activePlan
+    : {
+      periodo: store.settings.periodo,
+      termStart: store.settings.termStart,
+      termEnd: store.settings.termEnd
+    };
+
+  const resolved = resolveActiveAcademicPeriod({
+    plans: getOfficialPlanCandidates(),
+    preferredMeta,
+    fallbackMeta: preferredMeta
+  });
+
+  const hasExactDateMatch = (
+    resolved?.termStart &&
+    resolved.termStart === preferredMeta.termStart &&
+    resolved?.termEnd === preferredMeta.termEnd
+  );
+
+  return hasExactDateMatch ? resolved : preferredMeta;
+}
+
+function buildPublicExportPayload() {
+  const publicPlan = resolvePublicPlanMeta();
+  const exportableAllocations = filterExportableAllocations(store.allocations);
   const docentes = [...new Set(
-    store.allocations.flatMap((alloc) => {
+    exportableAllocations.flatMap((alloc) => {
       const names = [];
       if (typeof alloc?.docente === 'string') names.push(alloc.docente.trim());
       else if (alloc?.docente?.nome) names.push(String(alloc.docente.nome).trim());
@@ -117,7 +153,7 @@ function buildPublicExportPayload() {
     })
   )].sort((a, b) => a.localeCompare(b, 'pt-BR', { sensitivity: 'base' }));
   const turmas = [...new Set(
-    store.allocations
+    exportableAllocations
       .map((alloc) => String(alloc?.turmaId || '').trim())
       .filter(Boolean)
   )].sort((a, b) => a.localeCompare(b, 'pt-BR', { sensitivity: 'base' }));
@@ -125,20 +161,20 @@ function buildPublicExportPayload() {
   return {
     version: 2,
     exportedAt: new Date().toISOString(),
-    plan: activePlan?.key ? activePlan : null,
+    plan: publicPlan?.key ? publicPlan : null,
     meta: {
       publicationTarget: 'web_public',
-      periodoLetivo: store.settings.periodo || '',
+      periodoLetivo: publicPlan?.periodo || store.settings.periodo || '',
       docenteCount: docentes.length,
       turmaCount: turmas.length,
       docentes,
       turmas
     },
-    allocations: store.allocations,
+    allocations: exportableAllocations,
     settings: {
-      termStart: store.settings.termStart,
-      termEnd: store.settings.termEnd,
-      periodo: store.settings.periodo,
+      termStart: publicPlan?.termStart || store.settings.termStart,
+      termEnd: publicPlan?.termEnd || store.settings.termEnd,
+      periodo: publicPlan?.periodo || store.settings.periodo,
       turnoOferta: store.settings.turnoOferta || ''
     }
   };

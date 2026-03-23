@@ -2,6 +2,7 @@
 
 import { store } from './store.js';
 import { getCalendarEvents } from './calendar.js';
+import { resolveActiveAcademicPeriod } from './academic_rules.mjs';
 
 function getAllocationTipo(value) {
     return String(value?.tipo || value || '').trim().toLowerCase();
@@ -37,15 +38,44 @@ let mesSelecionadoAtual = '';
 let docentesDisponiveis = [];
 let publicCatalog = null;
 
+function getOfficialPlanCandidates() {
+    return (Array.isArray(store.rawData?.periodos_letivos) ? store.rawData.periodos_letivos : []).map((item) => ({
+        periodo: item?.periodo_letivo || item?.periodo || '',
+        termStart: item?.inicio || '',
+        termEnd: item?.fim || '',
+        ano: item?.ano || ''
+    }));
+}
+
 function applyPublicPlanSettings(dadosPublicos = {}) {
     const settings = dadosPublicos.settings && typeof dadosPublicos.settings === 'object' ? dadosPublicos.settings : {};
     const plan = dadosPublicos.plan && typeof dadosPublicos.plan === 'object' ? dadosPublicos.plan : {};
     const meta = dadosPublicos.meta && typeof dadosPublicos.meta === 'object' ? dadosPublicos.meta : {};
+    const preferredMeta = {
+        periodo: settings.periodo || plan.periodo || meta.periodoLetivo || '',
+        termStart: settings.termStart || plan.termStart || '',
+        termEnd: settings.termEnd || plan.termEnd || ''
+    };
+    const resolved = resolveActiveAcademicPeriod({
+        plans: getOfficialPlanCandidates(),
+        preferredMeta,
+        fallbackMeta: preferredMeta
+    });
+    const hasExactDateMatch = (
+        resolved?.termStart &&
+        resolved.termStart === preferredMeta.termStart &&
+        resolved?.termEnd === preferredMeta.termEnd
+    );
+    const publicPlan = hasExactDateMatch ? resolved : preferredMeta;
 
-    store.settings.termStart = settings.termStart || plan.termStart || store.settings.termStart;
-    store.settings.termEnd = settings.termEnd || plan.termEnd || store.settings.termEnd;
-    if (settings.periodo || plan.periodo || meta.periodoLetivo) {
-        store.settings.periodo = settings.periodo || plan.periodo || meta.periodoLetivo;
+    store.settings.termStart = publicPlan.termStart || store.settings.termStart;
+    store.settings.termEnd = publicPlan.termEnd || store.settings.termEnd;
+    if (publicPlan.periodo) {
+        store.settings.periodo = publicPlan.periodo;
+    }
+
+    if (publicCatalog && !publicCatalog.periodoLetivo && publicPlan.periodo) {
+        publicCatalog.periodoLetivo = publicPlan.periodo;
     }
 }
 

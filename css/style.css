@@ -36,6 +36,45 @@ body {
     box-shadow: 2px 0 10px rgba(0,0,0,0.1);
     z-index: 10;
     overflow-y: auto;
+    cursor: default;
+}
+
+.sidebar img,
+.sidebar h2,
+.sidebar h3,
+.sidebar label,
+.sidebar small,
+.sidebar hr,
+.sidebar div,
+.sidebar span,
+.sidebar p {
+    cursor: default;
+}
+
+.sidebar button,
+.sidebar input[type="checkbox"],
+.sidebar input[type="color"],
+.sidebar label[for],
+.sidebar .btn-secondary,
+.sidebar .btn-primary,
+.sidebar .btn-danger {
+    cursor: pointer;
+}
+
+.sidebar input,
+.sidebar select,
+.sidebar textarea {
+    cursor: text;
+}
+
+.sidebar select {
+    cursor: default;
+}
+
+.sidebar input[disabled],
+.sidebar select[disabled],
+.sidebar textarea[disabled] {
+    cursor: default !important;
 }
 
 .sidebar h2 {
