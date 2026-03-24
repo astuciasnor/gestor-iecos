@@ -77,8 +77,7 @@ Regras:
 |   `-- manual_desenvolvedor.md
 |-- img/
 |-- js/
-|   |-- agenda_discente.js
-|   |-- agenda_docente.js
+|   |-- agenda_publica.js
 |   |-- calendar.js
 |   |-- main.js
 |   |-- plan_storage.js
@@ -89,8 +88,7 @@ Regras:
 |   |-- convert_data.py
 |   |-- publish_online.py
 |   `-- requirements.txt
-|-- agenda_discente.html
-|-- agenda_docente.html
+|-- agenda_publica.html
 |-- alocacoes_publicas.json
 |-- dados_app.json
 |-- index.html
@@ -356,8 +354,7 @@ Fluxo:
 Arquivos envolvidos:
 
 - `alocacoes_publicas.json`
-- `agenda_discente.html`
-- `agenda_docente.html`
+- `agenda_publica.html`
 
 ---
 

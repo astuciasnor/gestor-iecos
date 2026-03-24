@@ -24,8 +24,7 @@ from typing import Any
 
 REQUIRED_WEB_FILES = (
     "index.html",
-    "agenda_discente.html",
-    "agenda_docente.html",
+    "agenda_publica.html",
     "js/main.js",
 )
 
