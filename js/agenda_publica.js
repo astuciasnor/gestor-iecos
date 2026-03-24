@@ -1008,6 +1008,7 @@ function buildMiniChipMarkup(event, dateObj, mode, dailyEvents = []) {
             data-local="${escapeHtmlAttr(local)}"
             data-tipo="${escapeHtmlAttr(tipo)}"
             data-cor="${escapeHtmlAttr(cor)}"
+            data-excepcional="${(event?.sabadoManha && dateObj.getDay() === 6) ? 'true' : 'false'}"
         >
             <div class="chip-hora">${escapeHtml(formatChipStartTime(horario))}</div>
             <div class="chip-sigla${wrapClass}">${escapeHtml(chipLabel)}</div>
@@ -1241,6 +1242,7 @@ function buildSlotLensMarkup(chip) {
                     <strong>Local:</strong>
                     <span>${escapeHtml(local)}</span>
                 </div>
+                ${chip.getAttribute('data-excepcional') === 'true' ? `<div style="margin-top:10px; padding:8px 10px; background-color:#fff3cd; color:#856404; font-size:0.85em; border-radius:4px; border-left:4px solid #e67e22; text-shadow:none;">⚠️ <b>Atenção:</b> Esta aula ocorre excepcionalmente em um turno diferente do habitual da turma.</div>` : ''}
             </div>
         </div>
     `;

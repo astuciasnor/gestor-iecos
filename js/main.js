@@ -1,5 +1,5 @@
 import { store } from './store.js';
-import { initUI, exportSigaaMetadataJSON, showToastWarning } from './ui.js?v=20260323ab';
+import { initUI, exportSigaaMetadataJSON, showToastWarning } from './ui.js?v=20260323ag';
 import { filterExportableAllocations, resolveActiveAcademicPeriod } from './academic_rules.mjs';
 
 const EXPORT_CURSOS_UNIDADE = ['EP', 'CB', 'CN'];

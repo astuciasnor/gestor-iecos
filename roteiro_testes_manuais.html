@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Roteiro de Testes Manuais</title>
+  <style>
+    :root {
+      --bg: #f3f6f3;
+      --panel: #ffffff;
+      --ink: #163126;
+      --muted: #617067;
+      --line: #d8dfda;
+      --accent: #0b6b3a;
+      --ok: #2f7d42;
+      --ok-soft: #e8f5ec;
+      --fail: #b23c2f;
+      --fail-soft: #fdeeed;
+      --review: #b97310;
+      --review-soft: #fff5e7;
+      --off: #eef2ef;
+      --shadow: 0 12px 28px rgba(16, 41, 27, 0.08);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at top right, rgba(11, 107, 58, 0.08), transparent 24rem),
+        linear-gradient(180deg, #f8faf8 0%, var(--bg) 100%);
+    }
+
+    .page {
+      max-width: 1380px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    .hero,
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      box-shadow: var(--shadow);
+    }
+
+    .hero {
+      padding: 22px 24px;
+      margin-bottom: 18px;
+      background:
+        linear-gradient(135deg, rgba(11, 107, 58, 0.08), rgba(11, 107, 58, 0.02)),
+        #fff;
+    }
+
+    .hero h1 {
+      margin: 0 0 8px;
+      font-size: 1.6rem;
+    }
+
+    .hero p {
+      margin: 0;
+      line-height: 1.55;
+      color: var(--muted);
+    }
+
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+      margin: 16px 0 0;
+    }
+
+    .stat {
+      padding: 14px 16px;
+      border-radius: 16px;
+      background: #fcfdfc;
+      border: 1px solid var(--line);
+    }
+
+    .stat .label {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+    }
+
+    .stat .value {
+      margin-top: 6px;
+      font-size: 1.5rem;
+      font-weight: 800;
+    }
+
+    .panel {
+      padding: 18px;
+      margin-bottom: 18px;
+    }
+
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .toolbar-left,
+    .toolbar-right {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+    }
+
+    button {
+      border: 0;
+      border-radius: 10px;
+      padding: 9px 12px;
+      font: inherit;
+      cursor: pointer;
+      background: #edf2ee;
+      color: var(--ink);
+    }
+
+    button:hover {
+      filter: brightness(0.98);
+    }
+
+    .btn-accent {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .btn-light {
+      background: #f1f4f1;
+      color: var(--muted);
+      border: 1px solid var(--line);
+    }
+
+    .hint {
+      font-size: 0.88rem;
+      color: var(--muted);
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 980px;
+    }
+
+    th,
+    td {
+      border-bottom: 1px solid var(--line);
+      padding: 10px 12px;
+      vertical-align: top;
+      text-align: left;
+    }
+
+    th {
+      font-size: 0.78rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .col-item {
+      width: 72px;
+    }
+
+    .col-status {
+      width: 220px;
+    }
+
+    .item-row {
+      background: #f9fbf9;
+    }
+
+    .item-row td {
+      padding-top: 14px;
+      padding-bottom: 14px;
+      border-bottom-color: #cbd6cf;
+    }
+
+    .item-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 34px;
+      height: 34px;
+      border-radius: 999px;
+      background: var(--accent-soft, #e7f3eb);
+      color: var(--accent);
+      font-weight: 800;
+    }
+
+    .item-title {
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .sub-row td:first-child {
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .sub-label {
+      display: block;
+      font-size: 0.92rem;
+      line-height: 1.45;
+    }
+
+    .status-group {
+      display: inline-flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .status-btn {
+      padding: 7px 10px;
+      border: 1px solid transparent;
+      border-radius: 999px;
+      background: var(--off);
+      color: var(--muted);
+      font-size: 0.83rem;
+      font-weight: 700;
+    }
+
+    .status-btn.active-ok {
+      background: var(--ok-soft);
+      color: var(--ok);
+      border-color: rgba(47, 125, 66, 0.18);
+    }
+
+    .status-btn.active-fail {
+      background: var(--fail-soft);
+      color: var(--fail);
+      border-color: rgba(178, 60, 47, 0.18);
+    }
+
+    .status-btn.active-review {
+      background: var(--review-soft);
+      color: var(--review);
+      border-color: rgba(185, 115, 16, 0.18);
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 9px;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      font-weight: 800;
+      background: var(--off);
+      color: var(--muted);
+    }
+
+    .status-pill.ok {
+      background: var(--ok-soft);
+      color: var(--ok);
+    }
+
+    .status-pill.fail {
+      background: var(--fail-soft);
+      color: var(--fail);
+    }
+
+    .status-pill.review {
+      background: var(--review-soft);
+      color: var(--review);
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 240px;
+      margin-top: 12px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      resize: vertical;
+      font: 13px/1.5 Consolas, "Courier New", monospace;
+      color: var(--ink);
+      background: #fbfcfb;
+    }
+
+    @media (max-width: 800px) {
+      .page {
+        padding: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <section class="hero">
+      <h1>Roteiro de Testes Manuais</h1>
+      <p>
+        Marque cada item e subitem como <strong>OK</strong>, <strong>Falhou</strong> ou
+        <strong>Revisar</strong>. O relatório abaixo é gerado automaticamente para você me devolver
+        os resultados de forma rápida.
+      </p>
+      <div class="summary">
+        <div class="stat">
+          <div class="label">Itens</div>
+          <div class="value" id="sum-items">0</div>
+        </div>
+        <div class="stat">
+          <div class="label">Subitens OK</div>
+          <div class="value" id="sum-ok">0</div>
+        </div>
+        <div class="stat">
+          <div class="label">Subitens falhou</div>
+          <div class="value" id="sum-fail">0</div>
+        </div>
+        <div class="stat">
+          <div class="label">Subitens revisar</div>
+          <div class="value" id="sum-review">0</div>
+        </div>
+        <div class="stat">
+          <div class="label">Subitens pendentes</div>
+          <div class="value" id="sum-pending">0</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="toolbar">
+        <div class="toolbar-left">
+          <button class="btn-accent" id="btn-copy-report">Copiar relatório</button>
+          <button class="btn-light" id="btn-clear">Limpar marcações</button>
+        </div>
+        <div class="toolbar-right">
+          <span class="hint">Clique no status da linha principal para aplicar em todos os subitens.</span>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th class="col-item">Item</th>
+              <th>Descrição</th>
+              <th class="col-status">Marcação</th>
+              <th>Estado do item</th>
+            </tr>
+          </thead>
+          <tbody id="test-body"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2 style="margin:0 0 8px;font-size:1.18rem;">Relatório rápido</h2>
+      <div class="hint">Você pode copiar esse bloco e me devolver na conversa.</div>
+      <textarea id="report-output" readonly></textarea>
+    </section>
+  </div>
+
+  <script>
+    const STORAGE_KEY = 'roteiro_testes_manuais_refatoracao_v1';
+
+    const testPlan = [
+      {
+        id: '1',
+        title: 'Plano Letivo',
+        subs: [
+          'Troca entre PL1, PL2, PL3 e PL4.',
+          'Datas de início e fim mudam automaticamente.',
+          'Dados aparecem sem recarregar a página.',
+          'Voltar para um plano anterior restaura as ofertas dele.'
+        ]
+      },
+      {
+        id: '2',
+        title: 'Grade Semanal Básica',
+        subs: [
+          'Cadastro simples com padrão fixo semanal.',
+          'CH fecha corretamente.',
+          'Não cria faixa extra sem necessidade.',
+          'Editar reflete o que foi salvo.'
+        ]
+      },
+      {
+        id: '3',
+        title: 'Faixa 2 Automática',
+        subs: [
+          'Componente com fechamento final quebrando o padrão.',
+          'Faixa 2 automática surge no salvamento.',
+          'Grade Semanal, Lista e calendário permanecem coerentes.',
+          'Reedição preserva o estado final.'
+        ]
+      },
+      {
+        id: '4',
+        title: 'Caso com Dia Final Diferente',
+        subs: [
+          'Padrão principal em um dia da semana.',
+          'Fechamento final em outro dia.',
+          'Sistema entende como mudança real de regime final.',
+          'Não inventa aulas em dias intermediários sem slot.'
+        ]
+      },
+      {
+        id: '5',
+        title: 'Turno Noite',
+        subs: [
+          'Noite aparece quando houver uso real.',
+          'Sidebar respeita o turno.',
+          'Grade Semanal respeita o turno.',
+          'Gantt e calendário respeitam o turno.'
+        ]
+      },
+      {
+        id: '6',
+        title: 'Lista de Ofertas',
+        subs: [
+          'Ordenação alfabética por componente.',
+          'Faixas consecutivas da mesma componente.',
+          'Separação visual coerente.',
+          'CH consistente com a Grade Semanal.'
+        ]
+      },
+      {
+        id: '7',
+        title: 'Gantt',
+        subs: [
+          'Troca com o plano letivo ativo.',
+          'Usa turnos reais.',
+          'Barras coerentes com o docente e o período.',
+          'Tooltips coerentes.'
+        ]
+      },
+      {
+        id: '8',
+        title: 'Calendário da Turma',
+        subs: [
+          'Renderização coerente com a execução real.',
+          'Fechamento final condiz com a oferta salva.',
+          'Choques visuais fazem sentido.',
+          'Sem discrepância grosseira com a Grade Semanal.'
+        ]
+      },
+      {
+        id: '9',
+        title: 'Calendário Docente',
+        subs: [
+          'Agenda responde ao plano ativo/publicado.',
+          'Meses e aulas batem com o período correto.',
+          'Troca de plano não mostra aulas indevidas.',
+          'Visão continua estável com várias componentes.'
+        ]
+      },
+      {
+        id: '10',
+        title: 'Exportação SIGAA',
+        subs: [
+          'Exporta só o plano ativo.',
+          'Período letivo no arquivo está correto.',
+          'CH e estrutura parecem compatíveis.',
+          'Faixas finais não geram inconsistência evidente.'
+        ]
+      },
+      {
+        id: '11',
+        title: 'Publicação Online',
+        subs: [
+          'JSON público gerado sem erro.',
+          'Agenda discente carrega o plano publicado.',
+          'Agenda docente carrega o plano publicado.',
+          'Cursos, turmas e docentes respeitam o que foi publicado.'
+        ]
+      },
+      {
+        id: '12',
+        title: 'Regressão Rápida',
+        subs: [
+          'Excluir componente libera o espaço corretamente.',
+          'Recriar componente no mesmo espaço funciona.',
+          'Editar novamente não gruda estado antigo.',
+          'Trocar de plano e voltar preserva consistência.'
+        ]
+      }
+    ];
+
+    let state = loadState();
+
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        return raw ? JSON.parse(raw) : {};
+      } catch (err) {
+        return {};
+      }
+    }
+
+    function saveState() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    }
+
+    function setStatus(key, status) {
+      if (!status) delete state[key];
+      else state[key] = status;
+      saveState();
+      render();
+    }
+
+    function getStatus(key) {
+      return state[key] || '';
+    }
+
+    function getItemAggregate(item) {
+      const statuses = item.subs.map((_, idx) => getStatus(`${item.id}.${idx + 1}`));
+      const filtered = statuses.filter(Boolean);
+      if (!filtered.length) return '';
+      if (filtered.includes('fail')) return 'fail';
+      if (filtered.includes('review')) return 'review';
+      if (filtered.every((status) => status === 'ok')) return 'ok';
+      return 'review';
+    }
+
+    function buildStatusButtons(key, compact = false) {
+      const current = getStatus(key);
+      const buttons = [
+        { value: 'ok', label: 'OK' },
+        { value: 'fail', label: 'Falhou' },
+        { value: 'review', label: 'Revisar' }
+      ];
+
+      return `
+        <div class="status-group">
+          ${buttons.map((btn) => `
+            <button
+              type="button"
+              class="status-btn ${current === btn.value ? `active-${btn.value}` : ''}"
+              data-key="${key}"
+              data-status="${btn.value}"
+              ${compact ? 'data-compact="1"' : ''}
+            >${btn.label}</button>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    function buildAggregatePill(status) {
+      if (!status) return '<span class="status-pill">Pendente</span>';
+      if (status === 'ok') return '<span class="status-pill ok">OK</span>';
+      if (status === 'fail') return '<span class="status-pill fail">Falhou</span>';
+      return '<span class="status-pill review">Revisar</span>';
+    }
+
+    function renderTable() {
+      const body = document.getElementById('test-body');
+      body.innerHTML = testPlan.map((item) => {
+        const aggregate = getItemAggregate(item);
+        const itemKey = `item:${item.id}`;
+        const subRows = item.subs.map((sub, idx) => {
+          const key = `${item.id}.${idx + 1}`;
+          return `
+            <tr class="sub-row">
+              <td>${item.id}.${idx + 1}</td>
+              <td><span class="sub-label">${sub}</span></td>
+              <td>${buildStatusButtons(key, true)}</td>
+              <td>${buildAggregatePill(getStatus(key))}</td>
+            </tr>
+          `;
+        }).join('');
+
+        return `
+          <tr class="item-row">
+            <td><span class="item-badge">${item.id}</span></td>
+            <td>
+              <div class="item-title">${item.title}</div>
+              <div class="hint">Clique na linha principal para aplicar o mesmo status aos subitens.</div>
+            </td>
+            <td>${buildStatusButtons(itemKey)}</td>
+            <td>${buildAggregatePill(aggregate)}</td>
+          </tr>
+          ${subRows}
+        `;
+      }).join('');
+
+      body.querySelectorAll('.status-btn').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const key = btn.dataset.key;
+          const status = btn.dataset.status;
+          if (key.startsWith('item:')) {
+            const itemId = key.split(':')[1];
+            const item = testPlan.find((entry) => entry.id === itemId);
+            item.subs.forEach((_, idx) => setStatus(`${item.id}.${idx + 1}`, status));
+            return;
+          }
+          setStatus(key, getStatus(key) === status ? '' : status);
+        });
+      });
+    }
+
+    function renderSummary() {
+      const subKeys = testPlan.flatMap((item) => item.subs.map((_, idx) => `${item.id}.${idx + 1}`));
+      const counts = { ok: 0, fail: 0, review: 0, pending: 0 };
+      subKeys.forEach((key) => {
+        const status = getStatus(key);
+        if (!status) counts.pending += 1;
+        else counts[status] += 1;
+      });
+
+      document.getElementById('sum-items').textContent = String(testPlan.length);
+      document.getElementById('sum-ok').textContent = String(counts.ok);
+      document.getElementById('sum-fail').textContent = String(counts.fail);
+      document.getElementById('sum-review').textContent = String(counts.review);
+      document.getElementById('sum-pending').textContent = String(counts.pending);
+    }
+
+    function buildReportText() {
+      const lines = [];
+      lines.push('Resultado dos testes manuais');
+      lines.push('');
+
+      testPlan.forEach((item) => {
+        const aggregate = getItemAggregate(item) || 'pending';
+        const aggregateText =
+          aggregate === 'ok' ? 'OK' :
+          aggregate === 'fail' ? 'falhou' :
+          aggregate === 'review' ? 'revisar' :
+          'pendente';
+        lines.push(`${item.id}. ${item.title}: ${aggregateText}`);
+        item.subs.forEach((sub, idx) => {
+          const status = getStatus(`${item.id}.${idx + 1}`);
+          const text =
+            status === 'ok' ? 'OK' :
+            status === 'fail' ? 'falhou' :
+            status === 'review' ? 'revisar' :
+            'pendente';
+          lines.push(`${item.id}.${idx + 1} ${text} - ${sub}`);
+        });
+        lines.push('');
+      });
+
+      return lines.join('\n');
+    }
+
+    function renderReport() {
+      document.getElementById('report-output').value = buildReportText();
+    }
+
+    function render() {
+      renderTable();
+      renderSummary();
+      renderReport();
+    }
+
+    document.getElementById('btn-copy-report').addEventListener('click', async () => {
+      const output = document.getElementById('report-output');
+      try {
+        await navigator.clipboard.writeText(output.value);
+        alert('Relatório copiado.');
+      } catch (err) {
+        output.select();
+        document.execCommand('copy');
+        alert('Relatório copiado.');
+      }
+    });
+
+    document.getElementById('btn-clear').addEventListener('click', () => {
+      if (!confirm('Limpar todas as marcações deste roteiro?')) return;
+      state = {};
+      saveState();
+      render();
+    });
+
+    render();
+  </script>
+</body>
+</html>

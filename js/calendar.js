@@ -261,7 +261,7 @@ export function getCalendarEvents(turmaId, startDate, endDate, docenteFilter = n
           }
         });
 
-        // Simula contagem das ofertas regulares padrão
+        // Simula contagem das ofertas regulares padrï¿½o
         myStandardRegulars.forEach(reg => {
           const regStart = reg.dataInicio || store.settings.termStart;
           const regEnd = reg.dataFim || store.settings.termEnd;
@@ -404,7 +404,7 @@ export function getCalendarEvents(turmaId, startDate, endDate, docenteFilter = n
       });
     });
     // =========================================================================================
-    // 3. PASSO C: RENDERIZAR OFERTAS REGULARES PADRÃO (somente criterios canonicos de data/dia/CH)
+    // 3. PASSO C: RENDERIZAR OFERTAS REGULARES PADRï¿½O (somente criterios canonicos de data/dia/CH)
     // =========================================================================================
     myStandardRegulars.forEach(reg => {
       // Verifica validade temporal modular

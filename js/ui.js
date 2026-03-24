@@ -3239,7 +3239,13 @@ function computeIntensiveExecution(intense, options = {}) {
         }
 
         if (!feriadosSet.has(dStr) && dow !== 0 && faixa.dias.includes(dow)) {
-            const daySlots = (faixa.drawnSlotsByDay?.[dow] || faixa.slots || []).slice();
+            let daySlots = (faixa.drawnSlotsByDay?.[dow] || faixa.slots || []).slice();
+
+            if (dow === 6 && intense.sabadoManha) {
+                const turmaTurno = store.rawData?.turmas?.find(t => String(t.turma_id) === String(intense.turmaId))?.turno || 'Tarde';
+                daySlots = [...new Set(daySlots.map(s => store.mapSlotToTurno(s, turmaTurno, 'Manha')))];
+            }
+
             const freeSlots = filterFreeSlotsForDate(dStr, daySlots, dow);
 
             if (freeSlots.length > 0) {
@@ -5236,16 +5242,15 @@ function onTurmaChange() {
     const alocacoesTurma = store.allocations.filter(a => String(a.turmaId) === String(store.selectedTurma));
     const primeiraOfertaPorFaixa = alocacoesTurma.find(a => isFaixaAllocation(a) && Array.isArray(a.horariosOcupados) && a.horariosOcupados.length > 0);
 
-    if (primeiraOfertaPorFaixa) {
+    const turmaNativa = store.rawData?.turmas?.find(x => String(x.turma_id) === String(store.selectedTurma));
+    if (turmaNativa?.turno) {
+        store.setTurnoOferta(resolveTurnoOfertaValue(turmaNativa.turno));
+    } else if (primeiraOfertaPorFaixa) {
         const slotRef = String(primeiraOfertaPorFaixa.horariosOcupados[0] || '');
         const hora = parseInt(slotRef.split(':')[0], 10);
         if (hora < 13) store.setTurnoOferta(resolveTurnoOfertaValue('Manhã'));
         else if (hora < 18) store.setTurnoOferta(resolveTurnoOfertaValue('Tarde'));
         else store.setTurnoOferta(resolveTurnoOfertaValue('Noite'));
-    }
-    else if (store.rawData?.turmas && store.selectedTurma) {
-        const t = store.rawData.turmas.find(x => String(x.turma_id) === String(store.selectedTurma));
-        if (t?.turno) store.setTurnoOferta(resolveTurnoOfertaValue(t.turno));
     }
 
     if (selTurnoOferta) {
@@ -5347,6 +5352,31 @@ function renderWeeklyGrid() {
         weeklyEventsByDate[d] = Array.isArray(weeklyEventsFull?.[d]) ? weeklyEventsFull[d] : [];
     });
 
+    const allWeeklySlots = new Set();
+    Object.values(weeklyEventsByDate).forEach(arr => {
+        arr.forEach(ev => {
+            if (ev.type !== 'holiday' && Array.isArray(ev.horariosOcupados)) {
+                ev.horariosOcupados.forEach(h => allWeeklySlots.add(h));
+            }
+        });
+    });
+
+    const isSlotInUI = (slot) => horariosUI.some(uiSlot => {
+        const t1 = String(uiSlot || '').trim().replace(/^Intervalo/i, 'INTERVALO');
+        const t2 = String(slot || '').trim().replace(/^Intervalo/i, 'INTERVALO');
+        return t1 === t2 || (t1.includes(t2) || t2.includes(t1));
+    });
+
+    const hiddenSlots = Array.from(allWeeklySlots).filter(s => !isSlotInUI(s));
+
+    if (hiddenSlots.length > 0) {
+        const warningBanner = document.createElement('div');
+        warningBanner.className = 'turno-alternativo-warning';
+        warningBanner.style = 'grid-column: 1/-1; background-color: #fff3cd; color: #856404; padding: 10px 15px; border-left: 5px solid #ffeeba; margin-bottom: 10px; font-size: 0.9em; border-radius: 4px; display: flex; align-items: center; gap: 10px;';
+        warningBanner.innerHTML = `<span>⚠️</span> <span><b>Atenção:</b> Há aulas desta turma programadas para turnos diferentes (ex: Sábado Manhã) nesta semana. Mude a aba de Turno acima para visualizá-las e editá-las adequadamente.</span>`;
+        if (gridContainer) gridContainer.appendChild(warningBanner);
+    }
+
     const slotKey = (value) => {
         const text = String(value || '').trim();
         if (!text) return '';
@@ -5366,9 +5396,22 @@ function renderWeeklyGrid() {
                 if (!e || e.type === 'holiday') return;
                 if (hasAnyDraftPattern && drawingDisciplina && normalizeDisciplinaInputValue(e.disciplina || '') === drawingDisciplina) return;
 
-                const eventKey = slotKey(e.horario);
+                let eventHorario = e.horario;
+                const eTurno = e.turno ||
+                    store.rawData?.turmas?.find(t => String(t.turma_id) === String(e.turmaId))?.turno || 'Tarde';
+                if (e.sabadoManha && dayNumber === 6 && eTurno !== 'Manha' && eTurno !== 'Manhã') {
+                    eventHorario = store.mapSlotToTurno(e.horario, 'Manha', eTurno);
+                }
+                const eventKey = slotKey(eventHorario);
+
                 const listKey = Array.isArray(e.horariosOcupados)
-                    ? e.horariosOcupados.some((h) => slotKey(h) === key)
+                    ? e.horariosOcupados.some((h) => {
+                        let hObj = h;
+                        if (e.sabadoManha && dayNumber === 6 && eTurno !== 'Manha' && eTurno !== 'Manhã') {
+                            hObj = store.mapSlotToTurno(h, 'Manha', eTurno);
+                        }
+                        return slotKey(hObj) === key;
+                    })
                     : false;
 
                 if (eventKey !== key && !listKey) return;
@@ -5470,7 +5513,7 @@ function renderWeeklyGrid() {
                 const allocsRaw = getWeeklySlotEvents(cellDate, horarioStr, i);
                 const allocs = isHolidayColumn ? [] : allocsRaw;
 
-                if (allocs.length > 0 && showContextWhileDrawing) renderSlotContent(cell, allocs);
+                if (allocs.length > 0 && showContextWhileDrawing) renderSlotContent(cell, allocs, i);
 
                 if (isHolidayColumn && horarioStr === firstClassSlot) {
                     const holidayMarker = document.createElement('div');
@@ -5596,7 +5639,7 @@ function isTurnoDividerSlot(slotLabel = '') {
     return normalized.includes('13:30') || normalized.includes('18:30');
 }
 
-function renderSlotContent(cell, allocs) {
+function renderSlotContent(cell, allocs, dayOfWeek = 0) {
     cell.innerHTML = '';
     const container = document.createElement('div');
     container.className = 'mini-card-container';
@@ -5613,9 +5656,19 @@ function renderSlotContent(cell, allocs) {
             card.style.border = '2px dashed #000';
         }
 
+        const allocTurno = alloc.turno ||
+            store.rawData?.turmas?.find(t => String(t.turma_id) === String(alloc.turmaId))?.turno || 'Tarde';
+        const turnoLetter = alloc.sabadoManha && dayOfWeek === 6
+            ? (store.getTurnoLetter(alloc.horario) || 'M')
+            : '';
+        const allocTurnoNorm = String(allocTurno).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+        const isNative = allocTurnoNorm.includes('manh') && turnoLetter === 'M';
+        const badgeHTML = (turnoLetter && !isNative)
+            ? `<span style="display:inline-block; font-size:0.65em; background:#e67e22; color:#fff; padding:1px 4px; border-radius:3px; margin-left:2px; font-weight:bold;" title="Aula excepcionalmente no turno ${turnoLetter === 'M' ? 'da Manhã' : turnoLetter === 'T' ? 'da Tarde' : 'da Noite'}">(${turnoLetter})</span>` : '';
+
         card.innerHTML = `
             <div class="card-title" title="${alloc.disciplina}${docenteNome ? ` - ${docenteNome}` : ''}">
-                <span class="card-comp">${info.abrev}</span>
+                <span class="card-comp">${info.abrev}${badgeHTML}</span>
                 ${docenteNome ? `<span class="card-docente">${docenteNome}</span>` : ''}
             </div>
             <span class="remove-btn" title="Remover">×</span>
@@ -5785,6 +5838,9 @@ function handleAddManual() {
             diasMarcados = [...new Set(faixasConfig.flatMap((f) => f.dias || []))].sort((a, b) => a - b);
             if (diasMarcados.length === 0) diasMarcados = [1, 2, 3, 4, 5];
 
+            const sabadoManhaCheckbox = document.getElementById('chk-sabado-manha');
+            const sabadoManha = sabadoManhaCheckbox ? sabadoManhaCheckbox.checked : false;
+
             previewIntensive = {
                 turmaId: store.selectedTurma,
                 disciplina,
@@ -5796,6 +5852,7 @@ function handleAddManual() {
                 horariosOcupados: [],
                 diasMarcados,
                 usaSabado: diasMarcados.includes(6),
+                sabadoManha: sabadoManha,
                 faixas: faixasConfig
             };
 
@@ -5862,6 +5919,9 @@ function handleAddManual() {
         const slotsIntensiva = execution.unionSlots || [];
         diasMarcados = execution.unionDias || diasMarcados;
         const usaSabado = diasMarcados.includes(6);
+        const sabadoManhaCheckbox = document.getElementById('chk-sabado-manha');
+        const sabadoManha = sabadoManhaCheckbox ? sabadoManhaCheckbox.checked : false;
+
         const candidateIntensiveForConflict = {
             ...previewIntensive,
             dataInicio: inicioCalculado,
@@ -5870,6 +5930,7 @@ function handleAddManual() {
             horariosOcupados: slotsIntensiva,
             diasMarcados,
             usaSabado,
+            sabadoManha,
             faixas: faixasConfigAjustadas
         };
 
@@ -5938,6 +5999,7 @@ function handleAddManual() {
             horariosUltimoDia: horariosUltimoDia,
             diasMarcados: diasMarcados,
             usaSabado: usaSabado,
+            sabadoManha: sabadoManha,
             faixas: faixasConfigAjustadas,
             subGrupo: subGrupo || null,
             cor: inputConfig.cor ? inputConfig.cor.value : store.getDisciplinaColor(disciplina)
@@ -8446,14 +8508,26 @@ function generateCalendarGrid(container, turmaId, docenteName, start, end, title
                         const slotTimeNorm = normalizeTime(slotTime);
 
                         const eventsInSlot = dayData.events.filter(e => {
-                            if (e.horario && normalizeTime(e.horario) === slotTimeNorm) return true;
+                            const eTurno = e.turno ||
+                                store.rawData?.turmas?.find(t => String(t.turma_id) === String(e.turmaId))?.turno || 'Tarde';
+                            let eHorario = e.horario;
+                            let eHorariosUltimoDia = e.horariosUltimoDia;
+                            let eHorariosOcupados = e.horariosOcupados;
 
-                            // NOVO: RESPEITA OS SLOTS LIMITADOS NO ÚLTIMO DIA DA INTENSIVA
-                            if (isFaixaAllocation(e) && e.dataFim === dayData.date && e.horariosUltimoDia) {
-                                return e.horariosUltimoDia.some(h => normalizeTime(h) === slotTimeNorm);
+                            if (e.sabadoManha && dayOfWeek === 6 && eTurno !== 'Manha' && eTurno !== 'Manhã') {
+                                if (eHorario) eHorario = store.mapSlotToTurno(eHorario, 'Manha', eTurno);
+                                if (Array.isArray(eHorariosUltimoDia)) eHorariosUltimoDia = eHorariosUltimoDia.map(h => store.mapSlotToTurno(h, 'Manha', eTurno));
+                                if (Array.isArray(eHorariosOcupados)) eHorariosOcupados = eHorariosOcupados.map(h => store.mapSlotToTurno(h, 'Manha', eTurno));
                             }
 
-                            if (e.horariosOcupados && e.horariosOcupados.some(h => normalizeTime(h) === slotTimeNorm)) return true;
+                            if (eHorario && normalizeTime(eHorario) === slotTimeNorm) return true;
+
+                            // NOVO: RESPEITA OS SLOTS LIMITADOS NO ÚLTIMO DIA DA INTENSIVA
+                            if (isFaixaAllocation(e) && e.dataFim === dayData.date && eHorariosUltimoDia) {
+                                return eHorariosUltimoDia.some(h => normalizeTime(h) === slotTimeNorm);
+                            }
+
+                            if (eHorariosOcupados && eHorariosOcupados.some(h => normalizeTime(h) === slotTimeNorm)) return true;
                             return false;
                         });
                         const dedupeEventKey = (e) => `${e.turmaId || ''}|${e.disciplina || ''}|${e.tipo || ''}|${e.subGrupo || ''}|${slotTimeNorm}`;
@@ -8492,10 +8566,19 @@ function generateCalendarGrid(container, turmaId, docenteName, start, end, title
                                     const info = getDisciplinaInfo(event.disciplina);
                                     const docenteFirst = String(event.docente || '').trim().split(/\s+/)[0] || '';
                                     const docenteLabel = (docenteFirst && !/^a$/i.test(docenteFirst)) ? docenteFirst.toUpperCase() : '';
-                                    content = docenteLabel
-                                        ? `<div>${info.abrev} <span style="font-size:0.82em; font-weight:600; opacity:0.92;">- ${docenteLabel}</span></div>`
-                                        : info.abrev;
-                                    style = `background:${event.cor || '#bdc3c7'}; color:black;`;
+                                    const eTurno = event.turno ||
+                                         store.rawData?.turmas?.find(t => String(t.turma_id) === String(event.turmaId))?.turno || 'Tarde';
+                                     const tLetter = (event.sabadoManha && dayOfWeek === 6)
+                                         ? (store.getTurnoLetter(event.horario) || 'M') : '';
+                                     const eTurnoNorm = String(eTurno).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+                                     const isNativeM = eTurnoNorm.includes('manh') && tLetter === 'M';
+                                     const eBadge = (tLetter && !isNativeM)
+                                         ? `<span style="font-size:0.65em; background:#e67e22; color:#fff; padding:1px 4px; border-radius:3px; margin-left:2px; font-weight:bold;" title="Aula no turno ${tLetter === 'M' ? 'da Manhã' : tLetter === 'T' ? 'da Tarde' : 'da Noite'}">(${tLetter})</span>`
+                                         : '';
+                                     content = docenteLabel
+                                         ? `<div>${info.abrev}${eBadge} <span style="font-size:0.82em; font-weight:600; opacity:0.92;">- ${docenteLabel}</span></div>`
+                                         : `${info.abrev}${eBadge}`;
+                                     style = `background:${event.cor || '#bdc3c7'}; color:black;`;
                                 } else {
                                     content = '&nbsp;';
                                     style = 'background: #ecf0f1;';

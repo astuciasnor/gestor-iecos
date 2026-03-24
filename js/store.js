@@ -315,6 +315,47 @@ class Store {
     const c = comps.find((x) => x.componente === nomeComponente);
     return c ? (c.cor || '#e0e0e0') : '#e0e0e0';
   }
+
+  // ===== Letra do Turno por Horário =====
+  getTurnoLetter(slotString) {
+    const match = String(slotString || '').match(/(\d{1,2}):\d{2}/);
+    if (!match) return '';
+    const h = parseInt(match[1], 10);
+    if (h < 12) return 'M';
+    if (h < 18) return 'T';
+    return 'N';
+  }
+
+  // ===== Conversao Sábado Manhã =====
+  mapSlotToTurno(slotString, fromTurno, toTurno) {
+    if (!this.rawData?.horarios_por_turno) return slotString;
+    const hp = this.rawData.horarios_por_turno;
+    
+    let fromArr = hp[fromTurno];
+    if (!fromArr) {
+      const normalizedFrom = normalizeTurnoKey(fromTurno);
+      const keyFrom = Object.keys(hp).find((k) => normalizeTurnoKey(k) === normalizedFrom);
+      fromArr = keyFrom ? hp[keyFrom] : null;
+    }
+    if (!fromArr) {
+      fromArr = Object.values(hp).find(arr => arr.includes(slotString));
+    }
+    if (!fromArr) return slotString;
+
+    let toArr = hp[toTurno];
+    if (!toArr) {
+      const normalizedTo = normalizeTurnoKey(toTurno);
+      const keyTo = Object.keys(hp).find((k) => normalizeTurnoKey(k) === normalizedTo);
+      toArr = keyTo ? hp[keyTo] : null;
+    }
+    if (!toArr) return slotString;
+
+    const idx = fromArr.findIndex(s => s === slotString || (s.includes('INTERVALO') && slotString.includes('INTERVALO')));
+    if (idx !== -1 && idx < toArr.length) {
+      return toArr[idx];
+    }
+    return slotString;
+  }
 }
 
 export const store = new Store();
