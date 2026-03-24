@@ -1,6 +1,5 @@
 import { store } from './store.js';
 import { getCalendarEvents } from './calendar.js';
-import { renderPublicTeacherGantt } from './ui.js?v=20260323ab';
 import { resolveActiveAcademicPeriod } from './academic_rules.mjs';
 
 const collator = new Intl.Collator('pt-BR', { sensitivity: 'base' });
@@ -20,8 +19,7 @@ const state = {
     docente: {
         nome: '',
         mes: '',
-        totalHoras: null,
-        ganttOpen: false
+        totalHoras: null
     }
 };
 
@@ -47,8 +45,6 @@ async function init() {
     preencherCursos();
     syncDocenteInputState();
     syncTabUI();
-    syncTeacherTools();
-    syncGanttVisibility();
     renderActiveEmptyState();
 }
 
@@ -68,11 +64,6 @@ function cacheElements() {
     els.btnLimparDocente = document.getElementById('btn-limpar-docente-publico');
     els.listaSugestoes = document.getElementById('lista-sugestoes-publico');
     els.containerMesesDocente = document.getElementById('container-meses-docente');
-    els.docenteTools = document.getElementById('docente-tools');
-    els.docenteTotalChip = document.getElementById('docente-total-chip');
-    els.btnToggleGantt = document.getElementById('btn-toggle-gantt-publico');
-    els.ganttShell = document.getElementById('gantt-shell-publico');
-    els.ganttContainer = document.getElementById('public-gantt-container');
     els.resultadoAgenda = document.getElementById('resultado-agenda');
     els.btnTopo = document.getElementById('btn-topo');
     els.sheetOverlay = document.getElementById('sheet-overlay');
@@ -85,6 +76,7 @@ function cacheElements() {
     els.sheetTurma = document.getElementById('sheet-turma');
     els.btnFecharSheet = document.getElementById('btn-fechar-sheet');
     els.slotLens = document.getElementById('slot-lens');
+    els.dayLens = document.getElementById('day-lens');
 }
 
 function bindEvents() {
@@ -97,11 +89,11 @@ function bindEvents() {
     els.inpDocente?.addEventListener('blur', handleDocenteBlur);
     els.inpDocente?.addEventListener('keydown', handleDocenteKeydown);
     els.btnLimparDocente?.addEventListener('click', limparDocenteSelecionado);
-    els.btnToggleGantt?.addEventListener('click', toggleGanttDocente);
 
     els.resultadoAgenda?.addEventListener('click', handleAgendaChipClick);
     els.resultadoAgenda?.addEventListener('keydown', handleAgendaChipKeydown);
     els.slotLens?.addEventListener('click', handleSlotLensClick);
+    els.dayLens?.addEventListener('click', (e) => { if (e.target.closest('.day-lens-close')) fecharDayLens(true); });
 
     els.btnFecharSheet?.addEventListener('click', fecharBottomSheet);
     els.sheetOverlay?.addEventListener('click', fecharBottomSheet);
@@ -110,20 +102,25 @@ function bindEvents() {
         if (clickedChip) return;
         if (els.slotLens?.contains(event.target)) return;
         fecharSlotLens();
+        const clickedDay = event.target.closest('.month-cal-day');
+        if (clickedDay) return;
+        if (els.dayLens?.contains(event.target)) return;
+        fecharDayLens();
     });
     document.addEventListener('keydown', (event) => {
         if (event.key === 'Escape') {
             fecharBottomSheet();
             fecharSlotLens(true);
+            fecharDayLens(true);
             esconderSugestoes();
         }
     });
 
     window.addEventListener('scroll', syncBackToTopButton);
     window.addEventListener('scroll', syncSuggestionViewportLayout, true);
-    window.addEventListener('scroll', () => fecharSlotLens(), true);
+    window.addEventListener('scroll', () => { fecharSlotLens(); fecharDayLens(); }, true);
     window.addEventListener('resize', syncSuggestionViewportLayout);
-    window.addEventListener('resize', () => fecharSlotLens(true));
+    window.addEventListener('resize', () => { fecharSlotLens(true); fecharDayLens(true); });
     window.visualViewport?.addEventListener('resize', handleVisualViewportChange);
     window.visualViewport?.addEventListener('scroll', syncSuggestionViewportLayout);
     els.btnTopo?.addEventListener('click', () => {
@@ -697,15 +694,13 @@ function selecionarDocente(nomeProfessor) {
     state.docente.nome = teacherName;
     state.docente.mes = '';
     state.docente.totalHoras = null;
-    state.docente.ganttOpen = true;
 
     if (els.inpDocente) els.inpDocente.value = teacherName;
     if (els.btnLimparDocente) els.btnLimparDocente.style.display = 'flex';
 
     esconderSugestoes();
     preencherMesesDocente();
-    syncTeacherTools();
-    renderActiveView();
+    renderActiveEmptyState();
     els.inpDocente?.blur();
 }
 
@@ -719,14 +714,11 @@ function resetDocenteState(clearInput) {
     state.docente.nome = '';
     state.docente.mes = '';
     state.docente.totalHoras = null;
-    state.docente.ganttOpen = false;
 
     if (clearInput && els.inpDocente) els.inpDocente.value = '';
     if (els.btnLimparDocente) els.btnLimparDocente.style.display = 'none';
 
-    preencherMesesDocente();
-    syncTeacherTools();
-    syncGanttVisibility();
+    if (els.containerMesesDocente) els.containerMesesDocente.innerHTML = '<span class="pub-empty">Aguardando professor...</span>';
     renderActiveEmptyState();
 }
 
@@ -750,8 +742,6 @@ function switchTab(tabName) {
     esconderSugestoes();
     fecharBottomSheet();
     syncTabUI();
-    syncTeacherTools();
-    syncGanttVisibility();
     renderActiveView();
 }
 
@@ -776,30 +766,19 @@ function renderActiveView() {
         if (els.resultadoAgenda) els.resultadoAgenda.hidden = false;
         if (!state.discente.turmaId || !state.discente.mes) {
             renderActiveEmptyState();
-            syncGanttVisibility();
             return;
         }
         renderAgendaDiscente();
-        syncGanttVisibility();
         return;
     }
 
-    if (!state.docente.nome) {
-        if (els.resultadoAgenda) {
-            els.resultadoAgenda.hidden = true;
-            els.resultadoAgenda.innerHTML = '';
-        }
-        syncTeacherTools();
-        syncGanttVisibility();
+    if (!state.docente.nome || !state.docente.mes) {
+        renderActiveEmptyState();
         return;
     }
 
-    if (els.resultadoAgenda) {
-        els.resultadoAgenda.hidden = true;
-        els.resultadoAgenda.innerHTML = '';
-    }
-    syncTeacherTools();
-    syncGanttVisibility();
+    if (els.resultadoAgenda) els.resultadoAgenda.hidden = false;
+    renderAgendaDocente();
 }
 
 function renderActiveEmptyState() {
@@ -821,9 +800,17 @@ function renderActiveEmptyState() {
         return;
     }
 
-    if (!state.docente.nome && els.resultadoAgenda) {
-        els.resultadoAgenda.hidden = true;
-        els.resultadoAgenda.innerHTML = '';
+    // Aba Docente
+    if (!state.docente.nome) {
+        if (els.resultadoAgenda) {
+            els.resultadoAgenda.hidden = true;
+            els.resultadoAgenda.innerHTML = '';
+        }
+        return;
+    }
+    if (!state.docente.mes) {
+        if (els.resultadoAgenda) els.resultadoAgenda.hidden = false;
+        renderResultEmpty('Escolha um mes para visualizar a agenda do professor.');
     }
 }
 
@@ -853,30 +840,29 @@ function renderAgendaDiscente() {
 
 function renderAgendaDocente() {
     fecharSlotLens(true);
+    fecharDayLens(true);
     const token = ++renderSequence;
     const [ano, mes] = state.docente.mes.split('-');
     const dataInicio = `${ano}-${mes}-01`;
     const ultimoDia = new Date(Number(ano), Number(mes), 0).getDate();
     const dataFim = `${ano}-${mes}-${String(ultimoDia).padStart(2, '0')}`;
 
-    renderResultLoading('A desenhar a grade semanal...');
+    renderResultLoading('A montar o calendário...');
 
     window.setTimeout(() => {
         if (token !== renderSequence) return;
 
         const calendarData = getCalendarEvents(null, dataInicio, dataFim, state.docente.nome);
         state.docente.totalHoras = calculateMonthlyTeacherHours(calendarData);
-        syncTeacherTools();
+        lastDocenteCalendarData = calendarData;
 
-        const gridHtml = buildWeeklyGridHTML({
+        const gridHtml = buildMonthlyCalendarHTML({
             calendarData,
             year: Number(ano),
-            month: Number(mes),
-            mode: 'docente'
+            month: Number(mes)
         });
         els.resultadoAgenda.innerHTML = buildResultContextMarkup('docente') + gridHtml;
         scrollResultIntoView();
-        syncGanttVisibility();
     }, 140);
 }
 
@@ -1175,16 +1161,17 @@ function normalizeLocationSegment(prefix, value) {
 
 function handleAgendaChipClick(event) {
     const chip = event.target.closest('.mini-chip');
-    if (!chip) return;
-    abrirSlotLens(chip);
+    if (chip) { abrirSlotLens(chip); return; }
+    const mcdChip = event.target.closest('.mcd-event[data-disc-key]');
+    if (mcdChip) { abrirDayLens(mcdChip); return; }
 }
 
 function handleAgendaChipKeydown(event) {
-    const chip = event.target.closest('.mini-chip');
-    if (!chip) return;
     if (event.key !== 'Enter' && event.key !== ' ') return;
-    event.preventDefault();
-    abrirSlotLens(chip);
+    const chip = event.target.closest('.mini-chip');
+    if (chip) { event.preventDefault(); abrirSlotLens(chip); return; }
+    const mcdChip = event.target.closest('.mcd-event[data-disc-key]');
+    if (mcdChip) { event.preventDefault(); abrirDayLens(mcdChip); }
 }
 
 function handleSlotLensClick(event) {
@@ -1382,49 +1369,7 @@ function calculateEventHours(event) {
     return Math.max(1, Math.round((end - start) / 50));
 }
 
-function syncTeacherTools() {
-    if (!els.docenteTools || !els.docenteTotalChip || !els.btnToggleGantt) return;
 
-    const hasTeacher = !!state.docente.nome;
-    els.docenteTools.hidden = !hasTeacher;
-    if (!hasTeacher) return;
-
-    els.docenteTotalChip.textContent = Number.isFinite(state.docente.totalHoras)
-        ? `Aulas no mes: ${state.docente.totalHoras} horas-aula`
-        : 'Aulas no mes: -- horas-aula';
-    els.btnToggleGantt.textContent = state.docente.ganttOpen
-        ? 'Fechar Gantt do professor'
-        : 'Abrir Gantt do professor';
-    els.btnToggleGantt.classList.toggle('is-active', state.docente.ganttOpen);
-}
-
-function toggleGanttDocente() {
-    if (!state.docente.nome) return;
-    state.docente.ganttOpen = !state.docente.ganttOpen;
-    syncTeacherTools();
-    syncGanttVisibility();
-    if (state.docente.ganttOpen) {
-        requestAnimationFrame(() => {
-            els.ganttShell?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        });
-    }
-}
-
-function syncGanttVisibility() {
-    if (!els.ganttShell || !els.ganttContainer) return;
-
-    const shouldShow = state.activeTab === 'docente' && !!state.docente.nome && state.docente.ganttOpen;
-    els.ganttShell.hidden = !shouldShow;
-
-    if (!shouldShow) {
-        els.ganttContainer.innerHTML = '';
-        return;
-    }
-
-    requestAnimationFrame(() => {
-        renderPublicTeacherGantt(els.ganttContainer, state.docente.nome);
-    });
-}
 
 function renderResultLoading(message) {
     if (!els.resultadoAgenda) return;
@@ -1543,3 +1488,217 @@ function escapeHtml(value) {
 function escapeHtmlAttr(value) {
     return escapeHtml(value).replace(/`/g, '&#96;');
 }
+
+
+// ─── Monthly Calendar ────────────────────────────────────────────────────────
+let lastDocenteCalendarData = null;
+let activeDayCell = null;
+
+function buildMonthlyCalendarHTML({ calendarData, year, month }) {
+    const dayNames = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'S\u00e1b'];
+    const firstDay = new Date(year, month - 1, 1);
+    const lastDay = new Date(year, month, 0);
+    // For Mon-Sat grid: offset = (dayOfWeek + 6) % 7; Sundays (0) get offset 0 (they're skipped)
+    const firstDow = firstDay.getDay();
+    const startOffset = firstDow === 0 ? 0 : (firstDow + 6) % 7;
+    const todayStr = toIsoDate(new Date());
+    let hasAnyEvent = false;
+
+    let header = '<div class="month-cal-header">';
+    dayNames.forEach(d => { header += `<div class="month-cal-hdcell">${d}</div>`; });
+    header += '</div>';
+
+    let grid = '<div class="month-cal-grid">';
+    for (let i = 0; i < startOffset; i++) {
+        grid += '<div class="month-cal-day is-empty" aria-hidden="true"></div>';
+    }
+
+    for (let d = 1; d <= lastDay.getDate(); d++) {
+        const dateObj = new Date(year, month - 1, d);
+        const dow = dateObj.getDay();
+        if (dow === 0) continue; // Skip Sundays
+        const dateStr = toIsoDate(dateObj);
+        const events = Array.isArray(calendarData?.[dateStr]) ? calendarData[dateStr] : [];
+        const isHoliday = events.some(e => e.type === 'holiday');
+        const classEvents = events.filter(e => e.type !== 'holiday');
+        const isToday = dateStr === todayStr;
+        if (classEvents.length > 0) hasAnyEvent = true;
+
+        let cls = 'month-cal-day';
+        if (dow === 6) cls += ' is-weekend'; // Saturday only
+        if (isToday) cls += ' is-today';
+        const hasContent = isHoliday || classEvents.length > 0;
+
+        grid += `<div class="${cls}" data-date="${dateStr}">`;
+        grid += `<div class="mcd-num">${d}</div>`;
+
+        if (isHoliday) grid += `<div class="mcd-feriado">Feriado</div>`;
+
+        // Group by discipline — one chip per component
+        const discGroups = new Map();
+        classEvents.forEach(ev => {
+            const key = `${normalizeText(ev.disciplina || ev.title || '')}|${ev.turmaId || ''}|${ev.subGrupo || ''}`;
+            if (!discGroups.has(key)) discGroups.set(key, ev);
+        });
+        const uniqueDiscs = Array.from(discGroups.values());
+
+        uniqueDiscs.slice(0, 2).forEach(ev => {
+            const cor = String(ev.cor || '#355344').trim();
+            const hora = formatChipStartTime(getEventHorario(ev));
+            const sigla = getDisciplinaShortLabel(ev.disciplina, ev.title || ev.disciplina || '').slice(0, 10);
+            const discKey = `${normalizeText(ev.disciplina || ev.title || '')}|${ev.turmaId || ''}|${ev.subGrupo || ''}`;
+            grid += `<div class="mcd-event" style="background:${escapeHtmlAttr(cor)}" data-date="${dateStr}" data-disc-key="${escapeHtmlAttr(discKey)}" tabindex="0" role="button">`;
+            grid += `<span class="mcd-event-hora">${escapeHtml(hora)}</span>`;
+            grid += `<span class="mcd-event-sigla">${escapeHtml(sigla)}</span>`;
+            grid += `</div>`;
+        });
+
+        if (uniqueDiscs.length > 2) grid += `<div class="mcd-more">+${uniqueDiscs.length - 2}</div>`;
+
+        grid += '</div>';
+    }
+
+    const totalCells = startOffset + lastDay.getDate() - Array.from({length: lastDay.getDate()}, (_, i) => new Date(year, month - 1, i + 1).getDay() === 0 ? 1 : 0).reduce((a, b) => a + b, 0);
+    const remainder = totalCells % 6;
+    if (remainder !== 0) {
+        for (let i = 0; i < 6 - remainder; i++) {
+            grid += '<div class="month-cal-day is-empty" aria-hidden="true"></div>';
+        }
+    }
+    grid += '</div>';
+
+    if (!hasAnyEvent) {
+        return '<div class="pub-empty-state">Nenhuma aula publicada para este professor no m\u00eas selecionado.</div>';
+    }
+    return `<div class="month-cal">${header}${grid}</div>`;
+}
+
+function buildDayLensMarkup(events, dateStr, filterKey = null) {
+    const classEvents = events.filter(e => e.type !== 'holiday');
+    if (!classEvents.length) return '';
+
+    const groups = new Map();
+    classEvents.forEach(ev => {
+        const key = `${normalizeText(ev.disciplina || ev.title || '')}|${ev.turmaId || ''}|${ev.subGrupo || ''}`;
+        if (filterKey && key !== filterKey) return;
+        if (!groups.has(key)) {
+            const comp = store.rawData?.componentes?.find(c => c.componente === ev.disciplina);
+            const totalCh = comp?.ch || 0;
+            groups.set(key, {
+                title: ev.title || ev.disciplina || 'Componente',
+                turmaId: ev.turmaId,
+                subGrupo: ev.subGrupo,
+                cor: ev.cor || '#355344',
+                local: getEventLocationLabel(ev),
+                horarios: [],
+                ch: totalCh
+            });
+        }
+        const g = groups.get(key);
+        const h = getEventHorario(ev);
+        if (h && !g.horarios.includes(h)) g.horarios.push(h);
+    });
+
+    const groupList = Array.from(groups.values());
+    const dateObj = new Date(`${dateStr}T12:00:00`);
+
+    let html = `<div class="day-lens-card">`;
+    html += `<button type="button" class="day-lens-close" aria-label="Fechar">&times;</button>`;
+    html += `<div class="day-lens-date">${escapeHtml(formatDateFull(dateObj))}</div>`;
+    html += `<div class="day-lens-groups is-single">`;
+
+    groupList.forEach(g => {
+        const turma = getTurmaLabel(g.turmaId, g.subGrupo);
+        html += `<div class="day-lens-group" style="--dlg-cor:${escapeHtmlAttr(g.cor)}">`;
+        html += `<div class="dlg-title">${escapeHtml(g.title)}${g.ch > 0 ? `<span class="dlg-ch">${g.ch}h</span>` : ''}</div>`;
+        html += `<div class="dlg-row"><span class="dlg-label">Turma</span><span class="dlg-val">${escapeHtml(turma)}</span></div>`;
+        html += `<div class="dlg-row"><span class="dlg-label">Local</span><span class="dlg-val">${escapeHtml(g.local)}</span></div>`;
+        html += `<div class="dlg-row"><span class="dlg-label">Hor\u00e1rio</span>`;
+        html += `<div class="dlg-horarios">`;
+        g.horarios.forEach(h => {
+            const m = String(h || '').match(/\d{1,2}:\d{2}/g) || [];
+            if (m.length >= 2) {
+                html += `<div class="dlg-hrow"><span>${escapeHtml(m[0])}</span><span class="dlg-dash">\u2013</span><span>${escapeHtml(m[1])}</span></div>`;
+            } else if (m.length === 1) {
+                html += `<div class="dlg-hrow"><span>${escapeHtml(m[0])}</span></div>`;
+            }
+        });
+        html += `</div></div>`; // dlg-horarios + dlg-row
+        html += `</div>`; // day-lens-group
+    });
+
+    html += `</div>`; // day-lens-groups
+    html += `<div class="day-lens-arrow"></div>`;
+    html += `</div>`; // day-lens-card
+    return html;
+}
+
+function abrirDayLens(chipEl) {
+    if (!chipEl || !els.dayLens) return;
+    const dateStr = chipEl.dataset.date;
+    const discKey = chipEl.dataset.discKey;
+    if (!dateStr) return;
+
+    if (activeDayCell === chipEl && els.dayLens.classList.contains('active')) {
+        fecharDayLens(true);
+        return;
+    }
+
+    activeDayCell = chipEl;
+    const events = lastDocenteCalendarData?.[dateStr] || [];
+    const markup = buildDayLensMarkup(events, dateStr, discKey || null);
+    if (!markup) return;
+
+    els.dayLens.innerHTML = markup;
+    els.dayLens.hidden = false;
+    els.dayLens.classList.remove('active', 'is-below');
+    els.dayLens.style.top = '0px';
+    els.dayLens.style.left = '0px';
+
+    requestAnimationFrame(() => {
+        positionDayLens(chipEl);
+        els.dayLens?.classList.add('active');
+    });
+}
+
+function fecharDayLens(immediate = false) {
+    if (!els.dayLens) return;
+    activeDayCell = null;
+    els.dayLens.classList.remove('active', 'is-below');
+
+    const finalize = () => {
+        if (!els.dayLens || els.dayLens.classList.contains('active')) return;
+        els.dayLens.hidden = true;
+        els.dayLens.innerHTML = '';
+        els.dayLens.style.removeProperty('top');
+        els.dayLens.style.removeProperty('left');
+    };
+
+    if (immediate) { finalize(); return; }
+    window.setTimeout(finalize, 180);
+}
+
+function positionDayLens(dayCell = activeDayCell) {
+    if (!dayCell || !els.dayLens) return;
+
+    const cellRect = dayCell.getBoundingClientRect();
+    const lensRect = els.dayLens.getBoundingClientRect();
+    const gap = 10;
+    const vpad = 8;
+    const hpad = 8;
+
+    const spaceAbove = cellRect.top - vpad;
+    const placeBelow = spaceAbove < lensRect.height + gap;
+
+    const top = placeBelow
+        ? Math.min(window.innerHeight - lensRect.height - vpad, cellRect.bottom + gap)
+        : Math.max(vpad, cellRect.top - lensRect.height - gap);
+
+    const centerX = cellRect.left + cellRect.width / 2;
+    const left = Math.max(hpad, Math.min(window.innerWidth - lensRect.width - hpad, centerX - lensRect.width / 2));
+
+    els.dayLens.style.top = `${Math.round(top)}px`;
+    els.dayLens.style.left = `${Math.round(left)}px`;
+    els.dayLens.classList.toggle('is-below', placeBelow);
+}
+

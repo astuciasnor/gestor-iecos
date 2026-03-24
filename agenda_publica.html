@@ -306,8 +306,7 @@
             gap: 12px;
         }
 
-        .pub-doc-tools[hidden],
-        .pub-gantt-shell[hidden] {
+        .pub-doc-tools[hidden] {
             display: none !important;
         }
 
@@ -551,42 +550,7 @@
             font-weight: 800;
         }
 
-        .pub-gantt-shell {
-            background: rgba(251, 252, 251, 0.92);
-            border: 1px solid rgba(0, 78, 40, 0.10);
-            border-radius: 24px;
-            padding: 18px;
-            box-shadow: 0 14px 34px rgba(15, 23, 42, 0.08);
-            scroll-margin-top: 14px;
-        }
 
-        .pub-gantt-title {
-            margin: 0 0 12px 0;
-            color: var(--pub-ink);
-            font-size: 1rem;
-            font-weight: 900;
-            text-transform: uppercase;
-            letter-spacing: 0.04em;
-        }
-
-        .pub-gantt-note {
-            margin: -6px 0 16px 0;
-            color: var(--pub-muted);
-            font-size: 0.88rem;
-        }
-
-        #public-gantt-container .gantt-container {
-            padding-inline: 42px;
-        }
-
-        #public-gantt-container .gantt-grid-line-week {
-            position: absolute;
-            top: 0;
-            bottom: 0;
-            border-left: 2px dotted rgba(71, 85, 105, 0.45);
-            pointer-events: none;
-            z-index: 1;
-        }
 
         .slot-lens {
             position: fixed;
@@ -1010,9 +974,7 @@
                 top: -84px;
             }
 
-            #public-gantt-container .gantt-container {
-                padding-inline: 32px;
-            }
+
 
             .pub-panel,
             .pub-gantt-shell {
@@ -1197,6 +1159,140 @@
                 font-size: 0.68rem;
                 min-height: 1.9em;
             }
+
+        }
+        /* ─── Monthly Calendar (Docente) ─── */
+        .month-cal { --mc-gap: 3px; }
+        .month-cal-header {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: var(--mc-gap);
+            margin-bottom: 4px;
+        }
+        .month-cal-hdcell {
+            text-align: center;
+            font-size: 0.72rem;
+            font-weight: 900;
+            color: #688074;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            padding: 6px 0;
+        }
+        .month-cal-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: var(--mc-gap);
+        }
+        .month-cal-day {
+            min-height: 84px;
+            background: #fff;
+            border: 1px solid var(--pub-line);
+            border-radius: 10px;
+            padding: 7px 6px 5px 6px;
+            cursor: pointer;
+            transition: box-shadow 0.14s ease, background 0.14s ease;
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+            user-select: none;
+        }
+        .month-cal-day:hover { background: #f4f8f6; box-shadow: 0 4px 12px rgba(15,23,42,0.08); }
+        .month-cal-day:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(0,78,40,0.18); }
+        .month-cal-day.is-empty { background: transparent; border-color: transparent; cursor: default; pointer-events: none; }
+        .month-cal-day.is-weekend { background: #f9fbfa; }
+        .month-cal-day.is-today .mcd-num {
+            background: var(--primary, #0b5a35);
+            color: #fff;
+            border-radius: 50%;
+            width: 22px; height: 22px;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .mcd-num { font-size: 0.8rem; font-weight: 900; color: #3a5445; line-height: 1; align-self: flex-start; }
+        .mcd-event {
+            border-radius: 5px;
+            padding: 3px 5px;
+            color: #111;
+            display: flex;
+            flex-direction: column;
+            line-height: 1.1;
+            min-width: 0;
+            cursor: pointer;
+            transition: filter 0.12s ease, transform 0.1s ease;
+        }
+        .mcd-event:hover { filter: brightness(0.88); transform: scale(1.03); }
+        .mcd-event:focus-visible { outline: 2px solid rgba(0,0,0,0.35); outline-offset: 1px; }
+        .mcd-event-hora { font-size: 0.6rem; font-weight: 700; opacity: 0.75; white-space: nowrap; }
+        .mcd-event-sigla { font-size: 0.68rem; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .mcd-feriado { font-size: 0.56rem; color: #b14b25; background: #fff4ef; border: 1px dashed #d97a56; border-radius: 4px; padding: 2px 4px; font-weight: 700; text-align: center; }
+        .mcd-more { font-size: 0.58rem; color: #7f9b8c; font-weight: 700; padding-left: 2px; }
+
+        /* ─── Day Lens Popup ─── */
+        .day-lens {
+            position: fixed;
+            z-index: 2200;
+            width: min(310px, calc(100vw - 16px));
+            opacity: 0;
+            pointer-events: none;
+            transform: translateY(8px) scale(0.97);
+            transform-origin: center top;
+            transition: opacity 0.16s ease, transform 0.18s ease;
+        }
+        .day-lens[hidden] { display: none !important; }
+        .day-lens.active { opacity: 1; pointer-events: auto; transform: translateY(0) scale(1); }
+        .day-lens.is-below { transform-origin: center bottom; }
+        .day-lens-card {
+            background: #fff;
+            border-radius: 16px;
+            border: 1px solid #dce7e0;
+            box-shadow: 0 22px 52px rgba(15,23,42,0.22);
+            padding: 14px 14px 12px 14px;
+            position: relative;
+        }
+        .day-lens-arrow {
+            position: absolute;
+            bottom: -6px; left: 50%;
+            transform: translateX(-50%) rotate(225deg);
+            width: 11px; height: 11px;
+            background: #fff;
+            border-left: 1px solid #dce7e0;
+            border-top: 1px solid #dce7e0;
+        }
+        .day-lens.is-below .day-lens-arrow { top: -6px; bottom: auto; transform: translateX(-50%) rotate(45deg); }
+        .day-lens-date { font-size: 0.72rem; font-weight: 900; color: #688074; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 10px; }
+        .day-lens-close {
+            position: absolute; top: 10px; right: 10px;
+            width: 26px; height: 26px;
+            border: none; border-radius: 50%;
+            background: #edf3ef; color: #466254;
+            font-size: 1rem; font-weight: 900; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .day-lens-groups { display: flex; gap: 12px; }
+        .day-lens-groups.is-single { flex-direction: column; }
+        .day-lens-groups.is-multi > .day-lens-group { flex: 1; min-width: 0; }
+        .day-lens-group { border-left: 3px solid var(--dlg-cor, #355344); padding-left: 10px; }
+        .dlg-title { font-size: 0.9rem; font-weight: 900; color: #173728; line-height: 1.15; margin-bottom: 8px; padding-right: 24px; display: flex; align-items: baseline; gap: 7px; flex-wrap: wrap; }
+        .dlg-ch { font-size: 0.7rem; font-weight: 800; background: #edf3ef; color: #355344; border-radius: 6px; padding: 2px 7px; white-space: nowrap; flex-shrink: 0; }
+        .dlg-row { margin-bottom: 5px; }
+        .dlg-label { display: block; font-size: 0.6rem; font-weight: 900; color: #688074; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 1px; }
+        .dlg-val { font-size: 0.82rem; font-weight: 700; color: #173728; }
+        .dlg-horarios { border: 1px solid #e4ece6; border-radius: 8px; overflow: hidden; margin-top: 2px; }
+        .dlg-hrow { display: flex; align-items: center; gap: 6px; padding: 5px 8px; font-size: 0.8rem; font-weight: 700; font-variant-numeric: tabular-nums; color: #173728; border-bottom: 1px solid #f0f5f2; }
+        .dlg-hrow:last-child { border-bottom: none; }
+        .dlg-dash { color: #b0bfb8; }
+        .day-lens-divider { width: 1px; background: #e4ece6; flex-shrink: 0; }
+
+        @media (max-width: 720px) {
+            .month-cal-day { min-height: 62px; padding: 5px 4px; }
+            .mcd-event-sigla { font-size: 0.6rem; }
+            .day-lens-groups.is-multi { flex-direction: column; }
+            .day-lens-divider { width: auto; height: 1px; }
+        }
+        @media (max-width: 520px) {
+            .month-cal-hdcell { font-size: 0.6rem; padding: 4px 0; }
+            .month-cal-day { min-height: 48px; padding: 4px 3px; }
+            .mcd-num { font-size: 0.65rem; }
+            .mcd-event-sigla { font-size: 0.56rem; }
         }
     </style>
 </head>
@@ -1224,8 +1320,10 @@
 
         <div class="pub-main">
             <div class="pub-tabs" role="tablist" aria-label="Modos de consulta">
-                <button id="tab-discente" type="button" class="pub-tab active" role="tab" aria-selected="true">Agenda Discente</button>
-                <button id="tab-docente" type="button" class="pub-tab" role="tab" aria-selected="false">Agenda Docente</button>
+                <button id="tab-discente" type="button" class="pub-tab active" role="tab" aria-selected="true">Agenda
+                    Discente</button>
+                <button id="tab-docente" type="button" class="pub-tab" role="tab" aria-selected="false">Agenda
+                    Docente</button>
             </div>
 
             <section class="pub-panel">
@@ -1260,24 +1358,30 @@
 
                 <section id="view-docente" class="pub-view" hidden>
                     <div class="pub-controls">
-                        <div class="pub-group">
-                            <label for="inp-docente-publico">Professor</label>
-                            <p class="pub-hint">Busque o nome do professor para abrir diretamente o Gantt docente.</p>
+                        <div class="pub-group is-half">
+                            <label for="inp-docente-publico">1. Professor</label>
+                            <p class="pub-hint">Busque o nome do professor para visualizar sua grade semanal de aulas.</p>
                             <div class="pub-autocomplete">
-                                <input id="inp-docente-publico" class="pub-input" type="text" autocomplete="off" placeholder="Digite o nome do professor...">
-                                <button id="btn-limpar-docente-publico" type="button" class="pub-clear-btn" title="Limpar">&times;</button>
+                                <input id="inp-docente-publico" class="pub-input" type="text" autocomplete="off"
+                                    placeholder="Digite o nome do professor...">
+                                <button id="btn-limpar-docente-publico" type="button" class="pub-clear-btn"
+                                    title="Limpar">&times;</button>
                                 <ul id="lista-sugestoes-publico" class="pub-suggestions"></ul>
+                            </div>
+                        </div>
+
+                        <div class="pub-group is-half">
+                            <label>2. M&ecirc;s</label>
+                            <p class="pub-hint">Escolha o m&ecirc;s para visualizar os slots do professor.</p>
+                            <div id="container-meses-docente" class="pub-pillbox">
+                                <span class="pub-empty">Aguardando professor...</span>
                             </div>
                         </div>
                     </div>
                 </section>
             </section>
 
-            <section id="gantt-shell-publico" class="pub-gantt-shell" hidden>
-                <h2 class="pub-gantt-title">Gantt Individual do Professor</h2>
-                <p class="pub-gantt-note">Visao complementar do semestre, mantendo o intervalo real e o detalhe sob demanda.</p>
-                <div id="public-gantt-container"></div>
-            </section>
+
 
             <section id="resultado-agenda" class="pub-result"></section>
         </div>
@@ -1326,6 +1430,7 @@
     </div>
 
     <div id="slot-lens" class="slot-lens" hidden></div>
+    <div id="day-lens" class="day-lens" hidden></div>
 
     <script type="module" src="js/agenda_publica.js?v=20260323ah"></script>
 </body>
