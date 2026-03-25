@@ -1,0 +1,27 @@
+
+ RUN  v4.1.1 D:/Git/planejador-academico/gestor-iecos
+
+✔ resolveActiveAcademicPeriod preserva o plano preferido quando ele existe na lista oficial (3.4433ms)
+✔ reconcileTurmaSelectionAfterPLChange mantém a turma atual válida e limpa contexto inválido (4.1545ms)
+✔ initializeWeeklyScheduleForTurma inicia turma nova na data inicial do PL (0.7628ms)
+✔ generateAllocationOccurrences cria fechamento fracionário com a CH restante exata (11.0364ms)
+✔ generateAllocationOccurrences não gera ocorrências após o fim do semestre (0.16ms)
+✔ resetWeeklyViewOnTurmaChange reposiciona a grade para a primeira semana do PL (0.1345ms)
+✔ getTeacherActiveShifts detecta manhã, tarde e noite conforme os horários reais (2.9998ms)
+✔ detectTeacherConflicts gera linhas com turno, turmas e componentes conflitantes (1.9825ms)
+✔ filterExportableAllocations e buildSigaaExportPayload excluem componentes pendentes (0.5336ms)
+ ❯ tests/academic_rules.test.mjs (0 test)
+
+ Test Files  1 failed (1)
+      Tests  no tests
+   Start at  10:58:07
+   Duration  466ms (transform 86ms, setup 0ms, import 169ms, tests 0ms, environment 0ms)
+
+
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/academic_rules.test.mjs [ tests/academic_rules.test.mjs ]
+Error: No test suite found in file D:/Git/planejador-academico/gestor-iecos/tests/academic_rules.test.mjs
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+

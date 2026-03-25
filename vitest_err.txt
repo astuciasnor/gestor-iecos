@@ -1,0 +1,19 @@
+﻿
+[1m[46m RUN [49m[22m [36mv4.1.1 [39m[90mD:/Git/planejador-academico/gestor-iecos[39m
+
+Ô£ö resolveActiveAcademicPeriod preserva o plano preferido quando ele existe na lista oficial (3.2491ms)
+Ô£ö reconcileTurmaSelectionAfterPLChange mant├®m a turma atual v├ílida e limpa contexto inv├ílido (3.1481ms)
+Ô£ö initializeWeeklyScheduleForTurma inicia turma nova na data inicial do PL (0.4663ms)
+Ô£ö generateAllocationOccurrences cria fechamento fracion├írio com a CH restante exata (8.7545ms)
+Ô£ö generateAllocationOccurrences n├úo gera ocorr├¬ncias ap├│s o fim do semestre (0.1793ms)
+Ô£ö resetWeeklyViewOnTurmaChange reposiciona a grade para a primeira semana do PL (0.1999ms)
+Ô£ö getTeacherActiveShifts detecta manh├ú, tarde e noite conforme os hor├írios reais (0.7111ms)
+Ô£ö detectTeacherConflicts gera linhas com turno, turmas e componentes conflitantes (0.7274ms)
+Ô£ö filterExportableAllocations e buildSigaaExportPayload excluem componentes pendentes (0.2815ms)
+ [31mÔØ»[39m tests/academic_rules.test.mjs [2m([22m[2m0 test[22m[2m)[22m
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [2mno tests[22m
+[2m   Start at [22m 08:35:08
+[2m   Duration [22m 374ms[2m (transform 50ms, setup 0ms, import 104ms, tests 0ms, environment 0ms)[22m
+

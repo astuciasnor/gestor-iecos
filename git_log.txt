@@ -1,0 +1,10 @@
+﻿8d716d2 feat: atualiza alocacoes_publicas.json e refinamento de turnos (12:30/18:30)
+e972db3 adiciona pequenos ajustes
+62e1a7a chore: remover agendas obsoletas (discente/docente) e unificar na agenda_publica.html
+368cef9 feat: badge dinamico M/T/N turno alternativo, correcoes grades e turno padrao turma
+987d2c6 feat(publica): calendario mensal docente - substitui Gantt por grid estilo Google Calendar, popup com CH total, sem domingos
+b06ec62 Refina agenda publica e gantt docente mobile
+0680fc8 Refine docente gantt lens interactions
+7dc7834 Refine docente gantt compact bars
+afdc320 Refine public export payload and agenda inputs
+1f6a206 Refine plan-scoped SIGAA and export payloads
