@@ -1343,7 +1343,7 @@ function fecharBottomSheet() {
 function getAgendaTipoTexto(tipo) {
     const normalized = String(tipo || '').trim().toLowerCase();
     if (normalized === 'intensiva') return 'Oferta por Faixas';
-    return 'Oferta Regular';
+    return 'Oferta';
 }
 
 function formatHorarioIntervalo(horario) {

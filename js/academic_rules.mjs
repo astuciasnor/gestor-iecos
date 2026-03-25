@@ -347,8 +347,8 @@ export function detectTeacherConflicts({
             : String(eventB?.turmaId || '').trim();
           const componenteA = String(eventA?.disciplina || '').trim();
           const componenteB = String(eventB?.disciplina || '').trim();
-          const eventKeyA = [turmaA, componenteA, String(eventA?.tipo || '').trim(), String(eventA?.subGrupo || '').trim()].join('|');
-          const eventKeyB = [turmaB, componenteB, String(eventB?.tipo || '').trim(), String(eventB?.subGrupo || '').trim()].join('|');
+          const eventKeyA = [turmaA, componenteA, String(eventA?.subGrupo || '').trim()].join('|');
+          const eventKeyB = [turmaB, componenteB, String(eventB?.subGrupo || '').trim()].join('|');
 
           if (!eventKeyA || !eventKeyB || eventKeyA === eventKeyB) continue;
 

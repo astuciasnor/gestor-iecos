@@ -3,6 +3,12 @@ import { normalizePeriodo as normalizePeriodoLetivoCode } from './plan_storage.j
 import { getCalendarEvents } from './calendar.js';
 import { countBusinessDays, countWeekdaysInPeriod, addBusinessDays, isDateOverlap, calculateEndDateByWeekday } from './utils.js';
 import {
+    getUnifiedExecutionSnapshot,
+    getAllocationExecutionRangeMap,
+    getUnifiedSignatureRangeMap,
+    buildUnifiedExecutionSignature
+} from './execution_engine.js';
+import {
     buildSigaaExportPayload,
     computeRemainingFractionalHours,
     detectTeacherConflicts,
@@ -3436,82 +3442,36 @@ function buildStoredExecutionSnapshot(intense) {
     };
 }
 
-function buildGanttFaixaDaySnapshots(faixaAlloc, rangeStart, rangeEnd) {
-    const fallbackStart = String(rangeStart || faixaAlloc?.dataInicio || store.settings.termStart || '').trim();
-    const fallbackEnd = String(rangeEnd || faixaAlloc?.dataFim || store.settings.termEnd || fallbackStart).trim();
-    const storedExecution = buildStoredExecutionSnapshot(faixaAlloc);
+function buildGanttFaixaDaySnapshots(alloc, rangeStart, rangeEnd) {
+    const fallbackStart = String(rangeStart || alloc?.dataInicio || store.settings.termStart || '').trim();
+    const fallbackEnd = String(rangeEnd || alloc?.dataFim || store.settings.termEnd || fallbackStart).trim();
 
-    if (storedExecution?.byDate && Object.keys(storedExecution.byDate).length > 0) {
-        const grouped = new Map();
-
-        Object.keys(storedExecution.byDate)
-            .sort()
-            .forEach((dateStr) => {
-                if (fallbackStart && dateStr < fallbackStart) return;
-                if (fallbackEnd && dateStr > fallbackEnd) return;
-
-                const dow = new Date(`${dateStr}T12:00:00`).getDay();
-                if (dow < 1 || dow > 6) return;
-
-                const slots = Array.isArray(storedExecution.byDate[dateStr])
-                    ? storedExecution.byDate[dateStr].filter(Boolean).map(String)
-                    : [];
-                if (slots.length === 0) return;
-
-                if (!grouped.has(dow)) {
-                    grouped.set(dow, {
-                        dow,
-                        inicio: dateStr,
-                        fim: dateStr,
-                        slotsSet: new Set()
-                    });
-                }
-
-                const entry = grouped.get(dow);
-                if (!entry.inicio || dateStr < entry.inicio) entry.inicio = dateStr;
-                if (!entry.fim || dateStr > entry.fim) entry.fim = dateStr;
-                slots.forEach((slot) => entry.slotsSet.add(slot));
-            });
-
-        return Array.from(grouped.values())
-            .map((entry) => ({
-                dow: entry.dow,
-                inicio: entry.inicio,
-                fim: entry.fim,
-                slots: [...entry.slotsSet].sort((a, b) => timeToMinutes(a) - timeToMinutes(b))
-            }))
-            .filter((entry) => entry.slots.length > 0)
-            .sort((a, b) => a.dow - b.dow);
-    }
-
-    const faixas = buildIntensiveConflictFaixas(faixaAlloc, fallbackStart, fallbackEnd);
+    const eventsByDate = getCalendarEvents(alloc.turmaId, fallbackStart, fallbackEnd);
     const grouped = new Map();
 
-    faixas.forEach((faixa) => {
-        if (!faixa?.inicio || !faixa?.fim || !faixa.byDay) return;
+    Object.keys(eventsByDate).sort().forEach(dateStr => {
+        const events = eventsByDate[dateStr] || [];
+        const matched = events.filter(e => e.id === alloc.id);
+        if (matched.length === 0) return;
 
-        Object.keys(faixa.byDay).forEach((dayKey) => {
-            const dow = parseInt(dayKey, 10);
-            if (Number.isNaN(dow) || dow < 1 || dow > 6) return;
+        const dow = new Date(`${dateStr}T12:00:00`).getDay();
+        if (dow < 1 || dow > 6) return;
 
-            const slots = Array.isArray(faixa.byDay[dow])
-                ? faixa.byDay[dow].filter(Boolean).map(String)
-                : [];
-            if (slots.length === 0) return;
+        if (!grouped.has(dow)) {
+            grouped.set(dow, {
+                dow,
+                inicio: dateStr,
+                fim: dateStr,
+                slotsSet: new Set()
+            });
+        }
 
-            if (!grouped.has(dow)) {
-                grouped.set(dow, {
-                    dow,
-                    inicio: faixa.inicio,
-                    fim: faixa.fim,
-                    slotsSet: new Set()
-                });
-            }
+        const entry = grouped.get(dow);
+        if (dateStr < entry.inicio) entry.inicio = dateStr;
+        if (dateStr > entry.fim) entry.fim = dateStr;
 
-            const entry = grouped.get(dow);
-            if (faixa.inicio < entry.inicio) entry.inicio = faixa.inicio;
-            if (faixa.fim > entry.fim) entry.fim = faixa.fim;
-            slots.forEach((slot) => entry.slotsSet.add(slot));
+        matched.forEach(e => {
+            if (e.horario) entry.slotsSet.add(e.horario);
         });
     });
 
@@ -6070,8 +6030,7 @@ function renderOfertasList() {
     const dayLabels = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab'];
     const semesterStart = calStart ? calStart.value : '2025-01-01';
     const semesterEnd = calEnd ? calEnd.value : '2025-12-31';
-    const regularExec = getRegularExecutionSnapshot(String(store.selectedTurma), semesterStart, semesterEnd);
-    const intensiveExec = getIntensiveExecutionSnapshot(String(store.selectedTurma), semesterStart, semesterEnd);
+    const unifiedExec = getUnifiedExecutionSnapshot(String(store.selectedTurma), semesterStart, semesterEnd);
 
     const list = store.allocations.filter((a) => String(a.turmaId) === String(store.selectedTurma));
     const regular = list.filter((a) => isScheduledRegularAllocation(a));
@@ -6115,10 +6074,10 @@ function renderOfertasList() {
             let start = null;
             let end = null;
             sorted.forEach((a) => {
-                const horas = regularExec.hoursByAlloc.get(a.id) || 0;
+                const horas = unifiedExec.hoursByAlloc.get(a.id) || 0;
                 totalHoras += horas;
 
-                const datesSet = regularExec.datesByAlloc.get(a.id);
+                const datesSet = unifiedExec.datesByAlloc.get(a.id);
                 const semanas = datesSet ? datesSet.size : 0;
                 if (semanas > maxSemanas) maxSemanas = semanas;
 
@@ -6191,7 +6150,7 @@ function renderOfertasList() {
                     const faixaEnd = faixa.fim || base.dataFim || semesterEnd;
                     const faixaDias = Array.isArray(faixa.dias) && faixa.dias.length > 0 ? faixa.dias : fallbackDias;
                     const faixaSlots = Array.isArray(faixa.slots) && faixa.slots.length > 0 ? faixa.slots : fallbackSlots;
-                    const dateHours = intensiveExec.dateHoursByAlloc.get(base.id) || new Map();
+                    const dateHours = unifiedExec.dateHoursByAlloc.get(base.id) || new Map();
                     let faixaTotalHoras = 0;
                     const faixaDaysSet = new Set();
                     dateHours.forEach((hours, dStr) => {
@@ -6423,13 +6382,13 @@ function buildSigaaOfertaBase(allocation, info = {}) {
     };
 }
 
-function buildSigaaRegularOferta(allocs, regularExec, planContext) {
+function buildSigaaRegularOferta(allocs, unifiedExec, planContext) {
     const base = allocs[0];
     const info = getDisciplinaInfo(base.disciplina);
     const activeDates = new Set();
 
     allocs.forEach((alloc) => {
-        const datesSet = regularExec.datesByAlloc.get(alloc.id);
+        const datesSet = unifiedExec.datesByAlloc.get(alloc.id);
         if (datesSet && datesSet.size > 0) datesSet.forEach((dateStr) => activeDates.add(dateStr));
     });
 
@@ -6540,7 +6499,7 @@ function buildSigaaMetadataPayload() {
     );
     const scheduledRegulars = list.filter((alloc) => isScheduledRegularAllocation(alloc));
     const faixaAllocations = list.filter((alloc) => isFaixaAllocation(alloc));
-    const regularExec = getRegularExecutionSnapshot(turmaId, planContext.termStart, planContext.termEnd);
+    const unifiedExec = getUnifiedExecutionSnapshot(turmaId, planContext.termStart, planContext.termEnd);
     const regularGroups = new Map();
 
     scheduledRegulars.forEach((alloc) => {
@@ -6551,7 +6510,7 @@ function buildSigaaMetadataPayload() {
 
     const ofertas = [];
     regularGroups.forEach((allocs) => {
-        ofertas.push(buildSigaaRegularOferta(allocs, regularExec, planContext));
+        ofertas.push(buildSigaaRegularOferta(allocs, unifiedExec, planContext));
     });
     faixaAllocations.forEach((alloc) => {
         ofertas.push(buildSigaaFaixaOferta(alloc, planContext));
@@ -6604,151 +6563,7 @@ export function exportSigaaMetadataJSON() {
     a.click();
     a.remove();
 }
-function getRegularExecutionSnapshot(turmaId, startDate, endDate) {
-    const hoursByAlloc = new Map();
-    const datesByAlloc = new Map();
-    if (!turmaId || !startDate || !endDate) {
-        return { hoursByAlloc, datesByAlloc };
-    }
 
-    const eventsByDate = getCalendarEvents(turmaId, startDate, endDate);
-    Object.keys(eventsByDate).forEach((dateStr) => {
-        const events = eventsByDate[dateStr] || [];
-        events.forEach((e) => {
-            if (!isScheduledRegularAllocation(e)) return;
-            if (e.id === undefined || e.id === null) return;
-
-            const id = e.id;
-            hoursByAlloc.set(id, (hoursByAlloc.get(id) || 0) + 1);
-            if (!datesByAlloc.has(id)) datesByAlloc.set(id, new Set());
-            datesByAlloc.get(id).add(dateStr);
-        });
-    });
-
-    return { hoursByAlloc, datesByAlloc };
-}
-
-function getAllocationExecutionRangeMap(allocations, startDate, endDate) {
-    const rangeByAlloc = new Map();
-    if (!Array.isArray(allocations) || allocations.length === 0 || !startDate || !endDate) {
-        return rangeByAlloc;
-    }
-
-    const allocIds = new Set(
-        allocations
-            .map((a) => a?.id)
-            .filter((id) => id !== undefined && id !== null)
-    );
-    if (allocIds.size === 0) return rangeByAlloc;
-
-    const turmaIds = [...new Set(
-        allocations
-            .map((a) => String(a?.turmaId || '').trim())
-            .filter(Boolean)
-    )];
-
-    turmaIds.forEach((turmaId) => {
-        const eventsByDate = getCalendarEvents(turmaId, startDate, endDate);
-        Object.keys(eventsByDate).forEach((dateStr) => {
-            const events = eventsByDate[dateStr] || [];
-            events.forEach((event) => {
-                const id = event?.id;
-                if (!allocIds.has(id)) return;
-
-                const current = rangeByAlloc.get(id);
-                if (!current) {
-                    rangeByAlloc.set(id, { firstDate: dateStr, lastDate: dateStr });
-                    return;
-                }
-
-                if (dateStr < current.firstDate) current.firstDate = dateStr;
-                if (dateStr > current.lastDate) current.lastDate = dateStr;
-            });
-        });
-    });
-
-    return rangeByAlloc;
-}
-
-function buildNonIntensiveExecutionSignature(entry) {
-    if (!entry) return '';
-    const tipo = String(entry.tipo || '').trim();
-    if (!isScheduledRegularAllocation({ tipo })) return '';
-
-    const turmaId = String(entry.turmaId || '').trim();
-    const disciplina = String(entry.disciplina || '').trim();
-    const subGrupo = String(entry.subGrupo || '').trim();
-    const diaSemana = String(parseInt(entry.diaSemana, 10));
-    const horario = String(entry.horario || '').trim();
-
-    if (!turmaId || !disciplina || !horario || diaSemana === 'NaN') return '';
-    return [turmaId, disciplina, tipo, subGrupo, diaSemana, horario].join('|');
-}
-
-function getNonIntensiveExecutionRangeMap(allocations, startDate, endDate) {
-    const rangeBySignature = new Map();
-    if (!Array.isArray(allocations) || allocations.length === 0 || !startDate || !endDate) {
-        return rangeBySignature;
-    }
-
-    const signatures = new Set(
-        allocations
-            .map((a) => buildNonIntensiveExecutionSignature(a))
-            .filter(Boolean)
-    );
-    if (signatures.size === 0) return rangeBySignature;
-
-    const turmaIds = [...new Set(
-        allocations
-            .map((a) => String(a?.turmaId || '').trim())
-            .filter(Boolean)
-    )];
-
-    turmaIds.forEach((turmaId) => {
-        const eventsByDate = getCalendarEvents(turmaId, startDate, endDate);
-        Object.keys(eventsByDate).forEach((dateStr) => {
-            const events = eventsByDate[dateStr] || [];
-            events.forEach((event) => {
-                const signature = buildNonIntensiveExecutionSignature(event);
-                if (!signatures.has(signature)) return;
-
-                const current = rangeBySignature.get(signature);
-                if (!current) {
-                    rangeBySignature.set(signature, { firstDate: dateStr, lastDate: dateStr });
-                    return;
-                }
-
-                if (dateStr < current.firstDate) current.firstDate = dateStr;
-                if (dateStr > current.lastDate) current.lastDate = dateStr;
-            });
-        });
-    });
-
-    return rangeBySignature;
-}
-
-function getIntensiveExecutionSnapshot(turmaId, startDate, endDate) {
-    const dateHoursByAlloc = new Map();
-    if (!turmaId || !startDate || !endDate) {
-        return { dateHoursByAlloc };
-    }
-
-    const eventsByDate = getCalendarEvents(turmaId, startDate, endDate);
-    Object.keys(eventsByDate).forEach((dateStr) => {
-        const events = eventsByDate[dateStr] || [];
-        events.forEach((e) => {
-            if (!isFaixaAllocation(e)) return;
-            if (e.id === undefined || e.id === null) return;
-
-            const id = e.id;
-            if (!dateHoursByAlloc.has(id)) dateHoursByAlloc.set(id, new Map());
-            const byDate = dateHoursByAlloc.get(id);
-            byDate.set(dateStr, (byDate.get(dateStr) || 0) + 1);
-        });
-    });
-
-    return { dateHoursByAlloc };
-}
 
 function renderMonthlyCalendar() {
     const container = document.getElementById('monthly-container');
@@ -6999,12 +6814,8 @@ function getGanttVisibleTurnos(allocs = [], minDateStr = '', maxDateStr = '', tu
     const used = new Set();
 
     (Array.isArray(allocs) ? allocs : []).forEach((alloc) => {
-        if (isScheduledRegularAllocation(alloc)) {
-            resolveGanttTurnosForSlots([alloc.horario], turnoConfigs).forEach((config) => used.add(config.value));
-            return;
-        }
-
-        if (!isFaixaAllocation(alloc)) return;
+        // Ignora allocations completamente pendentes e inválidas
+        if (isPendingAllocation(alloc) || !alloc.id) return;
 
         const snapshots = buildGanttFaixaDaySnapshots(
             alloc,
@@ -7184,7 +6995,7 @@ function collectGanttDayItems({
                     dataFim: dayRangeEnd,
                     slotCount: 1,
                     timeRanges: [alloc.horario],
-                    regimeLabel: 'Regular'
+                    regimeLabel: 'Oferta'
                 });
             });
         } else if (isFaixaAllocation(alloc)) {
@@ -8523,7 +8334,8 @@ function generateCalendarGrid(container, turmaId, docenteName, start, end, title
                             if (eHorario && normalizeTime(eHorario) === slotTimeNorm) return true;
 
                             // NOVO: RESPEITA OS SLOTS LIMITADOS NO ÚLTIMO DIA DA INTENSIVA
-                            if (isFaixaAllocation(e) && e.dataFim === dayData.date && eHorariosUltimoDia) {
+                            // Removida check isFaixaAllocation
+                            if (e.dataFim === dayData.date && eHorariosUltimoDia) {
                                 return eHorariosUltimoDia.some(h => normalizeTime(h) === slotTimeNorm);
                             }
 
