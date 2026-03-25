@@ -318,11 +318,14 @@ class Store {
 
   // ===== Letra do Turno por Horário =====
   getTurnoLetter(slotString) {
-    const match = String(slotString || '').match(/(\d{1,2}):\d{2}/);
+    const match = String(slotString || '').match(/(\d{1,2}):(\d{2})/);
     if (!match) return '';
     const h = parseInt(match[1], 10);
-    if (h < 12) return 'M';
-    if (h < 18) return 'T';
+    const m = parseInt(match[2], 10);
+    const totalMinutes = h * 60 + m;
+
+    if (totalMinutes < (12 * 60 + 30)) return 'M';
+    if (totalMinutes < (18 * 60 + 30)) return 'T';
     return 'N';
   }
 

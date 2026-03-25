@@ -5247,9 +5247,9 @@ function onTurmaChange() {
         store.setTurnoOferta(resolveTurnoOfertaValue(turmaNativa.turno));
     } else if (primeiraOfertaPorFaixa) {
         const slotRef = String(primeiraOfertaPorFaixa.horariosOcupados[0] || '');
-        const hora = parseInt(slotRef.split(':')[0], 10);
-        if (hora < 13) store.setTurnoOferta(resolveTurnoOfertaValue('Manhã'));
-        else if (hora < 18) store.setTurnoOferta(resolveTurnoOfertaValue('Tarde'));
+        const letter = store.getTurnoLetter(slotRef);
+        if (letter === 'M') store.setTurnoOferta(resolveTurnoOfertaValue('Manhã'));
+        else if (letter === 'T') store.setTurnoOferta(resolveTurnoOfertaValue('Tarde'));
         else store.setTurnoOferta(resolveTurnoOfertaValue('Noite'));
     }
 
@@ -8566,13 +8566,13 @@ function generateCalendarGrid(container, turmaId, docenteName, start, end, title
                                     const info = getDisciplinaInfo(event.disciplina);
                                     const docenteFirst = String(event.docente || '').trim().split(/\s+/)[0] || '';
                                     const docenteLabel = (docenteFirst && !/^a$/i.test(docenteFirst)) ? docenteFirst.toUpperCase() : '';
-                                    const eTurno = event.turno ||
-                                         store.rawData?.turmas?.find(t => String(t.turma_id) === String(event.turmaId))?.turno || 'Tarde';
-                                     const tLetter = (event.sabadoManha && dayOfWeek === 6)
-                                         ? (store.getTurnoLetter(event.horario) || 'M') : '';
-                                     const eTurnoNorm = String(eTurno).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
-                                     const isNativeM = eTurnoNorm.includes('manh') && tLetter === 'M';
-                                     const eBadge = (tLetter && !isNativeM)
+                                     const rawNative = (event.turno || store.rawData?.turmas?.find(t => String(t.turma_id) === String(event.turmaId))?.turno || '').toLowerCase();
+                                     const nativeLetter = rawNative.includes('manh') ? 'M' : (rawNative.includes('tard') || rawNative.includes('vesp') ? 'T' : (rawNative.includes('noit') ? 'N' : ''));
+                                     const currentLetter = store.getTurnoLetter(event.horario);
+                                     const isExceptional = (nativeLetter && currentLetter && nativeLetter !== currentLetter) || (event.sabadoManha && dayOfWeek === 6);
+                                     const tLetter = isExceptional ? currentLetter : '';
+
+                                     const eBadge = tLetter
                                          ? `<span style="font-size:0.65em; background:#e67e22; color:#fff; padding:1px 4px; border-radius:3px; margin-left:2px; font-weight:bold;" title="Aula no turno ${tLetter === 'M' ? 'da Manhã' : tLetter === 'T' ? 'da Tarde' : 'da Noite'}">(${tLetter})</span>`
                                          : '';
                                      content = docenteLabel

@@ -993,6 +993,18 @@ function buildMiniChipMarkup(event, dateObj, mode, dailyEvents = []) {
         : getDisciplinaShortLabel(event?.disciplina || titulo, titulo);
     const wrapClass = chipLabel.length > 16 ? ' wrap' : '';
 
+        const turmaInfo = state.turmaById.get(String(event?.turmaId || '').trim());
+        const rawNative = (turmaInfo?.turno || '').toLowerCase();
+        const nativeLetter = rawNative.includes('manh') ? 'M' : (rawNative.includes('tard') || rawNative.includes('vesp') ? 'T' : (rawNative.includes('noit') ? 'N' : ''));
+        const currentLetter = store.getTurnoLetter(horario);
+
+        const isExceptional = (nativeLetter && currentLetter && nativeLetter !== currentLetter) || (event?.sabadoManha && dateObj.getDay() === 6);
+        const tLetter = isExceptional ? currentLetter : '';
+
+        const badgeHTML = tLetter 
+            ? `<span style="display:inline-block; font-size:0.65em; background:#e67e22; color:#fff; padding:1px 4px; border-radius:3px; margin-left:2px; font-weight:bold;" title="Aula no turno ${tLetter === 'M' ? 'da Manhã' : tLetter === 'T' ? 'da Tarde' : 'da Noite'}">(${tLetter})</span>`
+            : '';
+
     return `
         <div
             class="mini-chip"
@@ -1008,10 +1020,10 @@ function buildMiniChipMarkup(event, dateObj, mode, dailyEvents = []) {
             data-local="${escapeHtmlAttr(local)}"
             data-tipo="${escapeHtmlAttr(tipo)}"
             data-cor="${escapeHtmlAttr(cor)}"
-            data-excepcional="${(event?.sabadoManha && dateObj.getDay() === 6) ? 'true' : 'false'}"
+            data-excepcional="${isExceptional ? 'true' : 'false'}"
         >
             <div class="chip-hora">${escapeHtml(formatChipStartTime(horario))}</div>
-            <div class="chip-sigla${wrapClass}">${escapeHtml(chipLabel)}</div>
+            <div class="chip-sigla${wrapClass}">${escapeHtml(chipLabel)}${badgeHTML}</div>
         </div>
     `;
 }
