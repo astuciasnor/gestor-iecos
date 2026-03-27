@@ -1,6 +1,13 @@
 import { store } from './store.js';
-import { initUI, exportSigaaMetadataJSON, showToastWarning } from './ui.js?v=20260323ag';
+import { initUI, exportSigaaMetadataJSON, showToastWarning } from './ui.js??v=20260326b';
 import { filterExportableAllocations, resolveActiveAcademicPeriod } from './academic_rules.mjs';
+import {
+  buildPlanScopedPayload,
+  buildTurmaParaCursoMap,
+  collectAllocationsByCurso,
+  buildTodosCursosExportSnapshot,
+  buildPublicExportPayload
+} from './serialization.js';
 
 const EXPORT_CURSOS_UNIDADE = ['EP', 'CB', 'CN'];
 
@@ -83,23 +90,7 @@ function buildBackupFilename(scope = 'TODOS') {
   return `backup_iecos_${scope}_${planPart}${stamp}.json`;
 }
 
-function buildPlanScopedPayload(scope, allocations, extra = {}) {
-  const activePlan = store.getActivePlanMeta();
-  return {
-    version: 2,
-    scope,
-    exportedAt: new Date().toISOString(),
-    plan: activePlan?.key ? activePlan : null,
-    settings: {
-      termStart: store.settings.termStart,
-      termEnd: store.settings.termEnd,
-      periodo: store.settings.periodo,
-      turnoOferta: store.settings.turnoOferta || ''
-    },
-    allocations,
-    ...extra
-  };
-}
+
 
 function getOfficialPlanCandidates() {
   return (Array.isArray(store.rawData?.periodos_letivos) ? store.rawData.periodos_letivos : []).map((item) => ({
@@ -110,106 +101,9 @@ function getOfficialPlanCandidates() {
   }));
 }
 
-function resolvePublicPlanMeta() {
-  const activePlan = store.getActivePlanMeta();
-  const preferredMeta = activePlan?.key
-    ? activePlan
-    : {
-      periodo: store.settings.periodo,
-      termStart: store.settings.termStart,
-      termEnd: store.settings.termEnd
-    };
 
-  const resolved = resolveActiveAcademicPeriod({
-    plans: getOfficialPlanCandidates(),
-    preferredMeta,
-    fallbackMeta: preferredMeta
-  });
 
-  const hasExactDateMatch = (
-    resolved?.termStart &&
-    resolved.termStart === preferredMeta.termStart &&
-    resolved?.termEnd === preferredMeta.termEnd
-  );
 
-  return hasExactDateMatch ? resolved : preferredMeta;
-}
-
-function buildPublicExportPayload() {
-  const publicPlan = resolvePublicPlanMeta();
-  const exportableAllocations = filterExportableAllocations(store.allocations);
-  const docentes = [...new Set(
-    exportableAllocations.flatMap((alloc) => {
-      const names = [];
-      if (typeof alloc?.docente === 'string') names.push(alloc.docente.trim());
-      else if (alloc?.docente?.nome) names.push(String(alloc.docente.nome).trim());
-      if (Array.isArray(alloc?.docentes)) {
-        alloc.docentes.forEach((entry) => {
-          const nome = entry?.nome || entry;
-          if (nome) names.push(String(nome).trim());
-        });
-      }
-      return names.filter((name) => name && name.toUpperCase() !== 'A DEFINIR');
-    })
-  )].sort((a, b) => a.localeCompare(b, 'pt-BR', { sensitivity: 'base' }));
-  const turmas = [...new Set(
-    exportableAllocations
-      .map((alloc) => String(alloc?.turmaId || '').trim())
-      .filter(Boolean)
-  )].sort((a, b) => a.localeCompare(b, 'pt-BR', { sensitivity: 'base' }));
-
-  return {
-    version: 2,
-    exportedAt: new Date().toISOString(),
-    plan: publicPlan?.key ? publicPlan : null,
-    meta: {
-      publicationTarget: 'web_public',
-      periodoLetivo: publicPlan?.periodo || store.settings.periodo || '',
-      docenteCount: docentes.length,
-      turmaCount: turmas.length,
-      docentes,
-      turmas
-    },
-    allocations: exportableAllocations,
-    settings: {
-      termStart: publicPlan?.termStart || store.settings.termStart,
-      termEnd: publicPlan?.termEnd || store.settings.termEnd,
-      periodo: publicPlan?.periodo || store.settings.periodo,
-      turnoOferta: store.settings.turnoOferta || ''
-    }
-  };
-}
-
-function buildTurmaParaCursoMap() {
-  const turmaParaCurso = {};
-  (store.rawData?.turmas || []).forEach((t) => {
-    if (t.turma_id && t.sigla) turmaParaCurso[String(t.turma_id)] = String(t.sigla);
-  });
-  return turmaParaCurso;
-}
-
-function collectAllocationsByCurso(sigla, turmaParaCurso) {
-  const cursoSigla = String(sigla || '').trim().toUpperCase();
-  return store.allocations.filter((a) => turmaParaCurso[String(a.turmaId)] === cursoSigla);
-}
-
-function buildTodosCursosExportSnapshot() {
-  const turmaParaCurso = buildTurmaParaCursoMap();
-  const porCurso = {};
-  const allocations = [];
-
-  EXPORT_CURSOS_UNIDADE.forEach((sigla) => {
-    const list = collectAllocationsByCurso(sigla, turmaParaCurso);
-    porCurso[sigla] = list.length;
-    allocations.push(...list);
-  });
-
-  return {
-    porCurso,
-    total: allocations.length,
-    allocations
-  };
-}
 
 function downloadJSONFile(payload, fileName) {
   const dataStr =
@@ -225,10 +119,10 @@ function downloadJSONFile(payload, fileName) {
 }
 
 function exportarJSONTodosCursos(snapshot = null) {
-  const effective = snapshot || buildTodosCursosExportSnapshot();
+  const effective = snapshot || buildTodosCursosExportSnapshot(store.allocations, store.rawData?.turmas, EXPORT_CURSOS_UNIDADE);
   const fileName = buildBackupFilename('TODOS');
   downloadJSONFile(
-    buildPlanScopedPayload('TODOS', effective.allocations, {
+    buildPlanScopedPayload('TODOS', effective.allocations, store.getActivePlanMeta(), store.settings, {
       porCurso: effective.porCurso,
       total: effective.total
     }),
@@ -243,13 +137,12 @@ function exportarJSONCurso(sigla) {
     return;
   }
 
-  const turmaParaCurso = buildTurmaParaCursoMap();
-  const dadosExportar = collectAllocationsByCurso(cursoSigla, turmaParaCurso);
+  const turmaParaCurso = buildTurmaParaCursoMap(store.rawData?.turmas);
+  const dadosExportar = collectAllocationsByCurso(cursoSigla, turmaParaCurso, store.allocations);
   const fileName = buildBackupFilename(cursoSigla);
   downloadJSONFile(
-    buildPlanScopedPayload(cursoSigla, dadosExportar, {
-      curso: cursoSigla,
-      total: dadosExportar.length
+    buildPlanScopedPayload(cursoSigla, dadosExportar, store.getActivePlanMeta(), store.settings, {
+      turmaCount: Object.keys(turmaParaCurso).length
     }),
     fileName
   );
@@ -383,7 +276,13 @@ function exportarJSONCurso(sigla) {
   if (btnExportPublic) {
     btnExportPublic.onclick = () => {
       const fileName = 'alocacoes_publicas.json';
-      const exportData = buildPublicExportPayload();
+      const exportableAllocations = filterExportableAllocations(store.allocations);
+      const exportData = buildPublicExportPayload(
+        exportableAllocations,
+        store.getActivePlanMeta(),
+        store.settings,
+        getOfficialPlanCandidates()
+      );
 
       const issues = validatePublicExportData(exportData);
       if (issues.length) {

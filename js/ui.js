@@ -1,17 +1,16 @@
 import { store } from './store.js';
+import { getTurnoLetter, mapSlotToTurno } from './turns.js';
 import { normalizePeriodo as normalizePeriodoLetivoCode } from './plan_storage.js';
 import { getCalendarEvents } from './calendar.js';
 import { countBusinessDays, countWeekdaysInPeriod, addBusinessDays, isDateOverlap, calculateEndDateByWeekday } from './utils.js';
-import {
-    getUnifiedExecutionSnapshot,
-    getAllocationExecutionRangeMap,
-    getUnifiedSignatureRangeMap,
-    buildUnifiedExecutionSignature
-} from './execution_engine.js';
+import { getUnifiedExecutionSnapshot } from './execution_engine.js';
+import { detectTeacherConflicts } from './conflicts.js';
+import { buildSigaaMetadataPayload, validateSigaaMetadataPayload } from './sigaa_metadata.js';
+import { parseBackupDataFile, extractImportPlanMeta } from './serialization.js';
 import {
     buildSigaaExportPayload,
     computeRemainingFractionalHours,
-    detectTeacherConflicts,
+
     filterExportableAllocations,
     generateAllocationOccurrences,
     getTeacherActiveShifts,
@@ -77,28 +76,28 @@ const weeklyViewState = {
     followActiveFaixa: true
 };
 
-function getAllocationTipo(alloc) {
-    return String(alloc?.tipo || '').trim().toLowerCase();
+function getAllocationModo(alloc) {
+    return String(alloc?.modo || '').trim().toLowerCase();
 }
 
 function isFaixaAllocation(alloc) {
-    return getAllocationTipo(alloc) === 'intensiva';
+    return getAllocationModo(alloc) === 'faixas';
 }
 
 function isPriorityRegularAllocation(alloc) {
-    return getAllocationTipo(alloc) === 'regular_prioritaria';
+    return false; // Deprecated
 }
 
 function isRegularAllocation(alloc) {
-    return getAllocationTipo(alloc) === 'regular';
+    return getAllocationModo(alloc) === 'semanal';
 }
 
 function isScheduledRegularAllocation(alloc) {
-    return isRegularAllocation(alloc) || isPriorityRegularAllocation(alloc);
+    return isRegularAllocation(alloc);
 }
 
 function isPendingAllocation(alloc) {
-    return getAllocationTipo(alloc) === 'pendente';
+    return getAllocationModo(alloc) === 'pendente';
 }
 
 // ==========================================
@@ -974,7 +973,7 @@ function buildWeeklyFaixaExecutionPreview(options = {}) {
             turmaId: store.selectedTurma,
             disciplina,
             subGrupo: subGrupo || null,
-            tipo: 'intensiva',
+            modo: 'faixas',
             ch: targetCH,
             dataInicio: faixas[0].inicio,
             dataFim: faixas[0].inicio,
@@ -3249,7 +3248,7 @@ function computeIntensiveExecution(intense, options = {}) {
 
             if (dow === 6 && intense.sabadoManha) {
                 const turmaTurno = store.rawData?.turmas?.find(t => String(t.turma_id) === String(intense.turmaId))?.turno || 'Tarde';
-                daySlots = [...new Set(daySlots.map(s => store.mapSlotToTurno(s, turmaTurno, 'Manha')))];
+                daySlots = [...new Set(daySlots.map(s => mapSlotToTurno(s, turmaTurno, 'Manha', store.rawData?.horarios_por_turno)))];
             }
 
             const freeSlots = filterFreeSlotsForDate(dStr, daySlots, dow);
@@ -3717,7 +3716,7 @@ function applyFinalAdjustmentFaixaSuggestion(suggestion, options = {}) {
     if (!suggestion?.faixas || suggestion.faixas.length === 0) return;
 
     const previewAlloc = {
-        tipo: 'intensiva',
+        modo: 'faixas',
         faixas: suggestion.faixas
     };
 
@@ -4608,7 +4607,7 @@ function handleImportBloco() {
             turmaId: store.selectedTurma,
             disciplina: c.componente,
             docente: 'A definir',
-            tipo: 'pendente',
+            modo: 'pendente',
             cor: c.cor || '#bdc3c7',
             dataInicio: store.settings.termStart,
             dataFim: store.settings.termEnd,
@@ -4907,25 +4906,6 @@ export function initUI() {
     updateWeeklyFaixasTitleDisciplina();
 }
 
-function extractImportPlanMeta(payload) {
-    if (!payload || typeof payload !== 'object' || Array.isArray(payload)) return null;
-
-    const rawPlan = payload.plan && typeof payload.plan === 'object'
-        ? payload.plan
-        : (payload.settings && typeof payload.settings === 'object'
-            ? {
-                termStart: payload.settings.termStart,
-                termEnd: payload.settings.termEnd,
-                periodo: payload.settings.periodo || payload.periodoLetivo || store.settings.periodo
-            }
-            : null);
-
-    if (!rawPlan) return null;
-
-    const normalized = resolveOfficialPeriodoLetivoPlan(rawPlan);
-    return normalized?.key ? normalized : null;
-}
-
 function handleFileSelect(event) {
     if (typeof event.stopImmediatePropagation === 'function') {
         event.stopImmediatePropagation();
@@ -4934,32 +4914,25 @@ function handleFileSelect(event) {
     if (!file) return;
     const reader = new FileReader();
     reader.onload = function (e) {
-        try {
-            const parsed = JSON.parse(e.target.result);
-            const normalized = Array.isArray(parsed)
-                ? parsed
-                : (Array.isArray(parsed?.allocations) ? parsed.allocations : null);
-
-            if (!normalized) {
-                showToastWarning('Arquivo inválido. O formato não é suportado.', 'error', 3000);
-                tempImportData = null;
-                tempImportPlanMeta = null;
-                event.target.value = '';
-                return;
-            }
-
-            tempImportData = normalized;
-            tempImportPlanMeta = extractImportPlanMeta(parsed);
-            if (tempImportPlanMeta?.key) {
-                showToastWarning(`Arquivo reconhecido para o plano ${getPlanDisplayLabel(tempImportPlanMeta)}.`, 'success', 2400);
-            }
-            const modal = document.getElementById('import-modal');
-            if (modal) modal.style.display = 'flex';
-        } catch (err) {
+        const result = parseBackupDataFile(e.target.result);
+        
+        if (!result.success) {
+            showToastWarning(result.error || 'Arquivo inválido. O formato não é suportado.', 'error', 3000);
             tempImportData = null;
             tempImportPlanMeta = null;
-            showToastWarning('Erro ao ler arquivo JSON. Verifique o formato.', 'error', 3000);
+            event.target.value = '';
+            return;
         }
+
+        tempImportData = result.allocations;
+        tempImportPlanMeta = extractImportPlanMeta(result.parsed, resolveOfficialPeriodoLetivoPlan);
+        
+        if (tempImportPlanMeta?.key) {
+            showToastWarning(`Arquivo reconhecido para o plano ${getPlanDisplayLabel(tempImportPlanMeta)}.`, 'success', 2400);
+        }
+        
+        const modal = document.getElementById('import-modal');
+        if (modal) modal.style.display = 'flex';
     };
     reader.readAsText(file);
 }
@@ -5207,7 +5180,7 @@ function onTurmaChange() {
         store.setTurnoOferta(resolveTurnoOfertaValue(turmaNativa.turno));
     } else if (primeiraOfertaPorFaixa) {
         const slotRef = String(primeiraOfertaPorFaixa.horariosOcupados[0] || '');
-        const letter = store.getTurnoLetter(slotRef);
+        const letter = getTurnoLetter(slotRef);
         if (letter === 'M') store.setTurnoOferta(resolveTurnoOfertaValue('Manhã'));
         else if (letter === 'T') store.setTurnoOferta(resolveTurnoOfertaValue('Tarde'));
         else store.setTurnoOferta(resolveTurnoOfertaValue('Noite'));
@@ -5360,7 +5333,7 @@ function renderWeeklyGrid() {
                 const eTurno = e.turno ||
                     store.rawData?.turmas?.find(t => String(t.turma_id) === String(e.turmaId))?.turno || 'Tarde';
                 if (e.sabadoManha && dayNumber === 6 && eTurno !== 'Manha' && eTurno !== 'Manhã') {
-                    eventHorario = store.mapSlotToTurno(e.horario, 'Manha', eTurno);
+                    eventHorario = mapSlotToTurno(e.horario, 'Manha', eTurno, store.rawData?.horarios_por_turno);
                 }
                 const eventKey = slotKey(eventHorario);
 
@@ -5368,7 +5341,7 @@ function renderWeeklyGrid() {
                     ? e.horariosOcupados.some((h) => {
                         let hObj = h;
                         if (e.sabadoManha && dayNumber === 6 && eTurno !== 'Manha' && eTurno !== 'Manhã') {
-                            hObj = store.mapSlotToTurno(h, 'Manha', eTurno);
+                            hObj = mapSlotToTurno(h, 'Manha', eTurno, store.rawData?.horarios_por_turno);
                         }
                         return slotKey(hObj) === key;
                     })
@@ -5376,7 +5349,7 @@ function renderWeeklyGrid() {
 
                 if (eventKey !== key && !listKey) return;
 
-                const dedupe = `${e.id ?? ''}|${e.disciplina ?? ''}|${e.tipo ?? ''}|${eventKey || key}|${e.subGrupo ?? ''}`;
+                const dedupe = `${e.id ?? ''}|${e.disciplina ?? ''}|${e.modo ?? ''}|${eventKey || key}|${e.subGrupo ?? ''}`;
                 if (seen.has(dedupe)) return;
                 seen.add(dedupe);
                 out.push(e);
@@ -5394,7 +5367,7 @@ function renderWeeklyGrid() {
                 if (!a.horariosUltimoDia.some((h) => slotKey(h) === key)) return;
             }
 
-            const dedupe = `${a.id ?? ''}|${a.disciplina ?? ''}|${a.tipo ?? ''}|${key}|${a.subGrupo ?? ''}`;
+            const dedupe = `${a.id ?? ''}|${a.disciplina ?? ''}|${a.modo ?? ''}|${key}|${a.subGrupo ?? ''}`;
             if (seen.has(dedupe)) return;
             seen.add(dedupe);
             out.push(a);
@@ -5619,7 +5592,7 @@ function renderSlotContent(cell, allocs, dayOfWeek = 0) {
         const allocTurno = alloc.turno ||
             store.rawData?.turmas?.find(t => String(t.turma_id) === String(alloc.turmaId))?.turno || 'Tarde';
         const turnoLetter = alloc.sabadoManha && dayOfWeek === 6
-            ? (store.getTurnoLetter(alloc.horario) || 'M')
+            ? (getTurnoLetter(alloc.horario) || 'M')
             : '';
         const allocTurnoNorm = String(allocTurno).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
         const isNative = allocTurnoNorm.includes('manh') && turnoLetter === 'M';
@@ -5746,7 +5719,7 @@ function handleAddManual() {
     if (window.isDrawingFaixa) persistActiveDrawingSelection();
 
     const disciplina = (inputConfig.disciplina?.value ?? '').replace(/\s*\(\s*\d+\s*h\s*\)\s*$/i, '');
-    const tipo = 'intensiva';
+    const tipo = 'faixas';
     const inicioFaixa1 = document.getElementById('inp-data-inicio-f1')?.value ?? '';
     const inicioLegacy = inputConfig.inicio?.value ?? '';
     const inicio = inicioFaixa1 || inicioLegacy;
@@ -5757,7 +5730,7 @@ function handleAddManual() {
         return;
     }
 
-    if (String(tipo || '').trim().toLowerCase() === 'intensiva') {
+    if (String(tipo || '').trim().toLowerCase() === 'faixas') {
         if (!inicio) {
             showToastWarning('Defina a data de início.', 'warning', 2200);
             return;
@@ -5805,7 +5778,7 @@ function handleAddManual() {
                 turmaId: store.selectedTurma,
                 disciplina,
                 subGrupo: subGrupo || null,
-                tipo: 'intensiva',
+                modo: 'faixas',
                 ch: effectiveCH,
                 dataInicio: faixasConfig[0].inicio,
                 dataFim: faixasConfig[0].inicio,
@@ -5949,7 +5922,7 @@ function handleAddManual() {
             disciplina: disciplina,
             docente: docData.docente,
             docentes: docData.docentesList,
-            tipo: 'intensiva',
+            modo: 'faixas',
             ch: effectiveCH,
             dataInicio: inicioCalculado,
             dataFim: dataFimCalculada,
@@ -6055,7 +6028,7 @@ function renderOfertasList() {
     const buildRegularRows = () => {
         const grouped = new Map();
         regular.forEach((a) => {
-            const key = [a.disciplina, a.docente, a.tipo, a.subGrupo || ''].join('|');
+            const key = [a.disciplina, a.docente, a.modo, a.subGrupo || ''].join('|');
             if (!grouped.has(key)) grouped.set(key, []);
             grouped.get(key).push(a);
         });
@@ -6365,178 +6338,28 @@ function getActiveExportPlanContext() {
     return { plan, termStart, termEnd, periodoLetivo };
 }
 
-function buildSigaaHorarioResumo(faixas = []) {
-    return (Array.isArray(faixas) ? faixas : [])
-        .map((faixa) => `${faixa.sigaa} (${formatDateBR(faixa.inicio)} - ${formatDateBR(faixa.fim)})`)
-        .join(', ');
-}
-
-function buildSigaaOfertaBase(allocation, info = {}) {
-    return {
-        componente: allocation?.disciplina || '',
-        codigo: info.codigo || '',
-        tipo: allocation?.tipo || '',
-        cargaHoraria: allocation?.ch || info.ch || 0,
-        docente: allocation?.docente || '',
-        subGrupo: allocation?.subGrupo || ''
-    };
-}
-
-function buildSigaaRegularOferta(allocs, unifiedExec, planContext) {
-    const base = allocs[0];
-    const info = getDisciplinaInfo(base.disciplina);
-    const activeDates = new Set();
-
-    allocs.forEach((alloc) => {
-        const datesSet = unifiedExec.datesByAlloc.get(alloc.id);
-        if (datesSet && datesSet.size > 0) datesSet.forEach((dateStr) => activeDates.add(dateStr));
-    });
-
-    let faixas = [];
-    if (activeDates.size > 0) {
-        const orderedDates = [...activeDates].sort();
-        faixas = [{
-            inicio: orderedDates[0],
-            fim: orderedDates[orderedDates.length - 1],
-            sigaa: getSigaaCode(allocs)
-        }];
-    } else {
-        const byInterval = new Map();
-        allocs.forEach((alloc) => {
-            const start = alloc.dataInicio || planContext.termStart;
-            const end = alloc.dataFim || planContext.termEnd;
-            const intervalKey = `${start}|${end}`;
-            if (!byInterval.has(intervalKey)) byInterval.set(intervalKey, []);
-            byInterval.get(intervalKey).push(alloc);
-        });
-
-        byInterval.forEach((slice, intervalKey) => {
-            const [start, end] = intervalKey.split('|');
-            faixas.push({
-                inicio: start,
-                fim: end,
-                sigaa: getSigaaCode(slice)
-            });
-        });
-    }
-
-    return {
-        ...buildSigaaOfertaBase(base, info),
-        horarioSigaa: buildSigaaHorarioResumo(faixas),
-        faixas
-    };
-}
-
-function buildSigaaFaixaOferta(allocation, planContext) {
-    const info = getDisciplinaInfo(allocation.disciplina);
-    const normalizedFaixas = alignFaixasToExecutionEnd(getNormalizedIntensiveFaixas(allocation), allocation.dataFim || planContext.termEnd);
-    const fallbackDias = Array.isArray(allocation.diasMarcados) && allocation.diasMarcados.length > 0
-        ? allocation.diasMarcados
-        : (allocation.usaSabado ? [1, 2, 3, 4, 5, 6] : [1, 2, 3, 4, 5]);
-    const fallbackSlots = Array.isArray(allocation.horariosOcupados) ? allocation.horariosOcupados : [];
-
-    const faixas = (normalizedFaixas.length > 0 ? normalizedFaixas : [{
-        inicio: allocation.dataInicio || planContext.termStart,
-        fim: allocation.dataFim || planContext.termEnd,
-        dias: fallbackDias,
-        slots: fallbackSlots
-    }]).map((faixa) => {
-        const scoped = {
-            ...allocation,
-            ch: 0,
-            dataInicio: faixa.inicio || allocation.dataInicio || planContext.termStart,
-            dataFim: faixa.fim || allocation.dataFim || planContext.termEnd,
-            diasMarcados: faixa.dias || fallbackDias,
-            horariosOcupados: faixa.slots || fallbackSlots,
-            usaSabado: (faixa.dias || fallbackDias).includes(6),
-            faixas: [faixa]
-        };
-
-        return {
-            inicio: scoped.dataInicio,
-            fim: scoped.dataFim,
-            sigaa: getSigaaCode([scoped])
-        };
-    });
-
-    return {
-        ...buildSigaaOfertaBase(allocation, info),
-        horarioSigaa: buildSigaaHorarioResumo(faixas),
-        faixas
-    };
-}
-
-function buildSigaaPendingOferta(allocation) {
-    const info = getDisciplinaInfo(allocation.disciplina);
-    return {
-        ...buildSigaaOfertaBase(allocation, info),
-        horarioSigaa: '',
-        faixas: []
-    };
-}
-
-function validateSigaaMetadataPayload(payload) {
-    const issues = [];
-    if (!payload || typeof payload !== 'object') return ['Payload invalido para exportacao SIGAA.'];
-    if (!payload.turmaId) issues.push('Turma ausente no payload SIGAA.');
-    if (!payload.periodoLetivo) issues.push('Periodo letivo ausente no payload SIGAA.');
-    if (!payload.termStart || !payload.termEnd) issues.push('Intervalo do plano letivo ausente no payload SIGAA.');
-    if (payload.termStart && payload.termEnd && payload.termStart > payload.termEnd) {
-        issues.push('Intervalo do plano letivo invalido no payload SIGAA.');
-    }
-    if (!Array.isArray(payload.ofertas)) issues.push('Ofertas ausentes no payload SIGAA.');
-    else if (!payload.ofertas.length) issues.push('Nenhuma oferta encontrada para exportar ao SIGAA.');
-    return issues;
-}
-
-function buildSigaaMetadataPayload() {
-    if (!store.selectedTurma) return null;
-
-    const turmaId = String(store.selectedTurma);
-    const planContext = getActiveExportPlanContext();
-    const list = filterExportableAllocations(
-        store.allocations.filter((alloc) => String(alloc.turmaId) === turmaId)
-    );
-    const scheduledRegulars = list.filter((alloc) => isScheduledRegularAllocation(alloc));
-    const faixaAllocations = list.filter((alloc) => isFaixaAllocation(alloc));
-    const unifiedExec = getUnifiedExecutionSnapshot(turmaId, planContext.termStart, planContext.termEnd);
-    const regularGroups = new Map();
-
-    scheduledRegulars.forEach((alloc) => {
-        const key = [alloc.disciplina, alloc.docente, alloc.tipo, alloc.subGrupo || ''].join('|');
-        if (!regularGroups.has(key)) regularGroups.set(key, []);
-        regularGroups.get(key).push(alloc);
-    });
-
-    const ofertas = [];
-    regularGroups.forEach((allocs) => {
-        ofertas.push(buildSigaaRegularOferta(allocs, unifiedExec, planContext));
-    });
-    faixaAllocations.forEach((alloc) => {
-        ofertas.push(buildSigaaFaixaOferta(alloc, planContext));
-    });
-
-    let turmaLabel = turmaId;
-    if (store.rawData?.turmas) {
-        const turma = store.rawData.turmas.find((entry) => String(entry.turma_id) === turmaId);
-        if (turma?.turma_label) turmaLabel = turma.turma_label;
-    }
-
-    return buildSigaaExportPayload({
-        generatedAt: new Date().toISOString(),
-        plan: planContext.plan,
-        cursoSigla: store.selectedCurso || '',
-        turmaId,
-        turmaLabel,
-        periodoLetivo: planContext.periodoLetivo,
-        termStart: planContext.termStart,
-        termEnd: planContext.termEnd,
-        ofertas
-    });
-}
-
 export function exportSigaaMetadataJSON() {
-    const payload = buildSigaaMetadataPayload();
+    const planContext = getActiveExportPlanContext();
+    const unifiedExec = getUnifiedExecutionSnapshot(store.selectedTurma, planContext.termStart, planContext.termEnd);
+    
+    const dataContext = {
+        store,
+        planContext,
+        turmaId: String(store.selectedTurma || ''),
+        unifiedExec
+    };
+    
+    const contextMap = {
+        getDisciplinaInfo,
+        getSigaaCode,
+        getNormalizedIntensiveFaixas,
+        alignFaixasToExecutionEnd,
+        isScheduledRegularAllocation,
+        isFaixaAllocation,
+        formatDateBR
+    };
+
+    const payload = buildSigaaMetadataPayload(dataContext, contextMap);
     if (!payload) {
         showToastWarning('Selecione uma turma antes de exportar os metadados SIGAA.', 'warning', 2600);
         return;
@@ -7027,7 +6850,7 @@ function collectGanttDayItems({
                 alloc.turmaId,
                 alloc.disciplina,
                 snapshot.turno,
-                alloc.tipo,
+                alloc.modo,
                 snapshot.dataInicio,
                 snapshot.dataFim
             ].join('|');
@@ -7910,7 +7733,7 @@ function detectGlobalTeacherConflicts() {
             const a = allocs[i];
             const b = allocs[j];
 
-            if (String(a.turmaId) === String(b.turmaId) && a.disciplina === b.disciplina && a.tipo === b.tipo) continue;
+            if (String(a.turmaId) === String(b.turmaId) && a.disciplina === b.disciplina && a.modo === b.modo) continue;
 
             const teachersA = getInvolvedTeachers(a);
             const teachersB = getInvolvedTeachers(b);
@@ -8026,7 +7849,7 @@ function detectGlobalTeacherConflictsStable() {
             String(event?.id || ''),
             String(event?.turmaId || ''),
             String(event?.disciplina || ''),
-            String(event?.tipo || ''),
+            String(event?.modo || ''),
             String(event?.subGrupo || ''),
             slotKey
         ].join('|');
@@ -8066,7 +7889,7 @@ function detectGlobalTeacherConflictsStable() {
                         if (
                             String(eventA?.turmaId) === String(eventB?.turmaId) &&
                             String(eventA?.disciplina || '') === String(eventB?.disciplina || '') &&
-                            String(eventA?.tipo || '') === String(eventB?.tipo || '')
+                            String(eventA?.modo || '') === String(eventB?.modo || '')
                         ) {
                             continue;
                         }
@@ -8326,9 +8149,9 @@ function generateCalendarGrid(container, turmaId, docenteName, start, end, title
                             let eHorariosOcupados = e.horariosOcupados;
 
                             if (e.sabadoManha && dayOfWeek === 6 && eTurno !== 'Manha' && eTurno !== 'Manhã') {
-                                if (eHorario) eHorario = store.mapSlotToTurno(eHorario, 'Manha', eTurno);
-                                if (Array.isArray(eHorariosUltimoDia)) eHorariosUltimoDia = eHorariosUltimoDia.map(h => store.mapSlotToTurno(h, 'Manha', eTurno));
-                                if (Array.isArray(eHorariosOcupados)) eHorariosOcupados = eHorariosOcupados.map(h => store.mapSlotToTurno(h, 'Manha', eTurno));
+                                if (eHorario) eHorario = mapSlotToTurno(eHorario, 'Manha', eTurno, store.rawData?.horarios_por_turno);
+                                if (Array.isArray(eHorariosUltimoDia)) eHorariosUltimoDia = eHorariosUltimoDia.map(h => mapSlotToTurno(h, 'Manha', eTurno, store.rawData?.horarios_por_turno));
+                                if (Array.isArray(eHorariosOcupados)) eHorariosOcupados = eHorariosOcupados.map(h => mapSlotToTurno(h, 'Manha', eTurno, store.rawData?.horarios_por_turno));
                             }
 
                             if (eHorario && normalizeTime(eHorario) === slotTimeNorm) return true;
@@ -8342,7 +8165,7 @@ function generateCalendarGrid(container, turmaId, docenteName, start, end, title
                             if (eHorariosOcupados && eHorariosOcupados.some(h => normalizeTime(h) === slotTimeNorm)) return true;
                             return false;
                         });
-                        const dedupeEventKey = (e) => `${e.turmaId || ''}|${e.disciplina || ''}|${e.tipo || ''}|${e.subGrupo || ''}|${slotTimeNorm}`;
+                        const dedupeEventKey = (e) => `${e.turmaId || ''}|${e.disciplina || ''}|${e.modo || ''}|${e.subGrupo || ''}|${slotTimeNorm}`;
                         const seenSlotEvents = new Set();
                         const uniqueEventsInSlot = eventsInSlot.filter((e) => {
                             const key = dedupeEventKey(e);
@@ -8380,7 +8203,7 @@ function generateCalendarGrid(container, turmaId, docenteName, start, end, title
                                     const docenteLabel = (docenteFirst && !/^a$/i.test(docenteFirst)) ? docenteFirst.toUpperCase() : '';
                                      const rawNative = (event.turno || store.rawData?.turmas?.find(t => String(t.turma_id) === String(event.turmaId))?.turno || '').toLowerCase();
                                      const nativeLetter = rawNative.includes('manh') ? 'M' : (rawNative.includes('tard') || rawNative.includes('vesp') ? 'T' : (rawNative.includes('noit') ? 'N' : ''));
-                                     const currentLetter = store.getTurnoLetter(event.horario);
+                                     const currentLetter = getTurnoLetter(event.horario);
                                      const isExceptional = (nativeLetter && currentLetter && nativeLetter !== currentLetter) || (event.sabadoManha && dayOfWeek === 6);
                                      const tLetter = isExceptional ? currentLetter : '';
 

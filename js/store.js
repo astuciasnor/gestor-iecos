@@ -11,17 +11,37 @@ import {
 } from './plan_storage.js';
 import { generateUUID } from './utils.js';
 
-function normalizeTurnoKey(value) {
-  const normalized = String(value || '')
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase()
-    .replace(/[^a-z0-9]/g, '');
+import { normalizeTurnoKey } from './turns.js';
 
-  if (normalized.includes('manh')) return 'manha';
-  if (normalized.includes('tard')) return 'tarde';
-  if (normalized.includes('noit')) return 'noite';
-  return normalized;
+function normalizeTurnoKeyLocal() { } // Dummy to prevent line mismatch but we just remove the real one
+export function normalizeLoadedAllocation(alloc) {
+  if (!alloc || typeof alloc !== 'object') return alloc;
+
+  if (alloc.tipo !== undefined) {
+    const tipo = String(alloc.tipo).trim().toLowerCase();
+    
+    if (tipo === 'intensiva') {
+      alloc.modo = 'faixas';
+    } else if (tipo === 'regular' || tipo === 'regular_prioritaria') {
+      alloc.modo = 'semanal';
+    } else if (tipo === 'pendente') {
+      alloc.modo = 'pendente';
+    } else {
+      alloc.modo = 'semanal';
+    }
+    
+    delete alloc.tipo;
+  }
+  
+  if (!alloc.modo) {
+    if (Array.isArray(alloc.faixas) && alloc.faixas.length > 0) {
+      alloc.modo = 'faixas';
+    } else {
+      alloc.modo = 'semanal';
+    }
+  }
+  
+  return alloc;
 }
 
 class Store {
@@ -145,14 +165,14 @@ class Store {
 
   readLegacyAllocations() {
     const saved = readJsonStorage(localStorage, LEGACY_ALLOCATIONS_KEY, []);
-    return Array.isArray(saved) ? saved : [];
+    return (Array.isArray(saved) ? saved : []).map(normalizeLoadedAllocation);
   }
 
   readPlanAllocations(meta = this.activePlanMeta) {
     const storageKey = this.getPlanStorageKey(meta);
     if (!storageKey) return [];
     const saved = readJsonStorage(localStorage, storageKey, []);
-    return Array.isArray(saved) ? saved : [];
+    return (Array.isArray(saved) ? saved : []).map(normalizeLoadedAllocation);
   }
 
   maybeMigrateLegacyAllocations(meta = this.activePlanMeta) {
@@ -316,49 +336,6 @@ class Store {
     return c ? (c.cor || '#e0e0e0') : '#e0e0e0';
   }
 
-  // ===== Letra do Turno por Horário =====
-  getTurnoLetter(slotString) {
-    const match = String(slotString || '').match(/(\d{1,2}):(\d{2})/);
-    if (!match) return '';
-    const h = parseInt(match[1], 10);
-    const m = parseInt(match[2], 10);
-    const totalMinutes = h * 60 + m;
-
-    if (totalMinutes < (12 * 60 + 30)) return 'M';
-    if (totalMinutes < (18 * 60 + 30)) return 'T';
-    return 'N';
-  }
-
-  // ===== Conversao Sábado Manhã =====
-  mapSlotToTurno(slotString, fromTurno, toTurno) {
-    if (!this.rawData?.horarios_por_turno) return slotString;
-    const hp = this.rawData.horarios_por_turno;
-    
-    let fromArr = hp[fromTurno];
-    if (!fromArr) {
-      const normalizedFrom = normalizeTurnoKey(fromTurno);
-      const keyFrom = Object.keys(hp).find((k) => normalizeTurnoKey(k) === normalizedFrom);
-      fromArr = keyFrom ? hp[keyFrom] : null;
-    }
-    if (!fromArr) {
-      fromArr = Object.values(hp).find(arr => arr.includes(slotString));
-    }
-    if (!fromArr) return slotString;
-
-    let toArr = hp[toTurno];
-    if (!toArr) {
-      const normalizedTo = normalizeTurnoKey(toTurno);
-      const keyTo = Object.keys(hp).find((k) => normalizeTurnoKey(k) === normalizedTo);
-      toArr = keyTo ? hp[keyTo] : null;
-    }
-    if (!toArr) return slotString;
-
-    const idx = fromArr.findIndex(s => s === slotString || (s.includes('INTERVALO') && slotString.includes('INTERVALO')));
-    if (idx !== -1 && idx < toArr.length) {
-      return toArr[idx];
-    }
-    return slotString;
-  }
 }
 
 export const store = new Store();

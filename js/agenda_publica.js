@@ -1,4 +1,5 @@
-import { store } from './store.js';
+import { store, normalizeLoadedAllocation } from './store.js';
+import { getTurnoLetter } from './turns.js';
 import { getCalendarEvents } from './calendar.js';
 import { resolveActiveAcademicPeriod } from './academic_rules.mjs';
 
@@ -137,10 +138,10 @@ async function loadPublicData() {
 
         const dadosPublicos = await response.json();
         if (Array.isArray(dadosPublicos)) {
-            store.allocations = dadosPublicos;
+            store.allocations = dadosPublicos.map(normalizeLoadedAllocation);
             state.publicCatalog = null;
         } else {
-            store.allocations = Array.isArray(dadosPublicos.allocations) ? dadosPublicos.allocations : [];
+            store.allocations = Array.isArray(dadosPublicos.allocations) ? dadosPublicos.allocations.map(normalizeLoadedAllocation) : [];
             state.publicCatalog = dadosPublicos.meta && typeof dadosPublicos.meta === 'object'
                 ? dadosPublicos.meta
                 : null;
@@ -986,7 +987,7 @@ function buildMiniChipMarkup(event, dateObj, mode, dailyEvents = []) {
     const turma = getTurmaLabel(event?.turmaId, event?.subGrupo);
     const local = getEventLocationLabel(event);
     const cor = String(event?.cor || '#355344').trim();
-    const tipo = String(event?.tipo || 'regular').trim();
+    const modo = String(event?.modo || 'semanal').trim();
     const data = formatDateFull(dateObj);
     const chipLabel = mode === 'docente'
         ? buildTeacherChipLabel(event)
@@ -996,7 +997,7 @@ function buildMiniChipMarkup(event, dateObj, mode, dailyEvents = []) {
         const turmaInfo = state.turmaById.get(String(event?.turmaId || '').trim());
         const rawNative = (turmaInfo?.turno || '').toLowerCase();
         const nativeLetter = rawNative.includes('manh') ? 'M' : (rawNative.includes('tard') || rawNative.includes('vesp') ? 'T' : (rawNative.includes('noit') ? 'N' : ''));
-        const currentLetter = store.getTurnoLetter(horario);
+        const currentLetter = getTurnoLetter(horario);
 
         const isExceptional = (nativeLetter && currentLetter && nativeLetter !== currentLetter) || (event?.sabadoManha && dateObj.getDay() === 6);
         const tLetter = isExceptional ? currentLetter : '';
@@ -1018,7 +1019,7 @@ function buildMiniChipMarkup(event, dateObj, mode, dailyEvents = []) {
             data-intervalo="${escapeHtmlAttr(intervalo)}"
             data-data="${escapeHtmlAttr(data)}"
             data-local="${escapeHtmlAttr(local)}"
-            data-tipo="${escapeHtmlAttr(tipo)}"
+            data-modo="${escapeHtmlAttr(modo)}"
             data-cor="${escapeHtmlAttr(cor)}"
             data-excepcional="${isExceptional ? 'true' : 'false'}"
         >
@@ -1110,7 +1111,7 @@ function buildEventGroupKey(event) {
         normalizeText(event?.turmaId || ''),
         normalizeText(event?.subGrupo || ''),
         normalizeText(getEventTeacherLabel(event)),
-        normalizeText(event?.tipo || ''),
+        normalizeText(event?.modo || ''),
         normalizeText(getEventLocationLabel(event))
     ].join('|');
 }
@@ -1325,7 +1326,7 @@ function abrirBottomSheet(chip) {
         els.sheetTitle.textContent = chip.getAttribute('data-titulo') || 'Componente';
         els.sheetTitle.style.color = chip.getAttribute('data-cor') || '#173728';
     }
-    if (els.sheetTipo) els.sheetTipo.textContent = getAgendaTipoTexto(chip.getAttribute('data-tipo'));
+    if (els.sheetTipo) els.sheetTipo.textContent = getAgendaModoTexto(chip.getAttribute('data-modo'));
     if (els.sheetData) els.sheetData.textContent = chip.getAttribute('data-data') || '--';
     if (els.sheetHorario) els.sheetHorario.textContent = chip.getAttribute('data-horario') || '--';
     if (els.sheetDocente) els.sheetDocente.textContent = chip.getAttribute('data-docente') || '--';
@@ -1340,8 +1341,8 @@ function fecharBottomSheet() {
     els.bottomSheet?.classList.remove('active');
 }
 
-function getAgendaTipoTexto(tipo) {
-    const normalized = String(tipo || '').trim().toLowerCase();
+function getAgendaModoTexto(modo) {
+    const normalized = String(modo || '').trim().toLowerCase();
     if (normalized === 'intensiva') return 'Oferta por Faixas';
     return 'Oferta';
 }

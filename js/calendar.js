@@ -1,20 +1,20 @@
 import { store } from './store.js';
 import { getDaysArray, toLocalDateString } from './utils.js';
 
-function getAllocationTipo(alloc) {
-  return String(alloc?.tipo || '').trim().toLowerCase();
+function getAllocationModo(alloc) {
+  return String(alloc?.modo || '').trim().toLowerCase();
 }
 
 function usesFaixaSchedule(alloc) {
-  return getAllocationTipo(alloc) === 'intensiva';
+  return getAllocationModo(alloc) === 'faixas';
 }
 
 function isPreferredRegularAllocation(alloc) {
-  return getAllocationTipo(alloc) === 'regular_prioritaria';
+  return false;
 }
 
 function isStandardRegularAllocation(alloc) {
-  return getAllocationTipo(alloc) === 'regular';
+  return getAllocationModo(alloc) === 'semanal';
 }
 function getFaixaExecutionByDateMap(faixaAlloc) {
   const raw = faixaAlloc?.executionByDate;
@@ -127,7 +127,7 @@ function getCalendarConflictIdentity(event, slotKey) {
     String(event?.id || ''),
     String(event?.turmaId || ''),
     String(event?.disciplina || ''),
-    String(event?.tipo || ''),
+    String(event?.modo || ''),
     String(event?.subGrupo || ''),
     normalizeCalendarSlotKey(event?.horario || slotKey || '')
   ].join('|');

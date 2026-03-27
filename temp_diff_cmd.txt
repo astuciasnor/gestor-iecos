@@ -1,0 +1,730 @@
+diff --git a/agenda_publica.html b/agenda_publica.html
+index cf7666f..6bcd8a6 100644
+--- a/agenda_publica.html
++++ b/agenda_publica.html
+@@ -5,7 +5,7 @@
+     <meta charset="UTF-8">
+     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+     <title>Cardume | Agenda de Aulas IECOS</title>
+-    <link rel="stylesheet" href="css/style.css?v=2.5">
++    <link rel="stylesheet" href="css/style.css??v=20260326b.5">
+     <style>
+         :root {
+             --pub-bg: #eef3ef;
+@@ -1432,7 +1432,7 @@
+     <div id="slot-lens" class="slot-lens" hidden></div>
+     <div id="day-lens" class="day-lens" hidden></div>
+ 
+-    <script type="module" src="js/agenda_publica.js?v=20260323ah"></script>
++    <script type="module" src="js/agenda_publica.js??v=20260326b"></script>
+ </body>
+ 
+ </html>
+\ No newline at end of file
+diff --git a/index.html b/index.html
+index 4bf7d1d..4f38a51 100644
+--- a/index.html
++++ b/index.html
+@@ -5,7 +5,7 @@
+     <meta charset="UTF-8">
+     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+     <title>Cardume – Planejador Acadêmico | IECOS</title>
+-    <link rel="stylesheet" href="css/style.css?v=4.2">
++    <link rel="stylesheet" href="css/style.css??v=20260326b.2">
+ 
+     <style>
+         :root {
+@@ -1272,7 +1272,7 @@
+         </main>
+     </div>
+ 
+-    <script type="module" src="js/main.js?v=20260323u"></script>
++    <script type="module" src="js/main.js??v=20260326b"></script>
+ </body>
+ 
+ </html>
+diff --git a/js/academic_rules.mjs b/js/academic_rules.mjs
+index 7fe4dd8..4d58273 100644
+--- a/js/academic_rules.mjs
++++ b/js/academic_rules.mjs
+@@ -16,7 +16,7 @@ function normalizePlanMeta(meta = {}) {
+   return normalizeStoredPlanMeta(meta);
+ }
+ 
+-function sortUniqueIsoDates(dates = []) {
++export function sortUniqueIsoDates(dates = []) {
+   return [...new Set((Array.isArray(dates) ? dates : []).map((value) => String(value || '').trim()))]
+     .filter((value) => /^\d{4}-\d{2}-\d{2}$/.test(value))
+     .sort((a, b) => a.localeCompare(b));
+@@ -26,7 +26,7 @@ function normalizeSlotList(slots = []) {
+   return [...new Set((Array.isArray(slots) ? slots : []).filter(Boolean).map(String))];
+ }
+ 
+-function normalizeShiftKey(value = '') {
++export function normalizeShiftKey(value = '') {
+   const normalized = String(value || '')
+     .normalize('NFD')
+     .replace(/[\u0300-\u036f]/g, '')
+@@ -49,31 +49,6 @@ function buildShiftLabelMap(order = []) {
+   return labels;
+ }
+ 
+-function normalizeConflictSlotLabel(value = '') {
+-  return String(value || '')
+-    .trim()
+-    .replace(/\s+/g, ' ')
+-    .replace(/\s*[-–]\s*/g, ' - ');
+-}
+-
+-function addPairConflictEntry(targetMap, key, entry) {
+-  if (!targetMap.has(key)) {
+-    targetMap.set(key, {
+-      shift: entry.shift,
+-      slot: entry.slot,
+-      turmas: new Set(entry.turmas || []),
+-      componentes: new Set(entry.componentes || []),
+-      dates: []
+-    });
+-  }
+-
+-  const current = targetMap.get(key);
+-  current.shift = current.shift || entry.shift;
+-  current.slot = current.slot || entry.slot;
+-  (entry.turmas || []).forEach((turma) => current.turmas.add(turma));
+-  (entry.componentes || []).forEach((componente) => current.componentes.add(componente));
+-  if (entry.date) current.dates.push(entry.date);
+-}
+ 
+ export function addDaysISO(dateStr, days) {
+   const date = toMiddayDate(dateStr);
+@@ -315,96 +290,10 @@ export function getTeacherActiveShifts({
+     });
+ }
+ 
+-export function detectTeacherConflicts({
+-  eventsByDate = {},
+-  resolveShift = null,
+-  formatTurmaLabel = null
+-} = {}) {
+-  const aggregates = new Map();
+-
+-  Object.entries(eventsByDate || {}).forEach(([dateStr, events]) => {
+-    const slotMap = new Map();
+-
+-    (Array.isArray(events) ? events : []).forEach((event) => {
+-      const slot = normalizeConflictSlotLabel(event?.horario || '');
+-      if (!slot) return;
+-      if (!slotMap.has(slot)) slotMap.set(slot, []);
+-      slotMap.get(slot).push(event);
+-    });
+-
+-    slotMap.forEach((slotEvents, slot) => {
+-      if (!Array.isArray(slotEvents) || slotEvents.length < 2) return;
+-
+-      for (let i = 0; i < slotEvents.length; i++) {
+-        for (let j = i + 1; j < slotEvents.length; j++) {
+-          const eventA = slotEvents[i];
+-          const eventB = slotEvents[j];
+-          const turmaA = typeof formatTurmaLabel === 'function'
+-            ? formatTurmaLabel(eventA)
+-            : String(eventA?.turmaId || '').trim();
+-          const turmaB = typeof formatTurmaLabel === 'function'
+-            ? formatTurmaLabel(eventB)
+-            : String(eventB?.turmaId || '').trim();
+-          const componenteA = String(eventA?.disciplina || '').trim();
+-          const componenteB = String(eventB?.disciplina || '').trim();
+-          const eventKeyA = [turmaA, componenteA, String(eventA?.subGrupo || '').trim()].join('|');
+-          const eventKeyB = [turmaB, componenteB, String(eventB?.subGrupo || '').trim()].join('|');
+-
+-          if (!eventKeyA || !eventKeyB || eventKeyA === eventKeyB) continue;
+-
+-          const orderedTurmas = [turmaA, turmaB].filter(Boolean).sort((a, b) => a.localeCompare(b, 'pt-BR', { sensitivity: 'base' }));
+-          const orderedComponentes = [componenteA, componenteB].filter(Boolean).sort((a, b) => a.localeCompare(b, 'pt-BR', { sensitivity: 'base' }));
+-          const shift = typeof resolveShift === 'function'
+-            ? String(resolveShift(slot, eventA) || resolveShift(slot, eventB) || '').trim()
+-            : '';
+-          const aggregateKey = [
+-            orderedTurmas.join('||'),
+-            orderedComponentes.join('||'),
+-            normalizeShiftKey(shift),
+-            slot
+-          ].join('|||');
+-
+-          addPairConflictEntry(aggregates, aggregateKey, {
+-            date: dateStr,
+-            shift,
+-            slot,
+-            turmas: orderedTurmas,
+-            componentes: orderedComponentes
+-          });
+-        }
+-      }
+-    });
+-  });
+-
+-  return [...aggregates.values()]
+-    .map((entry) => {
+-      const orderedDates = sortUniqueIsoDates(entry.dates);
+-      const startDate = orderedDates[0] || '';
+-      const endDate = orderedDates[orderedDates.length - 1] || startDate;
+-      const turmas = [...entry.turmas].sort((a, b) => a.localeCompare(b, 'pt-BR', { sensitivity: 'base' }));
+-      const componentes = [...entry.componentes].sort((a, b) => a.localeCompare(b, 'pt-BR', { sensitivity: 'base' }));
+-
+-      return {
+-        startDate,
+-        endDate,
+-        shift: entry.shift || '',
+-        slot: entry.slot || '',
+-        turmas,
+-        componentes,
+-        description: `Choque no mesmo horario (${entry.slot || 'horario nao identificado'}).`
+-      };
+-    })
+-    .sort((a, b) => {
+-      if (a.startDate !== b.startDate) return a.startDate.localeCompare(b.startDate);
+-      if (a.shift !== b.shift) return a.shift.localeCompare(b.shift, 'pt-BR', { sensitivity: 'base' });
+-      if (a.slot !== b.slot) return a.slot.localeCompare(b.slot, 'pt-BR', { sensitivity: 'base' });
+-      return a.componentes.join(' | ').localeCompare(b.componentes.join(' | '), 'pt-BR', { sensitivity: 'base' });
+-    });
+-}
+ 
+ export function filterExportableAllocations(allocations = []) {
+   return (Array.isArray(allocations) ? allocations : []).filter((allocation) =>
+-    String(allocation?.tipo || '').trim().toLowerCase() !== 'pendente'
++    String(allocation?.modo || '').trim().toLowerCase() !== 'pendente'
+   );
+ }
+ 
+* Unmerged path js/agenda_discente.js
+diff --git a/js/agenda_publica.js b/js/agenda_publica.js
+index d40619f..ec07426 100644
+--- a/js/agenda_publica.js
++++ b/js/agenda_publica.js
+@@ -1,4 +1,5 @@
+-import { store } from './store.js';
++import { store, normalizeLoadedAllocation } from './store.js';
++import { getTurnoLetter } from './turns.js';
+ import { getCalendarEvents } from './calendar.js';
+ import { resolveActiveAcademicPeriod } from './academic_rules.mjs';
+ 
+@@ -137,10 +138,10 @@ async function loadPublicData() {
+ 
+         const dadosPublicos = await response.json();
+         if (Array.isArray(dadosPublicos)) {
+-            store.allocations = dadosPublicos;
++            store.allocations = dadosPublicos.map(normalizeLoadedAllocation);
+             state.publicCatalog = null;
+         } else {
+-            store.allocations = Array.isArray(dadosPublicos.allocations) ? dadosPublicos.allocations : [];
++            store.allocations = Array.isArray(dadosPublicos.allocations) ? dadosPublicos.allocations.map(normalizeLoadedAllocation) : [];
+             state.publicCatalog = dadosPublicos.meta && typeof dadosPublicos.meta === 'object'
+                 ? dadosPublicos.meta
+                 : null;
+@@ -986,7 +987,7 @@ function buildMiniChipMarkup(event, dateObj, mode, dailyEvents = []) {
+     const turma = getTurmaLabel(event?.turmaId, event?.subGrupo);
+     const local = getEventLocationLabel(event);
+     const cor = String(event?.cor || '#355344').trim();
+-    const tipo = String(event?.tipo || 'regular').trim();
++    const modo = String(event?.modo || 'semanal').trim();
+     const data = formatDateFull(dateObj);
+     const chipLabel = mode === 'docente'
+         ? buildTeacherChipLabel(event)
+@@ -996,7 +997,7 @@ function buildMiniChipMarkup(event, dateObj, mode, dailyEvents = []) {
+         const turmaInfo = state.turmaById.get(String(event?.turmaId || '').trim());
+         const rawNative = (turmaInfo?.turno || '').toLowerCase();
+         const nativeLetter = rawNative.includes('manh') ? 'M' : (rawNative.includes('tard') || rawNative.includes('vesp') ? 'T' : (rawNative.includes('noit') ? 'N' : ''));
+-        const currentLetter = store.getTurnoLetter(horario);
++        const currentLetter = getTurnoLetter(horario);
+ 
+         const isExceptional = (nativeLetter && currentLetter && nativeLetter !== currentLetter) || (event?.sabadoManha && dateObj.getDay() === 6);
+         const tLetter = isExceptional ? currentLetter : '';
+@@ -1018,7 +1019,7 @@ function buildMiniChipMarkup(event, dateObj, mode, dailyEvents = []) {
+             data-intervalo="${escapeHtmlAttr(intervalo)}"
+             data-data="${escapeHtmlAttr(data)}"
+             data-local="${escapeHtmlAttr(local)}"
+-            data-tipo="${escapeHtmlAttr(tipo)}"
++            data-modo="${escapeHtmlAttr(modo)}"
+             data-cor="${escapeHtmlAttr(cor)}"
+             data-excepcional="${isExceptional ? 'true' : 'false'}"
+         >
+@@ -1110,7 +1111,7 @@ function buildEventGroupKey(event) {
+         normalizeText(event?.turmaId || ''),
+         normalizeText(event?.subGrupo || ''),
+         normalizeText(getEventTeacherLabel(event)),
+-        normalizeText(event?.tipo || ''),
++        normalizeText(event?.modo || ''),
+         normalizeText(getEventLocationLabel(event))
+     ].join('|');
+ }
+@@ -1325,7 +1326,7 @@ function abrirBottomSheet(chip) {
+         els.sheetTitle.textContent = chip.getAttribute('data-titulo') || 'Componente';
+         els.sheetTitle.style.color = chip.getAttribute('data-cor') || '#173728';
+     }
+-    if (els.sheetTipo) els.sheetTipo.textContent = getAgendaTipoTexto(chip.getAttribute('data-tipo'));
++    if (els.sheetTipo) els.sheetTipo.textContent = getAgendaModoTexto(chip.getAttribute('data-modo'));
+     if (els.sheetData) els.sheetData.textContent = chip.getAttribute('data-data') || '--';
+     if (els.sheetHorario) els.sheetHorario.textContent = chip.getAttribute('data-horario') || '--';
+     if (els.sheetDocente) els.sheetDocente.textContent = chip.getAttribute('data-docente') || '--';
+@@ -1340,8 +1341,8 @@ function fecharBottomSheet() {
+     els.bottomSheet?.classList.remove('active');
+ }
+ 
+-function getAgendaTipoTexto(tipo) {
+-    const normalized = String(tipo || '').trim().toLowerCase();
++function getAgendaModoTexto(modo) {
++    const normalized = String(modo || '').trim().toLowerCase();
+     if (normalized === 'intensiva') return 'Oferta por Faixas';
+     return 'Oferta';
+ }
+diff --git a/js/calendar.js b/js/calendar.js
+index eb4d0c3..f286aae 100644
+--- a/js/calendar.js
++++ b/js/calendar.js
+@@ -1,20 +1,20 @@
+ import { store } from './store.js';
+ import { getDaysArray, toLocalDateString } from './utils.js';
+ 
+-function getAllocationTipo(alloc) {
+-  return String(alloc?.tipo || '').trim().toLowerCase();
++function getAllocationModo(alloc) {
++  return String(alloc?.modo || '').trim().toLowerCase();
+ }
+ 
+ function usesFaixaSchedule(alloc) {
+-  return getAllocationTipo(alloc) === 'intensiva';
++  return getAllocationModo(alloc) === 'faixas';
+ }
+ 
+ function isPreferredRegularAllocation(alloc) {
+-  return getAllocationTipo(alloc) === 'regular_prioritaria';
++  return false;
+ }
+ 
+ function isStandardRegularAllocation(alloc) {
+-  return getAllocationTipo(alloc) === 'regular';
++  return getAllocationModo(alloc) === 'semanal';
+ }
+ function getFaixaExecutionByDateMap(faixaAlloc) {
+   const raw = faixaAlloc?.executionByDate;
+@@ -127,7 +127,7 @@ function getCalendarConflictIdentity(event, slotKey) {
+     String(event?.id || ''),
+     String(event?.turmaId || ''),
+     String(event?.disciplina || ''),
+-    String(event?.tipo || ''),
++    String(event?.modo || ''),
+     String(event?.subGrupo || ''),
+     normalizeCalendarSlotKey(event?.horario || slotKey || '')
+   ].join('|');
+diff --git a/js/main.js b/js/main.js
+index 09a75a9..cd97368 100644
+--- a/js/main.js
++++ b/js/main.js
+@@ -1,5 +1,5 @@
+ import { store } from './store.js';
+-import { initUI, exportSigaaMetadataJSON, showToastWarning } from './ui.js?v=20260323ag';
++import { initUI, exportSigaaMetadataJSON, showToastWarning } from './ui.js??v=20260326b';
+ import { filterExportableAllocations, resolveActiveAcademicPeriod } from './academic_rules.mjs';
+ 
+ const EXPORT_CURSOS_UNIDADE = ['EP', 'CB', 'CN'];
+diff --git a/js/store.js b/js/store.js
+index 82259a4..2f92379 100644
+--- a/js/store.js
++++ b/js/store.js
+@@ -11,17 +11,37 @@ import {
+ } from './plan_storage.js';
+ import { generateUUID } from './utils.js';
+ 
+-function normalizeTurnoKey(value) {
+-  const normalized = String(value || '')
+-    .normalize('NFD')
+-    .replace(/[\u0300-\u036f]/g, '')
+-    .toLowerCase()
+-    .replace(/[^a-z0-9]/g, '');
+-
+-  if (normalized.includes('manh')) return 'manha';
+-  if (normalized.includes('tard')) return 'tarde';
+-  if (normalized.includes('noit')) return 'noite';
+-  return normalized;
++import { normalizeTurnoKey } from './turns.js';
++
++function normalizeTurnoKeyLocal() { } // Dummy to prevent line mismatch but we just remove the real one
++export function normalizeLoadedAllocation(alloc) {
++  if (!alloc || typeof alloc !== 'object') return alloc;
++
++  if (alloc.tipo !== undefined) {
++    const tipo = String(alloc.tipo).trim().toLowerCase();
++    
++    if (tipo === 'intensiva') {
++      alloc.modo = 'faixas';
++    } else if (tipo === 'regular' || tipo === 'regular_prioritaria') {
++      alloc.modo = 'semanal';
++    } else if (tipo === 'pendente') {
++      alloc.modo = 'pendente';
++    } else {
++      alloc.modo = 'semanal';
++    }
++    
++    delete alloc.tipo;
++  }
++  
++  if (!alloc.modo) {
++    if (Array.isArray(alloc.faixas) && alloc.faixas.length > 0) {
++      alloc.modo = 'faixas';
++    } else {
++      alloc.modo = 'semanal';
++    }
++  }
++  
++  return alloc;
+ }
+ 
+ class Store {
+@@ -145,14 +165,14 @@ class Store {
+ 
+   readLegacyAllocations() {
+     const saved = readJsonStorage(localStorage, LEGACY_ALLOCATIONS_KEY, []);
+-    return Array.isArray(saved) ? saved : [];
++    return (Array.isArray(saved) ? saved : []).map(normalizeLoadedAllocation);
+   }
+ 
+   readPlanAllocations(meta = this.activePlanMeta) {
+     const storageKey = this.getPlanStorageKey(meta);
+     if (!storageKey) return [];
+     const saved = readJsonStorage(localStorage, storageKey, []);
+-    return Array.isArray(saved) ? saved : [];
++    return (Array.isArray(saved) ? saved : []).map(normalizeLoadedAllocation);
+   }
+ 
+   maybeMigrateLegacyAllocations(meta = this.activePlanMeta) {
+@@ -316,49 +336,6 @@ class Store {
+     return c ? (c.cor || '#e0e0e0') : '#e0e0e0';
+   }
+ 
+-  // ===== Letra do Turno por Horário =====
+-  getTurnoLetter(slotString) {
+-    const match = String(slotString || '').match(/(\d{1,2}):(\d{2})/);
+-    if (!match) return '';
+-    const h = parseInt(match[1], 10);
+-    const m = parseInt(match[2], 10);
+-    const totalMinutes = h * 60 + m;
+-
+-    if (totalMinutes < (12 * 60 + 30)) return 'M';
+-    if (totalMinutes < (18 * 60 + 30)) return 'T';
+-    return 'N';
+-  }
+-
+-  // ===== Conversao Sábado Manhã =====
+-  mapSlotToTurno(slotString, fromTurno, toTurno) {
+-    if (!this.rawData?.horarios_por_turno) return slotString;
+-    const hp = this.rawData.horarios_por_turno;
+-    
+-    let fromArr = hp[fromTurno];
+-    if (!fromArr) {
+-      const normalizedFrom = normalizeTurnoKey(fromTurno);
+-      const keyFrom = Object.keys(hp).find((k) => normalizeTurnoKey(k) === normalizedFrom);
+-      fromArr = keyFrom ? hp[keyFrom] : null;
+-    }
+-    if (!fromArr) {
+-      fromArr = Object.values(hp).find(arr => arr.includes(slotString));
+-    }
+-    if (!fromArr) return slotString;
+-
+-    let toArr = hp[toTurno];
+-    if (!toArr) {
+-      const normalizedTo = normalizeTurnoKey(toTurno);
+-      const keyTo = Object.keys(hp).find((k) => normalizeTurnoKey(k) === normalizedTo);
+-      toArr = keyTo ? hp[keyTo] : null;
+-    }
+-    if (!toArr) return slotString;
+-
+-    const idx = fromArr.findIndex(s => s === slotString || (s.includes('INTERVALO') && slotString.includes('INTERVALO')));
+-    if (idx !== -1 && idx < toArr.length) {
+-      return toArr[idx];
+-    }
+-    return slotString;
+-  }
+ }
+ 
+ export const store = new Store();
+diff --git a/js/ui.js b/js/ui.js
+index 51565a8..00e7297 100644
+--- a/js/ui.js
++++ b/js/ui.js
+@@ -1,17 +1,16 @@
+ import { store } from './store.js';
++import { getTurnoLetter, mapSlotToTurno } from './turns.js';
+ import { normalizePeriodo as normalizePeriodoLetivoCode } from './plan_storage.js';
+ import { getCalendarEvents } from './calendar.js';
+ import { countBusinessDays, countWeekdaysInPeriod, addBusinessDays, isDateOverlap, calculateEndDateByWeekday } from './utils.js';
+ import {
+-    getUnifiedExecutionSnapshot,
+-    getAllocationExecutionRangeMap,
+-    getUnifiedSignatureRangeMap,
+-    buildUnifiedExecutionSignature
++    getUnifiedExecutionSnapshot
+ } from './execution_engine.js';
++import { detectTeacherConflicts } from './conflicts.js';
+ import {
+     buildSigaaExportPayload,
+     computeRemainingFractionalHours,
+-    detectTeacherConflicts,
++
+     filterExportableAllocations,
+     generateAllocationOccurrences,
+     getTeacherActiveShifts,
+@@ -77,28 +76,28 @@ const weeklyViewState = {
+     followActiveFaixa: true
+ };
+ 
+-function getAllocationTipo(alloc) {
+-    return String(alloc?.tipo || '').trim().toLowerCase();
++function getAllocationModo(alloc) {
++    return String(alloc?.modo || '').trim().toLowerCase();
+ }
+ 
+ function isFaixaAllocation(alloc) {
+-    return getAllocationTipo(alloc) === 'intensiva';
++    return getAllocationModo(alloc) === 'faixas';
+ }
+ 
+ function isPriorityRegularAllocation(alloc) {
+-    return getAllocationTipo(alloc) === 'regular_prioritaria';
++    return false; // Deprecated
+ }
+ 
+ function isRegularAllocation(alloc) {
+-    return getAllocationTipo(alloc) === 'regular';
++    return getAllocationModo(alloc) === 'semanal';
+ }
+ 
+ function isScheduledRegularAllocation(alloc) {
+-    return isRegularAllocation(alloc) || isPriorityRegularAllocation(alloc);
++    return isRegularAllocation(alloc);
+ }
+ 
+ function isPendingAllocation(alloc) {
+-    return getAllocationTipo(alloc) === 'pendente';
++    return getAllocationModo(alloc) === 'pendente';
+ }
+ 
+ // ==========================================
+@@ -974,7 +973,7 @@ function buildWeeklyFaixaExecutionPreview(options = {}) {
+             turmaId: store.selectedTurma,
+             disciplina,
+             subGrupo: subGrupo || null,
+-            tipo: 'intensiva',
++            modo: 'faixas',
+             ch: targetCH,
+             dataInicio: faixas[0].inicio,
+             dataFim: faixas[0].inicio,
+@@ -3249,7 +3248,7 @@ function computeIntensiveExecution(intense, options = {}) {
+ 
+             if (dow === 6 && intense.sabadoManha) {
+                 const turmaTurno = store.rawData?.turmas?.find(t => String(t.turma_id) === String(intense.turmaId))?.turno || 'Tarde';
+-                daySlots = [...new Set(daySlots.map(s => store.mapSlotToTurno(s, turmaTurno, 'Manha')))];
++                daySlots = [...new Set(daySlots.map(s => mapSlotToTurno(s, turmaTurno, 'Manha', store.rawData?.horarios_por_turno)))];
+             }
+ 
+             const freeSlots = filterFreeSlotsForDate(dStr, daySlots, dow);
+@@ -3717,7 +3716,7 @@ function applyFinalAdjustmentFaixaSuggestion(suggestion, options = {}) {
+     if (!suggestion?.faixas || suggestion.faixas.length === 0) return;
+ 
+     const previewAlloc = {
+-        tipo: 'intensiva',
++        modo: 'faixas',
+         faixas: suggestion.faixas
+     };
+ 
+@@ -4608,7 +4607,7 @@ function handleImportBloco() {
+             turmaId: store.selectedTurma,
+             disciplina: c.componente,
+             docente: 'A definir',
+-            tipo: 'pendente',
++            modo: 'pendente',
+             cor: c.cor || '#bdc3c7',
+             dataInicio: store.settings.termStart,
+             dataFim: store.settings.termEnd,
+@@ -5207,7 +5206,7 @@ function onTurmaChange() {
+         store.setTurnoOferta(resolveTurnoOfertaValue(turmaNativa.turno));
+     } else if (primeiraOfertaPorFaixa) {
+         const slotRef = String(primeiraOfertaPorFaixa.horariosOcupados[0] || '');
+-        const letter = store.getTurnoLetter(slotRef);
++        const letter = getTurnoLetter(slotRef);
+         if (letter === 'M') store.setTurnoOferta(resolveTurnoOfertaValue('Manhã'));
+         else if (letter === 'T') store.setTurnoOferta(resolveTurnoOfertaValue('Tarde'));
+         else store.setTurnoOferta(resolveTurnoOfertaValue('Noite'));
+@@ -5360,7 +5359,7 @@ function renderWeeklyGrid() {
+                 const eTurno = e.turno ||
+                     store.rawData?.turmas?.find(t => String(t.turma_id) === String(e.turmaId))?.turno || 'Tarde';
+                 if (e.sabadoManha && dayNumber === 6 && eTurno !== 'Manha' && eTurno !== 'Manhã') {
+-                    eventHorario = store.mapSlotToTurno(e.horario, 'Manha', eTurno);
++                    eventHorario = mapSlotToTurno(e.horario, 'Manha', eTurno, store.rawData?.horarios_por_turno);
+                 }
+                 const eventKey = slotKey(eventHorario);
+ 
+@@ -5368,7 +5367,7 @@ function renderWeeklyGrid() {
+                     ? e.horariosOcupados.some((h) => {
+                         let hObj = h;
+                         if (e.sabadoManha && dayNumber === 6 && eTurno !== 'Manha' && eTurno !== 'Manhã') {
+-                            hObj = store.mapSlotToTurno(h, 'Manha', eTurno);
++                            hObj = mapSlotToTurno(h, 'Manha', eTurno, store.rawData?.horarios_por_turno);
+                         }
+                         return slotKey(hObj) === key;
+                     })
+@@ -5376,7 +5375,7 @@ function renderWeeklyGrid() {
+ 
+                 if (eventKey !== key && !listKey) return;
+ 
+-                const dedupe = `${e.id ?? ''}|${e.disciplina ?? ''}|${e.tipo ?? ''}|${eventKey || key}|${e.subGrupo ?? ''}`;
++                const dedupe = `${e.id ?? ''}|${e.disciplina ?? ''}|${e.modo ?? ''}|${eventKey || key}|${e.subGrupo ?? ''}`;
+                 if (seen.has(dedupe)) return;
+                 seen.add(dedupe);
+                 out.push(e);
+@@ -5394,7 +5393,7 @@ function renderWeeklyGrid() {
+                 if (!a.horariosUltimoDia.some((h) => slotKey(h) === key)) return;
+             }
+ 
+-            const dedupe = `${a.id ?? ''}|${a.disciplina ?? ''}|${a.tipo ?? ''}|${key}|${a.subGrupo ?? ''}`;
++            const dedupe = `${a.id ?? ''}|${a.disciplina ?? ''}|${a.modo ?? ''}|${key}|${a.subGrupo ?? ''}`;
+             if (seen.has(dedupe)) return;
+             seen.add(dedupe);
+             out.push(a);
+@@ -5619,7 +5618,7 @@ function renderSlotContent(cell, allocs, dayOfWeek = 0) {
+         const allocTurno = alloc.turno ||
+             store.rawData?.turmas?.find(t => String(t.turma_id) === String(alloc.turmaId))?.turno || 'Tarde';
+         const turnoLetter = alloc.sabadoManha && dayOfWeek === 6
+-            ? (store.getTurnoLetter(alloc.horario) || 'M')
++            ? (getTurnoLetter(alloc.horario) || 'M')
+             : '';
+         const allocTurnoNorm = String(allocTurno).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+         const isNative = allocTurnoNorm.includes('manh') && turnoLetter === 'M';
+@@ -5746,7 +5745,7 @@ function handleAddManual() {
+     if (window.isDrawingFaixa) persistActiveDrawingSelection();
+ 
+     const disciplina = (inputConfig.disciplina?.value ?? '').replace(/\s*\(\s*\d+\s*h\s*\)\s*$/i, '');
+-    const tipo = 'intensiva';
++    const tipo = 'faixas';
+     const inicioFaixa1 = document.getElementById('inp-data-inicio-f1')?.value ?? '';
+     const inicioLegacy = inputConfig.inicio?.value ?? '';
+     const inicio = inicioFaixa1 || inicioLegacy;
+@@ -5757,7 +5756,7 @@ function handleAddManual() {
+         return;
+     }
+ 
+-    if (String(tipo || '').trim().toLowerCase() === 'intensiva') {
++    if (String(tipo || '').trim().toLowerCase() === 'faixas') {
+         if (!inicio) {
+             showToastWarning('Defina a data de início.', 'warning', 2200);
+             return;
+@@ -5805,7 +5804,7 @@ function handleAddManual() {
+                 turmaId: store.selectedTurma,
+                 disciplina,
+                 subGrupo: subGrupo || null,
+-                tipo: 'intensiva',
++                modo: 'faixas',
+                 ch: effectiveCH,
+                 dataInicio: faixasConfig[0].inicio,
+                 dataFim: faixasConfig[0].inicio,
+@@ -5949,7 +5948,7 @@ function handleAddManual() {
+             disciplina: disciplina,
+             docente: docData.docente,
+             docentes: docData.docentesList,
+-            tipo: 'intensiva',
++            modo: 'faixas',
+             ch: effectiveCH,
+             dataInicio: inicioCalculado,
+             dataFim: dataFimCalculada,
+@@ -6055,7 +6054,7 @@ function renderOfertasList() {
+     const buildRegularRows = () => {
+         const grouped = new Map();
+         regular.forEach((a) => {
+-            const key = [a.disciplina, a.docente, a.tipo, a.subGrupo || ''].join('|');
++            const key = [a.disciplina, a.docente, a.modo, a.subGrupo || ''].join('|');
+             if (!grouped.has(key)) grouped.set(key, []);
+             grouped.get(key).push(a);
+         });
+@@ -6375,7 +6374,7 @@ function buildSigaaOfertaBase(allocation, info = {}) {
+     return {
+         componente: allocation?.disciplina || '',
+         codigo: info.codigo || '',
+-        tipo: allocation?.tipo || '',
++        modo: allocation?.modo || '',
+         cargaHoraria: allocation?.ch || info.ch || 0,
+         docente: allocation?.docente || '',
+         subGrupo: allocation?.subGrupo || ''
+@@ -6503,7 +6502,7 @@ function buildSigaaMetadataPayload() {
+     const regularGroups = new Map();
+ 
+     scheduledRegulars.forEach((alloc) => {
+-        const key = [alloc.disciplina, alloc.docente, alloc.tipo, alloc.subGrupo || ''].join('|');
++        const key = [alloc.disciplina, alloc.docente, alloc.modo, alloc.subGrupo || ''].join('|');
+         if (!regularGroups.has(key)) regularGroups.set(key, []);
+         regularGroups.get(key).push(alloc);
+     });
+@@ -7027,7 +7026,7 @@ function collectGanttDayItems({
+                 alloc.turmaId,
+                 alloc.disciplina,
+                 snapshot.turno,
+-                alloc.tipo,
++                alloc.modo,
+                 snapshot.dataInicio,
+                 snapshot.dataFim
+             ].join('|');
+@@ -7910,7 +7909,7 @@ function detectGlobalTeacherConflicts() {
+             const a = allocs[i];
+             const b = allocs[j];
+ 
+-            if (String(a.turmaId) === String(b.turmaId) && a.disciplina === b.disciplina && a.tipo === b.tipo) continue;
++            if (String(a.turmaId) === String(b.turmaId) && a.disciplina === b.disciplina && a.modo === b.modo) continue;
+ 
+             const teachersA = getInvolvedTeachers(a);
+             const teachersB = getInvolvedTeachers(b);
+@@ -8026,7 +8025,7 @@ function detectGlobalTeacherConflictsStable() {
+             String(event?.id || ''),
+             String(event?.turmaId || ''),
+             String(event?.disciplina || ''),
+-            String(event?.tipo || ''),
++            String(event?.modo || ''),
+             String(event?.subGrupo || ''),
+             slotKey
+         ].join('|');
+@@ -8066,7 +8065,7 @@ function detectGlobalTeacherConflictsStable() {
+                         if (
+                             String(eventA?.turmaId) === String(eventB?.turmaId) &&
+                             String(eventA?.disciplina || '') === String(eventB?.disciplina || '') &&
+-                            String(eventA?.tipo || '') === String(eventB?.tipo || '')
++                            String(eventA?.modo || '') === String(eventB?.modo || '')
+                         ) {
+                             continue;
+                         }
+@@ -8326,9 +8325,9 @@ function generateCalendarGrid(container, turmaId, docenteName, start, end, title
+                             let eHorariosOcupados = e.horariosOcupados;
+ 
+                             if (e.sabadoManha && dayOfWeek === 6 && eTurno !== 'Manha' && eTurno !== 'Manhã') {
+-                                if (eHorario) eHorario = store.mapSlotToTurno(eHorario, 'Manha', eTurno);
+-                                if (Array.isArray(eHorariosUltimoDia)) eHorariosUltimoDia = eHorariosUltimoDia.map(h => store.mapSlotToTurno(h, 'Manha', eTurno));
+-                                if (Array.isArray(eHorariosOcupados)) eHorariosOcupados = eHorariosOcupados.map(h => store.mapSlotToTurno(h, 'Manha', eTurno));
++                                if (eHorario) eHorario = mapSlotToTurno(eHorario, 'Manha', eTurno, store.rawData?.horarios_por_turno);
++                                if (Array.isArray(eHorariosUltimoDia)) eHorariosUltimoDia = eHorariosUltimoDia.map(h => mapSlotToTurno(h, 'Manha', eTurno, store.rawData?.horarios_por_turno));
++                                if (Array.isArray(eHorariosOcupados)) eHorariosOcupados = eHorariosOcupados.map(h => mapSlotToTurno(h, 'Manha', eTurno, store.rawData?.horarios_por_turno));
+                             }
+ 
+                             if (eHorario && normalizeTime(eHorario) === slotTimeNorm) return true;
+@@ -8342,7 +8341,7 @@ function generateCalendarGrid(container, turmaId, docenteName, start, end, title
+                             if (eHorariosOcupados && eHorariosOcupados.some(h => normalizeTime(h) === slotTimeNorm)) return true;
+                             return false;
+                         });
+-                        const dedupeEventKey = (e) => `${e.turmaId || ''}|${e.disciplina || ''}|${e.tipo || ''}|${e.subGrupo || ''}|${slotTimeNorm}`;
++                        const dedupeEventKey = (e) => `${e.turmaId || ''}|${e.disciplina || ''}|${e.modo || ''}|${e.subGrupo || ''}|${slotTimeNorm}`;
+                         const seenSlotEvents = new Set();
+                         const uniqueEventsInSlot = eventsInSlot.filter((e) => {
+                             const key = dedupeEventKey(e);
+@@ -8380,7 +8379,7 @@ function generateCalendarGrid(container, turmaId, docenteName, start, end, title
+                                     const docenteLabel = (docenteFirst && !/^a$/i.test(docenteFirst)) ? docenteFirst.toUpperCase() : '';
+                                      const rawNative = (event.turno || store.rawData?.turmas?.find(t => String(t.turma_id) === String(event.turmaId))?.turno || '').toLowerCase();
+                                      const nativeLetter = rawNative.includes('manh') ? 'M' : (rawNative.includes('tard') || rawNative.includes('vesp') ? 'T' : (rawNative.includes('noit') ? 'N' : ''));
+-                                     const currentLetter = store.getTurnoLetter(event.horario);
++                                     const currentLetter = getTurnoLetter(event.horario);
+                                      const isExceptional = (nativeLetter && currentLetter && nativeLetter !== currentLetter) || (event.sabadoManha && dayOfWeek === 6);
+                                      const tLetter = isExceptional ? currentLetter : '';
+ 
