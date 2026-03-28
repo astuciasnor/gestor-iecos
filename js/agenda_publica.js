@@ -1002,19 +1002,19 @@ function buildResultContextMarkup(mode, options = {}) {
     const badges = isDocente
         ? (docenteVariant === 'gantt'
             ? [
-                'Periodo letivo completo',
+                'Per\u00edodo letivo completo',
                 Number.isFinite(state.docente.totalHoras) ? `${state.docente.totalHoras} horas-aula` : '',
-                store.settings.periodo ? `Periodo ${store.settings.periodo}` : ''
+                store.settings.periodo ? `Per\u00edodo ${store.settings.periodo}` : ''
             ]
             : [
                 getMonthLabel(state.docente.mes),
                 Number.isFinite(state.docente.totalHoras) ? `${state.docente.totalHoras} horas-aula` : '',
-                store.settings.periodo ? `Periodo ${store.settings.periodo}` : ''
+                store.settings.periodo ? `Per\u00edodo ${store.settings.periodo}` : ''
             ])
         : [
             getMonthLabel(state.discente.mes),
             getTurmaLabel(state.discente.turmaId),
-            store.settings.periodo ? `Periodo ${store.settings.periodo}` : ''
+            store.settings.periodo ? `Per\u00edodo ${store.settings.periodo}` : ''
         ];
 
     return `
@@ -1574,7 +1574,7 @@ function buildSlotLensMarkup(chip) {
                     </div>
                 </div>
                 <div class="slot-lens-line">
-                    <strong>Horario:</strong>
+                    <strong>Hor\u00e1rio:</strong>
                     <span>${escapeHtml(intervalo)}</span>
                 </div>
                 <div class="slot-lens-line">

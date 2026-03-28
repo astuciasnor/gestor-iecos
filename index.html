@@ -577,18 +577,17 @@
                 <hr style="width: 100%; border: none; border-top: 3px solid #95a5a6; margin: 0;">
             </div>
 
-            <h3 class="periodo-letivo-title" style="margin-top: 20px; margin-bottom: 10px; text-transform: uppercase; font-size: 0.9em;">Período
-                Letivo</h3>
+            <h3 class="periodo-letivo-title" style="margin-top: 20px; margin-bottom: 10px; text-transform: uppercase; font-size: 0.9em;">Per&iacute;odo Letivo</h3>
 
             <div class="compact-row periodo-letivo-dates">
                 <div class="form-group">
-                    <label>Início</label>
-                    <input type="date" id="term-start" disabled title="Definido pelo perÃ­odo letivo oficial">
+                    <label>In&iacute;cio</label>
+                    <input type="date" id="term-start" disabled title="Definido pelo per&iacute;odo letivo oficial">
                 </div>
 
                 <div class="form-group">
                     <label>Fim</label>
-                    <input type="date" id="term-end" disabled title="Definido pelo perÃ­odo letivo oficial">
+                    <input type="date" id="term-end" disabled title="Definido pelo per&iacute;odo letivo oficial">
                 </div>
             </div>
 
@@ -603,7 +602,7 @@
 
             <div id="active-plan-status"
                 style="margin: 1px 0 1px; padding: 3px 10px; border-radius: 8px; background: rgba(44, 62, 80, 0.08); color: var(--primary); font-size: 0.78rem; line-height: 1.1;">
-                Plano ativo ainda nao definido.
+                Plano ativo ainda n&atilde;o definido.
             </div>
 
             <h3 style="margin-top: 0; margin-bottom: 5px; text-transform: uppercase; font-size: 0.9em;">IDENTIFICA&Ccedil;&Atilde;O DA TURMA</h3>
@@ -639,11 +638,11 @@
                 </label>
 
                 <button id="btn-import-bloco" type="button" class="btn-secondary offer-mode-action">
-                    📥 Importar Componentes do Bloco
+                    Importar Componentes do Bloco
                 </button>
 
                 <small class="offer-mode-help">
-                    * Após importar, edite cada componente pendente indo na aba Lista de Ofertas
+                    * Ap&oacute;s importar, edite cada componente pendente indo na aba Lista de Ofertas
                 </small>
             </div>
 
@@ -668,7 +667,7 @@
                         <div style="font-size:0.85em; display:flex; align-items:center; gap:5px;">
                             <input type="checkbox" id="chk-multi-docente" style="width:auto; transform: scale(1.2);">
                             <label for="chk-multi-docente"
-                                style="margin:0; font-weight:normal; cursor:pointer; color:#feffcc;">Múltiplos?</label>
+                                style="margin:0; font-weight:normal; cursor:pointer; color:#feffcc;">M&uacute;ltiplos?</label>
                         </div>
                     </div>
 
@@ -688,7 +687,7 @@
                     <datalist id="list-docentes"></datalist>
 
                     <div id="auto-week-position-row" class="week-autopos-row"
-                        title="Apenas navegação: reposiciona a grade ao trocar de componente.">
+                        title="Apenas navega&ccedil;&atilde;o: reposiciona a grade ao trocar de componente.">
                         <label for="chk-auto-week-position" class="week-autopos-toggle">
                             <input type="checkbox" id="chk-auto-week-position">
                             <span>Auto-posicionar semana</span>
@@ -697,7 +696,7 @@
                             <label class="week-autopos-mode" for="radio-auto-week-start">
                                 <input type="radio" id="radio-auto-week-start" name="auto-week-position-mode"
                                     value="inicio" checked>
-                                <span>InÃ­cio</span>
+                                <span>In&iacute;cio</span>
                             </label>
                             <label class="week-autopos-mode" for="radio-auto-week-end">
                                 <input type="radio" id="radio-auto-week-end" name="auto-week-position-mode"
@@ -706,11 +705,6 @@
                             </label>
                         </div>
                     </div>
-                    <div id="component-start-row" class="component-start-row"
-                        title="Ao preencher aqui, a data inicial da componente vai para a Faixa 1.">
-                        <label for="inp-data-inicio" class="component-start-label">Adicionar data inicial da componente</label>
-                        <input type="date" id="inp-data-inicio" class="component-start-input">
-                </div>
 
                 <!-- Campo de Sub-grupo: aparece automaticamente quando a mesma disciplina já existe na turma -->
                 <div id="container-sub-turma" class="form-group hidden">
@@ -783,8 +777,8 @@
                             <ul>
                                 <li>&#128218; Selecione o curso, a turma, a componente curricular e o(s) docente(s).</li>
                                 <li>&#129517; <strong>Observa&ccedil;&atilde;o importante:</strong> <strong>Faixa = regime de funcionamento em um intervalo de datas.</strong> Quando uma nova faixa come&ccedil;a, ela substitui o padr&atilde;o anterior.</li>
-                                <li>&#128197;&#65039; Defina o in&iacute;cio da 1&ordf; faixa clicando no primeiro slot do dia desejado na Grade Semanal.</li>
-                                <li>&#128433;&#65039; Desenhe o padr&atilde;o de hor&aacute;rios clicando ou arrastando sobre os slots dos dias.</li>
+                                <li>&#128197;&#65039; Defina o in&iacute;cio da 1&ordf; faixa pelo calend&aacute;rio ao lado. Essa data alimenta a componente e a Faixa 1.</li>
+                                <li>&#128433;&#65039; Use a Grade Semanal para desenhar apenas o padr&atilde;o de hor&aacute;rios, clicando ou arrastando sobre os slots dos dias.</li>
                                 <li>&#128256; Se precisar redistribuir a carga hor&aacute;ria, clique no n&uacute;mero 2 ou 3 e depois no slot da data de in&iacute;cio do novo padr&atilde;o. Depois, desenhe explicitamente os slots dessa nova faixa.</li>
                                 <li>&#10024; Ao salvar, se o &uacute;ltimo dia ficar quebrado, o sistema prepara automaticamente a Faixa 2 cobrindo o pen&uacute;ltimo e o &uacute;ltimo dia real de aula para ajuste fino.</li>
                             </ul>
@@ -822,14 +816,14 @@
                                             <td>
                                                 <div class="faixa-date-compact">
                                                     <input type="date" id="inp-data-inicio-f1" class="inp-data-inicio faixa-date-native" aria-label="Inicio da faixa 1">
-                                                    <span class="faixa-date-display is-placeholder" data-date-display-for="inp-data-inicio-f1">dd/mm/aa</span>
+                                                    <span class="faixa-date-display is-placeholder" data-date-display-for="inp-data-inicio-f1">dd/mm/aaaa</span>
                                                     <button type="button" class="faixa-date-trigger" data-date-target="inp-data-inicio-f1" aria-label="Selecionar data de inicio da faixa 1" title="Selecionar data">&#128197;</button>
                                                 </div>
                                             </td>
                                             <td>
                                                 <div class="faixa-date-compact">
                                                     <input type="date" id="inp-data-fim-f1" class="inp-data-fim faixa-date-native" aria-label="Fim da faixa 1">
-                                                    <span class="faixa-date-display is-placeholder" data-date-display-for="inp-data-fim-f1">dd/mm/aa</span>
+                                                    <span class="faixa-date-display is-placeholder" data-date-display-for="inp-data-fim-f1">dd/mm/aaaa</span>
                                                     <button type="button" class="faixa-date-trigger" data-date-target="inp-data-fim-f1" aria-label="Selecionar data de fim da faixa 1" title="Selecionar data">&#128197;</button>
                                                 </div>
                                             </td>
@@ -844,14 +838,14 @@
                                             <td>
                                                 <div class="faixa-date-compact">
                                                     <input type="date" id="inp-data-inicio-f2" class="inp-data-inicio faixa-date-native" aria-label="Inicio da faixa 2">
-                                                    <span class="faixa-date-display is-placeholder" data-date-display-for="inp-data-inicio-f2">dd/mm/aa</span>
+                                                    <span class="faixa-date-display is-placeholder" data-date-display-for="inp-data-inicio-f2">dd/mm/aaaa</span>
                                                     <button type="button" class="faixa-date-trigger" data-date-target="inp-data-inicio-f2" aria-label="Selecionar data de inicio da faixa 2" title="Selecionar data">&#128197;</button>
                                                 </div>
                                             </td>
                                             <td>
                                                 <div class="faixa-date-compact">
                                                     <input type="date" id="inp-data-fim-f2" class="inp-data-fim faixa-date-native" aria-label="Fim da faixa 2">
-                                                    <span class="faixa-date-display is-placeholder" data-date-display-for="inp-data-fim-f2">dd/mm/aa</span>
+                                                    <span class="faixa-date-display is-placeholder" data-date-display-for="inp-data-fim-f2">dd/mm/aaaa</span>
                                                     <button type="button" class="faixa-date-trigger" data-date-target="inp-data-fim-f2" aria-label="Selecionar data de fim da faixa 2" title="Selecionar data">&#128197;</button>
                                                 </div>
                                             </td>
@@ -866,14 +860,14 @@
                                             <td>
                                                 <div class="faixa-date-compact">
                                                     <input type="date" id="inp-data-inicio-f3" class="inp-data-inicio faixa-date-native" aria-label="Inicio da faixa 3">
-                                                    <span class="faixa-date-display is-placeholder" data-date-display-for="inp-data-inicio-f3">dd/mm/aa</span>
+                                                    <span class="faixa-date-display is-placeholder" data-date-display-for="inp-data-inicio-f3">dd/mm/aaaa</span>
                                                     <button type="button" class="faixa-date-trigger" data-date-target="inp-data-inicio-f3" aria-label="Selecionar data de inicio da faixa 3" title="Selecionar data">&#128197;</button>
                                                 </div>
                                             </td>
                                             <td>
                                                 <div class="faixa-date-compact">
                                                     <input type="date" id="inp-data-fim-f3" class="inp-data-fim faixa-date-native" aria-label="Fim da faixa 3">
-                                                    <span class="faixa-date-display is-placeholder" data-date-display-for="inp-data-fim-f3">dd/mm/aa</span>
+                                                    <span class="faixa-date-display is-placeholder" data-date-display-for="inp-data-fim-f3">dd/mm/aaaa</span>
                                                     <button type="button" class="faixa-date-trigger" data-date-target="inp-data-fim-f3" aria-label="Selecionar data de fim da faixa 3" title="Selecionar data">&#128197;</button>
                                                 </div>
                                             </td>
@@ -903,7 +897,7 @@
                         </div>
 
                         <div id="weekly-week-nav" class="weekly-week-nav no-print">
-                            <div id="weekly-week-label" class="weekly-week-label">Semana nao definida</div>
+                            <div id="weekly-week-label" class="weekly-week-label">Semana n&atilde;o definida</div>
                             <div class="weekly-week-actions">
                                 <button id="btn-week-prev" type="button" class="btn-week-nav btn-week-shift"><span class="btn-label-two-line"><span>Semana</span><span>Anterior</span></span></button>
                                 <button id="btn-week-next" type="button" class="btn-week-nav btn-week-shift"><span class="btn-label-two-line"><span>Proxima</span><span>Semana</span></span></button>
@@ -1040,8 +1034,8 @@
                                     primeiro o <b>Período Letivo</b> (PL1 a PL4) e o <b>Turno</b>. Só depois, selecione o
                                     <b>Curso</b> e a <b>Turma</b> no menu lateral.
                                 </li>
-                                <li style="margin-bottom: 10px;"><strong>2. Periodo Letivo:</strong> Selecione o
-                                    <b>Periodo Letivo</b> oficial. O sistema preenche automaticamente as datas de
+                                <li style="margin-bottom: 10px;"><strong>2. Per&iacute;odo Letivo:</strong> Selecione o
+                                    <b>Per&iacute;odo Letivo</b> oficial. O sistema preenche automaticamente as datas de
                                     <b>Inicio</b> e <b>Fim</b> do calendario daquele plano.</li>
                                 <li style="margin-bottom: 10px;"><strong>3. Identidade Visual:</strong> Clique na
                                     <b>bolinha colorida</b> para definir a cor de fundo da disciplina.

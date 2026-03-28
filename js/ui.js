@@ -40,7 +40,6 @@ const inputConfig = {
     disciplina: document.getElementById('inp-disciplina'),
     cor: document.getElementById('inp-color'),
     docente: document.getElementById('inp-docente'),
-    inicio: document.getElementById('inp-data-inicio'),
     fim: document.getElementById('inp-data-fim')
 };
 
@@ -54,6 +53,7 @@ let faixasPatterns = {
 };
 let editingDisciplinaDraft = '';
 let lastDisciplinaInputNormalized = '';
+let componentStartSelectionMode = 'auto';
 window.isDrawingFaixa = null;
 let drawingViewMode = 'context';
 const drawingDragState = {
@@ -450,8 +450,8 @@ function setupCopyActionButtons() {
                 }
             } catch (err) {
                 console.error('Falha ao copiar texto', err);
-                if (feedback) feedback.textContent = 'Nao foi possivel copiar. Copie manualmente.';
-                showToastWarning('Nao foi possivel copiar o conteudo. Copie manualmente.', 'warning', 2600);
+                if (feedback) feedback.textContent = 'N\u00e3o foi poss\u00edvel copiar. Copie manualmente.';
+                showToastWarning('N\u00e3o foi poss\u00edvel copiar o conte\u00fado. Copie manualmente.', 'warning', 2600);
             }
         });
     });
@@ -945,7 +945,6 @@ function buildWeeklyFaixaExecutionPreview(options = {}) {
     const disciplina = getWeeklyFaixasTitleDisciplinaAtiva();
     const targetCH = getDisciplinaTargetCHForDrawing();
     const fallbackInicio = document.getElementById('inp-data-inicio-f1')?.value
-        || inputConfig.inicio?.value
         || getPreferredStartDateForCurrentTurma()
         || '';
 
@@ -1121,6 +1120,28 @@ function syncFaixaStartFromGridClick(faixaIndex, cellDate, currentPattern = [], 
     const iniEl = document.getElementById(`inp-data-inicio-f${idx}`);
     if (!iniEl) return false;
 
+    if (idx === 1) {
+        // Para a Faixa 1, o clique na grade escolhe slots, mas não deve empurrar
+        // o início oficial para depois do primeiro dia do período letivo.
+        const lockedStart = String(iniEl.value || getCanonicalFirstFaixaStartDate() || '').trim();
+        const resolvedStart = lockedStart || dateStr;
+        if (!resolvedStart) return false;
+        if ((iniEl.value || '').trim() === resolvedStart) return false;
+
+        iniEl.value = resolvedStart;
+        if (store.selectedTurma) store.setTurmaLastStart(store.selectedTurma, resolvedStart);
+
+        applyFaixaDateAutofill({ forceSingleBounds: true, preferredStart: resolvedStart });
+        setFaixaStatus(1, getFaixaSlotsAndDays(1).pattern.length);
+        setFaixaStatus(2, getFaixaSlotsAndDays(2).pattern.length);
+        setFaixaStatus(3, getFaixaSlotsAndDays(3).pattern.length);
+        refreshPendingFaixaStartPickUI();
+        updateWeeklyFaixaHoursDisplay();
+        updateWeeklyNavigatorLabel();
+        renderOfertasList();
+        return true;
+    }
+
     const persistedCount = normalizeFaixaPattern(faixasPatterns[idx]).length;
     const currentCount = normalizeFaixaPattern(currentPattern).length;
     const firstMarking = persistedCount === 0 && currentCount === 0;
@@ -1129,7 +1150,6 @@ function syncFaixaStartFromGridClick(faixaIndex, cellDate, currentPattern = [], 
     if ((iniEl.value || '').trim() === dateStr) return false;
 
     iniEl.value = dateStr;
-    if (idx === 1 && inputConfig.inicio) inputConfig.inicio.value = dateStr;
     if (idx === 1 && store.selectedTurma) store.setTurmaLastStart(store.selectedTurma, dateStr);
 
     applyFaixaDateAutofill();
@@ -1491,13 +1511,7 @@ function normalizeDisciplinaInputValue(rawValue) {
 }
 
 function collapseFaixasForNewComponent(options = {}) {
-    const {
-        preferredStart: explicitPreferredStart,
-        useCurrentUI = true
-    } = options;
-    const preferredStart = explicitPreferredStart !== undefined
-        ? explicitPreferredStart
-        : getPreferredStartDateForCurrentTurma({ useCurrentUI });
+    const preferredStart = resolvePreferredStartForNewComponent(options);
 
     ['inp-data-inicio-f1', 'inp-data-fim-f1', 'inp-data-inicio-f2', 'inp-data-fim-f2', 'inp-data-inicio-f3', 'inp-data-fim-f3'].forEach((id) => {
         const el = document.getElementById(id);
@@ -1749,9 +1763,10 @@ function getLastValidFaixaFromUI() {
         const rawFim = String(document.getElementById(`inp-data-fim-f${i}`)?.value || '').trim();
         const nextInicio = String(document.getElementById(`inp-data-inicio-f${i + 1}`)?.value || '').trim();
         const patternCount = normalizeFaixaPattern(faixasPatterns[i]).length;
+        const hasExplicitBoundary = isValidISODateValue(rawFim) || isValidISODateValue(nextInicio);
 
         if (!isValidISODateValue(inicio)) continue;
-        if (i > 1 && patternCount === 0 && !isValidISODateValue(rawFim) && !isValidISODateValue(nextInicio)) continue;
+        if (patternCount === 0 && !hasExplicitBoundary) continue;
 
         let fim = rawFim;
         if (!isValidISODateValue(fim) && isValidISODateValue(nextInicio)) {
@@ -1797,9 +1812,28 @@ function getLastValidAllocationEndForCurrentTurma() {
     return latestEnd;
 }
 
+function setComponentStartSelectionMode(mode = 'auto') {
+    componentStartSelectionMode = mode === 'manual' ? 'manual' : 'auto';
+}
+
+function getCurrentComponentStartDateFromUI() {
+    const raw = String(document.getElementById('inp-data-inicio-f1')?.value || '').trim();
+    return isValidISODateValue(raw) ? raw : '';
+}
+
+function getManualComponentStartOverride() {
+    if (componentStartSelectionMode !== 'manual') return '';
+    return getCurrentComponentStartDateFromUI();
+}
+
+function getCanonicalFirstFaixaStartDate() {
+    const termStart = String(store.settings.termStart || inpTermStart?.value || calStart?.value || '').trim();
+    return isValidISODateValue(termStart) ? termStart : '';
+}
+
 function getPreferredStartDateForCurrentTurma(options = {}) {
     const { useCurrentUI = false } = options;
-    const termStart = store.settings.termStart || inpTermStart?.value || calStart?.value || '';
+    const termStart = String(store.settings.termStart || inpTermStart?.value || calStart?.value || '').trim();
 
     if (useCurrentUI) {
         const lastUiFaixa = getLastValidFaixaFromUI();
@@ -1815,6 +1849,20 @@ function getPreferredStartDateForCurrentTurma(options = {}) {
         turmaLastStart: turmaPreferred,
         latestAllocationEnd
     }).firstFaixaStart || termStart;
+}
+
+function resolvePreferredStartForNewComponent(options = {}) {
+    const {
+        preferredStart: explicitPreferredStart,
+        useCurrentUI = true
+    } = options;
+
+    if (explicitPreferredStart !== undefined) return String(explicitPreferredStart || '').trim();
+
+    const manualOverride = getManualComponentStartOverride();
+    if (manualOverride) return manualOverride;
+
+    return getPreferredStartDateForCurrentTurma({ useCurrentUI });
 }
 
 function normalizeConflictSlotLabel(value) {
@@ -2158,16 +2206,10 @@ function setupWeekAutoPositionControls() {
     });
 }
 
-function syncComponentStartInputFromFaixa1() {
-    if (!inputConfig.inicio) return;
-    const faixa1Start = document.getElementById('inp-data-inicio-f1')?.value || '';
-    inputConfig.inicio.value = faixa1Start;
-}
-
 function formatCompactFaixaDate(value) {
     const raw = String(value || '').trim();
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(raw)) return 'dd/mm/aa';
-    return `${raw.slice(8, 10)}/${raw.slice(5, 7)}/${raw.slice(2, 4)}`;
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(raw)) return 'dd/mm/aaaa';
+    return `${raw.slice(8, 10)}/${raw.slice(5, 7)}/${raw.slice(0, 4)}`;
 }
 
 function refreshCompactFaixaDateDisplay(input) {
@@ -2333,74 +2375,6 @@ function setupCompactFaixaDateFields() {
     });
 }
 
-function restoreComponentStartPickerValueIfNeeded() {
-    if (!inputConfig.inicio) return;
-    const restoreValue = inputConfig.inicio.dataset.restorePickerValue || '';
-    const anchorValue = inputConfig.inicio.dataset.pickerAnchorValue || '';
-    if (restoreValue && inputConfig.inicio.value === anchorValue) {
-        inputConfig.inicio.value = restoreValue;
-    }
-    delete inputConfig.inicio.dataset.restorePickerValue;
-    delete inputConfig.inicio.dataset.pickerAnchorValue;
-}
-
-function primeComponentStartPickerAnchor() {
-    if (!inputConfig.inicio || !store.selectedTurma) return;
-
-    const anchorValue = store.getTurmaLastStart(store.selectedTurma);
-    const currentValue = String(inputConfig.inicio.value || '').trim();
-    if (!anchorValue || !currentValue || anchorValue === currentValue) return;
-
-    inputConfig.inicio.dataset.restorePickerValue = currentValue;
-    inputConfig.inicio.dataset.pickerAnchorValue = anchorValue;
-    inputConfig.inicio.value = anchorValue;
-}
-
-function setupComponentStartControl() {
-    if (!inputConfig.inicio || inputConfig.inicio.dataset.bound === '1') return;
-    inputConfig.inicio.dataset.bound = '1';
-    syncComponentStartInputFromFaixa1();
-
-    inputConfig.inicio.addEventListener('pointerdown', () => {
-        primeComponentStartPickerAnchor();
-    });
-
-    inputConfig.inicio.addEventListener('keydown', (event) => {
-        if (event.key === 'Enter' || event.key === ' ' || event.key === 'ArrowDown') {
-            primeComponentStartPickerAnchor();
-        }
-    });
-
-    inputConfig.inicio.addEventListener('change', () => {
-        const value = String(inputConfig.inicio.value || '').trim();
-        const faixa1StartEl = document.getElementById('inp-data-inicio-f1');
-        if (!faixa1StartEl) return;
-
-        delete inputConfig.inicio.dataset.restorePickerValue;
-        delete inputConfig.inicio.dataset.pickerAnchorValue;
-        faixa1StartEl.value = value;
-        if (value && store.selectedTurma) {
-            store.setTurmaLastStart(store.selectedTurma, value);
-        }
-
-        applyFaixaDateAutofill({ forceSingleBounds: true, preferredStart: value });
-        setFaixaStatus(1, getFaixaSlotsAndDays(1).pattern.length);
-        setFaixaStatus(2, getFaixaSlotsAndDays(2).pattern.length);
-        setFaixaStatus(3, getFaixaSlotsAndDays(3).pattern.length);
-
-        if (value) {
-            activeFaixaIndex = 1;
-            autoEnterWeeklyEditingForFaixa(1);
-        } else if (store.selectedTurma) {
-            renderWeeklyGrid();
-        }
-    });
-
-    inputConfig.inicio.addEventListener('blur', () => {
-        restoreComponentStartPickerValueIfNeeded();
-    });
-}
-
 function applyFaixaDateAutofill(options = {}) {
     const { forceSingleBounds = false, preferredStart = '' } = options;
 
@@ -2444,7 +2418,6 @@ function applyFaixaDateAutofill(options = {}) {
         if (f3Ini) f3Ini.value = '';
     }
 
-    syncComponentStartInputFromFaixa1();
     refreshAllCompactFaixaDateDisplays();
     updateWeeklyFaixaHoursDisplay();
 }
@@ -2458,10 +2431,6 @@ function enforceCanonicalFaixaMode() {
         btnAddOferta.innerHTML = '<span class="btn-label-two-line"><span>Salvar</span><span>Componente</span></span>';
     }
 
-    const preferredStart = getPreferredStartDateForCurrentTurma();
-    if (preferredStart && inputConfig.inicio) {
-        inputConfig.inicio.value = preferredStart;
-    }
     applyFaixaDateAutofill({ forceSingleBounds: true });
     refreshPendingFaixaStartPickUI();
     updateWeeklyContextNote();
@@ -2529,6 +2498,9 @@ function setupFaixaControls() {
                     if (pendingFaixaStartPick === i && iniEl.value) clearPendingFaixaStartPick();
                     if (i === 1 && iniEl.value && store.selectedTurma) {
                         store.setTurmaLastStart(store.selectedTurma, iniEl.value);
+                    }
+                    if (i === 1) {
+                        setComponentStartSelectionMode(iniEl.value ? 'manual' : 'auto');
                     }
                     applyFaixaDateAutofill();
                     setFaixaStatus(1, getFaixaSlotsAndDays(1).pattern.length);
@@ -2895,7 +2867,7 @@ function updateWeeklyNavigatorLabel() {
 
     const weekStart = resolveWeeklyViewWeekStart();
     if (!weekStart) {
-        labelEl.textContent = 'Semana nao definida';
+        labelEl.textContent = 'Semana n\u00e3o definida';
         updateWeeklyContextNote();
         return;
     }
@@ -3719,10 +3691,6 @@ function applyFinalAdjustmentFaixaSuggestion(suggestion, options = {}) {
         faixas: suggestion.faixas
     };
 
-    if (inputConfig.inicio) {
-        inputConfig.inicio.value = suggestion.faixas[0]?.inicio || '';
-    }
-
     hydrateFaixasFromComponente(previewAlloc);
     activeFaixaIndex = suggestion.adjustmentFaixaIndex || suggestion.faixas.length;
     autoEnterWeeklyEditingForFaixa(activeFaixaIndex);
@@ -4540,7 +4508,7 @@ function syncPlanInputsFromStore(preferredMeta = null) {
 }
 
 function getPlanDisplayLabel(meta) {
-    if (!meta?.key) return 'Plano letivo ainda nao definido.';
+    if (!meta?.key) return 'Plano letivo ainda n\u00e3o definido.';
     return `${meta.periodo} | ${formatDateBR(meta.termStart)} a ${formatDateBR(meta.termEnd)}`;
 }
 
@@ -4548,7 +4516,7 @@ function updateActivePlanStatus() {
     if (!activePlanStatus) return;
     const activeMeta = store.getActivePlanMeta();
     if (!activeMeta?.key) {
-        activePlanStatus.textContent = 'Plano ativo ainda nao definido.';
+        activePlanStatus.textContent = 'Plano ativo ainda n\u00e3o definido.';
         return;
     }
     const total = Array.isArray(store.allocations) ? store.allocations.length : 0;
@@ -4594,6 +4562,8 @@ function applyPlanContextToUI(planMeta = {}, options = {}) {
     const didChangePlan = result.meta.key !== previousKey;
     const planStart = result.meta.termStart || store.settings.termStart || '';
 
+    if (didChangePlan) setComponentStartSelectionMode('auto');
+
     syncPlanInputsFromStore(result.meta);
     updateActivePlanStatus();
 
@@ -4606,10 +4576,6 @@ function applyPlanContextToUI(planMeta = {}, options = {}) {
     const preferredStart = didChangePlan
         ? planStart
         : getPreferredStartDateForCurrentTurma();
-    if (inputConfig.inicio && preferredStart) {
-        inputConfig.inicio.value = preferredStart;
-    }
-
     if (didChangePlan) {
         resetWeeklyEditorForTurma(selectionState.nextTurma, {
             preferredStart: planStart,
@@ -4654,10 +4620,6 @@ function initPeriodoLetivoETurno() {
 
     syncPlanInputsFromStore();
     populateTurnoOfertaOptions(store.settings.turnoOferta || 'Tarde');
-
-    if (inputConfig.inicio && store.settings.termStart && !inputConfig.inicio.value) {
-        inputConfig.inicio.value = store.settings.termStart;
-    }
 
     if (selPeriodo) {
         selPeriodo.addEventListener('change', () => {
@@ -4797,7 +4759,6 @@ export function initUI() {
     if (selTurma) selTurma.addEventListener('change', onTurmaChange);
 
     initPeriodoLetivoETurno();
-    setupComponentStartControl();
     setupCopyActionButtons();
 
     // ORDEM IMPORTANTE: Primeiro conserta o layout e encapsula os selects
@@ -4818,15 +4779,11 @@ export function initUI() {
 
     if (inputConfig.disciplina) {
         inputConfig.disciplina.addEventListener('input', () => {
-            const termStartEl = document.getElementById('term-start');
-            if (inputConfig.inicio && !inputConfig.inicio.value && termStartEl && termStartEl.value) {
-                inputConfig.inicio.value = termStartEl.value;
-            }
-
             const discNome = normalizeDisciplinaInputValue(inputConfig.disciplina.value || '');
             const isEditingSameDisc = editingDisciplinaDraft && discNome === editingDisciplinaDraft;
-            if (discNome && discNome !== lastDisciplinaInputNormalized && !isEditingSameDisc) {
-                collapseFaixasForNewComponent();
+            const isNewDiscSelection = !!discNome && discNome !== lastDisciplinaInputNormalized && !isEditingSameDisc;
+            if (isNewDiscSelection) {
+                collapseFaixasForNewComponent({ useCurrentUI: false });
                 editingDisciplinaDraft = '';
             }
             lastDisciplinaInputNormalized = discNome;
@@ -4839,8 +4796,9 @@ export function initUI() {
         inputConfig.disciplina.addEventListener('change', () => {
             const discNome = normalizeDisciplinaInputValue(inputConfig.disciplina.value || '');
             const isEditingSameDisc = editingDisciplinaDraft && discNome === editingDisciplinaDraft;
-            if (discNome && !isEditingSameDisc) {
-                collapseFaixasForNewComponent();
+            const isNewDiscSelection = !!discNome && discNome !== lastDisciplinaInputNormalized && !isEditingSameDisc;
+            if (isNewDiscSelection) {
+                collapseFaixasForNewComponent({ useCurrentUI: false });
                 editingDisciplinaDraft = '';
             }
             lastDisciplinaInputNormalized = discNome;
@@ -5152,6 +5110,7 @@ function resetWeeklyEditorForTurma(turmaId, options = {}) {
         preferredStart = '',
         resetWeekToPlanStart = false
     } = options;
+    setComponentStartSelectionMode('auto');
     const termStart = String(store.settings.termStart || inpTermStart?.value || calStart?.value || '').trim();
     const latestAllocationEnd = getLatestAllocationEndForTurma(turmaId);
     const initialized = initializeWeeklyScheduleForTurma({
@@ -5180,10 +5139,6 @@ function resetWeeklyEditorForTurma(turmaId, options = {}) {
     setFaixaStatus(1, 0);
     setFaixaStatus(2, 0);
     setFaixaStatus(3, 0);
-
-    if (inputConfig.inicio) {
-        inputConfig.inicio.value = initialized.firstFaixaStart || resetState.firstFaixaStart || termStart;
-    }
 
     const anchorDate = resetWeekToPlanStart
         ? (resetState.firstFaixaStart || termStart)
@@ -5797,6 +5752,7 @@ function loadAllocationIntoEditor(allocation, idsToRemove = []) {
     if (!confirm('Carregar para edicao? A oferta antiga sera removida e a Grade Semanal sera aberta para ajuste desta componente.')) return;
 
     editingDisciplinaDraft = normalizeDisciplinaInputValue(a.disciplina);
+    setComponentStartSelectionMode('auto');
     updateWeeklyFaixasTitleDisciplina();
     let editorFaixasAdjusted = false;
 
@@ -5811,7 +5767,6 @@ function loadAllocationIntoEditor(allocation, idsToRemove = []) {
     enforceCanonicalFaixaMode();
 
     if (isFaixaAllocation(a)) {
-        if (inputConfig.inicio && a.dataInicio) inputConfig.inicio.value = a.dataInicio;
         const hydrated = hydrateFaixasFromComponente(a, { useStoredExecution: true }) || {};
         editorFaixasAdjusted = !!hydrated.wasAdjusted;
     } else {
@@ -5874,8 +5829,7 @@ function handleAddManual() {
     const disciplina = (inputConfig.disciplina?.value ?? '').replace(/\s*\(\s*\d+\s*h\s*\)\s*$/i, '');
     const tipo = 'faixas';
     const inicioFaixa1 = document.getElementById('inp-data-inicio-f1')?.value ?? '';
-    const inicioLegacy = inputConfig.inicio?.value ?? '';
-    const inicio = inicioFaixa1 || inicioLegacy;
+    const inicio = inicioFaixa1;
     const subGrupo = (document.getElementById('inp-sub-turma')?.value ?? '').trim();
 
     if (!disciplina) {
@@ -6352,10 +6306,10 @@ function renderOfertasList() {
                     });
                     const sigaaCode = getSigaaCode([scoped]);
                     const sabadoLabel = Array.isArray(faixa?.dias) && faixa.dias.includes(6)
-                        ? `<br><span style="color:#e67e22; font-weight:bold; font-size:0.8em;">(Inclui SÃ¡bados)</span>`
+                        ? `<br><span style="color:#e67e22; font-weight:bold; font-size:0.8em;">(Inclui S\u00e1bados)</span>`
                         : '';
                     const horariosResumo = buildFaixaHorarioResumo(faixa);
-                    const faixaLabel = resolvedFaixas.length > 1 ? `Faixa ${idx + 1}` : 'Faixa Ãºnica';
+                    const faixaLabel = resolvedFaixas.length > 1 ? `Faixa ${idx + 1}` : 'Faixa \u00fanica';
                     const detailParts = [faixaLabel];
                     if (horariosResumo) detailParts.push(horariosResumo);
 
@@ -6370,10 +6324,10 @@ function renderOfertasList() {
                         tipoLabel: resolvedFaixas.length > 1 ? `componente <small>(Faixa ${idx + 1})</small>` : 'componente',
                         start: faixaStart,
                         end: faixaEnd,
-                        horarioTxt: `${formatDateBR(faixaStart)} a ${ensureWarningEndDate(faixaEnd)}<br><small>${detailParts.join(' • ')}</small>`,
+                        horarioTxt: `${formatDateBR(faixaStart)} a ${ensureWarningEndDate(faixaEnd)}<br><small>${detailParts.join(' \u2022 ')}</small>`,
                         totalHoras: faixa?.executedHours || 0,
                         chMax: base.ch || info.ch,
-                        details: `${faixa?.executionDays || 0} ocorrÃªncias`,
+                        details: `${faixa?.executionDays || 0} ocorr\u00eancias`,
                         sigaaCode,
                         sabadoLabel,
                         faixaIndex: idx + 1
@@ -6448,7 +6402,7 @@ function renderOfertasList() {
         const btnCopySigaa = row.sigaaCode && row.sigaaCode !== '-'
             ? `<div style="display:flex; align-items:center; justify-content:center; gap:6px;">
                     <span style="font-family:monospace; font-weight:bold; background:#ecf0f1; padding:2px 6px; border-radius:4px; font-size:0.9em; letter-spacing:1px;">${row.sigaaCode}</span>
-                    <button class="btn-sigaa-copy" data-code="${row.sigaaCode}" title="Copiar Código" style="background:transparent; color:var(--primary); border:1px solid #ccc; border-radius:4px; cursor:pointer; padding:2px 6px; font-size:0.9em; transition: all 0.2s;">Copiar</button>
+                    <button class="btn-sigaa-copy" data-code="${row.sigaaCode}" title="Copiar C\u00f3digo" style="background:transparent; color:var(--primary); border:1px solid #ccc; border-radius:4px; cursor:pointer; padding:2px 6px; font-size:0.9em; transition: all 0.2s;">Copiar</button>
                </div>`
             : `<span style="color:#999;">-</span>`;
 
@@ -6522,7 +6476,7 @@ function renderOfertasList() {
     });
 
     if (pendenteRows.length > 0) {
-        appendSeparator('AGUARDANDO ALOCAÇÃO NA GRADE (PENDENTES)');
+        appendSeparator('AGUARDANDO ALOCA\u00c7\u00c3O NA GRADE (PENDENTES)');
         let previousPendingRow = null;
         pendenteRows.forEach((row) => {
             appendRow(row, previousPendingRow);

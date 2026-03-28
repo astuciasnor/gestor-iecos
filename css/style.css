@@ -396,36 +396,6 @@ input[type="date"] { color-scheme: dark; }
     display: none !important;
 }
 
-.component-start-row {
-    display: none !important;
-    flex-direction: column;
-    gap: 4px;
-    margin-top: 6px;
-}
-
-.component-start-label {
-    margin: 0;
-    font-size: 0.78rem;
-    line-height: 1.1;
-    color: #d8efe3;
-}
-
-.component-start-input {
-    width: 100%;
-    max-width: 210px;
-    height: 32px;
-    padding: 4px 8px;
-    font-size: 0.88rem;
-    cursor: pointer;
-}
-
-.component-start-input::-webkit-calendar-picker-indicator {
-    opacity: 0;
-    width: 0;
-    margin: 0;
-    padding: 0;
-}
-
 .weekly-faixas-panel {
     min-width: 0;
     max-width: 100%;
@@ -622,9 +592,9 @@ input[type="date"] { color-scheme: dark; }
     box-sizing: border-box;
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    gap: 6px;
-    padding: 4px 5px 4px 10px;
+    justify-content: center;
+    gap: 0;
+    padding: 4px 28px;
     background: linear-gradient(180deg, #0c7f45 0%, #056b39 100%);
     border: 1px solid #0a8e4c;
     border-radius: 8px;
@@ -653,13 +623,14 @@ input[type="date"] { color-scheme: dark; }
 
 .weekly-faixas-table .faixa-date-display {
     flex: 1 1 auto;
+    width: 100%;
     min-width: 0;
     color: #f4fff7;
     font-weight: 800;
     font-size: 0.79rem;
     line-height: 1;
     font-variant-numeric: tabular-nums;
-    text-align: left;
+    text-align: center;
     white-space: nowrap;
 }
 
@@ -668,6 +639,9 @@ input[type="date"] { color-scheme: dark; }
 }
 
 .weekly-faixas-table .faixa-date-trigger {
+    position: absolute;
+    top: 50%;
+    right: 6px;
     flex: 0 0 auto;
     width: 18px;
     height: 18px;
@@ -675,6 +649,7 @@ input[type="date"] { color-scheme: dark; }
     padding: 0;
     border: none;
     background: transparent;
+    transform: translateY(-50%);
     color: #f4fff7;
     font-size: 0.88rem;
     line-height: 1;
@@ -1308,8 +1283,8 @@ input[type="date"] { color-scheme: dark; }
 
     .weekly-faixas-table .faixa-date-compact {
         min-height: 32px;
-        gap: 5px;
-        padding: 4px 4px 4px 8px;
+        gap: 0;
+        padding: 4px 26px;
     }
 
     .weekly-faixas-table .faixa-date-display {
