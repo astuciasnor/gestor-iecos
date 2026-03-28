@@ -206,6 +206,27 @@
             display: none !important;
         }
 
+        .pub-subtabs {
+            margin-top: 4px;
+            padding: 6px;
+            border-radius: 16px;
+            gap: 6px;
+        }
+
+        .pub-subtabs .pub-tab {
+            min-width: 118px;
+            min-height: 42px;
+            padding: 10px 14px;
+            font-size: 0.9rem;
+        }
+
+        .pub-docente-gantt-note {
+            grid-column: span 12;
+            margin: -4px 0 0 0;
+            color: var(--pub-muted);
+            font-size: 0.82rem;
+        }
+
         .pub-controls {
             display: grid;
             grid-template-columns: repeat(12, minmax(0, 1fr));
@@ -698,6 +719,20 @@
             font-weight: 700;
             line-height: 1.18;
             overflow-wrap: anywhere;
+        }
+        .pub-shift-warning {
+            margin-top: 10px;
+            padding: 8px 10px;
+            background: #fff3cd;
+            color: #856404;
+            font-size: 0.8rem;
+            border-radius: 8px;
+            border-left: 4px solid #e67e22;
+            line-height: 1.35;
+            text-shadow: none;
+        }
+        .pub-shift-warning strong {
+            font-weight: 900;
         }
 
         .sheet-overlay {
@@ -1370,12 +1405,22 @@
                             </div>
                         </div>
 
-                        <div class="pub-group is-half">
+                        <div id="docente-month-group" class="pub-group is-half">
                             <label>2. M&ecirc;s</label>
                             <p class="pub-hint">Escolha o m&ecirc;s para visualizar os slots do professor.</p>
                             <div id="container-meses-docente" class="pub-pillbox">
                                 <span class="pub-empty">Aguardando professor...</span>
                             </div>
+                        </div>
+
+                        <div class="pub-group">
+                            <label>3. Visualiza&ccedil;&atilde;o</label>
+                            <p class="pub-hint">Alterne entre o calend&aacute;rio mensal e o Gantt docente.</p>
+                            <div id="docente-subtabs" class="pub-tabs pub-subtabs" role="tablist" aria-label="Visualizacoes da agenda docente">
+                                <button id="tab-docente-calendar" type="button" class="pub-tab active" role="tab" aria-selected="true">Calendario</button>
+                                <button id="tab-docente-gantt" type="button" class="pub-tab" role="tab" aria-selected="false">Gantt</button>
+                            </div>
+                            <p id="docente-gantt-note" class="pub-docente-gantt-note" hidden>O Gantt usa todo o periodo letivo publicado para montar o cronograma do professor.</p>
                         </div>
                     </div>
                 </section>
@@ -1432,7 +1477,7 @@
     <div id="slot-lens" class="slot-lens" hidden></div>
     <div id="day-lens" class="day-lens" hidden></div>
 
-    <script type="module" src="js/agenda_publica.js??v=20260327d"></script>
+    <script type="module" src="js/agenda_publica.js??v=20260328b"></script>
 </body>
 
 </html>

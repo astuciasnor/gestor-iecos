@@ -2,6 +2,8 @@ import { store, normalizeLoadedAllocation } from './store.js';
 import { getTurnoLetter } from './turns.js';
 import { getCalendarEvents } from './calendar.js';
 import { resolveActiveAcademicPeriod } from './academic_rules.mjs';
+import { buildCanonicalOfferProjection, buildTeacherExecutionSnapshot } from './execution_engine.js';
+import { renderBidimensionalTeacherGantt, hideBidimensionalTeacherGanttLens } from './gantt_bidimensional.js';
 
 const collator = new Intl.Collator('pt-BR', { sensitivity: 'base' });
 const PUBLIC_ASSET_VERSION = '20260327d';
@@ -21,7 +23,8 @@ const state = {
     docente: {
         nome: '',
         mes: '',
-        totalHoras: null
+        totalHoras: null,
+        view: 'calendar'
     }
 };
 
@@ -83,6 +86,11 @@ function cacheElements() {
     els.btnLimparDocente = document.getElementById('btn-limpar-docente-publico');
     els.listaSugestoes = document.getElementById('lista-sugestoes-publico');
     els.containerMesesDocente = document.getElementById('container-meses-docente');
+    els.docenteMonthGroup = document.getElementById('docente-month-group');
+    els.docenteSubtabs = document.getElementById('docente-subtabs');
+    els.tabDocenteCalendar = document.getElementById('tab-docente-calendar');
+    els.tabDocenteGantt = document.getElementById('tab-docente-gantt');
+    els.docenteGanttNote = document.getElementById('docente-gantt-note');
     els.resultadoAgenda = document.getElementById('resultado-agenda');
     els.btnTopo = document.getElementById('btn-topo');
     els.sheetOverlay = document.getElementById('sheet-overlay');
@@ -101,6 +109,8 @@ function cacheElements() {
 function bindEvents() {
     els.tabDiscente?.addEventListener('click', () => switchTab('discente'));
     els.tabDocente?.addEventListener('click', () => switchTab('docente'));
+    els.tabDocenteCalendar?.addEventListener('click', () => switchDocenteView('calendar'));
+    els.tabDocenteGantt?.addEventListener('click', () => switchDocenteView('gantt'));
 
     els.selCurso?.addEventListener('change', handleCursoChange);
     els.inpDocente?.addEventListener('input', handleDocenteInput);
@@ -736,7 +746,7 @@ function selecionarDocente(nomeProfessor) {
 
     esconderSugestoes();
     preencherMesesDocente();
-    renderActiveEmptyState();
+    renderActiveView();
     els.inpDocente?.blur();
 }
 
@@ -775,9 +785,20 @@ function preencherMesesDocente() {
 
 function switchTab(tabName) {
     state.activeTab = tabName === 'docente' ? 'docente' : 'discente';
+    hideBidimensionalTeacherGanttLens();
     esconderSugestoes();
     fecharBottomSheet();
     syncTabUI();
+    renderActiveView();
+}
+
+function switchDocenteView(viewName) {
+    state.docente.view = viewName === 'gantt' ? 'gantt' : 'calendar';
+    hideBidimensionalTeacherGanttLens();
+    fecharSlotLens(true);
+    fecharDayLens(true);
+    esconderSugestoes();
+    syncDocenteViewUI();
     renderActiveView();
 }
 
@@ -789,12 +810,21 @@ function syncTabUI() {
 
     if (els.viewDiscente) els.viewDiscente.hidden = !isDiscente;
     if (els.viewDocente) els.viewDocente.hidden = isDiscente;
+    syncDocenteViewUI();
 }
 
 function toggleTabButton(button, active) {
     if (!button) return;
     button.classList.toggle('active', active);
     button.setAttribute('aria-selected', active ? 'true' : 'false');
+}
+
+function syncDocenteViewUI() {
+    const isCalendar = state.docente.view !== 'gantt';
+    toggleTabButton(els.tabDocenteCalendar, isCalendar);
+    toggleTabButton(els.tabDocenteGantt, !isCalendar);
+    if (els.docenteMonthGroup) els.docenteMonthGroup.hidden = !isCalendar;
+    if (els.docenteGanttNote) els.docenteGanttNote.hidden = isCalendar;
 }
 
 function renderActiveView() {
@@ -808,16 +838,27 @@ function renderActiveView() {
         return;
     }
 
-    if (!state.docente.nome || !state.docente.mes) {
+    if (!state.docente.nome) {
         renderActiveEmptyState();
         return;
     }
 
     if (els.resultadoAgenda) els.resultadoAgenda.hidden = false;
+    if (state.docente.view === 'gantt') {
+        renderAgendaDocenteGantt();
+        return;
+    }
+
+    if (!state.docente.mes) {
+        renderActiveEmptyState();
+        return;
+    }
+
     renderAgendaDocente();
 }
 
 function renderActiveEmptyState() {
+    hideBidimensionalTeacherGanttLens();
     fecharSlotLens(true);
 
     if (state.activeTab === 'discente') {
@@ -844,6 +885,7 @@ function renderActiveEmptyState() {
         }
         return;
     }
+    if (state.docente.view === 'gantt') return;
     if (!state.docente.mes) {
         if (els.resultadoAgenda) els.resultadoAgenda.hidden = false;
         renderResultEmpty('Escolha um mes para visualizar a agenda do professor.');
@@ -851,6 +893,7 @@ function renderActiveEmptyState() {
 }
 
 function renderAgendaDiscente() {
+    hideBidimensionalTeacherGanttLens();
     fecharSlotLens(true);
     const token = ++renderSequence;
     const [ano, mes] = state.discente.mes.split('-');
@@ -875,6 +918,7 @@ function renderAgendaDiscente() {
 }
 
 function renderAgendaDocente() {
+    hideBidimensionalTeacherGanttLens();
     fecharSlotLens(true);
     fecharDayLens(true);
     const token = ++renderSequence;
@@ -897,23 +941,76 @@ function renderAgendaDocente() {
             year: Number(ano),
             month: Number(mes)
         });
-        els.resultadoAgenda.innerHTML = buildResultContextMarkup('docente') + gridHtml;
+        els.resultadoAgenda.innerHTML = buildResultContextMarkup('docente', { variant: 'calendar' }) + gridHtml;
         scrollResultIntoView();
     }, 140);
 }
 
-function buildResultContextMarkup(mode) {
+function renderAgendaDocenteGantt() {
+    fecharSlotLens(true);
+    fecharDayLens(true);
+    const token = ++renderSequence;
+    const dataInicio = String(store.settings.termStart || '').trim();
+    const dataFim = String(store.settings.termEnd || dataInicio || '').trim();
+
+    renderResultLoading('A montar o Gantt docente...');
+
+    window.setTimeout(() => {
+        if (token !== renderSequence) return;
+
+        const docenteName = String(state.docente.nome || '').trim();
+        const relevantAllocations = (store.allocations || []).filter((allocation) => allocationHasTeacherMatch(allocation, docenteName));
+        const offerProjection = buildCanonicalOfferProjection({
+            allocations: relevantAllocations,
+            startDate: dataInicio,
+            endDate: dataFim
+        });
+        const teacherSnapshot = buildTeacherExecutionSnapshot({
+            docenteName,
+            startDate: dataInicio,
+            endDate: dataFim
+        });
+
+        state.docente.totalHoras = Number(teacherSnapshot?.totalEvents || 0) || null;
+        els.resultadoAgenda.innerHTML = `
+            ${buildResultContextMarkup('docente', { variant: 'gantt' })}
+            <div id="public-docente-gantt-host"></div>
+        `;
+
+        const ganttHost = document.getElementById('public-docente-gantt-host');
+        renderBidimensionalTeacherGantt(ganttHost, {
+            docenteName,
+            totalCH: state.docente.totalHoras || 0,
+            offerProjection,
+            teacherSnapshot,
+            startDate: dataInicio,
+            endDate: dataFim
+        });
+        scrollResultIntoView();
+    }, 140);
+}
+
+function buildResultContextMarkup(mode, options = {}) {
     const isDocente = mode === 'docente';
+    const docenteVariant = String(options?.variant || state.docente.view || 'calendar').trim().toLowerCase();
     const title = isDocente
         ? state.docente.nome
         : `${getCursoLabel(state.discente.curso)} - ${getTurmaLabel(state.discente.turmaId)}`;
-    const eyebrow = isDocente ? 'Consulta Docente' : 'Consulta Discente';
+    const eyebrow = isDocente
+        ? (docenteVariant === 'gantt' ? 'Consulta Docente - Gantt' : 'Consulta Docente')
+        : 'Consulta Discente';
     const badges = isDocente
-        ? [
-            getMonthLabel(state.docente.mes),
-            Number.isFinite(state.docente.totalHoras) ? `${state.docente.totalHoras} horas-aula` : '',
-            store.settings.periodo ? `Periodo ${store.settings.periodo}` : ''
-        ]
+        ? (docenteVariant === 'gantt'
+            ? [
+                'Periodo letivo completo',
+                Number.isFinite(state.docente.totalHoras) ? `${state.docente.totalHoras} horas-aula` : '',
+                store.settings.periodo ? `Periodo ${store.settings.periodo}` : ''
+            ]
+            : [
+                getMonthLabel(state.docente.mes),
+                Number.isFinite(state.docente.totalHoras) ? `${state.docente.totalHoras} horas-aula` : '',
+                store.settings.periodo ? `Periodo ${store.settings.periodo}` : ''
+            ])
         : [
             getMonthLabel(state.discente.mes),
             getTurmaLabel(state.discente.turmaId),
@@ -1034,6 +1131,8 @@ function buildMiniChipMarkup(event, dateObj, mode, dailyEvents = []) {
     const cor = String(event?.cor || '#355344').trim();
     const modo = String(event?.modo || 'semanal').trim();
     const data = formatDateFull(dateObj);
+    const faixaLabel = getEventFaixaLabel(event, dateStr);
+    const turnoLabel = getEventTurnoLabel(event, dateStr);
     const chipLabel = mode === 'docente'
         ? buildTeacherChipLabel(event)
         : getDisciplinaShortLabel(event?.disciplina || titulo, titulo);
@@ -1055,6 +1154,9 @@ function buildMiniChipMarkup(event, dateObj, mode, dailyEvents = []) {
             data-data="${escapeHtmlAttr(data)}"
             data-local="${escapeHtmlAttr(local)}"
             data-modo="${escapeHtmlAttr(modo)}"
+            data-faixa="${escapeHtmlAttr(faixaLabel)}"
+            data-turno="${escapeHtmlAttr(turnoLabel)}"
+            data-shift-label="${escapeHtmlAttr(shiftMeta.badgeLabel || '')}"
             data-cor="${escapeHtmlAttr(cor)}"
             data-excepcional="${shiftMeta.isShiftChange ? 'true' : 'false'}"
         >
@@ -1108,6 +1210,17 @@ function getEventTeacherLabel(event) {
     return uniqueNames.length ? uniqueNames.join(' / ') : 'A definir';
 }
 
+function allocationHasTeacherMatch(allocation, teacherName = '') {
+    const target = normalizeText(teacherName);
+    if (!target) return false;
+    if (extractTeacherNamesFromAllocation(allocation).some((name) => normalizeText(name) === target)) return true;
+
+    const compositeLabel = typeof allocation?.docente === 'string'
+        ? normalizeText(allocation.docente)
+        : normalizeText(allocation?.docente?.nome || '');
+    return !!(compositeLabel && compositeLabel.includes(target));
+}
+
 function normalizePublicTurnoKey(value) {
     const normalized = String(value || '')
         .normalize('NFD')
@@ -1126,6 +1239,52 @@ function getShiftChangeLabel(letter = '') {
     if (letter === 'T') return 'Tarde';
     if (letter === 'N') return 'Noturno';
     return '';
+}
+
+function shiftIsoDate(dateStr, days = 0) {
+    const raw = String(dateStr || '').trim();
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(raw)) return '';
+    const date = new Date(`${raw}T12:00:00`);
+    if (Number.isNaN(date.getTime())) return '';
+    date.setDate(date.getDate() + Number(days || 0));
+    return toIsoDate(date);
+}
+
+function getEventTurnoLabel(event, dateStr = '') {
+    return getShiftChangeLabel(getTurnoLetter(getEventHorario(event, dateStr))) || '--';
+}
+
+function getEventFaixaLabel(event, dateStr = '') {
+    const rawFaixas = Array.isArray(event?.faixas) ? event.faixas.filter(Boolean) : [];
+    if (!rawFaixas.length) return '';
+
+    const resolvedFaixas = rawFaixas.map((faixa, index) => {
+        const inicio = String(faixa?.inicio || '').trim();
+        let fim = String(faixa?.fim || '').trim();
+        if (!fim && rawFaixas[index + 1]?.inicio) fim = shiftIsoDate(rawFaixas[index + 1].inicio, -1);
+        if (!fim) fim = String(event?.dataFim || event?.dataInicio || inicio || '').trim();
+        return { index: index + 1, inicio, fim };
+    }).filter((faixa) => faixa.inicio);
+
+    if (!resolvedFaixas.length) return '';
+    if (resolvedFaixas.length === 1) return 'Faixa 1';
+
+    const targetDate = String(dateStr || '').trim();
+    const matched = resolvedFaixas.find((faixa) => (
+        targetDate
+        && targetDate >= faixa.inicio
+        && (!faixa.fim || targetDate <= faixa.fim)
+    ));
+
+    return `Faixa ${(matched || resolvedFaixas[0]).index}`;
+}
+
+function buildPublicShiftWarningMarkup(shiftMeta, compact = false) {
+    if (!shiftMeta?.isShiftChange || !shiftMeta?.badgeLabel) return '';
+    const extraText = compact
+        ? `Aula excepcional no turno ${shiftMeta.badgeLabel}.`
+        : `Esta aula ocorre excepcionalmente em um turno diferente do habitual da turma: ${shiftMeta.badgeLabel}.`;
+    return `<div class="pub-shift-warning"><strong>&#9888; Atenção:</strong> ${escapeHtml(extraText)}</div>`;
 }
 
 function getNativeTurnoLetterForEvent(event) {
@@ -1372,7 +1531,14 @@ function buildSlotLensMarkup(chip) {
     const docente = chip.getAttribute('data-docente') || '--';
     const turma = chip.getAttribute('data-turma') || '--';
     const local = chip.getAttribute('data-local') || '--';
+    const faixa = chip.getAttribute('data-faixa') || '--';
+    const turno = chip.getAttribute('data-turno') || '--';
+    const shiftLabel = chip.getAttribute('data-shift-label') || '';
     const cor = chip.getAttribute('data-cor') || '#0b5a35';
+    const shiftMeta = {
+        isShiftChange: chip.getAttribute('data-excepcional') === 'true',
+        badgeLabel: shiftLabel
+    };
 
     return `
         <div class="slot-lens-card" style="--lens-accent:${escapeHtmlAttr(cor)}">
@@ -1397,15 +1563,25 @@ function buildSlotLensMarkup(chip) {
                         <span>${escapeHtml(data)}</span>
                     </div>
                 </div>
+                <div class="slot-lens-inline">
+                    <div class="slot-lens-line">
+                        <strong>Faixa:</strong>
+                        <span>${escapeHtml(faixa)}</span>
+                    </div>
+                    <div class="slot-lens-line">
+                        <strong>Turno:</strong>
+                        <span>${escapeHtml(turno)}</span>
+                    </div>
+                </div>
                 <div class="slot-lens-line">
-                    <strong>Horário:</strong>
+                    <strong>Horario:</strong>
                     <span>${escapeHtml(intervalo)}</span>
                 </div>
                 <div class="slot-lens-line">
                     <strong>Local:</strong>
                     <span>${escapeHtml(local)}</span>
                 </div>
-                ${chip.getAttribute('data-excepcional') === 'true' ? `<div style="margin-top:10px; padding:8px 10px; background-color:#fff3cd; color:#856404; font-size:0.85em; border-radius:4px; border-left:4px solid #e67e22; text-shadow:none;">⚠️ <b>Atenção:</b> Esta aula ocorre excepcionalmente em um turno diferente do habitual da turma.</div>` : ''}
+                ${buildPublicShiftWarningMarkup(shiftMeta)}
             </div>
         </div>
     `;
@@ -1768,6 +1944,7 @@ function buildDayLensMarkup(events, dateStr, filterKey = null) {
 
     const groupList = Array.from(groups.values()).map((group) => {
         const preferredEvents = getPreferredGroupEvents(group.events, dateStr);
+        const representative = selectRepresentativeGroupEvent(preferredEvents, dateStr) || selectRepresentativeGroupEvent(group.events, dateStr);
         const horarios = [];
 
         preferredEvents.forEach((event) => {
@@ -1778,7 +1955,11 @@ function buildDayLensMarkup(events, dateStr, filterKey = null) {
 
         return {
             ...group,
-            horarios
+            horarios,
+            representative,
+            faixa: representative ? getEventFaixaLabel(representative, dateStr) : '',
+            turno: representative ? getEventTurnoLabel(representative, dateStr) : '--',
+            shiftMeta: representative ? getPublicShiftChangeMeta(representative, dateStr) : { isShiftChange: false, badgeLabel: '' }
         };
     });
     const dateObj = new Date(`${dateStr}T12:00:00`);
@@ -1793,6 +1974,9 @@ function buildDayLensMarkup(events, dateStr, filterKey = null) {
         html += `<div class="day-lens-group" style="--dlg-cor:${escapeHtmlAttr(g.cor)}">`;
         html += `<div class="dlg-title">${escapeHtml(g.title)}${g.ch > 0 ? `<span class="dlg-ch">${g.ch}h</span>` : ''}</div>`;
         html += `<div class="dlg-row"><span class="dlg-label">Turma</span><span class="dlg-val">${escapeHtml(turma)}</span></div>`;
+        if (g.faixa || g.turno) {
+            html += `<div class="dlg-row"><span class="dlg-label">Faixa / Turno</span><span class="dlg-val">${escapeHtml(g.faixa || '--')} &middot; ${escapeHtml(g.turno || '--')}</span></div>`;
+        }
         html += `<div class="dlg-row"><span class="dlg-label">Local</span><span class="dlg-val">${escapeHtml(g.local)}</span></div>`;
         html += `<div class="dlg-row"><span class="dlg-label">Hor\u00e1rio</span>`;
         html += `<div class="dlg-horarios">`;
@@ -1805,6 +1989,7 @@ function buildDayLensMarkup(events, dateStr, filterKey = null) {
             }
         });
         html += `</div></div>`; // dlg-horarios + dlg-row
+        html += buildPublicShiftWarningMarkup(g.shiftMeta, true);
         html += `</div>`; // day-lens-group
     });
 

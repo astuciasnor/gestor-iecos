@@ -420,12 +420,33 @@ function ensureBidimensionalGanttStyles() {
     }
     .gantt-bi__scroll {
       overflow: auto;
+      scrollbar-gutter: stable both-edges;
+      scrollbar-width: auto;
+      scrollbar-color: rgba(11, 93, 59, 0.7) rgba(203, 213, 225, 0.85);
+      -webkit-overflow-scrolling: touch;
       border: 1px solid #cbd5e1;
       border-radius: 18px;
       background:
         radial-gradient(circle at top left, rgba(255,255,255,0.95), rgba(255,255,255,0.78)),
         linear-gradient(180deg, #f8fbff, #eef3f8);
       box-shadow: inset 0 1px 0 rgba(255,255,255,0.6), 0 10px 24px rgba(15, 23, 42, 0.08);
+    }
+    .gantt-bi__scroll::-webkit-scrollbar {
+      width: 14px;
+      height: 14px;
+    }
+    .gantt-bi__scroll::-webkit-scrollbar-track {
+      background: rgba(226, 232, 240, 0.9);
+      border-radius: 999px;
+      box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.2);
+    }
+    .gantt-bi__scroll::-webkit-scrollbar-thumb {
+      background: linear-gradient(180deg, rgba(11, 93, 59, 0.88), rgba(19, 78, 74, 0.82));
+      border-radius: 999px;
+      border: 3px solid rgba(226, 232, 240, 0.95);
+    }
+    .gantt-bi__scroll::-webkit-scrollbar-thumb:hover {
+      background: linear-gradient(180deg, rgba(11, 93, 59, 0.96), rgba(15, 118, 110, 0.9));
     }
     .gantt-bi__canvas {
       min-width: max-content;
@@ -1106,4 +1127,8 @@ export function renderBidimensionalTeacherGantt(container, {
   `;
 
   bindBidimensionalLensInteractions(container);
+}
+
+export function hideBidimensionalTeacherGanttLens() {
+  hideBidimensionalLens(document.getElementById(LENS_ID));
 }
