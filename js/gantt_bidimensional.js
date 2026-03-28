@@ -11,7 +11,7 @@ const DAY_META = [
   { id: 6, short: 'Sab', full: 'Sabado' }
 ];
 const TURNO_LABELS = {
-  M: 'Manhã',
+  M: 'Manha',
   T: 'Tarde',
   N: 'Noite'
 };
@@ -142,7 +142,6 @@ function getComponentMeta(disciplina = '', turmaId = '') {
   )) || componentes.find((entry) => entry?.componente === disciplina);
 
   return {
-    codigo: String(component?.codigo || '').trim(),
     abreviacao: String(component?.abreviacao || component?.componente || disciplina || '').trim(),
     cor: normalizeHexColor(component?.cor || store.getDisciplinaColor?.(disciplina) || '#2563EB')
   };
@@ -265,12 +264,16 @@ function buildBidimensionalRows({
         const activeDayIds = new Set();
         const slotSet = new Set();
         const slotsByDayMap = new Map();
+        const occurrenceCountByDayMap = new Map();
 
         faixaDates.forEach((dateStr) => {
           const dayOfWeek = toDate(dateStr)?.getDay() || 0;
           if (dayOfWeek >= 1 && dayOfWeek <= 6) activeDayIds.add(dayOfWeek);
           if (dayOfWeek >= 1 && dayOfWeek <= 6 && !slotsByDayMap.has(dayOfWeek)) {
             slotsByDayMap.set(dayOfWeek, new Set());
+          }
+          if (dayOfWeek >= 1 && dayOfWeek <= 6) {
+            occurrenceCountByDayMap.set(dayOfWeek, (occurrenceCountByDayMap.get(dayOfWeek) || 0) + 1);
           }
 
           (dateMap.get(dateStr) || []).forEach((event) => {
@@ -286,7 +289,7 @@ function buildBidimensionalRows({
 
         const sortedSlots = [...slotSet].sort((left, right) => timeToMinutes(left) - timeToMinutes(right));
         const faixaLabel = faixas.length > 1 ? `Faixa ${faixa.index || 1}` : '';
-        const faixaBadge = segmentIdx > 0 ? `${faixaLabel || 'Faixa'} · Segmento ${segmentIdx + 1}` : faixaLabel;
+        const faixaBadge = segmentIdx > 0 ? `${faixaLabel || 'Faixa'} - Segmento ${segmentIdx + 1}` : faixaLabel;
 
         rows.push({
           key: `${group.offerKey}|${faixa.faixaId || faixa.index || 1}|${segment.start}|${segment.end}|${segmentIdx + 1}`,
@@ -295,7 +298,6 @@ function buildBidimensionalRows({
           groupEnd: String(group.end || faixaDates[faixaDates.length - 1] || '').trim(),
           faixaOrder: Number.parseInt(faixa?.index, 10) || 1,
           segmentOrder: segmentIdx + 1,
-          codigo: componentMeta.codigo || componentMeta.abreviacao || group.disciplina,
           nome: group.disciplina,
           turmaId: String(group.turmaId || '').trim(),
           chLabel: teacherHours > 0
@@ -305,7 +307,6 @@ function buildBidimensionalRows({
             : '-',
           turnoLabel: resolveTurnoLabelFromSlots(sortedSlots),
           faixaBadge,
-          diasLabel: sortedDayIds.map((dayId) => DAY_META.find((day) => day.id === dayId)?.short || '').filter(Boolean).join(' • '),
           activeDayIds: sortedDayIds,
           slots: sortedSlots,
           slotsByDay: Object.fromEntries(
@@ -313,6 +314,9 @@ function buildBidimensionalRows({
               dayId,
               [...(slotsByDayMap.get(dayId) || new Set())].sort((left, right) => timeToMinutes(left) - timeToMinutes(right))
             ])
+          ),
+          occurrenceCountByDay: Object.fromEntries(
+            sortedDayIds.map((dayId) => [dayId, occurrenceCountByDayMap.get(dayId) || 0])
           ),
           startDate: faixaDates[0],
           endDate: faixaDates[faixaDates.length - 1],
@@ -657,7 +661,7 @@ function ensureBidimensionalGanttStyles() {
       font-size: 0.72rem;
       font-weight: 900;
       letter-spacing: 0.04em;
-      text-transform: uppercase;
+      text-transform: none;
       color: #334155;
     }
     .gantt-bi__lens-list {
@@ -741,6 +745,7 @@ function buildSegmentDetailPayload(row, dayId) {
   return encodeURIComponent(JSON.stringify({
     dayId,
     dayShort: day.short,
+    occurrenceCount: Number.parseInt(row?.occurrenceCountByDay?.[dayId], 10) || 0,
     times: slots.map((slot) => formatHoverTimeLabel(slot)).filter(Boolean)
   }));
 }
@@ -775,7 +780,12 @@ function parseSegmentDetail(rawValue = '') {
 }
 
 function fillBidimensionalLens(lens, detail) {
+  const title = lens.querySelector('.gantt-bi__lens-title');
   const list = lens.querySelector('.gantt-bi__lens-list');
+  if (title) {
+    const countLabel = detail.occurrenceCount > 0 ? ` (${detail.occurrenceCount}x)` : '';
+    title.textContent = `${detail.dayShort}${countLabel}`;
+  }
   if (!list) return;
   list.innerHTML = detail.times.map((timeLabel) => `<li>${escapeHtml(timeLabel)}</li>`).join('');
 }
@@ -928,8 +938,7 @@ function buildBarDateDecorations({
     `;
   }
 
-  const compactLabel = isSingleDay ? startLabel : `${startLabel}–${endLabel}`;
-  const compactDisplayLabel = String(compactLabel).replace('â€“', ' - ');
+  const compactDisplayLabel = isSingleDay ? startLabel : `${startLabel} - ${endLabel}`;
   const compactWidth = isSingleDay ? 56 : 96;
   const compactLeft = clampNumber(
     Math.round(left + (width / 2) - (compactWidth / 2)),
@@ -965,6 +974,7 @@ function renderRow(row, layout) {
   const baseColor = row.color;
   const segmentBgEven = hexToRgba(baseColor, textColor === '#F8FAFC' ? 0.94 : 0.88);
   const segmentBgOdd = hexToRgba(baseColor, textColor === '#F8FAFC' ? 0.82 : 0.72);
+  const showSegmentFrequency = width >= 112;
   const dateDecorations = buildBarDateDecorations({
     row,
     left,
@@ -982,7 +992,7 @@ function renderRow(row, layout) {
       <div class="gantt-bi__label">
         <div class="gantt-bi__label-card" style="--accent:${baseColor};" title="${escapeHtml(row.tooltip)}">
           <div class="gantt-bi__label-name">${escapeHtml(row.nome)}</div>
-          <div class="gantt-bi__label-meta">CH ${escapeHtml(row.chLabel)} • Turma ${escapeHtml(row.turmaId)}</div>
+          <div class="gantt-bi__label-meta">CH ${escapeHtml(row.chLabel)} &middot; Turma ${escapeHtml(row.turmaId)}</div>
           <div class="gantt-bi__label-turno-row">
             <div class="gantt-bi__label-turno"><span style="opacity:0.68; font-weight:700; margin-right:6px;">Turno</span>${escapeHtml(row.turnoLabel)}</div>
             ${row.faixaBadge ? `<div class="gantt-bi__label-badge" style="background:${hexToRgba(baseColor, 0.14)}; color:${baseColor}; box-shadow:inset 0 0 0 1px ${hexToRgba(baseColor, 0.22)};">${escapeHtml(row.faixaBadge)}</div>` : ''}
@@ -1000,6 +1010,10 @@ function renderRow(row, layout) {
             ${row.activeDayIds.map((dayId, index) => {
               const day = DAY_META.find((entry) => entry.id === dayId);
               const segmentBg = index % 2 === 0 ? segmentBgEven : segmentBgOdd;
+              const occurrenceCount = Number.parseInt(row?.occurrenceCountByDay?.[dayId], 10) || 0;
+              const segmentLabel = showSegmentFrequency && occurrenceCount > 0
+                ? `${day?.short || ''} (${occurrenceCount}x)`
+                : (day?.short || '');
               const detailPayload = buildSegmentDetailPayload(row, dayId);
               const interactiveClass = detailPayload ? ' gantt-bi__segment--interactive' : '';
               const interactionAttrs = detailPayload
@@ -1007,7 +1021,7 @@ function renderRow(row, layout) {
                 : '';
               return `
                 <div class="gantt-bi__segment${interactiveClass}"${interactionAttrs} style="background:${segmentBg}; color:${textColor};">
-                  ${escapeHtml(day?.short || '')}
+                  ${escapeHtml(segmentLabel)}
                 </div>
               `;
             }).join('')}
@@ -1045,7 +1059,7 @@ export function renderBidimensionalTeacherGantt(container, {
   });
 
   if (rows.length === 0) {
-    container.innerHTML = `<div class="gantt-bi__empty">Nenhuma faixa visível encontrada para <b>${escapeHtml(teacherName)}</b> no intervalo selecionado.</div>`;
+    container.innerHTML = `<div class="gantt-bi__empty">Nenhuma faixa visivel encontrada para <b>${escapeHtml(teacherName)}</b> no intervalo selecionado.</div>`;
     return;
   }
 
