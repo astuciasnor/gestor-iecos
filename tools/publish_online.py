@@ -29,8 +29,12 @@ REQUIRED_WEB_FILES = (
 )
 
 PUBLIC_URL = "https://astuciasnor.github.io/gestor-iecos/"
-PUBLIC_JSON_URL = "https://astuciasnor.github.io/gestor-iecos/alocacoes_publicas.json"
 PUBLIC_DOWNLOAD_GLOB = "alocacoes_publicas*.json"
+LEGACY_PUBLIC_JSON_REL = "alocacoes_publicas.json"
+PUBLICATION_CONFIG_REL = Path("publicacoes") / "publicacao_config.json"
+DEFAULT_PUBLICATION_CATALOG_REL = "publicacoes/catalogo_publicacoes.json"
+DEFAULT_PLAN_DIRECTORY_TEMPLATE = "publicacoes/{year}/{periodo_slug}/alocacoes_publicas.json"
+DEFAULT_LAYOUT_MODE = "legacy_single_file"
 
 
 def run_git(repo_root: Path, args: list[str], check: bool = True) -> subprocess.CompletedProcess:
@@ -51,6 +55,148 @@ def is_iso_date(value: Any) -> bool:
     except ValueError:
         return False
     return True
+
+
+def normalize_periodo(value: Any) -> str:
+    text = str(value or "").strip().upper().replace(" ", "")
+    if not text:
+        return ""
+
+    legacy_map = {
+        "1P": "PL1",
+        "2P": "PL2",
+        "3P": "PL3",
+        "4P": "PL4",
+    }
+    if text in legacy_map:
+        return legacy_map[text]
+
+    if text.isdigit():
+        return f"PL{int(text)}"
+
+    if text.startswith("PL") and text[2:].isdigit():
+        return f"PL{int(text[2:])}"
+
+    return text
+
+
+def slugify_public_piece(value: Any) -> str:
+    raw = str(value or "").strip().lower()
+    if not raw:
+        return ""
+    out = []
+    last_was_dash = False
+    for ch in raw:
+        if ch.isalnum():
+            out.append(ch)
+            last_was_dash = False
+            continue
+        if not last_was_dash:
+            out.append("-")
+            last_was_dash = True
+    return "".join(out).strip("-")
+
+
+def load_publication_config(repo_root: Path) -> dict[str, Any]:
+    base_config: dict[str, Any] = {
+        "version": 1,
+        "layoutMode": DEFAULT_LAYOUT_MODE,
+        "defaultJsonPath": LEGACY_PUBLIC_JSON_REL,
+        "catalogPath": DEFAULT_PUBLICATION_CATALOG_REL,
+        "planDirectoryTemplate": DEFAULT_PLAN_DIRECTORY_TEMPLATE,
+        "studentRouting": {
+            "strategy": "default_publication",
+            "allowManualPlanSelection": False,
+            "planQueryParam": "pl",
+        },
+    }
+
+    config_path = repo_root / PUBLICATION_CONFIG_REL
+    if not config_path.exists():
+        return base_config
+
+    try:
+        loaded = json.loads(config_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return base_config
+
+    if not isinstance(loaded, dict):
+        return base_config
+
+    merged = {**base_config, **loaded}
+    student_routing = loaded.get("studentRouting")
+    if isinstance(student_routing, dict):
+        merged["studentRouting"] = {**base_config["studentRouting"], **student_routing}
+    else:
+        merged["studentRouting"] = dict(base_config["studentRouting"])
+    return merged
+
+
+def build_publication_plan_descriptor(payload: Any) -> dict[str, str]:
+    payload_dict = payload if isinstance(payload, dict) else {}
+    plan = payload_dict.get("plan") if isinstance(payload_dict.get("plan"), dict) else {}
+    settings = payload_dict.get("settings") if isinstance(payload_dict.get("settings"), dict) else {}
+    meta = payload_dict.get("meta") if isinstance(payload_dict.get("meta"), dict) else {}
+
+    periodo = normalize_periodo(
+        plan.get("periodo")
+        or settings.get("periodo")
+        or meta.get("periodoLetivo")
+        or ""
+    )
+    term_start = str(plan.get("termStart") or settings.get("termStart") or "").strip()
+    term_end = str(plan.get("termEnd") or settings.get("termEnd") or "").strip()
+    year = str(plan.get("ano") or (term_start[:4] if is_iso_date(term_start) else "")).strip()
+    plan_key = str(plan.get("key") or "").strip()
+    periodo_slug = slugify_public_piece(periodo)
+    plan_slug = slugify_public_piece("-".join(part for part in (year, periodo.lower() if periodo else "") if part))
+
+    return {
+        "plan_key": plan_key,
+        "periodo": periodo,
+        "periodo_slug": periodo_slug,
+        "term_start": term_start,
+        "term_end": term_end,
+        "year": year,
+        "plan_slug": plan_slug,
+    }
+
+
+def resolve_public_target_path(
+    repo_root: Path,
+    payload: Any,
+    publication_config: dict[str, Any],
+    target_arg: str | PathLike[str] | None,
+) -> tuple[Path, str, dict[str, str]]:
+    descriptor = build_publication_plan_descriptor(payload)
+
+    if target_arg:
+        return resolve_input_path(target_arg), "manual", descriptor
+
+    layout_mode = str(publication_config.get("layoutMode") or DEFAULT_LAYOUT_MODE).strip().lower()
+    default_json_path = str(publication_config.get("defaultJsonPath") or LEGACY_PUBLIC_JSON_REL).strip() or LEGACY_PUBLIC_JSON_REL
+
+    if layout_mode == "plan_directory":
+        template = str(publication_config.get("planDirectoryTemplate") or DEFAULT_PLAN_DIRECTORY_TEMPLATE).strip()
+        if descriptor["year"] and descriptor["periodo_slug"]:
+            rel_target = template.format(
+                year=descriptor["year"],
+                periodo=descriptor["periodo"],
+                periodo_slug=descriptor["periodo_slug"],
+                plan_key=descriptor["plan_key"],
+                plan_slug=descriptor["plan_slug"],
+            )
+            return (repo_root / Path(rel_target)).resolve(), "config_plan_directory", descriptor
+
+    return (repo_root / Path(default_json_path)).resolve(), "config_default", descriptor
+
+
+def build_public_file_url(repo_root: Path, path: Path) -> str:
+    try:
+        rel = path.resolve().relative_to(repo_root.resolve()).as_posix()
+    except ValueError:
+        return ""
+    return f"{PUBLIC_URL}{rel}"
 
 
 def validate_public_json(payload: Any) -> list[str]:
@@ -229,23 +375,36 @@ def print_publication_summary(
     allocations_count: int,
     term_start: Any,
     term_end: Any,
+    layout_mode: str,
+    target_mode: str,
+    plan_descriptor: dict[str, str],
 ) -> None:
     print("Resumo da publicacao:")
     print(f"  {describe_source_mode(source_mode)}")
     print(f"  Origem: {source_path}")
     print(f"  Destino: {target_path}")
+    print(f"  Layout publico: {layout_mode}")
+    print(f"  Resolucao do destino: {target_mode}")
+    if plan_descriptor.get("periodo") or plan_descriptor.get("year"):
+        print(f"  Plano detectado: {plan_descriptor.get('periodo') or '--'} / {plan_descriptor.get('year') or '--'}")
     print(f"  Alocacoes: {allocations_count}")
     print(f"  Periodo: {term_start} a {term_end}")
 
 
-def print_public_urls() -> None:
-    print(f"URL publica: {PUBLIC_URL}")
-    print(f"JSON publico: {PUBLIC_JSON_URL}")
+def print_public_urls(repo_root: Path, target_path: Path, publication_config: dict[str, Any]) -> None:
+    print(f"URL publica: {PUBLIC_URL}agenda_publica.html")
+    json_url = build_public_file_url(repo_root, target_path)
+    print(f"JSON publico: {json_url or (PUBLIC_URL + LEGACY_PUBLIC_JSON_REL)}")
+
+    catalog_rel = str(publication_config.get("catalogPath") or "").strip()
+    if catalog_rel:
+        print(f"Catalogo publico: {PUBLIC_URL}{catalog_rel}")
 
 
 def main() -> int:
     repo_root = Path(__file__).resolve().parent.parent
-    default_target = repo_root / "alocacoes_publicas.json"
+    default_source = repo_root / LEGACY_PUBLIC_JSON_REL
+    publication_config = load_publication_config(repo_root)
 
     parser = argparse.ArgumentParser(
         description="Automatiza a publicacao do alocacoes_publicas.json (commit e push opcional)."
@@ -258,7 +417,7 @@ def main() -> int:
     )
     parser.add_argument(
         "--target",
-        default=str(default_target),
+        default=None,
         help="Destino do arquivo público no repositório.",
     )
     parser.add_argument(
@@ -303,12 +462,10 @@ def main() -> int:
     )
     args = parser.parse_args()
 
-    source_path, source_mode = resolve_source_path(args.source, default_target)
-    target_path = resolve_input_path(args.target)
+    source_path, source_mode = resolve_source_path(args.source, default_source)
 
     branch = get_git_branch(repo_root)
     git_status = get_git_status(repo_root)
-    target_existed_before = target_path.exists()
     git_publish_allowed, git_publish_reasons = can_run_git_publish(
         allow_dirty=args.allow_dirty,
         allow_non_main=args.allow_non_main,
@@ -317,12 +474,11 @@ def main() -> int:
     )
 
     debug_print(args.debug, "repo_root", repo_root)
+    debug_print(args.debug, "publication_config_path", repo_root / PUBLICATION_CONFIG_REL)
+    debug_print(args.debug, "publication_layout_mode", publication_config.get("layoutMode"))
     debug_print(args.debug, "source_mode", source_mode)
     debug_print(args.debug, "source_path", source_path if source_path is not None else "<nenhum>")
     debug_print(args.debug, "source_exists", bool(source_path and source_path.exists()))
-    debug_print(args.debug, "target_path", target_path)
-    debug_print(args.debug, "target_exists_before", target_existed_before)
-    debug_print(args.debug, "target_size_before", file_size_or_none(target_path))
     debug_print(args.debug, "branch_atual", branch)
     debug_print(args.debug, "git_status", git_status or "<limpo>")
 
@@ -330,7 +486,7 @@ def main() -> int:
         print("Erro: nenhuma origem valida foi encontrada.", file=sys.stderr)
         print(
             "Nao foi encontrado nenhum arquivo compativel em Downloads e tambem nao existe "
-            "alocacoes_publicas.json na raiz do repositorio.",
+            f"{LEGACY_PUBLIC_JSON_REL} na raiz do repositorio.",
             file=sys.stderr,
         )
         print(
@@ -385,6 +541,20 @@ def main() -> int:
     settings = payload.get("settings", {})
     term_start = settings.get("termStart")
     term_end = settings.get("termEnd")
+    target_path, target_mode, plan_descriptor = resolve_public_target_path(
+        repo_root=repo_root,
+        payload=payload,
+        publication_config=publication_config,
+        target_arg=args.target,
+    )
+    target_existed_before = target_path.exists()
+    layout_mode = str(publication_config.get("layoutMode") or DEFAULT_LAYOUT_MODE)
+
+    debug_print(args.debug, "target_path", target_path)
+    debug_print(args.debug, "target_mode", target_mode)
+    debug_print(args.debug, "target_exists_before", target_existed_before)
+    debug_print(args.debug, "target_size_before", file_size_or_none(target_path))
+    debug_print(args.debug, "plan_descriptor", plan_descriptor)
 
     print_publication_summary(
         source_mode=source_mode,
@@ -393,12 +563,15 @@ def main() -> int:
         allocations_count=allocations_count,
         term_start=term_start,
         term_end=term_end,
+        layout_mode=layout_mode,
+        target_mode=target_mode,
+        plan_descriptor=plan_descriptor,
     )
 
     if args.check:
         print("Verificacao concluida com sucesso. Nenhum arquivo foi gravado e nenhuma etapa Git foi executada.")
         print("Se desejar publicar depois, rode: python tools/publish_online.py --push")
-        print_public_urls()
+        print_public_urls(repo_root, target_path, publication_config)
         return 0
 
     confirm_prompt = "Confirmar gravacao do arquivo publico?"
@@ -442,7 +615,7 @@ def main() -> int:
         print("Quando quiser publicar, rode novamente sem --no-git ou use --push.")
         if args.push:
             print("Observacao: --push foi ignorado porque --no-git desativa git add, commit e push.")
-        print_public_urls()
+        print_public_urls(repo_root, target_path, publication_config)
         return 0
 
     if not git_publish_allowed:
@@ -451,10 +624,21 @@ def main() -> int:
         for reason in git_publish_reasons:
             print(f"  - {reason}")
         print("Proximo passo: regularize o Git e rode novamente para commitar ou publicar.")
-        print_public_urls()
+        print_public_urls(repo_root, target_path, publication_config)
         return 0
 
-    rel_target = target_path.relative_to(repo_root).as_posix()
+    try:
+        rel_target = target_path.relative_to(repo_root).as_posix()
+    except ValueError:
+        print(
+            "Erro: o destino publico precisa permanecer dentro do repositorio para que o Git possa versionar a publicacao.",
+            file=sys.stderr,
+        )
+        print(
+            "Proximo passo: ajuste --target ou a configuracao publica para um caminho interno ao projeto.",
+            file=sys.stderr,
+        )
+        return 1
 
     run_git(repo_root, ["add", "--", rel_target], check=True)
     if not has_staged_changes(repo_root, rel_target):
@@ -463,7 +647,7 @@ def main() -> int:
             "identico ao existente. Nao ha alteracao para commitar."
         )
         print("Proximo passo: nenhum. O repositorio ja estava atualizado.")
-        print_public_urls()
+        print_public_urls(repo_root, target_path, publication_config)
         return 0
 
     run_git(repo_root, ["commit", "-m", args.message], check=True)
@@ -478,7 +662,7 @@ def main() -> int:
     else:
         print("Commit pronto. Proximo passo: rode git push origin main quando quiser publicar.")
 
-    print_public_urls()
+    print_public_urls(repo_root, target_path, publication_config)
     return 0
 
 

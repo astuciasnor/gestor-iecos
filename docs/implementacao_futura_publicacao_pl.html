@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Implementa&ccedil;&atilde;o Futura - Publica&ccedil;&atilde;o por PL</title>
+  <style>
+    :root {
+      --bg: #f4f7fb;
+      --card: #ffffff;
+      --ink: #17324d;
+      --muted: #5c6e82;
+      --line: #d7e0ea;
+      --accent: #0b6e4f;
+      --accent-soft: #e9f7f1;
+      --warn: #a24700;
+      --warn-soft: #fff4e8;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at top left, rgba(11, 110, 79, 0.10), transparent 28%),
+        linear-gradient(180deg, #f7fafc 0%, var(--bg) 100%);
+    }
+
+    .wrap {
+      width: min(1080px, calc(100% - 32px));
+      margin: 32px auto 48px;
+    }
+
+    .hero,
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      box-shadow: 0 14px 34px rgba(23, 50, 77, 0.08);
+    }
+
+    .hero {
+      padding: 28px;
+      margin-bottom: 20px;
+    }
+
+    .hero h1 {
+      margin: 0 0 10px;
+      font-size: 1.9rem;
+      line-height: 1.1;
+    }
+
+    .hero p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.6;
+      max-width: 78ch;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 18px;
+      margin-bottom: 20px;
+    }
+
+    .card {
+      padding: 22px;
+    }
+
+    h2 {
+      margin: 0 0 12px;
+      font-size: 1.1rem;
+    }
+
+    h3 {
+      margin: 0 0 10px;
+      font-size: 1rem;
+    }
+
+    p, li {
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    ul, ol {
+      margin: 10px 0 0 18px;
+      padding: 0;
+    }
+
+    code, pre {
+      font-family: Consolas, "Courier New", monospace;
+    }
+
+    pre {
+      margin: 12px 0 0;
+      padding: 14px;
+      border-radius: 12px;
+      background: #0f2133;
+      color: #eaf2fb;
+      overflow: auto;
+      line-height: 1.5;
+    }
+
+    .tag {
+      display: inline-block;
+      margin-bottom: 12px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: var(--accent-soft);
+      color: var(--accent);
+      font-weight: 700;
+      font-size: 0.82rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .warn {
+      background: var(--warn-soft);
+      border: 1px solid #f1d7bc;
+    }
+
+    .muted {
+      color: var(--muted);
+    }
+
+    .table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 12px;
+    }
+
+    .table th,
+    .table td {
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top;
+    }
+
+    .table th {
+      color: var(--ink);
+      font-size: 0.92rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <section class="hero">
+      <span class="tag">Planejamento Futuro</span>
+      <h1>Publica&ccedil;&atilde;o p&uacute;blica por Per&iacute;odo Letivo</h1>
+      <p>
+        Este arquivo registra a arquitetura desejada para permitir publica&ccedil;&otilde;es separadas por PL
+        sem obrigar o aluno a escolher manualmente o per&iacute;odo letivo na agenda p&uacute;blica.
+        A decis&atilde;o principal &eacute; manter uma &uacute;nica <code>agenda_publica.html</code> e deslocar a
+        intelig&ecirc;ncia de roteamento para um cat&aacute;logo/configura&ccedil;&atilde;o p&uacute;blica.
+      </p>
+    </section>
+
+    <section class="grid">
+      <article class="card">
+        <h2>Decis&atilde;o central</h2>
+        <ul>
+          <li>A agenda publicada continua sendo uma &uacute;nica p&aacute;gina: <code>agenda_publica.html</code>.</li>
+          <li>O aluno n&atilde;o deve decidir o PL por conta pr&oacute;pria na interface.</li>
+          <li>O PL ativo para o aluno deve sair de um cat&aacute;logo p&uacute;blico com uma publica&ccedil;&atilde;o padr&atilde;o.</li>
+          <li>Links com <code>?pl=...</code> podem existir futuramente para uso interno, auditoria ou divulga&ccedil;&atilde;o dirigida.</li>
+        </ul>
+      </article>
+
+      <article class="card">
+        <h2>Arquivos-base j&aacute; preparados</h2>
+        <ul>
+          <li><code>publicacoes/publicacao_config.json</code></li>
+          <li><code>publicacoes/catalogo_publicacoes.json</code></li>
+          <li><code>tools/publish_online.py</code></li>
+          <li><code>js/agenda_publica.js</code></li>
+        </ul>
+      </article>
+
+      <article class="card warn">
+        <h2>Ponto de UX preservado</h2>
+        <p>
+          Mesmo quando existirem v&aacute;rios PLs publicados simultaneamente, a experi&ecirc;ncia padr&atilde;o do aluno
+          deve continuar simples: abrir a agenda p&uacute;blica e ver o PL correto sem precisar interpretar siglas
+          institucionais.
+        </p>
+      </article>
+    </section>
+
+    <section class="card" style="margin-bottom: 20px;">
+      <h2>Estrutura alvo de arquivos</h2>
+      <p class="muted">
+        O layout abaixo &eacute; o formato desejado quando a chave de publica&ccedil;&atilde;o por PL for ativada.
+      </p>
+      <pre>publicacoes/
+  catalogo_publicacoes.json
+  publicacao_config.json
+  2026/
+    pl2/
+      alocacoes_publicas.json
+    pl4/
+      alocacoes_publicas.json
+
+agenda_publica.html</pre>
+    </section>
+
+    <section class="card" style="margin-bottom: 20px;">
+      <h2>L&oacute;gica de resolu&ccedil;&atilde;o da agenda p&uacute;blica</h2>
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Etapa</th>
+            <th>Regra</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>1. Carregar configura&ccedil;&atilde;o</td>
+            <td>Ler <code>publicacoes/publicacao_config.json</code>.</td>
+          </tr>
+          <tr>
+            <td>2. Carregar cat&aacute;logo</td>
+            <td>Ler <code>publicacoes/catalogo_publicacoes.json</code>.</td>
+          </tr>
+          <tr>
+            <td>3. Escolher a publica&ccedil;&atilde;o</td>
+            <td>Usar a publica&ccedil;&atilde;o marcada como padr&atilde;o para estudantes.</td>
+          </tr>
+          <tr>
+            <td>4. Carregar o JSON</td>
+            <td>Buscar o arquivo indicado em <code>defaultPublication.jsonPath</code>.</td>
+          </tr>
+          <tr>
+            <td>5. Fallback</td>
+            <td>Se o cat&aacute;logo n&atilde;o existir ou falhar, usar o modelo legado com <code>alocacoes_publicas.json</code> na raiz.</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="card" style="margin-bottom: 20px;">
+      <h2>Comportamento esperado do script Python</h2>
+      <ol>
+        <li>Ler o payload exportado e detectar o PL a partir de <code>plan</code> e <code>settings</code>.</li>
+        <li>Consultar <code>publicacoes/publicacao_config.json</code>.</li>
+        <li>Se o modo for <code>legacy_single_file</code>, publicar em <code>alocacoes_publicas.json</code>.</li>
+        <li>Se o modo for <code>plan_directory</code>, resolver a pasta pelo template configurado.</li>
+        <li>Criar a pasta automaticamente se ela ainda n&atilde;o existir.</li>
+        <li>Num passo futuro, tamb&eacute;m atualizar o cat&aacute;logo p&uacute;blico para apontar qual PL fica vis&iacute;vel aos estudantes.</li>
+      </ol>
+    </section>
+
+    <section class="card" style="margin-bottom: 20px;">
+      <h2>Chaves ainda n&atilde;o ativadas</h2>
+      <ul>
+        <li>Troca autom&aacute;tica de <code>layoutMode</code> para <code>plan_directory</code>.</li>
+        <li>Atualiza&ccedil;&atilde;o autom&aacute;tica do cat&aacute;logo de publica&ccedil;&otilde;es pelo script Python.</li>
+        <li>Interface administrativa para escolher qual PL fica ativo para os alunos.</li>
+        <li>Links institucionais por PL para uso externo controlado.</li>
+      </ul>
+    </section>
+
+    <section class="card warn" style="margin-bottom: 20px;">
+      <h2>Gate de Transi&ccedil;&atilde;o do Legado</h2>
+      <p>
+        A pr&oacute;xima etapa mais sens&iacute;vel da transi&ccedil;&atilde;o n&atilde;o &eacute; publicar por PL, e sim
+        isolar completamente a agenda discente legada sem quebrar a URL j&aacute; usada em produ&ccedil;&atilde;o.
+      </p>
+      <ul>
+        <li><code>agenda_discente.html</code> foi preservada e restaurada nesta branch.</li>
+        <li>Existe um snapshot completo da vers&atilde;o da <code>main</code> em <code>_backups/agenda_discente_main_snapshot_20260328</code>.</li>
+        <li>Nenhuma remo&ccedil;&atilde;o lenta de arquivos deve come&ccedil;ar antes do teste manual da <code>agenda_discente.html</code> nesta branch.</li>
+        <li>Se o teste falhar, a prioridade &eacute; retroagir e manter o legado compartilhando arquivos por mais tempo.</li>
+        <li>Se o teste passar, a etapa seguinte recomendada &eacute; isolar depend&ecirc;ncias da agenda discente em estrutura pr&oacute;pria, sem alterar sua URL p&uacute;blica.</li>
+      </ul>
+      <p>
+        <strong>Status atual:</strong> teste manual aprovado em <strong>28/03/2026</strong>,
+        no notebook local, via <code>http://127.0.0.1:5501/agenda_discente.html</code>.
+        A agenda discente legada carregou corretamente nesse cen&aacute;rio.
+      </p>
+      <p>
+        <strong>Andamento da transi&ccedil;&atilde;o:</strong> o HTML legado continua na raiz, mas o runtime da agenda
+        discente passou a apontar para uma estrutura isolada em <code>legacy/agenda_discente_runtime/</code>.
+        Os JSONs p&uacute;blicos continuam compartilhados por design nesta fase.
+      </p>
+      <p>
+        <strong>Trava antes do merge:</strong> repetir o mesmo smoke test da URL legada ap&oacute;s esse isolamento,
+        para confirmar que a vers&atilde;o agora servida pelo HTML raiz continua funcionando com os arquivos isolados.
+      </p>
+    </section>
+
+    <section class="card">
+      <h2>Pr&oacute;ximo passo recomendado</h2>
+      <p>
+        Quando a coordena&ccedil;&atilde;o decidir publicar simultaneamente dois PLs reais, o pr&oacute;ximo pacote de
+        implementa&ccedil;&atilde;o deve fazer duas coisas ao mesmo tempo:
+      </p>
+      <ol>
+        <li>ativar o modo <code>plan_directory</code> no arquivo de configura&ccedil;&atilde;o;</li>
+        <li>ensinar o <code>publish_online.py</code> a atualizar o <code>catalogo_publicacoes.json</code> com a publica&ccedil;&atilde;o padr&atilde;o.</li>
+      </ol>
+      <p>
+        Assim, a separa&ccedil;&atilde;o por PL entra de forma elegante, sem multiplicar HTMLs e sem transferir a
+        decis&atilde;o operacional para o aluno.
+      </p>
+    </section>
+  </div>
+</body>
+</html>

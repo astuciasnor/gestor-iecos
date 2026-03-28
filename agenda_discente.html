@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cardume – Planejador Acadêmico | IECOS</title>
+    <link rel="stylesheet" href="legacy/agenda_discente_runtime/css/style.css?v=20260328a">
+    <style>
+        /* Estilos específicos para a página de consulta pública, focados em Mobile */
+        body {
+            background-color: var(--bg-app);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px 10px;
+
+            /* AS DUAS LINHAS NOVAS PARA LIBERAR O SCROLL */
+            overflow-y: auto !important;
+            height: auto !important;
+        }
+
+        .consulta-container {
+            width: 100%;
+            max-width: 600px;
+            /* Num notebook não fica gigante, no celular ocupa 100% */
+            background: var(--bg-panel);
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            padding: 30px 20px;
+            text-align: center;
+        }
+
+        .header-publico img {
+            height: 80px;
+            margin-bottom: 15px;
+        }
+
+        .header-publico h1 {
+            color: var(--primary);
+            font-size: 1.5rem;
+            margin: 0 0 5px 0;
+        }
+
+        .header-publico p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            margin-bottom: 25px;
+        }
+
+        /* Estilo dos seletores para ficarem grandes e fáceis de tocar no celular */
+        .seletor-grupo {
+            text-align: left;
+            margin-bottom: 20px;
+        }
+
+        .seletor-grupo label {
+            display: block;
+            color: var(--text-main);
+            font-weight: bold;
+            margin-bottom: 8px;
+            font-size: 0.95rem;
+        }
+
+        .seletor-grupo select {
+            width: 100%;
+            padding: 14px;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            font-size: 1rem;
+            background-color: #fff;
+            color: var(--text-main);
+            transition: border-color 0.3s;
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23004e28%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
+            background-repeat: no-repeat;
+            background-position: right 15px top 50%;
+            background-size: 12px auto;
+        }
+
+        .seletor-grupo select:focus {
+            border-color: var(--primary);
+            outline: none;
+        }
+
+        .seletor-grupo select:disabled {
+            background-color: #f1f2f6;
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        /* ===== NOVOS ESTILOS: BOTÕES (PÍLULAS) ===== */
+        .botoes-wrapper {
+            /* MUDANÇA AQUI: Fundo Menta Gelo suave e fresco */
+            background: #f0f7f4;
+            /* Ajuste da cor da borda para combinar com o novo fundo */
+            border: 1px solid #dcebe6;
+
+            padding: 15px;
+            border-radius: 12px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            min-height: 60px;
+            align-items: center;
+            /* Sombra interna subtil mantida para profundidade */
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.02);
+        }
+
+        .msg-vazio {
+            color: #95a5a6;
+            font-size: 0.95rem;
+            font-style: italic;
+            width: 100%;
+            text-align: center;
+        }
+
+        .btn-seletor {
+            background: #ffffff;
+            border: 2px solid #dde4e0;
+            color: #2c3e50;
+            padding: 10px 16px;
+            border-radius: 20px;
+            font-size: 0.95rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.03);
+            flex: 1 1 auto;
+            text-align: center;
+        }
+
+        .btn-seletor:hover {
+            border-color: #bdc3c7;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        .btn-seletor:active {
+            transform: translateY(0);
+        }
+
+        .btn-seletor.active {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: #ffffff;
+            /* Sombra mantida para destacar o botão selecionado no novo fundo */
+            box-shadow: 0 4px 12px rgba(0, 78, 40, 0.3);
+            transform: scale(1.02);
+        }
+
+        /* Área onde o calendário/agenda vai aparecer depois */
+        #resultado-agenda {
+            margin-top: 30px;
+            width: 100%;
+            max-width: 800px;
+        }
+
+        /* ===== ESTILOS DOS CARTÕES DIÁRIOS (MÁGICA) ===== */
+        .dia-card {
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+            margin-bottom: 25px;
+            overflow: hidden;
+            text-align: left;
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .dia-header {
+            background: var(--primary);
+            color: white;
+            padding: 12px 18px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: bold;
+        }
+
+        .dia-numero {
+            font-size: 1.2rem;
+            letter-spacing: 1px;
+        }
+
+        .dia-semana {
+            font-size: 0.95rem;
+            opacity: 0.9;
+            text-transform: uppercase;
+        }
+
+        .dia-body {
+            padding: 5px 15px;
+        }
+
+        .aula-item {
+            display: flex;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .aula-item:last-child {
+            border-bottom: none;
+        }
+
+        .aula-horario {
+            font-weight: 800;
+            color: #2c3e50;
+            width: 70px;
+            flex-shrink: 0;
+            font-size: 1.05rem;
+            font-family: monospace;
+        }
+
+        .aula-info {
+            flex-grow: 1;
+            padding-left: 12px;
+        }
+
+        .aula-titulo {
+            font-weight: 800;
+            color: var(--primary-light);
+            font-size: 1.1rem;
+            margin-bottom: 5px;
+        }
+
+        .aula-docente {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .badge {
+            font-size: 0.7rem;
+            padding: 3px 6px;
+            border-radius: 4px;
+            color: white;
+            margin-left: 8px;
+            vertical-align: top;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .badge.intensiva {
+            background: #e67e22;
+        }
+
+        .badge.prioritaria {
+            background: #8e44ad;
+        }
+
+        .evento-feriado {
+            padding: 20px;
+            text-align: center;
+            color: var(--accent);
+            font-weight: bold;
+            background: #fdf0ed;
+            font-size: 1.1rem;
+        }
+
+        .sem-aulas {
+            padding: 40px 20px;
+            background: #fff;
+            border-radius: 8px;
+            color: var(--text-muted);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+            font-weight: bold;
+            font-size: 1.1rem;
+            text-align: center;
+        }
+
+        /* ===== NOVOS ESTILOS: OPÇÃO B (UX/UI) ===== */
+        .loading-msg {
+            text-align: center;
+            padding: 40px 20px;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+            color: var(--primary);
+            font-weight: bold;
+            font-size: 1.1rem;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                opacity: 0.6;
+                transform: scale(0.98);
+            }
+
+            50% {
+                opacity: 1;
+                transform: scale(1);
+            }
+
+            100% {
+                opacity: 0.6;
+                transform: scale(0.98);
+            }
+        }
+
+        .btn-topo {
+            position: fixed;
+            bottom: 25px;
+            right: 25px;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 55px;
+            height: 55px;
+            font-size: 24px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            cursor: pointer;
+            display: none;
+            /* Escondido por padrão, o JS vai mostrar */
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            transition: background-color 0.3s, transform 0.2s;
+        }
+
+        .btn-topo:active {
+            transform: scale(0.9);
+            background-color: var(--primary-light);
+        }
+
+        /* ============================================================== */
+        /* ===== NOVO DESIGN: GRADE SEMANAL E BOTTOM SHEET (OPÇÃO C) ==== */
+        /* ============================================================== */
+
+        .semana-block {
+            margin-bottom: 25px;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        .semana-header {
+            background: var(--primary);
+            color: white;
+            padding: 8px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .grade-semana {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            /* 6 colunas (Seg a Sáb) */
+            gap: 1px;
+            background: #e0e0e0;
+            /* Cor da borda entre colunas */
+        }
+
+        .grade-dia {
+            background: #fff;
+            display: flex;
+            flex-direction: column;
+            min-height: 90px;
+        }
+
+        .grade-dia-header {
+            text-align: center;
+            padding: 6px 0;
+            border-bottom: 1px solid #f0f0f0;
+            background: #fafafa;
+        }
+
+        .grade-dia-header .nome-dia {
+            font-size: 0.7rem;
+            font-weight: bold;
+            color: #7f8c8d;
+            text-transform: uppercase;
+        }
+
+        .grade-dia-header .num-dia {
+            font-size: 0.95rem;
+            font-weight: 800;
+            color: #2c3e50;
+        }
+
+        .grade-slots {
+            padding: 4px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            flex: 1;
+        }
+
+        /* O Quadradinho Mágico (Chip) */
+        .mini-chip {
+            color: white;
+            border-radius: 4px;
+            padding: 4px 2px;
+            text-align: center;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            transition: transform 0.1s;
+        }
+
+        .mini-chip:active {
+            transform: scale(0.92);
+        }
+
+        .chip-hora {
+            font-size: 0.55rem;
+            color: #666;
+            line-height: 1.2;
+            font-weight: bold;
+        }
+
+        /* Rotulo principal do chip */
+        .chip-sigla {
+            font-size: 0.58rem;
+            font-weight: 800;
+            line-height: 1.15;
+            letter-spacing: 0;
+            color: #fff;
+            text-transform: uppercase;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .feriado-chip {
+            background: #fdf0ed;
+            color: #e74c3c;
+            font-size: 0.65rem;
+            padding: 6px 2px;
+            text-align: center;
+            border-radius: 4px;
+            font-weight: bold;
+            border: 1px dashed #e74c3c;
+        }
+
+        /* ===== BOTTOM SHEET MODAL (Janela que sobe) ===== */
+        .sheet-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 2000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .sheet-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .bottom-sheet {
+            position: fixed;
+            bottom: -100%;
+            left: 0;
+            width: 100%;
+            background: #fff;
+            border-radius: 20px 20px 0 0;
+            z-index: 2001;
+            transition: bottom 0.3s cubic-bezier(0.1, 0.8, 0.2, 1);
+            box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.2);
+            padding: 20px;
+            max-height: 85vh;
+            overflow-y: auto;
+            text-align: left;
+        }
+
+        .bottom-sheet.active {
+            bottom: 0;
+        }
+
+        .sheet-handle {
+            width: 50px;
+            height: 5px;
+            background: #ddd;
+            border-radius: 5px;
+            margin: 0 auto 20px auto;
+        }
+
+        .sheet-title {
+            font-size: 1.3rem;
+            font-weight: 900;
+            margin-bottom: 5px;
+            line-height: 1.2;
+        }
+
+        .sheet-tipo {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            font-weight: bold;
+            color: #7f8c8d;
+            margin-bottom: 20px;
+            display: inline-block;
+            padding: 3px 8px;
+            background: #f1f2f6;
+            border-radius: 4px;
+        }
+
+        .sheet-info-row {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            margin-bottom: 15px;
+            font-size: 1rem;
+            color: #2c3e50;
+            font-weight: 600;
+        }
+
+        .sheet-info-icon {
+            font-size: 1.3rem;
+        }
+
+        .sheet-btn-fechar {
+            display: block;
+            width: 100%;
+            padding: 14px;
+            background: #f1f2f6;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            color: #555;
+            font-size: 1.05rem;
+            margin-top: 25px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .sheet-btn-fechar:active {
+            background: #e1e2e6;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="consulta-container">
+        <header class="header-publico">
+            <img src="legacy/agenda_discente_runtime/img/logo_iecos.png" alt="Logo IECOS">
+            <h1>Cardume – Planejador Acadêmico</h1>
+            <p>Consulte as alocações e horários do seu curso</p>
+        </header>
+
+        <div class="seletor-grupo">
+            <label for="public-sel-curso">1. Selecione o Curso</label>
+            <select id="public-sel-curso">
+                <option value="">Carregando cursos...</option>
+            </select>
+        </div>
+
+        <div class="seletor-grupo">
+            <label>2. Selecione a Turma</label>
+            <div id="container-turmas" class="botoes-wrapper">
+                <span class="msg-vazio">Aguardando curso...</span>
+            </div>
+            <select id="public-sel-turma" style="display:none;" disabled>
+                <option value="">Aguardando curso...</option>
+            </select>
+        </div>
+
+        <div class="seletor-grupo">
+            <label>3. Mês da Aula</label>
+            <div id="container-meses" class="botoes-wrapper">
+                <span class="msg-vazio">Aguardando turma...</span>
+            </div>
+            <select id="public-sel-mes" style="display:none;" disabled>
+                <option value="">Aguardando turma...</option>
+            </select>
+        </div>
+    </div>
+
+    <div id="resultado-agenda"></div>
+
+    <button id="btn-topo" class="btn-topo" title="Voltar ao topo">⬆️</button>
+
+    <div id="sheet-overlay" class="sheet-overlay"></div>
+    <div id="bottom-sheet" class="bottom-sheet">
+        <div class="sheet-handle"></div>
+        <h3 id="sheet-title" class="sheet-title">NOME DA DISCIPLINA</h3>
+        <div id="sheet-tipo" class="sheet-tipo">Tipo de Aula</div>
+
+        <div class="sheet-info-row">
+            <span class="sheet-info-icon">👨‍🏫</span>
+            <span id="sheet-docente">Nome do Professor</span>
+        </div>
+        <div class="sheet-info-row">
+            <span class="sheet-info-icon">⏰</span>
+            <span id="sheet-horario">00:00 - 00:00</span>
+        </div>
+        <div class="sheet-info-row">
+            <span class="sheet-info-icon">📅</span>
+            <span id="sheet-data">00/00/0000</span>
+        </div>
+
+        <button id="btn-fechar-sheet" class="sheet-btn-fechar">Fechar</button>
+    </div>
+
+    <script type="module" src="legacy/agenda_discente_runtime/js/agenda_discente.js?v=20260328a"></script>
+
+</body>
+
+</html>

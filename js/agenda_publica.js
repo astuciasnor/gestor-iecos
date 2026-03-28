@@ -6,11 +6,14 @@ import { buildCanonicalOfferProjection, buildTeacherExecutionSnapshot } from './
 import { renderBidimensionalTeacherGantt, hideBidimensionalTeacherGanttLens } from './gantt_bidimensional.js';
 
 const collator = new Intl.Collator('pt-BR', { sensitivity: 'base' });
-const PUBLIC_ASSET_VERSION = '20260327d';
+const PUBLIC_ASSET_VERSION = '20260328d';
+const PUBLIC_ROUTING_CONFIG_URL = 'publicacoes/publicacao_config.json';
+const PUBLIC_ROUTING_CATALOG_FALLBACK_URL = 'publicacoes/catalogo_publicacoes.json';
 
 const state = {
     activeTab: 'discente',
     publicCatalog: null,
+    publicPublicationRoute: null,
     publicTurmaIds: null,
     componentInfoByName: new Map(),
     turmaById: new Map(),
@@ -49,6 +52,133 @@ function shouldPreferLocalDraftSource(localAllocations = []) {
     if (forcedSource === 'public') return false;
 
     return true;
+}
+
+function appendPublicAssetVersion(url) {
+    const raw = String(url || '').trim();
+    if (!raw) return '';
+    return `${raw}${raw.includes('?') ? '&' : '?'}v=${PUBLIC_ASSET_VERSION}`;
+}
+
+async function fetchJsonIfAvailable(url) {
+    const ref = appendPublicAssetVersion(url);
+    if (!ref) return null;
+
+    try {
+        const response = await fetch(ref);
+        if (!response.ok) return null;
+        return await response.json();
+    } catch (_) {
+        return null;
+    }
+}
+
+function normalizePublicationSelector(value) {
+    return String(value || '')
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '');
+}
+
+function normalizePublicationEntry(entry = {}) {
+    if (!entry || typeof entry !== 'object') return null;
+
+    const planKey = String(entry.planKey || entry.key || '').trim();
+    const periodo = String(entry.periodo || '').trim();
+    const termStart = String(entry.termStart || '').trim();
+    const year = String(entry.year || (termStart ? termStart.slice(0, 4) : '') || '').trim();
+    const jsonPath = String(entry.jsonPath || '').trim();
+    const periodSlug = normalizePublicationSelector(periodo);
+    const yearPeriodSlug = normalizePublicationSelector([year, periodo].filter(Boolean).join('-'));
+    const normalizedPlanKey = normalizePublicationSelector(planKey);
+
+    return {
+        ...entry,
+        planKey,
+        periodo,
+        year,
+        termStart,
+        jsonPath,
+        selectors: [...new Set([
+            normalizedPlanKey,
+            yearPeriodSlug,
+            periodSlug,
+            normalizePublicationSelector(entry.slug || ''),
+            normalizePublicationSelector(entry.label || '')
+        ].filter(Boolean))]
+    };
+}
+
+function getDefaultPublicSourceDescriptor() {
+    return {
+        jsonPath: 'alocacoes_publicas.json',
+        publication: null,
+        routingConfig: null,
+        routingCatalog: null
+    };
+}
+
+function getCatalogPublications(catalog = {}) {
+    const publications = Array.isArray(catalog.publications) ? catalog.publications : [];
+    return publications
+        .map((entry) => normalizePublicationEntry(entry))
+        .filter((entry) => entry && entry.jsonPath);
+}
+
+function findPublicationEntry(catalog = {}, selector = '') {
+    const normalizedSelector = normalizePublicationSelector(selector);
+    if (!normalizedSelector) return null;
+    return getCatalogPublications(catalog).find((entry) => entry.selectors.includes(normalizedSelector)) || null;
+}
+
+function getDefaultPublicationEntry(catalog = {}, fallbackJsonPath = 'alocacoes_publicas.json') {
+    const explicitDefault = normalizePublicationEntry(catalog.defaultPublication || {});
+    if (explicitDefault?.jsonPath) return explicitDefault;
+
+    const publications = getCatalogPublications(catalog);
+    if (publications.length === 1) return publications[0];
+
+    return {
+        planKey: '',
+        periodo: '',
+        year: '',
+        termStart: '',
+        jsonPath: fallbackJsonPath,
+        selectors: []
+    };
+}
+
+async function resolvePublicDataSourceDescriptor() {
+    const fallback = getDefaultPublicSourceDescriptor();
+    const routingConfig = await fetchJsonIfAvailable(PUBLIC_ROUTING_CONFIG_URL);
+    if (!routingConfig || typeof routingConfig !== 'object') return fallback;
+
+    const fallbackJsonPath = String(routingConfig.defaultJsonPath || fallback.jsonPath || '').trim() || fallback.jsonPath;
+    const catalogPath = String(routingConfig.catalogPath || PUBLIC_ROUTING_CATALOG_FALLBACK_URL || '').trim() || PUBLIC_ROUTING_CATALOG_FALLBACK_URL;
+    const routingCatalog = await fetchJsonIfAvailable(catalogPath);
+    if (!routingCatalog || typeof routingCatalog !== 'object') {
+        return {
+            ...fallback,
+            jsonPath: fallbackJsonPath,
+            routingConfig
+        };
+    }
+
+    const params = new URLSearchParams(window.location.search || '');
+    const planQueryParam = String(routingConfig?.studentRouting?.planQueryParam || 'pl').trim() || 'pl';
+    const requestedPublication = String(params.get(planQueryParam) || '').trim();
+
+    const publication = requestedPublication
+        ? (findPublicationEntry(routingCatalog, requestedPublication) || getDefaultPublicationEntry(routingCatalog, fallbackJsonPath))
+        : getDefaultPublicationEntry(routingCatalog, fallbackJsonPath);
+
+    return {
+        jsonPath: publication?.jsonPath || fallbackJsonPath,
+        publication,
+        routingConfig,
+        routingCatalog
+    };
 }
 
 document.addEventListener('DOMContentLoaded', init);
@@ -167,6 +297,7 @@ async function loadPublicData() {
 
     if (useLocalDraft) {
         state.publicCatalog = null;
+        state.publicPublicationRoute = null;
         store.allocations = localDraftAllocations;
         store.settings.termStart = localDraftSettings.termStart || store.settings.termStart;
         store.settings.termEnd = localDraftSettings.termEnd || store.settings.termEnd;
@@ -177,25 +308,35 @@ async function loadPublicData() {
         return;
     }
 
+    const sourceDescriptor = await resolvePublicDataSourceDescriptor();
+    state.publicPublicationRoute = sourceDescriptor;
+
     try {
-        const response = await fetch(`alocacoes_publicas.json?v=${PUBLIC_ASSET_VERSION}`);
+        let response = await fetch(appendPublicAssetVersion(sourceDescriptor.jsonPath));
+        if (!response.ok && sourceDescriptor.jsonPath !== 'alocacoes_publicas.json') {
+            response = await fetch(appendPublicAssetVersion('alocacoes_publicas.json'));
+        }
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
         const dadosPublicos = await response.json();
         if (Array.isArray(dadosPublicos)) {
             store.allocations = dadosPublicos.map(normalizeLoadedAllocation);
-            state.publicCatalog = null;
+            state.publicCatalog = sourceDescriptor.publication || null;
         } else {
             store.allocations = Array.isArray(dadosPublicos.allocations) ? dadosPublicos.allocations.map(normalizeLoadedAllocation) : [];
             state.publicCatalog = dadosPublicos.meta && typeof dadosPublicos.meta === 'object'
-                ? dadosPublicos.meta
-                : null;
+                ? { ...dadosPublicos.meta }
+                : (sourceDescriptor.publication || null);
+            if (state.publicCatalog && sourceDescriptor.publication?.periodo && !state.publicCatalog.periodoLetivo) {
+                state.publicCatalog.periodoLetivo = sourceDescriptor.publication.periodo;
+            }
             applyPublicPlanSettings(dadosPublicos);
         }
     } catch (error) {
         console.warn('Falha ao carregar alocacoes_publicas.json. Usando dados locais.', error);
         store.loadAllocations();
         state.publicCatalog = null;
+        state.publicPublicationRoute = null;
     }
 
     if (!store.settings.termStart) store.settings.termStart = '2026-02-01';

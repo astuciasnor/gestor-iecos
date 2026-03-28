@@ -356,6 +356,12 @@ Arquivos envolvidos:
 - `alocacoes_publicas.json`
 - `agenda_publica.html`
 
+Preparacao futura ja assumida:
+
+- `publicacoes/publicacao_config.json` define o layout de publicacao;
+- `publicacoes/catalogo_publicacoes.json` sera a fonte para decidir qual PL fica visivel ao aluno;
+- a agenda publica deve continuar sendo uma unica pagina, com fallback para `alocacoes_publicas.json` enquanto o modo legado permanecer ativo.
+
 ---
 
 ## 10. Diretrizes de refatoracao em curso

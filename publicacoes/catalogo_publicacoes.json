@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "layoutMode": "legacy_single_file",
+  "defaultPublication": {
+    "planKey": "",
+    "periodo": "",
+    "year": "",
+    "label": "Publicacao padrao atual",
+    "jsonPath": "alocacoes_publicas.json",
+    "agendaPath": "agenda_publica.html",
+    "isStudentDefault": true,
+    "status": "legacy_default"
+  },
+  "publications": []
+}
