@@ -1142,6 +1142,12 @@ function syncFaixaStartFromGridClick(faixaIndex, cellDate, currentPattern = [], 
         return true;
     }
 
+    const validation = getFaixaStartDateValidation(idx, dateStr);
+    if (!validation.isValid) {
+        showToastWarning(validation.message, 'warning', 2600);
+        return false;
+    }
+
     const persistedCount = normalizeFaixaPattern(faixasPatterns[idx]).length;
     const currentCount = normalizeFaixaPattern(currentPattern).length;
     const firstMarking = persistedCount === 0 && currentCount === 0;
@@ -1547,6 +1553,14 @@ function clearFaixaState(faixaNum, options = {}) {
     setFaixaStatus(faixaNum, 0);
 }
 
+function syncFaixaStartSnapshots() {
+    for (let i = 1; i <= 3; i++) {
+        const input = document.getElementById(`inp-data-inicio-f${i}`);
+        if (!input) continue;
+        input.dataset.lastValidValue = String(input.value || '').trim();
+    }
+}
+
 function getFaixaQuickActionWarningText(faixaNum) {
     const idx = parseInt(faixaNum, 10);
     if (Number.isNaN(idx) || idx < 1 || idx > 3) return '';
@@ -1602,6 +1616,7 @@ function executeFaixaQuickAction(faixaNum) {
         if (pendingFaixaStartPick) clearPendingFaixaStartPick();
         window.isDrawingFaixa = null;
         weeklyViewState.followActiveFaixa = false;
+        setComponentStartSelectionMode('auto');
 
         ['inp-data-inicio-f1', 'inp-data-fim-f1', 'inp-data-inicio-f2', 'inp-data-fim-f2', 'inp-data-inicio-f3', 'inp-data-fim-f3']
             .forEach((id) => {
@@ -1829,6 +1844,60 @@ function getManualComponentStartOverride() {
 function getCanonicalFirstFaixaStartDate() {
     const termStart = String(store.settings.termStart || inpTermStart?.value || calStart?.value || '').trim();
     return isValidISODateValue(termStart) ? termStart : '';
+}
+
+function getFaixaStartDateValidation(faixaIndex, candidateDate) {
+    const idx = parseInt(faixaIndex, 10);
+    const dateStr = String(candidateDate || '').trim();
+    if (Number.isNaN(idx) || idx < 1 || idx > 3) {
+        return { isValid: false, message: 'Faixa inválida.' };
+    }
+    if (!isValidISODateValue(dateStr)) {
+        return { isValid: false, message: `Data inválida para a Faixa ${idx}.` };
+    }
+
+    const termStart = String(store.settings.termStart || inpTermStart?.value || calStart?.value || '').trim();
+    const termEnd = String(store.settings.termEnd || inpTermEnd?.value || calEnd?.value || '').trim();
+    if (isValidISODateValue(termStart) && dateStr < termStart) {
+        return {
+            isValid: false,
+            message: `A Faixa ${idx} precisa começar dentro do período letivo ativo.`
+        };
+    }
+    if (isValidISODateValue(termEnd) && dateStr > termEnd) {
+        return {
+            isValid: false,
+            message: `A Faixa ${idx} precisa terminar dentro do período letivo ativo.`
+        };
+    }
+
+    const previousStart = idx > 1
+        ? String(document.getElementById(`inp-data-inicio-f${idx - 1}`)?.value || '').trim()
+        : '';
+    if (idx > 1 && !isValidISODateValue(previousStart)) {
+        return {
+            isValid: false,
+            message: `Defina primeiro o início da Faixa ${idx - 1}.`
+        };
+    }
+    if (isValidISODateValue(previousStart) && dateStr <= previousStart) {
+        return {
+            isValid: false,
+            message: `A Faixa ${idx} precisa começar depois da Faixa ${idx - 1}.`
+        };
+    }
+
+    const nextStart = idx < 3
+        ? String(document.getElementById(`inp-data-inicio-f${idx + 1}`)?.value || '').trim()
+        : '';
+    if (isValidISODateValue(nextStart) && dateStr >= nextStart) {
+        return {
+            isValid: false,
+            message: `A Faixa ${idx} precisa começar antes da Faixa ${idx + 1}.`
+        };
+    }
+
+    return { isValid: true, message: '' };
 }
 
 function getPreferredStartDateForCurrentTurma(options = {}) {
@@ -2418,6 +2487,7 @@ function applyFaixaDateAutofill(options = {}) {
         if (f3Ini) f3Ini.value = '';
     }
 
+    syncFaixaStartSnapshots();
     refreshAllCompactFaixaDateDisplays();
     updateWeeklyFaixaHoursDisplay();
 }
@@ -2476,10 +2546,22 @@ function setupFaixaControls() {
         if (iniEl) {
             ['change'].forEach((evt) => {
                 iniEl.addEventListener(evt, () => {
+                    const previousValue = String(iniEl.dataset.lastValidValue || '').trim();
                     if (i === 3 && iniEl.value && !document.getElementById('inp-data-inicio-f2')?.value) {
                         showToastWarning('Defina primeiro o inicio da Faixa 2.', 'warning', 2200);
                         iniEl.value = '';
+                        refreshCompactFaixaDateDisplay(iniEl);
                         return;
+                    }
+
+                    if (iniEl.value) {
+                        const validation = getFaixaStartDateValidation(i, iniEl.value);
+                        if (!validation.isValid) {
+                            iniEl.value = previousValue;
+                            refreshCompactFaixaDateDisplay(iniEl);
+                            showToastWarning(validation.message, 'warning', 2600);
+                            return;
+                        }
                     }
 
                     if (i === 2 && !iniEl.value) {
@@ -2518,6 +2600,7 @@ function setupFaixaControls() {
             });
 
             iniEl.addEventListener('focus', () => {
+                iniEl.dataset.lastValidValue = String(iniEl.value || '').trim();
                 if (!iniEl.value) return;
                 activeFaixaIndex = i;
                 autoEnterWeeklyEditingForFaixa(i);
@@ -2922,7 +3005,7 @@ function updateWeeklyContextNote() {
 
     if (!ini) {
         noteEl.textContent = idx === 1
-            ? 'Faixa = regime de funcionamento em um intervalo de datas. Defina o inicio da Faixa 1 para alinhar a alocacao com a semana real.'
+            ? 'Faixa = regime de funcionamento em um intervalo de datas. Defina o início da Faixa 1 pelo calendário ao lado para alinhar a alocação com a semana real.'
             : `Defina o inicio da Faixa ${idx} para criar o novo regime que substituira a Faixa ${idx - 1}.`;
         return;
     }
@@ -4783,6 +4866,7 @@ export function initUI() {
             const isEditingSameDisc = editingDisciplinaDraft && discNome === editingDisciplinaDraft;
             const isNewDiscSelection = !!discNome && discNome !== lastDisciplinaInputNormalized && !isEditingSameDisc;
             if (isNewDiscSelection) {
+                setComponentStartSelectionMode('auto');
                 collapseFaixasForNewComponent({ useCurrentUI: false });
                 editingDisciplinaDraft = '';
             }
@@ -4798,6 +4882,7 @@ export function initUI() {
             const isEditingSameDisc = editingDisciplinaDraft && discNome === editingDisciplinaDraft;
             const isNewDiscSelection = !!discNome && discNome !== lastDisciplinaInputNormalized && !isEditingSameDisc;
             if (isNewDiscSelection) {
+                setComponentStartSelectionMode('auto');
                 collapseFaixasForNewComponent({ useCurrentUI: false });
                 editingDisciplinaDraft = '';
             }
@@ -5582,7 +5667,10 @@ function renderWeeklyGrid() {
                     const isHoliday = !!cellDate && feriadosSet.has(cellDate);
                     const holidayLabel = isHoliday ? (feriadosMap.get(cellDate) || 'Feriado') : '';
                     const waitingStartPick = !!pendingFaixaStartPick;
-                    const canPickStartDate = waitingStartPick && !isHoliday && !!cellDate;
+                    const startPickValidation = waitingStartPick
+                        ? getFaixaStartDateValidation(pendingFaixaStartPick, cellDate)
+                        : { isValid: false, message: '' };
+                    const canPickStartDate = waitingStartPick && !isHoliday && !!cellDate && startPickValidation.isValid;
                     const canEdit = !waitingStartPick && isInsideFaixa && !isHoliday && allocs.length === 0;
 
                     if (canPickStartDate) {
@@ -5651,6 +5739,9 @@ function renderWeeklyGrid() {
                         if (isHoliday) {
                             cell.classList.add('slot-week-holiday');
                             cell.title = holidayLabel ? `Feriado: ${holidayLabel}` : 'Feriado nesta data';
+                        } else if (waitingStartPick && !!cellDate) {
+                            cell.classList.add('slot-week-disabled');
+                            cell.title = startPickValidation.message || `Data indisponível para o início da Faixa ${String(pendingFaixaStartPick)}.`;
                         } else if (!isInsideFaixa) {
                             cell.classList.add('slot-week-disabled');
                             cell.title = 'Fora do intervalo da faixa ativa nesta semana. Ajuste inicio/fim ou navegue para outra semana.';
@@ -6063,6 +6154,7 @@ function handleAddManual() {
             );
             applyFaixasConfigToSidebar(faixasSidebar);
         }
+        setComponentStartSelectionMode('auto');
         editingDisciplinaDraft = normalizeDisciplinaInputValue(disciplina);
         updateWeeklyFaixasTitleDisciplina();
         refreshPendingFaixaStartPickUI();
