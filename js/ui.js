@@ -1,6 +1,5 @@
 import { store } from './store.js';
 import { getTurnoLetter, mapSlotToTurno } from './turns.js';
-import { ALLOCATION_MODES, inferAllocationModo, isAllocationModo } from './allocation_mode.mjs';
 import { normalizePeriodo as normalizePeriodoLetivoCode } from './plan_storage.js';
 import { getCalendarEvents } from './calendar.js';
 import { countBusinessDays, countWeekdaysInPeriod, addBusinessDays, isDateOverlap, calculateEndDateByWeekday } from './utils.js';
@@ -77,11 +76,11 @@ const weeklyViewState = {
 };
 
 function getAllocationModo(alloc) {
-    return inferAllocationModo(alloc);
+    return String(alloc?.modo || '').trim().toLowerCase();
 }
 
 function isFaixaAllocation(alloc) {
-    return isAllocationModo(alloc, ALLOCATION_MODES.FAIXAS);
+    return getAllocationModo(alloc) === 'faixas';
 }
 
 function isPriorityRegularAllocation(alloc) {
@@ -89,7 +88,7 @@ function isPriorityRegularAllocation(alloc) {
 }
 
 function isRegularAllocation(alloc) {
-    return isAllocationModo(alloc, ALLOCATION_MODES.WEEKLY);
+    return getAllocationModo(alloc) === 'semanal';
 }
 
 function isScheduledRegularAllocation(alloc) {
@@ -97,7 +96,7 @@ function isScheduledRegularAllocation(alloc) {
 }
 
 function isPendingAllocation(alloc) {
-    return isAllocationModo(alloc, ALLOCATION_MODES.PENDING);
+    return getAllocationModo(alloc) === 'pendente';
 }
 
 // ==========================================
@@ -5503,7 +5502,7 @@ function renderWeeklyGrid() {
 
                 if (eventKey !== key && !listKey) return;
 
-                const dedupe = `${e.id ?? ''}|${e.disciplina ?? ''}|${getAllocationModo(e)}|${eventKey || key}|${e.subGrupo ?? ''}`;
+                const dedupe = `${e.id ?? ''}|${e.disciplina ?? ''}|${e.modo ?? ''}|${eventKey || key}|${e.subGrupo ?? ''}`;
                 if (seen.has(dedupe)) return;
                 seen.add(dedupe);
                 out.push(e);
@@ -5521,7 +5520,7 @@ function renderWeeklyGrid() {
                 if (!a.horariosUltimoDia.some((h) => slotKey(h) === key)) return;
             }
 
-            const dedupe = `${a.id ?? ''}|${a.disciplina ?? ''}|${getAllocationModo(a)}|${key}|${a.subGrupo ?? ''}`;
+            const dedupe = `${a.id ?? ''}|${a.disciplina ?? ''}|${a.modo ?? ''}|${key}|${a.subGrupo ?? ''}`;
             if (seen.has(dedupe)) return;
             seen.add(dedupe);
             out.push(a);
@@ -5873,7 +5872,7 @@ function handleAddManual() {
     if (window.isDrawingFaixa) persistActiveDrawingSelection();
 
     const disciplina = (inputConfig.disciplina?.value ?? '').replace(/\s*\(\s*\d+\s*h\s*\)\s*$/i, '');
-    const modo = ALLOCATION_MODES.FAIXAS;
+    const tipo = 'faixas';
     const inicioFaixa1 = document.getElementById('inp-data-inicio-f1')?.value ?? '';
     const inicioLegacy = inputConfig.inicio?.value ?? '';
     const inicio = inicioFaixa1 || inicioLegacy;
@@ -5884,7 +5883,7 @@ function handleAddManual() {
         return;
     }
 
-    if (modo === ALLOCATION_MODES.FAIXAS) {
+    if (String(tipo || '').trim().toLowerCase() === 'faixas') {
         if (!inicio) {
             showToastWarning('Defina a data de início.', 'warning', 2200);
             return;
@@ -5932,7 +5931,7 @@ function handleAddManual() {
                 turmaId: store.selectedTurma,
                 disciplina,
                 subGrupo: subGrupo || null,
-                modo,
+                modo: 'faixas',
                 ch: effectiveCH,
                 dataInicio: faixasConfig[0].inicio,
                 dataFim: faixasConfig[0].inicio,
@@ -7107,7 +7106,7 @@ function collectLegacyGanttDayItems({
                 alloc.turmaId,
                 alloc.disciplina,
                 snapshot.turno,
-                getAllocationModo(alloc),
+                alloc.modo,
                 snapshot.dataInicio,
                 snapshot.dataFim
             ].join('|');
@@ -8349,11 +8348,7 @@ function detectGlobalTeacherConflicts() {
             const a = allocs[i];
             const b = allocs[j];
 
-            if (
-                String(a.turmaId) === String(b.turmaId)
-                && a.disciplina === b.disciplina
-                && getAllocationModo(a) === getAllocationModo(b)
-            ) continue;
+            if (String(a.turmaId) === String(b.turmaId) && a.disciplina === b.disciplina && a.modo === b.modo) continue;
 
             const teachersA = getInvolvedTeachers(a);
             const teachersB = getInvolvedTeachers(b);
@@ -8469,7 +8464,7 @@ function detectGlobalTeacherConflictsStable() {
             String(event?.id || ''),
             String(event?.turmaId || ''),
             String(event?.disciplina || ''),
-            getAllocationModo(event),
+            String(event?.modo || ''),
             String(event?.subGrupo || ''),
             slotKey
         ].join('|');
@@ -8509,7 +8504,7 @@ function detectGlobalTeacherConflictsStable() {
                         if (
                             String(eventA?.turmaId) === String(eventB?.turmaId) &&
                             String(eventA?.disciplina || '') === String(eventB?.disciplina || '') &&
-                            getAllocationModo(eventA) === getAllocationModo(eventB)
+                            String(eventA?.modo || '') === String(eventB?.modo || '')
                         ) {
                             continue;
                         }
@@ -8812,7 +8807,7 @@ function generateCalendarGrid(container, turmaId, docenteName, start, end, title
                             if (eHorariosOcupados && eHorariosOcupados.some(h => normalizeTime(h) === slotTimeNorm)) return true;
                             return false;
                         });
-                        const dedupeEventKey = (e) => `${e.turmaId || ''}|${e.disciplina || ''}|${getAllocationModo(e)}|${e.subGrupo || ''}|${slotTimeNorm}`;
+                        const dedupeEventKey = (e) => `${e.turmaId || ''}|${e.disciplina || ''}|${e.modo || ''}|${e.subGrupo || ''}|${slotTimeNorm}`;
                         const seenSlotEvents = new Set();
                         const uniqueEventsInSlot = eventsInSlot.filter((e) => {
                             const key = dedupeEventKey(e);

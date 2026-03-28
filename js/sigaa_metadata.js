@@ -1,12 +1,11 @@
 import { buildSigaaExportPayload, filterExportableAllocations } from './academic_rules.mjs';
 import { buildCanonicalOfferProjection } from './execution_engine.js';
-import { inferAllocationModo } from './allocation_mode.mjs';
 
 export function buildSigaaOfertaBase(allocation, info = {}) {
     return {
         componente: allocation?.disciplina || '',
         codigo: info.codigo || '',
-        modo: inferAllocationModo(allocation),
+        modo: allocation?.modo || '',
         cargaHoraria: allocation?.ch || info.ch || 0,
         docente: allocation?.docente || '',
         subGrupo: allocation?.subGrupo || ''
