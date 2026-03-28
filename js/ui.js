@@ -3,8 +3,7 @@ import { getTurnoLetter, mapSlotToTurno } from './turns.js';
 import { normalizePeriodo as normalizePeriodoLetivoCode } from './plan_storage.js';
 import { getCalendarEvents } from './calendar.js';
 import { countBusinessDays, countWeekdaysInPeriod, addBusinessDays, isDateOverlap, calculateEndDateByWeekday } from './utils.js';
-import { getUnifiedExecutionSnapshot } from './execution_engine.js';
-import { detectTeacherConflicts } from './conflicts.js';
+import { buildTeacherExecutionSnapshot, buildCanonicalOfferProjection } from './execution_engine.js';
 import { buildSigaaMetadataPayload, validateSigaaMetadataPayload } from './sigaa_metadata.js';
 import { parseBackupDataFile, extractImportPlanMeta } from './serialization.js';
 import {
@@ -13,7 +12,6 @@ import {
 
     filterExportableAllocations,
     generateAllocationOccurrences,
-    getTeacherActiveShifts,
     initializeWeeklyScheduleForTurma,
     reconcileTurmaSelectionAfterPLChange,
     resetWeeklyViewOnTurmaChange,
@@ -4098,13 +4096,85 @@ function syncAllIntensiveDates() {
     store.saveAllocations();
 }
 
+function buildScopedSigaaAllocationFromOfferFaixa(offerGroup, faixa, planContext = {}) {
+    const base = offerGroup?.baseAlloc || (Array.isArray(offerGroup?.allocations) ? offerGroup.allocations[0] : null) || {};
+    const rawDrawnSlotsByDay = faixa?.drawnSlotsByDay || offerGroup?.timeRangesByDay || {};
+    const dias = [...new Set(
+        (Array.isArray(faixa?.dias) ? faixa.dias : Object.keys(rawDrawnSlotsByDay))
+            .map((value) => Number.parseInt(value, 10))
+            .filter((value) => value >= 1 && value <= 6)
+    )].sort((left, right) => left - right);
+    const slots = [...new Set(
+        (Array.isArray(faixa?.slots) && faixa.slots.length > 0 ? faixa.slots : Object.values(rawDrawnSlotsByDay).flat())
+            .map((value) => String(value || '').trim())
+            .filter(Boolean)
+    )].sort((left, right) => timeToMinutes(left) - timeToMinutes(right));
+    const drawnSlotsByDay = {};
+
+    dias.forEach((day) => {
+        const daySlots = Array.isArray(rawDrawnSlotsByDay?.[day]) && rawDrawnSlotsByDay[day].length > 0
+            ? rawDrawnSlotsByDay[day]
+            : slots;
+        drawnSlotsByDay[day] = [...new Set(daySlots.map((value) => String(value || '').trim()).filter(Boolean))]
+            .sort((left, right) => timeToMinutes(left) - timeToMinutes(right));
+    });
+
+    const inicio = String(faixa?.inicio || offerGroup?.start || base?.dataInicio || planContext.termStart || '').trim();
+    const fim = String(faixa?.fim || offerGroup?.end || base?.dataFim || planContext.termEnd || inicio || '').trim();
+
+    return {
+        ...base,
+        modo: 'faixas',
+        ch: 0,
+        dataInicio: inicio,
+        dataFim: fim,
+        diasMarcados: dias,
+        horariosOcupados: slots,
+        usaSabado: dias.includes(6),
+        faixas: [{
+            inicio,
+            fim,
+            dias,
+            slots,
+            drawnSlotsByDay
+        }]
+    };
+}
+
 function getSigaaCode(allocsForClass) {
-    const slotsMap = [
-        { m: 450, s: 'M', sl: 1 }, { m: 500, s: 'M', sl: 2 }, { m: 550, s: 'M', sl: 3 },
-        { m: 620, s: 'M', sl: 4 }, { m: 670, s: 'M', sl: 5 }, { m: 720, s: 'M', sl: 6 },
-        { m: 810, s: 'T', sl: 1 }, { m: 860, s: 'T', sl: 2 }, { m: 910, s: 'T', sl: 3 },
-        { m: 980, s: 'T', sl: 4 }, { m: 1030, s: 'T', sl: 5 }, { m: 1080, s: 'T', sl: 6 }
-    ];
+    function buildSigaaSlotsMap() {
+        const hp = store.rawData?.horarios_por_turno || {};
+        const dynamicSlots = [];
+
+        Object.keys(hp).forEach((turnoValue) => {
+            const shiftCode = getGanttTurnoCode(turnoValue);
+            if (!['M', 'T', 'N'].includes(shiftCode)) return;
+
+            let slotIndex = 0;
+            (Array.isArray(hp[turnoValue]) ? hp[turnoValue] : []).forEach((rawSlot) => {
+                const rawLabel = String(rawSlot || '');
+                if (!rawLabel || rawLabel.toUpperCase().includes('INTERVALO')) return;
+                const startMinutes = timeToMinutes(cleanHorarioLabel(rawLabel));
+                if (!Number.isFinite(startMinutes) || startMinutes >= 99999) return;
+                slotIndex += 1;
+                dynamicSlots.push({ m: startMinutes, s: shiftCode, sl: slotIndex });
+            });
+        });
+
+        if (dynamicSlots.length > 0) {
+            return dynamicSlots.sort((a, b) => (a.m - b.m) || a.s.localeCompare(b.s) || (a.sl - b.sl));
+        }
+
+        return [
+            { m: 450, s: 'M', sl: 1 }, { m: 500, s: 'M', sl: 2 }, { m: 550, s: 'M', sl: 3 },
+            { m: 620, s: 'M', sl: 4 }, { m: 670, s: 'M', sl: 5 }, { m: 720, s: 'M', sl: 6 },
+            { m: 810, s: 'T', sl: 1 }, { m: 860, s: 'T', sl: 2 }, { m: 910, s: 'T', sl: 3 },
+            { m: 980, s: 'T', sl: 4 }, { m: 1030, s: 'T', sl: 5 }, { m: 1080, s: 'T', sl: 6 },
+            { m: 1110, s: 'N', sl: 1 }, { m: 1160, s: 'N', sl: 2 }, { m: 1210, s: 'N', sl: 3 }, { m: 1260, s: 'N', sl: 4 }
+        ];
+    }
+
+    const slotsMap = buildSigaaSlotsMap();
 
     function getSlot(horario) {
         if (!horario) return null;
@@ -4264,6 +4334,88 @@ function resolveTurnoOfertaValue(preferredValue = '') {
     const normalizedPreferred = normalizeTurnoOfertaKey(preferredValue);
     const matched = options.find((option) => option.normalized === normalizedPreferred);
     return matched?.value || preferredValue || options[0]?.value || '';
+}
+
+function getTurnoNormalizedFromLetter(letter = '') {
+    if (letter === 'M') return 'manha';
+    if (letter === 'T') return 'tarde';
+    if (letter === 'N') return 'noite';
+    return '';
+}
+
+function getTurnoValueFromLetter(letter = '') {
+    if (letter === 'M') return resolveTurnoOfertaValue('Manha');
+    if (letter === 'T') return resolveTurnoOfertaValue('Tarde');
+    if (letter === 'N') return resolveTurnoOfertaValue('Noite');
+    return '';
+}
+
+function getShiftChangeLabel(letter = '') {
+    if (letter === 'M') return 'Manha';
+    if (letter === 'T') return 'Tarde';
+    if (letter === 'N') return 'Noturno';
+    return '';
+}
+
+function getNativeTurnoValueForAllocation(allocLike = {}) {
+    return store.rawData?.turmas?.find((turma) => String(turma?.turma_id) === String(allocLike?.turmaId))?.turno
+        || allocLike?.turno
+        || 'Tarde';
+}
+
+function getShiftChangeMeta(allocLike = {}, slotLabel = '', dayOfWeek = 0, dateStr = '') {
+    const nativeTurnoValue = getNativeTurnoValueForAllocation(allocLike);
+    const nativeTurnoNorm = normalizeTurnoOfertaKey(nativeTurnoValue);
+    const currentLetter = getTurnoLetter(slotLabel);
+    const currentTurnoNorm = getTurnoNormalizedFromLetter(currentLetter);
+    const isShiftChange = !!(
+        nativeTurnoNorm
+        && currentTurnoNorm
+        && nativeTurnoNorm !== currentTurnoNorm
+    );
+    let mappedSlot = slotLabel;
+    if (isShiftChange && slotLabel) {
+        const normalizedSlotKey = normalizeConflictSlotLabel(slotLabel);
+        const actualDateSlots = dateStr
+            && allocLike?.executionByDate
+            && Array.isArray(allocLike.executionByDate[dateStr])
+            ? allocLike.executionByDate[dateStr]
+            : [];
+        const baseSlots = Array.isArray(allocLike?.horariosBase) && allocLike.horariosBase.length > 0
+            ? allocLike.horariosBase
+            : [];
+
+        if (baseSlots.length > 0 && actualDateSlots.length > 0) {
+            const slotIndex = actualDateSlots.findIndex((entry) => normalizeConflictSlotLabel(entry) === normalizedSlotKey);
+            if (slotIndex >= 0) {
+                mappedSlot = cleanHorarioLabel(baseSlots[slotIndex] || baseSlots[baseSlots.length - 1] || slotLabel);
+            }
+        }
+
+        if (mappedSlot === slotLabel) {
+            mappedSlot = mapSlotToTurno(
+                slotLabel,
+                getTurnoValueFromLetter(currentLetter),
+                nativeTurnoValue,
+                store.rawData?.horarios_por_turno
+            );
+        }
+    }
+    const badgeLabel = isShiftChange ? getShiftChangeLabel(currentLetter) : '';
+    const badgeHTML = badgeLabel
+        ? `<span style="display:inline-block; font-size:0.65em; background:#e67e22; color:#fff; padding:1px 4px; border-radius:3px; margin-left:2px; font-weight:bold;" title="Mudou de turno: aula no turno ${badgeLabel}">&#9888; ${badgeLabel}</span>`
+        : '';
+
+    return {
+        nativeTurnoValue,
+        nativeTurnoNorm,
+        currentLetter,
+        currentTurnoNorm,
+        isShiftChange,
+        mappedSlot,
+        badgeLabel,
+        badgeHTML
+    };
 }
 
 function populateTurnoOfertaOptions(preferredValue = store.settings.turnoOferta || '') {
@@ -5601,7 +5753,7 @@ function renderSlotContent(cell, allocs, dayOfWeek = 0) {
 
         card.innerHTML = `
             <div class="card-title" title="${alloc.disciplina}${docenteNome ? ` - ${docenteNome}` : ''}">
-                <span class="card-comp">${info.abrev}${badgeHTML}</span>
+                <span class="card-comp">${info.abrev}${getShiftChangeMeta(alloc, alloc.horario, dayOfWeek).badgeHTML || badgeHTML}</span>
                 ${docenteNome ? `<span class="card-docente">${docenteNome}</span>` : ''}
             </div>
             <span class="remove-btn" title="Remover">×</span>
@@ -6003,11 +6155,12 @@ function renderOfertasList() {
     const dayLabels = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab'];
     const semesterStart = calStart ? calStart.value : '2025-01-01';
     const semesterEnd = calEnd ? calEnd.value : '2025-12-31';
-    const unifiedExec = getUnifiedExecutionSnapshot(String(store.selectedTurma), semesterStart, semesterEnd);
-
     const list = store.allocations.filter((a) => String(a.turmaId) === String(store.selectedTurma));
-    const regular = list.filter((a) => isScheduledRegularAllocation(a));
-    const intensivas = list.filter((a) => isFaixaAllocation(a));
+    const offerProjection = buildCanonicalOfferProjection({
+        allocations: list,
+        startDate: semesterStart,
+        endDate: semesterEnd
+    });
     const pendentes = list.filter((a) => isPendingAllocation(a));
 
     const appendSeparator = (label) => {
@@ -6026,78 +6179,41 @@ function renderOfertasList() {
     };
 
     const buildRegularRows = () => {
-        const grouped = new Map();
-        regular.forEach((a) => {
-            const key = [a.disciplina, a.docente, a.modo, a.subGrupo || ''].join('|');
-            if (!grouped.has(key)) grouped.set(key, []);
-            grouped.get(key).push(a);
-        });
-
-        const rows = [];
-        grouped.forEach((allocs) => {
-            const sorted = allocs.slice().sort((x, y) => {
-                const byDay = parseInt(x.diaSemana, 10) - parseInt(y.diaSemana, 10);
-                if (byDay !== 0) return byDay;
-                return timeToMinutes(x.horario) - timeToMinutes(y.horario);
-            });
-            const fallbackStart = sorted.map((a) => a.dataInicio || semesterStart).sort()[0];
-            const fallbackEnd = sorted.map((a) => a.dataFim || semesterEnd).sort().slice(-1)[0];
-            let totalHoras = 0;
-            let maxSemanas = 0;
-            let start = null;
-            let end = null;
-            sorted.forEach((a) => {
-                const horas = unifiedExec.hoursByAlloc.get(a.id) || 0;
-                totalHoras += horas;
-
-                const datesSet = unifiedExec.datesByAlloc.get(a.id);
-                const semanas = datesSet ? datesSet.size : 0;
-                if (semanas > maxSemanas) maxSemanas = semanas;
-
-                if (datesSet && datesSet.size > 0) {
-                    datesSet.forEach((d) => {
-                        if (!start || d < start) start = d;
-                        if (!end || d > end) end = d;
-                    });
-                }
-            });
-            if (!start) start = fallbackStart;
-            if (!end) end = fallbackEnd;
-
-            const first = sorted[0];
+        return (offerProjection.regularOfferGroups || []).map((group) => {
+            const first = group.baseAlloc;
             const info = getDisciplinaInfo(first.disciplina);
-            const horariosResumo = sorted.map((a) => `${dayLabels[a.diaSemana] || 'Dia'} ${a.horario}`).join(', ');
+            const horariosResumo = (Array.isArray(group.scheduleEntries) ? group.scheduleEntries : [])
+                .map((entry) => `${dayLabels[entry.diaSemana] || 'Dia'} ${entry.horario}`)
+                .join(', ');
 
-            rows.push({
+            return {
                 rowType: 'regular_group',
                 baseAlloc: first,
-                groupIds: sorted.map((a) => a.id),
-                disciplina: first.disciplina,
-                componentKey: String(first.disciplina || '').trim().toLocaleUpperCase('pt-BR'),
+                groupIds: group.allocationIds,
+                disciplina: group.disciplina,
+                componentKey: group.componentKey,
                 codigo: info.codigo || '-',
-                docente: first.docente,
+                docente: group.docenteLabel || first.docente,
                 tipoLabel: 'componente',
-                start,
-                end,
-                horarioTxt: `${formatDateBR(start)} a ${ensureWarningEndDate(end)}<br><small>${horariosResumo}</small>`,
-                totalHoras,
+                start: group.start,
+                end: group.end,
+                horarioTxt: `${formatDateBR(group.start)} a ${ensureWarningEndDate(group.end)}<br><small>${horariosResumo}</small>`,
+                totalHoras: group.executedHours,
                 chMax: first.ch || info.ch,
-                details: `${maxSemanas} semanas`,
-                sigaaCode: getSigaaCode(sorted),
+                details: `${group.maxExecutionDays} semanas`,
+                sigaaCode: getSigaaCode(group.allocations),
                 faixaIndex: 0
-            });
+            };
         });
-
-        rows.sort((a, b) => (a.componentKey || '').localeCompare(b.componentKey || ''));
-        return rows;
     };
 
     const buildIntensiveRows = () => {
         const rows = [];
-        intensivas
+        (offerProjection.faixaOfferGroups || [])
             .slice()
-            .sort((a, b) => (a.dataInicio || '').localeCompare(b.dataInicio || ''))
-            .forEach((base) => {
+            .sort((a, b) => String(a.start || '').localeCompare(String(b.start || '')))
+            .forEach((group) => {
+                const base = group.baseAlloc;
                 const info = getDisciplinaInfo(base.disciplina);
                 const faixas = getNormalizedIntensiveFaixas(base);
                 const fallbackDias = Array.isArray(base.diasMarcados) && base.diasMarcados.length > 0
@@ -6123,7 +6239,7 @@ function renderOfertasList() {
                     const faixaEnd = faixa.fim || base.dataFim || semesterEnd;
                     const faixaDias = Array.isArray(faixa.dias) && faixa.dias.length > 0 ? faixa.dias : fallbackDias;
                     const faixaSlots = Array.isArray(faixa.slots) && faixa.slots.length > 0 ? faixa.slots : fallbackSlots;
-                    const dateHours = unifiedExec.dateHoursByAlloc.get(base.id) || new Map();
+                    const dateHours = offerProjection.dateHoursByAlloc.get(base.id) || new Map();
                     let faixaTotalHoras = 0;
                     const faixaDaysSet = new Set();
                     dateHours.forEach((hours, dStr) => {
@@ -6151,11 +6267,11 @@ function renderOfertasList() {
                     rows.push({
                         rowType: 'intensiva_faixa',
                         baseAlloc: base,
-                        groupIds: [base.id],
+                        groupIds: group.allocationIds,
                         disciplina: base.disciplina,
                         componentKey: String(base.disciplina || '').trim().toLocaleUpperCase('pt-BR'),
                         codigo: info.codigo || '-',
-                        docente: base.docente,
+                        docente: group.docenteLabel || base.docente,
                         tipoLabel: resolvedFaixas.length > 1 ? `componente <small>(Faixa ${idx + 1})</small>` : 'componente',
                         start: faixaStart,
                         end: faixaEnd,
@@ -6163,6 +6279,100 @@ function renderOfertasList() {
                         totalHoras: faixaTotalHoras,
                         chMax: base.ch || info.ch,
                         details: `${faixaDaysSet.size} dias`,
+                        sigaaCode,
+                        sabadoLabel,
+                        faixaIndex: idx + 1
+                    });
+                });
+            });
+
+        rows.sort((a, b) => {
+            const comp = (a.componentKey || '').localeCompare(b.componentKey || '');
+            if (comp !== 0) return comp;
+            const startA = a.start || '9999-12-31';
+            const startB = b.start || '9999-12-31';
+            if (startA !== startB) return startA.localeCompare(startB);
+            return (a.faixaIndex || 0) - (b.faixaIndex || 0);
+        });
+        return rows;
+    };
+
+    const buildCanonicalRows = () => {
+        const buildFaixaHorarioResumo = (faixa) => {
+            const drawnSlotsByDay = faixa?.drawnSlotsByDay || {};
+            return Object.entries(drawnSlotsByDay)
+                .sort(([left], [right]) => Number(left) - Number(right))
+                .map(([day, slots]) => {
+                    const safeSlots = Array.isArray(slots) ? slots.filter(Boolean) : [];
+                    if (safeSlots.length === 0) return '';
+                    return `${dayLabels[Number(day)] || 'Dia'} ${safeSlots.join(', ')}`;
+                })
+                .filter(Boolean)
+                .join(', ');
+        };
+
+        const getOfferFaixas = (group) => {
+            if (Array.isArray(group?.faixas) && group.faixas.length > 0) return group.faixas;
+            const drawnSlotsByDay = group?.timeRangesByDay || {};
+            const dias = Object.keys(drawnSlotsByDay)
+                .map((value) => Number.parseInt(value, 10))
+                .filter((value) => value >= 1 && value <= 6)
+                .sort((left, right) => left - right);
+            const slots = [...new Set(Object.values(drawnSlotsByDay).flat().map(String).filter(Boolean))];
+            return [{
+                faixaId: `${group?.offerKey || 'offer'}|1`,
+                index: 1,
+                inicio: group?.start || group?.baseAlloc?.dataInicio || semesterStart,
+                fim: group?.end || group?.baseAlloc?.dataFim || semesterEnd,
+                dias,
+                slots,
+                drawnSlotsByDay,
+                executedHours: group?.executedHours || 0,
+                executionDays: group?.activeDates?.length || 0
+            }];
+        };
+
+        const rows = [];
+        offerProjection.offerGroups
+            .slice()
+            .sort((a, b) => String(a.start || '').localeCompare(String(b.start || '')))
+            .forEach((group) => {
+                const base = group.baseAlloc || group.allocations?.[0];
+                if (!base) return;
+                const info = getDisciplinaInfo(base.disciplina);
+                const resolvedFaixas = getOfferFaixas(group);
+
+                resolvedFaixas.forEach((faixa, idx) => {
+                    const faixaStart = faixa?.inicio || base.dataInicio || semesterStart;
+                    const faixaEnd = faixa?.fim || base.dataFim || semesterEnd;
+                    const scoped = buildScopedSigaaAllocationFromOfferFaixa(group, faixa, {
+                        termStart: semesterStart,
+                        termEnd: semesterEnd
+                    });
+                    const sigaaCode = getSigaaCode([scoped]);
+                    const sabadoLabel = Array.isArray(faixa?.dias) && faixa.dias.includes(6)
+                        ? `<br><span style="color:#e67e22; font-weight:bold; font-size:0.8em;">(Inclui SÃ¡bados)</span>`
+                        : '';
+                    const horariosResumo = buildFaixaHorarioResumo(faixa);
+                    const faixaLabel = resolvedFaixas.length > 1 ? `Faixa ${idx + 1}` : 'Faixa Ãºnica';
+                    const detailParts = [faixaLabel];
+                    if (horariosResumo) detailParts.push(horariosResumo);
+
+                    rows.push({
+                        rowType: 'offer_faixa',
+                        baseAlloc: base,
+                        groupIds: group.allocationIds,
+                        disciplina: group.disciplina,
+                        componentKey: group.componentKey,
+                        codigo: info.codigo || '-',
+                        docente: group.docenteLabel || base.docente,
+                        tipoLabel: resolvedFaixas.length > 1 ? `componente <small>(Faixa ${idx + 1})</small>` : 'componente',
+                        start: faixaStart,
+                        end: faixaEnd,
+                        horarioTxt: `${formatDateBR(faixaStart)} a ${ensureWarningEndDate(faixaEnd)}<br><small>${detailParts.join(' • ')}</small>`,
+                        totalHoras: faixa?.executedHours || 0,
+                        chMax: base.ch || info.ch,
+                        details: `${faixa?.executionDays || 0} ocorrÃªncias`,
                         sigaaCode,
                         sabadoLabel,
                         faixaIndex: idx + 1
@@ -6286,10 +6496,9 @@ function renderOfertasList() {
         tbody.appendChild(tr);
     };
 
-    const regularRows = buildRegularRows();
-    const intensiveRows = buildIntensiveRows();
+    const canonicalRows = buildCanonicalRows();
     const pendenteRows = buildPendenteRows();
-    const canonicalRows = [...regularRows, ...intensiveRows].sort((a, b) => {
+    canonicalRows.sort((a, b) => {
         const comp = (a.componentKey || '').localeCompare(b.componentKey || '');
         if (comp !== 0) return comp;
         const startA = a.start || '9999-12-31';
@@ -6340,22 +6549,25 @@ function getActiveExportPlanContext() {
 
 export function exportSigaaMetadataJSON() {
     const planContext = getActiveExportPlanContext();
-    const unifiedExec = getUnifiedExecutionSnapshot(store.selectedTurma, planContext.termStart, planContext.termEnd);
+    const turmaAllocations = store.allocations.filter((alloc) => String(alloc?.turmaId || '') === String(store.selectedTurma || ''));
+    const offerProjection = buildCanonicalOfferProjection({
+        allocations: turmaAllocations,
+        startDate: planContext.termStart,
+        endDate: planContext.termEnd
+    });
     
     const dataContext = {
         store,
         planContext,
         turmaId: String(store.selectedTurma || ''),
-        unifiedExec
+        unifiedExec: offerProjection,
+        offerProjection
     };
     
     const contextMap = {
         getDisciplinaInfo,
         getSigaaCode,
-        getNormalizedIntensiveFaixas,
-        alignFaixasToExecutionEnd,
-        isScheduledRegularAllocation,
-        isFaixaAllocation,
+        buildScopedSigaaAllocationFromOfferFaixa,
         formatDateBR
     };
 
@@ -6450,6 +6662,39 @@ function getSlotsForTeacherShifts(activeShiftValues = []) {
     return collectSlotsForTurnoValues(activeShiftValues);
 }
 
+function buildTurmaCalendarSlots(eventsByDate = {}, turmaId = '') {
+    const nativeSlots = buildHorariosForUI();
+    const slotMap = new Map();
+
+    nativeSlots.forEach((slot) => {
+        const key = String(slot || '').trim();
+        if (!key) return;
+        slotMap.set(key, slot);
+    });
+
+    Object.values(eventsByDate || {}).forEach((events) => {
+        (Array.isArray(events) ? events : []).forEach((event) => {
+            if (!event || event.type === 'holiday') return;
+            if (turmaId && String(event?.turmaId || '') !== String(turmaId)) return;
+
+            const rawSlot = String(
+                event?.horario
+                || (Array.isArray(event?.horariosOcupados) ? event.horariosOcupados[0] : '')
+                || ''
+            ).trim();
+            if (!rawSlot) return;
+
+            const normalizedSlot = cleanHorarioLabel(rawSlot);
+            if (!normalizedSlot) return;
+            if (!slotMap.has(normalizedSlot)) slotMap.set(normalizedSlot, normalizedSlot);
+        });
+    });
+
+    return [...slotMap.values()]
+        .filter((slot) => String(slot || '').trim().length > 0)
+        .sort((left, right) => timeToMinutes(left) - timeToMinutes(right));
+}
+
 function formatConflictDateRange(startDate, endDate) {
     if (!startDate) return '-';
     if (!endDate || endDate === startDate) return formatDateBR(startDate);
@@ -6512,23 +6757,19 @@ function renderTeacherCalendar() {
         end = lastDay.toISOString().split('T')[0];
     }
 
-    const eventsByDate = getCalendarEvents(null, start, end, docente);
     const turnoConfigs = getTeacherCalendarTurnoConfigs();
-    const activeShiftData = getTeacherActiveShifts({
-        eventsByDate,
+    const teacherSnapshot = buildTeacherExecutionSnapshot({
+        docenteName: docente,
+        startDate: start,
+        endDate: end,
         resolveShift: (slot) => resolveTeacherShiftForSlot(slot),
-        preferredOrder: turnoConfigs.map((config) => config.value)
-    });
-    const activeShiftValues = activeShiftData.map((shift) => shift.value);
-    const conflictRows = detectTeacherConflicts({
-        eventsByDate,
-        resolveShift: (slot) => {
-            const turnoValue = resolveTeacherShiftForSlot(slot);
-            const config = turnoConfigs.find((entry) => entry.value === turnoValue);
-            return config?.label || turnoValue;
-        },
+        preferredShiftOrder: turnoConfigs.map((config) => config.value),
         formatTurmaLabel: (event) => getTurmaLabel(event?.turmaId, event?.subGrupo)
     });
+    const eventsByDate = teacherSnapshot.eventsByDate;
+    const activeShiftData = teacherSnapshot.activeShiftData;
+    const activeShiftValues = activeShiftData.map((shift) => shift.value);
+    const conflictRows = teacherSnapshot.conflictRows;
     const visibleSlots = getSlotsForTeacherShifts(activeShiftValues);
     const totalCH = calculateTeacherTotalCH(docente);
     const docenteTitle = totalCH > 0 ? `${docente} (${totalCH}h)` : docente;
@@ -6633,7 +6874,7 @@ function resolveGanttTurnosForSlots(slots = [], turnoConfigs = getGanttTurnoConf
     return turnoConfigs.filter((config) => used.has(config.value));
 }
 
-function getGanttVisibleTurnos(allocs = [], minDateStr = '', maxDateStr = '', turnoConfigs = getGanttTurnoConfigs()) {
+function getGanttVisibleTurnosLegacy(allocs = [], minDateStr = '', maxDateStr = '', turnoConfigs = getGanttTurnoConfigs()) {
     const used = new Set();
 
     (Array.isArray(allocs) ? allocs : []).forEach((alloc) => {
@@ -6766,7 +7007,14 @@ function buildGanttMonthHeaderColumnsHtml(minTime, maxTime, totalTime) {
     return html;
 }
 
-function collectGanttDayItems({
+function resolveExecutionRangeBounds(range, fallbackStart = '', fallbackEnd = '') {
+    return {
+        start: range?.firstDate || range?.start || fallbackStart,
+        end: range?.lastDate || range?.end || fallbackEnd || range?.firstDate || range?.start || fallbackStart
+    };
+}
+
+function collectLegacyGanttDayItems({
     dayId,
     allocs,
     docenteName,
@@ -6800,16 +7048,23 @@ function collectGanttDayItems({
 
     allocs.forEach((alloc) => {
         const snapshots = [];
-        const executionRange = executionRangeByAlloc.get(alloc.id);
-        const executionSignature = buildNonIntensiveExecutionSignature(alloc);
-        const scheduledRange = executionSignature ? scheduledExecutionRangeByAlloc.get(executionSignature) : null;
+        const executionRange = resolveExecutionRangeBounds(
+            executionRangeByAlloc.get(alloc.id),
+            alloc.dataInicio || minDateStr,
+            alloc.dataFim || maxDateStr
+        );
+        const scheduledRange = resolveExecutionRangeBounds(
+            scheduledExecutionRangeByAlloc.get(alloc.id),
+            executionRange.start,
+            executionRange.end
+        );
 
         if (isScheduledRegularAllocation(alloc)) {
             if (parseInt(alloc.diaSemana, 10) !== dayId) return;
             const turnos = resolveGanttTurnosForSlots([alloc.horario], ganttTurnoConfigs);
             const safeTurnos = turnos.length > 0 ? turnos : (visibleTurnos[0] ? [visibleTurnos[0]] : []);
-            const dayRangeStart = scheduledRange?.firstDate || executionRange?.firstDate || alloc.dataInicio || minDateStr;
-            const dayRangeEnd = scheduledRange?.lastDate || executionRange?.lastDate || alloc.dataFim || maxDateStr;
+            const dayRangeStart = scheduledRange.start;
+            const dayRangeEnd = scheduledRange.end;
 
             safeTurnos.forEach((turnoConfig) => {
                 snapshots.push({
@@ -6915,6 +7170,189 @@ function getGanttCompactRangeLabel(item) {
     return `${compactLabel} (${start} - ${end})`;
 }
 
+function buildGanttDetailedScheduleRows(timeRanges = []) {
+    return [...new Set((Array.isArray(timeRanges) ? timeRanges : [])
+        .filter(Boolean)
+        .map((slot) => String(slot).trim()))]
+        .sort((a, b) => timeToMinutes(a) - timeToMinutes(b))
+        .map((slot, idx) => {
+            const matches = String(slot).match(/\d{1,2}:\d{2}/g) || [];
+            return {
+                ordem: idx + 1,
+                inicio: matches[0] || String(slot).trim() || '-',
+                fim: matches[1] || '',
+                label: String(slot).trim() || '-'
+            };
+        });
+}
+
+function clampGanttPercent(value, min = 0, max = 100) {
+    return Math.max(min, Math.min(max, Number.isFinite(value) ? value : min));
+}
+
+function formatGanttShortDate(dateStr) {
+    return formatDateBR(dateStr || '').slice(0, 5) || '--/--';
+}
+
+function buildGanttSegmentDescriptors({
+    item,
+    docentesList,
+    docenteName,
+    compactLabel,
+    leftPct,
+    widthPct,
+    startT,
+    endT,
+    timeSpan
+}) {
+    const timelineSpan = timeSpan || 1;
+    const explicitSegments = Array.isArray(item?.docenteSegments)
+        ? item.docenteSegments.filter((segment) => segment?.nome)
+        : [];
+    const segmentDescriptors = [];
+
+    if (explicitSegments.length > 0) {
+        const sortedSegments = explicitSegments.slice().sort((left, right) => {
+            const startDiff = String(left?.start || '').localeCompare(String(right?.start || ''));
+            if (startDiff !== 0) return startDiff;
+            return String(left?.nome || '').localeCompare(String(right?.nome || ''), 'pt-BR', { sensitivity: 'base' });
+        });
+
+        sortedSegments.forEach((segment, idx) => {
+            const isTarget = teacherNamesMatch(segment.nome, docenteName);
+            const segStartIso = idx === 0
+                ? (item.dataInicio || segment.start || '')
+                : (segment.start || item.dataInicio || '');
+            const nextSegmentStart = String(sortedSegments[idx + 1]?.start || '').trim();
+            const displayBoundaryIso = nextSegmentStart || segment.end || item.dataFim || segStartIso;
+            let segEndIso = idx === (sortedSegments.length - 1)
+                ? (item.dataFim || segment.end || displayBoundaryIso || segStartIso)
+                : displayBoundaryIso;
+
+            if (item.dataFim && segEndIso > item.dataFim) segEndIso = item.dataFim;
+            if (!segEndIso || segEndIso < segStartIso) segEndIso = segStartIso;
+
+            const segStartT = new Date(`${segStartIso}T12:00:00`).getTime();
+            const rawEndT = idx === (sortedSegments.length - 1)
+                ? endT
+                : new Date(`${displayBoundaryIso || segEndIso}T12:00:00`).getTime();
+            const segStartPct = leftPct + (Math.max(0, segStartT - startT) / timelineSpan) * widthPct;
+            const rawEndPct = idx === (sortedSegments.length - 1)
+                ? (leftPct + widthPct)
+                : leftPct + (Math.max(0, rawEndT - startT) / timelineSpan) * widthPct;
+            const segEndPct = Math.max(segStartPct + 0.6, Math.min(leftPct + widthPct, rawEndPct));
+            const segWidthPct = segEndPct - segStartPct;
+            const docenteNameShort = String(segment?.nome || '').trim().split(/\s+/)[0] || 'Docente';
+            const segCH = Number.parseFloat(segment?.ch) || 0;
+            const docenteHoursLabel = Number.isFinite(segCH) && segCH > 0
+                ? `${Number.isInteger(segCH) ? segCH : segCH.toLocaleString('pt-BR', { maximumFractionDigits: 1 })}h`
+                : '';
+
+            segmentDescriptors.push({
+                nome: segment.nome,
+                ch: segment.ch,
+                isTarget,
+                label: isTarget ? compactLabel : `${docenteNameShort}${docenteHoursLabel ? ` (${docenteHoursLabel})` : ''}`,
+                startIso: segStartIso,
+                endIso: segEndIso,
+                startPct: segStartPct,
+                endPct: segEndPct,
+                widthPct: segWidthPct,
+                startShort: formatGanttShortDate(segStartIso),
+                endShort: formatGanttShortDate(displayBoundaryIso || segEndIso)
+            });
+        });
+
+        return segmentDescriptors;
+    }
+
+    const flexUnitsList = docentesList.map((docente) => {
+        const segCH = parseFloat(docente?.ch) || 0;
+        return segCH > 0 ? segCH : 1;
+    });
+    const totalFlexUnits = flexUnitsList.reduce((sum, value) => sum + value, 0) || 1;
+    let currentFlexOffset = 0;
+    let currentSegmentT = startT;
+
+    docentesList.forEach((docente, idx) => {
+        const segCH = parseFloat(docente?.ch) || 0;
+        const totalCH = parseFloat(item?.chTotal) || 0;
+        const rawShare = totalCH > 0 ? (segCH / totalCH) : 1;
+        const safeShare = rawShare > 0 ? rawShare : (totalCH > 0 ? (1 / totalCH) : 1);
+        const flexUnits = flexUnitsList[idx];
+        const segEndT = currentSegmentT + (timeSpan * safeShare);
+        const segStartPct = leftPct + ((currentFlexOffset / totalFlexUnits) * widthPct);
+        const segWidthPct = (flexUnits / totalFlexUnits) * widthPct;
+        const docenteNameShort = String(docente?.nome || '').trim().split(/\s+/)[0] || 'Docente';
+        const docenteHoursLabel = Number.isFinite(segCH) && segCH > 0
+            ? `${Number.isInteger(segCH) ? segCH : segCH.toLocaleString('pt-BR', { maximumFractionDigits: 1 })}h`
+            : '';
+        const isTarget = teacherNamesMatch(docente?.nome, docenteName);
+        const segStartIso = new Date(currentSegmentT).toISOString().split('T')[0];
+        const segEndIso = new Date(segEndT).toISOString().split('T')[0];
+
+        segmentDescriptors.push({
+            nome: docente?.nome || '',
+            ch: docente?.ch || 0,
+            isTarget,
+            label: isTarget ? compactLabel : `${docenteNameShort}${docenteHoursLabel ? ` (${docenteHoursLabel})` : ''}`,
+            startIso: segStartIso,
+            endIso: segEndIso,
+            startPct: segStartPct,
+            endPct: segStartPct + segWidthPct,
+            widthPct: segWidthPct,
+            startShort: formatGanttShortDate(segStartIso),
+            endShort: formatGanttShortDate(segEndIso)
+        });
+
+        currentFlexOffset += flexUnits;
+        currentSegmentT = segEndT;
+    });
+
+    return segmentDescriptors;
+}
+
+function buildGanttSharedSegmentLabelsHtml({ segmentMeta, leftPct, widthPct, currentTop, barHeight }) {
+    return segmentMeta.map((segment, idx) => {
+        const innerLeftPct = widthPct > 0
+            ? clampGanttPercent(((segment.startPct - leftPct) / widthPct) * 100)
+            : 0;
+        const innerRightPct = widthPct > 0
+            ? clampGanttPercent(((segment.endPct - leftPct) / widthPct) * 100)
+            : 100;
+        const innerWidthPct = Math.max(6, innerRightPct - innerLeftPct);
+        const showSegmentLabel = innerWidthPct >= 12;
+        const nextSegment = segmentMeta[idx + 1] || null;
+
+        const labelHtml = showSegmentLabel
+            ? `
+                <div style="position:absolute; top:50%; left:${Math.max(1, innerLeftPct)}%; width:${innerWidthPct}%; transform:translateY(-50%); min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; text-align:center; font-size:0.78em; font-weight:800; color:#0f172a; text-shadow:0 1px 0 rgba(255,255,255,0.45); padding:0 12px; box-sizing:border-box;">
+                    ${segment.label}
+                </div>
+            `
+            : '';
+        const seamDateHtml = nextSegment
+            ? `<span style="position:absolute; left:${segment.endPct}%; top:${currentTop + (barHeight / 2)}px; transform:translate(-50%, -50%); font-size:0.64em; font-weight:900; color:#0f172a; text-shadow:0 1px 0 rgba(255,255,255,0.9), 0 0 4px rgba(255,255,255,0.72); white-space:nowrap; pointer-events:none; z-index:6;">${segment.endShort}</span>`
+            : '';
+
+        return `${labelHtml}${seamDateHtml}`;
+    }).join('');
+}
+
+function buildGanttOuterDateLabelsHtml({ leftPct, widthPct, currentTop, barHeight, startShort, endShort }) {
+    return `
+        <span style="position:absolute; left:${leftPct}%; top:${currentTop + (barHeight / 2)}px; transform:translate(calc(-100% - 10px), -50%); font-size:0.64em; font-weight:900; color:#0f172a; text-shadow:0 1px 0 rgba(255,255,255,0.72); white-space:nowrap; pointer-events:none; z-index:6;">${startShort}</span>
+        <span style="position:absolute; left:${leftPct + widthPct}%; top:${currentTop + (barHeight / 2)}px; transform:translate(10px, -50%); font-size:0.64em; font-weight:900; color:#0f172a; text-shadow:0 1px 0 rgba(255,255,255,0.72); white-space:nowrap; pointer-events:none; z-index:6;">${endShort}</span>
+    `;
+}
+
+function buildGanttInnerDateLabelsHtml({ leftPct, widthPct, currentTop, barHeight, startShort, endShort }) {
+    return `
+        <span style="position:absolute; left:${leftPct}%; top:${currentTop + (barHeight / 2)}px; transform:translate(6px, -50%); font-size:0.64em; font-weight:900; color:#0f172a; text-shadow:0 1px 0 rgba(255,255,255,0.72); white-space:nowrap; pointer-events:none; z-index:6;">${startShort}</span>
+        <span style="position:absolute; left:${leftPct + widthPct}%; top:${currentTop + (barHeight / 2)}px; transform:translate(calc(-100% - 6px), -50%); font-size:0.64em; font-weight:900; color:#0f172a; text-shadow:0 1px 0 rgba(255,255,255,0.72); white-space:nowrap; pointer-events:none; z-index:6;">${endShort}</span>
+    `;
+}
+
 function renderGanttTurnoLane({ turnoConfig, dayItems, docenteName, dayConfig, minTime, totalTime, ganttTurnoConfigs, isLastLane }) {
     const laneItems = dayItems.filter((item) => item.turno === turnoConfig.value);
     let currentTop = 4;
@@ -6937,77 +7375,28 @@ function renderGanttTurnoLane({ turnoConfig, dayItems, docenteName, dayConfig, m
         const barHeight = 36;
         const timeRangeStr = getShiftTimeRangeStr(item.timeRanges, turnoConfig.value, ganttTurnoConfigs);
         const timeRangeMeta = getShiftTimeRangeMeta(item.timeRanges, turnoConfig.value, ganttTurnoConfigs);
+        const detailedScheduleRows = buildGanttDetailedScheduleRows(item.timeRanges);
         const compactLabel = getGanttCompactDisciplinaLabel(item);
         const compactRangeLabel = getGanttCompactRangeLabel(item);
         const startShort = formatDateBR(item.dataInicio || '').slice(0, 5) || '--/--';
         const endShort = formatDateBR(item.dataFim || '').slice(0, 5) || '--/--';
+        const useInsideEdgeDates = widthPct >= 18;
+        const insideLabelInsetPx = useInsideEdgeDates ? 44 : 8;
         const anchorId = `gantt-${String(dayConfig?.name || 'dia').toLowerCase()}-${String(turnoConfig.value || 'turno').toLowerCase()}-${startT}-${currentTop}`
             .replace(/[^a-z0-9_-]+/gi, '-');
-        const showExternalLabel = widthPct < 15;
-        const freeSpaceLeft = leftPct;
-        const freeSpaceRight = 100 - (leftPct + widthPct);
-        const placeExternalRight = freeSpaceRight >= freeSpaceLeft;
-        const externalLabelOffsetPx = 42;
-        const externalLabelPosition = placeExternalRight
-            ? `left:calc(${Math.min(92, leftPct + widthPct)}% + ${externalLabelOffsetPx}px);`
-            : `right:calc(${Math.min(92, 100 - leftPct)}% + ${externalLabelOffsetPx}px);`;
-        const defaultInsideLabelHtml = showExternalLabel
-            ? ''
-            : `
-                <div style="position:absolute; inset:0; pointer-events:none; z-index:5;">
-                    <div style="position:absolute; top:50%; left:8px; right:8px; transform:translateY(-50%); min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; text-align:center; font-size:0.78em; font-weight:800; color:#0f172a; text-shadow:0 1px 0 rgba(255,255,255,0.35);">
-                        ${compactLabel}
-                    </div>
-                </div>
-            `;
-        const externalLabelHtml = showExternalLabel
-            ? `
-                <button type="button"
-                        class="gantt-external-detail"
-                        data-gantt-anchor="${anchorId}"
-                        data-gantt-detail="${encodeURIComponent(JSON.stringify({
-                            disciplina: item.disciplina || '',
-                            disciplinaAbrev: getGanttCompactDisciplinaLabel(item),
-                            codigo: getDisciplinaInfo(item.disciplina || '').codigo || '',
-                            cor: item.cor || '#3498db',
-                            turma: turmaNome || '',
-                            turmaBase: baseLabel || '',
-                            subGrupo: item.subGrupo || '',
-                            dia: dayConfig?.name || '',
-                            turno: turnoConfig.label || '',
-                            inicio: formatDateBR(item.dataInicio),
-                            fim: formatDateBR(item.dataFim),
-                            periodo: `${formatDateBR(item.dataInicio)} a ${formatDateBR(item.dataFim)}`,
-                            horario: timeRangeStr.replace(/^\s*:\s*/, '').trim() || '-',
-                            horaInicio: timeRangeMeta.start || '',
-                            horaFim: timeRangeMeta.end || '',
-                            regime: item.regimeLabel || '',
-                            cargaHoraria: item.chTotal || 0,
-                            docente: docenteName || '',
-                            detalhesDocentes: ((item.docentes && item.docentes.length > 0) ? item.docentes : [{ nome: item.docente, ch: item.chTotal }]).map((docente) => ({
-                                nome: docente?.nome || '',
-                                ch: docente?.ch || ''
-                            }))
-                        }))}"
-                        aria-label="Abrir detalhes de ${compactRangeLabel}"
-                        style="position:absolute; ${externalLabelPosition} top:${currentTop + 8}px; border:none; background:transparent; box-shadow:none; padding:0; display:block; box-sizing:border-box; font-size:0.79em; font-weight:800; color:#1f2937; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; cursor:pointer; z-index:6; text-shadow:0 1px 0 rgba(255,255,255,0.92);">
+        const defaultInsideLabelHtml = `
+            <div style="position:absolute; inset:0; pointer-events:none; z-index:5;">
+                <div style="position:absolute; top:50%; left:${insideLabelInsetPx}px; right:${insideLabelInsetPx}px; transform:translateY(-50%); min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; text-align:center; font-size:0.78em; font-weight:800; color:#0f172a; text-shadow:0 1px 0 rgba(255,255,255,0.35);">
                     ${compactLabel}
-                </button>
-            `
-            : '';
+                </div>
+            </div>
+        `;
 
         let segmentsHtml = '';
         const docentesList = (item.docentes && item.docentes.length > 0) ? item.docentes : [{ nome: item.docente, ch: item.chTotal }];
-        const flexUnitsList = docentesList.map((docente) => {
-            const segCH = parseFloat(docente?.ch) || 0;
-            return segCH > 0 ? segCH : 1;
-        });
-        const totalFlexUnits = flexUnitsList.reduce((sum, value) => sum + value, 0) || 1;
-        let currentFlexOffset = 0;
         let targetSegmentStartPct = leftPct;
         let targetSegmentWidthPct = widthPct;
         let targetSegmentFound = false;
-        let currentSegmentT = startT;
         const detailPayload = encodeURIComponent(JSON.stringify({
             disciplina: item.disciplina || '',
             disciplinaAbrev: getGanttCompactDisciplinaLabel(item),
@@ -7024,6 +7413,7 @@ function renderGanttTurnoLane({ turnoConfig, dayItems, docenteName, dayConfig, m
             horario: timeRangeStr.replace(/^\s*:\s*/, '').trim() || '-',
             horaInicio: timeRangeMeta.start || '',
             horaFim: timeRangeMeta.end || '',
+            horariosDetalhados: detailedScheduleRows,
             regime: item.regimeLabel || '',
             cargaHoraria: item.chTotal || 0,
             docente: docenteName || '',
@@ -7032,22 +7422,32 @@ function renderGanttTurnoLane({ turnoConfig, dayItems, docenteName, dayConfig, m
                 ch: docente?.ch || ''
             }))
         }));
+        const segmentMeta = buildGanttSegmentDescriptors({
+            item,
+            docentesList,
+            docenteName,
+            compactLabel,
+            leftPct,
+            widthPct,
+            startT,
+            endT,
+            timeSpan
+        });
 
-        docentesList.forEach((docente, idx) => {
-            const isTarget = teacherNamesMatch(docente.nome, docenteName);
-            const segCH = parseFloat(docente.ch) || 0;
-            const totalCH = parseFloat(item.chTotal) || 0;
-            const rawShare = totalCH > 0 ? (segCH / totalCH) : 1;
-            const safeShare = rawShare > 0 ? rawShare : (totalCH > 0 ? (1 / totalCH) : 1);
-            const flexUnits = flexUnitsList[idx];
-
-            const segEndT = currentSegmentT + (timeSpan * safeShare);
-            const segStartPct = leftPct + ((currentFlexOffset / totalFlexUnits) * widthPct);
-            const segWidthPct = (flexUnits / totalFlexUnits) * widthPct;
-
-            const bgColor = isTarget ? (item.cor || '#3498db') : '#ffffff';
-            const txtColor = isTarget ? '#000000' : '#666666';
-            const borderStyle = isTarget ? 'none' : `1px dashed ${item.cor || '#ccc'}`;
+        segmentMeta.forEach((segment) => {
+            const isTarget = !!segment.isTarget;
+            const segStartPct = segment.startPct;
+            const segWidthPct = segment.widthPct;
+            const innerLeftPct = widthPct > 0
+                ? clampGanttPercent(((segStartPct - leftPct) / widthPct) * 100)
+                : 0;
+            const innerWidthPct = widthPct > 0
+                ? Math.max(0.8, Math.min(100 - innerLeftPct, (segWidthPct / widthPct) * 100))
+                : 100;
+            const segmentFill = isTarget
+                ? `linear-gradient(90deg, ${hexToRgba(baseColor, 0.92)}, ${baseColor})`
+                : 'linear-gradient(180deg, rgba(255,255,255,0.98), rgba(248,250,252,0.94))';
+            const borderStyle = isTarget ? 'none' : `1px solid ${hexToRgba(baseColor, 0.55)}`;
             const zIndex = isTarget ? '2' : '1';
 
             if (isTarget && !targetSegmentFound) {
@@ -7059,55 +7459,71 @@ function renderGanttTurnoLane({ turnoConfig, dayItems, docenteName, dayConfig, m
             segmentsHtml += `
                     <div class="${isTarget ? 'gantt-bar-anchor-segment' : ''}"
                          data-gantt-anchor="${isTarget ? anchorId : ''}"
-                         style="flex: ${flexUnits}; background-color: ${bgColor}; color: ${txtColor}; border-right: ${borderStyle}; border-left: ${borderStyle}; height: 100%; display: flex; align-items: center; justify-content: center; overflow: hidden; min-width: 0; box-sizing: border-box; z-index: ${zIndex};">
+                         data-gantt-detail="${isTarget ? detailPayload : ''}"
+                         tabindex="${isTarget ? '0' : '-1'}"
+                         role="${isTarget ? 'button' : 'presentation'}"
+                         style="position:absolute; left:${innerLeftPct}%; width:${innerWidthPct}%; top:0; bottom:0; background:${segmentFill}; color:#000000; border-right:${borderStyle}; border-left:${borderStyle}; display:flex; align-items:center; justify-content:center; overflow:hidden; min-width:0; box-sizing:border-box; z-index:${zIndex};">
                     </div>
                 `;
-            currentFlexOffset += flexUnits;
-            currentSegmentT = segEndT;
         });
 
         const showOutsideDates = targetSegmentWidthPct > 0;
         const targetSegmentEndPct = targetSegmentStartPct + targetSegmentWidthPct;
-        const targetStartWithinBarPct = widthPct > 0
-            ? Math.max(0, Math.min(100, ((targetSegmentStartPct - leftPct) / widthPct) * 100))
-            : 0;
-        const targetEndWithinBarPct = widthPct > 0
-            ? Math.max(0, Math.min(100, ((targetSegmentEndPct - leftPct) / widthPct) * 100))
-            : 100;
-        const spaceLeftWithinBarPct = targetStartWithinBarPct;
-        const spaceRightWithinBarPct = 100 - targetEndWithinBarPct;
+        const targetSpanPct = targetSegmentFound ? targetSegmentWidthPct : widthPct;
+        const freeSpaceLeft = targetSegmentFound ? targetSegmentStartPct : leftPct;
+        const freeSpaceRight = targetSegmentFound ? (100 - targetSegmentEndPct) : (100 - (leftPct + widthPct));
+        const placeExternalRight = freeSpaceRight >= freeSpaceLeft;
+        const externalLabelOffsetPx = 42;
+        const externalLabelPosition = targetSegmentFound
+            ? (placeExternalRight
+                ? `left:calc(${Math.min(92, targetSegmentEndPct)}% + ${externalLabelOffsetPx}px);`
+                : `right:calc(${Math.min(92, 100 - targetSegmentStartPct)}% + ${externalLabelOffsetPx}px);`)
+            : (placeExternalRight
+                ? `left:calc(${Math.min(92, leftPct + widthPct)}% + ${externalLabelOffsetPx}px);`
+                : `right:calc(${Math.min(92, 100 - leftPct)}% + ${externalLabelOffsetPx}px);`);
         const sharedTargetSegment = targetSegmentFound && targetSegmentWidthPct < (widthPct - 0.4);
-        const canPlaceLabelRight = spaceRightWithinBarPct >= 14;
-        const canPlaceLabelLeft = spaceLeftWithinBarPct >= 14;
-        const placeLabelRight = canPlaceLabelRight && (!canPlaceLabelLeft || spaceRightWithinBarPct >= spaceLeftWithinBarPct);
-        const insideLabelHtml = !showExternalLabel && sharedTargetSegment && (canPlaceLabelRight || canPlaceLabelLeft)
+        const showExternalLabel = !sharedTargetSegment && targetSpanPct < 12;
+        const sharedSegmentLabelsHtml = sharedTargetSegment
+            ? buildGanttSharedSegmentLabelsHtml({ segmentMeta, leftPct, widthPct, currentTop, barHeight })
+            : '';
+        const insideLabelHtml = !showExternalLabel && sharedTargetSegment
             ? `
                 <div style="position:absolute; inset:0; pointer-events:none; z-index:5;">
-                    <div style="position:absolute; top:50%; left:${placeLabelRight ? `calc(${targetEndWithinBarPct}% + 40px)` : '8px'}; right:${placeLabelRight ? '8px' : `calc(${100 - targetStartWithinBarPct}% + 40px)`}; transform:translateY(-50%); min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; text-align:${placeLabelRight ? 'left' : 'right'}; font-size:0.78em; font-weight:800; color:#0f172a; text-shadow:0 1px 0 rgba(255,255,255,0.35);">
-                        ${placeLabelRight ? `- ${compactLabel}` : `${compactLabel} -`}
-                    </div>
+                    ${sharedSegmentLabelsHtml}
                 </div>
             `
-            : defaultInsideLabelHtml;
-        const outsideDateLabelsHtml = showOutsideDates
+            : (!showExternalLabel ? defaultInsideLabelHtml : '');
+        const externalLabelHtml = showExternalLabel
             ? `
-                <span style="position:absolute; left:${targetSegmentStartPct}%; top:${currentTop + (barHeight / 2)}px; transform:translate(calc(-100% - 6px), -50%); font-size:0.64em; font-weight:900; color:#0f172a; text-shadow:0 1px 0 rgba(255,255,255,0.72); white-space:nowrap; pointer-events:none; z-index:6;">${startShort}</span>
-                <span style="position:absolute; left:${targetSegmentEndPct}%; top:${currentTop + (barHeight / 2)}px; transform:translate(6px, -50%); font-size:0.64em; font-weight:900; color:#0f172a; text-shadow:0 1px 0 rgba(255,255,255,0.72); white-space:nowrap; pointer-events:none; z-index:6;">${endShort}</span>
+                <button type="button"
+                        class="gantt-external-detail"
+                        data-gantt-anchor="${anchorId}"
+                        data-gantt-detail="${detailPayload}"
+                        aria-label="Abrir detalhes de ${compactRangeLabel}"
+                        style="position:absolute; ${externalLabelPosition} top:${currentTop + 8}px; border:none; background:transparent; box-shadow:none; padding:0; display:block; box-sizing:border-box; font-size:0.79em; font-weight:800; color:#1f2937; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; cursor:pointer; z-index:6; text-shadow:0 1px 0 rgba(255,255,255,0.92);">
+                    ${compactLabel}
+                </button>
             `
             : '';
+        const edgeDateLabelsHtml = showOutsideDates
+            ? (useInsideEdgeDates
+                ? buildGanttInnerDateLabelsHtml({ leftPct, widthPct, currentTop, barHeight, startShort, endShort })
+                : buildGanttOuterDateLabelsHtml({ leftPct, widthPct, currentTop, barHeight, startShort, endShort }))
+            : '';
+        const barDetailAttrs = sharedTargetSegment
+            ? ''
+            : `data-gantt-anchor="${anchorId}" data-gantt-detail="${detailPayload}" tabindex="0" role="button"`;
+        const barCursor = sharedTargetSegment ? 'default' : 'pointer';
 
         barsHtml += `
                     <div class="gantt-bar"
-                         data-gantt-anchor="${anchorId}"
-                         data-gantt-detail="${detailPayload}"
-                         tabindex="0"
-                         role="button"
-                         style="left: ${leftPct}%; width: ${widthPct}%; top: ${currentTop}px; height: ${barHeight}px; padding: 0; display: flex; flex-direction: row; ${boxBorder} cursor: pointer; z-index:3;"
+                         ${barDetailAttrs}
+                         style="left: ${leftPct}%; width: ${widthPct}%; top: ${currentTop}px; height: ${barHeight}px; padding: 0; display: flex; flex-direction: row; background:${sharedTargetSegment ? 'linear-gradient(180deg, rgba(255,255,255,0.98), rgba(248,250,252,0.94))' : `linear-gradient(90deg, ${hexToRgba(baseColor, 0.92)}, ${baseColor})`}; ${boxBorder} border-radius:6px; box-shadow:0 1px 3px rgba(15,23,42,0.12); overflow:hidden; cursor: ${barCursor}; z-index:3;"
                          aria-label="${item.disciplina} | CH docente: ${item.chProf || item.chTotal || 0}h | Turma: ${turmaNome} | Turno: ${turnoConfig.label}${timeRangeStr} | Regime: ${item.regimeLabel} | Periodo efetivo: ${formatDateBR(item.dataInicio)} a ${formatDateBR(item.dataFim)} | Aulas no dia: ${item.slotCount}">
                         ${segmentsHtml}
                         ${insideLabelHtml}
                     </div>
-                    ${outsideDateLabelsHtml}
+                    ${edgeDateLabelsHtml}
                     ${externalLabelHtml}
             `;
         currentTop += barHeight + 6;
@@ -7152,7 +7568,6 @@ function buildGanttLensHtml(detail, placement = 'above', pinned = false) {
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#39;');
-    const compactLayout = window.innerWidth <= 640;
     const accent = normalizeHexColor(detail?.cor || '#3498db');
     const accentSoft = hexToRgba(accent, 0.14);
     const accentMid = hexToRgba(accent, 0.24);
@@ -7163,58 +7578,45 @@ function buildGanttLensHtml(detail, placement = 'above', pinned = false) {
     const dockStyle = placement === 'below'
         ? 'top:-1px; border-radius:0 0 16px 16px;'
         : 'bottom:-1px; border-radius:16px 16px 0 0;';
-    const headerLayout = compactLayout
-        ? 'display:flex; flex-direction:column; align-items:flex-start; gap:10px;'
-        : 'display:flex; align-items:center; justify-content:space-between; gap:12px;';
-    const upperGrid = compactLayout
-        ? 'grid-template-columns:1fr;'
-        : 'grid-template-columns:1fr 1fr;';
-    const lowerGrid = compactLayout
-        ? 'grid-template-columns:1fr 1fr;'
-        : 'grid-template-columns:1fr 1fr 1fr;';
-    const timingSummary = [detail?.turno || '', detail?.horaInicio && detail?.horaFim ? `${detail.horaInicio} - ${detail.horaFim}` : '']
-        .filter(Boolean)
-        .join(' | ');
+    const detailedRows = Array.isArray(detail?.horariosDetalhados) ? detail.horariosDetalhados : [];
+    const detailedRowsHtml = detailedRows.length > 0
+        ? detailedRows.map((row) => `
+            <tr>
+                <td style="padding:6px 8px; border-bottom:1px solid #e2e8f0; font-weight:700; color:#475569; text-align:center;">${escapeHtml(row?.ordem || '-')}</td>
+                <td style="padding:6px 8px; border-bottom:1px solid #e2e8f0; color:#0f172a; text-align:left;">${escapeHtml(row?.label || row?.inicio || '-')}</td>
+            </tr>
+        `).join('')
+        : '';
+    const turmaParts = [detail?.turmaBase || detail?.turma || '', detail?.subGrupo || '']
+        .map((value) => String(value || '').trim())
+        .filter(Boolean);
+    const turmaInlineLabel = turmaParts.join(' ');
 
     return `
         <div style="position:absolute; inset:0; border-radius:18px; border:1px solid ${accentMid}; background:linear-gradient(180deg, rgba(255,255,255,0.99), rgba(246,248,251,0.98)); box-shadow:0 18px 34px rgba(15,23,42,0.18), 0 0 0 1px ${hexToRgba(accent, 0.05)};"></div>
         <div style="position:absolute; left:0; right:0; ${placement === 'below' ? 'top:0;' : 'bottom:0;'} height:18px; background:linear-gradient(90deg, ${hexToRgba(accent, 0)}, ${accentSoft} 20%, ${accentMid} 50%, ${accentSoft} 80%, ${hexToRgba(accent, 0)}); border-radius:${placement === 'below' ? '18px 18px 0 0' : '0 0 18px 18px'};"></div>
         <div style="position:absolute; ${dockStyle} left:calc(var(--gantt-lens-anchor-x, 50%) - 42px); width:84px; height:10px; background:${accentStrong}; box-shadow:0 0 0 3px ${hexToRgba(accent, 0.12)};"></div>
         <div style="position:absolute; ${pointerStyle} left:var(--gantt-lens-anchor-x, 50%); width:16px; height:16px; background:linear-gradient(135deg, ${accentStrong}, ${accent}); transform:translateX(-50%) rotate(45deg); box-shadow:0 6px 14px ${hexToRgba(accent, 0.28)};"></div>
-        <div style="position:relative; padding:${compactLayout ? '14px 14px 12px 14px' : '16px 18px 14px 18px'};">
+        <div style="position:relative; padding:14px 14px 12px 14px;">
             ${pinned ? `<button type="button" data-gantt-lens-close="1" aria-label="Fechar lupa" style="position:absolute; top:10px; right:10px; width:28px; height:28px; border:none; border-radius:999px; background:${hexToRgba(accent, 0.1)}; color:#334155; font-size:18px; line-height:1; cursor:pointer; display:inline-flex; align-items:center; justify-content:center;">&times;</button>` : ''}
-            <div style="${headerLayout} margin-bottom:10px; ${pinned ? 'padding-right:34px;' : ''}">
-                <div style="min-width:0;">
-                    <div style="font-size:0.76em; font-weight:800; color:#64748b; text-transform:uppercase; letter-spacing:0.05em;">Lupa da Oferta</div>
-                    <div style="margin-top:4px; font-size:1em; font-weight:800; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(detail?.disciplina || '-')}</div>
-                    ${timingSummary ? `<div style="margin-top:5px; font-size:0.8em; font-weight:700; color:#64748b;">${escapeHtml(timingSummary)}</div>` : ''}
-                </div>
-                <span style="display:inline-flex; align-items:center; border-radius:999px; background:${accent}; color:#0b1722; padding:5px 10px; font-size:0.76em; font-weight:800; white-space:nowrap; box-shadow:0 6px 14px ${hexToRgba(accent, 0.18)};">${escapeHtml(detail?.turmaBase || detail?.turma || '-')}</span>
+            <div style="min-width:0; margin-bottom:10px; ${pinned ? 'padding-right:34px;' : ''}">
+                <div style="font-size:0.98em; font-weight:800; color:#0f172a; line-height:1.2; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(detail?.disciplina || '-')}</div>
+                ${turmaInlineLabel ? `<div style="margin-top:4px; font-size:0.8em; font-weight:700; color:#475569; line-height:1.25; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Turma: ${escapeHtml(turmaInlineLabel)}</div>` : ''}
             </div>
-            <div style="display:grid; ${upperGrid} gap:10px; margin-bottom:10px;">
+            ${detailedRowsHtml ? `
                 <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:10px 12px;">
-                    <div style="font-size:0.72em; font-weight:800; color:#64748b; text-transform:uppercase;">Inicio</div>
-                    <div style="margin-top:4px; font-size:0.95em; font-weight:700; color:#0f172a;">${escapeHtml(detail?.inicio || '-')}</div>
+                    <div style="font-size:0.72em; font-weight:800; color:#64748b; text-transform:uppercase; margin-bottom:8px;">Horarios do Componente</div>
+                    <table style="width:100%; border-collapse:collapse; font-size:0.84em;">
+                        <thead>
+                            <tr>
+                                <th style="padding:0 8px 6px 8px; text-align:center; color:#64748b; font-size:0.72em; text-transform:uppercase;">#</th>
+                                <th style="padding:0 8px 6px 8px; text-align:left; color:#64748b; font-size:0.72em; text-transform:uppercase;">Horario</th>
+                            </tr>
+                        </thead>
+                        <tbody>${detailedRowsHtml}</tbody>
+                    </table>
                 </div>
-                <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:10px 12px;">
-                    <div style="font-size:0.72em; font-weight:800; color:#64748b; text-transform:uppercase;">Fim</div>
-                    <div style="margin-top:4px; font-size:0.95em; font-weight:700; color:#0f172a;">${escapeHtml(detail?.fim || '-')}</div>
-                </div>
-            </div>
-            <div style="display:grid; ${lowerGrid} gap:10px;">
-                <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:10px 12px;">
-                    <div style="font-size:0.72em; font-weight:800; color:#64748b; text-transform:uppercase;">Hora Inicio</div>
-                    <div style="margin-top:4px; font-size:0.92em; font-weight:700; color:#0f172a;">${escapeHtml(detail?.horaInicio || '-')}</div>
-                </div>
-                <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:10px 12px;">
-                    <div style="font-size:0.72em; font-weight:800; color:#64748b; text-transform:uppercase;">Hora Fim</div>
-                    <div style="margin-top:4px; font-size:0.92em; font-weight:700; color:#0f172a;">${escapeHtml(detail?.horaFim || '-')}</div>
-                </div>
-                <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:10px 12px;">
-                    <div style="font-size:0.72em; font-weight:800; color:#64748b; text-transform:uppercase;">Dia</div>
-                    <div style="margin-top:4px; font-size:0.92em; font-weight:700; color:#0f172a;">${escapeHtml(detail?.dia || '-')}</div>
-                </div>
-            </div>
+            ` : ''}
         </div>
     `;
 }
@@ -7250,11 +7652,17 @@ function positionGanttDetailLens(container, target) {
     const topBelow = targetRect.bottom - hostRect.top + 10;
     const spaceAbove = targetRect.top - hostRect.top;
     const spaceBelow = hostRect.bottom - targetRect.bottom;
-    const placement = spaceAbove >= (lensHeight + 18) || spaceAbove >= spaceBelow ? 'above' : 'below';
+    const placement = spaceAbove >= (lensHeight + 18)
+        ? 'above'
+        : (spaceBelow >= (lensHeight + 18)
+            ? 'below'
+            : (spaceBelow >= spaceAbove ? 'below' : 'above'));
     const rawTop = placement === 'above' ? topAbove : topBelow;
     const top = Math.max(12, Math.min(hostRect.height - lensHeight - 12, rawTop));
     const left = Math.max(horizontalPadding, Math.min(hostRect.width - lensWidth - horizontalPadding, anchorCenter - (lensWidth / 2)));
-    const anchorPercent = Math.max(14, Math.min(86, ((anchorCenter - left) / lensWidth) * 100));
+    const anchorClampMin = mobileViewport ? 10 : 6;
+    const anchorClampMax = mobileViewport ? 90 : 94;
+    const anchorPercent = Math.max(anchorClampMin, Math.min(anchorClampMax, ((anchorCenter - left) / lensWidth) * 100));
 
     lens.style.width = `${lensWidth}px`;
     lens.style.left = `${left}px`;
@@ -7331,6 +7739,26 @@ function openGanttDetailModal(detail) {
                 </li>
             `).join('')
             : '<li style="padding:8px 0; color:#52606d;">-</li>';
+        const horariosHtml = Array.isArray(detail?.horariosDetalhados) && detail.horariosDetalhados.length > 0
+            ? `
+                <table style="width:100%; border-collapse:collapse; margin-top:8px; font-size:0.92em;">
+                    <thead>
+                        <tr>
+                            <th style="text-align:center; padding:0 8px 8px 8px; color:#64748b; font-size:0.72em; text-transform:uppercase;">#</th>
+                            <th style="text-align:left; padding:0 8px 8px 8px; color:#64748b; font-size:0.72em; text-transform:uppercase;">Horario</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${detail.horariosDetalhados.map((row) => `
+                            <tr>
+                                <td style="padding:8px; border-top:1px solid #e2e8f0; text-align:center; font-weight:700; color:#475569;">${escapeHtml(row?.ordem || '-')}</td>
+                                <td style="padding:8px; border-top:1px solid #e2e8f0; color:#0f172a;">${escapeHtml(row?.label || row?.inicio || '-')}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `
+            : `<div style="margin-top:8px; color:#0f172a;">${escapeHtml(detail?.horario || '-')}</div>`;
 
         body.innerHTML = `
             <div style="height:8px; background:${accentColor};"></div>
@@ -7369,6 +7797,11 @@ function openGanttDetailModal(detail) {
                     <ul style="list-style:none; margin:10px 0 0 0; padding:0;">${docentesHtml}</ul>
                 </div>
 
+                <div style="margin-top:16px; border:1px solid #e2e8f0; border-radius:12px; padding:14px;">
+                    <div style="font-size:0.76em; font-weight:800; color:#64748b; text-transform:uppercase; letter-spacing:0.05em;">Horarios da Barra</div>
+                    ${horariosHtml}
+                </div>
+
                 <div style="margin-top:16px; font-size:0.86em; color:#64748b; line-height:1.45;">
                     Versao A para avaliacao: o modal mostra so o essencial da oferta para testar se o clique compensa a reducao do texto dentro da barra.
                 </div>
@@ -7382,6 +7815,26 @@ function openGanttDetailModal(detail) {
     const docentesHtml = Array.isArray(detail?.detalhesDocentes) && detail.detalhesDocentes.length > 0
         ? detail.detalhesDocentes.map((docente) => `<li><strong>${docente.nome || '-'}</strong> - ${docente.ch || 0}h</li>`).join('')
         : '<li>-</li>';
+    const horariosHtml = Array.isArray(detail?.horariosDetalhados) && detail.horariosDetalhados.length > 0
+        ? `
+            <table style="width:100%; border-collapse:collapse; margin-top:8px; font-size:0.92em;">
+                <thead>
+                    <tr>
+                        <th style="text-align:center; padding:0 8px 8px 8px; color:#64748b; font-size:0.72em; text-transform:uppercase;">#</th>
+                        <th style="text-align:left; padding:0 8px 8px 8px; color:#64748b; font-size:0.72em; text-transform:uppercase;">Horario</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${detail.horariosDetalhados.map((row) => `
+                        <tr>
+                            <td style="padding:8px; border-top:1px solid #e2e8f0; text-align:center; font-weight:700; color:#475569;">${row?.ordem || '-'}</td>
+                            <td style="padding:8px; border-top:1px solid #e2e8f0; color:#0f172a;">${row?.label || row?.inicio || '-'}</td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+        `
+        : `<div style="margin-top:8px;">${detail?.horario || '-'}</div>`;
 
     body.innerHTML = `
         <h3 style="margin:0 0 6px 0; color:var(--primary); text-transform:uppercase; letter-spacing:0.6px;">Detalhes da Oferta no Gantt</h3>
@@ -7404,6 +7857,10 @@ function openGanttDetailModal(detail) {
             <strong>Docente(s) e distribuicao</strong>
             <ul style="margin:8px 0 0 18px;">${docentesHtml}</ul>
         </div>
+        <div style="margin-top:14px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:12px;">
+            <strong>Horarios da Barra</strong>
+            ${horariosHtml}
+        </div>
     `;
 
     overlay.style.display = 'flex';
@@ -7414,14 +7871,20 @@ function bindGanttDetailInteractions(container) {
 
     const lens = ensureGanttDetailLens(container);
     let hideTimer = 0;
+    let hideCycle = 0;
     let pinnedKey = '';
     let pinnedAnchor = '';
+    let visibleKey = '';
+    let visibleAnchor = '';
+    let visiblePinned = false;
+    let visiblePlacement = 'above';
 
-    const targets = () => container.querySelectorAll('.gantt-bar[data-gantt-detail], .gantt-external-detail[data-gantt-detail]');
+    const targets = () => container.querySelectorAll('.gantt-bar[data-gantt-detail], .gantt-bar-anchor-segment[data-gantt-detail], .gantt-external-detail[data-gantt-detail]');
     const getAnchorElements = (anchorId) => anchorId
         ? Array.from(container.querySelectorAll(`[data-gantt-anchor="${anchorId}"]`))
         : [];
     const getAnchorTarget = (target) => {
+        if (target?.classList?.contains('gantt-bar-anchor-segment')) return target;
         const anchorId = target?.dataset?.ganttAnchor || '';
         const anchorElements = getAnchorElements(anchorId);
         return anchorElements.find((el) => el.classList.contains('gantt-bar-anchor-segment'))
@@ -7457,12 +7920,21 @@ function bindGanttDetailInteractions(container) {
             clearTimeout(hideTimer);
             hideTimer = 0;
         }
+        hideCycle += 1;
+    };
+
+    const clearVisibleState = () => {
+        visibleKey = '';
+        visibleAnchor = '';
+        visiblePinned = false;
+        visiblePlacement = 'above';
     };
 
     const hideLens = (force = false) => {
         if (!lens) return;
         if (!force && pinnedKey) return;
         clearHideTimer();
+        const cycleId = hideCycle;
         if (force) {
             pinnedKey = '';
             pinnedAnchor = '';
@@ -7470,9 +7942,11 @@ function bindGanttDetailInteractions(container) {
         lens.style.opacity = '0';
         lens.style.transform = 'translateY(8px) scale(0.98)';
         window.setTimeout(() => {
+            if (cycleId !== hideCycle) return;
             if (!pinnedKey) {
                 lens.style.display = 'none';
                 clearActiveStates();
+                clearVisibleState();
             }
         }, 180);
     };
@@ -7485,22 +7959,40 @@ function bindGanttDetailInteractions(container) {
 
         clearHideTimer();
         const anchorId = target?.dataset?.ganttAnchor || '';
+        const detailKey = target?.dataset?.ganttDetail || '';
         const anchorTarget = getAnchorTarget(target);
+        const sameVisibleTarget = lens.style.display === 'block'
+            && visibleKey === detailKey
+            && visibleAnchor === anchorId
+            && visiblePinned === pinned;
         if (pinned) {
-            pinnedKey = target.dataset.ganttDetail || '';
+            pinnedKey = detailKey;
             pinnedAnchor = anchorId;
         }
         clearActiveStates();
         applyActiveState(anchorId, pinned);
         lens.style.display = 'block';
-        lens.innerHTML = buildGanttLensHtml(detail, 'above', pinned);
-        const placement = positionGanttDetailLens(container, anchorTarget);
-        lens.innerHTML = buildGanttLensHtml(detail, placement, pinned);
-        positionGanttDetailLens(container, anchorTarget);
-        requestAnimationFrame(() => {
-            lens.style.opacity = '1';
-            lens.style.transform = 'translateY(0) scale(1)';
-        });
+        if (!sameVisibleTarget) {
+            lens.innerHTML = buildGanttLensHtml(detail, visiblePlacement, pinned);
+        }
+        const measuredPlacement = positionGanttDetailLens(container, anchorTarget) || 'above';
+        if (!sameVisibleTarget || measuredPlacement !== visiblePlacement) {
+            lens.innerHTML = buildGanttLensHtml(detail, measuredPlacement, pinned);
+            positionGanttDetailLens(container, anchorTarget);
+        }
+        visibleKey = detailKey;
+        visibleAnchor = anchorId;
+        visiblePinned = pinned;
+        visiblePlacement = measuredPlacement;
+        if (!sameVisibleTarget) {
+            requestAnimationFrame(() => {
+                lens.style.opacity = '1';
+                lens.style.transform = 'translateY(0) scale(1)';
+            });
+            return;
+        }
+        lens.style.opacity = '1';
+        lens.style.transform = 'translateY(0) scale(1)';
     };
 
     if (lens && lens.dataset.bound !== '1') {
@@ -7606,6 +8098,177 @@ function bindGanttDetailInteractions(container) {
     }
 }
 
+function getGanttVisibleTurnos(snapshot = null, turnoConfigs = getGanttTurnoConfigs()) {
+    const used = new Set(
+        (Array.isArray(snapshot?.activeShiftData) ? snapshot.activeShiftData : [])
+            .map((shift) => {
+                const rawValue = String(shift?.value || '').trim();
+                if (!rawValue) return '';
+                const matchedConfig = turnoConfigs.find((config) =>
+                    String(config?.value || '').trim() === rawValue
+                    || String(config?.normalized || '').trim() === normalizeTurnoOfertaKey(rawValue)
+                );
+                return matchedConfig?.normalized || normalizeTurnoOfertaKey(rawValue);
+            })
+            .filter(Boolean)
+    );
+
+    const byNormalized = new Map();
+    turnoConfigs.forEach((config) => {
+        const normalized = String(config?.normalized || '').trim();
+        if (!normalized || byNormalized.has(normalized)) return;
+        byNormalized.set(normalized, config);
+    });
+
+    const visible = ['manha', 'tarde']
+        .map((normalized) => byNormalized.get(normalized))
+        .filter(Boolean);
+
+    if (used.has('noite') && byNormalized.has('noite')) {
+        visible.push(byNormalized.get('noite'));
+    }
+
+    return visible.length > 0 ? visible : turnoConfigs.slice(0, Math.min(2, turnoConfigs.length));
+}
+
+function collectGanttDayItems({
+    dayId,
+    snapshot,
+    docenteName,
+    offerProjection,
+    ganttTurnoConfigs,
+    visibleTurnos
+}) {
+    const dayItemsMap = {};
+
+    function mergeTimeRanges(currentRanges = [], nextRanges = []) {
+        return [...new Set([
+            ...(Array.isArray(currentRanges) ? currentRanges : []),
+            ...(Array.isArray(nextRanges) ? nextRanges : [])
+        ].filter(Boolean).map(String))].sort((a, b) => timeToMinutes(a) - timeToMinutes(b));
+    }
+
+    function extractDocentesList(alloc, fallbackHours = 0) {
+        if (Array.isArray(alloc?.docentes) && alloc.docentes.length > 0) {
+            return alloc.docentes.map((docente) => ({
+                nome: String(docente?.nome || '').trim(),
+                ch: Number.parseFloat(docente?.ch) || 0
+            })).filter((docente) => docente.nome);
+        }
+
+        const singleName = String(alloc?.docente || '').trim();
+        if (!singleName) return [];
+        return [{
+            nome: singleName,
+            ch: Number.parseFloat(alloc?.ch) || Number.parseFloat(fallbackHours) || 0
+        }];
+    }
+
+    function mergeDocentesList(currentList = [], nextList = []) {
+        const merged = new Map();
+
+        [...(Array.isArray(currentList) ? currentList : []), ...(Array.isArray(nextList) ? nextList : [])]
+            .forEach((docente) => {
+                const nome = String(docente?.nome || '').trim();
+                if (!nome) return;
+                const current = merged.get(nome);
+                const nextCH = Number.parseFloat(docente?.ch) || 0;
+                if (!current) {
+                    merged.set(nome, { nome, ch: nextCH });
+                    return;
+                }
+                merged.set(nome, { nome, ch: Math.max(Number.parseFloat(current?.ch) || 0, nextCH) });
+            });
+
+        return [...merged.values()];
+    }
+
+    function getProfessorCarga(alloc) {
+        let chProf = 0;
+        const chTotal = getDisciplinaCHGlobal(alloc.disciplina, alloc.turmaId);
+        if (alloc.docentes && alloc.docentes.length > 0) {
+            const doc = alloc.docentes.find((entry) => teacherNamesMatch(entry?.nome, docenteName));
+            if (doc) chProf = parseInt(doc.ch, 10) || 0;
+        } else if (teacherNamesMatch(alloc.docente, docenteName)) {
+            chProf = chTotal;
+        }
+        return { chProf, chTotal };
+    }
+
+    Object.entries(snapshot?.eventsByDate || {})
+        .sort(([dateA], [dateB]) => String(dateA).localeCompare(String(dateB)))
+        .forEach(([dateStr, events]) => {
+            const dow = new Date(`${dateStr}T12:00:00`).getDay();
+            if (dow !== dayId) return;
+
+            (Array.isArray(events) ? events : []).forEach((alloc) => {
+                if (!alloc?.id || alloc?.type === 'holiday') return;
+
+                const turnos = resolveGanttTurnosForSlots([alloc.horario], ganttTurnoConfigs);
+                const safeTurnos = turnos.length > 0 ? turnos : (visibleTurnos[0] ? [visibleTurnos[0]] : []);
+                const { chProf, chTotal } = getProfessorCarga(alloc);
+                const offerGroup = offerProjection?.offerGroupsByAllocationId?.get(alloc.id) || null;
+                const docentesList = mergeDocentesList(
+                    extractDocentesList(alloc, chTotal),
+                    offerGroup?.docentes || []
+                );
+                const canonicalStart = String(offerGroup?.start || dateStr).trim();
+                const canonicalEnd = String(offerGroup?.end || canonicalStart || dateStr).trim();
+
+                safeTurnos.forEach((turnoConfig) => {
+                    const itemKey = [
+                        offerGroup?.offerKey || '',
+                        turnoConfig.value,
+                        String(dayId || ''),
+                        canonicalStart,
+                        canonicalEnd
+                    ].join('|');
+                    const nextTimeRanges = [alloc.horario];
+                    const nextRegimeLabel = Array.isArray(offerGroup?.faixas) && offerGroup.faixas.length > 1
+                        ? 'Por faixas'
+                        : 'Oferta';
+
+                    if (!dayItemsMap[itemKey]) {
+                        dayItemsMap[itemKey] = {
+                            ...alloc,
+                            turno: turnoConfig.value,
+                            chTotal,
+                            chProf,
+                            docentes: docentesList,
+                            docenteLabel: offerGroup?.docenteLabel || alloc.docente || '',
+                            docenteSegments: Array.isArray(offerGroup?.teacherSegments) ? offerGroup.teacherSegments : [],
+                            offerKey: offerGroup?.offerKey || '',
+                            dataInicio: canonicalStart,
+                            dataFim: canonicalEnd,
+                            slotCount: 1,
+                            timeRanges: mergeTimeRanges([], nextTimeRanges),
+                            regimeLabel: nextRegimeLabel
+                        };
+                        return;
+                    }
+
+                    dayItemsMap[itemKey].dataInicio = dateStr < dayItemsMap[itemKey].dataInicio
+                        ? dateStr
+                        : dayItemsMap[itemKey].dataInicio;
+                    dayItemsMap[itemKey].dataFim = dateStr > dayItemsMap[itemKey].dataFim
+                        ? dateStr
+                        : dayItemsMap[itemKey].dataFim;
+                    dayItemsMap[itemKey].docentes = mergeDocentesList(dayItemsMap[itemKey].docentes, docentesList);
+                    dayItemsMap[itemKey].timeRanges = mergeTimeRanges(dayItemsMap[itemKey].timeRanges, nextTimeRanges);
+                    dayItemsMap[itemKey].slotCount = dayItemsMap[itemKey].timeRanges.length;
+                });
+            });
+        });
+
+    return Object.values(dayItemsMap).sort((a, b) => {
+        const startCmp = String(a.dataInicio || '').localeCompare(String(b.dataInicio || ''));
+        if (startCmp !== 0) return startCmp;
+        const endCmp = String(a.dataFim || '').localeCompare(String(b.dataFim || ''));
+        if (endCmp !== 0) return endCmp;
+        return String(a.disciplina || '').localeCompare(String(b.disciplina || ''));
+    });
+}
+
 function renderTeacherGanttInto(container, docenteName) {
     try {
         if (!container) return;
@@ -7625,18 +8288,30 @@ function renderTeacherGanttInto(container, docenteName) {
         }
 
         const totalCH = calculateTeacherTotalCH(teacherName);
-        let minDateStr = store.settings.termStart || '2025-01-01';
-        let maxDateStr = store.settings.termEnd || '2025-12-31';
-
-        allocs.forEach((alloc) => {
-            if (alloc.dataInicio && alloc.dataInicio < minDateStr) minDateStr = alloc.dataInicio;
-            if (alloc.dataFim && alloc.dataFim > maxDateStr) maxDateStr = alloc.dataFim;
+        const fallbackStart = String(calStart?.value || store.settings.termStart || '2025-01-01').trim();
+        const fallbackEnd = String(calEnd?.value || store.settings.termEnd || fallbackStart || '2025-12-31').trim();
+        const ganttTurnoConfigs = getGanttTurnoConfigs();
+        const offerProjection = buildCanonicalOfferProjection({
+            allocations: allocs,
+            startDate: fallbackStart,
+            endDate: fallbackEnd
+        });
+        const teacherSnapshot = buildTeacherExecutionSnapshot({
+            docenteName: teacherName,
+            startDate: fallbackStart,
+            endDate: fallbackEnd,
+            resolveShift: (slot) => resolveTeacherShiftForSlot(slot),
+            preferredShiftOrder: ganttTurnoConfigs.map((config) => config.value)
         });
 
-        const executionRangeByAlloc = getAllocationExecutionRangeMap(allocs, minDateStr, maxDateStr);
-        const scheduledExecutionRangeByAlloc = getNonIntensiveExecutionRangeMap(allocs, minDateStr, maxDateStr);
-        const ganttTurnoConfigs = getGanttTurnoConfigs();
-        const visibleTurnos = getGanttVisibleTurnos(allocs, minDateStr, maxDateStr, ganttTurnoConfigs);
+        let minDateStr = fallbackStart;
+        let maxDateStr = fallbackEnd;
+        offerProjection.offerGroups.forEach((group) => {
+            if (group?.start && group.start < minDateStr) minDateStr = group.start;
+            if (group?.end && group.end > maxDateStr) maxDateStr = group.end;
+        });
+
+        const visibleTurnos = getGanttVisibleTurnos(teacherSnapshot, ganttTurnoConfigs);
         const minTime = new Date(minDateStr + 'T12:00:00').getTime();
         const maxTime = new Date(maxDateStr + 'T12:00:00').getTime();
         const totalTime = maxTime - minTime || 1;
@@ -7670,14 +8345,11 @@ function renderTeacherGanttInto(container, docenteName) {
         weekDays.forEach((dayConfig) => {
             const dayItems = collectGanttDayItems({
                 dayId: dayConfig.id,
-                allocs,
+                snapshot: teacherSnapshot,
                 docenteName: teacherName,
-                minDateStr,
-                maxDateStr,
+                offerProjection,
                 ganttTurnoConfigs,
-                visibleTurnos,
-                executionRangeByAlloc,
-                scheduledExecutionRangeByAlloc
+                visibleTurnos
             });
 
             const laneRenders = visibleTurnos.map((turnoConfig, idx) => renderGanttTurnoLane({
@@ -8021,6 +8693,7 @@ function generateCalendarGrid(container, turmaId, docenteName, start, end, title
     container.appendChild(header);
 
     const eventsByDate = getCalendarEvents(turmaId, start, end, docenteName);
+    const useNativeShiftMapping = !!options.useNativeShiftMapping;
 
     let slotsToRender = [];
 
@@ -8028,7 +8701,7 @@ function generateCalendarGrid(container, turmaId, docenteName, start, end, title
         slotsToRender = options.slotsToRenderOverride.slice();
     }
     else if (turmaId) {
-        slotsToRender = buildHorariosForUI();
+        slotsToRender = buildTurmaCalendarSlots(eventsByDate, turmaId);
     }
     else if (docenteName) {
         const normalizedSkeleton = collectSlotsForTurnoValues(
@@ -8103,6 +8776,19 @@ function generateCalendarGrid(container, turmaId, docenteName, start, end, title
             prefixEmptyCells = startDow === 0 ? 0 : startDow - 1;
         }
 
+        const turnoBoundarySlots = new Set();
+        let previousShiftLetter = '';
+        slotsToRender.forEach((slot) => {
+            const rawSlot = String(slot || '').trim();
+            if (!rawSlot || rawSlot.toUpperCase().includes('INTERVALO')) return;
+            const currentShiftLetter = getTurnoLetter(rawSlot);
+            if (!currentShiftLetter) return;
+            if (previousShiftLetter && currentShiftLetter !== previousShiftLetter) {
+                turnoBoundarySlots.add(rawSlot);
+            }
+            previousShiftLetter = currentShiftLetter;
+        });
+
         for (let i = 0; i < prefixEmptyCells; i++) {
             grid.innerHTML += `<div class="day-cell empty"></div>`;
         }
@@ -8154,6 +8840,19 @@ function generateCalendarGrid(container, turmaId, docenteName, start, end, title
                                 if (Array.isArray(eHorariosOcupados)) eHorariosOcupados = eHorariosOcupados.map(h => mapSlotToTurno(h, 'Manha', eTurno, store.rawData?.horarios_por_turno));
                             }
 
+                            if (eHorario) eHorario = getShiftChangeMeta(e, eHorario, dayOfWeek, dayData.date).mappedSlot || eHorario;
+                            if (Array.isArray(eHorariosUltimoDia)) {
+                                eHorariosUltimoDia = eHorariosUltimoDia.map((h) => getShiftChangeMeta(e, h, dayOfWeek, dayData.date).mappedSlot || h);
+                            }
+                            if (Array.isArray(eHorariosOcupados)) {
+                                eHorariosOcupados = eHorariosOcupados.map((h) => getShiftChangeMeta(e, h, dayOfWeek, dayData.date).mappedSlot || h);
+                            }
+                            if (!useNativeShiftMapping) {
+                                eHorario = e.horario;
+                                eHorariosUltimoDia = e.horariosUltimoDia;
+                                eHorariosOcupados = e.horariosOcupados;
+                            }
+
                             if (eHorario && normalizeTime(eHorario) === slotTimeNorm) return true;
 
                             // NOVO: RESPEITA OS SLOTS LIMITADOS NO ÚLTIMO DIA DA INTENSIVA
@@ -8201,8 +8900,9 @@ function generateCalendarGrid(container, turmaId, docenteName, start, end, title
                                     const info = getDisciplinaInfo(event.disciplina);
                                     const docenteFirst = String(event.docente || '').trim().split(/\s+/)[0] || '';
                                     const docenteLabel = (docenteFirst && !/^a$/i.test(docenteFirst)) ? docenteFirst.toUpperCase() : '';
-                                     const rawNative = (event.turno || store.rawData?.turmas?.find(t => String(t.turma_id) === String(event.turmaId))?.turno || '').toLowerCase();
-                                     const nativeLetter = rawNative.includes('manh') ? 'M' : (rawNative.includes('tard') || rawNative.includes('vesp') ? 'T' : (rawNative.includes('noit') ? 'N' : ''));
+                                     const turmaNativeTurno = store.rawData?.turmas?.find(t => String(t.turma_id) === String(event.turmaId))?.turno || event.turno || '';
+                                     const nativeTurnoNorm = normalizeTurnoOfertaKey(turmaNativeTurno);
+                                     const nativeLetter = nativeTurnoNorm === 'manha' ? 'M' : (nativeTurnoNorm === 'tarde' ? 'T' : (nativeTurnoNorm === 'noite' ? 'N' : ''));
                                      const currentLetter = getTurnoLetter(event.horario);
                                      const isExceptional = (nativeLetter && currentLetter && nativeLetter !== currentLetter) || (event.sabadoManha && dayOfWeek === 6);
                                      const tLetter = isExceptional ? currentLetter : '';
@@ -8210,9 +8910,18 @@ function generateCalendarGrid(container, turmaId, docenteName, start, end, title
                                      const eBadge = tLetter
                                          ? `<span style="font-size:0.65em; background:#e67e22; color:#fff; padding:1px 4px; border-radius:3px; margin-left:2px; font-weight:bold;" title="Aula no turno ${tLetter === 'M' ? 'da Manhã' : tLetter === 'T' ? 'da Tarde' : 'da Noite'}">(${tLetter})</span>`
                                          : '';
+                                     const eBadgeCompact = tLetter
+                                         ? `<span style="font-size:0.65em; background:#e67e22; color:#fff; padding:1px 4px; border-radius:3px; margin-left:2px; font-weight:bold;" title="Mudou de turno: aula no turno ${tLetter === 'M' ? 'da Manhã' : tLetter === 'T' ? 'da Tarde' : 'da Noite'}">⚠ ${tLetter}</span>`
+                                         : eBadge;
+                                     const eBadgeDisplay = getShiftChangeMeta(
+                                         event,
+                                         event.horario || (Array.isArray(event.horariosOcupados) ? event.horariosOcupados[0] : ''),
+                                         dayOfWeek,
+                                         dayData.date
+                                     ).badgeHTML || eBadgeCompact;
                                      content = docenteLabel
-                                         ? `<div>${info.abrev}${eBadge} <span style="font-size:0.82em; font-weight:600; opacity:0.92;">- ${docenteLabel}</span></div>`
-                                         : `${info.abrev}${eBadge}`;
+                                         ? `<div>${info.abrev}${eBadgeDisplay} <span style="font-size:0.82em; font-weight:600; opacity:0.92;">- ${docenteLabel}</span></div>`
+                                         : `${info.abrev}${eBadgeDisplay}`;
                                      style = `background:${event.cor || '#bdc3c7'}; color:black;`;
                                 } else {
                                     content = '&nbsp;';
@@ -8243,7 +8952,7 @@ function generateCalendarGrid(container, turmaId, docenteName, start, end, title
                         }
 
                         let rowStyle = '';
-                        if (isTurnoDividerSlot(slotTime)) {
+                        if (isTurnoDividerSlot(slotTime) || turnoBoundarySlots.has(slotTime)) {
                             rowStyle = 'border-top: 2px dashed #bdc3c7; margin-top: 2px; padding-top: 2px;';
                         }
 

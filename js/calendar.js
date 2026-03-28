@@ -1,119 +1,12 @@
 import { store } from './store.js';
 import { getDaysArray, toLocalDateString } from './utils.js';
 
-function getAllocationModo(alloc) {
-  return String(alloc?.modo || '').trim().toLowerCase();
+function normalizeKeyPart(value) {
+  return String(value || '').trim().toUpperCase();
 }
 
-function usesFaixaSchedule(alloc) {
-  return getAllocationModo(alloc) === 'faixas';
-}
-
-function isPreferredRegularAllocation(alloc) {
-  return false;
-}
-
-function isStandardRegularAllocation(alloc) {
-  return getAllocationModo(alloc) === 'semanal';
-}
-function getFaixaExecutionByDateMap(faixaAlloc) {
-  const raw = faixaAlloc?.executionByDate;
-  if (!raw || typeof raw !== 'object') return null;
-
-  const normalized = {};
-  Object.keys(raw)
-    .sort()
-    .forEach((dateStr) => {
-      const slots = Array.isArray(raw[dateStr]) ? raw[dateStr].filter(Boolean).map(String) : [];
-      if (slots.length > 0) normalized[dateStr] = slots;
-    });
-
-  return Object.keys(normalized).length > 0 ? normalized : null;
-}
-
-function getFallbackFaixaConfigs(faixaAlloc) {
-  const fallback = [{
-    inicio: faixaAlloc.dataInicio,
-    slots: faixaAlloc.horariosOcupados || [],
-    dias: faixaAlloc.usaSabado ? [1, 2, 3, 4, 5, 6] : [1, 2, 3, 4, 5]
-  }];
-
-  if (Array.isArray(faixaAlloc?.faixas) && faixaAlloc.faixas.length > 0) {
-    return [...faixaAlloc.faixas].sort((a, b) => a.inicio.localeCompare(b.inicio));
-  }
-
-  return fallback;
-}
-
-function getFallbackFaixaForDate(faixaAlloc, dateStr) {
-  const faixasDataList = getFallbackFaixaConfigs(faixaAlloc);
-  let activeFaixa = faixasDataList[0] || null;
-
-  faixasDataList.forEach((faixa) => {
-    if (dateStr >= faixa.inicio) activeFaixa = faixa;
-  });
-
-  return activeFaixa;
-}
-
-function getFaixaSlotsForCalendarDate(faixaAlloc, dateStr, feriadosList = []) {
-  const executionByDate = getFaixaExecutionByDateMap(faixaAlloc);
-  if (executionByDate) {
-    return Array.isArray(executionByDate[dateStr]) ? executionByDate[dateStr].slice() : [];
-  }
-
-  const currentDow = new Date(dateStr + 'T12:00:00').getDay();
-  const isHoliday = feriadosList.some((f) => (f.data || f) === dateStr);
-  if (isHoliday) return [];
-
-  const activeFaixa = getFallbackFaixaForDate(faixaAlloc, dateStr);
-  if (!activeFaixa?.dias?.includes(currentDow)) return [];
-
-  const slotsToday = activeFaixa.drawnSlotsByDay
-    ? (activeFaixa.drawnSlotsByDay[currentDow] || [])
-    : (activeFaixa.slots || []);
-
-  if (Array.isArray(faixaAlloc?.horariosUltimoDia) && faixaAlloc.horariosUltimoDia.length > 0 && dateStr === faixaAlloc.dataFim) {
-    return slotsToday.filter((slotTime) => faixaAlloc.horariosUltimoDia.includes(slotTime));
-  }
-
-  return slotsToday.slice();
-}
-
-function countFaixaHoursBeforeDate(faixaAlloc, targetDateStr, feriadosList = []) {
-  const executionByDate = getFaixaExecutionByDateMap(faixaAlloc);
-  if (executionByDate) {
-    return Object.keys(executionByDate)
-      .filter((dateStr) => dateStr < targetDateStr)
-      .reduce((sum, dateStr) => sum + (Array.isArray(executionByDate[dateStr]) ? executionByDate[dateStr].length : 0), 0);
-  }
-
-  let total = 0;
-  const cursor = new Date(faixaAlloc.dataInicio + 'T12:00:00');
-  const targetDate = new Date(targetDateStr + 'T12:00:00');
-
-  while (cursor < targetDate) {
-    const dateStr = cursor.toISOString().split('T')[0];
-    total += getFaixaSlotsForCalendarDate(faixaAlloc, dateStr, feriadosList).length;
-    cursor.setDate(cursor.getDate() + 1);
-  }
-
-  return total;
-}
-
-function resolveAllocationTeacherForHour(allocation, currentHourNum) {
-  let slotDocente = allocation.docente;
-  if (allocation.docentes && allocation.docentes.length > 0) {
-    let acc = 0;
-    for (const docente of allocation.docentes) {
-      acc += parseInt(docente.ch);
-      if (currentHourNum <= acc) {
-        slotDocente = docente.nome;
-        break;
-      }
-    }
-  }
-  return slotDocente;
+function normalizeTeacherKey(value) {
+  return String(value || '').trim().toUpperCase();
 }
 
 function normalizeCalendarSlotKey(value) {
@@ -122,12 +15,65 @@ function normalizeCalendarSlotKey(value) {
   return String(value || '').replace(/[^0-9:]/g, '');
 }
 
+function timeToMinutesSafe(value) {
+  const match = String(value || '').match(/(\d{1,2}):(\d{2})/);
+  if (!match) return Number.MAX_SAFE_INTEGER;
+  return (Number.parseInt(match[1], 10) * 60) + Number.parseInt(match[2], 10);
+}
+
+function addDaysISO(dateStr, days = 0) {
+  const raw = String(dateStr || '').trim();
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(raw)) return '';
+  const date = new Date(`${raw}T12:00:00`);
+  if (Number.isNaN(date.getTime())) return '';
+  date.setDate(date.getDate() + Number(days || 0));
+  return date.toISOString().split('T')[0];
+}
+
+function normalizeDayList(days = []) {
+  return [...new Set((Array.isArray(days) ? days : [])
+    .map((value) => Number.parseInt(value, 10))
+    .filter((value) => value >= 1 && value <= 6))]
+    .sort((left, right) => left - right);
+}
+
+function normalizeSlotList(slots = []) {
+  return [...new Set((Array.isArray(slots) ? slots : [])
+    .map((value) => String(value || '').trim())
+    .filter(Boolean))]
+    .sort((left, right) => timeToMinutesSafe(left) - timeToMinutesSafe(right));
+}
+
+function normalizeDrawnSlotsByDay(raw = {}) {
+  const normalized = {};
+
+  Object.entries(raw || {}).forEach(([day, slots]) => {
+    const dayNumber = Number.parseInt(day, 10);
+    if (dayNumber < 1 || dayNumber > 6) return;
+    const normalizedSlots = normalizeSlotList(slots);
+    if (normalizedSlots.length > 0) normalized[dayNumber] = normalizedSlots;
+  });
+
+  return normalized;
+}
+
+function buildDrawnSlotsByDay(days = [], slots = []) {
+  const map = {};
+  const normalizedDays = normalizeDayList(days);
+  const normalizedSlots = normalizeSlotList(slots);
+
+  normalizedDays.forEach((day) => {
+    map[day] = normalizedSlots.slice();
+  });
+
+  return map;
+}
+
 function getCalendarConflictIdentity(event, slotKey) {
   return [
     String(event?.id || ''),
     String(event?.turmaId || ''),
     String(event?.disciplina || ''),
-    String(event?.modo || ''),
     String(event?.subGrupo || ''),
     normalizeCalendarSlotKey(event?.horario || slotKey || '')
   ].join('|');
@@ -137,7 +83,7 @@ function markCalendarVisualConflicts(events = []) {
   const slotMap = new Map();
 
   (events || []).forEach((event) => {
-    const slotKey = normalizeCalendarSlotKey(event?.horario || (event?.horariosOcupados ? event.horariosOcupados[0] : ''));
+    const slotKey = normalizeCalendarSlotKey(event?.horario || '');
     if (!slotKey) return;
 
     if (!slotMap.has(slotKey)) slotMap.set(slotKey, []);
@@ -158,307 +104,390 @@ function markCalendarVisualConflicts(events = []) {
   });
 }
 
+function buildOfferKey(allocation) {
+  return [
+    normalizeKeyPart(allocation?.turmaId),
+    normalizeKeyPart(allocation?.disciplina),
+    normalizeKeyPart(allocation?.subGrupo)
+  ].join('|');
+}
 
-export function getCalendarEvents(turmaId, startDate, endDate, docenteFilter = null) {
-  const days = getDaysArray(startDate, endDate);
-  const calendarData = {};
+function allocationMatchesTeacherFilter(allocation, docenteFilter = '') {
+  const filter = String(docenteFilter || '').trim();
+  if (!filter) return true;
 
-  // --- Preparação ---
-  const turmaToCurso = {};
-  if (store.rawData?.turmas) {
-    store.rawData.turmas.forEach(t => {
-      // agora o curso é a própria sigla da turma (ex.: EP)
-      turmaToCurso[t.turma_id] = t.sigla;
+  if (typeof allocation?.docente === 'string' && allocation.docente.trim() === filter) return true;
+  if (allocation?.docente?.nome && String(allocation.docente.nome).trim() === filter) return true;
+
+  if (Array.isArray(allocation?.docentes)) {
+    return allocation.docentes.some((docente) => {
+      const nome = docente?.nome || docente;
+      return String(nome || '').trim() === filter;
     });
   }
 
-  const cursoRules = {};
-  if (store.rawData?.componentes) {
-    store.rawData.componentes.forEach(c => {
-      if (!cursoRules[c.sigla]) cursoRules[c.sigla] = {};
-      // regra por nome do componente
-      cursoRules[c.sigla][c.componente] = c.ch;
-    });
-  }
+  return false;
+}
 
-  const executionCount = {};
+function normalizeDeclaredFaixas(allocation, defaultStart = '', defaultEnd = '') {
+  const fallbackStart = String(allocation?.dataInicio || defaultStart || '').trim();
+  const fallbackEnd = String(allocation?.dataFim || defaultEnd || fallbackStart || '').trim();
+  const fallbackDays = Array.isArray(allocation?.diasMarcados) && allocation.diasMarcados.length > 0
+    ? allocation.diasMarcados
+    : (allocation?.usaSabado ? [1, 2, 3, 4, 5, 6] : [1, 2, 3, 4, 5]);
+  const fallbackSlots = Array.isArray(allocation?.horariosOcupados) ? allocation.horariosOcupados : [];
+  const declaredFaixas = Array.isArray(allocation?.faixas) ? allocation.faixas : [];
+  const normalized = [];
 
-  // --- Filtros para EXIBIÇÃO ---
-  let myAllocations = store.allocations.filter(a => {
-    // Se turmaId for passado, trava para aquela turma específica (Modo Aluno)
-    if (turmaId && a.turmaId !== turmaId) return false;
+  declaredFaixas.forEach((faixa) => {
+    const inicio = String(faixa?.inicio || fallbackStart || '').trim();
+    if (!inicio) return;
 
-    if (docenteFilter) {
-      if (typeof a.docente === 'string' && a.docente.trim() === docenteFilter) return true;
-      if (a.docente && a.docente.nome && a.docente.nome.trim() === docenteFilter) return true;
-      if (a.docentes && Array.isArray(a.docentes)) {
-        return a.docentes.some(d => {
-          const nome = d.nome || d;
-          return (nome || '').trim() === docenteFilter;
-        });
-      }
-      return false;
+    let drawnSlotsByDay = normalizeDrawnSlotsByDay(faixa?.drawnSlotsByDay || {});
+    let dias = normalizeDayList(faixa?.dias || faixa?.diasMarcados || fallbackDays);
+    let slots = normalizeSlotList(faixa?.slots || faixa?.horariosOcupados || fallbackSlots);
+
+    if (Object.keys(drawnSlotsByDay).length > 0) {
+      dias = normalizeDayList(Object.keys(drawnSlotsByDay));
+      slots = normalizeSlotList(Object.values(drawnSlotsByDay).flat());
+    } else if (dias.length > 0 && slots.length > 0) {
+      drawnSlotsByDay = buildDrawnSlotsByDay(dias, slots);
     }
 
-    // Se não passou docenteFilter e passou turmaId, exibe tudo daquela turma
-    return turmaId ? true : false;
+    if (dias.length === 0 || slots.length === 0) return;
+
+    normalized.push({
+      inicio,
+      fim: String(faixa?.fim || '').trim(),
+      dias,
+      slots,
+      drawnSlotsByDay
+    });
   });
 
-  const myFaixaAllocations = myAllocations.filter(a => usesFaixaSchedule(a));
-  const myStandardRegulars = myAllocations.filter(a => isStandardRegularAllocation(a));
-  const myPreferredRegulars = myAllocations.filter(a => isPreferredRegularAllocation(a));
+  normalized.sort((left, right) => {
+    const startDiff = String(left.inicio || '').localeCompare(String(right.inicio || ''));
+    if (startDiff !== 0) return startDiff;
+    return String(left.fim || '').localeCompare(String(right.fim || ''));
+  });
 
-  const feriadosList = store.rawData?.feriados || [];
+  return normalized.map((faixa, index) => {
+    const nextFaixa = normalized[index + 1];
+    let resolvedEnd = String(faixa?.fim || '').trim();
 
-  const normalizeTime = (t) => {
-    const match = (t || '').match(/\d{1,2}:\d{2}/);
-    if (!match) return (t || '').replace(/[^0-9:]/g, '');
-    return match[0];
-  };
+    if (!resolvedEnd && nextFaixa?.inicio) resolvedEnd = addDaysISO(nextFaixa.inicio, -1);
+    if (!resolvedEnd) resolvedEnd = fallbackEnd || faixa.inicio;
+    if (resolvedEnd < faixa.inicio) resolvedEnd = faixa.inicio;
 
-  // ATUALIZAÇÃO 4D: Recebe a flag de Sábado para contar corretamente o histórico de horas
-  function isBusinessDay(dStr, includeSaturdays = false) {
-    const d = new Date(dStr + 'T12:00:00');
-    const day = d.getDay();
-    if (day === 0) return false; // Domingo nunca é dia útil
-    if (day === 6 && !includeSaturdays) return false; // Sábado só se a flag autorizar
-    if (feriadosList.some(f => f.data === dStr)) return false;
-    return true;
-  }
+    return {
+      ...faixa,
+      fim: resolvedEnd
+    };
+  });
+}
 
-  // ====================================================================
-  // PRÉ-CÁLCULO: Acumula executionCount desde o início do semestre
-  // até a véspera do range solicitado, para que a rotação de docentes
-  // em disciplinas compartilhadas funcione corretamente em qualquer mês.
-  // ====================================================================
-  const termStartStr = store.settings.termStart || startDate;
-  if (termStartStr < startDate) {
-    let preCursor = new Date(termStartStr + 'T12:00:00');
-    const preEnd = new Date(startDate + 'T12:00:00');
+function buildCanonicalFaixasForAllocation(allocation, defaultStart = '', defaultEnd = '') {
+  const declaredFaixas = normalizeDeclaredFaixas(allocation, defaultStart, defaultEnd);
+  if (declaredFaixas.length > 0) return declaredFaixas;
 
-    while (preCursor < preEnd) {
-      const preDateStr = preCursor.toISOString().split('T')[0];
-      const preDow = preCursor.getDay();
-
-      // Pula domingos e feriados
-      if (preDow !== 0 && !feriadosList.some(f => f.data === preDateStr)) {
-        // Simula contagem das ofertas regulares priorizadas
-        myPreferredRegulars.forEach(reg => {
-          if (reg.diaSemana != preDow) return;
-          if (reg.dataInicio && preDateStr < reg.dataInicio) return;
-          if (!reg.dataFim && store.settings.termEnd && preDateStr > store.settings.termEnd) return;
-          if (reg.dataFim && preDateStr > reg.dataFim) return;
-
-          const cursoSigla = turmaToCurso[reg.turmaId];
-          let maxCH = 999;
-          if (cursoSigla && cursoRules[cursoSigla] && cursoRules[cursoSigla][reg.disciplina]) {
-            maxCH = cursoRules[cursoSigla][reg.disciplina];
-          }
-          const key = `${reg.turmaId}|${reg.disciplina}`;
-          const currentCount = executionCount[key] || 0;
-          if (currentCount < maxCH) {
-            executionCount[key] = currentCount + 1;
-          }
-        });
-
-        // Simula contagem das ofertas regulares padr�o
-        myStandardRegulars.forEach(reg => {
-          const regStart = reg.dataInicio || store.settings.termStart;
-          const regEnd = reg.dataFim || store.settings.termEnd;
-          if (preDateStr < regStart || preDateStr > regEnd) return;
-          if (reg.diaSemana != preDow) return;
-
-          // Observa a ocupacao por oferta em faixas neste dia
-          const cursoSigla = turmaToCurso[reg.turmaId];
-          let maxCH = 999;
-          if (cursoSigla && cursoRules[cursoSigla] && cursoRules[cursoSigla][reg.disciplina]) {
-            maxCH = cursoRules[cursoSigla][reg.disciplina];
-          }
-          const key = `${reg.turmaId}|${reg.disciplina}`;
-          const currentCount = executionCount[key] || 0;
-          if (currentCount < maxCH) {
-            executionCount[key] = currentCount + 1;
-          }
-        });
+  const weeklyDay = Number.parseInt(allocation?.diaSemana, 10) || 0;
+  const weeklySlot = String(allocation?.horario || '').trim();
+  if (weeklyDay >= 1 && weeklyDay <= 6 && weeklySlot) {
+    const inicio = String(allocation?.dataInicio || defaultStart || '').trim();
+    const fim = String(allocation?.dataFim || defaultEnd || inicio || '').trim();
+    return [{
+      inicio,
+      fim: fim || inicio,
+      dias: [weeklyDay],
+      slots: [weeklySlot],
+      drawnSlotsByDay: {
+        [weeklyDay]: [weeklySlot]
       }
-      preCursor.setDate(preCursor.getDate() + 1);
-    }
+    }];
   }
 
-  // --- Loop ---
-  days.forEach(date => {
+  const dias = Array.isArray(allocation?.diasMarcados) && allocation.diasMarcados.length > 0
+    ? allocation.diasMarcados
+    : (allocation?.usaSabado ? [1, 2, 3, 4, 5, 6] : [1, 2, 3, 4, 5]);
+  const slots = Array.isArray(allocation?.horariosOcupados) ? allocation.horariosOcupados : [];
+  const inicio = String(allocation?.dataInicio || defaultStart || '').trim();
+  const fim = String(allocation?.dataFim || defaultEnd || inicio || '').trim();
+
+  if (!inicio || slots.length === 0) return [];
+  return [{
+    inicio,
+    fim: fim || inicio,
+    dias: normalizeDayList(dias),
+    slots: normalizeSlotList(slots),
+    drawnSlotsByDay: buildDrawnSlotsByDay(dias, slots)
+  }];
+}
+
+function resolveSlotsForDate(faixas = [], dateStr = '', dayOfWeek = 0) {
+  if (!dateStr || dayOfWeek < 1 || dayOfWeek > 6) return [];
+
+  for (let index = faixas.length - 1; index >= 0; index -= 1) {
+    const faixa = faixas[index];
+    if (!faixa) continue;
+    if (dateStr < faixa.inicio) continue;
+    if (faixa.fim && dateStr > faixa.fim) continue;
+    if (!Array.isArray(faixa.dias) || !faixa.dias.includes(dayOfWeek)) return [];
+
+    const daySlots = faixa?.drawnSlotsByDay?.[dayOfWeek];
+    return normalizeSlotList(Array.isArray(daySlots) && daySlots.length > 0 ? daySlots : faixa.slots);
+  }
+
+  return [];
+}
+
+function buildCandidateSlotsByDate(allocation, computationDays = [], feriadosSet = new Set(), defaultStart = '', defaultEnd = '') {
+  const faixas = buildCanonicalFaixasForAllocation(allocation, defaultStart, defaultEnd);
+  const byDate = {};
+
+  computationDays.forEach((date) => {
     const dateStr = toLocalDateString(date);
     const dayOfWeek = date.getDay();
 
-    // ATUALIZAÇÃO 4D: Libera o Sábado! Agora apenas o Domingo (0) é bloqueado incondicionalmente
+    if (dayOfWeek === 0) return;
+    if (feriadosSet.has(dateStr)) return;
+
+    const slots = resolveSlotsForDate(faixas, dateStr, dayOfWeek);
+    if (slots.length > 0) byDate[dateStr] = slots;
+  });
+
+  return { faixas, byDate };
+}
+
+function buildBaseSlotsFromFaixas(faixas = []) {
+  return normalizeSlotList((faixas || []).flatMap((faixa) => faixa?.slots || []));
+}
+
+function buildTurmaToCursoMap() {
+  const map = {};
+  (Array.isArray(store.rawData?.turmas) ? store.rawData.turmas : []).forEach((turma) => {
+    if (turma?.turma_id && turma?.sigla) map[String(turma.turma_id)] = turma.sigla;
+  });
+  return map;
+}
+
+function buildCursoComponentCHMap() {
+  const map = {};
+  (Array.isArray(store.rawData?.componentes) ? store.rawData.componentes : []).forEach((component) => {
+    if (!component?.sigla || !component?.componente) return;
+    if (!map[component.sigla]) map[component.sigla] = {};
+    map[component.sigla][component.componente] = Number(component.ch || 0);
+  });
+  return map;
+}
+
+function resolveOfferWorkloadLimit(allocation, turmaToCurso = {}, cursoRules = {}) {
+  const cursoSigla = turmaToCurso[String(allocation?.turmaId || '')];
+  const courseCH = cursoSigla && cursoRules[cursoSigla]
+    ? Number(cursoRules[cursoSigla][allocation?.disciplina] || 0)
+    : 0;
+  const allocationCH = Number(allocation?.ch || 0);
+  const resolved = Math.max(courseCH, allocationCH);
+  return Number.isFinite(resolved) && resolved > 0 ? resolved : 0;
+}
+
+function resolveAllocationTeacherForHour(allocation, currentHourNum) {
+  let slotDocente = allocation?.docente;
+  if (Array.isArray(allocation?.docentes) && allocation.docentes.length > 0) {
+    let accumulated = 0;
+    for (const docente of allocation.docentes) {
+      accumulated += Number.parseInt(docente?.ch, 10) || 0;
+      if (currentHourNum <= accumulated) {
+        slotDocente = docente?.nome || docente;
+        break;
+      }
+    }
+  }
+  return slotDocente;
+}
+
+function buildAllocationDescriptors(allocations = [], computationDays = [], feriadosSet = new Set(), defaultStart = '', defaultEnd = '') {
+  const turmaToCurso = buildTurmaToCursoMap();
+  const cursoRules = buildCursoComponentCHMap();
+
+  return allocations.map((allocation) => {
+    const { faixas, byDate } = buildCandidateSlotsByDate(allocation, computationDays, feriadosSet, defaultStart, defaultEnd);
+    return {
+      allocation,
+      allocationId: allocation?.id,
+      offerKey: buildOfferKey(allocation),
+      maxCH: resolveOfferWorkloadLimit(allocation, turmaToCurso, cursoRules),
+      faixas,
+      candidateSlotsByDate: byDate,
+      baseSlots: buildBaseSlotsFromFaixas(faixas)
+    };
+  }).filter((descriptor) => descriptor.allocationId);
+}
+
+function buildActualOccurrences(descriptors = [], computationDays = [], visibleDateSet = new Set(), feriadosSet = new Set()) {
+  const executionCountByOffer = new Map();
+  const actualExecutionByAlloc = new Map();
+  const visibleOccurrencesByDate = {};
+  const descriptorsByAllocationId = new Map();
+  const maxCHByOffer = new Map();
+
+  descriptors.forEach((descriptor) => {
+    descriptorsByAllocationId.set(descriptor.allocationId, descriptor);
+    const current = maxCHByOffer.get(descriptor.offerKey) || 0;
+    const next = Number(descriptor.maxCH || 0);
+    maxCHByOffer.set(descriptor.offerKey, Math.max(current, next));
+  });
+
+  computationDays.forEach((date) => {
+    const dateStr = toLocalDateString(date);
+    const dayOfWeek = date.getDay();
+
+    if (dayOfWeek === 0 || feriadosSet.has(dateStr)) {
+      if (visibleDateSet.has(dateStr)) visibleOccurrencesByDate[dateStr] = [];
+      return;
+    }
+
+    const candidates = [];
+    descriptors.forEach((descriptor) => {
+      const slots = descriptor.candidateSlotsByDate[dateStr] || [];
+      slots.forEach((slotTime) => {
+        candidates.push({ descriptor, slotTime });
+      });
+    });
+
+    candidates.sort((left, right) => {
+      const slotDiff = timeToMinutesSafe(left.slotTime) - timeToMinutesSafe(right.slotTime);
+      if (slotDiff !== 0) return slotDiff;
+      const disciplinaDiff = String(left.descriptor?.allocation?.disciplina || '').localeCompare(String(right.descriptor?.allocation?.disciplina || ''));
+      if (disciplinaDiff !== 0) return disciplinaDiff;
+      return String(left.descriptor?.allocationId || '').localeCompare(String(right.descriptor?.allocationId || ''));
+    });
+
+    const visibleOccurrences = [];
+    candidates.forEach(({ descriptor, slotTime }) => {
+      const currentCount = executionCountByOffer.get(descriptor.offerKey) || 0;
+      const maxCH = maxCHByOffer.get(descriptor.offerKey) || 0;
+      if (maxCH > 0 && currentCount >= maxCH) return;
+
+      const occurrenceIndex = currentCount + 1;
+      executionCountByOffer.set(descriptor.offerKey, occurrenceIndex);
+
+      if (!actualExecutionByAlloc.has(descriptor.allocationId)) actualExecutionByAlloc.set(descriptor.allocationId, {});
+      const byDate = actualExecutionByAlloc.get(descriptor.allocationId);
+      if (!Array.isArray(byDate[dateStr])) byDate[dateStr] = [];
+      byDate[dateStr].push(slotTime);
+
+      if (visibleDateSet.has(dateStr)) {
+        visibleOccurrences.push({
+          allocationId: descriptor.allocationId,
+          horario: slotTime,
+          docente: resolveAllocationTeacherForHour(descriptor.allocation, occurrenceIndex),
+          occurrenceIndex
+        });
+      }
+    });
+
+    if (visibleDateSet.has(dateStr)) visibleOccurrencesByDate[dateStr] = visibleOccurrences;
+  });
+
+  return {
+    descriptorsByAllocationId,
+    actualExecutionByAlloc,
+    visibleOccurrencesByDate
+  };
+}
+
+function buildDerivedAllocationMeta(actualExecutionByAlloc = new Map(), descriptorsByAllocationId = new Map()) {
+  const metaByAllocationId = new Map();
+
+  descriptorsByAllocationId.forEach((descriptor, allocationId) => {
+    const executionByDate = actualExecutionByAlloc.get(allocationId) || {};
+    const activeDates = Object.keys(executionByDate).sort((left, right) => left.localeCompare(right));
+    const lastDate = activeDates[activeDates.length - 1] || '';
+
+    metaByAllocationId.set(allocationId, {
+      executionByDate,
+      horariosBase: descriptor.baseSlots,
+      dataInicio: activeDates[0] || descriptor.allocation?.dataInicio || '',
+      dataFim: lastDate || descriptor.allocation?.dataFim || descriptor.allocation?.dataInicio || '',
+      horariosUltimoDia: lastDate ? (executionByDate[lastDate] || []).slice() : []
+    });
+  });
+
+  return metaByAllocationId;
+}
+
+export function getCalendarEvents(turmaId, startDate, endDate, docenteFilter = null) {
+  const visibleDays = getDaysArray(startDate, endDate);
+  const visibleDateSet = new Set(visibleDays.map((date) => toLocalDateString(date)));
+  const feriadosList = Array.isArray(store.rawData?.feriados) ? store.rawData.feriados : [];
+  const feriadosSet = new Set(feriadosList.map((feriado) => feriado?.data || feriado).filter(Boolean));
+  const computationStart = String(store.settings.termStart || startDate || '').trim();
+  const computationDays = getDaysArray(computationStart || startDate, endDate);
+
+  const filteredAllocations = store.allocations.filter((allocation) => {
+    if (turmaId && String(allocation?.turmaId || '') !== String(turmaId)) return false;
+    if (docenteFilter) return allocationMatchesTeacherFilter(allocation, docenteFilter);
+    return !!turmaId;
+  });
+
+  const descriptors = buildAllocationDescriptors(
+    filteredAllocations,
+    computationDays,
+    feriadosSet,
+    computationStart || startDate,
+    endDate
+  );
+
+  const {
+    descriptorsByAllocationId,
+    actualExecutionByAlloc,
+    visibleOccurrencesByDate
+  } = buildActualOccurrences(descriptors, computationDays, visibleDateSet, feriadosSet);
+  const derivedMetaByAllocationId = buildDerivedAllocationMeta(actualExecutionByAlloc, descriptorsByAllocationId);
+  const calendarData = {};
+
+  visibleDays.forEach((date) => {
+    const dateStr = toLocalDateString(date);
+    const dayOfWeek = date.getDay();
+
     if (dayOfWeek === 0) {
       calendarData[dateStr] = [];
       return;
     }
 
-    const events = [];
-
-    // Feriado
-    const feriadoObj = feriadosList.find(f => f.data === dateStr);
+    const feriadoObj = feriadosList.find((feriado) => (feriado?.data || feriado) === dateStr);
     if (feriadoObj) {
-      events.push({ type: 'holiday', title: feriadoObj.feriado || 'Feriado' });
-      calendarData[dateStr] = events;
+      calendarData[dateStr] = [{ type: 'holiday', title: feriadoObj?.feriado || 'Feriado' }];
       return;
     }
 
-    // =========================================================================================
-    // 1. PASSO A: RENDERIZAR OFERTAS REGULARES PRIORIZADAS
-    // =========================================================================================
+    const events = [];
+    (visibleOccurrencesByDate[dateStr] || []).forEach((occurrence) => {
+      const descriptor = descriptorsByAllocationId.get(occurrence.allocationId);
+      if (!descriptor) return;
+      if (docenteFilter && normalizeTeacherKey(occurrence.docente) !== normalizeTeacherKey(docenteFilter)) return;
 
-    // Renderiza minhas ofertas regulares priorizadas
-    const myActivePriority = myPreferredRegulars.filter(a => {
-      if (a.diaSemana != dayOfWeek) return false;
-      const start = a.dataInicio || store.settings.termStart || '0000-00-00';
-      const end = a.dataFim || store.settings.termEnd || '2099-12-31';
-      return dateStr >= start && dateStr <= end;
-    });
+      const allocation = descriptor.allocation;
+      const derivedMeta = derivedMetaByAllocationId.get(occurrence.allocationId) || {};
 
-    myActivePriority.forEach(reg => {
-      // Bloqueio extra pelo fim de semestre global caso a disciplina não tenha fim próprio
-      if (!reg.dataFim && store.settings.termEnd && dateStr > store.settings.termEnd) return;
-
-      // Lógica de CH e Renderização
-      const cursoSigla = turmaToCurso[reg.turmaId];
-      let maxCH = 999;
-      if (cursoSigla && cursoRules[cursoSigla] && cursoRules[cursoSigla][reg.disciplina]) {
-        maxCH = cursoRules[cursoSigla][reg.disciplina];
-      }
-
-      const key = `${reg.turmaId}|${reg.disciplina}`;
-      const currentCount = executionCount[key] || 0;
-
-      if (currentCount < maxCH) {
-        executionCount[key] = currentCount + 1;
-        let slotDocente = reg.docente;
-        if (reg.docentes && reg.docentes.length > 0) {
-          let acc = 0;
-          for (const d of reg.docentes) {
-            acc += parseInt(d.ch);
-            if ((currentCount + 1) <= acc) {
-              slotDocente = d.nome;
-              break;
-            }
-          }
-        }
-        if (docenteFilter && (slotDocente || '').trim() !== docenteFilter) return;
-
-        events.push({
-          ...reg,
-          priority: 3, // Prioridade visual ALTA
-          title: reg.disciplina,
-          docente: slotDocente,
-          isPreferredSchedule: true // Flag visual para UI
-        });
-      }
-    });
-    // =========================================================================================
-    // 2. PASSO B: RENDERIZAR OFERTAS POR FAIXAS
-    // =========================================================================================
-
-    // Minhas ofertas por faixas
-    const myActiveFaixaAllocations = myFaixaAllocations.filter(
-      i => dateStr >= i.dataInicio && dateStr <= i.dataFim
-    );
-
-    // PREPARAR MAPA DE REGULARES DESTA TURMA PARA HOJE (Para borda visual de sobreposição)
-    const regularSlotsToday = new Set();
-    const allRegularsOfTurma = store.allocations.filter(a => {
-      if (!isStandardRegularAllocation(a) || a.diaSemana != dayOfWeek) return false;
-      if (String(a.turmaId) !== String(turmaId || (myActiveFaixaAllocations[0]?.turmaId))) return false;
-      const start = a.dataInicio || store.settings.termStart;
-      const end = a.dataFim || store.settings.termEnd;
-      return dateStr >= start && dateStr <= end;
-    });
-    allRegularsOfTurma.forEach(r => regularSlotsToday.add(normalizeTime(r.horario)));
-
-
-    myActiveFaixaAllocations.forEach(faixaAlloc => {
-      const slotsToday = getFaixaSlotsForCalendarDate(faixaAlloc, dateStr, feriadosList);
-      if (slotsToday.length === 0) return;
-
-      const hoursBeforeToday = countFaixaHoursBeforeDate(faixaAlloc, dateStr, feriadosList);
-
-      slotsToday.forEach((slotTime, slotIndex) => {
-        const currentHourNum = hoursBeforeToday + slotIndex + 1;
-        if (faixaAlloc.ch && currentHourNum > faixaAlloc.ch) return;
-
-        const slotDocente = resolveAllocationTeacherForHour(faixaAlloc, currentHourNum);
-        if (docenteFilter && (slotDocente || '').trim() !== docenteFilter) return;
-
-        const overlapsRegularSlot = regularSlotsToday.has(normalizeTime(slotTime));
-
-        events.push({
-          ...faixaAlloc,
-          priority: 2,
-          title: faixaAlloc.disciplina,
-          docente: slotDocente,
-          horario: slotTime,
-          horariosOcupados: null,
-          isOverriding: overlapsRegularSlot
-        });
+      events.push({
+        ...allocation,
+        title: allocation?.disciplina,
+        docente: occurrence.docente,
+        horario: occurrence.horario,
+        horariosBase: Array.isArray(derivedMeta.horariosBase) ? derivedMeta.horariosBase.slice() : [],
+        horariosOcupados: null,
+        executionByDate: derivedMeta.executionByDate || {},
+        dataInicio: derivedMeta.dataInicio || allocation?.dataInicio || '',
+        dataFim: derivedMeta.dataFim || allocation?.dataFim || allocation?.dataInicio || '',
+        horariosUltimoDia: Array.isArray(derivedMeta.horariosUltimoDia) ? derivedMeta.horariosUltimoDia.slice() : [],
+        offerKey: descriptor.offerKey,
+        occurrenceIndex: occurrence.occurrenceIndex
       });
     });
-    // =========================================================================================
-    // 3. PASSO C: RENDERIZAR OFERTAS REGULARES PADR�O (somente criterios canonicos de data/dia/CH)
-    // =========================================================================================
-    myStandardRegulars.forEach(reg => {
-      // Verifica validade temporal modular
-      const start = reg.dataInicio || store.settings.termStart;
-      const end = reg.dataFim || store.settings.termEnd;
-      if (dateStr < start || dateStr > end) return;
 
-      if (reg.diaSemana == dayOfWeek) {
-
-        const cursoSigla = turmaToCurso[reg.turmaId];
-        let maxCH = 999;
-
-        if (cursoSigla && cursoRules[cursoSigla] && cursoRules[cursoSigla][reg.disciplina]) {
-          maxCH = cursoRules[cursoSigla][reg.disciplina];
-        }
-
-        const key = `${reg.turmaId}|${reg.disciplina}`;
-        const currentCount = executionCount[key] || 0;
-
-        if (currentCount < maxCH) {
-          executionCount[key] = currentCount + 1;
-
-          let slotDocente = reg.docente;
-          if (reg.docentes && reg.docentes.length > 0) {
-            let acc = 0;
-            for (const d of reg.docentes) {
-              acc += parseInt(d.ch);
-              if ((currentCount + 1) <= acc) {
-                slotDocente = d.nome;
-                break;
-              }
-            }
-          }
-
-          if (docenteFilter && (slotDocente || '').trim() !== docenteFilter) return;
-
-          events.push({
-            ...reg,
-            priority: 1,
-            title: reg.disciplina,
-            docente: slotDocente
-          });
-        }
-      }
-    });
-
-    // --- Detecção de Choques (Apenas entre ativos no mesmo dia/hora) ---
     markCalendarVisualConflicts(events);
-    events.sort((a, b) => {
-      const hA = normalizeTime(a.horario || '');
-      const hB = normalizeTime(b.horario || '');
-      return hA.localeCompare(hB);
-    });
-
+    events.sort((left, right) => normalizeCalendarSlotKey(left?.horario || '').localeCompare(normalizeCalendarSlotKey(right?.horario || '')));
     calendarData[dateStr] = events;
   });
 

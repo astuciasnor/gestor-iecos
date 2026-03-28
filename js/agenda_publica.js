@@ -4,6 +4,7 @@ import { getCalendarEvents } from './calendar.js';
 import { resolveActiveAcademicPeriod } from './academic_rules.mjs';
 
 const collator = new Intl.Collator('pt-BR', { sensitivity: 'base' });
+const PUBLIC_ASSET_VERSION = '20260327d';
 
 const state = {
     activeTab: 'discente',
@@ -29,6 +30,23 @@ let renderSequence = 0;
 let suggestionActiveIndex = -1;
 let activeLensChip = null;
 let docenteViewportTimer = 0;
+
+function isLocalPreviewEnvironment() {
+    const protocol = String(window.location?.protocol || '').toLowerCase();
+    const hostname = String(window.location?.hostname || '').toLowerCase();
+    return protocol === 'file:' || hostname === 'localhost' || hostname === '127.0.0.1';
+}
+
+function shouldPreferLocalDraftSource(localAllocations = []) {
+    if (!isLocalPreviewEnvironment()) return false;
+    if (!Array.isArray(localAllocations) || !localAllocations.length) return false;
+
+    const params = new URLSearchParams(window.location.search || '');
+    const forcedSource = String(params.get('source') || '').trim().toLowerCase();
+    if (forcedSource === 'public') return false;
+
+    return true;
+}
 
 document.addEventListener('DOMContentLoaded', init);
 
@@ -131,9 +149,26 @@ function bindEvents() {
 
 async function loadPublicData() {
     await store.loadData();
+    const localDraftAllocations = Array.isArray(store.allocations)
+        ? store.allocations.map((allocation) => normalizeLoadedAllocation({ ...allocation }))
+        : [];
+    const localDraftSettings = { ...store.settings };
+    const useLocalDraft = shouldPreferLocalDraftSource(localDraftAllocations);
+
+    if (useLocalDraft) {
+        state.publicCatalog = null;
+        store.allocations = localDraftAllocations;
+        store.settings.termStart = localDraftSettings.termStart || store.settings.termStart;
+        store.settings.termEnd = localDraftSettings.termEnd || store.settings.termEnd;
+        store.settings.periodo = localDraftSettings.periodo || store.settings.periodo;
+        console.info('Agenda pública em modo de pré-visualização local: usando allocations do plano atual.');
+        if (!store.settings.termStart) store.settings.termStart = '2026-02-01';
+        if (!store.settings.termEnd) store.settings.termEnd = '2026-07-31';
+        return;
+    }
 
     try {
-        const response = await fetch('alocacoes_publicas.json');
+        const response = await fetch(`alocacoes_publicas.json?v=${PUBLIC_ASSET_VERSION}`);
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
         const dadosPublicos = await response.json();
@@ -951,7 +986,16 @@ function buildWeeklyGridHTML({ calendarData, year, month, mode }) {
             if (holiday) {
                 html += `<div class="feriado-chip" title="${escapeHtmlAttr(holiday.title || 'Feriado')}">Feriado</div>`;
             } else {
-                events.forEach((event) => {
+                const renderedEvents = mode === 'discente'
+                    ? events.slice().sort((a, b) => {
+                        const aTime = getEventStartMinutes(a, dateStr);
+                        const bTime = getEventStartMinutes(b, dateStr);
+                        if (Number.isFinite(aTime) && Number.isFinite(bTime) && aTime !== bTime) return aTime - bTime;
+                        return String(a?.title || a?.disciplina || '').localeCompare(String(b?.title || b?.disciplina || ''), 'pt-BR');
+                    })
+                    : events;
+
+                renderedEvents.forEach((event) => {
                     html += buildMiniChipMarkup(event, cursor, mode, events);
                 });
             }
@@ -980,8 +1024,9 @@ function buildWeeklyGridHTML({ calendarData, year, month, mode }) {
 }
 
 function buildMiniChipMarkup(event, dateObj, mode, dailyEvents = []) {
-    const horario = getEventHorario(event);
-    const intervalo = getEventDailyIntervalLabel(event, dailyEvents);
+    const dateStr = toIsoDate(dateObj);
+    const horario = getEventHorario(event, dateStr);
+    const intervalo = getEventDailyIntervalLabel(event, dailyEvents, dateStr);
     const titulo = String(event?.title || event?.disciplina || 'Componente').trim();
     const docente = getEventTeacherLabel(event);
     const turma = getTurmaLabel(event?.turmaId, event?.subGrupo);
@@ -993,18 +1038,8 @@ function buildMiniChipMarkup(event, dateObj, mode, dailyEvents = []) {
         ? buildTeacherChipLabel(event)
         : getDisciplinaShortLabel(event?.disciplina || titulo, titulo);
     const wrapClass = chipLabel.length > 16 ? ' wrap' : '';
-
-        const turmaInfo = state.turmaById.get(String(event?.turmaId || '').trim());
-        const rawNative = (turmaInfo?.turno || '').toLowerCase();
-        const nativeLetter = rawNative.includes('manh') ? 'M' : (rawNative.includes('tard') || rawNative.includes('vesp') ? 'T' : (rawNative.includes('noit') ? 'N' : ''));
-        const currentLetter = getTurnoLetter(horario);
-
-        const isExceptional = (nativeLetter && currentLetter && nativeLetter !== currentLetter) || (event?.sabadoManha && dateObj.getDay() === 6);
-        const tLetter = isExceptional ? currentLetter : '';
-
-        const badgeHTML = tLetter 
-            ? `<span style="display:inline-block; font-size:0.65em; background:#e67e22; color:#fff; padding:1px 4px; border-radius:3px; margin-left:2px; font-weight:bold;" title="Aula no turno ${tLetter === 'M' ? 'da Manhã' : tLetter === 'T' ? 'da Tarde' : 'da Noite'}">(${tLetter})</span>`
-            : '';
+    const shiftMeta = getPublicShiftChangeMeta(event, dateStr);
+    const badgeHTML = shiftMeta.badgeHTML;
 
     return `
         <div
@@ -1021,10 +1056,11 @@ function buildMiniChipMarkup(event, dateObj, mode, dailyEvents = []) {
             data-local="${escapeHtmlAttr(local)}"
             data-modo="${escapeHtmlAttr(modo)}"
             data-cor="${escapeHtmlAttr(cor)}"
-            data-excepcional="${isExceptional ? 'true' : 'false'}"
+            data-excepcional="${shiftMeta.isShiftChange ? 'true' : 'false'}"
         >
             <div class="chip-hora">${escapeHtml(formatChipStartTime(horario))}</div>
-            <div class="chip-sigla${wrapClass}">${escapeHtml(chipLabel)}${badgeHTML}</div>
+            <div class="chip-sigla${wrapClass}">${escapeHtml(chipLabel)}</div>
+            ${badgeHTML ? `<div style="margin-top:4px; line-height:1;">${badgeHTML}</div>` : ''}
         </div>
     `;
 }
@@ -1072,7 +1108,53 @@ function getEventTeacherLabel(event) {
     return uniqueNames.length ? uniqueNames.join(' / ') : 'A definir';
 }
 
-function getEventHorario(event) {
+function normalizePublicTurnoKey(value) {
+    const normalized = String(value || '')
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .trim()
+        .toLowerCase();
+
+    if (normalized.includes('manh')) return 'manha';
+    if (normalized.includes('tard') || normalized.includes('vesp')) return 'tarde';
+    if (normalized.includes('noit')) return 'noite';
+    return normalized;
+}
+
+function getShiftChangeLabel(letter = '') {
+    if (letter === 'M') return 'Manha';
+    if (letter === 'T') return 'Tarde';
+    if (letter === 'N') return 'Noturno';
+    return '';
+}
+
+function getNativeTurnoLetterForEvent(event) {
+    const turmaInfo = state.turmaById.get(String(event?.turmaId || '').trim());
+    const nativeKey = normalizePublicTurnoKey(turmaInfo?.turno || event?.turno || '');
+    if (nativeKey === 'manha') return 'M';
+    if (nativeKey === 'tarde') return 'T';
+    if (nativeKey === 'noite') return 'N';
+    return '';
+}
+
+function getEventHorariosForDate(event, dateStr = '') {
+    if (dateStr && event?.executionByDate && Array.isArray(event.executionByDate[dateStr]) && event.executionByDate[dateStr].length > 0) {
+        return event.executionByDate[dateStr].map((slot) => String(slot || '').trim()).filter(Boolean);
+    }
+
+    if (dateStr && event?.dataFim === dateStr && Array.isArray(event?.horariosUltimoDia) && event.horariosUltimoDia.length > 0) {
+        return event.horariosUltimoDia.map((slot) => String(slot || '').trim()).filter(Boolean);
+    }
+
+    if (Array.isArray(event?.horariosOcupados) && event.horariosOcupados.length > 0) {
+        return event.horariosOcupados.map((slot) => String(slot || '').trim()).filter(Boolean);
+    }
+
+    if (event?.horario) return [String(event.horario).trim()];
+    return [];
+}
+
+function getRawEventHorario(event) {
     if (event?.horario) return String(event.horario).trim();
     if (Array.isArray(event?.horariosOcupados) && event.horariosOcupados.length > 0) {
         return String(event.horariosOcupados[0] || '').trim() || '--:--';
@@ -1080,7 +1162,74 @@ function getEventHorario(event) {
     return '--:--';
 }
 
-function getEventDailyIntervalLabel(event, dailyEvents = []) {
+function getEventHorario(event, dateStr = '') {
+    const rawHorario = getRawEventHorario(event);
+    if (rawHorario && rawHorario !== '--:--') return rawHorario;
+    const slots = getEventHorariosForDate(event, dateStr);
+    return slots[0] || '--:--';
+}
+
+function getPublicShiftChangeMeta(event, dateStr = '') {
+    const horario = getEventHorario(event, dateStr);
+    const nativeLetter = getNativeTurnoLetterForEvent(event);
+    const currentLetter = getTurnoLetter(horario);
+    const isSaturdayMorning = !!(
+        event?.sabadoManha
+        && dateStr
+        && new Date(`${dateStr}T12:00:00`).getDay() === 6
+    );
+    const isShiftChange = !!(
+        (nativeLetter && currentLetter && nativeLetter !== currentLetter)
+        || isSaturdayMorning
+    );
+    const effectiveLetter = currentLetter || (isSaturdayMorning ? 'M' : '');
+    const badgeLabel = isShiftChange ? getShiftChangeLabel(effectiveLetter) : '';
+    const badgeHTML = badgeLabel
+        ? `<span style="display:inline-block; font-size:0.65em; background:#e67e22; color:#fff; padding:1px 4px; border-radius:3px; font-weight:bold;" title="Mudou de turno: aula no turno ${badgeLabel}">&#9888; ${badgeLabel}</span>`
+        : '';
+
+    return {
+        horario,
+        nativeLetter,
+        currentLetter,
+        isShiftChange,
+        badgeLabel,
+        badgeHTML
+    };
+}
+
+function getEventStartMinutes(event, dateStr = '') {
+    const horario = getEventHorario(event, dateStr);
+    const match = String(horario || '').match(/\d{1,2}:\d{2}/);
+    return match ? timeToMinutes(match[0]) : Number.POSITIVE_INFINITY;
+}
+
+function getPreferredGroupEvents(events = [], dateStr = '') {
+    const groupEvents = Array.isArray(events) ? events.slice() : [];
+    if (!groupEvents.length) return [];
+
+    const shiftedEvents = groupEvents.filter((event) => getPublicShiftChangeMeta(event, dateStr).isShiftChange);
+    return shiftedEvents.length > 0 ? shiftedEvents : groupEvents;
+}
+
+function selectRepresentativeGroupEvent(events = [], dateStr = '') {
+    const candidates = getPreferredGroupEvents(events, dateStr);
+    if (!candidates.length) return null;
+
+    return candidates
+        .slice()
+        .sort((a, b) => {
+            const shiftDiff = Number(getPublicShiftChangeMeta(b, dateStr).isShiftChange) - Number(getPublicShiftChangeMeta(a, dateStr).isShiftChange);
+            if (shiftDiff !== 0) return shiftDiff;
+
+            const startDiff = getEventStartMinutes(a, dateStr) - getEventStartMinutes(b, dateStr);
+            if (Number.isFinite(startDiff) && startDiff !== 0) return startDiff;
+
+            return String(a?.title || a?.disciplina || '').localeCompare(String(b?.title || b?.disciplina || ''), 'pt-BR');
+        })[0];
+}
+
+function getEventDailyIntervalLabel(event, dailyEvents = [], dateStr = '') {
     const currentKey = buildEventGroupKey(event);
     const matchingEvents = (Array.isArray(dailyEvents) ? dailyEvents : []).filter((item) => {
         if (!item || item.type === 'holiday') return false;
@@ -1088,18 +1237,18 @@ function getEventDailyIntervalLabel(event, dailyEvents = []) {
     });
 
     const bounds = matchingEvents
-        .map((item) => parseHorarioBounds(getEventHorario(item)))
+        .map((item) => parseHorarioBounds(getEventHorario(item, dateStr)))
         .filter(Boolean);
 
     if (!bounds.length) {
-        return formatHorarioIntervalo(getEventHorario(event));
+        return formatHorarioIntervalo(getEventHorario(event, dateStr));
     }
 
     const firstStart = bounds.reduce((min, item) => Math.min(min, item.startMinutes), Number.POSITIVE_INFINITY);
     const lastEnd = bounds.reduce((max, item) => Math.max(max, item.endMinutes), Number.NEGATIVE_INFINITY);
 
     if (!Number.isFinite(firstStart) || !Number.isFinite(lastEnd) || lastEnd <= firstStart) {
-        return formatHorarioIntervalo(getEventHorario(event));
+        return formatHorarioIntervalo(getEventHorario(event, dateStr));
     }
 
     return `de ${formatMinutesShort(firstStart)} a ${formatMinutesShort(lastEnd)}`;
@@ -1219,6 +1368,7 @@ function buildSlotLensMarkup(chip) {
     const titulo = chip.getAttribute('data-titulo') || 'Componente';
     const data = chip.getAttribute('data-data') || '--';
     const horario = chip.getAttribute('data-horario') || '--';
+    const intervalo = chip.getAttribute('data-intervalo') || formatHorarioIntervalo(horario);
     const docente = chip.getAttribute('data-docente') || '--';
     const turma = chip.getAttribute('data-turma') || '--';
     const local = chip.getAttribute('data-local') || '--';
@@ -1249,7 +1399,7 @@ function buildSlotLensMarkup(chip) {
                 </div>
                 <div class="slot-lens-line">
                     <strong>Horário:</strong>
-                    <span>${escapeHtml(formatHorarioIntervalo(horario))}</span>
+                    <span>${escapeHtml(intervalo)}</span>
                 </div>
                 <div class="slot-lens-line">
                     <strong>Local:</strong>
@@ -1551,17 +1701,20 @@ function buildMonthlyCalendarHTML({ calendarData, year, month }) {
 
         // Group by discipline — one chip per component
         const discGroups = new Map();
-        classEvents.forEach(ev => {
+        classEvents.forEach((ev) => {
             const key = `${normalizeText(ev.disciplina || ev.title || '')}|${ev.turmaId || ''}|${ev.subGrupo || ''}`;
-            if (!discGroups.has(key)) discGroups.set(key, ev);
+            if (!discGroups.has(key)) discGroups.set(key, []);
+            discGroups.get(key).push(ev);
         });
-        const uniqueDiscs = Array.from(discGroups.values());
+        const uniqueDiscs = Array.from(discGroups.entries()).map(([discKey, groupEvents]) => ({
+            discKey,
+            representative: selectRepresentativeGroupEvent(groupEvents, dateStr)
+        })).filter((entry) => entry.representative);
 
-        uniqueDiscs.slice(0, 2).forEach(ev => {
+        uniqueDiscs.slice(0, 2).forEach(({ discKey, representative: ev }) => {
             const cor = String(ev.cor || '#355344').trim();
-            const hora = formatChipStartTime(getEventHorario(ev));
+            const hora = formatChipStartTime(getEventHorario(ev, dateStr));
             const sigla = getDisciplinaShortLabel(ev.disciplina, ev.title || ev.disciplina || '').slice(0, 10);
-            const discKey = `${normalizeText(ev.disciplina || ev.title || '')}|${ev.turmaId || ''}|${ev.subGrupo || ''}`;
             grid += `<div class="mcd-event" style="background:${escapeHtmlAttr(cor)}" data-date="${dateStr}" data-disc-key="${escapeHtmlAttr(discKey)}" tabindex="0" role="button">`;
             grid += `<span class="mcd-event-hora">${escapeHtml(hora)}</span>`;
             grid += `<span class="mcd-event-sigla">${escapeHtml(sigla)}</span>`;
@@ -1605,16 +1758,29 @@ function buildDayLensMarkup(events, dateStr, filterKey = null) {
                 subGrupo: ev.subGrupo,
                 cor: ev.cor || '#355344',
                 local: getEventLocationLabel(ev),
-                horarios: [],
+                events: [],
                 ch: totalCh
             });
         }
         const g = groups.get(key);
-        const h = getEventHorario(ev);
-        if (h && !g.horarios.includes(h)) g.horarios.push(h);
+        g.events.push(ev);
     });
 
-    const groupList = Array.from(groups.values());
+    const groupList = Array.from(groups.values()).map((group) => {
+        const preferredEvents = getPreferredGroupEvents(group.events, dateStr);
+        const horarios = [];
+
+        preferredEvents.forEach((event) => {
+            getEventHorariosForDate(event, dateStr).forEach((slot) => {
+                if (slot && !horarios.includes(slot)) horarios.push(slot);
+            });
+        });
+
+        return {
+            ...group,
+            horarios
+        };
+    });
     const dateObj = new Date(`${dateStr}T12:00:00`);
 
     let html = `<div class="day-lens-card">`;

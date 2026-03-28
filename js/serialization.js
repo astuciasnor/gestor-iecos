@@ -1,4 +1,5 @@
 import { resolveActiveAcademicPeriod } from './academic_rules.mjs';
+import { buildCanonicalOfferProjection } from './execution_engine.js';
 
 // ==========================================
 // EXPORTAÇÃO JSON (BACKUP E OFERTAS)
@@ -82,6 +83,11 @@ export function resolvePublicPlanMeta(activePlanMeta, settings, officialPlans = 
 
 export function buildPublicExportPayload(exportableAllocations = [], activePlanMeta, settings, officialPlans = []) {
     const publicPlan = resolvePublicPlanMeta(activePlanMeta, settings, officialPlans);
+    const offerProjection = buildCanonicalOfferProjection({
+        allocations: exportableAllocations,
+        startDate: publicPlan?.termStart || settings.termStart,
+        endDate: publicPlan?.termEnd || settings.termEnd
+    });
     
     const docentes = [...new Set(
         exportableAllocations.flatMap((alloc) => {
@@ -113,10 +119,12 @@ export function buildPublicExportPayload(exportableAllocations = [], activePlanM
             periodoLetivo: publicPlan?.periodo || settings.periodo || '',
             docenteCount: docentes.length,
             turmaCount: turmas.length,
+            offerCount: Array.isArray(offerProjection?.offerGroups) ? offerProjection.offerGroups.length : 0,
             docentes,
             turmas
         },
         allocations: exportableAllocations,
+        offers: Array.isArray(offerProjection?.offerGroups) ? offerProjection.offerGroups : [],
         settings: {
             termStart: publicPlan?.termStart || settings.termStart,
             termEnd: publicPlan?.termEnd || settings.termEnd,
