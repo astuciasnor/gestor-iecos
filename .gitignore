@@ -2,3 +2,10 @@
 __pycache__/
 *.pyc
 _backups/
+node_modules/
+git_log.txt
+recent_changes.txt
+tests_output.txt
+vitest_dump.txt
+vitest_err.txt
+vitest_out.txt

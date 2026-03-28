@@ -83,3 +83,12 @@ Enquanto a migração não estiver validada:
 - manter a URL legada `agenda_discente.html` acessível;
 - isolar novas decisões em `agenda_publica.html` e nos novos arquivos de catálogo/configuração;
 - evitar reaproveitar nomes do legado para experimentos da nova arquitetura.
+
+## Próxima transição prevista
+
+Depois que a nova agenda pública estiver consolidada em produção:
+
+- `agenda_discente.html` deve continuar existindo para preservar a URL já disseminada;
+- o conteúdo servido por `agenda_discente.html` poderá ser alinhado ao mesmo app da `agenda_publica.html`;
+- essa convergência deve acontecer sem ruptura de endereço, para permitir uma transição suave entre semestres;
+- a remoção total do legado isolado só deve acontecer depois de um ciclo letivo validado com segurança.
