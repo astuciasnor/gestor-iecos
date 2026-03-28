@@ -3,18 +3,23 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Plano de Execução da Refatoração Ampla</title>
+  <title>Painel Consolidado da Refatoracao</title>
   <style>
     :root {
-      --bg: #f3f5f2;
+      --bg: #f2f6f3;
       --panel: #ffffff;
-      --ink: #163126;
-      --muted: #5f6f66;
-      --line: #d7ddd8;
+      --ink: #173126;
+      --muted: #617067;
+      --line: #d8e0da;
       --accent: #0b6b3a;
-      --accent-soft: #e6f3eb;
-      --warn: #a14b10;
-      --shadow: 0 10px 30px rgba(13, 39, 26, 0.08);
+      --accent-soft: #e8f4ec;
+      --warn: #a25a11;
+      --warn-soft: #fff4e8;
+      --danger: #b53d2e;
+      --danger-soft: #fdeeed;
+      --info: #1a5f84;
+      --info-soft: #ebf5fb;
+      --shadow: 0 12px 28px rgba(15, 43, 28, 0.08);
     }
 
     * {
@@ -30,13 +35,13 @@
       font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
       color: var(--ink);
       background:
-        radial-gradient(circle at top right, rgba(11, 107, 58, 0.08), transparent 22rem),
-        linear-gradient(180deg, #f7faf7 0%, var(--bg) 100%);
+        radial-gradient(circle at top right, rgba(11, 107, 58, 0.08), transparent 24rem),
+        linear-gradient(180deg, #f8faf8 0%, var(--bg) 100%);
     }
 
     .layout {
       display: grid;
-      grid-template-columns: 320px minmax(0, 1fr);
+      grid-template-columns: 300px minmax(0, 1fr);
       min-height: 100vh;
     }
 
@@ -46,54 +51,50 @@
       align-self: start;
       height: 100vh;
       overflow-y: auto;
-      padding: 24px 18px 32px;
+      padding: 20px 16px 28px;
       border-right: 1px solid var(--line);
-      background: rgba(255, 255, 255, 0.88);
+      background: rgba(255, 255, 255, 0.9);
       backdrop-filter: blur(8px);
     }
 
     .brand {
-      margin-bottom: 22px;
+      margin-bottom: 20px;
       padding: 18px;
       border-radius: 18px;
-      background: linear-gradient(145deg, #0a5e34, #0d7a43);
+      background: linear-gradient(145deg, #0a5f34, #0d7a43);
       color: #fff;
       box-shadow: var(--shadow);
     }
 
     .brand h1 {
       margin: 0 0 8px;
-      font-size: 1.12rem;
-      line-height: 1.25;
+      font-size: 1.08rem;
+      line-height: 1.2;
     }
 
     .brand p {
       margin: 0;
-      font-size: 0.92rem;
-      line-height: 1.45;
+      font-size: 0.9rem;
+      line-height: 1.5;
       color: rgba(255, 255, 255, 0.92);
     }
 
-    .meta {
+    .brand .meta {
       margin-top: 14px;
-      font-size: 0.82rem;
-      color: rgba(255, 255, 255, 0.84);
-    }
-
-    .nav-group {
-      margin: 16px 0 0;
+      font-size: 0.78rem;
+      color: rgba(255, 255, 255, 0.85);
     }
 
     .nav-title {
-      margin: 14px 0 8px;
-      font-size: 0.76rem;
+      margin: 16px 0 8px;
+      font-size: 0.74rem;
       font-weight: 700;
       letter-spacing: 0.08em;
       text-transform: uppercase;
       color: var(--muted);
     }
 
-    .nav-group a {
+    .sidebar a {
       display: block;
       margin: 4px 0;
       padding: 8px 10px;
@@ -103,90 +104,93 @@
       line-height: 1.35;
     }
 
-    .nav-group a:hover,
-    .nav-group a:focus-visible {
+    .sidebar a:hover,
+    .sidebar a:focus-visible {
       background: var(--accent-soft);
       color: var(--accent);
+      outline: none;
     }
 
     .content {
-      padding: 34px 34px 60px;
+      padding: 28px 28px 56px;
     }
 
     .hero,
     section {
-      max-width: 1020px;
-      margin: 0 auto 22px;
-      padding: 26px;
+      max-width: 1100px;
+      margin: 0 auto 18px;
+      padding: 24px;
       background: var(--panel);
-      border: 1px solid rgba(215, 221, 216, 0.9);
-      border-radius: 22px;
+      border: 1px solid rgba(216, 224, 218, 0.92);
+      border-radius: 20px;
       box-shadow: var(--shadow);
     }
 
     .hero {
       background:
-        linear-gradient(135deg, rgba(11, 107, 58, 0.07), rgba(11, 107, 58, 0.02)),
+        linear-gradient(135deg, rgba(11, 107, 58, 0.08), rgba(11, 107, 58, 0.02)),
         #fff;
     }
 
     h2 {
-      margin: 0 0 14px;
-      font-size: 1.52rem;
-      line-height: 1.2;
+      margin: 0 0 12px;
+      font-size: 1.45rem;
+      line-height: 1.18;
     }
 
     h3 {
-      margin: 22px 0 10px;
-      font-size: 1.05rem;
+      margin: 20px 0 10px;
+      font-size: 1rem;
     }
 
-    p {
-      margin: 0 0 12px;
+    p,
+    li {
       line-height: 1.62;
+      color: var(--muted);
     }
 
     ul,
     ol {
       margin: 0 0 12px 20px;
-      line-height: 1.62;
+      padding: 0;
     }
 
     li + li {
       margin-top: 6px;
     }
 
+    code {
+      padding: 0.12rem 0.35rem;
+      border-radius: 6px;
+      background: #eef2ef;
+      font-family: Consolas, "Courier New", monospace;
+      font-size: 0.92em;
+      color: var(--ink);
+    }
+
     .badge-row {
       display: flex;
       flex-wrap: wrap;
-      gap: 10px;
-      margin-top: 12px;
+      gap: 8px;
+      margin-top: 14px;
     }
 
     .badge {
       display: inline-flex;
       align-items: center;
-      padding: 7px 11px;
+      padding: 6px 10px;
       border-radius: 999px;
-      font-size: 0.84rem;
+      font-size: 0.8rem;
       font-weight: 700;
       background: var(--accent-soft);
       color: var(--accent);
     }
 
-    .note {
-      padding: 14px 16px;
-      border-left: 4px solid var(--warn);
-      border-radius: 12px;
-      background: #fff4eb;
-      color: #66320d;
-    }
-
     .grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 14px;
-      margin-top: 16px;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 12px;
+      margin-top: 14px;
     }
 
     .card {
@@ -198,7 +202,40 @@
 
     .card h4 {
       margin: 0 0 8px;
-      font-size: 1rem;
+      font-size: 0.98rem;
+      color: var(--ink);
+    }
+
+    .score {
+      font-size: 1.55rem;
+      font-weight: 800;
+      color: var(--accent);
+    }
+
+    .score-sub {
+      margin-top: 6px;
+      font-size: 0.84rem;
+      color: var(--muted);
+    }
+
+    .callout {
+      padding: 14px 16px;
+      border-left: 4px solid var(--warn);
+      border-radius: 14px;
+      background: var(--warn-soft);
+      color: #6e3a0b;
+    }
+
+    .callout.info {
+      border-left-color: var(--info);
+      background: var(--info-soft);
+      color: #22455d;
+    }
+
+    .callout.danger {
+      border-left-color: var(--danger);
+      background: var(--danger-soft);
+      color: #6d2a21;
     }
 
     .table-wrap {
@@ -209,6 +246,7 @@
       width: 100%;
       border-collapse: collapse;
       margin-top: 8px;
+      min-width: 820px;
     }
 
     th,
@@ -221,23 +259,192 @@
     }
 
     th {
-      color: var(--muted);
-      font-size: 0.84rem;
+      font-size: 0.8rem;
       text-transform: uppercase;
-      letter-spacing: 0.04em;
+      letter-spacing: 0.05em;
+      color: var(--muted);
     }
 
-    code {
-      padding: 0.12rem 0.35rem;
-      border-radius: 6px;
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 9px;
+      border-radius: 999px;
+      font-size: 0.76rem;
+      font-weight: 700;
+    }
+
+    .pill.done {
+      background: var(--accent-soft);
+      color: var(--accent);
+    }
+
+    .pill.progress {
+      background: var(--warn-soft);
+      color: var(--warn);
+    }
+
+    .pill.future {
+      background: var(--info-soft);
+      color: var(--info);
+    }
+
+    .pill.hold {
+      background: #f1f3f2;
+      color: var(--muted);
+    }
+
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .stat {
+      padding: 14px 16px;
+      border-radius: 16px;
+      border: 1px solid var(--line);
+      background: #fcfdfc;
+    }
+
+    .stat .label {
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+    }
+
+    .stat .value {
+      margin-top: 6px;
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: var(--ink);
+    }
+
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .toolbar-left,
+    .toolbar-right {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+    }
+
+    button {
+      border: 0;
+      border-radius: 10px;
+      padding: 9px 12px;
+      font: inherit;
+      cursor: pointer;
+      background: #edf2ee;
+      color: var(--ink);
+    }
+
+    button:hover {
+      filter: brightness(0.98);
+    }
+
+    .btn-accent {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .btn-light {
+      background: #f1f4f1;
+      color: var(--muted);
+      border: 1px solid var(--line);
+    }
+
+    .hint {
+      font-size: 0.88rem;
+      color: var(--muted);
+    }
+
+    .status-group {
+      display: inline-flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .status-btn {
+      padding: 7px 10px;
+      border: 1px solid transparent;
+      border-radius: 999px;
       background: #eef2ef;
-      font-family: Consolas, "Courier New", monospace;
-      font-size: 0.92em;
+      color: var(--muted);
+      font-size: 0.83rem;
+      font-weight: 700;
+    }
+
+    .status-btn.active-ok {
+      background: var(--accent-soft);
+      color: var(--accent);
+      border-color: rgba(11, 107, 58, 0.18);
+    }
+
+    .status-btn.active-review {
+      background: var(--warn-soft);
+      color: var(--warn);
+      border-color: rgba(162, 90, 17, 0.18);
+    }
+
+    .status-btn.active-later {
+      background: var(--info-soft);
+      color: var(--info);
+      border-color: rgba(26, 95, 132, 0.18);
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 9px;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      background: #eef2ef;
+      color: var(--muted);
+    }
+
+    .status-pill.ok {
+      background: var(--accent-soft);
+      color: var(--accent);
+    }
+
+    .status-pill.review {
+      background: var(--warn-soft);
+      color: var(--warn);
+    }
+
+    .status-pill.later {
+      background: var(--info-soft);
+      color: var(--info);
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 180px;
+      margin-top: 10px;
+      padding: 12px 14px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      resize: vertical;
+      font: inherit;
+      line-height: 1.5;
+      color: var(--ink);
+      background: #fbfdfb;
     }
 
     .small {
-      font-size: 0.92rem;
-      color: var(--muted);
+      font-size: 0.9rem;
     }
 
     @media (max-width: 980px) {
@@ -253,7 +460,7 @@
       }
 
       .content {
-        padding: 22px 16px 44px;
+        padding: 20px 16px 44px;
       }
 
       .hero,
@@ -268,324 +475,552 @@
   <div class="layout">
     <aside class="sidebar">
       <div class="brand">
-        <h1>Refatoração Ampla</h1>
-        <p>Plano consolidado de execução para reorganizar o núcleo do app sem perder o fluxo maduro já validado em produção.</p>
+        <h1>Painel Consolidado da Refatoracao</h1>
+        <p>Documento unico para acompanhar estado atual, backlog futuro, remocoes graduais e validacao manual do Cardume.</p>
         <div class="meta">
-          Consolidação em 21/03/2026<br />
-          Branch alvo: <code>refactor-canonical-execution-night-turn</code>
+          Consolidado em 28/03/2026<br />
+          Linha principal: <code>main</code><br />
+          Substitui: <code>mapa_revisao_refatoracao.html</code> e <code>roteiro_testes_manuais.html</code>
         </div>
       </div>
 
-      <nav>
-        <div class="nav-group">
-          <div class="nav-title">Visão Geral</div>
-          <a href="#status">Status Real</a>
-          <a href="#decisoes">Decisões Consolidadas</a>
-          <a href="#principios">Princípios de Execução</a>
-        </div>
+      <div class="nav-title">Panorama</div>
+      <a href="#status">Status Atual</a>
+      <a href="#conquistas">Conquistas Consolidadas</a>
+      <a href="#placar">Placar da Fase</a>
 
-        <div class="nav-group">
-          <div class="nav-title">Núcleo</div>
-          <a href="#armazenamento">Períodos Letivos e Salvamento</a>
-          <a href="#weekly">Grade Semanal</a>
-          <a href="#turnos">Turnos</a>
-          <a href="#motor">Motor Canônico</a>
-          <a href="#conflitos">Conflitos</a>
-        </div>
+      <div class="nav-title">Direcao</div>
+      <a href="#principios">Principios Operacionais</a>
+      <a href="#implementacoes">Implementacoes Futuras</a>
+      <a href="#transicao">Transicao das Agendas</a>
+      <a href="#publicacao-pl">Publicacao por PL</a>
+      <a href="#remocao">Remocao Gradual de Arquivos</a>
 
-        <div class="nav-group">
-          <div class="nav-title">Saídas</div>
-          <a href="#calendarios">Calendários</a>
-          <a href="#gantt">Gantt</a>
-          <a href="#dados">Importação, Exportação e Publicação</a>
-          <a href="#sigaa">SIGAA e Metadados</a>
-        </div>
-
-        <div class="nav-group">
-          <div class="nav-title">Execução</div>
-          <a href="#fases">Fases Técnicas</a>
-          <a href="#arquivos">Arquivos e Módulos</a>
-          <a href="#validacao">Checklist de Validação</a>
-          <a href="#abertos">Itens Deixados para Depois</a>
-        </div>
-      </nav>
+      <div class="nav-title">Execucao</div>
+      <a href="#checagem">Checklist de Validacao</a>
+      <a href="#relatorio">Relatorio Rapido</a>
+      <a href="#proximos">Proximos Passos</a>
     </aside>
 
     <main class="content">
       <section class="hero" id="status">
-        <h2>Status Real</h2>
-        <p>A refatoração ampla vai começar a partir do estado atual do app, e não de um ramo estrutural já avançado. A branch de refatoração existe, mas o código funcional relevante ainda está essencialmente no mesmo ponto da linha principal.</p>
-        <p>Isso muda a natureza do trabalho: não é desmontar um núcleo novo incompleto, e sim extrair, consolidar e limpar um núcleo que hoje já existe espalhado em <code>ui.js</code>, <code>calendar.js</code>, <code>store.js</code> e nas rotinas de exportação.</p>
+        <h2>Status Atual</h2>
+        <p>O projeto saiu da fase de incerteza estrutural e entrou numa fase de estabilizacao com limpeza incremental. O motor canonico ja esta na <code>main</code>, o fluxo de publicacao foi validado, e as agendas funcionaram em desktop e celular no estado atual da producao.</p>
         <div class="badge-row">
-          <span class="badge">Preservar UX madura</span>
-          <span class="badge">Remover remendos internos</span>
-          <span class="badge">Reestruturar sem perda funcional</span>
+          <span class="badge">Motor canonico ativo</span>
+          <span class="badge">Gantt validado</span>
+          <span class="badge">Turnos reais funcionando</span>
+          <span class="badge">Agendas publica e discente estaveis</span>
+          <span class="badge">Merge na main concluido</span>
+        </div>
+        <div class="summary">
+          <div class="stat">
+            <div class="label">Produto funcional</div>
+            <div class="value">95%</div>
+          </div>
+          <div class="stat">
+            <div class="label">Arquitetura estabilizada</div>
+            <div class="value">90%</div>
+          </div>
+          <div class="stat">
+            <div class="label">Fase atual</div>
+            <div class="value">Limpeza</div>
+          </div>
+          <div class="stat">
+            <div class="label">Modo de trabalho</div>
+            <div class="value">Pequenos testes</div>
+          </div>
         </div>
       </section>
 
-      <section id="decisoes">
-        <h2>Decisões Consolidadas</h2>
-        <ul>
-          <li>A refatoração ampla não deve redesenhar o produto. Ela deve reorganizar o código e preservar o fluxo funcional já amadurecido.</li>
-          <li>A <strong>Grade Semanal</strong> é a área mais crítica do sistema e terá prioridade máxima de estabilidade, clareza e cobertura na refatoração.</li>
-          <li>O sistema passará a operar com um núcleo canônico único para execução, turnos, conflitos, serialização e saídas públicas.</li>
-          <li>Os turnos reais continuarão vindo de <code>horarios_por_turno</code>, mas a prioridade de desenho para docentes será <code>Manhã</code> e <code>Tarde</code>. <code>Noite</code> só aparecerá quando houver uso real no recorte consultado.</li>
-          <li>Conflito de professor, conflito interno da turma e conflito geral passarão a ser derivados da mesma base de ocorrências reais.</li>
-          <li>Quando o fim da execução quebrar o padrão semanal por incompletude de slots, a faixa de ajuste automática deverá cobrir o <strong>penúltimo</strong> e o <strong>último</strong> dia de aula reais, já preenchendo início e fim na Grade Semanal.</li>
-          <li>Períodos letivos novos não devem sobrescrever semestres anteriores. Cada semestre/plano deverá ser salvo separadamente.</li>
-          <li>Importação, exportação, publicação online e metadados SIGAA deverão sair de um formato canônico estável, preparado para evoluir.</li>
-          <li>A agenda pública de docentes ficará preparada, mas a entrega visual amigável para professor será feita depois, sem travar a reestruturação atual.</li>
-        </ul>
-      </section>
-
-      <section id="principios">
-        <h2>Princípios de Execução</h2>
+      <section id="conquistas">
+        <h2>Conquistas Consolidadas</h2>
         <div class="grid">
-          <div class="card">
-            <h4>Paridade antes da limpeza</h4>
-            <p>O código antigo só sai depois que o novo caminho reproduzir o comportamento esperado com segurança.</p>
-          </div>
-          <div class="card">
-            <h4>UX preservada</h4>
-            <p>O fluxo do usuário final continua familiar. A refatoração acontece por baixo, não à custa da operação diária.</p>
-          </div>
-          <div class="card">
-            <h4>Núcleo único</h4>
-            <p>Execução, conflitos, calendários, Gantt, exportação e SIGAA devem depender da mesma fonte de verdade.</p>
-          </div>
-          <div class="card">
-            <h4>Fases reversíveis</h4>
-            <p>Cada etapa deve ser pequena o bastante para permitir revisão, teste e rollback sem desorganizar o projeto.</p>
-          </div>
+          <article class="card">
+            <h4>Grade Semanal</h4>
+            <p>Faixas, datas de inicio, fechamento final e comportamento de sabado ficaram coerentes com a execucao real.</p>
+          </article>
+          <article class="card">
+            <h4>Motor Canonico</h4>
+            <p>O sistema passou a trabalhar com <code>modo</code>, projeção real de oferta e regras mais consistentes para conflitos, exportacoes e visualizacoes.</p>
+          </article>
+          <article class="card">
+            <h4>Gantt e Calendarios</h4>
+            <p>O Gantt bidimensional e as agendas passaram a refletir melhor turnos, docentes, turmas e periodo publicado.</p>
+          </article>
+          <article class="card">
+            <h4>Publicacao</h4>
+            <p>O ciclo <code>Publicar Online</code> + <code>publish_online.py</code> foi validado com a estrutura atual da <code>main</code>.</p>
+          </article>
         </div>
       </section>
 
-      <section id="armazenamento">
-        <h2>Períodos Letivos e Salvamento</h2>
-        <p>O comportamento atual salva tudo em um único <code>academic_allocations</code> no navegador. Isso não é suficiente para suportar semestres independentes com segurança.</p>
-        <h3>Diretriz nova</h3>
-        <ul>
-          <li>Cada período letivo passará a ser um <strong>plano independente</strong>, com identificador próprio.</li>
-          <li>Ao selecionar um novo semestre, como agosto/2026 e <code>4P</code>, o sistema deverá abrir ou criar um novo plano, sem apagar os anteriores.</li>
-          <li>O contexto global continuará guardando preferências de uso, mas as alocações passarão a ser persistidas por plano.</li>
-          <li>Importação e exportação deverão carregar também os metadados do plano, e não apenas o array de alocações.</li>
-        </ul>
-        <div class="note">
-          Meta estrutural: o usuário deve conseguir alternar entre semestres sem misturar dados de calendários diferentes no mesmo armazenamento local.
-        </div>
-      </section>
-
-      <section id="weekly">
-        <h2>Grade Semanal</h2>
-        <p>A Grade Semanal continuará sendo o centro operacional do sistema. É nela que o diretor ou técnico administrativo monta a componente, define faixas, ajusta datas e salva a execução.</p>
-        <h3>Regras que ficam oficiais</h3>
-        <ul>
-          <li>Cadastro e edição de componente permanecem ancorados na Grade Semanal.</li>
-          <li>As faixas da interface devem refletir exatamente o que o motor canônico reconhece como execução real.</li>
-          <li>Qualquer ajuste automático relevante deve aparecer imediatamente nos campos da tabela de faixas.</li>
-          <li>A aba deve permanecer simples para o usuário, mesmo que o núcleo interno fique mais sofisticado.</li>
-        </ul>
-        <h3>Ajuste automático final</h3>
-        <ul>
-          <li>Se a execução exigir faixa extra por quebra do padrão semanal no fechamento da CH, a faixa de ajuste deve começar no penúltimo dia real de aula e terminar no último dia real.</li>
-          <li>Esses dois dias passam a pertencer à faixa extra, como <code>Faixa 2</code> ou <code>Faixa 3</code>, conforme o caso.</li>
-          <li>O sistema deve preencher automaticamente os campos de início e fim dessa faixa na Grade Semanal.</li>
-          <li>Depois disso, a UI deve posicionar o usuário nessa faixa para que ele refine a logística pedagógica final, incluindo aulas e avaliações.</li>
-        </ul>
-      </section>
-
-      <section id="turnos">
-        <h2>Turnos</h2>
-        <p>O app deve suportar todos os turnos reais do JSON, mas a prioridade de apresentação para docentes será diurna.</p>
-        <ul>
-          <li>Os turnos válidos continuarão sendo lidos dinamicamente de <code>horarios_por_turno</code>.</li>
-          <li><code>Manhã</code> e <code>Tarde</code> serão a prioridade de desenho para calendário docente e Gantt.</li>
-          <li><code>Noite</code> não será removido; ele apenas não deve aparecer por padrão quando não houver uso real.</li>
-          <li>Quando um docente tiver ocorrência noturna no período filtrado, o turno <code>Noite</code> deverá aparecer automaticamente.</li>
-          <li>A resolução de <code>slot -&gt; turno</code> deve sair de um módulo único, e não de regras manuais espalhadas pela UI.</li>
-        </ul>
-      </section>
-
-      <section id="motor">
-        <h2>Motor Canônico</h2>
-        <p>O núcleo canônico será responsável por transformar o modelo salvo em execuções reais de aula, respeitando faixas, dias, slots, CH, feriados, último dia parcial e ajustes finais.</p>
-        <h3>Saídas esperadas do motor</h3>
-        <ul>
-          <li>Ocorrências reais por <code>data + slot</code>.</li>
-          <li>Intervalo real de execução por componente.</li>
-          <li>Turnos usados de fato por componente, turma e docente.</li>
-          <li>Resumo de horas por faixa.</li>
-          <li>Sugestão formal de faixa de ajuste final quando a distribuição semanal for quebrada no fechamento.</li>
-        </ul>
-      </section>
-
-      <section id="conflitos">
-        <h2>Conflitos</h2>
-        <p>As regras de conflito deixarão de ficar divididas entre fluxo de cadastro, calendário e auditoria. Todas passarão a depender do mesmo modelo de ocorrências reais.</p>
+      <section id="placar">
+        <h2>Placar da Fase</h2>
         <div class="table-wrap">
           <table>
             <thead>
               <tr>
-                <th>Escopo</th>
-                <th>Regra oficial</th>
-                <th>Comportamento esperado</th>
+                <th>Frente</th>
+                <th>Estado</th>
+                <th>Leitura atual</th>
               </tr>
             </thead>
             <tbody>
               <tr>
-                <td>Professor</td>
-                <td><code>docente + data + slot</code></td>
-                <td>Bloqueio ou confirmação explícita no cadastro, com auditoria pós-importação.</td>
+                <td>Grade Semanal e faixas</td>
+                <td><span class="pill done">Consolidado</span></td>
+                <td>Fluxo principal validado e coerente com o motor canonico.</td>
               </tr>
               <tr>
-                <td>Turma</td>
-                <td><code>turma + data + slot</code></td>
-                <td>Bloqueio de choque interno real dentro da mesma grade.</td>
+                <td>Gantt e agendas</td>
+                <td><span class="pill done">Consolidado</span></td>
+                <td>Funcionando em producao, inclusive em testes recentes no celular.</td>
               </tr>
               <tr>
-                <td>Geral</td>
-                <td>Registro normalizado de conflito</td>
-                <td>Base pronta para banner, tabela, modal ou export futuro sem duplicar regra.</td>
+                <td>Publicacao e agenda publica</td>
+                <td><span class="pill done">Consolidado</span></td>
+                <td>Fluxo atual validado; publicacao por PL segue preparada, mas nao ativada.</td>
               </tr>
               <tr>
-                <td>Distribuição final</td>
-                <td>Execução real por faixa</td>
-                <td>Detectar quando a quebra do padrão exige faixa extra final.</td>
+                <td>Limpeza interna</td>
+                <td><span class="pill progress">Em progresso</span></td>
+                <td>Ja comecou a remocao de artefatos de baixo risco, com teste e commit.</td>
+              </tr>
+              <tr>
+                <td>Convergencia das agendas</td>
+                <td><span class="pill future">Futuro proximo</span></td>
+                <td><code>agenda_discente.html</code> deve continuar existindo e depois apontar para o mesmo app da agenda publica.</td>
               </tr>
             </tbody>
           </table>
         </div>
       </section>
 
-      <section id="calendarios">
-        <h2>Calendários</h2>
-        <p>Calendário da turma e calendário docente continuarão existindo, mas deixarão de recalcular regras centrais por conta própria.</p>
+      <section id="principios">
+        <h2>Principios Operacionais</h2>
         <ul>
-          <li>O calendário da turma deve permanecer estável e coerente com o turno predominante da turma.</li>
-          <li>O calendário docente deve ser gerado a partir das ocorrências reais do professor.</li>
-          <li>O esqueleto de slots do docente deverá priorizar <code>Manhã</code> e <code>Tarde</code>, trazendo <code>Noite</code> apenas quando houver necessidade real.</li>
-          <li>Choques destacados visualmente devem sair do mesmo motor de conflitos usado no cadastro.</li>
+          <li>Nao fazer limpezas em lote sem validacao humana.</li>
+          <li>Toda remocao de arquivo deve vir acompanhada de teste rapido e commit proprio.</li>
+          <li>Preservar a URL publica de <code>agenda_discente.html</code> durante a transicao.</li>
+          <li>Nao obrigar o aluno a escolher o PL na agenda publica.</li>
+          <li>Priorizar pequenas correcoes de UI e clareza antes de grandes reorganizacoes novas.</li>
         </ul>
+        <div class="callout info">
+          O projeto ja fez a transicao estrutural dificil. A fase atual nao pede reinvencao; pede acabamento tecnico, reducao de ruído e manutencao segura.
+        </div>
       </section>
 
-      <section id="gantt">
-        <h2>Gantt</h2>
-        <p>O Gantt passará a usar o mesmo núcleo de turnos e execução. Ele não deve continuar baseado em pistas fixas <code>M/T</code> nem em inferências manuais espalhadas.</p>
-        <ul>
-          <li>Exibir apenas os turnos realmente usados pelo docente no período filtrado.</li>
-          <li>Manter prioridade visual para manhã e tarde.</li>
-          <li>Suportar noite quando houver ocorrência real, sem hack específico.</li>
-          <li>Usar intervalos reais de execução, e não apenas <code>dataInicio/dataFim</code> brutos.</li>
-          <li>Ficar estruturalmente preparado para evoluções futuras da visão docente pública, sem acoplamento desnecessário.</li>
-        </ul>
+      <section id="implementacoes">
+        <h2>Implementacoes Futuras</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Frente</th>
+                <th>Status</th>
+                <th>O que fazer</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Convergencia das agendas</td>
+                <td><span class="pill progress">Planejada</span></td>
+                <td>Fazer <code>agenda_discente.html</code> servir o mesmo app de <code>agenda_publica.html</code> sem perder a URL antiga.</td>
+              </tr>
+              <tr>
+                <td>Publicacao por PL</td>
+                <td><span class="pill future">Preparada</span></td>
+                <td>Ativar <code>plan_directory</code>, atualizar catalogo publico e definir qual PL fica visivel ao aluno.</td>
+              </tr>
+              <tr>
+                <td>UI leve</td>
+                <td><span class="pill progress">Continuo</span></td>
+                <td>Fazer polimentos pequenos de texto, alinhamento, contraste e clareza de fluxo.</td>
+              </tr>
+              <tr>
+                <td>Limpeza de arquivos</td>
+                <td><span class="pill progress">Continuo</span></td>
+                <td>Seguir removendo artefatos e arquivos ociosos em blocos pequenos, sempre com teste e commit.</td>
+              </tr>
+              <tr>
+                <td>Consolidacao de codigo legado</td>
+                <td><span class="pill hold">Depois</span></td>
+                <td>Reavaliar duplicacoes entre runtime legado da agenda discente e arquivos equivalentes na raiz quando a convergencia das agendas estiver mais perto.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </section>
 
-      <section id="dados">
-        <h2>Importação, Exportação e Publicação</h2>
-        <p>Importação, merge, backup, export público e publicação online continuarão existindo, mas passarão a usar uma camada de serialização própria.</p>
-        <h3>Diretrizes</h3>
-        <ul>
-          <li>Backup por plano letivo, com possibilidade de exportar também conjuntos maiores quando necessário.</li>
-          <li>Merge orientado por plano e metadados, e não apenas por <code>id</code> de alocação.</li>
-          <li>Formato público separado da estrutura interna do editor.</li>
-          <li>Publicação discente mantida como fluxo oficial já existente.</li>
-          <li>Preparação estrutural para publicação docente futura, sem implementar ainda a nova interface amigável.</li>
-        </ul>
-      </section>
-
-      <section id="sigaa">
-        <h2>SIGAA e Metadados</h2>
-        <p>A geração de metadados SIGAA já existe, mas será reorganizada para depender do mesmo modelo canônico das execuções e faixas.</p>
-        <ul>
-          <li>O payload SIGAA deve sair de um módulo próprio, desacoplado da renderização da tabela de ofertas.</li>
-          <li>A estrutura precisa estar pronta para receber campos extras sem reabrir a arquitetura.</li>
-          <li>Faixas, datas, códigos e horários exportados devem refletir exatamente a execução final reconhecida pelo motor.</li>
-          <li>A preparação para melhorias futuras no SIGAA deve acontecer agora no nível estrutural, e não como remendo posterior.</li>
-        </ul>
-      </section>
-
-      <section id="fases">
-        <h2>Fases Técnicas</h2>
+      <section id="transicao">
+        <h2>Transicao das Agendas</h2>
+        <p>A estrategia recomendada permanece a mesma:</p>
         <ol>
-          <li>Introduzir salvamento por plano letivo e chave de contexto, preservando semestres anteriores.</li>
-          <li>Extrair a resolução de turnos para módulo próprio.</li>
-          <li>Extrair o motor canônico de execução e ajuste final de faixas.</li>
-          <li>Extrair o módulo unificado de conflitos.</li>
-          <li>Religar a Grade Semanal ao núcleo novo, mantendo paridade funcional.</li>
-          <li>Religar calendário da turma e calendário docente ao mesmo núcleo.</li>
-          <li>Refatorar o Gantt para usar turnos reais e intervalos reais.</li>
-          <li>Extrair serialização, importação, exportação, payload público e metadados SIGAA.</li>
-          <li>Remover gradualmente caminhos legados, hardcodes e duplicações.</li>
+          <li>manter <code>agenda_discente.html</code> funcional e acessivel;</li>
+          <li>manter <code>agenda_publica.html</code> como frente evolutiva da arquitetura atual;</li>
+          <li>num proximo ciclo, fazer a URL discente servir o mesmo app da agenda publica;</li>
+          <li>so depois de um ciclo letivo validado reavaliar a remocao do runtime legado isolado.</li>
         </ol>
-      </section>
-
-      <section id="arquivos">
-        <h2>Arquivos e Módulos Alvo</h2>
-        <div class="grid">
-          <div class="card">
-            <h4><code>js/turns.js</code></h4>
-            <p>Normalização de nomes de turno, leitura de <code>horarios_por_turno</code>, ordem preferencial de exibição e resolução de slot para turno.</p>
-          </div>
-          <div class="card">
-            <h4><code>js/execution_engine.js</code></h4>
-            <p>Geração canônica das ocorrências, cálculo de CH, fechamento por faixa, último dia parcial e sugestão da faixa final de ajuste.</p>
-          </div>
-          <div class="card">
-            <h4><code>js/conflicts.js</code></h4>
-            <p>Detecção unificada de conflito de professor, conflito de turma e registros gerais de auditoria.</p>
-          </div>
-          <div class="card">
-            <h4><code>js/plan_storage.js</code></h4>
-            <p>Persistência por período letivo/plano, índice de planos e troca segura de contexto sem mistura entre semestres.</p>
-          </div>
-          <div class="card">
-            <h4><code>js/serialization.js</code></h4>
-            <p>Formato canônico de importação, exportação, merge e payload público.</p>
-          </div>
-          <div class="card">
-            <h4><code>js/sigaa_metadata.js</code></h4>
-            <p>Geração dos metadados SIGAA a partir do núcleo canônico, desacoplada da UI.</p>
-          </div>
-          <div class="card">
-            <h4><code>js/ui.js</code></h4>
-            <p>Permanecerá como camada de interação e renderização, perdendo responsabilidades de motor e conflito.</p>
-          </div>
-          <div class="card">
-            <h4><code>js/calendar.js</code> e saídas públicas</h4>
-            <p>Consumidores do núcleo novo para turma, docente, publicação discente e futura evolução da agenda docente.</p>
-          </div>
+        <div class="callout">
+          A regra de ouro aqui e preservar endereco e previsibilidade. O usuario final nao deve sentir ruptura de URL nem perda de comportamento conhecido.
         </div>
       </section>
 
-      <section id="validacao">
-        <h2>Checklist de Validação</h2>
+      <section id="publicacao-pl">
+        <h2>Publicacao por PL</h2>
+        <p>O projeto ja esta pronto para evoluir sem multiplicar HTMLs publicos. A ideia continua sendo manter uma unica <code>agenda_publica.html</code> e deslocar a selecao do PL para configuracao e catalogo publico.</p>
         <ul>
-          <li>Selecionar agosto/2026 e <code>4P</code> cria ou abre um plano novo sem apagar o semestre anterior.</li>
-          <li>Trocar de plano letivo não mistura alocações de períodos diferentes.</li>
-          <li>A Grade Semanal continua permitindo cadastro e edição completa sem perda de usabilidade.</li>
-          <li>A faixa extra final cobre o penúltimo e o último dia reais quando a distribuição precisar ser ajustada.</li>
-          <li>Os campos de início e fim da faixa extra aparecem automaticamente preenchidos na Grade Semanal.</li>
-          <li>Conflito de professor é detectado pelo mesmo núcleo tanto no cadastro quanto na auditoria.</li>
-          <li>Conflito interno de turma continua bloqueando choques reais.</li>
-          <li>O calendário docente mostra apenas manhã e tarde quando não houver aula noturna.</li>
-          <li>O turno noite aparece automaticamente quando houver ocorrência real no período filtrado.</li>
-          <li>O Gantt passa a usar turnos reais e não depende mais de trilhas fixas <code>M/T</code>.</li>
-          <li>Backup, merge, export público e metadados SIGAA continuam funcionando após a reorganização.</li>
+          <li><code>publicacoes/publicacao_config.json</code> ja existe;</li>
+          <li><code>publicacoes/catalogo_publicacoes.json</code> ja existe;</li>
+          <li><code>tools/publish_online.py</code> ja sabe ler a configuracao;</li>
+          <li>o aluno continua sem precisar escolher o PL manualmente.</li>
         </ul>
+        <div class="callout info">
+          Quando essa frente for ativada, a mudanca certa nao e criar varios <code>agenda_publica_*.html</code>, e sim ativar roteamento por configuracao.
+        </div>
       </section>
 
-      <section id="abertos">
-        <h2>Itens Deixados para Depois</h2>
-        <ul>
-          <li>Definição visual final da futura agenda pública amigável para docentes.</li>
-          <li>Escolha definitiva entre visão por chips/dia, agenda enxuta ou outra alternativa para o portal docente.</li>
-          <li>Expansões específicas do payload SIGAA que ainda dependam de integração externa ou de regra institucional não fechada.</li>
-        </ul>
-        <div class="note">
-          Recomendação de execução: começar por <strong>salvamento por período letivo</strong>, <strong>turnos</strong> e <strong>motor canônico</strong>. Sem esse trio, qualquer ajuste em Gantt, calendário docente ou publicação continuará produzindo lógica em retalhos.
+      <section id="remocao">
+        <h2>Remocao Gradual de Arquivos</h2>
+        <p>As remocoes devem seguir um protocolo fixo para manter o risco baixo:</p>
+        <ol>
+          <li>escolher um bloco pequeno de arquivos com baixo risco;</li>
+          <li>confirmar que nao ha referencia no app, na publicacao ou na documentacao principal;</li>
+          <li>remover;</li>
+          <li>testar <code>index.html</code>, <code>agenda_publica.html</code> e <code>agenda_discente.html</code>;</li>
+          <li>commitar logo em seguida;</li>
+          <li>retroagir imediatamente se surgir regressao.</li>
+        </ol>
+        <div class="callout danger">
+          Nao misturar grande refatoracao com limpeza destrutiva em lote. Cada rodada deve ser pequena o bastante para ser revertida sem drama.
         </div>
+      </section>
+
+      <section id="checagem">
+        <h2>Checklist de Validacao</h2>
+        <div class="toolbar">
+          <div class="toolbar-left">
+            <button class="btn-accent" id="btn-copy-report">Copiar relatorio</button>
+            <button class="btn-light" id="btn-clear">Limpar marcacoes</button>
+          </div>
+          <div class="toolbar-right">
+            <span class="hint">Checklist persistido no navegador deste arquivo.</span>
+          </div>
+        </div>
+
+        <div class="summary">
+          <div class="stat">
+            <div class="label">Itens</div>
+            <div class="value" id="sum-items">0</div>
+          </div>
+          <div class="stat">
+            <div class="label">OK</div>
+            <div class="value" id="sum-ok">0</div>
+          </div>
+          <div class="stat">
+            <div class="label">Rever</div>
+            <div class="value" id="sum-review">0</div>
+          </div>
+          <div class="stat">
+            <div class="label">Depois</div>
+            <div class="value" id="sum-later">0</div>
+          </div>
+          <div class="stat">
+            <div class="label">Sem marcacao</div>
+            <div class="value" id="sum-pending">0</div>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th style="width:72px;">Item</th>
+                <th>Checklist</th>
+                <th style="width:220px;">Status</th>
+                <th style="width:120px;">Resumo</th>
+              </tr>
+            </thead>
+            <tbody id="checklist-body"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="relatorio">
+        <h2>Relatorio Rapido</h2>
+        <p class="small">Use este campo para copiar um resumo rapido da rodada de validacao e guardar no commit, na conversa ou em anotacoes internas.</p>
+        <textarea id="report-output" readonly></textarea>
+      </section>
+
+      <section id="proximos">
+        <h2>Proximos Passos</h2>
+        <ul>
+          <li>continuar testes pequenos e frequentes no fluxo principal;</li>
+          <li>seguir removendo artefatos ociosos por blocos de baixo risco;</li>
+          <li>fazer correcoes minimas de UI conforme os testes apontarem necessidade;</li>
+          <li>preparar o ciclo futuro de convergencia entre agenda discente e agenda publica;</li>
+          <li>deixar a publicacao por PL pronta para ativacao quando houver necessidade real institucional.</li>
+        </ul>
       </section>
     </main>
   </div>
+
+  <script>
+    const STORAGE_KEY = 'painel_refatoracao_consolidado_v1';
+
+    const checklist = [
+      {
+        id: '1',
+        title: 'Plano Letivo',
+        subs: [
+          'Troca entre PL1, PL2, PL3 e PL4.',
+          'Datas de inicio e fim mudam automaticamente.',
+          'Dados aparecem sem recarregar a pagina.',
+          'Voltar para um plano anterior restaura as ofertas dele.'
+        ]
+      },
+      {
+        id: '2',
+        title: 'Grade Semanal e Faixas',
+        subs: [
+          'Cadastro simples com padrao fixo semanal.',
+          'Faixa final automatica surge so quando precisa.',
+          'Editar reflete o que foi salvo.',
+          'CH fecha corretamente.'
+        ]
+      },
+      {
+        id: '3',
+        title: 'Turnos',
+        subs: [
+          'Noite aparece quando houver uso real.',
+          'Sidebar respeita o turno.',
+          'Grade Semanal respeita o turno.',
+          'Gantt e calendario respeitam o turno.'
+        ]
+      },
+      {
+        id: '4',
+        title: 'Lista de Ofertas',
+        subs: [
+          'Ordenacao alfabetica por componente.',
+          'Faixas consecutivas da mesma componente.',
+          'Separacao visual coerente.',
+          'CH consistente com a Grade Semanal.'
+        ]
+      },
+      {
+        id: '5',
+        title: 'Gantt e Calendarios',
+        subs: [
+          'Troca com o plano letivo ativo.',
+          'Usa turnos reais.',
+          'Calendario da turma bate com a execucao real.',
+          'Agenda docente continua estavel.'
+        ]
+      },
+      {
+        id: '6',
+        title: 'Publicacao Online',
+        subs: [
+          'JSON publico gerado sem erro.',
+          'Agenda publica carrega o plano publicado.',
+          'Agenda discente carrega o plano publicado.',
+          'Cursos, turmas e docentes respeitam o que foi publicado.'
+        ]
+      },
+      {
+        id: '7',
+        title: 'Regressao Rapida',
+        subs: [
+          'Excluir componente libera o espaco corretamente.',
+          'Recriar componente no mesmo espaco funciona.',
+          'Editar novamente nao gruda estado antigo.',
+          'Trocar de plano e voltar preserva consistencia.'
+        ]
+      },
+      {
+        id: '8',
+        title: 'Remocao de Arquivos',
+        subs: [
+          'Arquivo removido nao tem referencia no app.',
+          'index.html continua abrindo.',
+          'agenda_publica.html continua abrindo.',
+          'agenda_discente.html continua abrindo.'
+        ]
+      },
+      {
+        id: '9',
+        title: 'Convergencia das Agendas',
+        subs: [
+          'agenda_discente.html continua existindo como URL publica.',
+          'A futura convergencia nao quebra bookmarks e links.',
+          'O runtime legado so sai depois de validacao forte.',
+          'A transicao continua reversivel.'
+        ]
+      },
+      {
+        id: '10',
+        title: 'Publicacao por PL',
+        subs: [
+          'Catalogo e configuracao continuam coerentes.',
+          'Aluno nao precisara escolher PL manualmente.',
+          'O modo plan_directory sera ativado so quando houver necessidade real.',
+          'A mudanca nao deve multiplicar HTMLs publicos.'
+        ]
+      }
+    ];
+
+    let state = loadState();
+
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        return raw ? JSON.parse(raw) : {};
+      } catch (err) {
+        return {};
+      }
+    }
+
+    function saveState() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    }
+
+    function setStatus(key, status) {
+      if (!status) delete state[key];
+      else state[key] = status;
+      saveState();
+      render();
+    }
+
+    function getStatus(key) {
+      return state[key] || '';
+    }
+
+    function aggregateItem(item) {
+      const statuses = item.subs.map((_, idx) => getStatus(`${item.id}.${idx + 1}`));
+      const filtered = statuses.filter(Boolean);
+      if (!filtered.length) return '';
+      if (filtered.includes('review')) return 'review';
+      if (filtered.includes('later')) return 'later';
+      if (filtered.every((status) => status === 'ok')) return 'ok';
+      return 'review';
+    }
+
+    function buildStatusButtons(key) {
+      const current = getStatus(key);
+      const buttons = [
+        { value: 'ok', label: 'OK' },
+        { value: 'review', label: 'Rever' },
+        { value: 'later', label: 'Depois' }
+      ];
+
+      return `
+        <div class="status-group">
+          ${buttons.map((btn) => `
+            <button
+              type="button"
+              class="status-btn ${current === btn.value ? `active-${btn.value}` : ''}"
+              data-key="${key}"
+              data-status="${btn.value}"
+            >${btn.label}</button>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    function buildAggregatePill(status) {
+      if (!status) return '<span class="status-pill">Sem marcacao</span>';
+      if (status === 'ok') return '<span class="status-pill ok">OK</span>';
+      if (status === 'review') return '<span class="status-pill review">Rever</span>';
+      return '<span class="status-pill later">Depois</span>';
+    }
+
+    function render() {
+      const body = document.getElementById('checklist-body');
+      body.innerHTML = checklist.map((item) => {
+        const aggregate = aggregateItem(item);
+
+        const rows = item.subs.map((sub, idx) => `
+          <tr>
+            <td>${item.id}.${idx + 1}</td>
+            <td>${sub}</td>
+            <td>${buildStatusButtons(`${item.id}.${idx + 1}`)}</td>
+            <td>${idx === 0 ? buildAggregatePill(aggregate) : ''}</td>
+          </tr>
+        `).join('');
+
+        return `
+          <tr>
+            <td><strong>${item.id}</strong></td>
+            <td><strong>${item.title}</strong></td>
+            <td></td>
+            <td>${buildAggregatePill(aggregate)}</td>
+          </tr>
+          ${rows}
+        `;
+      }).join('');
+
+      bindStatusButtons();
+      updateSummary();
+      updateReport();
+    }
+
+    function bindStatusButtons() {
+      document.querySelectorAll('.status-btn').forEach((button) => {
+        button.onclick = () => {
+          const key = button.dataset.key;
+          const value = button.dataset.status;
+          setStatus(key, getStatus(key) === value ? '' : value);
+        };
+      });
+    }
+
+    function updateSummary() {
+      const itemStatuses = checklist.map((item) => aggregateItem(item));
+      const ok = itemStatuses.filter((status) => status === 'ok').length;
+      const review = itemStatuses.filter((status) => status === 'review').length;
+      const later = itemStatuses.filter((status) => status === 'later').length;
+      const pending = itemStatuses.filter((status) => !status).length;
+
+      document.getElementById('sum-items').textContent = String(checklist.length);
+      document.getElementById('sum-ok').textContent = String(ok);
+      document.getElementById('sum-review').textContent = String(review);
+      document.getElementById('sum-later').textContent = String(later);
+      document.getElementById('sum-pending').textContent = String(pending);
+    }
+
+    function updateReport() {
+      const lines = [];
+      lines.push('Painel consolidado de validacao e refatoracao');
+      lines.push('');
+
+      checklist.forEach((item) => {
+        const aggregate = aggregateItem(item) || 'sem marcacao';
+        lines.push(`${item.id}. ${item.title}: ${aggregate}`);
+      });
+
+      document.getElementById('report-output').value = lines.join('\n');
+    }
+
+    document.getElementById('btn-clear').addEventListener('click', () => {
+      state = {};
+      saveState();
+      render();
+    });
+
+    document.getElementById('btn-copy-report').addEventListener('click', async () => {
+      const output = document.getElementById('report-output').value;
+      try {
+        await navigator.clipboard.writeText(output);
+      } catch (err) {
+        document.getElementById('report-output').select();
+        document.execCommand('copy');
+      }
+    });
+
+    render();
+  </script>
 </body>
 </html>
