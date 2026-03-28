@@ -4351,9 +4351,9 @@ function getTurnoValueFromLetter(letter = '') {
 }
 
 function getShiftChangeLabel(letter = '') {
-    if (letter === 'M') return 'Manha';
+    if (letter === 'M') return 'Manhã';
     if (letter === 'T') return 'Tarde';
-    if (letter === 'N') return 'Noturno';
+    if (letter === 'N') return 'Noite';
     return '';
 }
 

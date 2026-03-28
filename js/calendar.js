@@ -1,5 +1,6 @@
 import { store } from './store.js';
 import { getDaysArray, toLocalDateString } from './utils.js';
+import { mapSlotToTurno, normalizeTurnoKey } from './turns.js';
 
 function normalizeKeyPart(value) {
   return String(value || '').trim().toUpperCase();
@@ -67,6 +68,29 @@ function buildDrawnSlotsByDay(days = [], slots = []) {
   });
 
   return map;
+}
+
+function getNativeTurnoValueForAllocation(allocation = {}) {
+  return store.rawData?.turmas?.find((turma) => String(turma?.turma_id) === String(allocation?.turmaId))?.turno
+    || allocation?.turno
+    || 'Tarde';
+}
+
+function applyExceptionalSaturdayShift(allocation = {}, dayOfWeek = 0, slots = []) {
+  const normalizedSlots = normalizeSlotList(slots);
+  if (!allocation?.sabadoManha || dayOfWeek !== 6 || normalizedSlots.length === 0) return normalizedSlots;
+
+  const nativeTurno = getNativeTurnoValueForAllocation(allocation);
+  if (normalizeTurnoKey(nativeTurno) === 'manha') return normalizedSlots;
+
+  return normalizeSlotList(
+    normalizedSlots.map((slot) => mapSlotToTurno(
+      slot,
+      nativeTurno,
+      'Manha',
+      store.rawData?.horarios_por_turno
+    ))
+  );
 }
 
 function getCalendarConflictIdentity(event, slotKey) {
@@ -251,7 +275,11 @@ function buildCandidateSlotsByDate(allocation, computationDays = [], feriadosSet
     if (dayOfWeek === 0) return;
     if (feriadosSet.has(dateStr)) return;
 
-    const slots = resolveSlotsForDate(faixas, dateStr, dayOfWeek);
+    const slots = applyExceptionalSaturdayShift(
+      allocation,
+      dayOfWeek,
+      resolveSlotsForDate(faixas, dateStr, dayOfWeek)
+    );
     if (slots.length > 0) byDate[dateStr] = slots;
   });
 
