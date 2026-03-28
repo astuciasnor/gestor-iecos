@@ -51,7 +51,7 @@ Arquivos preservados:
 - URL testada: `http://127.0.0.1:5501/agenda_discente.html`
 - Resultado: a agenda discente legada carregou corretamente no notebook
 - Consequência: a etapa de isolamento do legado foi liberada e já foi aplicada nesta branch
-- Pendência atual: repetir esse mesmo smoke test depois do isolamento para validar o runtime legado já apontando para `legacy/agenda_discente_runtime/`
+- Revalidação posterior: a URL legada continuou funcionando após o isolamento do runtime e antes da preparação final de merge
 
 ## Protocolo para remoção lenta de arquivos
 

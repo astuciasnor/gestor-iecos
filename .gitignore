@@ -9,3 +9,5 @@ tests_output.txt
 vitest_dump.txt
 vitest_err.txt
 vitest_out.txt
+temp_diff.txt
+temp_diff_cmd.txt
