@@ -4,6 +4,7 @@ import { normalizePeriodo as normalizePeriodoLetivoCode } from './plan_storage.j
 import { getCalendarEvents } from './calendar.js';
 import { countBusinessDays, countWeekdaysInPeriod, addBusinessDays, isDateOverlap, calculateEndDateByWeekday } from './utils.js';
 import { buildTeacherExecutionSnapshot, buildCanonicalOfferProjection } from './execution_engine.js';
+import { renderBidimensionalTeacherGantt } from './gantt_bidimensional.js';
 import { buildSigaaMetadataPayload, validateSigaaMetadataPayload } from './sigaa_metadata.js';
 import { parseBackupDataFile, extractImportPlanMeta } from './serialization.js';
 import {
@@ -8303,72 +8304,14 @@ function renderTeacherGanttInto(container, docenteName) {
             resolveShift: (slot) => resolveTeacherShiftForSlot(slot),
             preferredShiftOrder: ganttTurnoConfigs.map((config) => config.value)
         });
-
-        let minDateStr = fallbackStart;
-        let maxDateStr = fallbackEnd;
-        offerProjection.offerGroups.forEach((group) => {
-            if (group?.start && group.start < minDateStr) minDateStr = group.start;
-            if (group?.end && group.end > maxDateStr) maxDateStr = group.end;
+        renderBidimensionalTeacherGantt(container, {
+            docenteName: teacherName,
+            totalCH,
+            offerProjection,
+            teacherSnapshot,
+            startDate: fallbackStart,
+            endDate: fallbackEnd
         });
-
-        const visibleTurnos = getGanttVisibleTurnos(teacherSnapshot, ganttTurnoConfigs);
-        const minTime = new Date(minDateStr + 'T12:00:00').getTime();
-        const maxTime = new Date(maxDateStr + 'T12:00:00').getTime();
-        const totalTime = maxTime - minTime || 1;
-
-        const weekDays = [
-            { id: 1, name: 'SEG' },
-            { id: 2, name: 'TER' },
-            { id: 3, name: 'QUA' },
-            { id: 4, name: 'QUI' },
-            { id: 5, name: 'SEX' },
-            { id: 6, name: 'SAB' }
-        ];
-
-        let html = `
-        <div style="margin-bottom: 20px; text-align: center;">
-            <h3 style="color: var(--primary); margin: 0; font-size: 1.4em; text-transform: uppercase;">Cronograma: ${teacherName} (${totalCH}h)</h3>
-        </div>
-
-        <div class="gantt-container" style="position: relative; border: 1px solid #ddd; border-radius: 6px; overflow: hidden; background: #f0f3f5;">
-            <div style="position: absolute; top: 0; bottom: 0; left: 80px; right: 0; pointer-events: none; z-index: 0;">
-                ${buildGanttTimelineLinesHtml(minTime, maxTime, totalTime)}
-            </div>
-
-            <div style="position: absolute; top: 0; bottom: 0; left: 80px; right: 0; pointer-events: none; z-index: 10;">
-                ${buildGanttMonthOverlaysHtml(minTime, maxTime, totalTime)}
-            </div>
-
-            ${buildGanttMonthHeaderColumnsHtml(minTime, maxTime, totalTime)}
-        `;
-
-        weekDays.forEach((dayConfig) => {
-            const dayItems = collectGanttDayItems({
-                dayId: dayConfig.id,
-                snapshot: teacherSnapshot,
-                docenteName: teacherName,
-                offerProjection,
-                ganttTurnoConfigs,
-                visibleTurnos
-            });
-
-            const laneRenders = visibleTurnos.map((turnoConfig, idx) => renderGanttTurnoLane({
-                turnoConfig,
-                dayItems,
-                docenteName: teacherName,
-                dayConfig,
-                minTime,
-                totalTime,
-                ganttTurnoConfigs,
-                isLastLane: idx === visibleTurnos.length - 1
-            }));
-
-            html += renderGanttDayRow(dayConfig, laneRenders);
-        });
-
-        html += '</div>';
-        container.innerHTML = html;
-        bindGanttDetailInteractions(container);
     } catch (err) {
         console.error('Erro renderGanttChart:', err);
         if (container) container.innerHTML = `<div style="color:red; margin-top:20px;"><b>Erro Inesperado no Grafico:</b><br>${err.message}</div>`;
