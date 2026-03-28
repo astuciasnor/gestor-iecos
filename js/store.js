@@ -10,38 +10,11 @@ import {
   writeJsonStorage
 } from './plan_storage.js';
 import { generateUUID } from './utils.js';
-
+import { canonicalizeAllocationModo } from './allocation_mode.mjs';
 import { normalizeTurnoKey } from './turns.js';
 
-function normalizeTurnoKeyLocal() { } // Dummy to prevent line mismatch but we just remove the real one
 export function normalizeLoadedAllocation(alloc) {
-  if (!alloc || typeof alloc !== 'object') return alloc;
-
-  if (alloc.tipo !== undefined) {
-    const tipo = String(alloc.tipo).trim().toLowerCase();
-    
-    if (tipo === 'intensiva') {
-      alloc.modo = 'faixas';
-    } else if (tipo === 'regular' || tipo === 'regular_prioritaria') {
-      alloc.modo = 'semanal';
-    } else if (tipo === 'pendente') {
-      alloc.modo = 'pendente';
-    } else {
-      alloc.modo = 'semanal';
-    }
-    
-    delete alloc.tipo;
-  }
-  
-  if (!alloc.modo) {
-    if (Array.isArray(alloc.faixas) && alloc.faixas.length > 0) {
-      alloc.modo = 'faixas';
-    } else {
-      alloc.modo = 'semanal';
-    }
-  }
-  
-  return alloc;
+  return canonicalizeAllocationModo(alloc, { dropLegacyTipo: true });
 }
 
 class Store {

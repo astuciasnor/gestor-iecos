@@ -2,8 +2,13 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import {
+  ALLOCATION_MODES,
+  canonicalizeAllocationModo,
+  getAllocationModoLabel,
+  inferAllocationModo
+} from '../js/allocation_mode.mjs';
+import {
   buildSigaaExportPayload,
-  detectTeacherConflicts,
   filterExportableAllocations,
   generateAllocationOccurrences,
   getTeacherActiveShifts,
@@ -12,6 +17,27 @@ import {
   resetWeeklyViewOnTurmaChange,
   resolveActiveAcademicPeriod
 } from '../js/academic_rules.mjs';
+import { detectTeacherConflicts } from '../js/conflicts.js';
+
+test('inferAllocationModo traduz o legado e canonicalizeAllocationModo limpa o payload', () => {
+  assert.equal(inferAllocationModo({ tipo: 'regular_prioritaria' }), ALLOCATION_MODES.WEEKLY);
+  assert.equal(inferAllocationModo({ tipo: 'intensiva' }), ALLOCATION_MODES.FAIXAS);
+
+  const normalized = canonicalizeAllocationModo({
+    tipo: 'intensiva',
+    faixas: [{ inicio: '2026-03-09', fim: '2026-03-30' }]
+  });
+
+  assert.equal(normalized.modo, ALLOCATION_MODES.FAIXAS);
+  assert.equal(Object.hasOwn(normalized, 'tipo'), false);
+});
+
+test('getAllocationModoLabel usa a linguagem canônica para modos novos e legados', () => {
+  assert.equal(getAllocationModoLabel('faixas'), 'Oferta por Faixas');
+  assert.equal(getAllocationModoLabel('intensiva'), 'Oferta por Faixas');
+  assert.equal(getAllocationModoLabel('pendente'), 'Pendente');
+  assert.equal(getAllocationModoLabel('semanal'), 'Oferta');
+});
 
 test('resolveActiveAcademicPeriod preserva o plano preferido quando ele existe na lista oficial', () => {
   const resolved = resolveActiveAcademicPeriod({

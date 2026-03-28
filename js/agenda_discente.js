@@ -2,6 +2,7 @@
 
 import { store } from './store.js';
 import { getCalendarEvents } from './calendar.js';
+import { getAllocationModoLabel, inferAllocationModo } from './allocation_mode.mjs';
 
 // Capturando os elementos do HTML (Inclui os novos containers dos botões)
 const selCurso = document.getElementById('public-sel-curso');
@@ -394,7 +395,7 @@ function gerarGradeSemanalHTML(calendarData, ano, mes) {
                     const horario = ev.horario || (ev.horariosOcupados ? ev.horariosOcupados[0] : '--:--');
                     const titulo = ev.title || ev.disciplina;
                     const cor = ev.cor || '#2c3e50';
-                    const modo = ev.modo || 'semanal';
+                    const modo = inferAllocationModo(ev) || 'semanal';
 
                     // CORREÇÃO: Mostra TODOS os docentes envolvidos nesta alocação
                     let docente = ev.docente || 'A definir';
@@ -471,9 +472,7 @@ function ativarInteracaoChips() {
             document.getElementById('sheet-horario').textContent = horario;
             document.getElementById('sheet-data').textContent = data;
 
-            let tipoTexto = 'Oferta';
-            if (modo === 'faixas') tipoTexto = 'Oferta por Faixas';
-            document.getElementById('sheet-tipo').textContent = tipoTexto;
+            document.getElementById('sheet-tipo').textContent = getAllocationModoLabel(modo);
 
             // Mostra o Modal com animação suave
             overlay.classList.add('active');

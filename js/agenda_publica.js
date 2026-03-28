@@ -2,11 +2,12 @@ import { store, normalizeLoadedAllocation } from './store.js';
 import { getTurnoLetter } from './turns.js';
 import { getCalendarEvents } from './calendar.js';
 import { resolveActiveAcademicPeriod } from './academic_rules.mjs';
+import { getAllocationModoLabel, inferAllocationModo } from './allocation_mode.mjs';
 import { buildCanonicalOfferProjection, buildTeacherExecutionSnapshot } from './execution_engine.js';
 import { renderBidimensionalTeacherGantt, hideBidimensionalTeacherGanttLens } from './gantt_bidimensional.js';
 
 const collator = new Intl.Collator('pt-BR', { sensitivity: 'base' });
-const PUBLIC_ASSET_VERSION = '20260327d';
+const PUBLIC_ASSET_VERSION = '20260328c';
 
 const state = {
     activeTab: 'discente',
@@ -1129,7 +1130,7 @@ function buildMiniChipMarkup(event, dateObj, mode, dailyEvents = []) {
     const turma = getTurmaLabel(event?.turmaId, event?.subGrupo);
     const local = getEventLocationLabel(event);
     const cor = String(event?.cor || '#355344').trim();
-    const modo = String(event?.modo || 'semanal').trim();
+    const modo = inferAllocationModo(event) || 'semanal';
     const data = formatDateFull(dateObj);
     const faixaLabel = getEventFaixaLabel(event, dateStr);
     const turnoLabel = getEventTurnoLabel(event, dateStr);
@@ -1419,7 +1420,7 @@ function buildEventGroupKey(event) {
         normalizeText(event?.turmaId || ''),
         normalizeText(event?.subGrupo || ''),
         normalizeText(getEventTeacherLabel(event)),
-        normalizeText(event?.modo || ''),
+        normalizeText(inferAllocationModo(event)),
         normalizeText(getEventLocationLabel(event))
     ].join('|');
 }
@@ -1668,9 +1669,7 @@ function fecharBottomSheet() {
 }
 
 function getAgendaModoTexto(modo) {
-    const normalized = String(modo || '').trim().toLowerCase();
-    if (normalized === 'intensiva') return 'Oferta por Faixas';
-    return 'Oferta';
+    return getAllocationModoLabel(modo);
 }
 
 function formatHorarioIntervalo(horario) {

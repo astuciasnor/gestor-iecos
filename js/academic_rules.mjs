@@ -1,4 +1,5 @@
 import { normalizePlanMeta as normalizeStoredPlanMeta } from './plan_storage.js';
+import { ALLOCATION_MODES, inferAllocationModo } from './allocation_mode.mjs';
 
 function toMiddayDate(dateStr) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(String(dateStr || '').trim())) return null;
@@ -293,7 +294,7 @@ export function getTeacherActiveShifts({
 
 export function filterExportableAllocations(allocations = []) {
   return (Array.isArray(allocations) ? allocations : []).filter((allocation) =>
-    String(allocation?.modo || '').trim().toLowerCase() !== 'pendente'
+    inferAllocationModo(allocation) !== ALLOCATION_MODES.PENDING
   );
 }
 
