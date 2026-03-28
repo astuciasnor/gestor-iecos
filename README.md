@@ -1,6 +1,6 @@
 # Cardume - Planejador Academico | IECOS/UFPA
 
-![Capa do Projeto](img/capa_projeto.png)
+![Logo do Projeto](img/logo_cardume.png)
 
 Sistema web para montagem, revisao e publicacao de grades academicas do IECOS/UFPA. O app roda no navegador, usa `localStorage` como persistencia local e trabalha com um modelo canonico por faixas.
 
