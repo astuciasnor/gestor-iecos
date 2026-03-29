@@ -4470,6 +4470,27 @@ function getShiftChangeMeta(allocLike = {}, slotLabel = '', dayOfWeek = 0, dateS
     };
 }
 
+
+function getCalendarShiftBadgeHTML(allocLike = {}, slotLabel = '', dayOfWeek = 0, dateStr = '') {
+    const effectiveSlot = String(
+        slotLabel
+        || allocLike?.horario
+        || (Array.isArray(allocLike?.horariosOcupados) ? allocLike.horariosOcupados[0] : '')
+        || ''
+    ).trim();
+
+    const shiftMeta = getShiftChangeMeta(allocLike, effectiveSlot, dayOfWeek, dateStr);
+    if (shiftMeta.badgeHTML) return shiftMeta.badgeHTML;
+
+    if (!(allocLike?.sabadoManha && dayOfWeek === 6)) return '';
+
+    const fallbackLetter = getTurnoLetter(effectiveSlot);
+    const fallbackLabel = getShiftChangeLabel(fallbackLetter);
+    if (!fallbackLabel) return '';
+
+    return `<span style="display:inline-block; font-size:0.65em; background:#e67e22; color:#fff; padding:1px 4px; border-radius:3px; margin-left:2px; font-weight:bold;" title="Mudou de turno: aula no turno ${fallbackLabel}">&#9888; ${fallbackLabel}</span>`;
+}
+
 function populateTurnoOfertaOptions(preferredValue = store.settings.turnoOferta || '') {
     if (!selTurnoOferta) return;
     const options = getAvailableTurnoOfertaOptions();
@@ -8880,7 +8901,13 @@ function generateCalendarGrid(container, turmaId, docenteName, start, end, title
                                 } else {
                                     const event = uniqueEventsInSlot[0];
                                     const info = getDisciplinaInfo(event.disciplina);
-                                    content = `${info.abrev} - ${event.turmaId}`;
+                                    const shiftBadgeDisplay = getCalendarShiftBadgeHTML(
+                                        event,
+                                        event.horario || (Array.isArray(event.horariosOcupados) ? event.horariosOcupados[0] : ''),
+                                        dayOfWeek,
+                                        dayData.date
+                                    );
+                                    content = `${info.abrev}${shiftBadgeDisplay} - ${event.turmaId}`;
                                     style = `background:${event.cor || '#bdc3c7'}; color:black;`;
                                 }
                             } else {
@@ -8889,29 +8916,16 @@ function generateCalendarGrid(container, turmaId, docenteName, start, end, title
                                     const info = getDisciplinaInfo(event.disciplina);
                                     const docenteFirst = String(event.docente || '').trim().split(/\s+/)[0] || '';
                                     const docenteLabel = (docenteFirst && !/^a$/i.test(docenteFirst)) ? docenteFirst.toUpperCase() : '';
-                                     const turmaNativeTurno = store.rawData?.turmas?.find(t => String(t.turma_id) === String(event.turmaId))?.turno || event.turno || '';
-                                     const nativeTurnoNorm = normalizeTurnoOfertaKey(turmaNativeTurno);
-                                     const nativeLetter = nativeTurnoNorm === 'manha' ? 'M' : (nativeTurnoNorm === 'tarde' ? 'T' : (nativeTurnoNorm === 'noite' ? 'N' : ''));
-                                     const currentLetter = getTurnoLetter(event.horario);
-                                     const isExceptional = (nativeLetter && currentLetter && nativeLetter !== currentLetter) || (event.sabadoManha && dayOfWeek === 6);
-                                     const tLetter = isExceptional ? currentLetter : '';
-
-                                     const eBadge = tLetter
-                                         ? `<span style="font-size:0.65em; background:#e67e22; color:#fff; padding:1px 4px; border-radius:3px; margin-left:2px; font-weight:bold;" title="Aula no turno ${tLetter === 'M' ? 'da Manhã' : tLetter === 'T' ? 'da Tarde' : 'da Noite'}">(${tLetter})</span>`
-                                         : '';
-                                     const eBadgeCompact = tLetter
-                                         ? `<span style="font-size:0.65em; background:#e67e22; color:#fff; padding:1px 4px; border-radius:3px; margin-left:2px; font-weight:bold;" title="Mudou de turno: aula no turno ${tLetter === 'M' ? 'da Manhã' : tLetter === 'T' ? 'da Tarde' : 'da Noite'}">⚠ ${tLetter}</span>`
-                                         : eBadge;
-                                     const eBadgeDisplay = getShiftChangeMeta(
-                                         event,
-                                         event.horario || (Array.isArray(event.horariosOcupados) ? event.horariosOcupados[0] : ''),
-                                         dayOfWeek,
-                                         dayData.date
-                                     ).badgeHTML || eBadgeCompact;
-                                     content = docenteLabel
-                                         ? `<div>${info.abrev}${eBadgeDisplay} <span style="font-size:0.82em; font-weight:600; opacity:0.92;">- ${docenteLabel}</span></div>`
-                                         : `${info.abrev}${eBadgeDisplay}`;
-                                     style = `background:${event.cor || '#bdc3c7'}; color:black;`;
+                                    const eBadgeDisplay = getCalendarShiftBadgeHTML(
+                                        event,
+                                        event.horario || (Array.isArray(event.horariosOcupados) ? event.horariosOcupados[0] : ''),
+                                        dayOfWeek,
+                                        dayData.date
+                                    );
+                                    content = docenteLabel
+                                        ? `<div>${info.abrev}${eBadgeDisplay} <span style="font-size:0.82em; font-weight:600; opacity:0.92;">- ${docenteLabel}</span></div>`
+                                        : `${info.abrev}${eBadgeDisplay}`;
+                                    style = `background:${event.cor || '#bdc3c7'}; color:black;`;
                                 } else {
                                     content = '&nbsp;';
                                     style = 'background: #ecf0f1;';

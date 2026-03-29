@@ -6,7 +6,7 @@ import { buildCanonicalOfferProjection, buildTeacherExecutionSnapshot } from './
 import { renderBidimensionalTeacherGantt, hideBidimensionalTeacherGanttLens } from './gantt_bidimensional.js';
 
 const collator = new Intl.Collator('pt-BR', { sensitivity: 'base' });
-const PUBLIC_ASSET_VERSION = '20260328d';
+const PUBLIC_ASSET_VERSION = '20260328e';
 const PUBLIC_ROUTING_CONFIG_URL = 'publicacoes/publicacao_config.json';
 const PUBLIC_ROUTING_CATALOG_FALLBACK_URL = 'publicacoes/catalogo_publicacoes.json';
 
@@ -1279,7 +1279,7 @@ function buildMiniChipMarkup(event, dateObj, mode, dailyEvents = []) {
         : getDisciplinaShortLabel(event?.disciplina || titulo, titulo);
     const wrapClass = chipLabel.length > 16 ? ' wrap' : '';
     const shiftMeta = getPublicShiftChangeMeta(event, dateStr);
-    const badgeHTML = shiftMeta.badgeHTML;
+    const badgeMarkup = buildPublicShiftBadgeMarkup(shiftMeta, true);
 
     return `
         <div
@@ -1303,7 +1303,7 @@ function buildMiniChipMarkup(event, dateObj, mode, dailyEvents = []) {
         >
             <div class="chip-hora">${escapeHtml(formatChipStartTime(horario))}</div>
             <div class="chip-sigla${wrapClass}">${escapeHtml(chipLabel)}</div>
-            ${badgeHTML ? `<div style="margin-top:4px; line-height:1;">${badgeHTML}</div>` : ''}
+            ${badgeMarkup ? `<div class="mini-chip-shift">${badgeMarkup}</div>` : ''}
         </div>
     `;
 }
@@ -1428,6 +1428,21 @@ function buildPublicShiftWarningMarkup(shiftMeta, compact = false) {
     return `<div class="pub-shift-warning"><strong>&#9888; Atenção:</strong> ${escapeHtml(extraText)}</div>`;
 }
 
+function buildPublicShiftBadgeMarkup(shiftMeta, compact = false) {
+    if (!shiftMeta?.isShiftChange || !shiftMeta?.badgeLabel) return '';
+
+    const className = compact ? 'pub-shift-badge is-compact' : 'pub-shift-badge';
+    const badgeLabel = String(shiftMeta.badgeLabel || '').trim();
+    const title = `Mudou de turno: aula no turno ${badgeLabel}.`;
+
+    return `
+        <span class="${className}" title="${escapeHtmlAttr(title)}">
+            <span class="pub-shift-badge-symbol">&#9888;</span>
+            <span>${escapeHtml(badgeLabel)}</span>
+        </span>
+    `;
+}
+
 function getNativeTurnoLetterForEvent(event) {
     const turmaInfo = state.turmaById.get(String(event?.turmaId || '').trim());
     const nativeKey = normalizePublicTurnoKey(turmaInfo?.turno || event?.turno || '');
@@ -1484,17 +1499,13 @@ function getPublicShiftChangeMeta(event, dateStr = '') {
     );
     const effectiveLetter = currentLetter || (isSaturdayMorning ? 'M' : '');
     const badgeLabel = isShiftChange ? getShiftChangeLabel(effectiveLetter) : '';
-    const badgeHTML = badgeLabel
-        ? `<span style="display:inline-block; font-size:0.65em; background:#e67e22; color:#fff; padding:1px 4px; border-radius:3px; font-weight:bold;" title="Mudou de turno: aula no turno ${badgeLabel}">&#9888; ${badgeLabel}</span>`
-        : '';
 
     return {
         horario,
         nativeLetter,
         currentLetter,
         isShiftChange,
-        badgeLabel,
-        badgeHTML
+        badgeLabel
     };
 }
 
@@ -2032,9 +2043,12 @@ function buildMonthlyCalendarHTML({ calendarData, year, month }) {
             const cor = String(ev.cor || '#355344').trim();
             const hora = formatChipStartTime(getEventHorario(ev, dateStr));
             const sigla = getDisciplinaShortLabel(ev.disciplina, ev.title || ev.disciplina || '').slice(0, 10);
+            const shiftMeta = getPublicShiftChangeMeta(ev, dateStr);
+            const shiftBadgeMarkup = buildPublicShiftBadgeMarkup(shiftMeta, true);
             grid += `<div class="mcd-event" style="background:${escapeHtmlAttr(cor)}" data-date="${dateStr}" data-disc-key="${escapeHtmlAttr(discKey)}" tabindex="0" role="button">`;
             grid += `<span class="mcd-event-hora">${escapeHtml(hora)}</span>`;
             grid += `<span class="mcd-event-sigla">${escapeHtml(sigla)}</span>`;
+            if (shiftBadgeMarkup) grid += `<span class="mcd-event-shift">${shiftBadgeMarkup}</span>`;
             grid += `</div>`;
         });
 
