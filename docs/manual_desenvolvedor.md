@@ -1,8 +1,8 @@
 # Manual Tecnico do Desenvolvedor - Cardume Planejador Academico (IECOS)
 
-**Versao do sistema:** 3.3
-**Status:** estavel em producao, com refatoracao estrutural em andamento
-**Stack:** HTML5, CSS3, JavaScript ES modules, Python ETL, `localStorage`
+**Versao do sistema:** 3.4
+**Status:** estavel em producao, com motor canonico adotado na `main` e limpeza incremental em andamento
+**Stack:** HTML5, CSS3, JavaScript ES modules, Python ETL/publicacao, `localStorage`, testes com `node:test`
 
 ---
 
@@ -18,7 +18,7 @@ O principio atual do produto e:
 
 > **toda oferta deve ser tratada como oferta por faixas**
 
-Isso vale para Grade Semanal, Lista de Ofertas, calendario, exportacoes e SIGAA.
+Isso vale para Grade Semanal, Lista de Ofertas, calendario, Gantt, agendas publicas, exportacoes e SIGAA.
 
 ---
 
@@ -69,29 +69,46 @@ Regras:
 
 ```text
 /gestor-iecos
+|-- _backups/
 |-- css/
 |   `-- style.css
 |-- dados/
 |   `-- planilha_base.xlsx
 |-- docs/
+|   |-- implementacao_futura_publicacao_pl.html
 |   `-- manual_desenvolvedor.md
 |-- img/
 |-- js/
+|   |-- academic_rules.mjs
+|   |-- agenda_discente.js
 |   |-- agenda_publica.js
 |   |-- calendar.js
+|   |-- execution_engine.js
+|   |-- gantt_bidimensional.js
 |   |-- main.js
 |   |-- plan_storage.js
+|   |-- serialization.js
+|   |-- sigaa_metadata.js
 |   |-- store.js
 |   |-- ui.js
 |   `-- utils.js
+|-- legacy/
+|   `-- agenda_discente_runtime/
+|-- publicacoes/
+|   |-- catalogo_publicacoes.json
+|   `-- publicacao_config.json
+|-- tests/
+|   `-- academic_rules.test.mjs
 |-- tools/
 |   |-- convert_data.py
 |   |-- publish_online.py
 |   `-- requirements.txt
+|-- agenda_discente.html
 |-- agenda_publica.html
 |-- alocacoes_publicas.json
 |-- dados_app.json
 |-- index.html
+|-- plano_refatoracao_ampla.html
 `-- README.md
 ```
 
@@ -99,9 +116,16 @@ Regras:
 
 - `tools/convert_data.py`: converte o Excel institucional para `dados_app.json`.
 - `js/plan_storage.js`: normalizacao de periodo letivo e persistencia por plano.
+- `js/execution_engine.js`: calculo central da execucao real por faixa/data/slot.
+- `js/academic_rules.mjs`: regras compartilhadas de plano, ocorrencias, exportacao e inicializacao da grade.
 - `js/store.js`: estado principal, leitura do JSON e gravação das alocacoes no plano ativo.
 - `js/ui.js`: fluxo principal da interface, Grade Semanal, Lista de Ofertas, conflitos e exportacoes.
 - `js/calendar.js`: renderizacao de calendario a partir da execucao real.
+- `js/gantt_bidimensional.js`: renderizacao do Gantt docente bidimensional.
+- `js/agenda_publica.js`: runtime da agenda publica e da consulta docente/discente publicada.
+- `legacy/agenda_discente_runtime/`: runtime preservado da agenda discente legada em producao.
+- `tools/publish_online.py`: validacao, copia e eventual push do arquivo publico.
+- `tests/academic_rules.test.mjs`: suite automatizada do nucleo canonico.
 - `js/main.js`: bootstrap, importacao/exportacao e publicacao.
 
 ---
@@ -179,15 +203,18 @@ O periodo letivo da sidebar nao deve ser tratado como campo livre. Ele vem do ca
 
 A Grade Semanal e o centro operacional do sistema. O fluxo canonico atual e:
 
-1. definir a data de inicio da `Faixa 1`;
+1. definir a data de inicio da `Faixa 1` pelo mini calendario da tabela de faixas;
 2. desenhar os slots por clique ou arraste;
-3. criar `Faixa 2` ou `Faixa 3` se o regime mudar;
+3. criar `Faixa 2` ou `Faixa 3` se o regime mudar, marcando explicitamente o novo padrao;
 4. salvar a componente;
 5. usar a Lista de Ofertas apenas para revisao, edicao e exclusao.
 
 Regras importantes:
 
 - nova faixa substitui a anterior a partir de sua data de inicio;
+- a data oficial da componente passa a ser a data da `Faixa 1`;
+- o clique na grade desenha horarios, mas nao deve empurrar a data oficial da `Faixa 1`;
+- novas componentes podem nascer com uma data sugerida automaticamente, calculada a partir da ultima alocacao valida da turma;
 - nao ha heranca automatica de slots entre faixas;
 - a nova faixa so passa a ter slots depois que o usuario os desenha;
 - a CH mostrada na tabela de faixas deve bater com a execucao real.
@@ -217,9 +244,10 @@ A Lista de Ofertas tem funcao administrativa e de revisao. O comportamento esper
 
 ### 5.5. Calendario e visoes
 
-- **Calendario da Turma**: leitura do cronograma final da turma.
-- **Visao do Professor**: leitura e auditoria de ocupacao docente.
-- **Gantt**: leitura temporal do semestre por docente/equipe.
+- **Calendario da Turma**: leitura do cronograma final da turma, com avisos de mudanca de turno quando houver aula excepcional fora do turno nativo.
+- **Visao do Professor / Calendario Docente**: leitura e auditoria de ocupacao docente com a mesma base canonica e badges de turno.
+- **Gantt bidimensional**: leitura temporal do semestre por docente/equipe, com turnos reais, detalhes de barra e mesmos recortes usados nos calendarios.
+- **Agendas publicas**: `agenda_publica.html` e `agenda_discente.html` coexistem em producao durante a transicao, sem perda da URL antiga.
 
 Essas telas devem consumir a mesma base canonica de execucao.
 
@@ -349,18 +377,48 @@ Fluxo:
 
 1. clicar em **Publicar Online** no app;
 2. executar `python tools/publish_online.py`;
-3. opcionalmente publicar com `python tools/publish_online.py --push`.
+3. opcionalmente validar antes com `python tools/publish_online.py --check`;
+4. opcionalmente publicar com `python tools/publish_online.py --push`.
 
 Arquivos envolvidos:
 
 - `alocacoes_publicas.json`
 - `agenda_publica.html`
+- `agenda_discente.html`
+- `publicacoes/publicacao_config.json`
+- `publicacoes/catalogo_publicacoes.json`
 
 Preparacao futura ja assumida:
 
 - `publicacoes/publicacao_config.json` define o layout de publicacao;
 - `publicacoes/catalogo_publicacoes.json` sera a fonte para decidir qual PL fica visivel ao aluno;
-- a agenda publica deve continuar sendo uma unica pagina, com fallback para `alocacoes_publicas.json` enquanto o modo legado permanecer ativo.
+- a agenda publica deve continuar sendo uma unica pagina, com fallback para `alocacoes_publicas.json` enquanto o modo legado permanecer ativo;
+- a `agenda_discente.html` segue preservada e publicada em paralelo durante a transicao.
+
+### 9.4. Testes automatizados
+
+Suite principal atual:
+
+```bash
+node --test tests/academic_rules.test.mjs
+```
+
+Cobertura atual mais importante:
+
+- resolucao de periodo letivo ativo;
+- reconciliacao de turma ao trocar de PL;
+- inicializacao e reset da Grade Semanal;
+- ocorrencias, truncamento final e limites de semestre;
+- turnos ativos de docente;
+- filtro de exportacao e payload SIGAA.
+
+Uso recomendado nas limpezas graduais:
+
+1. rodar a suite automatizada;
+2. testar `index.html`;
+3. testar `agenda_publica.html`;
+4. testar `agenda_discente.html`;
+5. so depois remover ou consolidar arquivos de baixo risco.
 
 ---
 
@@ -373,10 +431,13 @@ Direcoes ja assumidas:
 - concentrar logica temporal e de conflitos em nucleo compartilhado;
 - tratar Grade Semanal como principal ponto de entrada operacional;
 - manter Lista de Ofertas como painel de revisao;
-- preparar exportacoes e publicacao para evolucoes futuras sem reabrir a arquitetura.
+- preparar exportacoes e publicacao para evolucoes futuras sem reabrir a arquitetura;
+- fazer remocoes de arquivos em ciclos pequenos, sempre acompanhadas de teste e commit;
+- manter a agenda discente legada preservada ate a convergencia completa com a agenda publica.
 
 Itens ainda em observacao tecnica:
 
 - limpeza final de nomenclaturas internas legadas;
 - extracao mais explicita do motor canonico de execucao;
-- evolucao futura da agenda docente publica.
+- convergencia futura entre `agenda_discente.html` e `agenda_publica.html`;
+- ativacao futura da publicacao por plano letivo sem expor essa escolha ao aluno final.

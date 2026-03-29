@@ -1046,13 +1046,15 @@
                                 <li style="margin-bottom: 10px;"><strong>5. Modelo de Oferta:</strong> Todas as
                                     componentes seguem o padrão por <b>Faixas</b>. Defina docentes, carga horária e
                                     período para cada oferta.</li>
-                                <li style="margin-bottom: 10px;"><strong>6. Alocacao Manual (somente na Grade Semanal):</strong> Desenhe os slots clicando nos <b>quadradinhos da grade</b>. Ajuste inicio/fim por faixa na tabela superior da grade. A aba <b>Lista de Ofertas</b> deve ser usada para revisao/edicao/exclusao, e nao para desenhar slots.</li>
-                                <li style="margin-bottom: 10px;"><strong>7. Leitura da Grade Semanal:</strong> Slots bloqueados indicam ocupacao real na semana visivel. Navegue entre semanas ou ajuste inicio/faixa para visualizar e editar corretamente.</li>
-                                <li style="margin-bottom: 10px;"><strong>8. Importação em Bloco (PPC):</strong> Ao usar
+                                <li style="margin-bottom: 10px;"><strong>6. Data inicial da componente:</strong> Defina o inicio oficial pelo <b>mini calendário da Faixa 1</b>. A grade desenha horários, mas não deve empurrar essa data por conta própria.</li>
+                                <li style="margin-bottom: 10px;"><strong>7. Alocacao Manual (somente na Grade Semanal):</strong> Desenhe os slots clicando nos <b>quadradinhos da grade</b>. Se o regime mudar, ative a faixa 2 ou 3 e desenhe explicitamente o novo padrão.</li>
+                                <li style="margin-bottom: 10px;"><strong>8. Leitura da Grade Semanal:</strong> Slots bloqueados indicam ocupação real na semana visível. Navegue entre semanas ou ajuste início/faixa para visualizar e editar corretamente.</li>
+                                <li style="margin-bottom: 10px;"><strong>9. Turnos e sábado:</strong> Quando houver aula excepcional em outro turno, o sistema mostra avisos visuais em calendários, agendas e Gantt. Se necessário, mude o turno visível da grade para enxergar esses slots.</li>
+                                <li style="margin-bottom: 10px;"><strong>10. Importação em Bloco (PPC):</strong> Ao usar
                                     a opção de <b>"Importar Componentes"</b>, é <b>obrigatório</b> ir na aba <b>Lista de
                                         Ofertas</b> e editar o horário/data de cada componente pendente para alocá-los
                                     na grade corretamente.</li>
-                                <li><strong>9. Mesclagem de Calendários:</strong> Você pode usar a ferramenta de
+                                <li><strong>11. Mesclagem de Calendários:</strong> Você pode usar a ferramenta de
                                     Importação (JSON) para carregar o trabalho salvo de outro diretor de curso e checar
                                     se há choques.</li>
                             </ul>
@@ -1065,8 +1067,9 @@
                             <p style="font-size:0.97em;">A operação da grade segue um fluxo único e previsível:</p>
                             <ul style="padding-left:20px; font-size:0.95em; line-height:1.8;">
                                 <li>Cada componente pode ter uma ou mais <strong>faixas</strong>, com datas e slots proprios.</li>
+                                <li>A data oficial da componente passa pela <strong>Faixa 1</strong>; o mini calendario da faixa e a referencia de edicao.</li>
                                 <li>Ao editar uma oferta, redesenhe os slots da faixa para manter a estrutura consistente.</li>
-                                <li>Conflitos devem ser resolvidos por ajuste explícito de <strong>data</strong> e <strong>horário</strong>.</li>
+                                <li>Conflitos e mudancas de turno devem ser resolvidos por ajuste explicito de <strong>data</strong> e <strong>horario</strong>.</li>
                             </ul>
                             <p
                                 style="font-size:0.92em; margin-top:8px; background:#d4edda; padding:8px; border-radius:6px;">
@@ -1090,6 +1093,9 @@
                                 humanas. Ao importar a grade de outro diretor, vá na aba <strong>Visão do
                                     Professor</strong>. Um <strong>alerta vermelho</strong> aparecerá automaticamente
                                 caso algum professor esteja alocado em dois lugares ao mesmo tempo.</p>
+                            <p style="font-size:0.92em; background:#fdecea; padding:8px; border-radius:6px;">
+                                ⚠️ Quando uma aula ocorrer em turno diferente do turno nativo da turma, os calendarios e agendas mostram um aviso visual de turno.
+                            </p>
                         </div>
 
                         <div class="tutorial-card" style="background-color: #f0f4ff; border-left-color: #3498db;">
@@ -1109,12 +1115,13 @@
 
                         <div class="tutorial-card" style="background-color: #fdf2f8; border-left-color: #8e44ad;">
                             <h4 style="font-size:1.05em;">📊 5. Gráfico de Gantt por Docente</h4>
-                            <p style="font-size:0.97em;">O <strong>Gráfico de Gantt</strong> exibe a carga de cada
-                                professor em ordem cronológica. Cada barra mostra:</p>
+                            <p style="font-size:0.97em;">O <strong>Gráfico de Gantt</strong> agora usa a mesma base canonica dos calendarios e exibe a carga de cada
+                                professor em ordem cronológica, com leitura por turno e detalhes de barra.</p>
                             <ul style="padding-left:20px; font-size:0.95em; line-height:1.8;">
                                 <li><strong>Turma + Código + Abreviação</strong>: ex.
                                     <code>EP2026 EP05003 LabInfo (30h)</code>
                                 </li>
+                                <li>As linhas respeitam os <strong>turnos reais</strong> da execução, inclusive quando houver mudança excepcional de turno.</li>
                                 <li>Quando a disciplina é <strong>subdividida em sub-turmas</strong>, aparece o prefixo:
                                     <code>[T01]</code> ou <code>[T02]</code> antes do nome.
                                 </li>
@@ -1181,9 +1188,9 @@
                                     Calendário (Turma/Professor) e Gráfico Gantt, use os botões azuis <b>🔄
                                         Atualizar</b> sempre que fizer uma mudança, para renderizar as novidades
                                     imediatamente.</li>
-                                <li>🌐 <strong>Publicação:</strong><br>O botão verde <b>"Publicar Online"</b> gera o
-                                    arquivo final <code>alocacoes_publicas.json</code> para publicacao controlada no
-                                    repositório.</li>
+                                <li>🌐 <strong>Publicação:</strong><br>O botão verde <b>"Publicar Online"</b> prepara o
+                                    arquivo final <code>alocacoes_publicas.json</code>, usado pela agenda publica e pela
+                                    agenda discente publicada.</li>
                             </ul>
                         </div>
 
@@ -1200,8 +1207,8 @@
                             style="background: #dfe7df; border: 1px solid #a8d3a8; padding:18px; border-radius:10px; margin-top:15px;">
                             <h4 style="margin-top:0; margin-bottom:18px; color:#1e7e34; font-size:1.18em;">Publicacao do arquivo publico</h4>
                             <p style="font-size: 0.98em; margin-bottom:14px; line-height:1.55; color:#2c3e50;">
-                                Para publicar o arquivo <code>alocacoes_publicas.json</code> com validacao e envio ao
-                                GitHub, siga estes passos:
+                                Para publicar o arquivo <code>alocacoes_publicas.json</code> do plano ativo com validacao e
+                                envio controlado, siga estes passos:
                             </p>
                             <ol style="padding-left:24px; font-size:0.98em; line-height:1.7; margin:0; color:#34495e;">
                                 <li style="margin-bottom:6px;">Clique em <strong>Publicar Online</strong>.</li>
@@ -1209,19 +1216,23 @@
                             </ol>
                             <div
                                 style="background:#174b3d; color:#f4fff7; border-radius:10px; padding:14px 16px; font-family:Consolas, 'Courier New', monospace; font-size:0.94em; line-height:1.55; word-break:break-all; margin:0 0 14px 24px;">
-                                git add .; git commit -m "adiciona pequenos ajustes"; git push
+                                python tools/publish_online.py
                             </div>
                             <div style="display:flex; align-items:center; gap:10px; margin:0 0 18px 24px; flex-wrap:wrap;">
                                 <button type="button"
-                                    data-copy-text="git add .; git commit -m &quot;adiciona pequenos ajustes&quot;; git push"
+                                    data-copy-text="python tools/publish_online.py"
                                     data-copy-feedback-target="publish-command-feedback"
                                     data-copy-success-label="Comando copiado"
                                     style="background:#2b9140; color:#fff; border:none; border-radius:7px; padding:8px 14px; font-weight:bold; cursor:pointer;">
-                                    Copiar comando Git
+                                    Copiar comando base
                                 </button>
                                 <span id="publish-command-feedback"
                                     style="font-size:0.85em; color:#2f6f3e; min-height:1.2em;">&nbsp;</span>
                             </div>
+                            <ol start="3"
+                                style="padding-left:24px; font-size:0.98em; line-height:1.7; margin:0; color:#34495e;">
+                                <li style="margin-bottom:14px;">Se quiser validar antes ou publicar no GitHub Pages no mesmo fluxo, use:</li>
+                            </ol>
                             <div
                                 style="background:#174b3d; color:#f4fff7; border-radius:10px; padding:14px 16px; font-family:Consolas, 'Courier New', monospace; font-size:0.94em; line-height:1.55; word-break:break-all; margin:0 0 14px 24px;">
                                 python tools/publish_online.py --push
@@ -1235,9 +1246,9 @@
                                     Copiar comando Python
                                 </button>
                             </div>
-                            <ol start="3"
+                            <ol start="4"
                                 style="padding-left:24px; font-size:0.98em; line-height:1.7; margin:0; color:#34495e;">
-                                <li style="margin-bottom:10px;">Copie a URL da <b>Agenda Pública</b> para compartilhar escalas e calendários com a equipe e alunos.</li>
+                                <li style="margin-bottom:10px;">Compartilhe a URL da <b>Agenda Publica</b> e, durante a transicao, mantenha tambem a <b>Agenda Discente</b> disponivel.</li>
                             </ol>
                             <div
                                 style="background:#eef3ee; border:1px solid #b8d1b8; color:#173f35; border-radius:10px; padding:12px 14px; margin:0 0 14px 24px; font-family:Consolas, 'Courier New', monospace; font-size:0.9em; line-height:1.55; word-break:break-all;">
@@ -1254,11 +1265,27 @@
                                 <span id="agenda-publica-feedback"
                                     style="font-size:0.85em; color:#2f6f3e; min-height:1.2em;">&nbsp;</span>
                             </div>
+                            <div
+                                style="background:#eef3ee; border:1px solid #b8d1b8; color:#173f35; border-radius:10px; padding:12px 14px; margin:14px 0 14px 24px; font-family:Consolas, 'Courier New', monospace; font-size:0.9em; line-height:1.55; word-break:break-all;">
+                                https://astuciasnor.github.io/gestor-iecos/agenda_discente.html
+                            </div>
+                            <div style="display:flex; align-items:center; gap:10px; margin:0 0 0 24px; flex-wrap:wrap;">
+                                <button type="button"
+                                    data-copy-text="https://astuciasnor.github.io/gestor-iecos/agenda_discente.html"
+                                    data-copy-feedback-target="agenda-discente-feedback"
+                                    data-copy-success-label="URL copiada"
+                                    style="background:#2b9140; color:#fff; border:none; border-radius:7px; padding:8px 14px; font-weight:bold; cursor:pointer;">
+                                    Copiar URL da Agenda Discente
+                                </button>
+                                <span id="agenda-discente-feedback"
+                                    style="font-size:0.85em; color:#2f6f3e; min-height:1.2em;">&nbsp;</span>
+                            </div>
                         </div>
 
                         <div style="margin-top: 20px; font-size: 0.8em; color: #999; text-align: center;">
-                            <p>Nota Técnica: Os dados base operam via pipeline Python. Não limpe o cache de navegação
-                                antes de exportar seu trabalho diário (JSON).</p>
+                            <p>Nota Tecnica: Os dados base operam via pipeline Python. Se a publicacao parecer antiga
+                                no navegador ou no celular, faca um recarregamento forcado antes de concluir que o JSON
+                                nao atualizou.</p>
                         </div>
                     </aside>
                 </div>

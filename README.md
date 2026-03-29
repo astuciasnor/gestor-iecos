@@ -2,10 +2,12 @@
 
 ![Logo do Projeto](img/logo_cardume.png)
 
-Sistema web para montagem, revisao e publicacao de grades academicas do IECOS/UFPA. O app roda no navegador, usa `localStorage` como persistencia local e trabalha com um modelo canonico por faixas.
+Sistema web para montagem, revisao, auditoria e publicacao de grades academicas do IECOS/UFPA. O app roda no navegador, usa `localStorage` como persistencia local por plano letivo e hoje opera com o motor canonico por faixas ja consolidado na `main`.
 
-Link publico do sistema:
-- https://astuciasnor.github.io/gestor-iecos/
+Links publicos:
+- App principal: `https://astuciasnor.github.io/gestor-iecos/`
+- Agenda publica: `https://astuciasnor.github.io/gestor-iecos/agenda_publica.html`
+- Agenda discente: `https://astuciasnor.github.io/gestor-iecos/agenda_discente.html`
 
 Documentacao tecnica:
 - [`docs/manual_desenvolvedor.md`](docs/manual_desenvolvedor.md)
@@ -14,15 +16,16 @@ Documentacao tecnica:
 
 ## Funcionalidades principais
 
-- **Periodos letivos oficiais:** o seletor lateral consome `periodos_letivos` do `dados_app.json` e preenche automaticamente inicio e fim do periodo.
-- **Persistencia por plano letivo:** cada combinacao `periodo + inicio + fim` e salva separadamente no navegador.
-- **Grade Semanal como centro operacional:** toda marcacao de slots, datas e faixas acontece na aba **Grade Semanal**.
-- **Faixas como modelo unico:** cada faixa representa um regime de funcionamento em um intervalo de datas.
-- **Fechamento automatico da faixa final:** quando os dois ultimos dias reais de aula fogem do regime principal, o sistema cria automaticamente a `Faixa 2` para manter a estrutura consistente.
-- **Conflitos canonicos:** so existe conflito real com sobreposicao simultanea de periodo, dia da semana e slot.
-- **Lista de Ofertas organizada para revisao:** componentes em ordem alfabetica, faixas consecutivas e separacao visual entre faixas e entre componentes.
-- **Calendario da turma, visao docente e Gantt:** o app usa a mesma base de execucao para leitura e auditoria.
-- **Exportacao/importacao e publicacao online:** backups, JSON publico e metadados SIGAA partem do plano letivo ativo.
+- **Periodos letivos oficiais:** o seletor lateral consome `periodos_letivos` do `dados_app.json` e preenche automaticamente inicio e fim do plano ativo.
+- **Persistencia por plano letivo:** cada combinacao `periodo + inicio + fim` fica isolada no navegador.
+- **Grade Semanal como centro operacional:** e o unico lugar para desenhar slots e definir regimes de funcionamento.
+- **Motor canonico por faixas:** toda oferta e tratada por datas, slots e execucao real, sem depender da UX legada por tipo.
+- **Datas das faixas como referencia oficial:** a `Faixa 1` nasce por sugestao automatica, mas a edicao oficial da data e feita pelos mini calendarios das faixas.
+- **Turnos e sabado integrados ao motor:** mudancas de turno, sabado de manha e avisos `Atenção Turno` sao refletidos na Grade Semanal, calendarios, agendas e Gantt.
+- **Gantt bidimensional por docente:** leitura temporal mais clara, com turnos reais, detalhes de barra e mesma base de execucao usada nos calendarios.
+- **Agendas publicas coexistentes:** `agenda_publica.html` e `agenda_discente.html` seguem publicadas em paralelo durante a transicao, sem perda da URL antiga.
+- **Exportacao, SIGAA e publicacao online:** backup, exportacao institucional e `alocacoes_publicas.json` partem do plano ativo.
+- **Base inicial de testes automatizados:** a suite `tests/academic_rules.test.mjs` cobre o nucleo atual do motor canonico.
 
 ---
 
@@ -38,24 +41,28 @@ Documentacao tecnica:
 
 1. Selecione a componente, a cor e o(s) docente(s) na lateral.
 2. Va para a aba **Grade Semanal**.
-3. Defina o inicio da `Faixa 1` clicando no primeiro slot do dia desejado.
+3. Defina o inicio da `Faixa 1` pelo mini calendario da tabela de faixas.
 4. Desenhe os slots diretamente na grade.
-5. Se precisar mudar o regime ao longo do periodo, crie a `Faixa 2` ou `Faixa 3` e desenhe explicitamente o novo padrao.
+5. Se o regime mudar ao longo do periodo, crie a `Faixa 2` ou `Faixa 3` e desenhe explicitamente o novo padrao.
 6. Clique em **Salvar Componente**.
 
-### 3. Revisao e administracao
+Observacoes importantes:
+- o clique na grade desenha horarios, mas nao deve empurrar a data oficial da `Faixa 1`;
+- a data inicial sugerida para uma nova componente pode vir do primeiro dia livre apos a ultima alocacao valida da turma;
+- se a sugestao nao servir, ajuste a data diretamente no calendario da faixa.
+
+### 3. Revisao e auditoria
 
 - Use a aba **Lista de Ofertas** para revisar, editar ou excluir ofertas.
-- A lista e exibida em ordem alfabetica por componente.
-- Faixas da mesma componente aparecem uma abaixo da outra.
-- A **Lista de Ofertas** nao e lugar de desenhar slots; isso fica restrito a **Grade Semanal**.
+- Use **Calendario da Turma**, **Calendario Docente** e **Grafico Gantt** para leitura e auditoria.
+- Quando aparecer o aviso de turno, ele indica que aquela aula ocorre excepcionalmente em um turno diferente do turno nativo da turma.
 
 ### 4. Publicacao e exportacoes
 
 - **Exportar JSON:** gera backup do plano letivo ativo.
 - **Importar JSON:** restaura ou mescla dados no contexto do plano selecionado.
-- **Exportar Metadados SIGAA:** gera os metadados do plano ativo, no recorte institucional correto do periodo letivo.
-- **Publicar Online:** gera `alocacoes_publicas.json` para a agenda publica.
+- **Exportar Metadados SIGAA:** gera o payload institucional do plano ativo.
+- **Publicar Online:** prepara o arquivo publico para as agendas.
 
 ---
 
@@ -67,12 +74,12 @@ Faixa significa:
 
 > **regime de funcionamento em um intervalo de datas**
 
-Regra operacional:
+Regras operacionais:
 
 - a nova faixa substitui a faixa anterior a partir de sua data de inicio;
 - o fim da faixa anterior e ajustado automaticamente;
 - os slots da nova faixa so existem se forem desenhados pelo usuario;
-- o calculo de CH, conflitos e exportacoes parte da execucao real gerada por essas faixas.
+- o calculo de CH, conflitos, calendario, Gantt e exportacoes parte da execucao real gerada por essas faixas.
 
 ### Conflitos
 
@@ -113,14 +120,17 @@ A aba `periodos_letivos` e a fonte oficial dos periodos institucionais. Exemplo:
 | 2026 | PL1 | 05/01/2026 | 06/03/2026 |
 | 2026 | PL2 | 23/03/2026 | 23/07/2026 |
 
-Observacao importante:
+Observacoes:
 
 - o app nao depende mais de datas padrao escritas manualmente no `index.html`;
-- o seletor lateral passa a consumir os periodos oficiais gerados no JSON.
+- o seletor lateral consome os periodos oficiais gerados no JSON;
+- `horarios_por_turno` e a base para Grade Semanal, calendarios e Gantt.
 
 ---
 
 ## Publicacao online
+
+Fluxo recomendado:
 
 1. No app, clique em **Publicar Online**.
 2. No terminal, execute:
@@ -129,25 +139,50 @@ Observacao importante:
 python tools/publish_online.py
 ```
 
-Para publicar no GitHub Pages:
+3. Se quiser publicar no GitHub Pages no mesmo fluxo:
 
 ```bash
 python tools/publish_online.py --push
 ```
 
-URLs publicas:
-- https://astuciasnor.github.io/gestor-iecos/
-- https://astuciasnor.github.io/gestor-iecos/alocacoes_publicas.json
+Arquivos e paginas envolvidos:
+
+- `alocacoes_publicas.json`
+- `agenda_publica.html`
+- `agenda_discente.html`
+- `publicacoes/publicacao_config.json`
+- `publicacoes/catalogo_publicacoes.json`
+
+Hoje a publicacao segue no modo legado de arquivo unico, com preparacao interna para evolucao futura por plano letivo.
 
 ---
 
-## Estado atual da refatoracao
+## Testes
+
+Suite automatizada principal do nucleo canonico:
+
+```bash
+node --test tests/academic_rules.test.mjs
+```
+
+Uso recomendado nas limpezas graduais:
+
+1. rodar a suite automatizada;
+2. testar `index.html`;
+3. testar `agenda_publica.html`;
+4. testar `agenda_discente.html`;
+5. so entao remover ou consolidar arquivos de baixo risco.
+
+---
+
+## Estado atual
 
 Diretrizes ja consolidadas:
 
-- periodos letivos oficiais `PL1..PL4` vindos do Excel/JSON;
-- armazenamento por plano letivo;
-- Grade Semanal como unico ponto de desenho de slots;
-- Lista de Ofertas como painel de revisao;
-- exportacoes e publicacao apoiadas no plano ativo;
-- modelo unico por faixas, sem depender da UX antiga de tipos de oferta.
+- motor canonico por faixas em producao;
+- mudancas de turno funcionando no app e nas agendas;
+- Gantt bidimensional validado;
+- agendas publica e discente funcionando em desktop e celular;
+- publicacao online validada com `publish_online.py`;
+- agenda discente legada preservada durante a transicao;
+- limpezas e remocoes devem continuar em ciclos pequenos, sempre com teste e commit.
