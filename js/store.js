@@ -13,7 +13,6 @@ import { generateUUID } from './utils.js';
 
 import { normalizeTurnoKey } from './turns.js';
 
-function normalizeTurnoKeyLocal() { } // Dummy to prevent line mismatch but we just remove the real one
 export function normalizeLoadedAllocation(alloc) {
   if (!alloc || typeof alloc !== 'object') return alloc;
 

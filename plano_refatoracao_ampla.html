@@ -494,6 +494,8 @@
       <a href="#implementacoes">Implementacoes Futuras</a>
       <a href="#transicao">Transicao das Agendas</a>
       <a href="#publicacao-pl">Publicacao por PL</a>
+      <a href="#arquitetura-futura">Fatiamento do ui.js</a>
+      <a href="#qa">QA Automatizado</a>
       <a href="#remocao">Remocao Gradual de Arquivos</a>
 
       <div class="nav-title">Execucao</div>
@@ -520,7 +522,7 @@
           </div>
           <div class="stat">
             <div class="label">Arquitetura estabilizada</div>
-            <div class="value">90%</div>
+            <div class="value">93%</div>
           </div>
           <div class="stat">
             <div class="label">Fase atual</div>
@@ -592,8 +594,21 @@
                 <td><span class="pill future">Futuro proximo</span></td>
                 <td><code>agenda_discente.html</code> deve continuar existindo e depois apontar para o mesmo app da agenda publica.</td>
               </tr>
+              <tr>
+                <td>QA automatizado</td>
+                <td><span class="pill progress">Em ampliacao</span></td>
+                <td>A suite do nucleo canonico ja esta ativa, mas ainda faltam smoke tests automatizados de publicacao, agenda publica e UI critica.</td>
+              </tr>
+              <tr>
+                <td>Modularizacao do <code>ui.js</code></td>
+                <td><span class="pill future">Proxima frente</span></td>
+                <td>O arquivo central ainda concentra Grade Semanal, listas, calendarios e Gantt; o proximo ganho estrutural vem do fatiamento por responsabilidade.</td>
+              </tr>
             </tbody>
           </table>
+        </div>
+        <div class="callout info">
+          Leitura atual da maturidade: cerca de <strong>95% a 96%</strong> no projeto como um todo. O que mais segura a subida para <strong>98%+</strong> nao e falta de funcionalidade principal, e sim fechamento do legado, modularizacao do <code>ui.js</code>, QA automatizado e ativacao elegante da publicacao por PL.
         </div>
       </section>
 
@@ -632,6 +647,16 @@
                 <td>Publicacao por PL</td>
                 <td><span class="pill future">Preparada</span></td>
                 <td>Ativar <code>plan_directory</code>, atualizar catalogo publico e definir qual PL fica visivel ao aluno.</td>
+              </tr>
+              <tr>
+                <td>Fatiamento do <code>ui.js</code></td>
+                <td><span class="pill progress">Proxima rodada</span></td>
+                <td>Separar o arquivo por responsabilidades: Grade Semanal, Lista de Ofertas, calendarios, Gantt e camada de feedback.</td>
+              </tr>
+              <tr>
+                <td>QA automatizado</td>
+                <td><span class="pill progress">Proxima rodada</span></td>
+                <td>Ampliar a cobertura atual com smoke tests para publicacao, agenda publica, agenda discente e fluxos criticos da UI.</td>
               </tr>
               <tr>
                 <td>UI leve</td>
@@ -678,6 +703,35 @@
         </ul>
         <div class="callout info">
           Quando essa frente for ativada, a mudanca certa nao e criar varios <code>agenda_publica_*.html</code>, e sim ativar roteamento por configuracao.
+        </div>
+      </section>
+
+      <section id="arquitetura-futura">
+        <h2>Fatiamento do ui.js</h2>
+        <p>O maior ponto restante de manutenibilidade esta concentrado em <code>js/ui.js</code>. A proxima rodada estrutural deve reduzir o risco de regressao sem trocar o comportamento visivel do sistema.</p>
+        <ul>
+          <li>extrair modulo da Grade Semanal e faixas;</li>
+          <li>extrair modulo da Lista de Ofertas e revisao;</li>
+          <li>extrair modulo de calendarios internos e visao docente;</li>
+          <li>extrair modulo do Gantt e seus detalhes;</li>
+          <li>manter a inicializacao final em <code>ui.js</code> como casca de orquestracao.</li>
+        </ul>
+        <div class="callout">
+          A meta aqui nao e reescrever a UI. E diminuir acoplamento, tornar cada area mais testavel e baixar o custo das proximas correcoes pequenas.
+        </div>
+      </section>
+
+      <section id="qa">
+        <h2>QA Automatizado</h2>
+        <p>A base atual ja conta com a suite do nucleo canonico em <code>tests/academic_rules.test.mjs</code>. O proximo salto e cobrir melhor os fluxos de integracao.</p>
+        <ol>
+          <li>manter <code>node --test tests/academic_rules.test.mjs</code> como check obrigatorio das limpezas;</li>
+          <li>criar smoke tests para <code>publish_online.py</code> e publicacao publica;</li>
+          <li>cobrir carregamento minimo de <code>agenda_publica.html</code> e <code>agenda_discente.html</code>;</li>
+          <li>adicionar checks simples para regressao de turnos, badges e navegacao critica.</li>
+        </ol>
+        <div class="callout info">
+          Quando essa frente estiver madura, o projeto fica muito mais perto de <strong>98% a 100%</strong> em confiabilidade operacional.
         </div>
       </section>
 
@@ -758,6 +812,8 @@
         <ul>
           <li>continuar testes pequenos e frequentes no fluxo principal;</li>
           <li>seguir removendo artefatos ociosos por blocos de baixo risco;</li>
+          <li>fatiar <code>js/ui.js</code> por responsabilidade sem mudar o comportamento visivel;</li>
+          <li>ampliar o QA automatizado para publicacao, agendas e fluxos criticos;</li>
           <li>fazer correcoes minimas de UI conforme os testes apontarem necessidade;</li>
           <li>preparar o ciclo futuro de convergencia entre agenda discente e agenda publica;</li>
           <li>deixar a publicacao por PL pronta para ativacao quando houver necessidade real institucional.</li>
