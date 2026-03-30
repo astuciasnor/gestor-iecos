@@ -33,6 +33,7 @@
     body {
       margin: 0;
       font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      font-size: 17px;
       color: var(--ink);
       background:
         radial-gradient(circle at top right, rgba(11, 107, 58, 0.08), transparent 24rem),
@@ -66,15 +67,31 @@
       box-shadow: var(--shadow);
     }
 
+    .brand-mark {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 14px;
+    }
+
+    .brand-logo {
+      width: 54px;
+      height: 54px;
+      object-fit: contain;
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.14);
+      padding: 7px;
+    }
+
     .brand h1 {
       margin: 0 0 8px;
-      font-size: 1.08rem;
+      font-size: 1.2rem;
       line-height: 1.2;
     }
 
     .brand p {
       margin: 0;
-      font-size: 0.9rem;
+      font-size: 0.98rem;
       line-height: 1.5;
       color: rgba(255, 255, 255, 0.92);
     }
@@ -97,11 +114,12 @@
     .sidebar a {
       display: block;
       margin: 4px 0;
-      padding: 8px 10px;
+      padding: 9px 11px;
       border-radius: 10px;
       color: var(--ink);
       text-decoration: none;
-      line-height: 1.35;
+      line-height: 1.42;
+      font-size: 0.96rem;
     }
 
     .sidebar a:hover,
@@ -134,19 +152,24 @@
 
     h2 {
       margin: 0 0 12px;
-      font-size: 1.45rem;
+      font-size: 1.62rem;
       line-height: 1.18;
     }
 
     h3 {
       margin: 20px 0 10px;
-      font-size: 1rem;
+      font-size: 1.08rem;
     }
 
     p,
     li {
-      line-height: 1.62;
+      font-size: 1rem;
+      line-height: 1.72;
       color: var(--muted);
+    }
+
+    strong {
+      color: var(--ink);
     }
 
     ul,
@@ -180,10 +203,61 @@
       align-items: center;
       padding: 6px 10px;
       border-radius: 999px;
-      font-size: 0.8rem;
+      font-size: 0.85rem;
       font-weight: 700;
       background: var(--accent-soft);
       color: var(--accent);
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.6fr) minmax(250px, 0.9fr);
+      gap: 18px;
+      align-items: start;
+    }
+
+    .hero-note {
+      padding: 16px 18px;
+      border-radius: 18px;
+      border: 1px solid var(--line);
+      background: linear-gradient(180deg, #fcfefc 0%, #f3f8f4 100%);
+    }
+
+    .hero-note h3 {
+      margin-top: 0;
+    }
+
+    .hero-note ul {
+      margin-bottom: 0;
+    }
+
+    .section-head {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .section-head h2 {
+      margin-bottom: 0;
+    }
+
+    .section-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+      border-radius: 12px;
+      background: var(--accent-soft);
+      color: var(--accent);
+      font-size: 1.05rem;
+      flex: 0 0 auto;
+    }
+
+    .lead {
+      margin-top: 0;
+      font-size: 1.03rem;
     }
 
     .grid {
@@ -202,7 +276,7 @@
 
     .card h4 {
       margin: 0 0 8px;
-      font-size: 0.98rem;
+      font-size: 1.04rem;
       color: var(--ink);
     }
 
@@ -214,7 +288,7 @@
 
     .score-sub {
       margin-top: 6px;
-      font-size: 0.84rem;
+      font-size: 0.92rem;
       color: var(--muted);
     }
 
@@ -224,6 +298,10 @@
       border-radius: 14px;
       background: var(--warn-soft);
       color: #6e3a0b;
+    }
+
+    .callout + .callout {
+      margin-top: 12px;
     }
 
     .callout.info {
@@ -309,7 +387,7 @@
     }
 
     .stat .label {
-      font-size: 0.78rem;
+      font-size: 0.82rem;
       text-transform: uppercase;
       letter-spacing: 0.06em;
       color: var(--muted);
@@ -317,8 +395,40 @@
 
     .stat .value {
       margin-top: 6px;
-      font-size: 1.5rem;
+      font-size: 1.62rem;
       font-weight: 800;
+      color: var(--ink);
+    }
+
+    .timeline {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 12px;
+      margin-top: 14px;
+    }
+
+    .timeline-step {
+      padding: 16px;
+      border-radius: 16px;
+      border: 1px solid var(--line);
+      background: #fbfdfb;
+    }
+
+    .timeline-step .step-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 8px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--accent);
+    }
+
+    .timeline-step h4 {
+      margin: 0 0 8px;
+      font-size: 1rem;
       color: var(--ink);
     }
 
@@ -468,6 +578,10 @@
         padding: 20px;
         border-radius: 18px;
       }
+
+      .hero-grid {
+        grid-template-columns: 1fr;
+      }
     }
   </style>
 </head>
@@ -475,10 +589,15 @@
   <div class="layout">
     <aside class="sidebar">
       <div class="brand">
-        <h1>Painel Consolidado da Refatoracao</h1>
-        <p>Documento unico para acompanhar estado atual, backlog futuro, remocoes graduais e validacao manual do Cardume.</p>
+        <div class="brand-mark">
+          <img class="brand-logo" src="img/logo_cardume.png" alt="Logo do projeto Cardume" />
+          <div>
+            <h1>Painel Consolidado da Refatoracao</h1>
+            <p>Documento unico para acompanhar estado atual, backlog futuro, remocoes graduais e validacao manual do Cardume.</p>
+          </div>
+        </div>
         <div class="meta">
-          Consolidado em 28/03/2026<br />
+          Atualizado em 30/03/2026<br />
           Linha principal: <code>main</code><br />
           Substitui: <code>mapa_revisao_refatoracao.html</code> e <code>roteiro_testes_manuais.html</code>
         </div>
@@ -502,23 +621,39 @@
       <a href="#checagem">Checklist de Validacao</a>
       <a href="#relatorio">Relatorio Rapido</a>
       <a href="#proximos">Proximos Passos</a>
+      <a href="#retomada">Retomada em 2 Semanas</a>
     </aside>
 
     <main class="content">
       <section class="hero" id="status">
-        <h2>Status Atual</h2>
-        <p>O projeto saiu da fase de incerteza estrutural e entrou numa fase de estabilizacao com limpeza incremental. O motor canonico ja esta na <code>main</code>, o fluxo de publicacao foi validado, e as agendas funcionaram em desktop e celular no estado atual da producao.</p>
-        <div class="badge-row">
-          <span class="badge">Motor canonico ativo</span>
-          <span class="badge">Gantt validado</span>
-          <span class="badge">Turnos reais funcionando</span>
-          <span class="badge">Agendas publica e discente estaveis</span>
-          <span class="badge">Merge na main concluido</span>
+        <div class="hero-grid">
+          <div>
+            <div class="section-head">
+              <span class="section-icon" aria-hidden="true">&#128640;</span>
+              <h2>Status Atual</h2>
+            </div>
+            <p class="lead">O projeto saiu da fase de incerteza estrutural e entrou em estabilizacao com limpeza incremental. O motor canonico ja esta na <code>main</code>, o fluxo de publicacao foi validado, e as agendas funcionaram em desktop e celular no estado atual da producao.</p>
+            <div class="badge-row">
+              <span class="badge">Motor canonico ativo</span>
+              <span class="badge">Gantt validado</span>
+              <span class="badge">Turnos reais funcionando</span>
+              <span class="badge">Agendas publica e discente estaveis</span>
+              <span class="badge">Merge na main concluido</span>
+            </div>
+          </div>
+          <aside class="hero-note" aria-label="Resumo da rodada atual">
+            <h3>Janela atual</h3>
+            <ul>
+              <li>Projeto em estado confiavel para pausa curta.</li>
+              <li>Proxima retomada prevista em cerca de <strong>2 semanas</strong>.</li>
+              <li>Foco da volta: conflitos, exportacao, importacao e publicacao.</li>
+            </ul>
+          </aside>
         </div>
         <div class="summary">
           <div class="stat">
             <div class="label">Produto funcional</div>
-            <div class="value">95%</div>
+            <div class="value">96%</div>
           </div>
           <div class="stat">
             <div class="label">Arquitetura estabilizada</div>
@@ -536,7 +671,10 @@
       </section>
 
       <section id="conquistas">
-        <h2>Conquistas Consolidadas</h2>
+        <div class="section-head">
+          <span class="section-icon" aria-hidden="true">&#10024;</span>
+          <h2>Conquistas Consolidadas</h2>
+        </div>
         <div class="grid">
           <article class="card">
             <h4>Grade Semanal</h4>
@@ -544,7 +682,7 @@
           </article>
           <article class="card">
             <h4>Motor Canonico</h4>
-            <p>O sistema passou a trabalhar com <code>modo</code>, projeção real de oferta e regras mais consistentes para conflitos, exportacoes e visualizacoes.</p>
+            <p>O sistema passou a trabalhar com <code>modo</code>, projecao real de oferta e regras mais consistentes para conflitos, exportacoes e visualizacoes.</p>
           </article>
           <article class="card">
             <h4>Gantt e Calendarios</h4>
@@ -558,7 +696,10 @@
       </section>
 
       <section id="placar">
-        <h2>Placar da Fase</h2>
+        <div class="section-head">
+          <span class="section-icon" aria-hidden="true">&#128202;</span>
+          <h2>Placar da Fase</h2>
+        </div>
         <div class="table-wrap">
           <table>
             <thead>
@@ -613,7 +754,10 @@
       </section>
 
       <section id="principios">
-        <h2>Principios Operacionais</h2>
+        <div class="section-head">
+          <span class="section-icon" aria-hidden="true">&#129504;</span>
+          <h2>Principios Operacionais</h2>
+        </div>
         <ul>
           <li>Nao fazer limpezas em lote sem validacao humana.</li>
           <li>Toda remocao de arquivo deve vir acompanhada de teste rapido e commit proprio.</li>
@@ -622,12 +766,15 @@
           <li>Priorizar pequenas correcoes de UI e clareza antes de grandes reorganizacoes novas.</li>
         </ul>
         <div class="callout info">
-          O projeto ja fez a transicao estrutural dificil. A fase atual nao pede reinvencao; pede acabamento tecnico, reducao de ruído e manutencao segura.
+          O projeto ja fez a transicao estrutural dificil. A fase atual nao pede reinvencao; pede acabamento tecnico, reducao de ruido e manutencao segura.
         </div>
       </section>
 
       <section id="implementacoes">
-        <h2>Implementacoes Futuras</h2>
+        <div class="section-head">
+          <span class="section-icon" aria-hidden="true">&#128295;</span>
+          <h2>Implementacoes Futuras</h2>
+        </div>
         <div class="table-wrap">
           <table>
             <thead>
@@ -679,7 +826,10 @@
       </section>
 
       <section id="transicao">
-        <h2>Transicao das Agendas</h2>
+        <div class="section-head">
+          <span class="section-icon" aria-hidden="true">&#128260;</span>
+          <h2>Transicao das Agendas</h2>
+        </div>
         <p>A estrategia recomendada permanece a mesma:</p>
         <ol>
           <li>manter <code>agenda_discente.html</code> funcional e acessivel;</li>
@@ -693,7 +843,10 @@
       </section>
 
       <section id="publicacao-pl">
-        <h2>Publicacao por PL</h2>
+        <div class="section-head">
+          <span class="section-icon" aria-hidden="true">&#128194;</span>
+          <h2>Publicacao por PL</h2>
+        </div>
         <p>O projeto ja esta pronto para evoluir sem multiplicar HTMLs publicos. A ideia continua sendo manter uma unica <code>agenda_publica.html</code> e deslocar a selecao do PL para configuracao e catalogo publico.</p>
         <ul>
           <li><code>publicacoes/publicacao_config.json</code> ja existe;</li>
@@ -707,7 +860,10 @@
       </section>
 
       <section id="arquitetura-futura">
-        <h2>Fatiamento do ui.js</h2>
+        <div class="section-head">
+          <span class="section-icon" aria-hidden="true">&#129521;</span>
+          <h2>Fatiamento do ui.js</h2>
+        </div>
         <p>O maior ponto restante de manutenibilidade esta concentrado em <code>js/ui.js</code>. A proxima rodada estrutural deve reduzir o risco de regressao sem trocar o comportamento visivel do sistema.</p>
         <ul>
           <li>extrair modulo da Grade Semanal e faixas;</li>
@@ -722,7 +878,10 @@
       </section>
 
       <section id="qa">
-        <h2>QA Automatizado</h2>
+        <div class="section-head">
+          <span class="section-icon" aria-hidden="true">&#129514;</span>
+          <h2>QA Automatizado</h2>
+        </div>
         <p>A base atual ja conta com a suite do nucleo canonico em <code>tests/academic_rules.test.mjs</code>. O proximo salto e cobrir melhor os fluxos de integracao.</p>
         <ol>
           <li>manter <code>node --test tests/academic_rules.test.mjs</code> como check obrigatorio das limpezas;</li>
@@ -736,7 +895,10 @@
       </section>
 
       <section id="remocao">
-        <h2>Remocao Gradual de Arquivos</h2>
+        <div class="section-head">
+          <span class="section-icon" aria-hidden="true">&#128465;</span>
+          <h2>Remocao Gradual de Arquivos</h2>
+        </div>
         <p>As remocoes devem seguir um protocolo fixo para manter o risco baixo:</p>
         <ol>
           <li>escolher um bloco pequeno de arquivos com baixo risco;</li>
@@ -752,7 +914,11 @@
       </section>
 
       <section id="checagem">
-        <h2>Checklist de Validacao</h2>
+        <div class="section-head">
+          <span class="section-icon" aria-hidden="true">&#9989;</span>
+          <h2>Checklist de Validacao</h2>
+        </div>
+        <p class="lead">Use esta tabela para acompanhar cada rodada curta de validacao. A ideia agora e simples: testar pouco, confirmar, commitar e seguir.</p>
         <div class="toolbar">
           <div class="toolbar-left">
             <button class="btn-accent" id="btn-copy-report">Copiar relatorio</button>
@@ -802,13 +968,19 @@
       </section>
 
       <section id="relatorio">
-        <h2>Relatorio Rapido</h2>
+        <div class="section-head">
+          <span class="section-icon" aria-hidden="true">&#128221;</span>
+          <h2>Relatorio Rapido</h2>
+        </div>
         <p class="small">Use este campo para copiar um resumo rapido da rodada de validacao e guardar no commit, na conversa ou em anotacoes internas.</p>
         <textarea id="report-output" readonly></textarea>
       </section>
 
       <section id="proximos">
-        <h2>Proximos Passos</h2>
+        <div class="section-head">
+          <span class="section-icon" aria-hidden="true">&#127919;</span>
+          <h2>Proximos Passos</h2>
+        </div>
         <ul>
           <li>continuar testes pequenos e frequentes no fluxo principal;</li>
           <li>seguir removendo artefatos ociosos por blocos de baixo risco;</li>
@@ -816,8 +988,38 @@
           <li>ampliar o QA automatizado para publicacao, agendas e fluxos criticos;</li>
           <li>fazer correcoes minimas de UI conforme os testes apontarem necessidade;</li>
           <li>preparar o ciclo futuro de convergencia entre agenda discente e agenda publica;</li>
-          <li>deixar a publicacao por PL pronta para ativacao quando houver necessidade real institucional.</li>
+          <li>deixar a publicacao por PL pronta para ativacao quando houver necessidade real institucional;</li>
+          <li>na proxima rodada, validar com mais profundidade os conflitos por turma e por docente;</li>
+          <li>na proxima rodada, revisar exportacao, importacao e publicacao completa.</li>
         </ul>
+      </section>
+
+      <section id="retomada">
+        <div class="section-head">
+          <span class="section-icon" aria-hidden="true">&#9201;</span>
+          <h2>Retomada em 2 Semanas</h2>
+        </div>
+        <p class="lead">Este painel fica como ponto oficial de retomada do projeto. A expectativa e voltar em cerca de duas semanas para fechar a fase atual e caminhar para a finalizacao completa do app.</p>
+        <div class="timeline">
+          <article class="timeline-step">
+            <div class="step-tag">&#128161; Pausa curta</div>
+            <h4>Estado de saida</h4>
+            <p>Projeto estavel na <code>main</code>, agendas publicas funcionando e documentacao atualizada.</p>
+          </article>
+          <article class="timeline-step">
+            <div class="step-tag">&#129513; Primeira retomada</div>
+            <h4>Testes orientados</h4>
+            <p>Priorizar conflitos por turma e docente, exportacao, importacao e publicacao ponta a ponta.</p>
+          </article>
+          <article class="timeline-step">
+            <div class="step-tag">&#128736; Proxima frente</div>
+            <h4>Frentes estruturais</h4>
+            <p>Avancar no fatiamento do <code>ui.js</code>, no QA automatizado e na preparacao elegante da publicacao por PL.</p>
+          </article>
+        </div>
+        <div class="callout info">
+          Objetivo da volta: fechar o app com todas as funcionalidades principais, preservando o metodo que ja deu certo nesta fase final de refatoracao: teste curto, ajuste pequeno, commit limpo e avancos graduais.
+        </div>
       </section>
     </main>
   </div>
@@ -924,6 +1126,16 @@
           'Aluno nao precisara escolher PL manualmente.',
           'O modo plan_directory sera ativado so quando houver necessidade real.',
           'A mudanca nao deve multiplicar HTMLs publicos.'
+        ]
+      },
+      {
+        id: '11',
+        title: 'Rodada de Retomada',
+        subs: [
+          'Conflitos por turma passam na revisao manual.',
+          'Conflitos por docente passam na revisao manual.',
+          'Exportacao e importacao concluem o ciclo sem regressao.',
+          'Publicacao completa continua coerente depois das novas limpezas.'
         ]
       }
     ];
