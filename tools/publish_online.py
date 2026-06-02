@@ -368,6 +368,76 @@ def describe_source_mode(source_mode: str) -> str:
     return "Origem nao identificada."
 
 
+def update_publication_catalog(
+    repo_root: Path,
+    publication_config: dict[str, Any],
+    descriptor: dict[str, str],
+    target_path: Path,
+) -> tuple[Path | None, bool]:
+    catalog_rel = publication_config.get("catalogPath") or DEFAULT_PUBLICATION_CATALOG_REL
+    catalog_path = repo_root / catalog_rel
+
+    if not catalog_path.exists():
+        return None, False
+
+    try:
+        catalog_data = json.loads(catalog_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return None, False
+
+    layout_mode = publication_config.get("layoutMode") or DEFAULT_LAYOUT_MODE
+    catalog_data["layoutMode"] = layout_mode
+
+    try:
+        json_rel_path = target_path.resolve().relative_to(repo_root.resolve()).as_posix()
+    except ValueError:
+        json_rel_path = str(target_path)
+
+    new_pub = {
+        "planKey": descriptor.get("plan_key", ""),
+        "periodo": descriptor.get("periodo", ""),
+        "periodoSlug": descriptor.get("periodo_slug", ""),
+        "year": descriptor.get("year", ""),
+        "termStart": descriptor.get("term_start", ""),
+        "termEnd": descriptor.get("term_end", ""),
+        "jsonPath": json_rel_path,
+        "publishedAt": datetime.now().isoformat() + "Z",
+    }
+
+    publications = catalog_data.get("publications")
+    if not isinstance(publications, list):
+        publications = []
+
+    found = False
+    for i, pub in enumerate(publications):
+        if pub.get("year") == new_pub["year"] and pub.get("periodo") == new_pub["periodo"]:
+            publications[i] = {**pub, **new_pub}
+            found = True
+            break
+            
+    if not found:
+        publications.append(new_pub)
+        
+    catalog_data["publications"] = publications
+
+    default_pub = catalog_data.get("defaultPublication") or {}
+    default_pub.update({
+        "planKey": new_pub["planKey"],
+        "periodo": new_pub["periodo"],
+        "year": new_pub["year"],
+        "label": f"Publicacao {new_pub['periodo']} - {new_pub['year']}",
+        "jsonPath": json_rel_path,
+        "agendaPath": "agenda_publica.html",
+        "isStudentDefault": True,
+        "status": "published"
+    })
+    
+    catalog_data["defaultPublication"] = default_pub
+
+    catalog_path.write_text(json.dumps(catalog_data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    return catalog_path, True
+
+
 def print_publication_summary(
     source_mode: str,
     source_path: Path,
@@ -606,6 +676,18 @@ def main() -> int:
     else:
         print("Arquivo de destino ja continha conteudo identico; nenhuma regravacao foi necessaria.")
 
+    catalog_updated = False
+    catalog_path = None
+    if layout_mode == "plan_directory":
+        catalog_path, catalog_updated = update_publication_catalog(
+            repo_root=repo_root,
+            publication_config=publication_config,
+            descriptor=plan_descriptor,
+            target_path=target_path
+        )
+        if catalog_updated:
+            print(f"Catalogo de publicacoes atualizado: {catalog_path.relative_to(repo_root) if catalog_path else ''}")
+
     debug_print(args.debug, "target_exists_after", target_path.exists())
     debug_print(args.debug, "target_size_after", file_size_or_none(target_path))
 
@@ -641,7 +723,19 @@ def main() -> int:
         return 1
 
     run_git(repo_root, ["add", "--", rel_target], check=True)
-    if not has_staged_changes(repo_root, rel_target):
+    
+    rel_catalog = ""
+    if catalog_updated and catalog_path:
+        try:
+            rel_catalog = catalog_path.relative_to(repo_root).as_posix()
+            run_git(repo_root, ["add", "--", rel_catalog], check=True)
+        except ValueError:
+            pass
+
+    has_target_changes = has_staged_changes(repo_root, rel_target)
+    has_catalog_changes = has_staged_changes(repo_root, rel_catalog) if rel_catalog else False
+
+    if not has_target_changes and not has_catalog_changes:
         print(
             "O arquivo publico foi validado e comparado com o repositorio, mas o conteudo final ja era "
             "identico ao existente. Nao ha alteracao para commitar."

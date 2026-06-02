@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "layoutMode": "legacy_single_file",
+  "layoutMode": "plan_directory",
   "defaultJsonPath": "alocacoes_publicas.json",
   "catalogPath": "publicacoes/catalogo_publicacoes.json",
   "planDirectoryTemplate": "publicacoes/{year}/{periodo_slug}/alocacoes_publicas.json",
@@ -10,3 +10,4 @@
     "planQueryParam": "pl"
   }
 }
+
