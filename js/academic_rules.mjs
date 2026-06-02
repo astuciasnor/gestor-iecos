@@ -130,7 +130,6 @@ export function initializeWeeklyScheduleForTurma({
   preferredStart = ''
 } = {}) {
   const resolvedStart = String(preferredStart || '').trim()
-    || (String(latestAllocationEnd || '').trim() ? (addDaysISO(latestAllocationEnd, 1) || String(latestAllocationEnd || '').trim()) : '')
     || String(turmaLastStart || '').trim()
     || String(termStart || '').trim();
 

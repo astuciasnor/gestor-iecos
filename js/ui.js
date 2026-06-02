@@ -1535,6 +1535,13 @@ function collapseFaixasForNewComponent(options = {}) {
     setFaixaStatus(3, 0);
 
     applyFaixaDateAutofill({ forceSingleBounds: true, preferredStart });
+    
+    // Força o pulo da grade semanal para a data em que a disciplina vai iniciar
+    const f1Ini = document.getElementById('inp-data-inicio-f1')?.value || preferredStart;
+    if (f1Ini) {
+        setWeeklyViewByDate(f1Ini, { followFaixa: false, render: false });
+    }
+
     refreshPendingFaixaStartPickUI();
     updateWeeklyContextNote();
     if (store.selectedTurma) renderWeeklyGrid();
@@ -1907,7 +1914,7 @@ function getPreferredStartDateForCurrentTurma(options = {}) {
     if (useCurrentUI) {
         const lastUiFaixa = getLastValidFaixaFromUI();
         if (lastUiFaixa?.fim) {
-            return shiftISODate(lastUiFaixa.fim, 1) || lastUiFaixa.fim;
+            return lastUiFaixa.fim;
         }
     }
 
