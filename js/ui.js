@@ -11,6 +11,7 @@ import {
     buildSigaaExportPayload,
     computeRemainingFractionalHours,
 
+    findFirstDateWithAvailableSlot,
     filterExportableAllocations,
     generateAllocationOccurrences,
     initializeWeeklyScheduleForTurma,
@@ -1910,6 +1911,9 @@ function getFaixaStartDateValidation(faixaIndex, candidateDate) {
 function getPreferredStartDateForCurrentTurma(options = {}) {
     const { useCurrentUI = false } = options;
     const termStart = String(store.settings.termStart || inpTermStart?.value || calStart?.value || '').trim();
+    const termEnd = String(store.settings.termEnd || inpTermEnd?.value || calEnd?.value || termStart).trim();
+    const latestAllocationEnd = getLastValidAllocationEndForCurrentTurma();
+    const searchStart = latestAllocationEnd || termStart;
 
     if (useCurrentUI) {
         const lastUiFaixa = getLastValidFaixaFromUI();
@@ -1918,13 +1922,125 @@ function getPreferredStartDateForCurrentTurma(options = {}) {
         }
     }
 
-    const latestAllocationEnd = getLastValidAllocationEndForCurrentTurma();
+    const availableSlots = buildHorariosForUI()
+        .map((slot) => normalizeConflictSlotLabel(slot))
+        .filter((slot) => slot && !slot.toUpperCase().includes('INTERVALO'));
+    const preferredTailSlots = availableSlots.length > 3
+        ? availableSlots.slice(3)
+        : availableSlots.slice();
+    const occupiedSlotsByDate = buildTurmaOccupiedSlotsByDate({ turmaId: store.selectedTurma }, termStart, termEnd);
+    const holidays = (store.rawData?.feriados || []).map((item) => String(item?.data || item || '').trim()).filter(Boolean);
+    const firstGapDate = findFirstDateWithAvailableSlot({
+        termStart: searchStart,
+        termEnd,
+        availableSlots,
+        requiredFreeSlots: preferredTailSlots,
+        occupiedSlotsByDate,
+        holidays
+    });
+
     const turmaPreferred = store.selectedTurma ? store.getTurmaLastStart(store.selectedTurma) : '';
-    return initializeWeeklyScheduleForTurma({
+    return firstGapDate || initializeWeeklyScheduleForTurma({
         termStart,
         turmaLastStart: turmaPreferred,
         latestAllocationEnd
     }).firstFaixaStart || termStart;
+}
+
+// Lê a ocupação de slots diretamente das faixas das alocações, sem passar pelo
+// limite de carga horária (CH) do getCalendarEvents. Isso garante que mesmo
+// faixas extras (ex: Faixa 2 após CH esgotado na Faixa 1) sejam detectadas.
+function buildFaixaOccupiedSlotsByDateDirect(turmaId, startDate, endDate) {
+    const occupiedByDate = new Map();
+    if (!turmaId || !startDate || !endDate) return occupiedByDate;
+    const turmIdStr = String(turmaId);
+
+    store.allocations.forEach((alloc) => {
+        if (String(alloc?.turmaId) !== turmIdStr) return;
+        if (!isFaixaAllocation(alloc)) return;
+
+        const faixas = getNormalizedIntensiveFaixas(alloc);
+        faixas.forEach((faixa) => {
+            const faixaEnd = faixa.fim || faixa.inicio;
+            const rangeStart = faixa.inicio > startDate ? faixa.inicio : startDate;
+            const rangeEnd = faixaEnd < endDate ? faixaEnd : endDate;
+            if (rangeStart > rangeEnd) return;
+
+            let cursor = new Date(rangeStart + 'T12:00:00');
+            const limitDate = new Date(rangeEnd + 'T12:00:00');
+            while (cursor <= limitDate) {
+                const dow = cursor.getDay();
+                const dateStr = toISODate(cursor);
+                cursor.setDate(cursor.getDate() + 1);
+                if (dow < 1 || dow > 6) continue;
+
+                const byDay = faixa.drawnSlotsByDay || {};
+                const daySlots = (Array.isArray(byDay[dow]) && byDay[dow].length > 0)
+                    ? byDay[dow]
+                    : (Array.isArray(faixa.dias) && faixa.dias.includes(dow) ? faixa.slots || [] : []);
+
+                daySlots.forEach((rawSlot) => {
+                    const slot = normalizeConflictSlotLabel(rawSlot);
+                    if (!slot) return;
+                    if (!occupiedByDate.has(dateStr)) occupiedByDate.set(dateStr, new Set());
+                    occupiedByDate.get(dateStr).add(slot);
+                });
+            }
+        });
+    });
+
+    return occupiedByDate;
+}
+
+function getPreferredPendingStartDateForCurrentTurma() {
+    const termStart = String(store.settings.termStart || inpTermStart?.value || calStart?.value || '').trim();
+    const termEnd = String(store.settings.termEnd || inpTermEnd?.value || calEnd?.value || termStart).trim();
+    // Sempre varre desde o início do semestre para encontrar o primeiro dia com
+    // a 4ª aula livre — não usa latestAllocationEnd para evitar pular gaps.
+    const searchStart = termStart;
+
+    const availableSlots = buildHorariosForUI()
+        .map((slot) => normalizeConflictSlotLabel(slot))
+        .filter((slot) => slot && !slot.toUpperCase().includes('INTERVALO'));
+
+    // Regra: primeiro dia em que a 1ª aula OU a 4ª aula esteja livre
+    const firstSlot = availableSlots[0] || '';
+    const fourthSlot = availableSlots.length >= 4
+        ? availableSlots[3]
+        : (availableSlots[availableSlots.length - 1] || '');
+
+    if (!searchStart || !termEnd || (!firstSlot && !fourthSlot)) return searchStart || termStart;
+
+    // Lê ocupação diretamente das faixas — sem limite de CH do calendário
+    const occupiedByDate = buildFaixaOccupiedSlotsByDateDirect(store.selectedTurma, termStart, termEnd);
+    const holidays = new Set(
+        (store.rawData?.feriados || []).map((item) => String(item?.data || item || '').trim()).filter(Boolean)
+    );
+
+    // Verifica se a turma usa sábado (dia 6); caso contrário, sábado é pulado
+    // para evitar retornar um sábado "vazio" que não é dia letivo real.
+    const turmaUsaSabado = store.allocations.some((a) =>
+        String(a?.turmaId) === String(store.selectedTurma) &&
+        isFaixaAllocation(a) &&
+        getNormalizedIntensiveFaixas(a).some((f) => Array.isArray(f.dias) && f.dias.includes(6))
+    );
+
+    let cursor = new Date(searchStart + 'T12:00:00');
+    const endDateObj = new Date(termEnd + 'T12:00:00');
+    let safety = 0;
+    while (cursor <= endDateObj && safety < 500) {
+        safety++;
+        const dow = cursor.getDay();
+        const dateStr = toISODate(cursor);
+        cursor.setDate(cursor.getDate() + 1);
+        if (dow === 0 || (!turmaUsaSabado && dow === 6) || holidays.has(dateStr)) continue;
+        const occupied = occupiedByDate.get(dateStr) || new Set();
+        const firstFree = firstSlot && !occupied.has(firstSlot);
+        const fourthFree = fourthSlot && !occupied.has(fourthSlot);
+        if (firstFree || fourthFree) return dateStr;
+    }
+
+    return searchStart || termStart;
 }
 
 function resolvePreferredStartForNewComponent(options = {}) {
@@ -5889,7 +6005,10 @@ function loadAllocationIntoEditor(allocation, idsToRemove = []) {
         const hydrated = hydrateFaixasFromComponente(a, { useStoredExecution: true }) || {};
         editorFaixasAdjusted = !!hydrated.wasAdjusted;
     } else {
-        collapseFaixasForNewComponent();
+        const preferredStart = getPreferredPendingStartDateForCurrentTurma();
+        collapseFaixasForNewComponent({ preferredStart, useCurrentUI: false });
+        // Guarda preferredStart para reposicionar a grade após applyWeekAutoPositionForComponentChange
+        a._pendingPreferredStart = preferredStart;
     }
 
     const chkMulti = document.getElementById('chk-multi-docente');
@@ -5918,6 +6037,12 @@ function loadAllocationIntoEditor(allocation, idsToRemove = []) {
     updateWeeklyContextNote();
     updateWeeklyFaixaHoursDisplay();
     applyWeekAutoPositionForComponentChange({ render: false });
+    // Para pendentes: reposiciona a grade na data sugerida, que pode ter sido
+    // sobrescrita por applyWeekAutoPositionForComponentChange acima.
+    if (a._pendingPreferredStart) {
+        setWeeklyViewByDate(a._pendingPreferredStart, { followFaixa: false, render: false });
+        delete a._pendingPreferredStart;
+    }
     idsToRemove.forEach((id) => store.removeAllocation(id));
     syncAllRegularDates();
     renderWeeklyGrid();

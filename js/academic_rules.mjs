@@ -130,7 +130,7 @@ export function initializeWeeklyScheduleForTurma({
   preferredStart = ''
 } = {}) {
   const resolvedStart = String(preferredStart || '').trim()
-    || String(turmaLastStart || '').trim()
+    || String(latestAllocationEnd || '').trim()
     || String(termStart || '').trim();
 
   return {
@@ -144,14 +144,72 @@ export function resetWeeklyViewOnTurmaChange({
   turmaFirstFaixaStart = '',
   fallbackDate = ''
 } = {}) {
-  const firstFaixaStart = String(termStart || '').trim()
-    || String(turmaFirstFaixaStart || '').trim()
+  const firstFaixaStart = String(turmaFirstFaixaStart || '').trim()
+    || String(termStart || '').trim()
     || String(fallbackDate || '').trim();
 
   return {
     firstFaixaStart,
     weekStartISO: getWeekStartISO(firstFaixaStart || fallbackDate || '')
   };
+}
+
+export function findFirstDateWithAvailableSlot({
+  termStart = '',
+  termEnd = '',
+  availableSlots = [],
+  requiredFreeSlots = [],
+  occupiedSlotsByDate = {},
+  holidays = []
+} = {}) {
+  const start = String(termStart || '').trim();
+  const end = String(termEnd || '').trim() || start;
+  if (!start) return '';
+
+  const candidateSlots = normalizeSlotList(availableSlots)
+    .map((value) => String(value || '').trim())
+    .filter((value) => value && !value.toUpperCase().includes('INTERVALO'));
+
+  const targetSlots = normalizeSlotList(requiredFreeSlots)
+    .map((value) => String(value || '').trim())
+    .filter((value) => value && candidateSlots.includes(value));
+
+  if (candidateSlots.length === 0) return start;
+
+  const holidaySet = new Set(sortUniqueIsoDates(holidays));
+  const occupiedMap = occupiedSlotsByDate instanceof Map
+    ? occupiedSlotsByDate
+    : new Map(Object.entries(occupiedSlotsByDate || {}));
+  let fallbackWithAnyGap = '';
+
+  for (let current = start; current && current <= end; current = addDaysISO(current, 1)) {
+    const currentDate = toMiddayDate(current);
+    if (!currentDate) continue;
+
+    const dayOfWeek = currentDate.getDay();
+    if (dayOfWeek === 0) continue;
+    if (holidaySet.has(current)) continue;
+
+    const occupiedRaw = occupiedMap.get(current);
+    const occupiedSet = occupiedRaw instanceof Set
+      ? new Set([...occupiedRaw].map((value) => String(value || '').trim()).filter(Boolean))
+      : new Set(normalizeSlotList(Array.isArray(occupiedRaw) ? occupiedRaw : []));
+
+    const hasAnyGap = candidateSlots.some((slot) => !occupiedSet.has(slot));
+    if (!hasAnyGap) continue;
+
+    if (!fallbackWithAnyGap) fallbackWithAnyGap = current;
+
+    const hasRequiredGap = targetSlots.length > 0
+      ? targetSlots.every((slot) => !occupiedSet.has(slot))
+      : true;
+
+    if (hasRequiredGap) {
+      return current;
+    }
+  }
+
+  return fallbackWithAnyGap;
 }
 
 export function computeRemainingFractionalHours(totalWorkload = 0, accumulatedAllocatedHours = 0) {
