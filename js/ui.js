@@ -1913,7 +1913,9 @@ function getPreferredStartDateForCurrentTurma(options = {}) {
     const termStart = String(store.settings.termStart || inpTermStart?.value || calStart?.value || '').trim();
     const termEnd = String(store.settings.termEnd || inpTermEnd?.value || calEnd?.value || termStart).trim();
     const latestAllocationEnd = getLastValidAllocationEndForCurrentTurma();
-    const searchStart = latestAllocationEnd || termStart;
+    // Varre sempre desde o início do semestre para encontrar o primeiro dia com
+    // 1º slot OU 4º slot livre — não usa latestAllocationEnd para evitar pular gaps.
+    const searchStart = termStart;
 
     if (useCurrentUI) {
         const lastUiFaixa = getLastValidFaixaFromUI();
@@ -1925,18 +1927,27 @@ function getPreferredStartDateForCurrentTurma(options = {}) {
     const availableSlots = buildHorariosForUI()
         .map((slot) => normalizeConflictSlotLabel(slot))
         .filter((slot) => slot && !slot.toUpperCase().includes('INTERVALO'));
-    const preferredTailSlots = availableSlots.length > 3
-        ? availableSlots.slice(3)
-        : availableSlots.slice();
-    const occupiedSlotsByDate = buildTurmaOccupiedSlotsByDate({ turmaId: store.selectedTurma }, termStart, termEnd);
+    const firstSlot = availableSlots[0] || '';
+    const fourthSlot = availableSlots.length >= 4
+        ? availableSlots[3]
+        : (availableSlots[availableSlots.length - 1] || '');
+    const targetSlots = [firstSlot, fourthSlot].filter(Boolean);
+    const occupiedSlotsByDate = buildFaixaOccupiedSlotsByDateDirect(store.selectedTurma, termStart, termEnd);
     const holidays = (store.rawData?.feriados || []).map((item) => String(item?.data || item || '').trim()).filter(Boolean);
+    const turmaUsaSabado = store.allocations.some((a) =>
+        String(a?.turmaId) === String(store.selectedTurma) &&
+        isFaixaAllocation(a) &&
+        getNormalizedIntensiveFaixas(a).some((f) => Array.isArray(f.dias) && f.dias.includes(6))
+    );
     const firstGapDate = findFirstDateWithAvailableSlot({
         termStart: searchStart,
         termEnd,
         availableSlots,
-        requiredFreeSlots: preferredTailSlots,
+        requiredFreeSlots: targetSlots,
         occupiedSlotsByDate,
-        holidays
+        holidays,
+        requireAll: false,  // 1º slot livre OU 4º slot livre
+        skipSaturday: !turmaUsaSabado
     });
 
     const turmaPreferred = store.selectedTurma ? store.getTurmaLastStart(store.selectedTurma) : '';
@@ -5025,9 +5036,11 @@ export function initUI() {
             const discNome = normalizeDisciplinaInputValue(inputConfig.disciplina.value || '');
             const isEditingSameDisc = editingDisciplinaDraft && discNome === editingDisciplinaDraft;
             const isNewDiscSelection = !!discNome && discNome !== lastDisciplinaInputNormalized && !isEditingSameDisc;
+            let pendingPreferredStart = '';
             if (isNewDiscSelection) {
                 setComponentStartSelectionMode('auto');
-                collapseFaixasForNewComponent({ useCurrentUI: false });
+                pendingPreferredStart = getPreferredStartDateForCurrentTurma();
+                collapseFaixasForNewComponent({ preferredStart: pendingPreferredStart, useCurrentUI: false });
                 editingDisciplinaDraft = '';
             }
             lastDisciplinaInputNormalized = discNome;
@@ -5035,6 +5048,12 @@ export function initUI() {
             updateWeeklyFaixaHoursDisplay();
             if (store.selectedTurma) {
                 applyWeekAutoPositionForComponentChange({ render: false });
+                // Reposiciona a grade no início da Faixa 1 — applyWeekAutoPositionForComponentChange
+                // pode ter sobrescrito a posição definida por collapseFaixasForNewComponent.
+                const f1Start = document.getElementById('inp-data-inicio-f1')?.value;
+                if (f1Start) {
+                    setWeeklyViewByDate(f1Start, { followFaixa: false, render: false });
+                }
                 renderWeeklyGrid();
             }
             const containerSub = document.getElementById('container-sub-turma');

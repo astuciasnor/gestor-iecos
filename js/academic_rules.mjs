@@ -160,7 +160,9 @@ export function findFirstDateWithAvailableSlot({
   availableSlots = [],
   requiredFreeSlots = [],
   occupiedSlotsByDate = {},
-  holidays = []
+  holidays = [],
+  requireAll = true,
+  skipSaturday = false
 } = {}) {
   const start = String(termStart || '').trim();
   const end = String(termEnd || '').trim() || start;
@@ -188,6 +190,7 @@ export function findFirstDateWithAvailableSlot({
 
     const dayOfWeek = currentDate.getDay();
     if (dayOfWeek === 0) continue;
+    if (skipSaturday && dayOfWeek === 6) continue;
     if (holidaySet.has(current)) continue;
 
     const occupiedRaw = occupiedMap.get(current);
@@ -201,7 +204,9 @@ export function findFirstDateWithAvailableSlot({
     if (!fallbackWithAnyGap) fallbackWithAnyGap = current;
 
     const hasRequiredGap = targetSlots.length > 0
-      ? targetSlots.every((slot) => !occupiedSet.has(slot))
+      ? (requireAll
+          ? targetSlots.every((slot) => !occupiedSet.has(slot))
+          : targetSlots.some((slot) => !occupiedSet.has(slot)))
       : true;
 
     if (hasRequiredGap) {
