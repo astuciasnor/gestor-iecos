@@ -3886,19 +3886,19 @@ function buildFinalAdjustmentSuggestionMessage(suggestion) {
 
     if (suggestion?.reason === 'partial-day-same-dow') {
         return rangeLabel
-            ? `Ok, criada uma 2ª faixa automaticamente para acomodar a distribuicao de horas no final (${rangeLabel}). Como os dois dias finais caem no mesmo dia da semana, refine os slots manualmente se precisar diferenciar o fechamento.`
-            : 'Ok, criada uma 2ª faixa automaticamente para acomodar a distribuicao de horas no final. Como os dois dias finais caem no mesmo dia da semana, refine os slots manualmente se precisar.';
+            ? `Ok, 2ª faixa criada para ajuste final (${rangeLabel}). Dias finais no mesmo dia da semana — refine os slots se precisar.`
+            : 'Ok, 2ª faixa criada para ajuste final. Dias finais no mesmo dia da semana — refine os slots se precisar.';
     }
 
     if (suggestion?.reason === 'tail-regime-change') {
         return rangeLabel
-            ? `Ok, criada uma 2ª faixa automaticamente para acomodar a distribuicao de horas no final (${rangeLabel}). Os dois ultimos dias reais de aula nao seguem o regime principal — ajuste os slots se quiser refinar a distribuicao.`
-            : 'Ok, criada uma 2ª faixa automaticamente para acomodar a distribuicao de horas no final. Os dois ultimos dias reais de aula nao seguem o regime principal — ajuste os slots se quiser refinar.';
+            ? `Ok, 2ª faixa criada para ajuste final (${rangeLabel}). Ultimos dias fora do regime principal — ajuste os slots se quiser refinar.`
+            : 'Ok, 2ª faixa criada para ajuste final. Ultimos dias fora do regime principal — ajuste os slots se quiser refinar.';
     }
 
     return rangeLabel
-        ? `Ok, criada uma 2ª faixa automaticamente para acomodar a distribuicao de horas no final (${rangeLabel}). Ajuste os slots se quiser refinar a distribuicao.`
-        : 'Ok, criada uma 2ª faixa automaticamente para acomodar a distribuicao de horas no final. Ajuste os slots se quiser refinar.';
+        ? `Ok, 2ª faixa criada para ajuste final (${rangeLabel}). Ajuste os slots se quiser refinar.`
+        : 'Ok, 2ª faixa criada para ajuste final. Ajuste os slots se quiser refinar.';
 }
 
 function applyFinalAdjustmentFaixaSuggestion(suggestion, options = {}) {
