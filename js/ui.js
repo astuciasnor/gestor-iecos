@@ -3884,19 +3884,19 @@ function buildFinalAdjustmentSuggestionMessage(suggestion) {
 
     if (suggestion?.reason === 'partial-day-same-dow') {
         return rangeLabel
-            ? `Criamos automaticamente a Faixa 2 cobrindo ${rangeLabel}, do penultimo ao ultimo dia real de aula. Como os dois dias caem no mesmo dia da semana, refine manualmente se precisar diferenciar o fechamento final.`
-            : 'Criamos automaticamente a Faixa 2 do penultimo ao ultimo dia real de aula. Como os dois dias caem no mesmo dia da semana, refine manualmente se precisar diferenciar o fechamento final.';
+            ? `Ok, criada uma 2ª faixa automaticamente para acomodar a distribuicao de horas no final (${rangeLabel}). Como os dois dias finais caem no mesmo dia da semana, refine os slots manualmente se precisar diferenciar o fechamento.`
+            : 'Ok, criada uma 2ª faixa automaticamente para acomodar a distribuicao de horas no final. Como os dois dias finais caem no mesmo dia da semana, refine os slots manualmente se precisar.';
     }
 
     if (suggestion?.reason === 'tail-regime-change') {
         return rangeLabel
-            ? `Criamos automaticamente a Faixa 2 cobrindo ${rangeLabel}, porque os dois ultimos dias reais de aula ja nao seguem o regime principal da faixa anterior. Ajuste os slots finais se quiser refinar a distribuicao e a exportacao.`
-            : 'Criamos automaticamente a Faixa 2 porque os dois ultimos dias reais de aula ja nao seguem o regime principal da faixa anterior. Ajuste os slots finais se quiser refinar a distribuicao e a exportacao.';
+            ? `Ok, criada uma 2ª faixa automaticamente para acomodar a distribuicao de horas no final (${rangeLabel}). Os dois ultimos dias reais de aula nao seguem o regime principal — ajuste os slots se quiser refinar a distribuicao.`
+            : 'Ok, criada uma 2ª faixa automaticamente para acomodar a distribuicao de horas no final. Os dois ultimos dias reais de aula nao seguem o regime principal — ajuste os slots se quiser refinar.';
     }
 
     return rangeLabel
-        ? `Criamos automaticamente a Faixa 2 cobrindo ${rangeLabel}, do penultimo ao ultimo dia real de aula. Ajuste os slots finais se quiser refinar a distribuicao.`
-        : 'Criamos automaticamente a Faixa 2 do penultimo ao ultimo dia real de aula. Ajuste os slots finais se quiser refinar a distribuicao.';
+        ? `Ok, criada uma 2ª faixa automaticamente para acomodar a distribuicao de horas no final (${rangeLabel}). Ajuste os slots se quiser refinar a distribuicao.`
+        : 'Ok, criada uma 2ª faixa automaticamente para acomodar a distribuicao de horas no final. Ajuste os slots se quiser refinar.';
 }
 
 function applyFinalAdjustmentFaixaSuggestion(suggestion, options = {}) {
@@ -3917,7 +3917,7 @@ function applyFinalAdjustmentFaixaSuggestion(suggestion, options = {}) {
     switchTab('weekly');
 
     if (showToast) {
-        showToastWarning(buildFinalAdjustmentSuggestionMessage(suggestion), 'warning', 9000);
+        showToastWarning(buildFinalAdjustmentSuggestionMessage(suggestion), 'success', 9000);
     }
 }
 
@@ -6246,18 +6246,21 @@ function handleAddManual() {
             faixasConfig = Array.isArray(finalAdjustmentSuggestion.faixas)
                 ? finalAdjustmentSuggestion.faixas.map(normalizeFaixaEntry).filter(Boolean)
                 : faixasConfig;
-            finalAdjustmentNotice = `${buildFinalAdjustmentSuggestionMessage(finalAdjustmentSuggestion)} A componente sera salva com essa Faixa 2 automatica; se voce fizer novos ajustes depois, sera preciso salvar novamente.`;
+            finalAdjustmentNotice = buildFinalAdjustmentSuggestionMessage(finalAdjustmentSuggestion);
         }
 
         let nonBlockingDistributionNotice = '';
+        let nonBlockingDistributionNoticeType = 'warning';
         if (finalAdjustmentNotice) {
             nonBlockingDistributionNotice = finalAdjustmentNotice;
+            nonBlockingDistributionNoticeType = 'success';
         }
         if (execution.wasTruncatedByCH) {
             const truncatedMsg = 'A componente foi inserida, mas a ultima semana ficou parcial. Se desejar, voce pode criar uma segunda faixa para ajustar melhor a distribuicao final.';
             nonBlockingDistributionNotice = nonBlockingDistributionNotice
                 ? `${nonBlockingDistributionNotice} ${truncatedMsg}`
                 : truncatedMsg;
+            nonBlockingDistributionNoticeType = 'warning';
         }
 
         if (execution.totalHours !== effectiveCH) {
@@ -6269,6 +6272,7 @@ function handleAddManual() {
             nonBlockingDistributionNotice = nonBlockingDistributionNotice
                 ? `${nonBlockingDistributionNotice} ${diffMsg}`
                 : diffMsg;
+            if (nonBlockingDistributionNoticeType !== 'warning') nonBlockingDistributionNoticeType = 'warning';
         }
 
         const faixaHoursSummary = buildFaixaHoursSummaryFromExecution(faixasConfig, execution.byDate);
@@ -6408,7 +6412,7 @@ function handleAddManual() {
         renderOfertasList();
 
         if (nonBlockingDistributionNotice) {
-            showToastWarning(nonBlockingDistributionNotice, 'warning', 6200);
+            showToastWarning(nonBlockingDistributionNotice, nonBlockingDistributionNoticeType, 6200);
         }
 
         if (execution.wasTruncatedByCH && execution.truncationType === 'partial-day') {
