@@ -6144,24 +6144,21 @@ function loadAllocationIntoEditor(allocation, idsToRemove = []) {
     const _reeditBadgeFaixa = document.getElementById('reedit-badge-faixa');
     if (_reeditBadge) {
         _reeditBadge.classList.remove('hidden');
+        const _reeditBadgeText = document.getElementById('reedit-badge-text');
         if (isReEdit) {
             // Verde — re-editando oferta já salva
             _reeditBadge.style.background = '#f0faf4';
             _reeditBadge.style.border = '1px solid #27ae60';
             _reeditBadge.style.color = '#1e7e34';
-            if (_reeditBadgeFaixa) {
-                _reeditBadgeFaixa.closest('span').firstChild.textContent = '\u270E Re-editando oferta \u2014 ';
-                _reeditBadgeFaixa.textContent = `Faixa ${faixaToActivate}`;
-            }
+            if (_reeditBadgeText) _reeditBadgeText.textContent = '\u270E Re-editando oferta \u2014 ';
+            if (_reeditBadgeFaixa) _reeditBadgeFaixa.textContent = `Faixa ${faixaToActivate}`;
         } else {
             // Azul acinzentado — pendente, alocando pela 1ª vez
             _reeditBadge.style.background = '#eef4fb';
             _reeditBadge.style.border = '1px solid #2980b9';
             _reeditBadge.style.color = '#1a5276';
-            if (_reeditBadgeFaixa) {
-                _reeditBadgeFaixa.closest('span').firstChild.textContent = '\u270E Alocando oferta pendente \u2014 ';
-                _reeditBadgeFaixa.textContent = `Faixa ${faixaToActivate}`;
-            }
+            if (_reeditBadgeText) _reeditBadgeText.textContent = '\u270E Alocando oferta pendente \u2014 ';
+            if (_reeditBadgeFaixa) _reeditBadgeFaixa.textContent = `Faixa ${faixaToActivate}`;
         }
     }
     const _toolbar = document.getElementById('drawing-toolbar');
