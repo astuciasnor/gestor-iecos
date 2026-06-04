@@ -6080,6 +6080,9 @@ function loadAllocationIntoEditor(allocation, idsToRemove = []) {
     }
     enforceCanonicalFaixaMode();
 
+    // isReEdit: true = oferta já tinha faixas salvas (re-edição); false = pendente (1ª vez)
+    const isReEdit = isFaixaAllocation(a);
+
     if (isFaixaAllocation(a)) {
         const hydrated = hydrateFaixasFromComponente(a, { useStoredExecution: true }) || {};
         editorFaixasAdjusted = !!hydrated.wasAdjusted;
@@ -6135,11 +6138,32 @@ function loadAllocationIntoEditor(allocation, idsToRemove = []) {
     weeklyViewState.followActiveFaixa = true;
     const _drawNameEl = document.getElementById('drawing-faixa-name');
     if (_drawNameEl) _drawNameEl.textContent = `Faixa ${faixaToActivate}`;
-    // Mostra o badge compacto de re-edição (sem a toolbar grande)
+    // Mostra o badge compacto diferenciado por tipo:
+    // verde = re-edição de oferta já alocada | azul = pendente sendo alocada pela 1ª vez
     const _reeditBadge = document.getElementById('reedit-badge');
     const _reeditBadgeFaixa = document.getElementById('reedit-badge-faixa');
-    if (_reeditBadge) _reeditBadge.classList.remove('hidden');
-    if (_reeditBadgeFaixa) _reeditBadgeFaixa.textContent = `Faixa ${faixaToActivate}`;
+    if (_reeditBadge) {
+        _reeditBadge.classList.remove('hidden');
+        if (isReEdit) {
+            // Verde — re-editando oferta já salva
+            _reeditBadge.style.background = '#f0faf4';
+            _reeditBadge.style.border = '1px solid #27ae60';
+            _reeditBadge.style.color = '#1e7e34';
+            if (_reeditBadgeFaixa) {
+                _reeditBadgeFaixa.closest('span').firstChild.textContent = '\u270E Re-editando oferta \u2014 ';
+                _reeditBadgeFaixa.textContent = `Faixa ${faixaToActivate}`;
+            }
+        } else {
+            // Azul acinzentado — pendente, alocando pela 1ª vez
+            _reeditBadge.style.background = '#eef4fb';
+            _reeditBadge.style.border = '1px solid #2980b9';
+            _reeditBadge.style.color = '#1a5276';
+            if (_reeditBadgeFaixa) {
+                _reeditBadgeFaixa.closest('span').firstChild.textContent = '\u270E Alocando oferta pendente \u2014 ';
+                _reeditBadgeFaixa.textContent = `Faixa ${faixaToActivate}`;
+            }
+        }
+    }
     const _toolbar = document.getElementById('drawing-toolbar');
     if (_toolbar) _toolbar.classList.add('hidden');
 
