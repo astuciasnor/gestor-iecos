@@ -6122,6 +6122,22 @@ function loadAllocationIntoEditor(allocation, idsToRemove = []) {
     }
     idsToRemove.forEach((id) => store.removeAllocation(id));
     syncAllRegularDates();
+
+    // Ativa explicitamente o modo de desenho na Faixa 1 (ou na faixa com padrão carregado)
+    // para que a grade exiba os slots com o visual de "recém marcado" na cor original.
+    const faixaToActivate = normalizeFaixaPattern(faixasPatterns[1]).length > 0
+        ? 1
+        : ([2, 3].find((fi) => normalizeFaixaPattern(faixasPatterns[fi]).length > 0) || activeFaixaIndex || 1);
+    activeFaixaIndex = faixaToActivate;
+    window.isDrawingFaixa = faixaToActivate;
+    weeklyViewState.followActiveFaixa = true;
+    const _drawNameEl = document.getElementById('drawing-faixa-name');
+    if (_drawNameEl) _drawNameEl.textContent = `Faixa ${faixaToActivate}`;
+    const _toolbar = document.getElementById('drawing-toolbar');
+    if (_toolbar) _toolbar.classList.remove('hidden');
+    applyDrawingToolbarTheme();
+    updateDrawingViewToggleButton();
+
     renderWeeklyGrid();
     renderOfertasList();
     if (editorFaixasAdjusted) {
