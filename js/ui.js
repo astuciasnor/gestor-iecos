@@ -1503,6 +1503,8 @@ function deactivateDrawingMode() {
     updateWeeklySavePatternButton();
     const toolbar = document.getElementById('drawing-toolbar');
     if (toolbar) toolbar.classList.add('hidden');
+    const reeditBadge = document.getElementById('reedit-badge');
+    if (reeditBadge) reeditBadge.classList.add('hidden');
     renderWeeklyGrid();
 }
 
@@ -6133,10 +6135,13 @@ function loadAllocationIntoEditor(allocation, idsToRemove = []) {
     weeklyViewState.followActiveFaixa = true;
     const _drawNameEl = document.getElementById('drawing-faixa-name');
     if (_drawNameEl) _drawNameEl.textContent = `Faixa ${faixaToActivate}`;
+    // Mostra o badge compacto de re-edição (sem a toolbar grande)
+    const _reeditBadge = document.getElementById('reedit-badge');
+    const _reeditBadgeFaixa = document.getElementById('reedit-badge-faixa');
+    if (_reeditBadge) _reeditBadge.classList.remove('hidden');
+    if (_reeditBadgeFaixa) _reeditBadgeFaixa.textContent = `Faixa ${faixaToActivate}`;
     const _toolbar = document.getElementById('drawing-toolbar');
-    if (_toolbar) _toolbar.classList.remove('hidden');
-    applyDrawingToolbarTheme();
-    updateDrawingViewToggleButton();
+    if (_toolbar) _toolbar.classList.add('hidden');
 
     renderWeeklyGrid();
     renderOfertasList();
