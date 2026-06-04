@@ -5732,64 +5732,50 @@ function renderWeeklyGrid() {
         return out;
     };
 
-    // Retorna apenas as alocações da componente sendo editada (excluídas de getWeeklySlotEvents),
-    // usado para exibir o fundo colorido nas semanas fora da faixa ativa durante a edição.
+    // Retorna um evento sintético para células de outras faixas da componente em edição,
+    // permitindo exibir o fundo colorido mesmo após a alocação ter sido removida do store.
+    // Lê diretamente faixasPatterns[] (já carregados em memória pelo hydrateFaixasFromComponente).
     const getSelfAllocsForCell = (dateStr, slotLabel, dayNumber) => {
         if (!hasAnyDraftPattern || !drawingDisciplina) return [];
-        const dayEvents = Array.isArray(weeklyEventsByDate?.[dateStr]) ? weeklyEventsByDate[dateStr] : [];
-        const key = slotKey(slotLabel);
-        const seen = new Set();
-        const out = [];
 
-        if (key && dayEvents.length > 0) {
-            dayEvents.forEach((e) => {
-                if (!e || e.type === 'holiday') return;
-                if (normalizeDisciplinaInputValue(e.disciplina || '') !== drawingDisciplina) return;
+        const activeFaixa = parseInt(window.isDrawingFaixa || activeFaixaIndex, 10) || 1;
+        const cor = inputConfig.cor?.value || '#cccccc';
+        const docenteVal = inputConfig.docente?.value || '';
 
-                let eventHorario = e.horario;
-                const eTurno = e.turno ||
-                    store.rawData?.turmas?.find(t => String(t.turma_id) === String(e.turmaId))?.turno || 'Tarde';
-                if (e.sabadoManha && dayNumber === 6 && eTurno !== 'Manha' && eTurno !== 'Manhã') {
-                    eventHorario = mapSlotToTurno(e.horario, 'Manha', eTurno, store.rawData?.horarios_por_turno);
-                }
-                const eventKey = slotKey(eventHorario);
+        for (let fi = 1; fi <= 3; fi++) {
+            if (fi === activeFaixa) continue;
 
-                const listKey = Array.isArray(e.horariosOcupados)
-                    ? e.horariosOcupados.some((h) => {
-                        let hObj = h;
-                        if (e.sabadoManha && dayNumber === 6 && eTurno !== 'Manha' && eTurno !== 'Manhã') {
-                            hObj = mapSlotToTurno(h, 'Manha', eTurno, store.rawData?.horarios_por_turno);
-                        }
-                        return slotKey(hObj) === key;
-                    })
-                    : false;
+            const fPattern = normalizeFaixaPattern(faixasPatterns[fi]);
+            if (fPattern.length === 0) continue;
 
-                if (eventKey !== key && !listKey) return;
+            // Verifica se o slot/dia estão no padrão desta faixa
+            const key = slotKey(slotLabel);
+            const matchesPattern = fPattern.some(
+                (p) => p.dia === dayNumber && slotKey(p.slot) === key
+            );
+            if (!matchesPattern) continue;
 
-                const dedupe = `${e.id ?? ''}|${e.disciplina ?? ''}|${e.modo ?? ''}|${eventKey || key}|${e.subGrupo ?? ''}`;
-                if (seen.has(dedupe)) return;
-                seen.add(dedupe);
-                out.push(e);
-            });
+            // Verifica se a data está dentro do intervalo desta faixa
+            const fIni = document.getElementById(`inp-data-inicio-f${fi}`)?.value || '';
+            const fFim = document.getElementById(`inp-data-fim-f${fi}`)?.value || '';
+            if (!fIni) continue;
+            if (dateStr < fIni) continue;
+            if (fFim && dateStr > fFim) continue;
+
+            // Retorna evento sintético com a cor original da componente
+            return [{
+                id: `_edit_f${fi}`,
+                disciplina: drawingDisciplina,
+                cor,
+                docente: docenteVal,
+                modo: 'faixas',
+                turmaId: store.selectedTurma,
+                horario: slotLabel,
+                _synthetic: true
+            }];
         }
 
-        if (out.length > 0 || !key) return out;
-
-        turmaAllocs.forEach((a) => {
-            if (normalizeDisciplinaInputValue(a.disciplina || '') !== drawingDisciplina) return;
-            if (!isAllocationActiveInWeeklyCell(a, dayNumber, dateStr, slotLabel)) return;
-
-            if (isFaixaAllocation(a) && a.dataFim === dateStr && Array.isArray(a.horariosUltimoDia) && a.horariosUltimoDia.length > 0) {
-                if (!a.horariosUltimoDia.some((h) => slotKey(h) === key)) return;
-            }
-
-            const dedupe = `${a.id ?? ''}|${a.disciplina ?? ''}|${a.modo ?? ''}|${key}|${a.subGrupo ?? ''}`;
-            if (seen.has(dedupe)) return;
-            seen.add(dedupe);
-            out.push(a);
-        });
-
-        return out;
+        return [];
     };
 
     gridContainer.appendChild(createCell('header top-header', ''));
