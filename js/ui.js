@@ -5732,6 +5732,66 @@ function renderWeeklyGrid() {
         return out;
     };
 
+    // Retorna apenas as alocações da componente sendo editada (excluídas de getWeeklySlotEvents),
+    // usado para exibir o fundo colorido nas semanas fora da faixa ativa durante a edição.
+    const getSelfAllocsForCell = (dateStr, slotLabel, dayNumber) => {
+        if (!hasAnyDraftPattern || !drawingDisciplina) return [];
+        const dayEvents = Array.isArray(weeklyEventsByDate?.[dateStr]) ? weeklyEventsByDate[dateStr] : [];
+        const key = slotKey(slotLabel);
+        const seen = new Set();
+        const out = [];
+
+        if (key && dayEvents.length > 0) {
+            dayEvents.forEach((e) => {
+                if (!e || e.type === 'holiday') return;
+                if (normalizeDisciplinaInputValue(e.disciplina || '') !== drawingDisciplina) return;
+
+                let eventHorario = e.horario;
+                const eTurno = e.turno ||
+                    store.rawData?.turmas?.find(t => String(t.turma_id) === String(e.turmaId))?.turno || 'Tarde';
+                if (e.sabadoManha && dayNumber === 6 && eTurno !== 'Manha' && eTurno !== 'Manhã') {
+                    eventHorario = mapSlotToTurno(e.horario, 'Manha', eTurno, store.rawData?.horarios_por_turno);
+                }
+                const eventKey = slotKey(eventHorario);
+
+                const listKey = Array.isArray(e.horariosOcupados)
+                    ? e.horariosOcupados.some((h) => {
+                        let hObj = h;
+                        if (e.sabadoManha && dayNumber === 6 && eTurno !== 'Manha' && eTurno !== 'Manhã') {
+                            hObj = mapSlotToTurno(h, 'Manha', eTurno, store.rawData?.horarios_por_turno);
+                        }
+                        return slotKey(hObj) === key;
+                    })
+                    : false;
+
+                if (eventKey !== key && !listKey) return;
+
+                const dedupe = `${e.id ?? ''}|${e.disciplina ?? ''}|${e.modo ?? ''}|${eventKey || key}|${e.subGrupo ?? ''}`;
+                if (seen.has(dedupe)) return;
+                seen.add(dedupe);
+                out.push(e);
+            });
+        }
+
+        if (out.length > 0 || !key) return out;
+
+        turmaAllocs.forEach((a) => {
+            if (normalizeDisciplinaInputValue(a.disciplina || '') !== drawingDisciplina) return;
+            if (!isAllocationActiveInWeeklyCell(a, dayNumber, dateStr, slotLabel)) return;
+
+            if (isFaixaAllocation(a) && a.dataFim === dateStr && Array.isArray(a.horariosUltimoDia) && a.horariosUltimoDia.length > 0) {
+                if (!a.horariosUltimoDia.some((h) => slotKey(h) === key)) return;
+            }
+
+            const dedupe = `${a.id ?? ''}|${a.disciplina ?? ''}|${a.modo ?? ''}|${key}|${a.subGrupo ?? ''}`;
+            if (seen.has(dedupe)) return;
+            seen.add(dedupe);
+            out.push(a);
+        });
+
+        return out;
+    };
+
     gridContainer.appendChild(createCell('header top-header', ''));
     diasSemana.forEach((dia, idx) => {
         const dateStr = weekDates[idx] || '';
@@ -5801,6 +5861,9 @@ function renderWeeklyGrid() {
 
                 const allocsRaw = getWeeklySlotEvents(cellDate, horarioStr, i);
                 const allocs = isHolidayColumn ? [] : allocsRaw;
+                const selfAllocs = (isDrawing && !isHolidayColumn)
+                    ? getSelfAllocsForCell(cellDate, horarioStr, i)
+                    : [];
 
                 if (allocs.length > 0 && showContextWhileDrawing) renderSlotContent(cell, allocs, i);
 
@@ -5906,8 +5969,17 @@ function renderWeeklyGrid() {
                             cell.classList.add('slot-week-disabled');
                             cell.title = startPickValidation.message || `Data indisponível para o início da Faixa ${String(pendingFaixaStartPick)}.`;
                         } else if (!isInsideFaixa) {
-                            cell.classList.add('slot-week-disabled');
-                            cell.title = 'Fora do intervalo da faixa ativa nesta semana. Ajuste inicio/fim ou navegue para outra semana.';
+                            if (selfAllocs.length > 0) {
+                                // Mostra o fundo colorido da componente em edição em faixas diferentes da ativa
+                                renderSlotContent(cell, selfAllocs, i);
+                                cell.style.opacity = '0.55';
+                                cell.style.cursor = 'default';
+                                cell.style.pointerEvents = 'none';
+                                cell.title = 'Alocação desta componente em outra faixa (somente leitura).';
+                            } else {
+                                cell.classList.add('slot-week-disabled');
+                                cell.title = 'Fora do intervalo da faixa ativa nesta semana. Ajuste inicio/fim ou navegue para outra semana.';
+                            }
                         }
                     }
                 }
