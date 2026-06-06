@@ -303,8 +303,7 @@ async function loadPublicData() {
         store.settings.termEnd = localDraftSettings.termEnd || store.settings.termEnd;
         store.settings.periodo = localDraftSettings.periodo || store.settings.periodo;
         console.info('Agenda pública em modo de pré-visualização local: usando allocations do plano atual.');
-        if (!store.settings.termStart) store.settings.termStart = '2026-02-01';
-        if (!store.settings.termEnd) store.settings.termEnd = '2026-07-31';
+        applyFallbackTermDates();
         return;
     }
 
@@ -339,8 +338,23 @@ async function loadPublicData() {
         state.publicPublicationRoute = null;
     }
 
-    if (!store.settings.termStart) store.settings.termStart = '2026-02-01';
-    if (!store.settings.termEnd) store.settings.termEnd = '2026-07-31';
+    applyFallbackTermDates();
+}
+
+function applyFallbackTermDates() {
+    if (store.settings.termStart && store.settings.termEnd) return;
+    const today = new Date().toISOString().slice(0, 10);
+    const periodos = Array.isArray(store.rawData?.periodos_letivos)
+        ? store.rawData.periodos_letivos
+        : [];
+    const periodoAtual =
+        periodos.find(p => p.inicio <= today && p.fim >= today) ||
+        periodos.find(p => p.inicio >= today) ||
+        periodos[periodos.length - 1];
+    if (periodoAtual) {
+        if (!store.settings.termStart) store.settings.termStart = periodoAtual.inicio;
+        if (!store.settings.termEnd) store.settings.termEnd = periodoAtual.fim;
+    }
 }
 
 function getOfficialPlanCandidates() {

@@ -129,8 +129,10 @@ export function initializeWeeklyScheduleForTurma({
   latestAllocationEnd = '',
   preferredStart = ''
 } = {}) {
-  const resolvedStart = String(preferredStart || '').trim()
-    || String(latestAllocationEnd || '').trim()
+  const explicitPreferred = String(preferredStart || '').trim();
+  const fromEnd = latestAllocationEnd ? addDaysISO(String(latestAllocationEnd).trim(), 1) : '';
+  const resolvedStart = explicitPreferred
+    || fromEnd
     || String(termStart || '').trim();
 
   return {
@@ -144,8 +146,8 @@ export function resetWeeklyViewOnTurmaChange({
   turmaFirstFaixaStart = '',
   fallbackDate = ''
 } = {}) {
-  const firstFaixaStart = String(turmaFirstFaixaStart || '').trim()
-    || String(termStart || '').trim()
+  const firstFaixaStart = String(termStart || '').trim()
+    || String(turmaFirstFaixaStart || '').trim()
     || String(fallbackDate || '').trim();
 
   return {
