@@ -3438,6 +3438,7 @@ function computeIntensiveExecution(intense, options = {}) {
 
             if (dow === 6 && intense.sabadoManha) {
                 const turmaTurno = store.rawData?.turmas?.find(t => String(t.turma_id) === String(intense.turmaId))?.turno || 'Tarde';
+                // Remove duplicatas e garante que o mapeamento respeite a ordem das aulas (pulando intervalos)
                 daySlots = [...new Set(daySlots.map(s => mapSlotToTurno(s, turmaTurno, 'Manha', store.rawData?.horarios_por_turno)))];
             }
 
@@ -5690,8 +5691,14 @@ function renderWeeklyGrid() {
                 let eventHorario = e.horario;
                 const eTurno = e.turno ||
                     store.rawData?.turmas?.find(t => String(t.turma_id) === String(e.turmaId))?.turno || 'Tarde';
+                
+                const currentViewTurno = store.settings.turnoOferta || 
+                    store.rawData?.turmas?.find(t => String(t.turma_id) === String(store.selectedTurma))?.turno || 'Tarde';
+
                 if (e.sabadoManha && dayNumber === 6 && eTurno !== 'Manha' && eTurno !== 'Manhã') {
-                    eventHorario = mapSlotToTurno(e.horario, 'Manha', eTurno, store.rawData?.horarios_por_turno);
+                    // Se estamos vendo a Noite, e a aula é de Sábado Manhã (vinculada), 
+                    // mapeamos de volta para a visão da Noite para que o quadradinho apareça.
+                    eventHorario = mapSlotToTurno(e.horario, 'Manha', currentViewTurno, store.rawData?.horarios_por_turno);
                 }
                 const eventKey = slotKey(eventHorario);
 
@@ -5699,7 +5706,7 @@ function renderWeeklyGrid() {
                     ? e.horariosOcupados.some((h) => {
                         let hObj = h;
                         if (e.sabadoManha && dayNumber === 6 && eTurno !== 'Manha' && eTurno !== 'Manhã') {
-                            hObj = mapSlotToTurno(h, 'Manha', eTurno, store.rawData?.horarios_por_turno);
+                            hObj = mapSlotToTurno(h, 'Manha', currentViewTurno, store.rawData?.horarios_por_turno);
                         }
                         return slotKey(hObj) === key;
                     })

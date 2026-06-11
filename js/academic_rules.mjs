@@ -265,6 +265,10 @@ export function generateAllocationOccurrences({
     const slots = normalizeSlotList(slotsByDate?.[dateStr]);
     if (slots.length === 0) continue;
 
+    // Filtra apenas faixas que não sejam intervalos para contagem de carga horária
+    const classSlots = slots.filter(s => !String(s || '').toUpperCase().includes('INTERVALO'));
+    if (classSlots.length === 0) continue;
+
     const remaining = computeRemainingFractionalHours(totalWorkload, allocatedHours);
     if (Number(totalWorkload || 0) > 0 && remaining <= 0) {
       stopReason = 'workload-complete';
@@ -272,12 +276,12 @@ export function generateAllocationOccurrences({
     }
 
     const take = Number(totalWorkload || 0) > 0
-      ? Math.min(remaining, slots.length)
-      : (Number(weeklyPlannedWorkload || 0) > 0 ? Math.min(Number(weeklyPlannedWorkload || 0), slots.length) : slots.length);
+      ? Math.min(remaining, classSlots.length)
+      : (Number(weeklyPlannedWorkload || 0) > 0 ? Math.min(Number(weeklyPlannedWorkload || 0), classSlots.length) : classSlots.length);
 
     if (take <= 0) continue;
 
-    const usedSlots = slots.slice(0, take);
+    const usedSlots = classSlots.slice(0, take);
     byDate[dateStr] = usedSlots;
     allocatedHours += usedSlots.length;
     lastDate = dateStr;
