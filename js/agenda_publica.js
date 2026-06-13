@@ -1383,6 +1383,9 @@ function normalizePublicTurnoKey(value) {
         .trim()
         .toLowerCase();
 
+    if (normalized.includes('manh') && normalized.includes('tard')) return 'manha_tarde';
+    if (normalized.includes('tard') && normalized.includes('noit')) return 'tarde_noite';
+    if (normalized.includes('manh') && normalized.includes('noit')) return 'integral';
     if (normalized.includes('manh')) return 'manha';
     if (normalized.includes('tard') || normalized.includes('vesp')) return 'tarde';
     if (normalized.includes('noit')) return 'noite';
@@ -1463,6 +1466,7 @@ function getNativeTurnoLetterForEvent(event) {
     if (nativeKey === 'manha') return 'M';
     if (nativeKey === 'tarde') return 'T';
     if (nativeKey === 'noite') return 'N';
+    // Para turnos combinados (ex: Manhã+Tarde), retornamos vazio para evitar alertas de mudança de turno desnecessários
     return '';
 }
 

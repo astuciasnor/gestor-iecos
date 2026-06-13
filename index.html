@@ -582,12 +582,12 @@
             <div class="compact-row periodo-letivo-dates">
                 <div class="form-group">
                     <label>In&iacute;cio</label>
-                    <input type="date" id="term-start" disabled title="Definido pelo per&iacute;odo letivo oficial">
+                    <input type="date" id="term-start" title="Defina as datas de in&iacute;cio e fim do semestre">
                 </div>
 
                 <div class="form-group">
                     <label>Fim</label>
-                    <input type="date" id="term-end" disabled title="Definido pelo per&iacute;odo letivo oficial">
+                    <input type="date" id="term-end" title="Defina as datas de in&iacute;cio e fim do semestre">
                 </div>
             </div>
 
@@ -654,11 +654,33 @@
                 <div class="form-group">
                     <label>Disciplina</label>
                     <div class="input-row-color">
-                        <input type="color" id="inp-color" value="#e91e63" title="Escolha a cor da disciplina">
+                        <input type="color" id="inp-color" value="#e91e63" title="Escolha a cor da disciplina" list="list-cores-vibrantes">
                         <input type="text" id="inp-disciplina" list="list-disciplinas"
                             placeholder="Busque a disciplina...">
                     </div>
                     <datalist id="list-disciplinas"></datalist>
+                    <datalist id="list-cores-vibrantes">
+                        <option value="#FFADAD"></option>
+                        <option value="#FFD6A5"></option>
+                        <option value="#FDFFB6"></option>
+                        <option value="#CAFFBF"></option>
+                        <option value="#9BF6FF"></option>
+                        <option value="#A0C4FF"></option>
+                        <option value="#BDB2FF"></option>
+                        <option value="#FFC6FF"></option>
+                        <option value="#FFC2C2"></option>
+                        <option value="#FFDFD3"></option>
+                        <option value="#FFE2B9"></option>
+                        <option value="#E0BBE4"></option>
+                        <option value="#FEFFCC"></option>
+                        <option value="#ADF9FF"></option>
+                        <option value="#D9FFCF"></option>
+                        <option value="#F2C08F"></option>
+                        <option value="#FFD3FF"></option>
+                        <option value="#ECCFE9"></option>
+                        <option value="#F29898"></option>
+                        <option value="#B4D1FF"></option>
+                    </datalist>
                 </div>
 
                 <div class="form-group">

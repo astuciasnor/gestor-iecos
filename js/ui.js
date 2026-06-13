@@ -1,5 +1,5 @@
 import { store } from './store.js';
-import { getTurnoLetter, mapSlotToTurno } from './turns.js';
+import { getTurnoLetter, mapSlotToTurno, normalizeTurnoKey } from './turns.js';
 import { normalizePeriodo as normalizePeriodoLetivoCode } from './plan_storage.js';
 import { getCalendarEvents } from './calendar.js';
 import { countBusinessDays, countWeekdaysInPeriod, addBusinessDays, isDateOverlap, calculateEndDateByWeekday } from './utils.js';
@@ -4462,16 +4462,7 @@ function getOfficialPeriodoLetivoPlans() {
 }
 
 function normalizeTurnoOfertaKey(value) {
-    const normalized = String(value || '')
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
-        .toLowerCase()
-        .replace(/[^a-z0-9]/g, '');
-
-    if (normalized.includes('manh')) return 'manha';
-    if (normalized.includes('tard')) return 'tarde';
-    if (normalized.includes('noit')) return 'noite';
-    return normalized;
+    return normalizeTurnoKey(value);
 }
 
 function formatTurnoOfertaLabel(value) {
@@ -4479,6 +4470,10 @@ function formatTurnoOfertaLabel(value) {
     if (normalized === 'manha') return 'Manhã';
     if (normalized === 'tarde') return 'Tarde';
     if (normalized === 'noite') return 'Noite';
+    if (normalized === 'manha_tarde') return 'Manhã e Tarde';
+    if (normalized === 'tarde_noite') return 'Tarde e Noite';
+    if (normalized === 'manha_noite') return 'Manhã e Noite';
+    if (normalized === 'integral') return 'Integral (M+T+N)';
     return String(value || '').trim() || 'Turno';
 }
 
@@ -4493,6 +4488,20 @@ function getAvailableTurnoOfertaOptions() {
                 normalized: normalizeTurnoOfertaKey(value)
             }));
 
+        // Adiciona turnos combinados para apoiar estágios e demandas multi-turno (ex: Eng. Pesca)
+        if (options.some(o => o.normalized === 'manha') && options.some(o => o.normalized === 'tarde')) {
+            options.push({ value: 'Manhã+Tarde', label: 'Manhã e Tarde', normalized: 'manha_tarde' });
+        }
+        if (options.some(o => o.normalized === 'tarde') && options.some(o => o.normalized === 'noite')) {
+            options.push({ value: 'Tarde+Noite', label: 'Tarde e Noite', normalized: 'tarde_noite' });
+        }
+        if (options.some(o => o.normalized === 'manha') && options.some(o => o.normalized === 'noite')) {
+            options.push({ value: 'Manhã+Noite', label: 'Manhã e Noite', normalized: 'manha_noite' });
+        }
+        if (options.length > 2) {
+            options.push({ value: 'Integral', label: 'Integral (M+T+N)', normalized: 'integral' });
+        }
+
         if (options.length > 0) {
             const deduped = [];
             const seen = new Set();
@@ -4501,7 +4510,7 @@ function getAvailableTurnoOfertaOptions() {
                 seen.add(option.normalized);
                 deduped.push(option);
             });
-            const order = { manha: 1, tarde: 2, noite: 3 };
+            const order = { manha: 1, tarde: 2, noite: 3, manha_tarde: 4, tarde_noite: 5, manha_noite: 6, integral: 7 };
             return deduped.sort((a, b) => {
                 const orderA = order[a.normalized] || 99;
                 const orderB = order[b.normalized] || 99;
@@ -4868,6 +4877,29 @@ function initPeriodoLetivoETurno() {
             applyPlanContextToUI(selectedMeta || { periodo: selPeriodo.value });
         });
     }
+
+    if (inpTermStart) {
+        inpTermStart.addEventListener('change', () => {
+            applyPlanContextFromInputs({ termStart: inpTermStart.value });
+        });
+    }
+    if (inpTermEnd) {
+        inpTermEnd.addEventListener('change', () => {
+            applyPlanContextFromInputs({ termEnd: inpTermEnd.value });
+        });
+    }
+
+    if (calStart) {
+        calStart.addEventListener('change', () => {
+            applyPlanContextFromInputs({ termStart: calStart.value });
+        });
+    }
+    if (calEnd) {
+        calEnd.addEventListener('change', () => {
+            applyPlanContextFromInputs({ termEnd: calEnd.value });
+        });
+    }
+
     applyPlanContextFromInputs({ options: { resetDraftOnChange: false } });
     if (selTurnoOferta) {
         selTurnoOferta.addEventListener('change', () => {
@@ -5045,6 +5077,11 @@ export function initUI() {
                 pendingPreferredStart = getPreferredStartDateForCurrentTurma();
                 collapseFaixasForNewComponent({ preferredStart: pendingPreferredStart, useCurrentUI: false });
                 editingDisciplinaDraft = '';
+                
+                // Aplica a cor automática (da paleta de 20 cores ou do JSON)
+                if (inputConfig.cor) {
+                    inputConfig.cor.value = store.getDisciplinaColor(discNome);
+                }
             }
             lastDisciplinaInputNormalized = discNome;
             updateWeeklyFaixasTitleDisciplina();

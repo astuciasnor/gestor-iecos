@@ -11,7 +11,7 @@ import {
 } from './plan_storage.js';
 import { generateUUID } from './utils.js';
 
-import { normalizeTurnoKey } from './turns.js';
+import { normalizeTurnoKey, getHorariosByTurno } from './turns.js';
 
 export function normalizeLoadedAllocation(alloc) {
   if (!alloc || typeof alloc !== 'object') return alloc;
@@ -306,13 +306,11 @@ class Store {
     if (!turmaObj) return [];
 
     const turno = this.settings.turnoOferta || turmaObj.turno || 'Tarde';
-
     const hp = this.rawData.horarios_por_turno;
+
     if (hp && typeof hp === 'object') {
-      if (Array.isArray(hp[turno])) return hp[turno];
-      const normalizedTurno = normalizeTurnoKey(turno);
-      const key = Object.keys(hp).find((k) => normalizeTurnoKey(k) === normalizedTurno);
-      if (key && Array.isArray(hp[key])) return hp[key];
+      const slots = getHorariosByTurno(turno, hp);
+      if (slots && slots.length > 0) return slots;
     }
 
     if (Array.isArray(this.rawData.horarios)) {
@@ -330,9 +328,31 @@ class Store {
   getDisciplinaColor(nomeComponente) {
     if (!this.rawData) return '#e0e0e0';
 
+    const normalizedReq = String(nomeComponente || '').trim().toUpperCase();
     const comps = this.rawData.componentes || [];
-    const c = comps.find((x) => x.componente === nomeComponente);
-    return c ? (c.cor || '#e0e0e0') : '#e0e0e0';
+    
+    // 1. Tenta achar no JSON pelo nome exato
+    const c = comps.find((x) => String(x.componente || '').trim().toUpperCase() === normalizedReq);
+    if (c && c.cor) return c.cor;
+
+    // 2. Fallback: Paleta de 20 Cores Vibrantes (determinístico por nome)
+    const VIBRANT_PALETTE = [
+      '#FFADAD', '#FFD6A5', '#FDFFB6', '#CAFFBF', '#9BF6FF', 
+      '#A0C4FF', '#BDB2FF', '#FFC6FF', '#FFC2C2', '#FFDFD3',
+      '#FFE2B9', '#E0BBE4', '#FEFFCC', '#ADF9FF', '#D9FFCF', 
+      '#F2C08F', '#FFD3FF', '#ECCFE9', '#F29898', '#B4D1FF'
+    ];
+
+    if (!normalizedReq) return '#e0e0e0';
+
+    // Gera um hash simples do nome para escolher a cor
+    let hash = 0;
+    for (let i = 0; i < normalizedReq.length; i++) {
+      hash = (hash << 5) - hash + normalizedReq.charCodeAt(i);
+      hash |= 0; 
+    }
+    const index = Math.abs(hash) % VIBRANT_PALETTE.length;
+    return VIBRANT_PALETTE[index];
   }
 
 }

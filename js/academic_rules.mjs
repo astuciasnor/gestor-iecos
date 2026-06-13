@@ -83,12 +83,21 @@ export function resolveActiveAcademicPeriod({ plans = [], preferredMeta = null, 
   const preferredYear = String(preferred.termStart || '').slice(0, 4);
   const activeNow = officialPlans.find((plan) => plan.termStart <= todayIso && plan.termEnd >= todayIso);
   const nextPlan = officialPlans.find((plan) => plan.termStart >= todayIso);
-  const exactDateMatch = officialPlans.find(
-    (plan) => plan.termStart === preferred.termStart && plan.termEnd === preferred.termEnd
-  );
+  const exactMatch = officialPlans.find((plan) => plan.key === preferred.key);
+  if (exactMatch) return exactMatch;
 
-  return officialPlans.find((plan) => plan.key === preferred.key)
-    || officialPlans.find((plan) => plan.periodo === preferred.periodo && plan.termStart === preferred.termStart && plan.termEnd === preferred.termEnd)
+  // Se o preferred já é um plano completo e não bateu no exato, 
+  // e estamos tentando evitar o "snap" automático para datas oficiais indesejadas
+  if (preferred.key && preferred.termStart && preferred.termEnd) {
+      // Só faz snap se as datas coincidirem exatamente
+      const dateMatch = officialPlans.find(p => p.termStart === preferred.termStart && p.termEnd === preferred.termEnd);
+      if (dateMatch) return dateMatch;
+      
+      // Caso contrário, mantemos o preferred (customizado)
+      return preferred;
+  }
+
+  return officialPlans.find((plan) => plan.periodo === preferred.periodo && plan.termStart === preferred.termStart && plan.termEnd === preferred.termEnd)
     || exactDateMatch
     || officialPlans.find((plan) => String(plan.ano || '') === preferredYear && plan.periodo === preferred.periodo)
     || officialPlans.find((plan) => plan.periodo === preferred.periodo)

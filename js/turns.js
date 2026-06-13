@@ -2,13 +2,65 @@ export function normalizeTurnoKey(value) {
   const normalized = String(value || '')
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase()
-    .replace(/[^a-z0-9]/g, '');
+    .toLowerCase();
 
+  if (normalized.includes('manh') && normalized.includes('tard') && normalized.includes('noit')) return 'integral';
+  if (normalized.includes('manh') && normalized.includes('tard')) return 'manha_tarde';
+  if (normalized.includes('tard') && normalized.includes('noit')) return 'tarde_noite';
+  if (normalized.includes('manh') && normalized.includes('noit')) return 'manha_noite';
+  if (normalized.includes('integral')) return 'integral';
+  
   if (normalized.includes('manh')) return 'manha';
   if (normalized.includes('tard')) return 'tarde';
-  if (normalized.includes('noit')) return 'noite';
+  if (normalized.includes('noit') || normalized.includes('noite')) return 'noite';
   return normalized;
+}
+
+export function getHorariosByTurno(turno, hp) {
+  if (!hp || typeof hp !== 'object') return [];
+  const normalizedTurno = normalizeTurnoKey(turno);
+
+  const getSlice = (norm) => {
+    const key = Object.keys(hp).find(k => normalizeTurnoKey(k) === norm);
+    return (key && Array.isArray(hp[key])) ? hp[key] : [];
+  };
+
+  if (normalizedTurno === 'manha_tarde') {
+    const manha = getSlice('manha');
+    const tarde = getSlice('tarde');
+    const combined = [...manha];
+    if (manha.length > 0 && tarde.length > 0) combined.push('INTERVALO (Almoço)');
+    return [...combined, ...tarde];
+  }
+  if (normalizedTurno === 'tarde_noite') {
+    const tarde = getSlice('tarde');
+    const noite = getSlice('noite');
+    const combined = [...tarde];
+    if (tarde.length > 0 && noite.length > 0) combined.push('INTERVALO (Jantar)');
+    return [...combined, ...noite];
+  }
+  if (normalizedTurno === 'manha_noite') {
+    const manha = getSlice('manha');
+    const noite = getSlice('noite');
+    const combined = [...manha];
+    if (manha.length > 0 && noite.length > 0) combined.push('INTERVALO (Manhã-Noite)');
+    return [...combined, ...noite];
+  }
+  if (normalizedTurno === 'integral') {
+    const manha = getSlice('manha');
+    const tarde = getSlice('tarde');
+    const noite = getSlice('noite');
+    let combined = [...manha];
+    if (manha.length > 0 && tarde.length > 0) combined.push('INTERVALO (Almoço)');
+    combined = [...combined, ...tarde];
+    if (tarde.length > 0 && noite.length > 0) combined.push('INTERVALO (Jantar)');
+    return [...combined, ...noite];
+  }
+
+  const key = Object.keys(hp).find((k) => k === turno || normalizeTurnoKey(k) === normalizedTurno);
+  if (key && Array.isArray(hp[key])) return hp[key];
+
+  return [];
 }
 
 export function getTurnoLetter(slotString) {
@@ -26,23 +78,15 @@ export function getTurnoLetter(slotString) {
 export function mapSlotToTurno(slotString, fromTurno, toTurno, horariosPorTurno) {
   if (!horariosPorTurno) return slotString;
   const hp = horariosPorTurno;
-  
-  const getArr = (turno) => {
-    if (Array.isArray(hp[turno])) return hp[turno];
-    const normalized = normalizeTurnoKey(turno);
-    const key = Object.keys(hp).find((k) => normalizeTurnoKey(k) === normalized);
-    if (key && Array.isArray(hp[key])) return hp[key];
-    return null;
-  };
 
-  let fromArr = getArr(fromTurno);
-  if (!fromArr) {
+  let fromArr = getHorariosByTurno(fromTurno, hp);
+  if (!fromArr || fromArr.length === 0) {
     fromArr = Object.values(hp).find(arr => arr.includes(slotString));
   }
   if (!fromArr) return slotString;
 
-  const toArr = getArr(toTurno);
-  if (!toArr) return slotString;
+  const toArr = getHorariosByTurno(toTurno, hp);
+  if (!toArr || toArr.length === 0) return slotString;
 
   const isInterval = (s) => String(s || '').toUpperCase().includes('INTERVALO');
   const sourceIsInt = isInterval(slotString);
