@@ -5878,6 +5878,12 @@ function renderWeeklyGrid() {
         } else {
             for (let i = 1; i <= 6; i++) {
                 const cell = createCell('slot', '');
+                
+                const tLetter = getTurnoLetter(horarioStr);
+                if (tLetter === 'M') cell.classList.add('turno-manha');
+                else if (tLetter === 'T') cell.classList.add('turno-tarde');
+                else if (tLetter === 'N') cell.classList.add('turno-noite');
+
                 const cellDate = weekDates[i - 1] || '';
                 cell.dataset.dia = i;
                 cell.dataset.horario = horarioStr;
@@ -7034,15 +7040,20 @@ function buildTurmaCalendarSlots(eventsByDate = {}, turmaId = '') {
     const slotMap = new Map();
 
     nativeSlots.forEach((slot) => {
-        const key = String(slot || '').trim();
+        const key = cleanHorarioLabel(String(slot || '').trim());
         if (!key) return;
-        slotMap.set(key, slot);
+        slotMap.set(key, key);
     });
+
+    const activeShifts = new Set();
 
     Object.values(eventsByDate || {}).forEach((events) => {
         (Array.isArray(events) ? events : []).forEach((event) => {
             if (!event || event.type === 'holiday') return;
             if (turmaId && String(event?.turmaId || '') !== String(turmaId)) return;
+
+            const tKey = event.turno || store.rawData?.turmas?.find(t => String(t.turma_id) === String(event.turmaId))?.turno;
+            if (tKey) activeShifts.add(normalizeTurnoKey(tKey));
 
             const rawSlot = String(
                 event?.horario
@@ -7054,6 +7065,18 @@ function buildTurmaCalendarSlots(eventsByDate = {}, turmaId = '') {
             const normalizedSlot = cleanHorarioLabel(rawSlot);
             if (!normalizedSlot) return;
             if (!slotMap.has(normalizedSlot)) slotMap.set(normalizedSlot, normalizedSlot);
+        });
+    });
+
+    // Injeção de turnos completos se houver ao menos um evento neles
+    const hp = store.rawData?.horarios_por_turno || {};
+    activeShifts.forEach(shiftKey => {
+        const fullShifter = getHorariosByTurno(shiftKey, hp);
+        fullShifter.forEach(s => {
+            const ks = cleanHorarioLabel(String(s || '').trim());
+            if (ks && !slotMap.has(ks)) {
+                slotMap.set(ks, ks);
+            }
         });
     });
 
@@ -9254,12 +9277,18 @@ function generateCalendarGrid(container, turmaId, docenteName, start, end, title
                         }
 
                         let rowStyle = '';
-                        if (isTurnoDividerSlot(slotTime) || turnoBoundarySlots.has(slotTime)) {
+                        if (isTurnoDividerSlot(slotTime) || (typeof turnoBoundarySlots !== 'undefined' && turnoBoundarySlots.has(slotTime))) {
                             rowStyle = 'border-top: 2px dashed #bdc3c7; margin-top: 2px; padding-top: 2px;';
                         }
+                        
+                        let turnoClass = '';
+                        const tLetter = getTurnoLetter(slotTime);
+                        if (tLetter === 'M') turnoClass = 'turno-manha';
+                        else if (tLetter === 'T') turnoClass = 'turno-tarde';
+                        else if (tLetter === 'N') turnoClass = 'turno-noite';
 
                         html += `
-              <div class="cal-slot-row" style="${rowStyle}">
+              <div class="cal-slot-row ${turnoClass}" style="${rowStyle}">
                 <div class="cal-slot-time">${timeLabel}</div>
                 <div class="${className}" style="${style}" ${tooltip}>${content}</div>
               </div>`;

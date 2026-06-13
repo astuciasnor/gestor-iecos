@@ -1165,6 +1165,16 @@ input[type="date"] { color-scheme: dark; }
 } 
 .timetable .slot:hover { background: #f8f9fa; }
 
+/* Cores de Fundo por Turno (Semanal e Mensal) */
+.turno-manha { background-color: rgba(255, 235, 156, 0.22) !important; } /* Amarelo */
+.turno-tarde { background-color: rgba(186, 225, 255, 0.20) !important; } /* Azul */
+.turno-noite { background-color: rgba(224, 187, 228, 0.25) !important; } /* Roxo/Cinza */
+
+/* Ajustes específicos para a Grade Mensal */
+.cal-slot-row.turno-manha .cal-slot-time { background-color: #f1c40f33; }
+.cal-slot-row.turno-tarde .cal-slot-time { background-color: #3498db33; }
+.cal-slot-row.turno-noite .cal-slot-time { background-color: #9b59b633; }
+
 /* Cards padronizados da Grade Semanal */
 #weekly-grid .mini-card-container {
     display: flex;
