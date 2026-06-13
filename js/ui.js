@@ -7053,6 +7053,7 @@ function buildTurmaCalendarSlots(eventsByDate = {}, turmaId = '') {
             if (turmaId && String(event?.turmaId || '') !== String(turmaId)) return;
 
             const tKey = event.turno || store.rawData?.turmas?.find(t => String(t.turma_id) === String(event.turmaId))?.turno;
+            // Usamos a normalização do turns.js que é a fonte definitiva
             if (tKey) activeShifts.add(normalizeTurnoKey(tKey));
 
             const rawSlot = String(
@@ -7072,12 +7073,14 @@ function buildTurmaCalendarSlots(eventsByDate = {}, turmaId = '') {
     const hp = store.rawData?.horarios_por_turno || {};
     activeShifts.forEach(shiftKey => {
         const fullShifter = getHorariosByTurno(shiftKey, hp);
-        fullShifter.forEach(s => {
-            const ks = cleanHorarioLabel(String(s || '').trim());
-            if (ks && !slotMap.has(ks)) {
-                slotMap.set(ks, ks);
-            }
-        });
+        if (Array.isArray(fullShifter)) {
+            fullShifter.forEach(s => {
+                const ks = cleanHorarioLabel(String(s || '').trim());
+                if (ks && !slotMap.has(ks)) {
+                    slotMap.set(ks, ks);
+                }
+            });
+        }
     });
 
     return [...slotMap.values()]
