@@ -84,18 +84,8 @@ export function resolveActiveAcademicPeriod({ plans = [], preferredMeta = null, 
   const activeNow = officialPlans.find((plan) => plan.termStart <= todayIso && plan.termEnd >= todayIso);
   const nextPlan = officialPlans.find((plan) => plan.termStart >= todayIso);
   const exactMatch = officialPlans.find((plan) => plan.key === preferred.key);
+  const exactDateMatch = officialPlans.find((plan) => plan.termStart === preferred.termStart && plan.termEnd === preferred.termEnd);
   if (exactMatch) return exactMatch;
-
-  // Se o preferred já é um plano completo e não bateu no exato, 
-  // e estamos tentando evitar o "snap" automático para datas oficiais indesejadas
-  if (preferred.key && preferred.termStart && preferred.termEnd) {
-      // Só faz snap se as datas coincidirem exatamente
-      const dateMatch = officialPlans.find(p => p.termStart === preferred.termStart && p.termEnd === preferred.termEnd);
-      if (dateMatch) return dateMatch;
-      
-      // Caso contrário, mantemos o preferred (customizado)
-      return preferred;
-  }
 
   return officialPlans.find((plan) => plan.periodo === preferred.periodo && plan.termStart === preferred.termStart && plan.termEnd === preferred.termEnd)
     || exactDateMatch
@@ -375,8 +365,6 @@ export function filterExportableAllocations(allocations = []) {
 }
 
 export function buildSigaaExportPayload({
-  generatedAt = '',
-  plan = null,
   cursoSigla = '',
   turmaId = '',
   turmaLabel = '',
@@ -386,8 +374,6 @@ export function buildSigaaExportPayload({
   ofertas = []
 } = {}) {
   return {
-    generatedAt: generatedAt || new Date().toISOString(),
-    plan,
     cursoSigla: String(cursoSigla || '').trim(),
     turmaId: String(turmaId || '').trim(),
     turmaLabel: String(turmaLabel || '').trim(),

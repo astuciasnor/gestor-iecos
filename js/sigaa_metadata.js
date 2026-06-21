@@ -5,10 +5,8 @@ export function buildSigaaOfertaBase(allocation, info = {}) {
     return {
         componente: allocation?.disciplina || '',
         codigo: info.codigo || '',
-        modo: allocation?.modo || '',
         cargaHoraria: allocation?.ch || info.ch || 0,
-        docente: allocation?.docente || '',
-        subGrupo: allocation?.subGrupo || ''
+        docente: allocation?.docente || ''
     };
 }
 
@@ -67,7 +65,6 @@ export function buildSigaaOferta(offerGroup, planContext, contextMap) {
     return {
         ...buildSigaaOfertaBase(base, info),
         docente: offerGroup?.docenteLabel || base.docente || '',
-        subGrupo: offerGroup?.subGrupo || base.subGrupo || '',
         horarioSigaa: buildSigaaHorarioResumo(faixas, contextMap.formatDateBR),
         faixas
     };
@@ -114,8 +111,6 @@ export function buildSigaaMetadataPayload(dataContext, contextMap) {
     }
 
     return buildSigaaExportPayload({
-        generatedAt: new Date().toISOString(),
-        plan: planContext.plan,
         cursoSigla: store.selectedCurso || '',
         turmaId: String(turmaId),
         turmaLabel,

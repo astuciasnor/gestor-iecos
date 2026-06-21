@@ -43,6 +43,21 @@ test('resolveActiveAcademicPeriod falls back to the active plan when the preferr
   assert.equal(resolved.periodo, 'PL2');
 });
 
+test('resolveActiveAcademicPeriod does not break when preferred metadata is partial', () => {
+  const resolved = resolveActiveAcademicPeriod({
+    plans: [
+      { periodo: 'PL1', termStart: '2026-01-05', termEnd: '2026-03-06', ano: 2026 },
+      { periodo: 'PL2', termStart: '2026-03-09', termEnd: '2026-06-30', ano: 2026 }
+    ],
+    preferredMeta: { periodo: 'PL4' },
+    today: '2026-03-28'
+  });
+
+  assert.equal(resolved.periodo, 'PL2');
+  assert.equal(resolved.termStart, '2026-03-09');
+  assert.equal(resolved.termEnd, '2026-06-30');
+});
+
 test('reconcileTurmaSelectionAfterPLChange keeps a valid turma and clears an invalid one', () => {
   const turmas = [
     { turma_id: 'EP2026', sigla: 'EP' },
@@ -215,7 +230,7 @@ test('filterExportableAllocations excludes pending canonical allocations', () =>
   );
 });
 
-test('buildSigaaExportPayload trims fields and preserves plan metadata', () => {
+test('buildSigaaExportPayload trims fields and drops internal metadata', () => {
   const payload = buildSigaaExportPayload({
     generatedAt: '2026-03-28T12:00:00.000Z',
     plan: { key: '2026-pl2', periodo: 'PL2' },
@@ -228,8 +243,8 @@ test('buildSigaaExportPayload trims fields and preserves plan metadata', () => {
     ofertas: [{ componente: 'Algoritmos' }, null]
   });
 
-  assert.equal(payload.generatedAt, '2026-03-28T12:00:00.000Z');
-  assert.deepEqual(payload.plan, { key: '2026-pl2', periodo: 'PL2' });
+  assert.equal(payload.generatedAt, undefined);
+  assert.equal(payload.plan, undefined);
   assert.equal(payload.cursoSigla, 'EP');
   assert.equal(payload.turmaId, 'EP2026');
   assert.equal(payload.turmaLabel, 'EP2026_BL1');

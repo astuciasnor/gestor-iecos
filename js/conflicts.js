@@ -14,6 +14,7 @@ function addPairConflictEntry(targetMap, key, entry) {
       slot: entry.slot,
       turmas: new Set(entry.turmas || []),
       componentes: new Set(entry.componentes || []),
+      importado: false,
       dates: []
     });
   }
@@ -21,6 +22,7 @@ function addPairConflictEntry(targetMap, key, entry) {
   const current = targetMap.get(key);
   current.shift = current.shift || entry.shift;
   current.slot = current.slot || entry.slot;
+  if (entry.importado) current.importado = true;
   (entry.turmas || []).forEach((turma) => current.turmas.add(turma));
   (entry.componentes || []).forEach((componente) => current.componentes.add(componente));
   if (entry.date) current.dates.push(entry.date);
@@ -80,7 +82,8 @@ export function detectTeacherConflicts({
             shift,
             slot,
             turmas: orderedTurmas,
-            componentes: orderedComponentes
+            componentes: orderedComponentes,
+            importado: !!(eventA?.importado || eventB?.importado)
           });
         }
       }
@@ -102,6 +105,7 @@ export function detectTeacherConflicts({
         slot: entry.slot || '',
         turmas,
         componentes,
+        importado: !!entry.importado,
         description: `Choque no mesmo horario (${entry.slot || 'horario nao identificado'}).`
       };
     })

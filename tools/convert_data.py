@@ -7,7 +7,7 @@ convert_data.py
 Planilha esperada:
 
 docentes:
-  docente | unidade | subunidade
+  docente | unidade | subunidade | apelido (opcional)
 
 componentes:
   sigla | periodo | codigo | cor | componente | abreviacao | ch
@@ -190,6 +190,7 @@ def build_json_from_excel(xlsx_path: Path) -> Dict[str, Any]:
             "docente": to_str(row.get("docente")),
             "unidade": to_str(row.get("unidade")),
             "subunidade": to_str(row.get("subunidade")),
+            "apelido": to_str(row.get("apelido")),
         }
         for row in raw["docentes"]
     ]

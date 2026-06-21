@@ -1,368 +1,440 @@
 {
   "meta": {
-    "generated_at": "2026-06-13T09:52:54",
+    "generated_at": "2026-06-21T07:42:22",
     "source_file": "planilha_base.xlsx"
   },
   "docentes": [
     {
       "docente": "Aldemir Branco de Oliveira Filho",
       "unidade": "IECOS",
-      "subunidade": "FACIN"
+      "subunidade": "FACIN",
+      "apelido": "Aldemir"
     },
     {
       "docente": "Carlos Alberto Martins Cordeiro",
       "unidade": "IECOS",
-      "subunidade": "FEPESCA"
+      "subunidade": "FEPESCA",
+      "apelido": "Cordeiro"
     },
     {
       "docente": "Carlos Eduardo Rangel Andrade",
       "unidade": "IECOS",
-      "subunidade": "FEPESCA"
+      "subunidade": "FEPESCA",
+      "apelido": "Eduardo"
     },
     {
       "docente": "Carlos Murilo Tenório Maciel",
       "unidade": "IECOS",
-      "subunidade": "FACIN"
+      "subunidade": "FACIN",
+      "apelido": "Murilo"
     },
     {
       "docente": "Colin Robert Beasley",
       "unidade": "IECOS",
-      "subunidade": "FBIO"
+      "subunidade": "FBIO",
+      "apelido": "Colin"
     },
     {
       "docente": "Cristiana Ramalho Maciel",
       "unidade": "IECOS",
-      "subunidade": "FBIO"
+      "subunidade": "FBIO",
+      "apelido": "Cristiana"
     },
     {
       "docente": "Daniel Abreu Vasconcelos Campelo",
       "unidade": "IECOS",
-      "subunidade": "FEPESCA"
+      "subunidade": "FEPESCA",
+      "apelido": "Daniel"
     },
     {
       "docente": "Dionísio de Souza Sampaio",
       "unidade": "IECOS",
-      "subunidade": "FACIN"
+      "subunidade": "FACIN",
+      "apelido": "Dioniso"
     },
     {
       "docente": "Evaldo Martins da Silva",
       "unidade": "IECOS",
-      "subunidade": "FEPESCA"
+      "subunidade": "FEPESCA",
+      "apelido": "Evaldo"
     },
     {
       "docente": "Francisco Carlos Alberto Fonteles Holanda",
       "unidade": "IECOS",
-      "subunidade": "FEPESCA"
+      "subunidade": "FEPESCA",
+      "apelido": "Holanda"
     },
     {
       "docente": "Gláucia Caroline Silva de Oliveira",
       "unidade": "IECOS",
-      "subunidade": "FBIO"
+      "subunidade": "FBIO",
+      "apelido": "Gláucia"
     },
     {
       "docente": "Grazielle Fernanda Evangelista Gomes",
       "unidade": "IECOS",
-      "subunidade": "FEPESCA"
+      "subunidade": "FEPESCA",
+      "apelido": "Grazi"
     },
     {
       "docente": "Hudson Cleber Pereira da Silva",
       "unidade": "IECOS",
-      "subunidade": "FEPESCA"
+      "subunidade": "FEPESCA",
+      "apelido": "Hudson"
     },
     {
       "docente": "Janice Muriel Fernandes Lima da Cunha",
       "unidade": "IECOS",
-      "subunidade": "FACIN"
+      "subunidade": "FACIN",
+      "apelido": "Janice"
     },
     {
       "docente": "Juliana Araripe Gomes da Silva",
       "unidade": "IECOS",
-      "subunidade": "FACIN"
+      "subunidade": "FACIN",
+      "apelido": "Julliana"
     },
     {
       "docente": "Lilliane Miranda Freitas",
       "unidade": "IECOS",
-      "subunidade": "FACIN"
+      "subunidade": "FACIN",
+      "apelido": "Lilliane"
     },
     {
       "docente": "Lorena Batista de Moura",
       "unidade": "IECOS",
-      "subunidade": "FEPESCA"
+      "subunidade": "FEPESCA",
+      "apelido": "Lorena"
     },
     {
       "docente": "Luci Cajueiro Carneiro Pereira",
       "unidade": "IECOS",
-      "subunidade": "FBIO"
+      "subunidade": "FBIO",
+      "apelido": "Luci"
     },
     {
       "docente": "Lucinaldo da Silva Blandtt",
       "unidade": "IECOS",
-      "subunidade": "FBIO"
+      "subunidade": "FBIO",
+      "apelido": "Blandtt"
     },
     {
       "docente": "Marcelo Nazareno Vallinoto de Sousa",
       "unidade": "IECOS",
-      "subunidade": "FBIO"
+      "subunidade": "FBIO",
+      "apelido": "Vallinoto"
     },
     {
       "docente": "Marcus Emanuel Barroncas Fernandes",
       "unidade": "IECOS",
-      "subunidade": "FBIO"
+      "subunidade": "FBIO",
+      "apelido": "M. Fernandes"
     },
     {
       "docente": "Marcus Vinícius Domingues",
       "unidade": "IECOS",
-      "subunidade": "FACIN"
+      "subunidade": "FACIN",
+      "apelido": "M. Vinicius"
     },
     {
       "docente": "Maria Iracilda da Cunha Sampaio",
       "unidade": "IECOS",
-      "subunidade": "FBIO"
+      "subunidade": "FBIO",
+      "apelido": "Iracilda"
     },
     {
       "docente": "Marcos Ferreira Brabo",
       "unidade": "IECOS",
-      "subunidade": "FEPESCA"
+      "subunidade": "FEPESCA",
+      "apelido": "Brabo"
     },
     {
       "docente": "Marileide Moraes Alves",
       "unidade": "IECOS",
-      "subunidade": "FEPESCA"
+      "subunidade": "FEPESCA",
+      "apelido": "Mari"
     },
     {
       "docente": "Marivana Borges Silva",
       "unidade": "IECOS",
-      "subunidade": "FBIO"
+      "subunidade": "FBIO",
+      "apelido": "Marivana"
     },
     {
       "docente": "Moirah Paula Machado de Menezes",
       "unidade": "IECOS",
-      "subunidade": "FBIO"
+      "subunidade": "FBIO",
+      "apelido": "Moirah"
     },
     {
       "docente": "Nelane do Socorro Marques da Silva",
       "unidade": "IECOS",
-      "subunidade": "FBIO"
+      "subunidade": "FBIO",
+      "apelido": "Nelane"
     },
     {
       "docente": "Nils Asp Edwin Neto",
       "unidade": "IECOS",
-      "subunidade": "FEPESCA"
+      "subunidade": "FEPESCA",
+      "apelido": "Nils"
     },
     {
       "docente": "Pedro Andrés Chira Oliva",
       "unidade": "IECOS",
-      "subunidade": "FEPESCA"
+      "subunidade": "FEPESCA",
+      "apelido": "Pedro"
     },
     {
       "docente": "Péricles Sena do Rêgo",
       "unidade": "IECOS",
-      "subunidade": "FACIN"
+      "subunidade": "FACIN",
+      "apelido": "Péricles"
     },
     {
       "docente": "Rafael Anaisce",
       "unidade": "IECOS",
-      "subunidade": "FEPESCA"
+      "subunidade": "FEPESCA",
+      "apelido": "Rafael"
     },
     {
       "docente": "Rauquírio André Albuquerque Marinho da Costa",
       "unidade": "IECOS",
-      "subunidade": "FBIO"
+      "subunidade": "FBIO",
+      "apelido": "Rauquírio"
     },
     {
       "docente": "Rita de Cássia Oliveira dos Santos",
       "unidade": "IECOS",
-      "subunidade": "FBIO"
+      "subunidade": "FBIO",
+      "apelido": "Rita"
     },
     {
       "docente": "Roberta Sá Leitão Barboza",
       "unidade": "IECOS",
-      "subunidade": "FEPESCA"
+      "subunidade": "FEPESCA",
+      "apelido": "Roberta"
     },
     {
       "docente": "Rosigleyes Corrêa de Sousa Felix",
       "unidade": "IECOS",
-      "subunidade": "FBIO"
+      "subunidade": "FBIO",
+      "apelido": "Rosigleyse"
     },
     {
       "docente": "Sandra Nazaré Dias Bastos",
       "unidade": "IECOS",
-      "subunidade": "FBIO"
+      "subunidade": "FBIO",
+      "apelido": "Sandra"
     },
     {
       "docente": "Simoni Santos da Silva",
       "unidade": "IECOS",
-      "subunidade": "FEPESCA"
+      "subunidade": "FEPESCA",
+      "apelido": "Simoni"
     },
     {
       "docente": "Ulf Mehlig",
       "unidade": "IECOS",
-      "subunidade": "FACIN"
+      "subunidade": "FACIN",
+      "apelido": "Ulf"
     },
     {
       "docente": "Zélia Maria Pimental Nunes",
       "unidade": "IECOS",
-      "subunidade": "FEPESCA"
+      "subunidade": "FEPESCA",
+      "apelido": "Zélia"
     },
     {
       "docente": "Ana Garcês",
       "unidade": "CBRAG",
-      "subunidade": "FACED"
+      "subunidade": "FACED",
+      "apelido": "Garcês"
     },
     {
       "docente": "Priscilany Cavalcante dos Santos",
       "unidade": "IECOS",
-      "subunidade": "FACIN"
+      "subunidade": "FACIN",
+      "apelido": "Priscilany"
     },
     {
       "docente": "Fábio Batagini Quinteiro",
       "unidade": "IECOS",
-      "subunidade": "FBIO"
+      "subunidade": "FBIO",
+      "apelido": "Fábio"
     },
     {
       "docente": "Roseane Pinto",
       "unidade": "CBRAG",
-      "subunidade": "FAHIST"
+      "subunidade": "FAHIST",
+      "apelido": "Roseane"
     },
     {
       "docente": "Cleide Marques",
       "unidade": "IECOS",
-      "subunidade": "FEPESCA"
+      "subunidade": "FEPESCA",
+      "apelido": "Cleide"
     },
     {
       "docente": "Leonnan Oliveira",
       "unidade": "IECOS",
-      "subunidade": "FEPESCA"
+      "subunidade": "FEPESCA",
+      "apelido": "Leonnan"
     },
     {
       "docente": "Cláudia Xavier",
       "unidade": "IECOS",
-      "subunidade": "FBIO"
+      "subunidade": "FBIO",
+      "apelido": "Cláudia"
     },
     {
       "docente": "Iracely Rodrigues da Silva",
       "unidade": "",
-      "subunidade": ""
+      "subunidade": "",
+      "apelido": "Iracely"
     },
     {
       "docente": "Daniel Gomes de Sousa",
       "unidade": "",
-      "subunidade": ""
+      "subunidade": "",
+      "apelido": "Daniel Gomes"
     },
     {
       "docente": "Maria Neide Ramos",
       "unidade": "",
-      "subunidade": ""
+      "subunidade": "",
+      "apelido": "Neide"
     },
     {
       "docente": "Natália Reis",
       "unidade": "",
-      "subunidade": ""
+      "subunidade": "",
+      "apelido": "Natália"
     },
     {
       "docente": "Dhemersson Santos",
       "unidade": "IECOS",
-      "subunidade": "FBIO"
+      "subunidade": "FBIO",
+      "apelido": "Dhemersson"
     },
     {
       "docente": "Leiliane Rocha",
       "unidade": "",
-      "subunidade": ""
+      "subunidade": "",
+      "apelido": "Leiliane"
     },
     {
       "docente": "Vicent Ferrer",
       "unidade": "",
-      "subunidade": ""
+      "subunidade": "",
+      "apelido": "Ferrer"
     },
     {
       "docente": "Darlene Ferreira",
       "unidade": "",
-      "subunidade": ""
+      "subunidade": "",
+      "apelido": "Darlene"
     },
     {
       "docente": "Benedito Nunes",
       "unidade": "IECOS",
-      "subunidade": "FBIO"
+      "subunidade": "FBIO",
+      "apelido": "Benedito"
     },
     {
       "docente": "Cinthya Arruda",
       "unidade": "",
-      "subunidade": ""
+      "subunidade": "",
+      "apelido": "Cinthya"
     },
     {
       "docente": "Gabriel Lima",
       "unidade": "IECOS",
-      "subunidade": "Pos-Doutorando"
+      "subunidade": "Pos-Doutorando",
+      "apelido": "Gabriel"
     },
     {
       "docente": "Alessandra Mariana dos Santos Oliveira",
       "unidade": "CBRAG",
-      "subunidade": "FAMAT"
+      "subunidade": "FAMAT",
+      "apelido": "Alessandra"
     },
     {
       "docente": "Carlos Alessandro da Costa Baldez",
       "unidade": "CBRAG",
-      "subunidade": "FAMAT"
+      "subunidade": "FAMAT",
+      "apelido": "Baldez"
     },
     {
       "docente": "Deiziane Mendes Wanzeler",
       "unidade": "CBRAG",
-      "subunidade": "FAMAT"
+      "subunidade": "FAMAT",
+      "apelido": "Deiziane"
     },
     {
       "docente": "Edilene Farias Rozal",
       "unidade": "CBRAG",
-      "subunidade": "FAMAT"
+      "subunidade": "FAMAT",
+      "apelido": "Edilene"
     },
     {
       "docente": "Edson Jorge de Matos",
       "unidade": "CBRAG",
-      "subunidade": "FAMAT"
+      "subunidade": "FAMAT",
+      "apelido": "Edson"
     },
     {
       "docente": "Elizardo Fabricio Lima Lucena",
       "unidade": "CBRAG",
-      "subunidade": "FAMAT"
+      "subunidade": "FAMAT",
+      "apelido": "Elizardo"
     },
     {
       "docente": "Leandro Santos Ribeiro",
       "unidade": "CBRAG",
-      "subunidade": "FAMAT"
+      "subunidade": "FAMAT",
+      "apelido": "Leandro"
     },
     {
       "docente": "Marcos Lazaro de Souza Albuquerque",
       "unidade": "CBRAG",
-      "subunidade": "FAMAT"
+      "subunidade": "FAMAT",
+      "apelido": "Lázaro"
     },
     {
       "docente": "Maria Augusta Raposo de Barros Brito",
       "unidade": "CBRAG",
-      "subunidade": "FAMAT"
+      "subunidade": "FAMAT",
+      "apelido": "Augusta"
     },
     {
       "docente": "Marly dos Anjos Nunes",
       "unidade": "CBRAG",
-      "subunidade": "FAMAT"
+      "subunidade": "FAMAT",
+      "apelido": "Marly"
     },
     {
       "docente": "Oseas Guimarães Ferreira Neto",
       "unidade": "CBRAG",
-      "subunidade": "FAMAT"
+      "subunidade": "FAMAT",
+      "apelido": "Oseas"
     },
     {
       "docente": "Silvia Helen Ferreira dos Santos",
       "unidade": "CBRAG",
-      "subunidade": "FAMAT"
+      "subunidade": "FAMAT",
+      "apelido": "Sílvia"
     },
     {
       "docente": "Ana Mabell Seixas Alves Santos",
       "unidade": "CBRAG",
-      "subunidade": "FAMAT"
+      "subunidade": "FAMAT",
+      "apelido": "Mabell"
     },
     {
       "docente": "Leila Saraiva Mota",
       "unidade": "CBRAG",
-      "subunidade": "FAMAT"
+      "subunidade": "FAMAT",
+      "apelido": "Leila"
     }
   ],
   "cursos": [
