@@ -1,5 +1,5 @@
 import { store } from './store.js';
-import { getTurnoLetter, mapSlotToTurno, normalizeTurnoKey } from './turns.js';
+import { getTurnoLetter, mapSlotToTurno, normalizeTurnoKey, getHorariosByTurno } from './turns.js';
 import { normalizePeriodo as normalizePeriodoLetivoCode } from './plan_storage.js';
 import { getCalendarEvents } from './calendar.js';
 import { countBusinessDays, countWeekdaysInPeriod, addBusinessDays, isDateOverlap, calculateEndDateByWeekday } from './utils.js';
@@ -53,6 +53,9 @@ let faixasPatterns = {
     3: []
 };
 let editingDisciplinaDraft = '';
+// true quando a disciplina carregada no editor veio de importacao (bloco PPC ou arquivo).
+// Sobreposicao ao salvar so e permitida quando esta flag for true.
+let editingImportadoDraft = false;
 let lastDisciplinaInputNormalized = '';
 let componentStartSelectionMode = 'auto';
 window.isDrawingFaixa = null;
@@ -1050,6 +1053,18 @@ function clearPendingFaixaStartPick() {
     updateWeeklyContextNote();
 }
 
+function refreshActiveFaixaHighlight() {
+    const activeIdx = window.isDrawingFaixa
+        ? parseInt(window.isDrawingFaixa, 10)
+        : (parseInt(activeFaixaIndex, 10) || null);
+    for (let i = 1; i <= 3; i++) {
+        const row = document.getElementById(`faixa-${i}`);
+        const numCell = row ? row.querySelector('.faixa-num') : null;
+        if (!numCell) continue;
+        numCell.classList.toggle('faixa-num-active', activeIdx === i);
+    }
+}
+
 function setPendingFaixaStartPick(faixaIndex, options = {}) {
     const { quiet = false } = options;
     const idx = parseInt(faixaIndex, 10);
@@ -1492,6 +1507,7 @@ function activateDrawingMode(faixaIndex, options = {}) {
 
     if (switchToWeekly) switchTab('weekly');
     renderWeeklyGrid();
+    refreshActiveFaixaHighlight();
     if (!silent) showToastWarning(`Edicao ativa para a Faixa ${faixaIndex}.`, 'success', 1800);
 }
 
@@ -1505,6 +1521,7 @@ function deactivateDrawingMode() {
     if (toolbar) toolbar.classList.add('hidden');
     const reeditBadge = document.getElementById('reedit-badge');
     if (reeditBadge) reeditBadge.classList.add('hidden');
+    refreshActiveFaixaHighlight();
     renderWeeklyGrid();
 }
 
@@ -2658,6 +2675,40 @@ function autoEnterWeeklyEditingForFaixa(faixaIndex) {
     });
 }
 
+// Limpa as 3 faixas e reposiciona a Faixa 1 no primeiro dia com a 1ª OU a 4ª
+// aula livre (busca via getPreferredStartDateForCurrentTurma), deixando o desenho
+// pronto para recomeçar a inserção de faixas a partir dessa data.
+function handleClearFaixasRestart() {
+    if (!store.selectedTurma) {
+        showToastWarning('Selecione uma turma antes de limpar as faixas.', 'warning', 2200);
+        return;
+    }
+
+    const hasWork = [1, 2, 3].some((n) => (faixasPatterns[n]?.length || 0) > 0)
+        || [1, 2, 3].some((n) => !!document.getElementById(`inp-data-inicio-f${n}`)?.value);
+    if (hasWork && !confirm('Limpar todas as faixas e recomeçar? Os slots desenhados serão apagados e a data inicial voltará para o primeiro dia com a 1ª ou 4ª aula livre.')) {
+        return;
+    }
+
+    endDrawingDrag();
+    if (pendingFaixaStartPick) clearPendingFaixaStartPick();
+    window.isDrawingFaixa = null;
+    weeklyViewState.followActiveFaixa = false;
+    setComponentStartSelectionMode('auto');
+
+    // useCurrentUI: false força a busca da data disponível ignorando as faixas atuais.
+    collapseFaixasForNewComponent({ useCurrentUI: false });
+    autoEnterWeeklyEditingForFaixa(1);
+    updateWeeklySavePatternButton();
+    updateWeeklyFaixaHoursDisplay();
+
+    const f1Ini = document.getElementById('inp-data-inicio-f1')?.value || '';
+    const humanDate = f1Ini ? formatDateBR(f1Ini) : '';
+    showToastWarning(humanDate
+        ? `Faixas limpas. Data inicial posicionada em ${humanDate} (primeiro dia com a 1ª ou 4ª aula livre). Redesenhe os slots.`
+        : 'Faixas limpas. Redesenhe os slots para a componente.', 'warning', 2800);
+}
+
 function resolveInlineEditableFaixaIndex() {
     const disciplina = normalizeDisciplinaInputValue(inputConfig.disciplina?.value || '');
     if (!store.selectedTurma || !disciplina) return null;
@@ -2671,6 +2722,69 @@ function resolveInlineEditableFaixaIndex() {
     if (hasStart(2)) return 2;
     if (hasStart(3)) return 3;
     return null;
+}
+
+function setupWeeklyInstructionsToggle() {
+    const card = document.getElementById('weekly-instructions-card');
+    const toggle = document.getElementById('weekly-instructions-toggle');
+    if (!card || !toggle) return;
+
+    const STORAGE_KEY = 'weekly_instructions_collapsed';
+    const body = document.getElementById('weekly-instructions-body');
+
+    const positionBody = () => {
+        if (!body) return;
+        const r = toggle.getBoundingClientRect();
+        body.style.top = `${Math.round(r.bottom + 8)}px`;
+        body.style.right = `${Math.round(window.innerWidth - r.right)}px`;
+        body.style.left = 'auto';
+    };
+
+    const applyState = (collapsed) => {
+        card.classList.toggle('is-collapsed', collapsed);
+        toggle.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+        if (!collapsed) positionBody();
+    };
+
+    let collapsed = true;
+    try {
+        const stored = localStorage.getItem(STORAGE_KEY);
+        collapsed = stored === null ? true : stored === '1';
+    } catch (_) {
+        collapsed = true;
+    }
+    applyState(collapsed);
+
+    toggle.addEventListener('click', () => {
+        const nextCollapsed = !card.classList.contains('is-collapsed');
+        applyState(nextCollapsed);
+        try {
+            localStorage.setItem(STORAGE_KEY, nextCollapsed ? '1' : '0');
+        } catch (_) {
+            /* persistencia opcional */
+        }
+    });
+
+    // Popover: fecha ao clicar fora ou pressionar Esc (sem alterar a preferencia salva)
+    document.addEventListener('click', (event) => {
+        if (card.classList.contains('is-collapsed')) return;
+        if (card.contains(event.target)) return;
+        applyState(true);
+    });
+
+    document.addEventListener('keydown', (event) => {
+        if (event.key !== 'Escape') return;
+        if (card.classList.contains('is-collapsed')) return;
+        applyState(true);
+        toggle.focus();
+    });
+
+    window.addEventListener('resize', () => {
+        if (!card.classList.contains('is-collapsed')) positionBody();
+    });
+    window.addEventListener('scroll', () => {
+        if (!card.classList.contains('is-collapsed')) positionBody();
+    }, true);
 }
 
 function setupFaixaControls() {
@@ -2798,6 +2912,12 @@ function setupFaixaControls() {
             persistActiveDrawingSelection();
             deactivateDrawingMode();
         });
+    }
+
+    const btnLimparFaixas = document.getElementById('btn-limpar-faixas');
+    if (btnLimparFaixas && !btnLimparFaixas.dataset.bound) {
+        btnLimparFaixas.dataset.bound = '1';
+        btnLimparFaixas.addEventListener('click', handleClearFaixasRestart);
     }
 
     if (!window.__drawingDragListenersBound) {
@@ -4129,6 +4249,19 @@ function allocationHasTeacherMatch(alloc, teacherName) {
     return false;
 }
 
+// Retorna o rotulo curto preferido do docente para exibicao compacta (Gantt,
+// calendario, etc.). Usa o "apelido" cadastrado em dados_app.json
+// (docentes[].apelido) quando existir; caso contrario, cai no primeiro nome.
+function getDocenteShortLabel(fullName) {
+    const raw = String(fullName || '').trim();
+    if (!raw) return '';
+    const docentes = Array.isArray(store.rawData?.docentes) ? store.rawData.docentes : [];
+    const match = docentes.find((d) => teacherNamesMatch(d?.docente, raw));
+    const apelido = String(match?.apelido || '').trim();
+    if (apelido) return apelido;
+    return raw.split(/\s+/)[0] || raw;
+}
+
 function calculateTeacherTotalCH(teacherName) {
     if (!teacherName) return 0;
 
@@ -4776,6 +4909,7 @@ function updateActivePlanStatus() {
 function resetWeeklyDraftStateForPlanSwitch(preferredStart = '') {
     deactivateDrawingMode();
     editingDisciplinaDraft = '';
+    editingImportadoDraft = false;
     lastDisciplinaInputNormalized = '';
     pendingFaixaStartPick = null;
     pendingFaixaQuickActionConfirm = null;
@@ -4996,6 +5130,7 @@ function handleImportBloco() {
             disciplina: c.componente,
             docente: 'A definir',
             modo: 'pendente',
+            importado: true,
             cor: c.cor || '#bdc3c7',
             dataInicio: store.settings.termStart,
             dataFim: store.settings.termEnd,
@@ -5026,6 +5161,7 @@ function updateImportBlocoButtonState() {
 export function initUI() {
     setupCompactFaixaDateFields();
     setupFaixaControls();
+    setupWeeklyInstructionsToggle();
     setupWeeklyWeekNavigator();
     setWeeklyViewByDate(store.settings.termStart || calStart?.value || '', { followFaixa: false, render: false });
     if (selCurso) selCurso.addEventListener('change', onCursoChange);
@@ -5059,6 +5195,7 @@ export function initUI() {
                 setComponentStartSelectionMode('auto');
                 collapseFaixasForNewComponent({ useCurrentUI: false });
                 editingDisciplinaDraft = '';
+                editingImportadoDraft = false;
             }
             lastDisciplinaInputNormalized = discNome;
             updateWeeklyFaixasTitleDisciplina();
@@ -5077,6 +5214,7 @@ export function initUI() {
                 pendingPreferredStart = getPreferredStartDateForCurrentTurma();
                 collapseFaixasForNewComponent({ preferredStart: pendingPreferredStart, useCurrentUI: false });
                 editingDisciplinaDraft = '';
+                editingImportadoDraft = false;
                 
                 // Aplica a cor automática (da paleta de 20 cores ou do JSON)
                 if (inputConfig.cor) {
@@ -5254,7 +5392,7 @@ export function initUI() {
                 if (tempImportPlanMeta?.key) {
                     applyPlanContextToUI(tempImportPlanMeta, { resetDraftOnChange: true });
                 }
-                store.replaceAllocations(tempImportData);
+                store.replaceAllocations(markAllocationsAsImported(tempImportData));
                 syncAllRegularDates();
                 syncAllIntensiveDates();
                 populateDocentes();
@@ -5278,7 +5416,7 @@ export function initUI() {
                     if (!shouldSwitch) return;
                     applyPlanContextToUI(tempImportPlanMeta, { resetDraftOnChange: true });
                 }
-                const count = store.mergeAllocations(tempImportData);
+                const count = store.mergeAllocations(markAllocationsAsImported(tempImportData));
                 syncAllRegularDates();
                 syncAllIntensiveDates();
                 populateDocentes();
@@ -5303,6 +5441,13 @@ export function initUI() {
     populateDocentes();
     renderOfertasList();
     updateWeeklyFaixasTitleDisciplina();
+}
+
+// Marca alocacoes vindas de arquivo importado para que sobreposicoes sejam
+// permitidas e destacadas na aba Calendario Docente.
+function markAllocationsAsImported(list) {
+    if (!Array.isArray(list)) return [];
+    return list.map((alloc) => (alloc && typeof alloc === 'object' ? { ...alloc, importado: true } : alloc));
 }
 
 function handleFileSelect(event) {
@@ -5415,6 +5560,7 @@ function resetWeeklyEditorForTurma(turmaId, options = {}) {
 
     deactivateDrawingMode();
     editingDisciplinaDraft = '';
+    editingImportadoDraft = false;
     lastDisciplinaInputNormalized = '';
     updateWeeklyFaixasTitleDisciplina();
     updateWeeklyFaixaHoursDisplay();
@@ -5623,6 +5769,7 @@ function renderWeeklyGrid() {
             isDrawing = true;
         }
     }
+    refreshActiveFaixaHighlight();
 
     const drawRange = isDrawing ? getActiveDrawingFaixaRange() : null;
     const drawingDisciplina = normalizeDisciplinaInputValue(inputConfig.disciplina?.value || '');
@@ -5865,7 +6012,16 @@ function renderWeeklyGrid() {
         const isTurnoDivider = !isIntervalo && isTurnoDividerSlot(horarioStr);
 
         if (isIntervalo) hDiv.style.background = '#e0e0e0';
-        if (isTurnoDivider) hDiv.style.borderTop = '2px dashed #bdc3c7';
+        if (isTurnoDivider) hDiv.style.borderTop = '3px dashed #bdc3c7';
+
+        // Estreita o slot de tempo do intervalo (10:00)
+        if (horarioStr.includes('10:00')) {
+            hDiv.style.height = '12px';
+            hDiv.style.minHeight = '12px';
+            hDiv.style.lineHeight = '12px';
+            hDiv.style.fontSize = '8px';
+        }
+
         gridContainer.appendChild(hDiv);
 
         if (isIntervalo) {
@@ -5888,7 +6044,13 @@ function renderWeeklyGrid() {
                 cell.dataset.dia = i;
                 cell.dataset.horario = horarioStr;
                 cell.dataset.date = cellDate;
-                if (isTurnoDivider) cell.style.borderTop = '2px dashed #bdc3c7';
+                if (isTurnoDivider) cell.style.borderTop = '3px dashed #bdc3c7';
+
+                // Se for o slot do intervalo (10:00), reduz a altura em 40% (aprox. 12px se o padrão for 20px)
+                if (horarioStr.includes('10:00')) {
+                    cell.style.height = '12px';
+                    cell.style.minHeight = '12px';
+                }
 
                 const isHolidayColumn = !!cellDate && feriadosSet.has(cellDate);
                 const holidayLabelForColumn = isHolidayColumn ? (feriadosMap.get(cellDate) || 'Feriado') : '';
@@ -6015,8 +6177,15 @@ function renderWeeklyGrid() {
                                 cell.style.pointerEvents = 'none';
                                 cell.title = 'Alocação desta componente em outra faixa (somente leitura).';
                             } else {
-                                cell.classList.add('slot-week-disabled');
-                                cell.title = 'Fora do intervalo da faixa ativa nesta semana. Ajuste inicio/fim ou navegue para outra semana.';
+                                cell.classList.add('slot-week-disabled', 'slot-out-of-faixa');
+                                cell.style.pointerEvents = 'auto';
+                                cell.style.cursor = 'not-allowed';
+                                cell.title = 'Slot nao disponivel para esta faixa (fora do intervalo de datas). Ajuste a data da faixa ou navegue para outra semana.';
+                                cell.addEventListener('click', (e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    showToastWarning('Slot nao disponivel. Ajuste a data da faixa.', 'warning', 2400);
+                                });
                             }
                         }
                     }
@@ -6041,7 +6210,9 @@ function createCell(classNames, text) {
 
 function isTurnoDividerSlot(slotLabel = '') {
     const normalized = String(slotLabel || '').trim();
-    return normalized.includes('13:30') || normalized.includes('18:30');
+    // 10:20 indica o início da aula após o intervalo da manhã (pós-10:00)
+    // 13:30 inicia o turno da tarde e 18:30 o da noite
+    return normalized.includes('10:20') || normalized.includes('13:30') || normalized.includes('18:30');
 }
 
 function renderSlotContent(cell, allocs, dayOfWeek = 0) {
@@ -6052,7 +6223,7 @@ function renderSlotContent(cell, allocs, dayOfWeek = 0) {
     allocs.forEach(alloc => {
         const info = getDisciplinaInfo(alloc.disciplina);
         const card = document.createElement('div');
-        const docenteNome = (alloc.docente || '').split(' ')[0] || '';
+        const docenteNome = getDocenteShortLabel(alloc.docente) || '';
 
         card.className = 'mini-card';
         card.style.backgroundColor = alloc.cor;
@@ -6116,6 +6287,7 @@ function loadAllocationIntoEditor(allocation, idsToRemove = []) {
     if (!confirm('Carregar para edicao? A oferta antiga sera removida e a Grade Semanal sera aberta para ajuste desta componente.')) return;
 
     editingDisciplinaDraft = normalizeDisciplinaInputValue(a.disciplina);
+    editingImportadoDraft = !!a.importado;
     setComponentStartSelectionMode('auto');
     updateWeeklyFaixasTitleDisciplina();
     let editorFaixasAdjusted = false;
@@ -6188,29 +6360,10 @@ function loadAllocationIntoEditor(allocation, idsToRemove = []) {
     weeklyViewState.followActiveFaixa = true;
     const _drawNameEl = document.getElementById('drawing-faixa-name');
     if (_drawNameEl) _drawNameEl.textContent = `Faixa ${faixaToActivate}`;
-    // Mostra o badge compacto diferenciado por tipo:
-    // verde = re-edição de oferta já alocada | azul = pendente sendo alocada pela 1ª vez
+    // Badge textual removido: a faixa ativa passa a ser destacada na propria tabela de faixas.
     const _reeditBadge = document.getElementById('reedit-badge');
-    const _reeditBadgeFaixa = document.getElementById('reedit-badge-faixa');
-    if (_reeditBadge) {
-        _reeditBadge.classList.remove('hidden');
-        const _reeditBadgeText = document.getElementById('reedit-badge-text');
-        if (isReEdit) {
-            // Verde — re-editando oferta já salva
-            _reeditBadge.style.background = '#f0faf4';
-            _reeditBadge.style.border = '1px solid #27ae60';
-            _reeditBadge.style.color = '#1e7e34';
-            if (_reeditBadgeText) _reeditBadgeText.textContent = '\u270E Re-editando oferta \u2014 ';
-            if (_reeditBadgeFaixa) _reeditBadgeFaixa.textContent = `Faixa ${faixaToActivate}`;
-        } else {
-            // Azul acinzentado — pendente, alocando pela 1ª vez
-            _reeditBadge.style.background = '#eef4fb';
-            _reeditBadge.style.border = '1px solid #2980b9';
-            _reeditBadge.style.color = '#1a5276';
-            if (_reeditBadgeText) _reeditBadgeText.textContent = '\u270E Alocando oferta pendente \u2014 ';
-            if (_reeditBadgeFaixa) _reeditBadgeFaixa.textContent = `Faixa ${faixaToActivate}`;
-        }
-    }
+    if (_reeditBadge) _reeditBadge.classList.add('hidden');
+    refreshActiveFaixaHighlight();
     const _toolbar = document.getElementById('drawing-toolbar');
     if (_toolbar) _toolbar.classList.add('hidden');
 
@@ -6393,9 +6546,22 @@ function handleAddManual() {
 
         const intensiveConflict = findTurmaConflictForCandidateExecution(candidateIntensiveForConflict, execution);
 
+        const isImportedSave = !!editingImportadoDraft;
+
         if (intensiveConflict) {
-            showToastWarning(`Conflito de horário: "${intensiveConflict.disciplina}" já usa esse horário no mesmo período.`, 'error', 3600);
-            return;
+            if (!isImportedSave) {
+                showToastWarning(
+                    `Sobreposicao detectada: "${intensiveConflict.disciplina}" ja ocupa esse horario no mesmo periodo. Salvamento cancelado - sobreposicao so e permitida em disciplinas carregadas via importacao.`,
+                    'error',
+                    5600
+                );
+                return;
+            }
+            showToastWarning(
+                `Sobreposicao permitida (disciplina importada): choque de horario com "${intensiveConflict.disciplina}". Sera destacada na aba Calendario Docente.`,
+                'warning',
+                4800
+            );
         }
 
         const teachersToCheck = (docData.mode === 'single' ? [docData.docente] : docData.docentesList.map(d => d.nome)).filter(n => n && n.trim().toUpperCase() !== 'A DEFINIR');
@@ -6412,13 +6578,19 @@ function handleAddManual() {
                     confirmedTeacherConflict.event.subGrupo
                 );
                 const profNomes = confirmedTeacherConflict.teacherName;
-                const forceImport = confirm(
-                    `Conflito de professor detectado.\n\n` +
-                    `${profNomes} ja tem aula de ${confirmedTeacherConflict.event.disciplina} na turma ${turmaNomeConflito} em ${formatDateBR(confirmedTeacherConflict.date)} no horario ${confirmedTeacherConflict.horario}.\n\n` +
-                    `Deseja importar/alocar mesmo assim?`
+                if (!isImportedSave) {
+                    showToastWarning(
+                        `Sobreposicao de professor detectada: ${profNomes} ja tem ${confirmedTeacherConflict.event.disciplina} na turma ${turmaNomeConflito} em ${formatDateBR(confirmedTeacherConflict.date)} (${confirmedTeacherConflict.horario}). Salvamento cancelado - sobreposicao so e permitida em disciplinas carregadas via importacao.`,
+                        'error',
+                        6200
+                    );
+                    return;
+                }
+                showToastWarning(
+                    `Sobreposicao de professor permitida (disciplina importada): ${profNomes} em choque na turma ${turmaNomeConflito}. Sera destacada na aba Calendario Docente.`,
+                    'warning',
+                    5200
                 );
-                if (!forceImport) return;
-                showToastWarning(`Conflito permitido: ${profNomes} mantido(s) com choque para auditoria posterior.`, 'warning', 3500);
             }
         }
 
@@ -6459,7 +6631,8 @@ function handleAddManual() {
             sabadoManha: sabadoManha,
             faixas: faixasConfigAjustadas,
             subGrupo: subGrupo || null,
-            cor: inputConfig.cor ? inputConfig.cor.value : store.getDisciplinaColor(disciplina)
+            cor: inputConfig.cor ? inputConfig.cor.value : store.getDisciplinaColor(disciplina),
+            importado: isImportedSave
         });
 
         if (inicioCalculado && store.selectedTurma) {
@@ -7046,6 +7219,7 @@ function buildTurmaCalendarSlots(eventsByDate = {}, turmaId = '') {
     });
 
     const activeShifts = new Set();
+    const letterToShiftKey = { M: 'manha', T: 'tarde', N: 'noite' };
 
     Object.values(eventsByDate || {}).forEach((events) => {
         (Array.isArray(events) ? events : []).forEach((event) => {
@@ -7056,16 +7230,24 @@ function buildTurmaCalendarSlots(eventsByDate = {}, turmaId = '') {
             // Usamos a normalização do turns.js que é a fonte definitiva
             if (tKey) activeShifts.add(normalizeTurnoKey(tKey));
 
-            const rawSlot = String(
-                event?.horario
-                || (Array.isArray(event?.horariosOcupados) ? event.horariosOcupados[0] : '')
-                || ''
-            ).trim();
-            if (!rawSlot) return;
+            // Aula deslocada para o sábado de manhã ativa o turno da manhã.
+            if (event.sabadoManha) activeShifts.add('manha');
 
-            const normalizedSlot = cleanHorarioLabel(rawSlot);
-            if (!normalizedSlot) return;
-            if (!slotMap.has(normalizedSlot)) slotMap.set(normalizedSlot, normalizedSlot);
+            // Reúne todos os horários usados pelo evento e detecta o turno real de
+            // cada slot pelo horário, garantindo a injeção do esqueleto completo
+            // do turno (inclusive os slots vagos) quando houver mudança de turno.
+            const eventSlots = [
+                event.horario,
+                ...(Array.isArray(event.horariosOcupados) ? event.horariosOcupados : []),
+                ...(Array.isArray(event.horariosUltimoDia) ? event.horariosUltimoDia : [])
+            ];
+            eventSlots.forEach((rawSlot) => {
+                const normalizedSlot = cleanHorarioLabel(String(rawSlot || '').trim());
+                if (!normalizedSlot) return;
+                if (!slotMap.has(normalizedSlot)) slotMap.set(normalizedSlot, normalizedSlot);
+                const shiftKey = letterToShiftKey[getTurnoLetter(normalizedSlot)];
+                if (shiftKey) activeShifts.add(shiftKey);
+            });
         });
     });
 
@@ -7103,19 +7285,34 @@ function renderTeacherConflictRows(conflicts = []) {
         `;
     }
 
-    const rows = conflicts.map((conflict) => `
-        <tr>
+    const rows = conflicts.map((conflict) => {
+        const imported = !!conflict.importado;
+        const rowStyle = imported ? ' style="background:#fff4d6;"' : '';
+        const badge = imported
+            ? ' <span style="display:inline-block; background:#e0a200; color:#3a2a00; font-weight:700; font-size:0.72rem; padding:1px 8px; border-radius:10px; margin-left:6px; vertical-align:middle;">IMPORTADO</span>'
+            : '';
+        return `
+        <tr${rowStyle}>
             <td style="padding:8px 10px; border-bottom:1px solid #dfe6e9;">${formatConflictDateRange(conflict.startDate, conflict.endDate)}</td>
             <td style="padding:8px 10px; border-bottom:1px solid #dfe6e9;">${conflict.shift || '-'}</td>
             <td style="padding:8px 10px; border-bottom:1px solid #dfe6e9;">${conflict.turmas.join(', ') || '-'}</td>
             <td style="padding:8px 10px; border-bottom:1px solid #dfe6e9;">${conflict.componentes.join(', ') || '-'}</td>
-            <td style="padding:8px 10px; border-bottom:1px solid #dfe6e9;">${conflict.description}</td>
+            <td style="padding:8px 10px; border-bottom:1px solid #dfe6e9;">${conflict.description}${badge}</td>
         </tr>
-    `).join('');
+    `;
+    }).join('');
+
+    const hasImported = conflicts.some((conflict) => conflict.importado);
+    const importedLegend = hasImported
+        ? `<div style="margin:0 0 10px 0; font-size:0.86rem; color:#7a5b00; background:#fff4d6; border:1px solid #f0d486; border-radius:6px; padding:8px 12px;">
+                <strong>IMPORTADO</strong>: sobreposicao permitida porque a disciplina foi carregada via importacao.
+           </div>`
+        : '';
 
     return `
         <div style="margin-bottom:18px;">
             <h4 style="margin:0 0 10px 0; color:var(--primary); text-transform:uppercase; letter-spacing:0.6px;">Tabela de Conflitos</h4>
+            ${importedLegend}
             <div style="overflow:auto; border:1px solid #dfe6e9; border-radius:8px; background:#fff;">
                 <table style="width:100%; border-collapse:collapse; min-width:760px;">
                     <thead>
@@ -7635,7 +7832,7 @@ function buildGanttSegmentDescriptors({
                 : leftPct + (Math.max(0, rawEndT - startT) / timelineSpan) * widthPct;
             const segEndPct = Math.max(segStartPct + 0.6, Math.min(leftPct + widthPct, rawEndPct));
             const segWidthPct = segEndPct - segStartPct;
-            const docenteNameShort = String(segment?.nome || '').trim().split(/\s+/)[0] || 'Docente';
+            const docenteNameShort = getDocenteShortLabel(segment?.nome) || 'Docente';
             const segCH = Number.parseFloat(segment?.ch) || 0;
             const docenteHoursLabel = Number.isFinite(segCH) && segCH > 0
                 ? `${Number.isInteger(segCH) ? segCH : segCH.toLocaleString('pt-BR', { maximumFractionDigits: 1 })}h`
@@ -7676,7 +7873,7 @@ function buildGanttSegmentDescriptors({
         const segEndT = currentSegmentT + (timeSpan * safeShare);
         const segStartPct = leftPct + ((currentFlexOffset / totalFlexUnits) * widthPct);
         const segWidthPct = (flexUnits / totalFlexUnits) * widthPct;
-        const docenteNameShort = String(docente?.nome || '').trim().split(/\s+/)[0] || 'Docente';
+        const docenteNameShort = getDocenteShortLabel(docente?.nome) || 'Docente';
         const docenteHoursLabel = Number.isFinite(segCH) && segCH > 0
             ? `${Number.isInteger(segCH) ? segCH : segCH.toLocaleString('pt-BR', { maximumFractionDigits: 1 })}h`
             : '';
@@ -9239,7 +9436,7 @@ function generateCalendarGrid(container, turmaId, docenteName, start, end, title
                                 const event = uniqueEventsInSlot[0];
                                 if (event) {
                                     const info = getDisciplinaInfo(event.disciplina);
-                                    const docenteFirst = String(event.docente || '').trim().split(/\s+/)[0] || '';
+                                    const docenteFirst = getDocenteShortLabel(event.docente) || '';
                                     const docenteLabel = (docenteFirst && !/^a$/i.test(docenteFirst)) ? docenteFirst.toUpperCase() : '';
                                     const eBadgeDisplay = getCalendarShiftBadgeHTML(
                                         event,
@@ -9281,7 +9478,14 @@ function generateCalendarGrid(container, turmaId, docenteName, start, end, title
 
                         let rowStyle = '';
                         if (isTurnoDividerSlot(slotTime) || (typeof turnoBoundarySlots !== 'undefined' && turnoBoundarySlots.has(slotTime))) {
-                            rowStyle = 'border-top: 2px dashed #bdc3c7; margin-top: 2px; padding-top: 2px;';
+                            const isIntervaloManha = slotTime.includes('10:20');
+                            const borderStyle = isIntervaloManha ? '2px dashed #ced4da' : '3px dashed #bdc3c7';
+                            rowStyle = `border-top: ${borderStyle}; margin-top: 2px; padding-top: 2px;`;
+                        }
+
+                        // Reduz a altura dos slots entre 10:00 e 10:20 (intervalo da manhã)
+                        if (slotTime.includes('10:00') || (slotTime.includes('10:') && parseInt(slotTime.split(':')[1]) < 20)) {
+                            rowStyle += ' height: 12px; min-height: 12px;';
                         }
                         
                         let turnoClass = '';
@@ -9351,6 +9555,9 @@ function switchTab(tabId) {
     const btn = document.querySelector(`button[data-tab="${tabId}"]`);
     if (btn) btn.classList.add('active');
 
+    if (tabId === 'monthly') {
+        renderMonthlyCalendar();
+    }
     if (tabId === 'teacher') {
         refreshTeacherConflictsUI();
     }

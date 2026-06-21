@@ -274,13 +274,14 @@ input[type="date"] { color-scheme: dark; }
 .instruction { margin: 0; color: var(--text-muted); font-size: 1em; }
 
 .weekly-top-layout {
-    display: grid;
-    grid-template-columns: minmax(0, 1.18fr) minmax(0, 1fr);
+    display: flex;
+    flex-direction: column;
     align-items: stretch;
-    gap: 8px;
+    gap: 4px;
     margin-bottom: 4px;
     width: 100%;
     min-width: 0;
+    position: relative;
 }
 
 .weekly-top-layout .grid-header {
@@ -348,6 +349,405 @@ input[type="date"] { color-scheme: dark; }
 
 .weekly-instructions-card li:last-child {
     margin-bottom: 0;
+}
+
+.weekly-instructions-toggle {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    background: transparent;
+    border: none;
+    padding: 0;
+    margin: 0;
+    cursor: pointer;
+    color: inherit;
+    text-align: left;
+}
+
+.weekly-instructions-toggle:hover h3 {
+    text-decoration: underline;
+}
+
+.weekly-instructions-toggle h3 {
+    margin: 0;
+}
+
+.weekly-instructions-chevron {
+    font-size: 1.1rem;
+    line-height: 1;
+    color: #123a2b;
+    transition: transform 0.2s ease;
+    flex-shrink: 0;
+}
+
+.weekly-instructions-card.is-collapsed .weekly-instructions-chevron {
+    transform: rotate(-90deg);
+}
+
+.weekly-instructions-body {
+    margin-top: 4px;
+}
+
+.weekly-instructions-card.is-collapsed .weekly-instructions-body {
+    display: none;
+}
+
+/* ----- Instrucoes como popover flutuante (nao ocupam espaco no fluxo) ----- */
+.weekly-top-bar {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    min-height: 0;
+}
+
+.weekly-instructions-popover {
+    position: relative;
+    width: auto;
+    background: transparent;
+    border: none;
+    border-left: none;
+    border-radius: 0;
+    padding: 0;
+    box-shadow: none;
+}
+
+.weekly-instructions-popover .weekly-instructions-toggle {
+    width: auto;
+    gap: 7px;
+    padding: 5px 11px;
+    background: linear-gradient(150deg, #8cc7a8 0%, #6fae8f 100%);
+    border: 1px solid #5d9577;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(21, 67, 48, 0.18);
+}
+
+.weekly-instructions-popover .weekly-instructions-toggle:hover {
+    filter: brightness(1.03);
+}
+
+.weekly-instructions-popover .weekly-instructions-toggle:hover h3 {
+    text-decoration: none;
+}
+
+.weekly-instructions-popover .weekly-instructions-toggle h3 {
+    font-size: 0.84rem;
+    color: #103226;
+}
+
+.weekly-instructions-popover .weekly-instructions-icon {
+    font-size: 0.95rem;
+    line-height: 1;
+    flex-shrink: 0;
+}
+
+.weekly-instructions-popover .weekly-instructions-body {
+    position: fixed;
+    top: 120px;
+    right: 24px;
+    width: min(768px, 94vw);
+    max-height: min(78vh, 720px);
+    overflow-y: auto;
+    margin-top: 0;
+    background: linear-gradient(160deg, #f4fbf7 0%, #e6f3ec 100%);
+    border: 1px solid #5d9577;
+    border-top: 5px solid #2e8b62;
+    border-radius: 14px;
+    padding: 18px 20px 20px;
+    box-shadow: 0 18px 46px rgba(16, 50, 36, 0.34);
+    z-index: 60;
+}
+
+/* Cabecalho das instrucoes */
+.weekly-instructions-popover .wi-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding-bottom: 12px;
+    margin-bottom: 14px;
+    border-bottom: 2px dashed #b7dcc7;
+}
+
+.weekly-instructions-popover .wi-header-icon {
+    font-size: 1.9rem;
+    line-height: 1;
+    flex-shrink: 0;
+}
+
+.weekly-instructions-popover .wi-title {
+    margin: 0;
+    font-size: 1.32rem;
+    font-weight: 800;
+    color: #0f3526;
+    letter-spacing: 0.2px;
+}
+
+.weekly-instructions-popover .wi-subtitle {
+    margin: 3px 0 0;
+    font-size: 0.98rem;
+    color: #3f6b58;
+}
+
+/* Lista de passos */
+.weekly-instructions-popover .wi-steps {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    counter-reset: none;
+}
+
+.weekly-instructions-popover .wi-step {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    background: #ffffff;
+    border: 1px solid #d3e7dc;
+    border-left: 5px solid #2e8b62;
+    border-radius: 10px;
+    padding: 11px 14px;
+    box-shadow: 0 2px 6px rgba(16, 50, 36, 0.08);
+}
+
+.weekly-instructions-popover .wi-step--first {
+    background: linear-gradient(120deg, #fff7df 0%, #fdeec0 100%);
+    border-color: #e7c766;
+    border-left-color: #e0a200;
+}
+
+.weekly-instructions-popover .wi-step-num {
+    flex-shrink: 0;
+    width: 30px;
+    height: 30px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: #2e8b62;
+    color: #fff;
+    font-size: 1.05rem;
+    font-weight: 800;
+    box-shadow: 0 2px 5px rgba(16, 50, 36, 0.25);
+}
+
+.weekly-instructions-popover .wi-step--first .wi-step-num {
+    background: #e0a200;
+    color: #3a2600;
+}
+
+/* Cores distintas por passo */
+.weekly-instructions-popover .wi-step:nth-child(2) { border-left-color: #2f80c9; }
+.weekly-instructions-popover .wi-step:nth-child(2) .wi-step-num { background: #2f80c9; }
+.weekly-instructions-popover .wi-step:nth-child(3) { border-left-color: #8e44ad; }
+.weekly-instructions-popover .wi-step:nth-child(3) .wi-step-num { background: #8e44ad; }
+.weekly-instructions-popover .wi-step:nth-child(4) { border-left-color: #16a085; }
+.weekly-instructions-popover .wi-step:nth-child(4) .wi-step-num { background: #16a085; }
+.weekly-instructions-popover .wi-step:nth-child(5) { border-left-color: #d35400; }
+.weekly-instructions-popover .wi-step:nth-child(5) .wi-step-num { background: #d35400; }
+.weekly-instructions-popover .wi-step:nth-child(6) { border-left-color: #c0392b; }
+.weekly-instructions-popover .wi-step:nth-child(6) .wi-step-num { background: #c0392b; }
+.weekly-instructions-popover .wi-step:nth-child(7) { border-left-color: #6d4c41; }
+.weekly-instructions-popover .wi-step:nth-child(7) .wi-step-num { background: #6d4c41; }
+
+.weekly-instructions-popover .wi-step-text {
+    font-size: 1.03rem;
+    line-height: 1.4;
+    color: #1c4334;
+}
+
+.weekly-instructions-popover .wi-step-emoji {
+    font-size: 1.15rem;
+    margin-right: 4px;
+}
+
+.weekly-instructions-popover .wi-step-text strong {
+    color: #0f3526;
+}
+
+/* Nota explicativa */
+.weekly-instructions-popover .wi-note {
+    display: flex;
+    align-items: flex-start;
+    gap: 11px;
+    margin-top: 14px;
+    padding: 12px 14px;
+    background: linear-gradient(120deg, #e7f0ff 0%, #d9e8ff 100%);
+    border: 1px solid #b6cef2;
+    border-radius: 10px;
+    font-size: 1.0rem;
+    line-height: 1.4;
+    color: #1b3b66;
+}
+
+.weekly-instructions-popover .wi-note-icon {
+    font-size: 1.4rem;
+    line-height: 1;
+    flex-shrink: 0;
+}
+
+.weekly-instructions-popover .wi-note strong {
+    color: #12305a;
+}
+
+/* Guia Rapido na aba Ajuda: reaproveita o visual dos passos da Grade Semanal,
+   sem o posicionamento de popover. */
+.help-fullwidth-title {
+    grid-column: 1 / -1;
+    margin: 0;
+}
+
+.help-quick-guide {
+    margin: 6px 0 26px;
+    padding: 20px 22px 22px;
+    background: #f3fbf6;
+    border: 1px solid #cfe9da;
+    border-top: 5px solid #2e8b62;
+    border-radius: 14px;
+    box-shadow: 0 6px 18px rgba(16, 50, 36, 0.10);
+}
+
+/* Variante full-width: ocupa toda a largura da coluna de ajuda e
+   distribui os passos em colunas para caber sem rolar. */
+.help-quick-guide--full {
+    grid-column: 1 / -1;
+    margin: 0 0 8px;
+}
+
+.help-quick-guide--full .wi-steps {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 10px 18px;
+}
+
+.help-quick-guide .wi-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding-bottom: 12px;
+    margin-bottom: 14px;
+    border-bottom: 2px dashed #b7dcc7;
+}
+
+.help-quick-guide .wi-header-icon {
+    font-size: 1.9rem;
+    line-height: 1;
+    flex-shrink: 0;
+}
+
+.help-quick-guide .wi-title {
+    margin: 0;
+    font-size: 1.3rem;
+    font-weight: 800;
+    color: #0f3526;
+    letter-spacing: 0.2px;
+}
+
+.help-quick-guide .wi-subtitle {
+    margin: 3px 0 0;
+    font-size: 0.98rem;
+    color: #3f6b58;
+}
+
+.help-quick-guide .wi-steps {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.help-quick-guide .wi-step {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    background: #ffffff;
+    border: 1px solid #d3e7dc;
+    border-left: 5px solid #2e8b62;
+    border-radius: 10px;
+    padding: 11px 14px;
+    box-shadow: 0 2px 6px rgba(16, 50, 36, 0.08);
+}
+
+.help-quick-guide .wi-step--first {
+    background: linear-gradient(120deg, #fff7df 0%, #fdeec0 100%);
+    border-color: #e7c766;
+    border-left-color: #e0a200;
+}
+
+.help-quick-guide .wi-step-num {
+    flex-shrink: 0;
+    width: 30px;
+    height: 30px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: #2e8b62;
+    color: #fff;
+    font-size: 1.05rem;
+    font-weight: 800;
+    box-shadow: 0 2px 5px rgba(16, 50, 36, 0.25);
+}
+
+.help-quick-guide .wi-step--first .wi-step-num {
+    background: #e0a200;
+    color: #3a2600;
+}
+
+.help-quick-guide .wi-step:nth-child(2) { border-left-color: #2f80c9; }
+.help-quick-guide .wi-step:nth-child(2) .wi-step-num { background: #2f80c9; }
+.help-quick-guide .wi-step:nth-child(3) { border-left-color: #8e44ad; }
+.help-quick-guide .wi-step:nth-child(3) .wi-step-num { background: #8e44ad; }
+.help-quick-guide .wi-step:nth-child(4) { border-left-color: #16a085; }
+.help-quick-guide .wi-step:nth-child(4) .wi-step-num { background: #16a085; }
+.help-quick-guide .wi-step:nth-child(5) { border-left-color: #d35400; }
+.help-quick-guide .wi-step:nth-child(5) .wi-step-num { background: #d35400; }
+.help-quick-guide .wi-step:nth-child(6) { border-left-color: #c0392b; }
+.help-quick-guide .wi-step:nth-child(6) .wi-step-num { background: #c0392b; }
+.help-quick-guide .wi-step:nth-child(7) { border-left-color: #6d4c41; }
+.help-quick-guide .wi-step:nth-child(7) .wi-step-num { background: #6d4c41; }
+
+.help-quick-guide .wi-step-text {
+    font-size: 1.03rem;
+    line-height: 1.4;
+    color: #1c4334;
+}
+
+.help-quick-guide .wi-step-emoji {
+    font-size: 1.15rem;
+    margin-right: 4px;
+}
+
+.help-quick-guide .wi-step-text strong {
+    color: #0f3526;
+}
+
+.help-quick-guide .wi-note {
+    display: flex;
+    align-items: flex-start;
+    gap: 11px;
+    margin-top: 14px;
+    padding: 12px 14px;
+    background: linear-gradient(120deg, #e7f0ff 0%, #d9e8ff 100%);
+    border: 1px solid #b6cef2;
+    border-radius: 10px;
+    font-size: 1.0rem;
+    line-height: 1.4;
+    color: #1b3b66;
+}
+
+.help-quick-guide .wi-note-icon {
+    font-size: 1.4rem;
+    line-height: 1;
+    flex-shrink: 0;
+}
+
+.help-quick-guide .wi-note strong {
+    color: #12305a;
 }
 
 .offer-mode-section {
@@ -418,6 +818,31 @@ input[type="date"] { color-scheme: dark; }
     display: flex;
     flex-direction: column;
     align-items: stretch;
+}
+
+@media (min-width: 1281px) {
+    .weekly-faixas-stack {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(250px, 300px);
+        gap: 10px;
+        align-items: start;
+    }
+
+    .weekly-top-layout .weekly-top-bar {
+        position: absolute;
+        top: 0;
+        right: 0;
+        z-index: 50;
+    }
+
+    .weekly-faixas-stack .weekly-week-nav {
+        margin-top: 0;
+        padding-top: 34px;
+    }
+
+    .weekly-faixas-stack .weekly-week-actions {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
 }
 
 .weekly-faixas-main {
@@ -517,6 +942,17 @@ input[type="date"] { color-scheme: dark; }
     display: inline-block;
     min-width: 10px;
     line-height: 1;
+}
+
+.weekly-faixas-table .faixa-num.faixa-num-active {
+    background: #ffce3a;
+    color: #5a3b00;
+    box-shadow: inset 0 0 0 2px #e0a200;
+    border-radius: 4px;
+}
+
+.weekly-faixas-table .faixa-num.faixa-num-active .faixa-num-value {
+    font-weight: 900;
 }
 
 .weekly-faixas-table .faixa-quick-action-trigger,
@@ -681,6 +1117,29 @@ input[type="date"] { color-scheme: dark; }
     flex-direction: column;
     justify-content: center;
     gap: 5px;
+}
+
+.weekly-faixas-clear-btn {
+    width: 100%;
+    padding: 7px 6px;
+    border: 1px solid #5e2470;
+    border-radius: 9px;
+    background: linear-gradient(135deg, #9b2d8e, #6f2c91);
+    color: #fff;
+    font-size: 0.8rem;
+    font-weight: 800;
+    letter-spacing: 0.2px;
+    cursor: pointer;
+    box-shadow: 0 2px 9px rgba(80, 20, 90, 0.28);
+    transition: filter 0.15s ease, transform 0.05s ease;
+}
+
+.weekly-faixas-clear-btn:hover {
+    filter: brightness(1.08);
+}
+
+.weekly-faixas-clear-btn:active {
+    transform: translateY(1px);
 }
 
 .weekly-faixas-metric-card {
@@ -1086,6 +1545,26 @@ input[type="date"] { color-scheme: dark; }
     border: 1px solid #d3dde6 !important;
 }
 
+/* Slot fora do intervalo de datas da faixa ativa: destaque hachurado de
+   "indisponivel" para deixar claro que nao da para desenhar ali sem ajustar a data. */
+.timetable .slot.slot-out-of-faixa {
+    background-color: #eceff3 !important;
+    background-image: repeating-linear-gradient(
+        135deg,
+        rgba(120, 144, 156, 0.20) 0,
+        rgba(120, 144, 156, 0.20) 6px,
+        transparent 6px,
+        transparent 12px
+    ) !important;
+    border: 1px solid #c4d0da !important;
+    cursor: not-allowed;
+}
+
+.timetable .slot.slot-out-of-faixa:hover {
+    background-color: #e3e8ee !important;
+    border-color: #aab9c6 !important;
+}
+
 .timetable .slot.slot-week-holiday {
     background: #f1f2f6 !important;
     border: 1px solid #d7dde3 !important;
@@ -1134,7 +1613,6 @@ input[type="date"] { color-scheme: dark; }
     background: var(--border);
     border: 1px solid var(--border);
     border-radius: 4px;
-    overflow: hidden;
     margin-bottom: 16px;
     box-shadow: 0 4px 15px rgba(0,0,0,0.05);
 }
@@ -1165,10 +1643,152 @@ input[type="date"] { color-scheme: dark; }
 } 
 .timetable .slot:hover { background: #f8f9fa; }
 
+/* Cabecalho de dias fixo ao rolar a grade (item 3) */
+.timetable .top-header {
+    position: sticky;
+    top: 0;
+    z-index: 6;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+}
+
+/* ===== Toolbar de desenho (item 1: estilos migrados de inline para classes) ===== */
+.drawing-toolbar {
+    position: sticky;
+    top: 0;
+    z-index: 999;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    padding: 15px 20px;
+    margin-bottom: 20px;
+    border-radius: 8px;
+    color: #fff;
+    /* Tema padrao (ambar). Sobrescrito dinamicamente por applyDrawingToolbarTheme(). */
+    background: linear-gradient(135deg, #f1c40f, #f39c12);
+    border: 2px solid #e67e22;
+    box-shadow: 0 4px 15px rgba(243, 156, 18, 0.4);
+}
+
+.drawing-toolbar-info {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.drawing-toolbar-title {
+    font-size: 1.2rem;
+    font-weight: 900;
+    letter-spacing: 0.5px;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.drawing-faixa-name {
+    color: #2c3e50;
+    background: rgba(255, 255, 255, 0.8);
+    padding: 2px 8px;
+    border-radius: 4px;
+    margin-left: 6px;
+}
+
+.drawing-toolbar-hint {
+    font-size: 0.95rem;
+    font-weight: 600;
+    text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.1);
+    margin-top: 4px;
+}
+
+.drawing-toolbar-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.drawing-btn {
+    border: none;
+    padding: 8px 16px;
+    font-weight: bold;
+    font-size: 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+    transition: transform 0.1s;
+}
+
+.drawing-btn:hover {
+    transform: translateY(-1px);
+}
+
+.drawing-btn-clear {
+    background: #fff;
+    color: #e74c3c;
+}
+
+.drawing-btn-view {
+    background: #2c3e50;
+    color: #fff;
+    font-size: 0.95rem;
+    padding: 8px 14px;
+}
+
+.drawing-btn-save {
+    background: #2ecc71;
+    color: #fff;
+    padding: 8px 20px;
+}
+
+/* ===== Affordance de descoberta do fluxo de faixas (item 2) ===== */
+/* Apenas Faixas 2 e 3 sao "start-pick" (a Faixa 1 usa o calendario). */
+.faixa-num-start-pick .faixa-num-value {
+    cursor: pointer;
+    border-radius: 6px;
+    padding: 1px 7px;
+    border: 1px dashed rgba(255, 255, 255, 0.75);
+    transition: background 0.12s, border-color 0.12s, box-shadow 0.12s;
+}
+
+.faixa-num-start-pick .faixa-num-value:hover {
+    background: rgba(255, 255, 255, 0.55);
+    border-color: rgba(255, 255, 255, 0.95);
+}
+
+.faixa-start-pick-waiting .faixa-num-value {
+    background: #fff;
+    color: #1f486e;
+    border-color: #1f486e;
+    box-shadow: 0 0 0 2px rgba(31, 72, 110, 0.3);
+    animation: faixa-pick-pulse 1.1s ease-in-out infinite;
+}
+
+@keyframes faixa-pick-pulse {
+    0%, 100% { box-shadow: 0 0 0 2px rgba(31, 72, 110, 0.25); }
+    50% { box-shadow: 0 0 0 4px rgba(31, 72, 110, 0.12); }
+}
+
+.weekly-faixas-hint {
+    margin: 2px 0 6px 0;
+    font-size: 0.82rem;
+    line-height: 1.25;
+    color: #15324f;
+    background: rgba(255, 255, 255, 0.5);
+    border-left: 3px solid #1f486e;
+    border-radius: 4px;
+    padding: 4px 8px;
+}
+
 /* Cores de Fundo por Turno (Semanal e Mensal) */
 .turno-manha { background-color: rgba(255, 235, 156, 0.22) !important; } /* Amarelo */
 .turno-tarde { background-color: rgba(186, 225, 255, 0.20) !important; } /* Azul */
 .turno-noite { background-color: rgba(224, 187, 228, 0.25) !important; } /* Roxo/Cinza */
+
+/* Grade Semanal: usa as cores opacas equivalentes (compostas sobre branco) em vez
+   dos tints semitransparentes. Como o fundo do grid (.timetable) e cinza (--border),
+   o tint transparente deixava os slots acinzentados e escondia as linhas de grade.
+   Com a versao opaca e mais clara, as linhas cinza separam bem os slots. */
+.timetable .slot.turno-manha { background-color: #fffbe9 !important; } /* Amarelo claro */
+.timetable .slot.turno-tarde { background-color: #f1f9ff !important; } /* Azul claro */
+.timetable .slot.turno-noite { background-color: #f7eef8 !important; } /* Roxo claro */
 
 /* Ajustes específicos para a Grade Mensal */
 .cal-slot-row.turno-manha .cal-slot-time { background-color: #f1c40f33; }
@@ -1232,7 +1852,7 @@ input[type="date"] { color-scheme: dark; }
     overflow: hidden;
     text-overflow: ellipsis;
     font-weight: 600;
-    font-size: 0.76rem;
+    font-size: 0.68rem;
     color: #1f3340;
 }
 

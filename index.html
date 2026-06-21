@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cardume – Planejador Acadêmico | IECOS</title>
-    <link rel="stylesheet" href="css/style.css??v=20260326b.2">
+    <link rel="stylesheet" href="css/style.css??v=20260620t">
 
     <style>
         :root {
@@ -407,6 +407,7 @@
                 font-size: 9px;
                 line-height: 1.1;
                 margin-bottom: 2px;
+                width: 100%;
             }
 
             .cal-slot-time {
@@ -793,17 +794,77 @@
 
             <section id="tab-weekly" class="tab-content active">
                 <div class="weekly-top-layout">
-                    <div class="grid-header weekly-header-panel">
-                        <div class="weekly-instructions-card">
-                            <h3>Instru&ccedil;&otilde;es de preenchimento</h3>
-                            <ul>
-                                <li>&#128218; Selecione o curso, a turma, a componente curricular e o(s) docente(s).</li>
-                                <li>&#129517; <strong>Observa&ccedil;&atilde;o importante:</strong> <strong>Faixa = regime de funcionamento em um intervalo de datas.</strong> Quando uma nova faixa come&ccedil;a, ela substitui o padr&atilde;o anterior.</li>
-                                <li>&#128197;&#65039; Defina o in&iacute;cio da 1&ordf; faixa pelo calend&aacute;rio ao lado. Essa data alimenta a componente e a Faixa 1.</li>
-                                <li>&#128433;&#65039; Use a Grade Semanal para desenhar apenas o padr&atilde;o de hor&aacute;rios, clicando ou arrastando sobre os slots dos dias.</li>
-                                <li>&#128256; Se precisar redistribuir a carga hor&aacute;ria, clique no n&uacute;mero 2 ou 3 e depois no slot da data de in&iacute;cio do novo padr&atilde;o. Depois, desenhe explicitamente os slots dessa nova faixa.</li>
-                                <li>&#10024; Ao salvar, se o &uacute;ltimo dia ficar quebrado, o sistema prepara automaticamente a Faixa 2 cobrindo o pen&uacute;ltimo e o &uacute;ltimo dia real de aula para ajuste fino.</li>
-                            </ul>
+                    <div class="weekly-top-bar">
+                        <div class="weekly-instructions-popover weekly-instructions-card is-collapsed" id="weekly-instructions-card">
+                            <button type="button" id="weekly-instructions-toggle" class="weekly-instructions-toggle" aria-expanded="false" aria-controls="weekly-instructions-body" aria-haspopup="dialog">
+                                <span class="weekly-instructions-icon" aria-hidden="true">&#8505;&#65039;</span>
+                                <h3>Instru&ccedil;&otilde;es de preenchimento</h3>
+                                <span class="weekly-instructions-chevron" aria-hidden="true">&#9662;</span>
+                            </button>
+                            <div id="weekly-instructions-body" class="weekly-instructions-body" role="dialog" aria-label="Instru&ccedil;&otilde;es de preenchimento">
+                                <div class="wi-header">
+                                    <span class="wi-header-icon" aria-hidden="true">&#129517;</span>
+                                    <div>
+                                        <h4 class="wi-title">Como preencher a Grade Semanal</h4>
+                                        <p class="wi-subtitle">Siga os passos na ordem para montar a oferta da turma.</p>
+                                    </div>
+                                </div>
+                                <ol class="wi-steps">
+                                    <li class="wi-step wi-step--first">
+                                        <span class="wi-step-num">1</span>
+                                        <div class="wi-step-text">
+                                            <span class="wi-step-emoji" aria-hidden="true">&#128197;&#65039;</span>
+                                            <strong>Selecione o per&iacute;odo letivo do ano</strong> (ex.: 2026.1). Ele define o calend&aacute;rio-base de todo o planejamento.
+                                        </div>
+                                    </li>
+                                    <li class="wi-step">
+                                        <span class="wi-step-num">2</span>
+                                        <div class="wi-step-text">
+                                            <span class="wi-step-emoji" aria-hidden="true">&#127891;</span>
+                                            Selecione o <strong>curso</strong> e a <strong>turma</strong> do IECOS.
+                                        </div>
+                                    </li>
+                                    <li class="wi-step">
+                                        <span class="wi-step-num">3</span>
+                                        <div class="wi-step-text">
+                                            <span class="wi-step-emoji" aria-hidden="true">&#128218;</span>
+                                            Selecione a <strong>componente curricular</strong> &mdash; individualmente ou <strong>por bloco</strong>. No modo por bloco, v&aacute; &agrave; aba <strong>Lista de ofertas</strong> para editar a componente e alocar o(s) <strong>docente(s)</strong>.
+                                        </div>
+                                    </li>
+                                    <li class="wi-step">
+                                        <span class="wi-step-num">4</span>
+                                        <div class="wi-step-text">
+                                            <span class="wi-step-emoji" aria-hidden="true">&#127919;</span>
+                                            Defina o <strong>in&iacute;cio da 1&ordf; faixa</strong> pelo calend&aacute;rio. Essa data alimenta a componente e a Faixa&nbsp;1.
+                                        </div>
+                                    </li>
+                                    <li class="wi-step">
+                                        <span class="wi-step-num">5</span>
+                                        <div class="wi-step-text">
+                                            <span class="wi-step-emoji" aria-hidden="true">&#128433;&#65039;</span>
+                                            Na grade, <strong>desenhe o padr&atilde;o de hor&aacute;rios</strong> clicando ou arrastando sobre os slots dos dias.
+                                        </div>
+                                    </li>
+                                    <li class="wi-step">
+                                        <span class="wi-step-num">6</span>
+                                        <div class="wi-step-text">
+                                            <span class="wi-step-emoji" aria-hidden="true">&#128256;</span>
+                                            Para <strong>redistribuir a carga hor&aacute;ria</strong>, clique no n&uacute;mero <strong>2</strong> ou <strong>3</strong>, depois no slot da data de in&iacute;cio do novo padr&atilde;o e, por fim, desenhe os slots dessa nova faixa.
+                                        </div>
+                                    </li>
+                                    <li class="wi-step">
+                                        <span class="wi-step-num">7</span>
+                                        <div class="wi-step-text">
+                                            <span class="wi-step-emoji" aria-hidden="true">&#10024;</span>
+                                            Ao <strong>salvar</strong>, se o &uacute;ltimo dia ficar quebrado, o sistema prepara automaticamente a Faixa&nbsp;2 cobrindo o pen&uacute;ltimo e o &uacute;ltimo dia real de aula para ajuste fino.
+                                        </div>
+                                    </li>
+                                </ol>
+                                <div class="wi-note">
+                                    <span class="wi-note-icon" aria-hidden="true">&#128161;</span>
+                                    <div><strong>O que &eacute; uma faixa?</strong> &Eacute; o regime de hor&aacute;rios v&aacute;lido em um intervalo de datas. Quando uma nova faixa come&ccedil;a, ela substitui o padr&atilde;o anterior.</div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     <div class="weekly-faixas-stack">
@@ -898,6 +959,10 @@
                                     </tbody>
                                 </table>
                                 <div class="weekly-faixas-total" aria-live="polite">
+                                    <button type="button" id="btn-limpar-faixas" class="weekly-faixas-clear-btn"
+                                        title="Limpar todas as faixas e reposicionar a data inicial no primeiro dia com a 1ª ou 4ª aula livre">
+                                        Limpar Faixas
+                                    </button>
                                     <div class="weekly-faixas-metric-card weekly-faixas-metric-total">
                                         <div class="weekly-faixas-metric-label">Total CH</div>
                                         <div class="weekly-faixas-metric-value"><span id="weekly-faixa-total-ch">0</span></div>
@@ -945,38 +1010,25 @@
                 </div>
 
                 <!-- BOOTSTRAPPED DRAWING TOOLBAR -->
-                <div id="drawing-toolbar" class="hidden" style="
-                    position: sticky; top: 0; z-index: 999; 
-                    background: linear-gradient(135deg, #f1c40f, #f39c12); 
-                    color: #fff; padding: 15px 20px; border-radius: 8px; 
-                    box-shadow: 0 4px 15px rgba(243, 156, 18, 0.4); 
-                    display: flex; justify-content: space-between; align-items: center; 
-                    margin-bottom: 20px; border: 2px solid #e67e22;">
+                <div id="drawing-toolbar" class="hidden drawing-toolbar">
 
-                    <div style="display:flex; flex-direction:column;">
-                        <span
-                            style="font-size: 1.2rem; font-weight: 900; letter-spacing: 0.5px; text-shadow: 1px 1px 2px rgba(0,0,0,0.2);">
-                            ✏ MODO DE DESENHO ATIVO: <span id="drawing-faixa-name"
-                                style="color:#2c3e50; background:rgba(255,255,255,0.8); padding:2px 8px; border-radius:4px; margin-left:6px;">Faixa
-                                1</span>
+                    <div class="drawing-toolbar-info">
+                        <span class="drawing-toolbar-title">
+                            ✏ MODO DE DESENHO ATIVO: <span id="drawing-faixa-name" class="drawing-faixa-name">Faixa 1</span>
                         </span>
-                        <span
-                            style="font-size: 0.95rem; font-weight:600; text-shadow: 1px 1px 1px rgba(0,0,0,0.1); margin-top:4px;">
+                        <span class="drawing-toolbar-hint">
                             Clique nos horários vagos abaixo para definir o padrão desta faixa.
                         </span>
                     </div>
 
-                    <div style="display: flex; gap: 10px;">
-                        <button id="btn-cancel-draw" type="button"
-                            style="background:#fff; color:#e74c3c; border:none; padding:8px 16px; font-weight:bold; border-radius:4px; cursor:pointer; font-size:1rem; box-shadow:0 2px 4px rgba(0,0,0,0.1); transition:transform 0.1s;">
+                    <div class="drawing-toolbar-actions">
+                        <button id="btn-cancel-draw" type="button" class="drawing-btn drawing-btn-clear">
                             Limpar Padrão
                         </button>
-                        <button id="btn-toggle-draw-view" type="button"
-                            style="background:#2c3e50; color:#fff; border:none; padding:8px 14px; font-weight:bold; border-radius:4px; cursor:pointer; font-size:0.95rem; box-shadow:0 2px 4px rgba(0,0,0,0.2); transition:transform 0.1s;">
+                        <button id="btn-toggle-draw-view" type="button" class="drawing-btn drawing-btn-view">
                             Modo Limpo
                         </button>
-                        <button id="btn-save-draw" type="button"
-                            style="background:#2ecc71; color:white; border:none; padding:8px 20px; font-weight:bold; border-radius:4px; cursor:pointer; font-size:1rem; box-shadow:0 2px 4px rgba(0,0,0,0.2); transition:transform 0.1s;">
+                        <button id="btn-save-draw" type="button" class="drawing-btn drawing-btn-save">
                             💾 Salvar Padrão
                         </button>
                     </div>
@@ -1054,57 +1106,103 @@
             <section id="tab-tutorial" class="tab-content">
                 <div class="help-layout">
 
-                    <div class="help-main">
-                        <h2 style="border-bottom: 2px solid #2c3e50; padding-bottom: 10px; color: var(--primary);">🎓
-                            Guia Rápido & Dicas</h2>
+                    <h2 class="help-fullwidth-title" style="border-bottom: 2px solid #2c3e50; padding-bottom: 10px; color: var(--primary);">🎓
+                        Guia Rápido & Dicas</h2>
 
+                    <div class="help-quick-guide help-quick-guide--full">
+                        <div class="wi-header">
+                            <span class="wi-header-icon" aria-hidden="true">&#129517;</span>
+                            <div>
+                                <h4 class="wi-title">Como preencher a Grade Semanal</h4>
+                                <p class="wi-subtitle">Siga os passos na ordem para montar a oferta da turma.</p>
+                            </div>
+                        </div>
+                        <ol class="wi-steps">
+                            <li class="wi-step wi-step--first">
+                                <span class="wi-step-num">1</span>
+                                <div class="wi-step-text">
+                                    <span class="wi-step-emoji" aria-hidden="true">&#128197;&#65039;</span>
+                                    <strong>Selecione o per&iacute;odo letivo do ano</strong> (ex.: 2026.1). Ele define o calend&aacute;rio-base de todo o planejamento.
+                                </div>
+                            </li>
+                            <li class="wi-step">
+                                <span class="wi-step-num">2</span>
+                                <div class="wi-step-text">
+                                    <span class="wi-step-emoji" aria-hidden="true">&#127891;</span>
+                                    Selecione o <strong>curso</strong> e a <strong>turma</strong> do IECOS.
+                                </div>
+                            </li>
+                            <li class="wi-step">
+                                <span class="wi-step-num">3</span>
+                                <div class="wi-step-text">
+                                    <span class="wi-step-emoji" aria-hidden="true">&#128218;</span>
+                                    Selecione a <strong>componente curricular</strong> &mdash; individualmente ou <strong>por bloco</strong>. No modo por bloco, v&aacute; &agrave; aba <strong>Lista de ofertas</strong> para editar a componente e alocar o(s) <strong>docente(s)</strong>.
+                                </div>
+                            </li>
+                            <li class="wi-step">
+                                <span class="wi-step-num">4</span>
+                                <div class="wi-step-text">
+                                    <span class="wi-step-emoji" aria-hidden="true">&#127919;</span>
+                                    Defina o <strong>in&iacute;cio da 1&ordf; faixa</strong> pelo calend&aacute;rio. Essa data alimenta a componente e a Faixa&nbsp;1.
+                                </div>
+                            </li>
+                            <li class="wi-step">
+                                <span class="wi-step-num">5</span>
+                                <div class="wi-step-text">
+                                    <span class="wi-step-emoji" aria-hidden="true">&#128433;&#65039;</span>
+                                    Na grade, <strong>desenhe o padr&atilde;o de hor&aacute;rios</strong> clicando ou arrastando sobre os slots dos dias.
+                                </div>
+                            </li>
+                            <li class="wi-step">
+                                <span class="wi-step-num">6</span>
+                                <div class="wi-step-text">
+                                    <span class="wi-step-emoji" aria-hidden="true">&#128256;</span>
+                                    Para <strong>redistribuir a carga hor&aacute;ria</strong>, clique no n&uacute;mero <strong>2</strong> ou <strong>3</strong>, depois no slot da data de in&iacute;cio do novo padr&atilde;o e, por fim, desenhe os slots dessa nova faixa.
+                                </div>
+                            </li>
+                            <li class="wi-step">
+                                <span class="wi-step-num">7</span>
+                                <div class="wi-step-text">
+                                    <span class="wi-step-emoji" aria-hidden="true">&#10024;</span>
+                                    Ao <strong>salvar</strong>, se o &uacute;ltimo dia ficar quebrado, o sistema prepara automaticamente a Faixa&nbsp;2 cobrindo o pen&uacute;ltimo e o &uacute;ltimo dia real de aula para ajuste fino.
+                                </div>
+                            </li>
+                        </ol>
+                        <div class="wi-note">
+                            <span class="wi-note-icon" aria-hidden="true">&#128161;</span>
+                            <div><strong>O que &eacute; uma faixa?</strong> &Eacute; o regime de hor&aacute;rios v&aacute;lido em um intervalo de datas. Quando uma nova faixa come&ccedil;a, ela substitui o padr&atilde;o anterior.</div>
+                        </div>
+                    </div>
+
+                    <div class="help-main">
                         <div class="tutorial-card">
-                            <h4>🚀 Começando Agora</h4>
+                            <h4>🎨 Detalhes do preenchimento</h4>
                             <ul style="padding-left: 20px; line-height: 1.6; list-style-type: none;">
-                                <li style="margin-bottom: 10px;"><strong>1. Configuração Inicial:</strong> Defina
-                                    primeiro o <b>Período Letivo</b> (PL1 a PL4) e o <b>Turno</b>. Só depois, selecione o
-                                    <b>Curso</b> e a <b>Turma</b> no menu lateral.
+                                <li style="margin-bottom: 10px;"><strong>Cor da disciplina:</strong> clique na
+                                    <b>bolinha colorida</b> para definir a cor de fundo usada nos calendários e na grade.
                                 </li>
-                                <li style="margin-bottom: 10px;"><strong>2. Per&iacute;odo Letivo:</strong> Selecione o
-                                    <b>Per&iacute;odo Letivo</b> oficial. O sistema preenche automaticamente as datas de
-                                    <b>Inicio</b> e <b>Fim</b> do calendario daquele plano.</li>
-                                <li style="margin-bottom: 10px;"><strong>3. Identidade Visual:</strong> Clique na
-                                    <b>bolinha colorida</b> para definir a cor de fundo da disciplina.
-                                </li>
-                                <li style="margin-bottom: 10px;"><strong>4. Professores:</strong> Se a disciplina for
-                                    dividida, marque <b>"Múltiplos?"</b> e adicione os docentes com suas respectivas
-                                    Cargas Horárias parciais.</li>
-                                <li style="margin-bottom: 10px;"><strong>5. Modelo de Oferta:</strong> Todas as
-                                    componentes seguem o padrão por <b>Faixas</b>. Defina docentes, carga horária e
-                                    período para cada oferta.</li>
-                                <li style="margin-bottom: 10px;"><strong>6. Data inicial da componente:</strong> Defina o inicio oficial pelo <b>mini calendário da Faixa 1</b>. A grade desenha horários, mas não deve empurrar essa data por conta própria.</li>
-                                <li style="margin-bottom: 10px;"><strong>7. Alocacao Manual (somente na Grade Semanal):</strong> Desenhe os slots clicando nos <b>quadradinhos da grade</b>. Se o regime mudar, ative a faixa 2 ou 3 e desenhe explicitamente o novo padrão.</li>
-                                <li style="margin-bottom: 10px;"><strong>8. Leitura da Grade Semanal:</strong> Slots bloqueados indicam ocupação real na semana visível. Navegue entre semanas ou ajuste início/faixa para visualizar e editar corretamente.</li>
-                                <li style="margin-bottom: 10px;"><strong>9. Turnos e sábado:</strong> Quando houver aula excepcional em outro turno, o sistema mostra avisos visuais em calendários, agendas e Gantt. Se necessário, mude o turno visível da grade para enxergar esses slots.</li>
-                                <li style="margin-bottom: 10px;"><strong>10. Importação em Bloco (PPC):</strong> Ao usar
-                                    a opção de <b>"Importar Componentes"</b>, é <b>obrigatório</b> ir na aba <b>Lista de
-                                        Ofertas</b> e editar o horário/data de cada componente pendente para alocá-los
-                                    na grade corretamente.</li>
-                                <li><strong>11. Mesclagem de Calendários:</strong> Você pode usar a ferramenta de
-                                    Importação (JSON) para carregar o trabalho salvo de outro diretor de curso e checar
-                                    se há choques.</li>
+                                <li style="margin-bottom: 10px;"><strong>Múltiplos docentes:</strong> marque
+                                    <b>"Múltiplos?"</b> e adicione cada professor com sua <b>Carga Horária</b> parcial.</li>
+                                <li style="margin-bottom: 10px;"><strong>Leitura da grade:</strong> slots bloqueados
+                                    indicam ocupação real na semana visível. Navegue entre semanas ou ajuste
+                                    início/faixa para visualizar e editar corretamente.</li>
+                                <li style="margin-bottom: 10px;"><strong>Turnos e sábado:</strong> aulas em turno
+                                    diferente do nativo recebem um <b>aviso visual</b> nos calendários, agendas e Gantt.
+                                    Se necessário, mude o turno visível da grade para enxergar esses slots.</li>
                             </ul>
                         </div>
 
                         <h3 style="margin-top:25px; font-size:1.15em;">⚡ Regras Inteligentes e Auditoria</h3>
 
                         <div class="tutorial-card" style="background-color: #f0fff4; border-left-color: #27ae60;">
-                            <h4 style="font-size:1.05em;">🧩 1. Fluxo Canônico por Faixas</h4>
-                            <p style="font-size:0.97em;">A operação da grade segue um fluxo único e previsível:</p>
-                            <ul style="padding-left:20px; font-size:0.95em; line-height:1.8;">
-                                <li>Cada componente pode ter uma ou mais <strong>faixas</strong>, com datas e slots proprios.</li>
-                                <li>A data oficial da componente passa pela <strong>Faixa 1</strong>; o mini calendario da faixa e a referencia de edicao.</li>
-                                <li>Ao editar uma oferta, redesenhe os slots da faixa para manter a estrutura consistente.</li>
-                                <li>Conflitos e mudancas de turno devem ser resolvidos por ajuste explicito de <strong>data</strong> e <strong>horario</strong>.</li>
-                            </ul>
+                            <h4 style="font-size:1.05em;">🧩 1. Lista de Ofertas como painel de revisão</h4>
+                            <p style="font-size:0.97em;">Antes de publicar, use a <strong>Lista de Ofertas</strong> como
+                                painel principal de revisão: as componentes aparecem em ordem alfabética, com as faixas
+                                agrupadas em sequência. É também onde você edita ofertas importadas por bloco.</p>
                             <p
                                 style="font-size:0.92em; margin-top:8px; background:#d4edda; padding:8px; border-radius:6px;">
-                                💡 <strong>Dica:</strong> use a <strong>Lista de Ofertas</strong> como painel principal de revisao antes de publicar. As componentes aparecem em ordem alfabetica, com as faixas agrupadas em sequencia.
+                                💡 <strong>Dica:</strong> conflitos e mudanças de turno se resolvem por ajuste explícito
+                                de <strong>data</strong> e <strong>horário</strong> da oferta.
                             </p>
                         </div>
 
@@ -1324,7 +1422,7 @@
         </main>
     </div>
 
-    <script type="module" src="js/main.js??v=20260326b"></script>
+    <script type="module" src="js/main.js??v=20260620t"></script>
 </body>
 
 </html>
