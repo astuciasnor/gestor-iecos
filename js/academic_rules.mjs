@@ -328,9 +328,21 @@ export function getTeacherActiveShifts({
         ? String(resolveShift(event?.horario || '', event) || '').trim()
         : '';
       const normalized = normalizeShiftKey(shiftValue);
-      if (!normalized) return;
-      counts.set(normalized, (counts.get(normalized) || 0) + 1);
-      if (!labelMap.has(normalized)) labelMap.set(normalized, shiftValue);
+      if (normalized) {
+        counts.set(normalized, (counts.get(normalized) || 0) + 1);
+        if (!labelMap.has(normalized)) labelMap.set(normalized, shiftValue);
+      }
+
+      // Aulas deslocadas para o sabado de manha (ultimo dia da intensiva)
+      // ativam o turno da manha mesmo que o horario base seja de outro turno
+      // (ex.: Noite). Espelha buildTurmaCalendarSlots no calendario da turma.
+      if (event?.sabadoManha) {
+        const manhaKey = normalizeShiftKey('Manha');
+        if (manhaKey) {
+          counts.set(manhaKey, (counts.get(manhaKey) || 0) + 1);
+          if (!labelMap.has(manhaKey)) labelMap.set(manhaKey, 'Manhã');
+        }
+      }
     });
   });
 

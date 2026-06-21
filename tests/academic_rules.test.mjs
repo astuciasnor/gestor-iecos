@@ -215,6 +215,21 @@ test('getTeacherActiveShifts groups real slots by preferred shift order', () => 
   );
 });
 
+test('getTeacherActiveShifts activates the morning shift for sabadoManha events', () => {
+  const shifts = getTeacherActiveShifts({
+    eventsByDate: {
+      // Aula de turma noturna deslocada para o sabado de manha (ultimo dia).
+      '2026-03-28': [{ horario: '18:30 - 19:20', sabadoManha: true }]
+    },
+    resolveShift: () => 'Noite',
+    preferredOrder: ['Manha', 'Tarde', 'Noite']
+  });
+
+  const normalizedShifts = shifts.map((shift) => shift.normalized);
+  assert.ok(normalizedShifts.includes('manha'), 'turno da manha deve estar ativo');
+  assert.ok(normalizedShifts.includes('noite'), 'turno da noite tambem deve estar ativo');
+});
+
 test('filterExportableAllocations excludes pending canonical allocations', () => {
   const allocs = [
     { turmaId: 'EP2026', disciplina: 'Algoritmos', modo: 'faixas' },

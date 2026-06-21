@@ -1279,6 +1279,70 @@ function hexToRgba(hexColor, alpha = 1) {
     return `rgba(${r}, ${g}, ${b}, ${a})`;
 }
 
+function rgbToHsl(r, g, b) {
+    r /= 255; g /= 255; b /= 255;
+    const max = Math.max(r, g, b);
+    const min = Math.min(r, g, b);
+    let h = 0;
+    let s = 0;
+    const l = (max + min) / 2;
+    const d = max - min;
+    if (d !== 0) {
+        s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+        switch (max) {
+            case r: h = ((g - b) / d) + (g < b ? 6 : 0); break;
+            case g: h = ((b - r) / d) + 2; break;
+            default: h = ((r - g) / d) + 4; break;
+        }
+        h /= 6;
+    }
+    return { h, s, l };
+}
+
+function hslToRgb(h, s, l) {
+    let r;
+    let g;
+    let b;
+    if (s === 0) {
+        r = g = b = l;
+    } else {
+        const hue2rgb = (p, q, t) => {
+            if (t < 0) t += 1;
+            if (t > 1) t -= 1;
+            if (t < 1 / 6) return p + (q - p) * 6 * t;
+            if (t < 1 / 2) return q;
+            if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
+            return p;
+        };
+        const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+        const p = 2 * l - q;
+        r = hue2rgb(p, q, h + 1 / 3);
+        g = hue2rgb(p, q, h);
+        b = hue2rgb(p, q, h - 1 / 3);
+    }
+    return { r: r * 255, g: g * 255, b: b * 255 };
+}
+
+// Realca a cor (boost de croma): pasteis muito claros viram tons mais cheios,
+// para que os cards da Grade Semanal e o seletor "encham os olhos" como o
+// Calendario Mensal. Idempotente: cores ja vivas mapeiam para ~si mesmas.
+function vividHexColor(hexColor, fallback = '#f39c12') {
+    const base = normalizeHexColor(hexColor, fallback);
+    const { r, g, b } = hexToRgb(base);
+    const hsl = rgbToHsl(r, g, b);
+    // Cinzas/quase neutros ficam de fora para nao ganharem cor artificial.
+    if (hsl.s < 0.08) return base;
+    const s = Math.min(1, hsl.s * 1.12 + 0.06);
+    let l = hsl.l;
+    const maxL = 0.70;
+    if (l > maxL) l = maxL - (l - maxL) * 0.25; // comprime o excesso de luminancia dos pasteis
+    // Faixa de luminancia que mantem a cor vibrante e o texto preto legivel (contraste >= 4.3).
+    l = Math.max(0.55, Math.min(maxL, l));
+    const out = hslToRgb(hsl.h, s, l);
+    const toHex = (v) => Math.max(0, Math.min(255, Math.round(v))).toString(16).padStart(2, '0');
+    return `#${toHex(out.r)}${toHex(out.g)}${toHex(out.b)}`;
+}
+
 function getDrawingBaseColor() {
     const disciplina = (inputConfig.disciplina?.value ?? '').replace(/\s*\(\s*\d+\s*h\s*\)\s*$/i, '').trim();
     const fallbackColor = normalizeHexColor(disciplina ? store.getDisciplinaColor(disciplina) : '#f39c12');
@@ -1314,7 +1378,7 @@ function updateWeeklyFaixasTitleDisciplina() {
 }
 
 function getDrawingSelectedStyles() {
-    const base = getDrawingBaseColor();
+    const base = vividHexColor(getDrawingBaseColor());
     return {
         background: base,
         border: `2px dashed ${adjustHexColor(base, -45)}`,
@@ -1351,14 +1415,17 @@ function setDrawingCellSelection(cell, selected, styles) {
     if (selected) {
         cell.classList.add('selected-slot');
         cell.classList.remove('slot-free-draw');
-        cell.style.background = styles.background;
+        // O background precisa de !important inline para vencer a regra de tint
+        // por turno (.timetable .slot.turno-* { background-color: ... !important }),
+        // senao a celula pintada fica com a cor do turno e so a borda aparece colorida.
+        cell.style.setProperty('background', styles.background, 'important');
         cell.style.border = styles.border;
         cell.style.color = styles.color;
         cell.style.fontWeight = styles.fontWeight;
     } else {
         cell.classList.remove('selected-slot');
         if (cell.dataset.canEdit === '1') cell.classList.add('slot-free-draw');
-        cell.style.background = '';
+        cell.style.removeProperty('background');
         cell.style.border = '';
         cell.style.color = '';
         cell.style.fontWeight = '';
@@ -5216,9 +5283,9 @@ export function initUI() {
                 editingDisciplinaDraft = '';
                 editingImportadoDraft = false;
                 
-                // Aplica a cor automática (da paleta de 20 cores ou do JSON)
+                // Aplica a cor automática (da paleta de 20 cores ou do JSON), com realce de croma
                 if (inputConfig.cor) {
-                    inputConfig.cor.value = store.getDisciplinaColor(discNome);
+                    inputConfig.cor.value = vividHexColor(store.getDisciplinaColor(discNome));
                 }
             }
             lastDisciplinaInputNormalized = discNome;
@@ -6226,7 +6293,7 @@ function renderSlotContent(cell, allocs, dayOfWeek = 0) {
         const docenteNome = getDocenteShortLabel(alloc.docente) || '';
 
         card.className = 'mini-card';
-        card.style.backgroundColor = alloc.cor;
+        card.style.backgroundColor = vividHexColor(alloc.cor);
         card.style.cursor = 'pointer';
         if (isPriorityRegularAllocation(alloc)) {
             card.style.border = '2px dashed #000';
@@ -6297,8 +6364,9 @@ function loadAllocationIntoEditor(allocation, idsToRemove = []) {
         inputConfig.disciplina.dispatchEvent(new Event('input'));
     }
     if (inputConfig.cor && a.cor) {
-        inputConfig.cor.value = a.cor;
-        setTimeout(() => { inputConfig.cor.value = a.cor; }, 50);
+        const vividCor = vividHexColor(a.cor);
+        inputConfig.cor.value = vividCor;
+        setTimeout(() => { inputConfig.cor.value = vividCor; }, 50);
     }
     enforceCanonicalFaixaMode();
 
@@ -7204,8 +7272,31 @@ function collectSlotsForTurnoValues(turnoValues = []) {
         .sort((a, b) => timeToMinutes(a) - timeToMinutes(b));
 }
 
-function getSlotsForTeacherShifts(activeShiftValues = []) {
-    return collectSlotsForTurnoValues(activeShiftValues);
+function getSlotsForTeacherShifts(activeShiftKeys = []) {
+    // Usa as chaves normalizadas (manha/tarde/noite) com getHorariosByTurno, que
+    // resolve o turno pela normalizeTurnoKey (turns.js) e injeta o esqueleto
+    // completo do turno. Isso é robusto para aulas deslocadas ao sábado de manhã,
+    // ao contrário de resolver pelo valor bruto do turno (ex.: "Manhã+Noite"),
+    // que não casa com nenhuma chave de horarios_por_turno.
+    const hp = store.rawData?.horarios_por_turno || {};
+    const slotMap = new Map();
+
+    [...new Set((Array.isArray(activeShiftKeys) ? activeShiftKeys : []).filter(Boolean))]
+        .forEach((shiftKey) => {
+            const slots = getHorariosByTurno(shiftKey, hp);
+            if (!Array.isArray(slots)) return;
+            slots.forEach((slot) => {
+                const raw = String(slot ?? '');
+                const label = raw.toUpperCase().includes('INTERVALO')
+                    ? formatIntervaloLabel(raw)
+                    : cleanHorarioLabel(raw);
+                if (label && label.trim() && !slotMap.has(label)) slotMap.set(label, label);
+            });
+        });
+
+    return [...slotMap.values()]
+        .filter((slot) => slot && slot.trim().length > 0)
+        .sort((a, b) => timeToMinutes(a) - timeToMinutes(b));
 }
 
 function buildTurmaCalendarSlots(eventsByDate = {}, turmaId = '') {
@@ -7358,13 +7449,13 @@ function renderTeacherCalendar() {
     });
     const eventsByDate = teacherSnapshot.eventsByDate;
     const activeShiftData = teacherSnapshot.activeShiftData;
-    const activeShiftValues = activeShiftData.map((shift) => shift.value);
+    const activeShiftKeys = activeShiftData.map((shift) => shift.normalized).filter(Boolean);
     const conflictRows = teacherSnapshot.conflictRows;
-    const visibleSlots = getSlotsForTeacherShifts(activeShiftValues);
+    const visibleSlots = getSlotsForTeacherShifts(activeShiftKeys);
     const totalCH = calculateTeacherTotalCH(docente);
     const docenteTitle = totalCH > 0 ? `${docente} (${totalCH}h)` : docente;
     const shiftSummary = activeShiftData.length > 0
-        ? activeShiftData.map((shift) => shift.label).join(', ')
+        ? activeShiftData.map((shift) => formatTurnoOfertaLabel(shift.normalized)).join(', ')
         : 'Sem turnos ativos no intervalo';
 
     container.innerHTML = `
@@ -9430,7 +9521,7 @@ function generateCalendarGrid(container, turmaId, docenteName, start, end, title
                                         dayData.date
                                     );
                                     content = `${info.abrev}${shiftBadgeDisplay} - ${event.turmaId}`;
-                                    style = `background:${event.cor || '#bdc3c7'}; color:black;`;
+                                    style = `background:${vividHexColor(event.cor || '#bdc3c7')}; color:black;`;
                                 }
                             } else {
                                 const event = uniqueEventsInSlot[0];
@@ -9447,7 +9538,7 @@ function generateCalendarGrid(container, turmaId, docenteName, start, end, title
                                     content = docenteLabel
                                         ? `<div>${info.abrev}${eBadgeDisplay} <span style="font-size:0.82em; font-weight:600; opacity:0.92;">- ${docenteLabel}</span></div>`
                                         : `${info.abrev}${eBadgeDisplay}`;
-                                    style = `background:${event.cor || '#bdc3c7'}; color:black;`;
+                                    style = `background:${vividHexColor(event.cor || '#bdc3c7')}; color:black;`;
                                 } else {
                                     content = '&nbsp;';
                                     style = 'background: #ecf0f1;';
@@ -9503,7 +9594,7 @@ function generateCalendarGrid(container, turmaId, docenteName, start, end, title
                 } else {
                     dayData.events.forEach((ev) => {
                         const info = getDisciplinaInfo(ev.disciplina);
-                        let style = `background:${ev.cor || '#bdc3c7'}`;
+                        let style = `background:${vividHexColor(ev.cor || '#bdc3c7')}`;
                         let displayLabel = docenteName ? `${info.abrev} - ${ev.turmaId}` : info.abrev;
 
                         if (isOutOfBounds) {
