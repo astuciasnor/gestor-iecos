@@ -750,6 +750,199 @@ input[type="date"] { color-scheme: dark; }
     color: #12305a;
 }
 
+/* ===== Infográfico do fluxo de trabalho (aba Ajuda) ===== */
+.help-workflow {
+    grid-column: 1 / -1;
+    margin: 4px 0 22px;
+}
+
+.help-workflow__title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 14px;
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: var(--primary);
+}
+
+.help-workflow__grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    align-items: stretch;
+}
+
+.wf-step {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    padding: 14px 12px 16px;
+    border: 2px solid #cfe0f5;
+    border-radius: 12px;
+    background-color: #f3f8ff;
+    background-image:
+        repeating-linear-gradient(0deg, rgba(120, 160, 210, 0.18) 0 1px, transparent 1px 20px),
+        repeating-linear-gradient(90deg, rgba(120, 160, 210, 0.18) 0 1px, transparent 1px 20px);
+    box-shadow: 0 3px 8px rgba(52, 152, 219, 0.10);
+}
+
+.wf-step__badge {
+    align-self: center;
+    margin-bottom: 10px;
+    padding: 2px 14px;
+    border: 2px solid #cfe0f5;
+    border-radius: 6px;
+    background: #ffffff;
+    color: #2c5d9b;
+    font-weight: 800;
+    font-size: 0.9rem;
+    letter-spacing: 1px;
+}
+
+.wf-step--1 .wf-step__badge { border-top: 4px solid #f6c873; }
+
+.wf-step__title {
+    margin: 0 0 12px;
+    text-align: center;
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: #2c3e50;
+    line-height: 1.2;
+}
+
+.wf-step__art {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 104px;
+    margin-bottom: 12px;
+    padding: 10px;
+    border: 1px dashed #c2d6ef;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.7);
+}
+
+.wf-step__caption {
+    margin: 0;
+    font-size: 0.86rem;
+    line-height: 1.45;
+    color: #5a6b7b;
+}
+
+.wf-step:not(:last-child)::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    right: -13px;
+    z-index: 3;
+    width: 0;
+    height: 0;
+    border-top: 9px solid transparent;
+    border-bottom: 9px solid transparent;
+    border-left: 13px solid #6f9fd6;
+    transform: translateY(-50%);
+}
+
+/* Arte 1: lista de seletores encadeados */
+.wf-dropdowns {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    width: 100%;
+}
+.wf-dd {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 4px 8px;
+    font-size: 0.72rem;
+    color: #34557e;
+    background: #ffffff;
+    border: 1px solid #c2d6ef;
+    border-radius: 5px;
+}
+.wf-dd::after { content: "\25BE"; color: #7ea8d8; font-size: 0.7rem; }
+.wf-dd--i1 { margin-left: 12px; }
+.wf-dd--i2 { margin-left: 24px; }
+.wf-dd--i3 { margin-left: 36px; }
+
+/* Arte 2: roda de cores + docente */
+.wf-target {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+.wf-colorwheel {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    border: 3px solid #ffffff;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18);
+    background: conic-gradient(#ff6b6b, #ffd93b, #6bcB77, #4d96ff, #9b5de5, #ff6b6b);
+}
+.wf-person {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 46px;
+    height: 46px;
+    font-size: 1.5rem;
+    background: #ffffff;
+    border: 2px solid #c2d6ef;
+    border-radius: 50%;
+}
+
+/* Arte 3: mini grade pintada */
+.wf-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 3px;
+    width: 100%;
+    max-width: 130px;
+}
+.wf-cell {
+    aspect-ratio: 1 / 1;
+    background: #ffffff;
+    border: 1px solid #d6e2f2;
+    border-radius: 2px;
+}
+.wf-cell--on { background: #4d96ff; border-color: #2f80c9; }
+
+/* Arte 4: barras de Gantt + alerta */
+.wf-audit {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    width: 100%;
+    max-width: 140px;
+}
+.wf-bar {
+    height: 10px;
+    border-radius: 5px;
+    background: #6bcB77;
+}
+.wf-bar--1 { width: 80%; }
+.wf-bar--2 { width: 55%; margin-left: 18%; background: #4d96ff; }
+.wf-bar--3 { width: 45%; margin-left: 8%; background: #ffd93b; }
+.wf-audit-flags {
+    display: flex;
+    justify-content: flex-end;
+    gap: 6px;
+    font-size: 0.95rem;
+}
+
+@media (max-width: 900px) {
+    .help-workflow__grid { grid-template-columns: repeat(2, 1fr); }
+    .wf-step:nth-child(2n)::after { display: none; }
+}
+
+@media (max-width: 560px) {
+    .help-workflow__grid { grid-template-columns: 1fr; }
+    .wf-step::after { display: none !important; }
+}
+
 .offer-mode-section {
     margin-bottom: 20px;
 }
