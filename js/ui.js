@@ -7643,6 +7643,23 @@ function buildGanttTimelineLinesHtml(minTime, maxTime, totalTime) {
     return weekLines.map((pct) => `<div class="gantt-grid-line-week" style="left: ${pct}%;"></div>`).join('');
 }
 
+function buildGanttMonthStartLinesHtml(minTime, maxTime, totalTime) {
+    const monthStartLines = [];
+    let monthWalker = new Date(minTime);
+    monthWalker.setDate(1);
+    monthWalker = new Date(monthWalker.getFullYear(), monthWalker.getMonth() + 1, 1, 12, 0, 0);
+
+    while (monthWalker.getTime() <= maxTime) {
+        const leftPct = ((monthWalker.getTime() - minTime) / totalTime) * 100;
+        if (leftPct > 0.1 && leftPct < 100) monthStartLines.push(leftPct);
+        monthWalker = new Date(monthWalker.getFullYear(), monthWalker.getMonth() + 1, 1, 12, 0, 0);
+    }
+
+    return monthStartLines
+        .map((pct) => `<div style="position:absolute; left:${pct}%; top:0; bottom:0; border-left:2px dotted rgba(44,62,80,0.55); z-index:1; pointer-events:none;"></div>`)
+        .join('');
+}
+
 function buildGanttMonthOverlaysHtml(minTime, maxTime, totalTime) {
     const monthLines = [];
     let curMonthWalker = new Date(minTime);
@@ -7827,7 +7844,11 @@ function collectLegacyGanttDayItems({
 
 function getGanttCompactDisciplinaLabel(item) {
     const info = getDisciplinaInfo(item?.disciplina || '');
-    const base = String(info?.abrev || item?.disciplina || '').trim();
+    const baseRaw = String(info?.abrev || item?.disciplina || '').trim();
+    const baseLower = baseRaw ? baseRaw.toLocaleLowerCase('pt-BR') : '';
+    const base = baseLower
+        ? `${baseLower.charAt(0).toLocaleUpperCase('pt-BR')}${baseLower.slice(1)}`
+        : '';
     const preferredHours = Number(item?.chProf);
     const fallbackHours = Number(item?.chTotal);
     const cargaHoraria = Number.isFinite(preferredHours) && preferredHours > 0
@@ -8033,7 +8054,7 @@ function buildGanttInnerDateLabelsHtml({ leftPct, widthPct, currentTop, barHeigh
     `;
 }
 
-function renderGanttTurnoLane({ turnoConfig, dayItems, docenteName, dayConfig, minTime, totalTime, ganttTurnoConfigs, isLastLane }) {
+function renderGanttTurnoLane({ turnoConfig, dayItems, docenteName, dayConfig, minTime, totalTime, ganttTurnoConfigs, isLastLane, monthStartLinesHtml = '' }) {
     const laneItems = dayItems.filter((item) => item.turno === turnoConfig.value);
     let currentTop = 4;
     let barsHtml = '';
@@ -8052,11 +8073,19 @@ function renderGanttTurnoLane({ turnoConfig, dayItems, docenteName, dayConfig, m
         const isOutOfBounds = store.settings.termEnd && item.dataFim > store.settings.termEnd;
         const baseColor = normalizeHexColor(item.cor || '#3498db');
         const boxBorder = isOutOfBounds ? 'border: 2px solid #900;' : `border: 1px solid ${baseColor};`;
-        const barHeight = 36;
+        const barHeight = 40;
         const timeRangeStr = getShiftTimeRangeStr(item.timeRanges, turnoConfig.value, ganttTurnoConfigs);
         const timeRangeMeta = getShiftTimeRangeMeta(item.timeRanges, turnoConfig.value, ganttTurnoConfigs);
         const detailedScheduleRows = buildGanttDetailedScheduleRows(item.timeRanges);
+        const componentHours = Number.parseFloat(item.chProf) || Number.parseFloat(item.chTotal) || 0;
+        const componentHoursLabel = componentHours > 0
+            ? `${Number.isInteger(componentHours) ? componentHours : componentHours.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 1 })}h`
+            : '';
         const compactLabel = getGanttCompactDisciplinaLabel(item);
+        const compactTurmaLabel = String(item.turmaId || '').trim();
+        const compactLabelWithTurma = compactTurmaLabel
+            ? `${compactLabel}<br><span style="font-size:0.90em; font-weight:700; opacity:0.92;">(${compactTurmaLabel})</span>`
+            : compactLabel;
         const compactRangeLabel = getGanttCompactRangeLabel(item);
         const startShort = formatDateBR(item.dataInicio || '').slice(0, 5) || '--/--';
         const endShort = formatDateBR(item.dataFim || '').slice(0, 5) || '--/--';
@@ -8066,8 +8095,8 @@ function renderGanttTurnoLane({ turnoConfig, dayItems, docenteName, dayConfig, m
             .replace(/[^a-z0-9_-]+/gi, '-');
         const defaultInsideLabelHtml = `
             <div style="position:absolute; inset:0; pointer-events:none; z-index:5;">
-                <div style="position:absolute; top:50%; left:${insideLabelInsetPx}px; right:${insideLabelInsetPx}px; transform:translateY(-50%); min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; text-align:center; font-size:0.78em; font-weight:800; color:#0f172a; text-shadow:0 1px 0 rgba(255,255,255,0.35);">
-                    ${compactLabel}
+                <div class="gantt-bar-label-2l" style="position:absolute; top:50%; left:${insideLabelInsetPx}px; right:${insideLabelInsetPx}px; transform:translateY(-50%); min-width:0; overflow:hidden; text-align:center; font-size:0.66em; line-height:1.12; font-weight:800; color:#0f172a; text-shadow:0 1px 0 rgba(255,255,255,0.35); white-space:normal; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; line-clamp:2; word-break:break-word; overflow-wrap:anywhere;">
+                    ${compactLabelWithTurma}
                 </div>
             </div>
         `;
@@ -8161,8 +8190,8 @@ function renderGanttTurnoLane({ turnoConfig, dayItems, docenteName, dayConfig, m
             : (placeExternalRight
                 ? `left:calc(${Math.min(92, leftPct + widthPct)}% + ${externalLabelOffsetPx}px);`
                 : `right:calc(${Math.min(92, 100 - leftPct)}% + ${externalLabelOffsetPx}px);`);
-        const sharedTargetSegment = targetSegmentFound && targetSegmentWidthPct < (widthPct - 0.4);
-        const showExternalLabel = !sharedTargetSegment && targetSpanPct < 12;
+        const sharedTargetSegment = false;
+        const showExternalLabel = false;
         const sharedSegmentLabelsHtml = sharedTargetSegment
             ? buildGanttSharedSegmentLabelsHtml({ segmentMeta, leftPct, widthPct, currentTop, barHeight })
             : '';
@@ -8220,11 +8249,87 @@ function renderGanttTurnoLane({ turnoConfig, dayItems, docenteName, dayConfig, m
                             ${turnoConfig.shortCode}
                         </div>
                         <div class="gantt-timeline" style="flex: 1; position: relative; background: transparent; border: none;">
+                            ${monthStartLinesHtml}
                             ${barsHtml}
                         </div>
                     </div>
                 `
     };
+}
+
+function renderTeacherClassicGantt(container, {
+    docenteName = '',
+    totalCH = 0,
+    offerProjection = null,
+    teacherSnapshot = null,
+    startDate = '',
+    endDate = '',
+    ganttTurnoConfigs = []
+} = {}) {
+    const eventsByDate = teacherSnapshot?.eventsByDate || {};
+    const allDates = Object.keys(eventsByDate).sort((a, b) => a.localeCompare(b));
+    const minDateStr = String(startDate || allDates[0] || '').trim();
+    const maxDateStr = String(endDate || allDates[allDates.length - 1] || minDateStr || '').trim();
+
+    if (!minDateStr || !maxDateStr) {
+        container.innerHTML = `<div style="text-align:center; color:#64748b; padding:26px;">Sem dados para o periodo selecionado.</div>`;
+        return;
+    }
+
+    const minTime = new Date(`${minDateStr}T12:00:00`).getTime();
+    const maxTimeRaw = new Date(`${maxDateStr}T12:00:00`).getTime();
+    const maxTime = maxTimeRaw > minTime ? maxTimeRaw : (minTime + (24 * 60 * 60 * 1000));
+    const totalTime = Math.max(1, maxTime - minTime);
+    const monthStartLinesHtml = buildGanttMonthStartLinesHtml(minTime, maxTime, totalTime);
+    const visibleTurnos = getGanttVisibleTurnos(teacherSnapshot, ganttTurnoConfigs);
+
+    const dayConfigs = [
+        { id: 1, name: 'SEG' },
+        { id: 2, name: 'TER' },
+        { id: 3, name: 'QUA' },
+        { id: 4, name: 'QUI' },
+        { id: 5, name: 'SEX' },
+        { id: 6, name: 'SÁB' }
+    ];
+
+    const rowsHtml = dayConfigs.map((dayConfig) => {
+        const dayItems = collectGanttDayItems({
+            dayId: dayConfig.id,
+            snapshot: teacherSnapshot,
+            docenteName,
+            offerProjection,
+            ganttTurnoConfigs,
+            visibleTurnos
+        });
+
+        const laneRenders = visibleTurnos.map((turnoConfig, index) => renderGanttTurnoLane({
+            turnoConfig,
+            dayItems,
+            docenteName,
+            dayConfig,
+            minTime,
+            totalTime,
+            ganttTurnoConfigs,
+            isLastLane: index === (visibleTurnos.length - 1),
+            monthStartLinesHtml
+        }));
+
+        return renderGanttDayRow(dayConfig, laneRenders);
+    }).join('');
+
+    const titleHours = Number.isFinite(Number(totalCH)) && Number(totalCH) > 0
+        ? `${Number(totalCH)}H`
+        : '-';
+
+    container.innerHTML = `
+        <div class="gantt-container teacher-gantt-print" style="background:#f8fafc; border:1px solid #cbd5e1; border-radius:8px; overflow:hidden; box-shadow:0 1px 3px rgba(15,23,42,0.08);">
+            <h3 style="margin:16px 12px 12px 12px; text-align:center; color:var(--primary); font-size:2rem; font-weight:800; letter-spacing:0.3px; text-transform:uppercase;">CRONOGRAMA: ${String(docenteName || '').toUpperCase()} (${titleHours})</h3>
+            ${buildGanttMonthHeaderColumnsHtml(minTime, maxTime, totalTime)}
+            <div style="position:relative; background:#eef2f7; border-top:2px solid var(--primary);">
+                ${rowsHtml}
+            </div>
+        </div>
+    `;
 }
 
 function renderGanttDayRow(dayConfig, laneRenders) {
@@ -8983,13 +9088,14 @@ function renderTeacherGanttInto(container, docenteName) {
             resolveShift: (slot) => resolveTeacherShiftForSlot(slot),
             preferredShiftOrder: ganttTurnoConfigs.map((config) => config.value)
         });
-        renderBidimensionalTeacherGantt(container, {
+        renderTeacherClassicGantt(container, {
             docenteName: teacherName,
             totalCH,
             offerProjection,
             teacherSnapshot,
             startDate: fallbackStart,
-            endDate: fallbackEnd
+            endDate: fallbackEnd,
+            ganttTurnoConfigs
         });
     } catch (err) {
         console.error('Erro renderGanttChart:', err);

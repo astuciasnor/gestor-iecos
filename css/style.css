@@ -2361,7 +2361,7 @@ input[type="date"] { color-scheme: dark; }
 }
 
 @media print {
-    @page { margin: 1cm; size: landscape; }
+    @page { margin: 0.8cm; size: 297mm 210mm; }
     
     html, body {
         height: auto !important;
@@ -2440,6 +2440,39 @@ input[type="date"] { color-scheme: dark; }
     }
     
     .day-header { border: 1px solid #ccc !important; }
+
+    .teacher-gantt-print {
+        width: 100% !important;
+        page-break-inside: avoid;
+        break-inside: avoid;
+        box-shadow: none !important;
+    }
+
+    .teacher-gantt-print h3 {
+        font-size: 16pt !important;
+        margin: 8px 8px 10px 8px !important;
+    }
+
+    .teacher-gantt-print .gantt-bar {
+        height: 36px !important;
+    }
+
+    .teacher-gantt-print .gantt-bar-label-2l {
+        font-size: 0.6em !important;
+        line-height: 1.08 !important;
+        -webkit-line-clamp: 2 !important;
+        line-clamp: 2 !important;
+    }
+
+    .gantt-wrapper,
+    .gantt-container,
+    .gantt-timeline,
+    .gantt-header-row,
+    .teacher-gantt-print {
+        transform: none !important;
+        rotate: 0deg !important;
+        writing-mode: horizontal-tb !important;
+    }
 }
 
 .help-layout{

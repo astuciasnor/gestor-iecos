@@ -1364,6 +1364,25 @@
             .mcd-num { font-size: 0.65rem; }
             .mcd-event-sigla { font-size: 0.56rem; }
         }
+
+        @media print {
+            @page {
+                size: A4 landscape;
+                margin: 0.8cm;
+            }
+
+            body {
+                background: #fff !important;
+            }
+
+            .bottom-sheet,
+            .sheet-overlay,
+            .btn-topo,
+            .slot-lens,
+            .day-lens {
+                display: none !important;
+            }
+        }
     </style>
 </head>
 
