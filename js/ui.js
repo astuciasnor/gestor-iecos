@@ -9306,6 +9306,111 @@ function refreshTeacherConflictsUI() {
 }
 // ========================================================
 
+function buildCalendarTurmaResumTable(turmaId, start, end) {
+    if (!turmaId) return null;
+
+    const allocations = store.allocations.filter(a => String(a.turmaId) === String(turmaId));
+    if (allocations.length === 0) return null;
+
+    const disciplinas = [];
+    const disciplinaMap = new Map();
+
+    allocations.forEach((alloc, idx) => {
+        const key = `${alloc.disciplina}`;
+        if (!disciplinaMap.has(key)) {
+            const componenteCode = alloc.componenteCode || '';
+            const color = alloc.cor || store.getDisciplinaColor(alloc.disciplina) || '#f39c12';
+            disciplinas.push({
+                num: disciplinas.length + 1,
+                codigo: componenteCode,
+                disciplina: alloc.disciplina,
+                cor: color,
+                docentes: []
+            });
+            disciplinaMap.set(key, disciplinas.length - 1);
+        }
+
+        const disciplinaIdx = disciplinaMap.get(key);
+        const disc = disciplinas[disciplinaIdx];
+
+        let docenteName = '';
+        let periodo = '';
+
+        if (alloc.docentes && Array.isArray(alloc.docentes) && alloc.docentes.length > 0) {
+            alloc.docentes.forEach(d => {
+                const nome = String(d?.nome || d || '').trim();
+                const dataInicio = alloc.dataInicio || start || '';
+                const dataFim = alloc.dataFim || end || '';
+                if (nome) {
+                    periodo = dataInicio && dataFim 
+                        ? `${formatDateBR(dataInicio)} a ${formatDateBR(dataFim)}`
+                        : '';
+                    disc.docentes.push({ nome, periodo });
+                }
+            });
+        } else if (alloc.docente) {
+            docenteName = String(alloc.docente || '').trim();
+            const dataInicio = alloc.dataInicio || start || '';
+            const dataFim = alloc.dataFim || end || '';
+            periodo = dataInicio && dataFim 
+                ? `${formatDateBR(dataInicio)} a ${formatDateBR(dataFim)}`
+                : '';
+            if (docenteName) {
+                disc.docentes.push({ nome: docenteName, periodo });
+            }
+        }
+    });
+
+    // Monta a tabela HTML
+    let tableHtml = `
+        <table class="calendar-turma-resume-table" style="width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 12px;">
+            <thead>
+                <tr style="background: #f5f5f5; border-bottom: 2px solid #333;">
+                    <th style="padding: 8px; text-align: left; border-right: 1px solid #ddd; width: 5%;">#</th>
+                    <th style="padding: 8px; text-align: left; border-right: 1px solid #ddd; width: 15%;">Código</th>
+                    <th style="padding: 8px; text-align: left; border-right: 1px solid #ddd; width: 30%;">Disciplina</th>
+                    <th style="padding: 8px; text-align: left; border-right: 1px solid #ddd; width: 20%;">Docente</th>
+                    <th style="padding: 8px; text-align: left; width: 30%;">Período</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+
+    disciplinas.forEach(disc => {
+        if (disc.docentes.length === 0) {
+            tableHtml += `
+                <tr style="border-bottom: 1px solid #ddd;">
+                    <td style="padding: 8px; border-right: 1px solid #ddd; background-color: ${disc.cor}22; font-weight: bold;">${disc.num}</td>
+                    <td style="padding: 8px; border-right: 1px solid #ddd;">${disc.codigo}</td>
+                    <td style="padding: 8px; border-right: 1px solid #ddd; font-weight: bold; color: #333;">${disc.disciplina}</td>
+                    <td style="padding: 8px; border-right: 1px solid #ddd; font-style: italic; color: #999;">-</td>
+                    <td style="padding: 8px; color: #999;">-</td>
+                </tr>
+            `;
+        } else {
+            disc.docentes.forEach((doc, idx) => {
+                const isFirst = idx === 0;
+                tableHtml += `
+                    <tr style="border-bottom: 1px solid #ddd;">
+                        <td style="padding: 8px; border-right: 1px solid #ddd; background-color: ${disc.cor}22; font-weight: bold; ${isFirst ? '' : 'border-top: none;'}">${isFirst ? disc.num : ''}</td>
+                        <td style="padding: 8px; border-right: 1px solid #ddd; ${isFirst ? '' : 'border-top: none;'}">${isFirst ? disc.codigo : ''}</td>
+                        <td style="padding: 8px; border-right: 1px solid #ddd; font-weight: bold; color: #333; ${isFirst ? '' : 'border-top: none;'}">${isFirst ? disc.disciplina : ''}</td>
+                        <td style="padding: 8px; border-right: 1px solid #ddd; color: #333;">${doc.nome}</td>
+                        <td style="padding: 8px; color: #666;">${doc.periodo}</td>
+                    </tr>
+                `;
+            });
+        }
+    });
+
+    tableHtml += `
+            </tbody>
+        </table>
+    `;
+
+    return tableHtml;
+}
+
 function generateCalendarGrid(container, turmaId, docenteName, start, end, titleHTML, options = {}) {
     container.innerHTML = '';
 
@@ -9313,6 +9418,17 @@ function generateCalendarGrid(container, turmaId, docenteName, start, end, title
     header.className = turmaId ? 'print-header-container' : 'print-only print-header-container';
     header.innerHTML = titleHTML;
     container.appendChild(header);
+
+    // Adiciona tabela resumo de disciplinas para turmas
+    if (turmaId) {
+        const resumTable = buildCalendarTurmaResumTable(turmaId, start, end);
+        if (resumTable) {
+            const tableDiv = document.createElement('div');
+            tableDiv.className = 'calendar-turma-resume-container';
+            tableDiv.innerHTML = resumTable;
+            container.appendChild(tableDiv);
+        }
+    }
 
     const eventsByDate = getCalendarEvents(turmaId, start, end, docenteName);
     const useNativeShiftMapping = !!options.useNativeShiftMapping;

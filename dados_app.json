@@ -1,6 +1,6 @@
 {
   "meta": {
-    "generated_at": "2026-06-25T12:16:23",
+    "generated_at": "2026-06-25T14:15:41",
     "source_file": "planilha_base.xlsx"
   },
   "docentes": [
@@ -3222,7 +3222,7 @@
     {
       "regime": 1,
       "turno": "Tarde",
-      "ordem": 0,
+      "ordem": 1,
       "faixa": "13:30 - 14:20",
       "sigaa": 1
     },
@@ -3659,6 +3659,24 @@
       "feriado": "Dia de São Benedito",
       "dia": "Domingo",
       "tipo": "Municipal"
+    },
+    {
+      "data": "2026-11-09",
+      "feriado": "SEMIP",
+      "dia": "Segunda-feira",
+      "tipo": "evento-academico"
+    },
+    {
+      "data": "2026-11-10",
+      "feriado": "SEMIP",
+      "dia": "Terça-feira",
+      "tipo": "evento-academico"
+    },
+    {
+      "data": "2026-11-11",
+      "feriado": "SEMIP",
+      "dia": "Quarta-feira",
+      "tipo": "evento-academico"
     }
   ],
   "periodos_letivos": [
