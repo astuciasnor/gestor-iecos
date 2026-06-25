@@ -1,4 +1,4 @@
-import { store } from './store.js';
+import { store } from './store.js??v=20260625v';
 import { getDaysArray, toLocalDateString } from './utils.js';
 import { mapSlotToTurno, normalizeTurnoKey } from './turns.js';
 
@@ -88,7 +88,7 @@ function applyExceptionalSaturdayShift(allocation = {}, dayOfWeek = 0, slots = [
       slot,
       nativeTurno,
       'Manha',
-      store.rawData?.horarios_por_turno
+      store.getActiveHorariosPorTurno()
     ))
   );
 }

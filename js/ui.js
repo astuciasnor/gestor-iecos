@@ -1,7 +1,7 @@
-import { store } from './store.js';
+import { store } from './store.js??v=20260625v';
 import { getTurnoLetter, mapSlotToTurno, normalizeTurnoKey, getHorariosByTurno } from './turns.js';
 import { normalizePeriodo as normalizePeriodoLetivoCode } from './plan_storage.js';
-import { getCalendarEvents } from './calendar.js';
+import { getCalendarEvents } from './calendar.js??v=20260625v';
 import { countBusinessDays, countWeekdaysInPeriod, addBusinessDays, isDateOverlap, calculateEndDateByWeekday } from './utils.js';
 import { buildTeacherExecutionSnapshot, buildCanonicalOfferProjection } from './execution_engine.js';
 import { renderBidimensionalTeacherGantt } from './gantt_bidimensional.js';
@@ -3626,7 +3626,7 @@ function computeIntensiveExecution(intense, options = {}) {
             if (dow === 6 && intense.sabadoManha) {
                 const turmaTurno = store.rawData?.turmas?.find(t => String(t.turma_id) === String(intense.turmaId))?.turno || 'Tarde';
                 // Remove duplicatas e garante que o mapeamento respeite a ordem das aulas (pulando intervalos)
-                daySlots = [...new Set(daySlots.map(s => mapSlotToTurno(s, turmaTurno, 'Manha', store.rawData?.horarios_por_turno)))];
+                daySlots = [...new Set(daySlots.map(s => mapSlotToTurno(s, turmaTurno, 'Manha', store.getActiveHorariosPorTurno())))];
             }
 
             const freeSlots = filterFreeSlotsForDate(dStr, daySlots, dow);
@@ -4532,22 +4532,21 @@ function buildScopedSigaaAllocationFromOfferFaixa(offerGroup, faixa, planContext
 
 function getSigaaCode(allocsForClass) {
     function buildSigaaSlotsMap() {
-        const hp = store.rawData?.horarios_por_turno || {};
+        // Usa os numeros SIGAA explicitos do regime ativo (coluna `sigaa` da planilha).
+        // O 4o horario (intervalo) nao tem numero e e ignorado.
+        const entries = (typeof store.getActiveSigaaSlots === 'function') ? store.getActiveSigaaSlots() : [];
         const dynamicSlots = [];
 
-        Object.keys(hp).forEach((turnoValue) => {
-            const shiftCode = getGanttTurnoCode(turnoValue);
+        entries.forEach((entry) => {
+            const shiftCode = getGanttTurnoCode(entry.turno);
             if (!['M', 'T', 'N'].includes(shiftCode)) return;
-
-            let slotIndex = 0;
-            (Array.isArray(hp[turnoValue]) ? hp[turnoValue] : []).forEach((rawSlot) => {
-                const rawLabel = String(rawSlot || '');
-                if (!rawLabel || rawLabel.toUpperCase().includes('INTERVALO')) return;
-                const startMinutes = timeToMinutes(cleanHorarioLabel(rawLabel));
-                if (!Number.isFinite(startMinutes) || startMinutes >= 99999) return;
-                slotIndex += 1;
-                dynamicSlots.push({ m: startMinutes, s: shiftCode, sl: slotIndex });
-            });
+            const sigaaNum = parseInt(entry.sigaa, 10);
+            if (!Number.isFinite(sigaaNum) || sigaaNum <= 0) return;
+            const rawLabel = String(entry.faixa || '');
+            if (!rawLabel || rawLabel.toUpperCase().includes('INTERVALO')) return;
+            const startMinutes = timeToMinutes(cleanHorarioLabel(rawLabel));
+            if (!Number.isFinite(startMinutes) || startMinutes >= 99999) return;
+            dynamicSlots.push({ m: startMinutes, s: shiftCode, sl: sigaaNum });
         });
 
         if (dynamicSlots.length > 0) {
@@ -4678,7 +4677,7 @@ function formatTurnoOfertaLabel(value) {
 }
 
 function getAvailableTurnoOfertaOptions() {
-    const byTurnoMap = store.rawData?.horarios_por_turno;
+    const byTurnoMap = store.getActiveHorariosPorTurno();
     if (byTurnoMap && typeof byTurnoMap === 'object') {
         const options = Object.keys(byTurnoMap)
             .filter((key) => Array.isArray(byTurnoMap[key]) && byTurnoMap[key].length > 0)
@@ -4795,7 +4794,7 @@ function getShiftChangeMeta(allocLike = {}, slotLabel = '', dayOfWeek = 0, dateS
                 slotLabel,
                 getTurnoValueFromLetter(currentLetter),
                 nativeTurnoValue,
-                store.rawData?.horarios_por_turno
+                store.getActiveHorariosPorTurno()
             );
         }
     }
@@ -5949,7 +5948,7 @@ function renderWeeklyGrid() {
                 if (e.sabadoManha && dayNumber === 6 && eTurno !== 'Manha' && eTurno !== 'Manhã') {
                     // Se estamos vendo a Noite, e a aula é de Sábado Manhã (vinculada), 
                     // mapeamos de volta para a visão da Noite para que o quadradinho apareça.
-                    eventHorario = mapSlotToTurno(e.horario, 'Manha', currentViewTurno, store.rawData?.horarios_por_turno);
+                    eventHorario = mapSlotToTurno(e.horario, 'Manha', currentViewTurno, store.getActiveHorariosPorTurno());
                 }
                 const eventKey = slotKey(eventHorario);
 
@@ -5957,7 +5956,7 @@ function renderWeeklyGrid() {
                     ? e.horariosOcupados.some((h) => {
                         let hObj = h;
                         if (e.sabadoManha && dayNumber === 6 && eTurno !== 'Manha' && eTurno !== 'Manhã') {
-                            hObj = mapSlotToTurno(h, 'Manha', currentViewTurno, store.rawData?.horarios_por_turno);
+                            hObj = mapSlotToTurno(h, 'Manha', currentViewTurno, store.getActiveHorariosPorTurno());
                         }
                         return slotKey(hObj) === key;
                     })
@@ -7253,7 +7252,7 @@ function collectSlotsForTurnoValues(turnoValues = []) {
         .filter(Boolean))];
     if (normalizedWanted.length === 0) return [];
 
-    const hp = store.rawData?.horarios_por_turno || {};
+    const hp = store.getActiveHorariosPorTurno();
     const slots = [];
 
     normalizedWanted.forEach((wantedTurno) => {
@@ -7278,7 +7277,7 @@ function getSlotsForTeacherShifts(activeShiftKeys = []) {
     // completo do turno. Isso é robusto para aulas deslocadas ao sábado de manhã,
     // ao contrário de resolver pelo valor bruto do turno (ex.: "Manhã+Noite"),
     // que não casa com nenhuma chave de horarios_por_turno.
-    const hp = store.rawData?.horarios_por_turno || {};
+    const hp = store.getActiveHorariosPorTurno();
     const slotMap = new Map();
 
     [...new Set((Array.isArray(activeShiftKeys) ? activeShiftKeys : []).filter(Boolean))]
@@ -7343,7 +7342,7 @@ function buildTurmaCalendarSlots(eventsByDate = {}, turmaId = '') {
     });
 
     // Injeção de turnos completos se houver ao menos um evento neles
-    const hp = store.rawData?.horarios_por_turno || {};
+    const hp = store.getActiveHorariosPorTurno();
     activeShifts.forEach(shiftKey => {
         const fullShifter = getHorariosByTurno(shiftKey, hp);
         if (Array.isArray(fullShifter)) {
@@ -7490,7 +7489,7 @@ function getGanttTurnoCode(turnoValue = '') {
 }
 
 function getGanttTurnoConfigs() {
-    const hp = store.rawData?.horarios_por_turno || {};
+    const hp = store.getActiveHorariosPorTurno();
     return getAvailableTurnoOfertaOptions().map((option) => {
         const rawSlots = Array.isArray(hp?.[option.value]) ? hp[option.value] : [];
         const normalizedSlots = rawSlots
@@ -9333,7 +9332,7 @@ function generateCalendarGrid(container, turmaId, docenteName, start, end, title
         if (normalizedSkeleton.length > 0) {
             slotsToRender = normalizedSkeleton.slice();
         } else {
-        const hp = store.rawData?.horarios_por_turno || {};
+        const hp = store.getActiveHorariosPorTurno();
         const skeleton = [];
 
         if (hp['Manhã']) skeleton.push(...hp['Manhã']);
@@ -9458,9 +9457,9 @@ function generateCalendarGrid(container, turmaId, docenteName, start, end, title
                             let eHorariosOcupados = e.horariosOcupados;
 
                             if (e.sabadoManha && dayOfWeek === 6 && eTurno !== 'Manha' && eTurno !== 'Manhã') {
-                                if (eHorario) eHorario = mapSlotToTurno(eHorario, 'Manha', eTurno, store.rawData?.horarios_por_turno);
-                                if (Array.isArray(eHorariosUltimoDia)) eHorariosUltimoDia = eHorariosUltimoDia.map(h => mapSlotToTurno(h, 'Manha', eTurno, store.rawData?.horarios_por_turno));
-                                if (Array.isArray(eHorariosOcupados)) eHorariosOcupados = eHorariosOcupados.map(h => mapSlotToTurno(h, 'Manha', eTurno, store.rawData?.horarios_por_turno));
+                                if (eHorario) eHorario = mapSlotToTurno(eHorario, 'Manha', eTurno, store.getActiveHorariosPorTurno());
+                                if (Array.isArray(eHorariosUltimoDia)) eHorariosUltimoDia = eHorariosUltimoDia.map(h => mapSlotToTurno(h, 'Manha', eTurno, store.getActiveHorariosPorTurno()));
+                                if (Array.isArray(eHorariosOcupados)) eHorariosOcupados = eHorariosOcupados.map(h => mapSlotToTurno(h, 'Manha', eTurno, store.getActiveHorariosPorTurno()));
                             }
 
                             if (eHorario) eHorario = getShiftChangeMeta(e, eHorario, dayOfWeek, dayData.date).mappedSlot || eHorario;

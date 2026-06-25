@@ -199,6 +199,7 @@ def build_json_from_excel(xlsx_path: Path) -> Dict[str, Any]:
         {
             "sigla": to_str(row.get("sigla")),
             "curso": to_str(row.get("curso")),
+            "regime": to_int(row.get("regime")) or 1,
         }
         for row in raw["cursos"]
     ]
@@ -240,16 +241,39 @@ def build_json_from_excel(xlsx_path: Path) -> Dict[str, Any]:
         faixa = to_str(row.get("faixa"))
         if not turno or not faixa:
             continue
-        faixa_out = f"INTERVALO ({faixa})" if is_intervalo(faixa) else faixa
-        horarios_out.append({"turno": turno, "ordem": ordem, "faixa": faixa_out})
+        regime = to_int(row.get("regime")) or 1
+        is_int = is_intervalo(faixa)
+        sigaa = None if is_int else (to_int(row.get("sigaa")) or None)
+        faixa_out = f"INTERVALO ({faixa})" if is_int else faixa
+        horarios_out.append(
+            {
+                "regime": regime,
+                "turno": turno,
+                "ordem": ordem,
+                "faixa": faixa_out,
+                "sigaa": sigaa,
+            }
+        )
 
-    horarios_out.sort(key=lambda item: (item["turno"], item["ordem"]))
+    horarios_out.sort(key=lambda item: (item["regime"], item["turno"], item["ordem"]))
     data["horarios"] = horarios_out
 
-    horarios_por_turno: Dict[str, List[str]] = {}
+    # Grade de horarios agrupada por regime: { "1": {turno: [faixas]}, "2": {...} }
+    horarios_por_regime: Dict[str, Dict[str, List[str]]] = {}
     for horario in horarios_out:
-        horarios_por_turno.setdefault(horario["turno"], []).append(horario["faixa"])
-    data["horarios_por_turno"] = horarios_por_turno
+        reg = str(horario["regime"])
+        horarios_por_regime.setdefault(reg, {}).setdefault(horario["turno"], []).append(horario["faixa"])
+    data["horarios_por_regime"] = horarios_por_regime
+
+    # Compat: horarios_por_turno = grade do regime padrao (Regime 1)
+    default_regime = "1" if "1" in horarios_por_regime else (
+        sorted(horarios_por_regime.keys())[0] if horarios_por_regime else "1"
+    )
+    data["horarios_por_turno"] = horarios_por_regime.get(default_regime, {})
+    data["regime_default"] = int(default_regime) if default_regime.isdigit() else 1
+    # A partir desta data (inicio do PL4/2026) cada curso usa o regime atribuido a ele;
+    # antes disso, todos seguem o Regime 1 (preserva turmas passadas).
+    data["regime_vigencia"] = "2026-08-24"
 
     data["feriados"] = [
         {

@@ -1,5 +1,5 @@
-import { store } from './store.js';
-import { initUI, exportSigaaMetadataJSON, showToastWarning } from './ui.js??v=20260621v';
+import { store } from './store.js??v=20260625v';
+import { initUI, exportSigaaMetadataJSON, showToastWarning } from './ui.js??v=20260625v';
 import { filterExportableAllocations, resolveActiveAcademicPeriod } from './academic_rules.mjs';
 import {
   buildPlanScopedPayload,

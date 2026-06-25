@@ -1,6 +1,6 @@
 {
   "meta": {
-    "generated_at": "2026-06-21T07:42:22",
+    "generated_at": "2026-06-25T12:16:23",
     "source_file": "planilha_base.xlsx"
   },
   "docentes": [
@@ -440,19 +440,23 @@
   "cursos": [
     {
       "sigla": "EP",
-      "curso": "Engenharia de Pesca"
+      "curso": "Engenharia de Pesca",
+      "regime": 2
     },
     {
       "sigla": "CB",
-      "curso": "Ciências Biológicas"
+      "curso": "Ciências Biológicas",
+      "regime": 2
     },
     {
       "sigla": "CN",
-      "curso": "Ciências Naturais"
+      "curso": "Ciências Naturais",
+      "regime": 2
     },
     {
       "sigla": "MT",
-      "curso": "Matemática"
+      "curso": "Matemática",
+      "regime": 1
     }
   ],
   "componentes": [
@@ -3139,96 +3143,296 @@
   ],
   "horarios": [
     {
+      "regime": 1,
       "turno": "Manhã",
       "ordem": 1,
-      "faixa": "07:30 - 08:20"
+      "faixa": "07:30 - 08:20",
+      "sigaa": 1
     },
     {
+      "regime": 1,
       "turno": "Manhã",
       "ordem": 2,
-      "faixa": "08:20 - 09:10"
+      "faixa": "08:20 - 09:10",
+      "sigaa": 2
     },
     {
+      "regime": 1,
       "turno": "Manhã",
       "ordem": 3,
-      "faixa": "09:10 - 10:00"
+      "faixa": "09:10 - 10:00",
+      "sigaa": 3
     },
     {
+      "regime": 1,
       "turno": "Manhã",
       "ordem": 4,
-      "faixa": "INTERVALO (10:00 - 10:20)"
+      "faixa": "INTERVALO (10:00 - 10:20)",
+      "sigaa": null
     },
     {
+      "regime": 1,
       "turno": "Manhã",
       "ordem": 5,
-      "faixa": "10:20 - 11:10"
+      "faixa": "10:20 - 11:10",
+      "sigaa": 4
     },
     {
+      "regime": 1,
       "turno": "Manhã",
       "ordem": 6,
-      "faixa": "11:10 - 12:00"
+      "faixa": "11:10 - 12:00",
+      "sigaa": 5
     },
     {
+      "regime": 1,
       "turno": "Manhã",
       "ordem": 7,
-      "faixa": "12:00 - 12:50"
+      "faixa": "12:00 - 12:50",
+      "sigaa": 6
     },
     {
+      "regime": 1,
       "turno": "Noite",
       "ordem": 1,
-      "faixa": "18:30 - 19:20"
+      "faixa": "18:30 - 19:20",
+      "sigaa": 1
     },
     {
+      "regime": 1,
       "turno": "Noite",
       "ordem": 2,
-      "faixa": "19:20 - 20:10"
+      "faixa": "19:20 - 20:10",
+      "sigaa": 2
     },
     {
+      "regime": 1,
       "turno": "Noite",
       "ordem": 3,
-      "faixa": "20:10 - 21:00"
+      "faixa": "20:10 - 21:00",
+      "sigaa": 3
     },
     {
+      "regime": 1,
       "turno": "Noite",
       "ordem": 4,
-      "faixa": "21:00 -21:50"
+      "faixa": "21:00 - 21:50",
+      "sigaa": 4
     },
     {
+      "regime": 1,
       "turno": "Tarde",
-      "ordem": 1,
-      "faixa": "13:30 - 14:20"
+      "ordem": 0,
+      "faixa": "13:30 - 14:20",
+      "sigaa": 1
     },
     {
+      "regime": 1,
       "turno": "Tarde",
       "ordem": 2,
-      "faixa": "14:20 - 15:10"
+      "faixa": "14:20 - 15:10",
+      "sigaa": 2
     },
     {
+      "regime": 1,
       "turno": "Tarde",
       "ordem": 3,
-      "faixa": "15:10 - 16:00"
+      "faixa": "15:10 - 16:00",
+      "sigaa": 3
     },
     {
+      "regime": 1,
       "turno": "Tarde",
       "ordem": 4,
-      "faixa": "INTERVALO (16:00 - 16:20)"
+      "faixa": "INTERVALO (16:00 - 16:20)",
+      "sigaa": null
     },
     {
+      "regime": 1,
       "turno": "Tarde",
       "ordem": 5,
-      "faixa": "16:20 - 17:10"
+      "faixa": "16:20 - 17:10",
+      "sigaa": 4
     },
     {
+      "regime": 1,
       "turno": "Tarde",
       "ordem": 6,
-      "faixa": "17:10 - 18:00"
+      "faixa": "17:10 - 18:00",
+      "sigaa": 5
     },
     {
+      "regime": 1,
       "turno": "Tarde",
       "ordem": 7,
-      "faixa": "18:00 - 18:50"
+      "faixa": "18:00 - 18:50",
+      "sigaa": 6
+    },
+    {
+      "regime": 2,
+      "turno": "Manhã",
+      "ordem": 1,
+      "faixa": "08:00 - 08:50",
+      "sigaa": 2
+    },
+    {
+      "regime": 2,
+      "turno": "Manhã",
+      "ordem": 2,
+      "faixa": "08:50 - 09:40",
+      "sigaa": 3
+    },
+    {
+      "regime": 2,
+      "turno": "Manhã",
+      "ordem": 3,
+      "faixa": "09:40 - 10:30",
+      "sigaa": 4
+    },
+    {
+      "regime": 2,
+      "turno": "Manhã",
+      "ordem": 4,
+      "faixa": "INTERVALO (10:30 - 10:50)",
+      "sigaa": null
+    },
+    {
+      "regime": 2,
+      "turno": "Manhã",
+      "ordem": 5,
+      "faixa": "10:50 - 11:40",
+      "sigaa": 5
+    },
+    {
+      "regime": 2,
+      "turno": "Manhã",
+      "ordem": 6,
+      "faixa": "11:40 - 12:30",
+      "sigaa": 6
+    },
+    {
+      "regime": 2,
+      "turno": "Noite",
+      "ordem": 1,
+      "faixa": "18:30 - 19:20",
+      "sigaa": 1
+    },
+    {
+      "regime": 2,
+      "turno": "Noite",
+      "ordem": 2,
+      "faixa": "19:20 - 20:10",
+      "sigaa": 2
+    },
+    {
+      "regime": 2,
+      "turno": "Noite",
+      "ordem": 3,
+      "faixa": "20:10 - 21:00",
+      "sigaa": 3
+    },
+    {
+      "regime": 2,
+      "turno": "Noite",
+      "ordem": 4,
+      "faixa": "21:00 - 21:50",
+      "sigaa": 4
+    },
+    {
+      "regime": 2,
+      "turno": "Tarde",
+      "ordem": 1,
+      "faixa": "14:00 - 14:50",
+      "sigaa": 2
+    },
+    {
+      "regime": 2,
+      "turno": "Tarde",
+      "ordem": 2,
+      "faixa": "14:50 - 15:40",
+      "sigaa": 3
+    },
+    {
+      "regime": 2,
+      "turno": "Tarde",
+      "ordem": 3,
+      "faixa": "15:40 - 16:30",
+      "sigaa": 4
+    },
+    {
+      "regime": 2,
+      "turno": "Tarde",
+      "ordem": 4,
+      "faixa": "INTERVALO (16:30 - 16:50)",
+      "sigaa": null
+    },
+    {
+      "regime": 2,
+      "turno": "Tarde",
+      "ordem": 5,
+      "faixa": "16:50 - 17:40",
+      "sigaa": 5
+    },
+    {
+      "regime": 2,
+      "turno": "Tarde",
+      "ordem": 6,
+      "faixa": "17:40 - 18:30",
+      "sigaa": 6
     }
   ],
+  "horarios_por_regime": {
+    "1": {
+      "Manhã": [
+        "07:30 - 08:20",
+        "08:20 - 09:10",
+        "09:10 - 10:00",
+        "INTERVALO (10:00 - 10:20)",
+        "10:20 - 11:10",
+        "11:10 - 12:00",
+        "12:00 - 12:50"
+      ],
+      "Noite": [
+        "18:30 - 19:20",
+        "19:20 - 20:10",
+        "20:10 - 21:00",
+        "21:00 - 21:50"
+      ],
+      "Tarde": [
+        "13:30 - 14:20",
+        "14:20 - 15:10",
+        "15:10 - 16:00",
+        "INTERVALO (16:00 - 16:20)",
+        "16:20 - 17:10",
+        "17:10 - 18:00",
+        "18:00 - 18:50"
+      ]
+    },
+    "2": {
+      "Manhã": [
+        "08:00 - 08:50",
+        "08:50 - 09:40",
+        "09:40 - 10:30",
+        "INTERVALO (10:30 - 10:50)",
+        "10:50 - 11:40",
+        "11:40 - 12:30"
+      ],
+      "Noite": [
+        "18:30 - 19:20",
+        "19:20 - 20:10",
+        "20:10 - 21:00",
+        "21:00 - 21:50"
+      ],
+      "Tarde": [
+        "14:00 - 14:50",
+        "14:50 - 15:40",
+        "15:40 - 16:30",
+        "INTERVALO (16:30 - 16:50)",
+        "16:50 - 17:40",
+        "17:40 - 18:30"
+      ]
+    }
+  },
   "horarios_por_turno": {
     "Manhã": [
       "07:30 - 08:20",
@@ -3243,7 +3447,7 @@
       "18:30 - 19:20",
       "19:20 - 20:10",
       "20:10 - 21:00",
-      "21:00 -21:50"
+      "21:00 - 21:50"
     ],
     "Tarde": [
       "13:30 - 14:20",
@@ -3255,6 +3459,8 @@
       "18:00 - 18:50"
     ]
   },
+  "regime_default": 1,
+  "regime_vigencia": "2026-08-24",
   "feriados": [
     {
       "data": "2026-01-01",

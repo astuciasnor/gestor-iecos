@@ -298,6 +298,44 @@ class Store {
     }
   }
 
+  // ===== Regime de horario (por curso, a partir da vigencia) =====
+  // Antes de regime_vigencia (inicio do PL4/2026) todos seguem o regime padrao,
+  // preservando turmas passadas. A partir dela, cada curso usa o regime atribuido.
+  getActiveRegime() {
+    const rd = this.rawData || {};
+    const cutoff = String(rd.regime_vigencia || '').trim();
+    const termStart = String(this.settings?.termStart || this.activePlanMeta?.termStart || '').trim();
+    if (cutoff && termStart && termStart < cutoff) {
+      return String(rd.regime_default || 1);
+    }
+    const sigla = this.selectedCurso;
+    if (sigla) {
+      const curso = (rd.cursos || []).find((c) => String(c.sigla) === String(sigla));
+      if (curso && curso.regime) return String(curso.regime);
+    }
+    return String(rd.regime_default || 1);
+  }
+
+  // Grade horarios_por_turno do regime ativo (com fallback de compatibilidade).
+  getActiveHorariosPorTurno() {
+    const rd = this.rawData || {};
+    const byRegime = rd.horarios_por_regime || {};
+    const regime = this.getActiveRegime();
+    if (byRegime && byRegime[regime] && typeof byRegime[regime] === 'object') {
+      return byRegime[regime];
+    }
+    return rd.horarios_por_turno || {};
+  }
+
+  // Entradas de horario do regime ativo que possuem numero SIGAA (exclui intervalos).
+  getActiveSigaaSlots() {
+    const rd = this.rawData || {};
+    const regime = this.getActiveRegime();
+    const list = Array.isArray(rd.horarios) ? rd.horarios : [];
+    const filtered = list.filter((h) => String(h.regime ?? rd.regime_default ?? 1) === regime);
+    return (filtered.length > 0 ? filtered : list).filter((h) => h && h.sigaa != null);
+  }
+
   // ===== Horarios (NOVA FONTE: horarios_por_turno) =====
   getHorariosTurma() {
     if (!this.selectedTurma || !this.rawData) return [];
@@ -306,7 +344,7 @@ class Store {
     if (!turmaObj) return [];
 
     const turno = this.settings.turnoOferta || turmaObj.turno || 'Tarde';
-    const hp = this.rawData.horarios_por_turno;
+    const hp = this.getActiveHorariosPorTurno();
 
     if (hp && typeof hp === 'object') {
       const slots = getHorariosByTurno(turno, hp);
