@@ -9306,104 +9306,253 @@ function refreshTeacherConflictsUI() {
 }
 // ========================================================
 
-function buildCalendarTurmaResumTable(turmaId, start, end) {
+function buildCalendarTurmaResumeTable(turmaId, start, end) {
     if (!turmaId) return null;
 
-    const allocations = store.allocations.filter(a => String(a.turmaId) === String(turmaId));
+    const allocations = store.allocations.filter((a) => (
+        String(a.turmaId) === String(turmaId)
+        && (isScheduledRegularAllocation(a) || isFaixaAllocation(a))
+    ));
     if (allocations.length === 0) return null;
 
-    const disciplinas = [];
-    const disciplinaMap = new Map();
+    function toCH(value) {
+        const num = Number.parseFloat(value);
+        return Number.isFinite(num) && num > 0 ? num : 0;
+    }
 
-    allocations.forEach((alloc, idx) => {
-        const key = `${alloc.disciplina}`;
-        if (!disciplinaMap.has(key)) {
-            const componenteCode = alloc.componenteCode || '';
-            const color = alloc.cor || store.getDisciplinaColor(alloc.disciplina) || '#f39c12';
-            disciplinas.push({
-                num: disciplinas.length + 1,
-                codigo: componenteCode,
-                disciplina: alloc.disciplina,
-                cor: color,
-                docentes: []
-            });
-            disciplinaMap.set(key, disciplinas.length - 1);
+    function formatCH(value) {
+        const num = Number.parseFloat(value);
+        if (!Number.isFinite(num) || num <= 0) return '';
+        return Number.isInteger(num)
+            ? String(num)
+            : num.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 1 });
+    }
+
+    function formatPeriodo(dataInicio, dataFim) {
+        if (!dataInicio || !dataFim) return '-';
+        return `${formatDateBR(dataInicio)} a ${formatDateBR(dataFim)}`;
+    }
+
+    function escapeHtml(value) {
+        return String(value ?? '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
+    function extractDocentes(alloc, fallbackCH = 0) {
+        if (Array.isArray(alloc?.docentes) && alloc.docentes.length > 0) {
+            return alloc.docentes
+                .map((docente) => ({
+                    nome: String(docente?.nome || '').trim(),
+                    ch: toCH(docente?.ch)
+                }))
+                .filter((docente) => docente.nome);
         }
 
-        const disciplinaIdx = disciplinaMap.get(key);
-        const disc = disciplinas[disciplinaIdx];
+        const nome = String(alloc?.docente || '').trim();
+        if (!nome) return [];
+        return [{
+            nome,
+            ch: toCH(alloc?.ch) || toCH(fallbackCH)
+        }];
+    }
 
-        let docenteName = '';
-        let periodo = '';
+    function buildRowsFromOfferGroup(group) {
+        const declaredDocentes = Array.isArray(group?.docentes) ? group.docentes : [];
+        const fallbackStart = String(group?.start || start || '').trim();
+        const fallbackEnd = String(group?.end || end || fallbackStart || '').trim();
+        const segments = Array.isArray(group?.teacherSegments) ? group.teacherSegments : [];
 
-        if (alloc.docentes && Array.isArray(alloc.docentes) && alloc.docentes.length > 0) {
-            alloc.docentes.forEach(d => {
-                const nome = String(d?.nome || d || '').trim();
-                const dataInicio = alloc.dataInicio || start || '';
-                const dataFim = alloc.dataFim || end || '';
-                if (nome) {
-                    periodo = dataInicio && dataFim 
-                        ? `${formatDateBR(dataInicio)} a ${formatDateBR(dataFim)}`
-                        : '';
-                    disc.docentes.push({ nome, periodo });
-                }
-            });
-        } else if (alloc.docente) {
-            docenteName = String(alloc.docente || '').trim();
-            const dataInicio = alloc.dataInicio || start || '';
-            const dataFim = alloc.dataFim || end || '';
-            periodo = dataInicio && dataFim 
-                ? `${formatDateBR(dataInicio)} a ${formatDateBR(dataFim)}`
-                : '';
-            if (docenteName) {
-                disc.docentes.push({ nome: docenteName, periodo });
-            }
+        if (segments.length > 0) {
+            return segments
+                .slice()
+                .sort((left, right) => {
+                    const startDiff = String(left?.start || '').localeCompare(String(right?.start || ''));
+                    if (startDiff !== 0) return startDiff;
+                    return String(left?.nome || '').localeCompare(String(right?.nome || ''), 'pt-BR', { sensitivity: 'base' });
+                })
+                .map((segment) => {
+                    const nome = String(segment?.nome || '').trim();
+                    const declared = declaredDocentes.find((docente) => teacherNamesMatch(docente?.nome, nome));
+                    return {
+                        nome: nome || '-',
+                        ch: toCH(segment?.ch) || toCH(declared?.ch),
+                        dataInicio: String(segment?.start || fallbackStart || '').trim(),
+                        dataFim: String(segment?.end || fallbackEnd || '').trim()
+                    };
+                });
         }
+
+        if (declaredDocentes.length > 0) {
+            return declaredDocentes.map((docente) => ({
+                nome: String(docente?.nome || '').trim() || '-',
+                ch: toCH(docente?.ch),
+                dataInicio: fallbackStart,
+                dataFim: fallbackEnd
+            }));
+        }
+
+        const fallbackDocente = String(group?.baseAlloc?.docente || group?.docenteLabel || '').trim();
+        return [{
+            nome: fallbackDocente || '-',
+            ch: 0,
+            dataInicio: fallbackStart,
+            dataFim: fallbackEnd
+        }];
+    }
+
+    const offerProjection = buildCanonicalOfferProjection({
+        allocations,
+        startDate: start,
+        endDate: end
     });
 
-    // Monta a tabela HTML
+    const disciplinasMap = new Map();
+    (offerProjection?.offerGroups || []).forEach((offerGroup) => {
+        const baseAlloc = offerGroup?.baseAlloc || {};
+        const disciplina = String(offerGroup?.disciplina || baseAlloc?.disciplina || '').trim();
+        if (!disciplina) return;
+
+        if (!disciplinasMap.has(disciplina)) {
+            const info = getDisciplinaInfo(disciplina);
+            const totalCH = toCH(getDisciplinaCHGlobal(disciplina, turmaId)) || toCH(info?.ch) || toCH(baseAlloc?.ch);
+            disciplinasMap.set(disciplina, {
+                disciplina,
+                codigo: String(info?.codigo || baseAlloc?.componenteCode || '').trim(),
+                cor: baseAlloc?.cor || store.getDisciplinaColor(disciplina) || '#f39c12',
+                totalCH,
+                rows: []
+            });
+        }
+
+        const disciplinaEntry = disciplinasMap.get(disciplina);
+        const rows = buildRowsFromOfferGroup(offerGroup);
+        rows.forEach((row) => disciplinaEntry.rows.push(row));
+    });
+
+    if (disciplinasMap.size === 0) {
+        allocations.forEach((alloc) => {
+            const disciplina = String(alloc?.disciplina || '').trim();
+            if (!disciplina) return;
+
+            if (!disciplinasMap.has(disciplina)) {
+                const info = getDisciplinaInfo(disciplina);
+                const totalCH = toCH(getDisciplinaCHGlobal(disciplina, turmaId)) || toCH(info?.ch);
+                disciplinasMap.set(disciplina, {
+                    disciplina,
+                    codigo: String(info?.codigo || alloc?.componenteCode || '').trim(),
+                    cor: alloc?.cor || store.getDisciplinaColor(disciplina) || '#f39c12',
+                    totalCH,
+                    rows: []
+                });
+            }
+
+            const disciplinaEntry = disciplinasMap.get(disciplina);
+            const dataInicio = String(alloc?.dataInicio || start || '').trim();
+            const dataFim = String(alloc?.dataFim || end || '').trim();
+            const docentes = extractDocentes(alloc, disciplinaEntry.totalCH);
+
+            if (docentes.length === 0) {
+                disciplinaEntry.rows.push({ nome: '-', ch: 0, dataInicio, dataFim });
+                return;
+            }
+
+            docentes.forEach((docente) => {
+                disciplinaEntry.rows.push({
+                    nome: docente.nome,
+                    ch: toCH(docente.ch),
+                    dataInicio,
+                    dataFim
+                });
+            });
+        });
+    }
+
+    const disciplinas = [...disciplinasMap.values()].map((disciplina, index) => {
+        const merged = new Map();
+
+        disciplina.rows.forEach((row) => {
+            const rowKey = `${row.nome}|${row.dataInicio}|${row.dataFim}`;
+            if (!merged.has(rowKey)) {
+                merged.set(rowKey, { ...row });
+                return;
+            }
+            const current = merged.get(rowKey);
+            merged.set(rowKey, {
+                ...current,
+                ch: Math.max(toCH(current?.ch), toCH(row?.ch))
+            });
+        });
+
+        const rows = [...merged.values()]
+            .sort((a, b) => {
+                const startCmp = String(a.dataInicio || '').localeCompare(String(b.dataInicio || ''));
+                if (startCmp !== 0) return startCmp;
+                return String(a.nome || '').localeCompare(String(b.nome || ''), 'pt-BR', { sensitivity: 'base' });
+            })
+            .map((row, rowIndex, arr) => {
+                const fallbackCH = (arr.length === 1 && toCH(row.ch) <= 0)
+                    ? toCH(disciplina.totalCH)
+                    : toCH(row.ch);
+                return {
+                    ...row,
+                    ch: fallbackCH
+                };
+            });
+
+        const totalFromRows = rows.reduce((sum, row) => sum + toCH(row.ch), 0);
+        return {
+            ...disciplina,
+            numero: index + 1,
+            rows,
+            totalCH: toCH(disciplina.totalCH) > 0 ? toCH(disciplina.totalCH) : totalFromRows
+        };
+    });
+
+    const totalGeralCH = disciplinas.reduce((sum, disc) => sum + toCH(disc.totalCH), 0);
+
     let tableHtml = `
         <table class="calendar-turma-resume-table" style="width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 12px;">
             <thead>
                 <tr style="background: #f5f5f5; border-bottom: 2px solid #333;">
                     <th style="padding: 8px; text-align: left; border-right: 1px solid #ddd; width: 5%;">#</th>
-                    <th style="padding: 8px; text-align: left; border-right: 1px solid #ddd; width: 15%;">Código</th>
-                    <th style="padding: 8px; text-align: left; border-right: 1px solid #ddd; width: 30%;">Disciplina</th>
+                    <th style="padding: 8px; text-align: left; border-right: 2px solid #2d34c6; width: 13%;">Código</th>
+                    <th style="padding: 8px; text-align: center; border-right: 2px solid #2d34c6; width: 8%; color: #2d34c6;">CH</th>
+                    <th style="padding: 8px; text-align: left; border-right: 1px solid #ddd; width: 32%;">Disciplina</th>
                     <th style="padding: 8px; text-align: left; border-right: 1px solid #ddd; width: 20%;">Docente</th>
-                    <th style="padding: 8px; text-align: left; width: 30%;">Período</th>
+                    <th style="padding: 8px; text-align: left; width: 22%;">Período</th>
                 </tr>
             </thead>
             <tbody>
     `;
 
-    disciplinas.forEach(disc => {
-        if (disc.docentes.length === 0) {
+    disciplinas.forEach((disc) => {
+        const safeRows = disc.rows.length > 0 ? disc.rows : [{ nome: '-', ch: 0, dataInicio: '', dataFim: '' }];
+
+        safeRows.forEach((row, idx) => {
+            const isFirst = idx === 0;
             tableHtml += `
                 <tr style="border-bottom: 1px solid #ddd;">
-                    <td style="padding: 8px; border-right: 1px solid #ddd; background-color: ${disc.cor}22; font-weight: bold;">${disc.num}</td>
-                    <td style="padding: 8px; border-right: 1px solid #ddd;">${disc.codigo}</td>
-                    <td style="padding: 8px; border-right: 1px solid #ddd; font-weight: bold; color: #333;">${disc.disciplina}</td>
-                    <td style="padding: 8px; border-right: 1px solid #ddd; font-style: italic; color: #999;">-</td>
-                    <td style="padding: 8px; color: #999;">-</td>
+                    <td style="padding: 8px; border-right: 1px solid #ddd; background-color: ${disc.cor}22; font-weight: bold;">${isFirst ? disc.numero : ''}</td>
+                    <td style="padding: 8px; border-right: 2px solid #2d34c6;">${isFirst ? escapeHtml(disc.codigo || '-') : ''}</td>
+                    <td style="padding: 8px; text-align: center; border-right: 2px solid #2d34c6; font-weight: 700; color: #1f2937;">${formatCH(row.ch)}</td>
+                    <td style="padding: 8px; border-right: 1px solid #ddd; font-weight: ${isFirst ? '700' : '500'}; color: #333;">${isFirst ? escapeHtml(disc.disciplina) : ''}</td>
+                    <td style="padding: 8px; border-right: 1px solid #ddd; color: #333;">${escapeHtml(row.nome || '-')}</td>
+                    <td style="padding: 8px; color: #4b5563;">${escapeHtml(formatPeriodo(row.dataInicio, row.dataFim))}</td>
                 </tr>
             `;
-        } else {
-            disc.docentes.forEach((doc, idx) => {
-                const isFirst = idx === 0;
-                tableHtml += `
-                    <tr style="border-bottom: 1px solid #ddd;">
-                        <td style="padding: 8px; border-right: 1px solid #ddd; background-color: ${disc.cor}22; font-weight: bold; ${isFirst ? '' : 'border-top: none;'}">${isFirst ? disc.num : ''}</td>
-                        <td style="padding: 8px; border-right: 1px solid #ddd; ${isFirst ? '' : 'border-top: none;'}">${isFirst ? disc.codigo : ''}</td>
-                        <td style="padding: 8px; border-right: 1px solid #ddd; font-weight: bold; color: #333; ${isFirst ? '' : 'border-top: none;'}">${isFirst ? disc.disciplina : ''}</td>
-                        <td style="padding: 8px; border-right: 1px solid #ddd; color: #333;">${doc.nome}</td>
-                        <td style="padding: 8px; color: #666;">${doc.periodo}</td>
-                    </tr>
-                `;
-            });
-        }
+        });
     });
 
     tableHtml += `
+                <tr style="background: #f8fafc; border-top: 2px solid #2d34c6; border-bottom: 2px solid #2d34c6;">
+                    <td colspan="2" style="padding: 8px; border-right: 2px solid #2d34c6; text-align: right; font-weight: 800; color: #1e3a8a;">Total</td>
+                    <td style="padding: 8px; text-align: center; border-right: 2px solid #2d34c6; font-weight: 800; color: #1e3a8a;">${formatCH(totalGeralCH)}</td>
+                    <td colspan="3" style="padding: 8px;"></td>
+                </tr>
             </tbody>
         </table>
     `;
@@ -9421,11 +9570,11 @@ function generateCalendarGrid(container, turmaId, docenteName, start, end, title
 
     // Adiciona tabela resumo de disciplinas para turmas
     if (turmaId) {
-        const resumTable = buildCalendarTurmaResumTable(turmaId, start, end);
-        if (resumTable) {
+        const resumeTable = buildCalendarTurmaResumeTable(turmaId, start, end);
+        if (resumeTable) {
             const tableDiv = document.createElement('div');
             tableDiv.className = 'calendar-turma-resume-container';
-            tableDiv.innerHTML = resumTable;
+            tableDiv.innerHTML = resumeTable;
             container.appendChild(tableDiv);
         }
     }

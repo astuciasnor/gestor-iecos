@@ -404,19 +404,19 @@ function ensureBidimensionalGanttStyles() {
   style.id = STYLE_ID;
   style.textContent = `
     .gantt-bi {
-      --gantt-label-width: 320px;
+      --gantt-label-width: 340px;
       --gantt-day-width: 24px;
       --gantt-segment-height: 30px;
       color: #0f172a;
     }
     .gantt-bi__title {
-      margin: 0 0 18px;
-      text-align: center;
+      margin: 0 0 12px;
+      text-align: left;
       color: var(--primary, #0b5d3b);
-      font-size: 1.5rem;
+      font-size: 1.18rem;
       font-weight: 800;
-      letter-spacing: 0.03em;
-      text-transform: uppercase;
+      letter-spacing: 0.01em;
+      text-transform: none;
     }
     .gantt-bi__scroll {
       overflow: auto;
@@ -425,11 +425,9 @@ function ensureBidimensionalGanttStyles() {
       scrollbar-color: rgba(11, 93, 59, 0.7) rgba(203, 213, 225, 0.85);
       -webkit-overflow-scrolling: touch;
       border: 1px solid #cbd5e1;
-      border-radius: 18px;
-      background:
-        radial-gradient(circle at top left, rgba(255,255,255,0.95), rgba(255,255,255,0.78)),
-        linear-gradient(180deg, #f8fbff, #eef3f8);
-      box-shadow: inset 0 1px 0 rgba(255,255,255,0.6), 0 10px 24px rgba(15, 23, 42, 0.08);
+      border-radius: 10px;
+      background: #ffffff;
+      box-shadow: none;
     }
     .gantt-bi__scroll::-webkit-scrollbar {
       width: 14px;
@@ -460,8 +458,8 @@ function ensureBidimensionalGanttStyles() {
       position: sticky;
       top: 0;
       z-index: 18;
-      background: linear-gradient(180deg, #dfe7ef, #e7edf4);
-      border-bottom: 2px solid rgba(11, 93, 59, 0.9);
+      background: #f1f5f9;
+      border-bottom: 1px solid #cbd5e1;
     }
     .gantt-bi__header-label,
     .gantt-bi__label {
@@ -479,17 +477,17 @@ function ensureBidimensionalGanttStyles() {
       align-items: center;
       justify-content: center;
       padding: 12px 16px;
-      font-size: 0.78rem;
+      font-size: 0.75rem;
       font-weight: 800;
       letter-spacing: 0.08em;
       color: #334155;
       text-transform: uppercase;
-      background: linear-gradient(180deg, #dfe7ef, #e7edf4);
+      background: #f1f5f9;
     }
     .gantt-bi__header-timeline {
       position: relative;
-      height: 72px;
-      background: linear-gradient(180deg, rgba(255,255,255,0.65), rgba(255,255,255,0.32));
+      height: 56px;
+      background: #f8fafc;
     }
     .gantt-bi__month-cell {
       position: absolute;
@@ -500,7 +498,7 @@ function ensureBidimensionalGanttStyles() {
       justify-content: center;
       font-weight: 800;
       color: var(--primary, #0b5d3b);
-      font-size: 1.1rem;
+      font-size: 0.92rem;
       letter-spacing: 0.02em;
       border-left: 1px solid rgba(51, 65, 85, 0.18);
     }
@@ -510,42 +508,42 @@ function ensureBidimensionalGanttStyles() {
     .gantt-bi__label {
       display: flex;
       align-items: center;
-      padding: 10px 12px;
-      background: linear-gradient(180deg, rgba(248,250,252,0.98), rgba(241,245,249,0.96));
+      padding: 8px 10px;
+      background: #f8fafc;
     }
     .gantt-bi__label-card {
       width: 100%;
-      border-left: 6px solid var(--accent, #2563eb);
-      background: rgba(255,255,255,0.72);
-      border-radius: 12px;
-      padding: 12px 14px;
-      box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.16);
+      border-left: 5px solid var(--accent, #2563eb);
+      background: #ffffff;
+      border-radius: 8px;
+      padding: 9px 10px;
+      box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.24);
       display: flex;
       flex-direction: column;
     }
     .gantt-bi__label-name {
-      font-size: 1.02rem;
-      font-weight: 850;
+      font-size: 0.92rem;
+      font-weight: 800;
       color: #0f172a;
-      line-height: 1.16;
-      letter-spacing: -0.01em;
-      margin-bottom: 8px;
+      line-height: 1.2;
+      letter-spacing: 0;
+      margin-bottom: 6px;
     }
     .gantt-bi__label-meta {
-      font-size: 0.78rem;
+      font-size: 0.74rem;
       color: #475569;
-      line-height: 1.32;
-      font-weight: 650;
+      line-height: 1.3;
+      font-weight: 700;
     }
     .gantt-bi__label-turno-row {
       display: flex;
       align-items: center;
       gap: 8px;
       flex-wrap: wrap;
-      margin-top: 6px;
+      margin-top: 4px;
     }
     .gantt-bi__label-turno {
-      font-size: 0.84rem;
+      font-size: 0.76rem;
       color: #0f172a;
       line-height: 1.3;
       font-weight: 800;
@@ -554,10 +552,10 @@ function ensureBidimensionalGanttStyles() {
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      padding: 4px 10px;
+      padding: 3px 8px;
       border-radius: 999px;
       color: #0f172a;
-      font-size: 0.72rem;
+      font-size: 0.68rem;
       font-weight: 900;
       letter-spacing: 0.01em;
       text-transform: none;
@@ -566,11 +564,11 @@ function ensureBidimensionalGanttStyles() {
       position: relative;
       flex: 0 0 auto;
       background:
-        linear-gradient(180deg, rgba(248,250,252,0.45), rgba(255,255,255,0.72)),
+        linear-gradient(180deg, rgba(248,250,252,0.35), rgba(255,255,255,0.78)),
         repeating-linear-gradient(
           to right,
-          rgba(148, 163, 184, 0.18) 0,
-          rgba(148, 163, 184, 0.18) 1px,
+          rgba(148, 163, 184, 0.14) 0,
+          rgba(148, 163, 184, 0.14) 1px,
           transparent 1px,
           transparent var(--gantt-day-width)
         ),
@@ -589,10 +587,10 @@ function ensureBidimensionalGanttStyles() {
       pointer-events: none;
     }
     .gantt-bi__line--week {
-      border-left: 1px dashed rgba(71, 85, 105, 0.32);
+      border-left: 1px dashed rgba(71, 85, 105, 0.22);
     }
     .gantt-bi__line--month {
-      border-left: 2px solid rgba(15, 23, 42, 0.6);
+      border-left: 1px solid rgba(15, 23, 42, 0.35);
     }
     .gantt-bi__date {
       position: absolute;
@@ -600,7 +598,7 @@ function ensureBidimensionalGanttStyles() {
       box-sizing: border-box;
       padding: 3px 6px;
       border-radius: 999px;
-      font-size: 0.72rem;
+      font-size: 0.68rem;
       font-weight: 800;
       line-height: 1;
       letter-spacing: 0.01em;
@@ -618,10 +616,10 @@ function ensureBidimensionalGanttStyles() {
     }
     .gantt-bi__block {
       position: absolute;
-      border-radius: 14px;
+      border-radius: 8px;
       overflow: hidden;
-      box-shadow: 0 10px 20px rgba(15, 23, 42, 0.14);
-      border: 1px solid rgba(15, 23, 42, 0.18);
+      box-shadow: none;
+      border: 1px solid rgba(15, 23, 42, 0.16);
     }
     .gantt-bi__block-inner {
       display: grid;
@@ -632,9 +630,9 @@ function ensureBidimensionalGanttStyles() {
       align-items: center;
       justify-content: center;
       text-align: center;
-      font-size: 0.88rem;
+      font-size: 0.78rem;
       font-weight: 800;
-      letter-spacing: 0.03em;
+      letter-spacing: 0.01em;
       padding: 0 8px;
       border-top: 1px solid rgba(255,255,255,0.36);
       overflow: hidden;
@@ -642,14 +640,8 @@ function ensureBidimensionalGanttStyles() {
       white-space: nowrap;
     }
     .gantt-bi__segment--interactive {
-      cursor: pointer;
-      transition: filter 120ms ease, transform 120ms ease;
-    }
-    .gantt-bi__segment--interactive:hover,
-    .gantt-bi__segment--interactive:focus-visible {
-      filter: brightness(1.04) saturate(1.04);
-      transform: scale(0.985);
-      outline: none;
+      cursor: default;
+      transition: none;
     }
     .gantt-bi__segment:first-child {
       border-top: none;
@@ -941,26 +933,8 @@ function buildBarDateDecorations({
   const internalTop = Math.max(6, Math.round(blockTop + (blockHeight / 2) - 11));
   const externalTop = clampNumber(Math.round(blockTop - 24), 4, Math.max(4, rowHeight - 28));
 
-  if (width >= 220) {
-    return `
-      <div class="gantt-bi__date gantt-bi__date--internal" style="left:${left + 8}px; top:${internalTop}px; background:${internalBg}; color:${textColor}; border:1px solid ${internalBorder};">${escapeHtml(startLabel)}</div>
-      ${isSingleDay ? '' : `<div class="gantt-bi__date gantt-bi__date--internal" style="left:${Math.max(left + 8, left + width - 52)}px; top:${internalTop}px; background:${internalBg}; color:${textColor}; border:1px solid ${internalBorder};">${escapeHtml(endLabel)}</div>`}
-    `;
-  }
-
-  if (width >= 110 && !isSingleDay) {
-    const startWidth = 50;
-    const endWidth = 50;
-    const startLeft = clampNumber(left, 4, Math.max(4, timelineWidth - startWidth - 4));
-    const endLeft = clampNumber(left + width - endWidth, 4, Math.max(4, timelineWidth - endWidth - 4));
-    return `
-      <div class="gantt-bi__date gantt-bi__date--external" style="left:${startLeft}px; top:${externalTop}px; width:${startWidth}px; background:${externalBg}; color:${externalColor}; border:1px solid ${externalBorder};">${escapeHtml(startLabel)}</div>
-      <div class="gantt-bi__date gantt-bi__date--external" style="left:${endLeft}px; top:${externalTop}px; width:${endWidth}px; background:${externalBg}; color:${externalColor}; border:1px solid ${externalBorder};">${escapeHtml(endLabel)}</div>
-    `;
-  }
-
   const compactDisplayLabel = isSingleDay ? startLabel : `${startLabel} - ${endLabel}`;
-  const compactWidth = isSingleDay ? 56 : 96;
+  const compactWidth = isSingleDay ? 58 : 106;
   const compactLeft = clampNumber(
     Math.round(left + (width / 2) - (compactWidth / 2)),
     4,
@@ -995,7 +969,12 @@ function renderRow(row, layout) {
   const baseColor = row.color;
   const segmentBgEven = hexToRgba(baseColor, textColor === '#F8FAFC' ? 0.94 : 0.88);
   const segmentBgOdd = hexToRgba(baseColor, textColor === '#F8FAFC' ? 0.82 : 0.72);
-  const showSegmentFrequency = width >= 112;
+  const showSegmentFrequency = width >= 132;
+  const periodoResumo = `${formatDateBR(row?.startDate || '')} a ${formatDateBR(row?.endDate || '')}`;
+  const diasResumo = row.activeDayIds
+    .map((dayId) => DAY_META.find((entry) => entry.id === dayId)?.short || '')
+    .filter(Boolean)
+    .join(', ');
   const dateDecorations = buildBarDateDecorations({
     row,
     left,
@@ -1014,8 +993,10 @@ function renderRow(row, layout) {
         <div class="gantt-bi__label-card" style="--accent:${baseColor};" title="${escapeHtml(row.tooltip)}">
           <div class="gantt-bi__label-name">${escapeHtml(row.nome)}</div>
           <div class="gantt-bi__label-meta">CH ${escapeHtml(row.chLabel)} &middot; Turma ${escapeHtml(row.turmaId)}</div>
+          <div class="gantt-bi__label-meta">Periodo ${escapeHtml(periodoResumo)}</div>
           <div class="gantt-bi__label-turno-row">
             <div class="gantt-bi__label-turno"><span style="opacity:0.68; font-weight:700; margin-right:6px;">Turno</span>${escapeHtml(row.turnoLabel)}</div>
+            <div class="gantt-bi__label-turno"><span style="opacity:0.68; font-weight:700; margin-right:6px;">Dias</span>${escapeHtml(diasResumo || '-')}</div>
             ${row.faixaBadge ? `<div class="gantt-bi__label-badge" style="background:${hexToRgba(baseColor, 0.14)}; color:${baseColor}; box-shadow:inset 0 0 0 1px ${hexToRgba(baseColor, 0.22)};">${escapeHtml(row.faixaBadge)}</div>` : ''}
           </div>
         </div>
@@ -1035,11 +1016,8 @@ function renderRow(row, layout) {
               const segmentLabel = showSegmentFrequency && occurrenceCount > 0
                 ? `${day?.short || ''} (${occurrenceCount}x)`
                 : (day?.short || '');
-              const detailPayload = buildSegmentDetailPayload(row, dayId);
-              const interactiveClass = detailPayload ? ' gantt-bi__segment--interactive' : '';
-              const interactionAttrs = detailPayload
-                ? ` data-gantt-bi-detail="${detailPayload}" data-gantt-bi-anchor="${escapeHtml(`${row.key}|${dayId}`)}" tabindex="0" role="button" aria-label="Horarios de ${escapeHtml(day?.short || '')}"`
-                : '';
+              const interactiveClass = '';
+              const interactionAttrs = '';
               return `
                 <div class="gantt-bi__segment${interactiveClass}"${interactionAttrs} style="background:${segmentBg}; color:${textColor};">
                   ${escapeHtml(segmentLabel)}
@@ -1110,7 +1088,7 @@ export function renderBidimensionalTeacherGantt(container, {
 
   container.innerHTML = `
     <div class="gantt-bi" style="--gantt-day-width:${dayWidth}px; --gantt-segment-height:${segmentHeight}px;">
-      <h3 class="gantt-bi__title">Cronograma: ${escapeHtml(teacherName)} (${escapeHtml(titleHours)})</h3>
+      <h3 class="gantt-bi__title">Gantt Docente: ${escapeHtml(teacherName)} (${escapeHtml(titleHours)})</h3>
       <div class="gantt-bi__scroll">
         <div class="gantt-bi__canvas" style="width:${timelineWidth + 320}px;">
           <div class="gantt-bi__header">
@@ -1125,8 +1103,6 @@ export function renderBidimensionalTeacherGantt(container, {
       </div>
     </div>
   `;
-
-  bindBidimensionalLensInteractions(container);
 }
 
 export function hideBidimensionalTeacherGanttLens() {
