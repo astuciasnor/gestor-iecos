@@ -242,89 +242,67 @@ function buildBidimensionalRows({
     const baseColor = normalizeHexColor(group?.baseAlloc?.cor || componentMeta.cor || '#2563EB');
     const textColor = getTextColorForHex(baseColor);
     const teacherHours = resolveTeacherHoursForGroup(group, docenteName);
-    const faixas = Array.isArray(group?.faixas) && group.faixas.length > 0
-      ? group.faixas
-      : [{
-          faixaId: `${group.offerKey}|1`,
-          index: 1,
-          inicio: group.start,
-          fim: group.end,
-          dias: Object.keys(group?.timeRangesByDay || {}).map((value) => Number.parseInt(value, 10)).filter((value) => value >= 1 && value <= 6),
-          slots: Object.values(group?.timeRangesByDay || {}).flat()
-        }];
+    const allDates = [...dateMap.keys()].sort((left, right) => left.localeCompare(right));
+    if (allDates.length === 0) return;
 
-    faixas.forEach((faixa) => {
-      resolveFaixaTeacherSegments(group, faixa, docenteName).forEach((segment, segmentIdx) => {
-        const faixaDates = [...dateMap.keys()]
-          .filter((dateStr) => dateStr >= segment.start && dateStr <= segment.end)
-          .sort((left, right) => left.localeCompare(right));
+    const activeDayIds = new Set();
+    const slotSet = new Set();
+    const slotsByDayMap = new Map();
+    const occurrenceCountByDayMap = new Map();
 
-        if (faixaDates.length === 0) return;
+    allDates.forEach((dateStr) => {
+      const dayOfWeek = toDate(dateStr)?.getDay() || 0;
+      if (dayOfWeek >= 1 && dayOfWeek <= 6) {
+        activeDayIds.add(dayOfWeek);
+        if (!slotsByDayMap.has(dayOfWeek)) slotsByDayMap.set(dayOfWeek, new Set());
+        occurrenceCountByDayMap.set(dayOfWeek, (occurrenceCountByDayMap.get(dayOfWeek) || 0) + 1);
+      }
 
-        const activeDayIds = new Set();
-        const slotSet = new Set();
-        const slotsByDayMap = new Map();
-        const occurrenceCountByDayMap = new Map();
-
-        faixaDates.forEach((dateStr) => {
-          const dayOfWeek = toDate(dateStr)?.getDay() || 0;
-          if (dayOfWeek >= 1 && dayOfWeek <= 6) activeDayIds.add(dayOfWeek);
-          if (dayOfWeek >= 1 && dayOfWeek <= 6 && !slotsByDayMap.has(dayOfWeek)) {
-            slotsByDayMap.set(dayOfWeek, new Set());
-          }
-          if (dayOfWeek >= 1 && dayOfWeek <= 6) {
-            occurrenceCountByDayMap.set(dayOfWeek, (occurrenceCountByDayMap.get(dayOfWeek) || 0) + 1);
-          }
-
-          (dateMap.get(dateStr) || []).forEach((event) => {
-            const slot = String(event?.horario || '').trim();
-            if (!slot) return;
-            slotSet.add(slot);
-            if (dayOfWeek >= 1 && dayOfWeek <= 6) slotsByDayMap.get(dayOfWeek)?.add(slot);
-          });
-        });
-
-        const sortedDayIds = DAY_META.map((day) => day.id).filter((dayId) => activeDayIds.has(dayId));
-        if (sortedDayIds.length === 0) return;
-
-        const sortedSlots = [...slotSet].sort((left, right) => timeToMinutes(left) - timeToMinutes(right));
-        const faixaLabel = faixas.length > 1 ? `Faixa ${faixa.index || 1}` : '';
-        const faixaBadge = segmentIdx > 0 ? `${faixaLabel || 'Faixa'} - Segmento ${segmentIdx + 1}` : faixaLabel;
-
-        rows.push({
-          key: `${group.offerKey}|${faixa.faixaId || faixa.index || 1}|${segment.start}|${segment.end}|${segmentIdx + 1}`,
-          offerKey: group.offerKey,
-          groupStart: String(group.start || faixaDates[0] || '').trim(),
-          groupEnd: String(group.end || faixaDates[faixaDates.length - 1] || '').trim(),
-          faixaOrder: Number.parseInt(faixa?.index, 10) || 1,
-          segmentOrder: segmentIdx + 1,
-          nome: group.disciplina,
-          turmaId: String(group.turmaId || '').trim(),
-          chLabel: teacherHours > 0
-            ? (Number.isInteger(teacherHours)
-              ? `${teacherHours}h`
-              : `${teacherHours.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 1 })}h`)
-            : '-',
-          turnoLabel: resolveTurnoLabelFromSlots(sortedSlots),
-          faixaBadge,
-          activeDayIds: sortedDayIds,
-          slots: sortedSlots,
-          slotsByDay: Object.fromEntries(
-            sortedDayIds.map((dayId) => [
-              dayId,
-              [...(slotsByDayMap.get(dayId) || new Set())].sort((left, right) => timeToMinutes(left) - timeToMinutes(right))
-            ])
-          ),
-          occurrenceCountByDay: Object.fromEntries(
-            sortedDayIds.map((dayId) => [dayId, occurrenceCountByDayMap.get(dayId) || 0])
-          ),
-          startDate: faixaDates[0],
-          endDate: faixaDates[faixaDates.length - 1],
-          color: baseColor,
-          textColor,
-          tooltip: `${group.disciplina}\n${formatDateBR(faixaDates[0])} a ${formatDateBR(faixaDates[faixaDates.length - 1])}\nDias: ${sortedDayIds.map((dayId) => DAY_META.find((day) => day.id === dayId)?.full || '').join(', ')}\nTurma: ${group.turmaId}\nTurno: ${resolveTurnoLabelFromSlots(sortedSlots)}`
-        });
+      (dateMap.get(dateStr) || []).forEach((event) => {
+        const slot = String(event?.horario || '').trim();
+        if (!slot) return;
+        slotSet.add(slot);
+        if (dayOfWeek >= 1 && dayOfWeek <= 6) slotsByDayMap.get(dayOfWeek)?.add(slot);
       });
+    });
+
+    const sortedDayIds = DAY_META.map((day) => day.id).filter((dayId) => activeDayIds.has(dayId));
+    if (sortedDayIds.length === 0) return;
+
+    const sortedSlots = [...slotSet].sort((left, right) => timeToMinutes(left) - timeToMinutes(right));
+
+    rows.push({
+      key: `${group.offerKey}|single`,
+      offerKey: group.offerKey,
+      groupStart: String(group.start || allDates[0] || '').trim(),
+      groupEnd: String(group.end || allDates[allDates.length - 1] || '').trim(),
+      faixaOrder: 1,
+      segmentOrder: 1,
+      nome: group.disciplina,
+      turmaId: String(group.turmaId || '').trim(),
+      chLabel: teacherHours > 0
+        ? (Number.isInteger(teacherHours)
+          ? `${teacherHours}h`
+          : `${teacherHours.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 1 })}h`)
+        : '-',
+      turnoLabel: resolveTurnoLabelFromSlots(sortedSlots),
+      faixaBadge: '',
+      activeDayIds: sortedDayIds,
+      slots: sortedSlots,
+      slotsByDay: Object.fromEntries(
+        sortedDayIds.map((dayId) => [
+          dayId,
+          [...(slotsByDayMap.get(dayId) || new Set())].sort((left, right) => timeToMinutes(left) - timeToMinutes(right))
+        ])
+      ),
+      occurrenceCountByDay: Object.fromEntries(
+        sortedDayIds.map((dayId) => [dayId, occurrenceCountByDayMap.get(dayId) || 0])
+      ),
+      startDate: allDates[0],
+      endDate: allDates[allDates.length - 1],
+      color: baseColor,
+      textColor,
+      tooltip: `${group.disciplina}\n${formatDateBR(allDates[0])} a ${formatDateBR(allDates[allDates.length - 1])}\nDias: ${sortedDayIds.map((dayId) => DAY_META.find((day) => day.id === dayId)?.full || '').join(', ')}\nTurma: ${group.turmaId}\nTurno: ${resolveTurnoLabelFromSlots(sortedSlots)}`
     });
   });
 

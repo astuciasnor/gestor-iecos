@@ -2229,6 +2229,17 @@ input[type="date"] { color-scheme: dark; }
     font-weight: 600;
 }
 
+/* Linhas de intervalo (manha/tarde) mais estreitas e com horario menor. */
+.cal-slot-row.cal-slot-interval {
+    min-height: 11px;
+}
+.cal-slot-row.cal-slot-interval .cal-slot-time {
+    font-size: 0.8em;
+}
+.cal-slot-row.cal-slot-interval .cal-slot-content {
+    font-size: 0.85em;
+}
+
 .suspended-slot {
     background: #ffffff !important; 
     color: #c0392b !important; 
@@ -2278,6 +2289,12 @@ input[type="date"] { color-scheme: dark; }
     border-bottom: 2px solid var(--primary);
     padding: 6px 0;
     margin-bottom: 10px;
+}
+
+/* Quando o cabecalho do titulo e seguido pela tabela-resumo da turma, encosta a
+   linha do titulo logo acima da tabela (remove o vao). */
+.print-header-container:has(+ .calendar-turma-resume-container) {
+    margin-bottom: 0;
 }
 
 .print-title-line {

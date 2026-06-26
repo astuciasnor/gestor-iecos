@@ -595,7 +595,7 @@ function applyWeeklyGridRowHeightScale() {
         const ideal = Math.round(available / rowCount);
         const uniformH = Math.max(minH, Math.min(maxH, ideal));
 
-        const intervaloH = Math.max(isCompactScreen ? 20 : 22, Math.round(uniformH * 0.6));
+        const intervaloH = Math.max(isCompactScreen ? 15 : 16, Math.round(uniformH * 0.42));
 
         if (!styleEl) {
             styleEl = document.createElement('style');
@@ -618,6 +618,12 @@ function applyWeeklyGridRowHeightScale() {
             min-height: ${intervaloH}px !important;
             max-height: ${intervaloH}px !important;
             box-sizing: border-box !important;
+          }
+          #weekly-grid .header.interval-time {
+            font-size: 0.66em !important;
+            line-height: 1.05 !important;
+            padding-top: 2px !important;
+            padding-bottom: 2px !important;
           }
           #weekly-grid .slot { overflow: hidden !important; }
         `;
@@ -2394,6 +2400,315 @@ function findTurmaConflictForCandidateExecution(candidateAlloc, execution = {}) 
     }
 
     return null;
+}
+
+function diffDaysISO(fromDate, toDate) {
+    if (!fromDate || !toDate) return 0;
+    const from = new Date(`${fromDate}T12:00:00`).getTime();
+    const to = new Date(`${toDate}T12:00:00`).getTime();
+    if (!Number.isFinite(from) || !Number.isFinite(to)) return 0;
+    return Math.round((to - from) / (24 * 60 * 60 * 1000));
+}
+
+function shiftFaixasByDays(faixas = [], deltaDays = 0) {
+    return (Array.isArray(faixas) ? faixas : [])
+        .map((faixa) => normalizeFaixaEntry(faixa))
+        .filter(Boolean)
+        .map((faixa) => ({
+            ...faixa,
+            inicio: shiftISODate(faixa.inicio, deltaDays),
+            fim: faixa.fim ? shiftISODate(faixa.fim, deltaDays) : null
+        }));
+}
+
+function buildCandidateIntensiveFromFaixas(baseAlloc, faixas) {
+    const safeFaixas = Array.isArray(faixas) ? faixas.map(normalizeFaixaEntry).filter(Boolean) : [];
+    if (!baseAlloc || safeFaixas.length === 0) return null;
+
+    const allDays = [...new Set(safeFaixas.flatMap((f) => Array.isArray(f.dias) ? f.dias : []))]
+        .filter((d) => d >= 1 && d <= 6)
+        .sort((a, b) => a - b);
+    const allSlots = [...new Set(safeFaixas.flatMap((f) => Array.isArray(f.slots) ? f.slots : []))]
+        .filter(Boolean)
+        .sort((a, b) => timeToMinutes(a) - timeToMinutes(b));
+
+    return {
+        ...baseAlloc,
+        dataInicio: safeFaixas[0].inicio,
+        dataFim: safeFaixas[safeFaixas.length - 1].fim || safeFaixas[safeFaixas.length - 1].inicio,
+        faixas: safeFaixas,
+        diasMarcados: allDays,
+        horariosOcupados: allSlots,
+        usaSabado: allDays.includes(6)
+    };
+}
+
+function collectTurmaConflictAllocationsForExecution(candidateAlloc, execution = {}) {
+    const result = {
+        all: [],
+        faixa: [],
+        nonFaixa: []
+    };
+
+    if (!candidateAlloc?.turmaId || !execution?.dataInicio || !execution?.dataFim) return result;
+
+    const allocById = new Map((store.allocations || []).map((alloc) => [String(alloc?.id || ''), alloc]));
+    const eventsByDate = getCalendarEvents(String(candidateAlloc.turmaId), execution.dataInicio, execution.dataFim);
+    const conflictIds = new Set();
+
+    const usedDates = getExecutionUsedDates(execution);
+    for (const dateStr of usedDates) {
+        const candidateSlots = new Set(
+            getExecutionSlotsForDate(execution, dateStr)
+                .map((slot) => normalizeConflictSlotLabel(slot))
+                .filter(Boolean)
+        );
+        if (candidateSlots.size === 0) continue;
+
+        const events = eventsByDate?.[dateStr] || [];
+        events.forEach((event) => {
+            if (shouldIgnoreTurmaEventForCandidate(event, candidateAlloc)) return;
+            const slot = normalizeConflictSlotLabel(event?.horario || '');
+            if (!slot || !candidateSlots.has(slot)) return;
+            if (event?.id !== undefined && event?.id !== null) conflictIds.add(String(event.id));
+        });
+    }
+
+    result.all = [...conflictIds]
+        .map((id) => allocById.get(id))
+        .filter(Boolean);
+    result.faixa = result.all.filter((alloc) => isFaixaAllocation(alloc));
+    result.nonFaixa = result.all.filter((alloc) => !isFaixaAllocation(alloc));
+    return result;
+}
+
+// Uma componente e considerada "intensiva" quando suas aulas caem em dias
+// CONSECUTIVOS da semana (sem buraco no meio). Ex.: seg-ter-qua e intensiva;
+// seg-qua-sex NAO e (ha buraco em ter/qui). O numero de slots por dia nao importa.
+function diasSemanaSaoConsecutivos(dias = []) {
+    const lista = [...new Set((Array.isArray(dias) ? dias : [])
+        .map((d) => parseInt(d, 10))
+        .filter((d) => d >= 1 && d <= 6))]
+        .sort((a, b) => a - b);
+    if (lista.length === 0) return false;
+    return (lista[lista.length - 1] - lista[0] + 1) === lista.length;
+}
+
+// A componente e intensiva se TODAS as faixas com carga tiverem dias consecutivos.
+function isIntensiveComponentByFaixas(faixasInput = []) {
+    const faixas = (Array.isArray(faixasInput) ? faixasInput : [])
+        .map(normalizeFaixaEntry)
+        .filter(Boolean);
+    if (faixas.length === 0) return false;
+    return faixas.every((faixa) => diasSemanaSaoConsecutivos(faixa.dias));
+}
+
+function isIntensiveAllocation(alloc) {
+    if (!isFaixaAllocation(alloc)) return false;
+    return isIntensiveComponentByFaixas(getNormalizedIntensiveFaixas(alloc));
+}
+
+function relocateFaixaAllocationForward(baseAlloc, anchorStartDate) {
+    const originalFaixas = getNormalizedIntensiveFaixas(baseAlloc);
+    if (!baseAlloc || originalFaixas.length === 0 || !anchorStartDate) return null;
+
+    const originalFirstStart = originalFaixas[0].inicio;
+    const anchor = String(anchorStartDate || '').trim();
+    const maxShiftDays = 365;
+
+    for (let offset = 0; offset <= maxShiftDays; offset++) {
+        const candidateFirstStart = shiftISODate(anchor, offset);
+        const delta = diffDaysISO(originalFirstStart, candidateFirstStart);
+        const shiftedFaixas = shiftFaixasByDays(originalFaixas, delta);
+        const shiftedCandidate = buildCandidateIntensiveFromFaixas(baseAlloc, shiftedFaixas);
+        if (!shiftedCandidate) continue;
+
+        const execution = computeIntensiveExecution(shiftedCandidate, {
+            respectPriority: true,
+            respectTurmaOccupancy: true
+        });
+        if (!execution || execution.totalHours <= 0 || !execution.dataInicio || !execution.dataFim) continue;
+
+        const alignedFaixas = alignFaixasToExecutionEnd(shiftedFaixas, execution.dataFim);
+        const finalCandidate = {
+            ...shiftedCandidate,
+            dataInicio: execution.dataInicio,
+            dataFim: execution.dataFim,
+            executionByDate: execution.byDate || {},
+            horariosOcupados: execution.unionSlots || shiftedCandidate.horariosOcupados || [],
+            horariosUltimoDia: execution.horariosUltimoDia || [],
+            diasMarcados: execution.unionDias || shiftedCandidate.diasMarcados || [],
+            usaSabado: (execution.unionDias || []).includes(6),
+            faixas: alignedFaixas
+        };
+
+        const turmaConflict = findTurmaConflictForCandidateExecution(finalCandidate, execution);
+        if (turmaConflict) continue;
+
+        const teacherNames = getAllocationTeachersForConflict(finalCandidate);
+        const teacherConflict = findConfirmedTeacherConflictForCandidate(finalCandidate, teacherNames);
+        if (teacherConflict) continue;
+
+        return finalCandidate;
+    }
+
+    return null;
+}
+
+// Empurrao com "pausa e retoma": a componente conflitante MANTEM as aulas anteriores
+// ao inicio da intensiva, PAUSA durante o periodo ocupado por ela e RETOMA depois,
+// preservando o padrao de dias/slots e a carga horaria total. Caso "professor
+// visitante". Quando nao ha aulas antes da intensiva, equivale a deslocar tudo.
+function splitAndDeferAllocationAroundIntensive(baseAlloc, intensiveStart, intensiveEnd) {
+    const origFaixas = getNormalizedIntensiveFaixas(baseAlloc);
+    if (!baseAlloc || origFaixas.length === 0) return null;
+
+    const start = String(intensiveStart || '').trim();
+    const end = String(intensiveEnd || '').trim();
+    if (!start || !end) return null;
+
+    const totalCH = parseInt(baseAlloc.ch || 0, 10) || 0;
+
+    // Aulas originalmente planejadas (preferindo o que ja estava salvo).
+    const origByDate = (baseAlloc.executionByDate && typeof baseAlloc.executionByDate === 'object'
+        && Object.keys(baseAlloc.executionByDate).length > 0)
+        ? baseAlloc.executionByDate
+        : (computeIntensiveExecution(baseAlloc, { respectPriority: true }).byDate || {});
+
+    const keptByDate = {};
+    let keptHours = 0;
+    Object.keys(origByDate)
+        .filter((dateStr) => /^\d{4}-\d{2}-\d{2}$/.test(dateStr) && dateStr < start)
+        .forEach((dateStr) => {
+            const slots = Array.isArray(origByDate[dateStr]) ? origByDate[dateStr].slice() : [];
+            if (slots.length === 0) return;
+            keptByDate[dateStr] = slots;
+            keptHours += slots.length;
+        });
+
+    const deferHours = totalCH > 0 ? Math.max(0, totalCH - keptHours) : 0;
+    // Nada a deferir: a componente ja cabe inteira antes da intensiva (nao deveria conflitar).
+    if (deferHours <= 0) return null;
+
+    const keptEnd = shiftISODate(start, -1);
+    const keptFaixas = keptHours > 0 ? alignFaixasToExecutionEnd(origFaixas, keptEnd) : [];
+
+    // Padrao a retomar = faixa ativa no inicio da intensiva (ou a ultima existente).
+    const template = getActiveFaixaForDate(origFaixas, start) || origFaixas[origFaixas.length - 1];
+    if (!template) return null;
+
+    // Re-aloca a parte futura imediatamente apos a intensiva, buscando inicio livre.
+    const anchorStart = shiftISODate(end, 1);
+    const deferBase = {
+        ...baseAlloc,
+        ch: deferHours,
+        executionByDate: undefined,
+        dataInicio: anchorStart,
+        dataFim: null,
+        faixas: [{
+            inicio: anchorStart,
+            fim: null,
+            dias: template.dias.slice(),
+            slots: template.slots.slice(),
+            drawnSlotsByDay: template.drawnSlotsByDay
+        }]
+    };
+    const deferred = relocateFaixaAllocationForward(deferBase, anchorStart);
+    if (!deferred) return null;
+
+    const combinedFaixas = [...keptFaixas, ...(Array.isArray(deferred.faixas) ? deferred.faixas : [])]
+        .map(normalizeFaixaEntry)
+        .filter(Boolean)
+        .sort((a, b) => a.inicio.localeCompare(b.inicio));
+    if (combinedFaixas.length === 0) return null;
+
+    const mergedByDate = { ...keptByDate, ...(deferred.executionByDate || {}) };
+    const allDays = new Set();
+    const allSlots = new Set();
+    Object.keys(mergedByDate).forEach((dateStr) => {
+        const dow = new Date(`${dateStr}T12:00:00`).getDay();
+        if (dow >= 1 && dow <= 6) allDays.add(dow);
+        (mergedByDate[dateStr] || []).forEach((slot) => allSlots.add(slot));
+    });
+    const usedDates = Object.keys(mergedByDate).sort();
+    const dataInicio = usedDates[0] || combinedFaixas[0].inicio;
+    const dataFim = usedDates[usedDates.length - 1] || combinedFaixas[combinedFaixas.length - 1].fim;
+
+    return {
+        ...baseAlloc,
+        ch: totalCH,
+        dataInicio,
+        dataFim,
+        executionByDate: mergedByDate,
+        horariosOcupados: [...allSlots].sort((a, b) => timeToMinutes(a) - timeToMinutes(b)),
+        horariosUltimoDia: Array.isArray(deferred.horariosUltimoDia) ? deferred.horariosUltimoDia.slice() : [],
+        diasMarcados: [...allDays].sort((a, b) => a - b),
+        usaSabado: allDays.has(6),
+        faixas: alignFaixasToExecutionEnd(combinedFaixas, dataFim),
+        pausedForIntensive: keptHours > 0
+    };
+}
+
+function applyConflictPushForwardTransaction(candidateAllocToInsert, candidateExecution, conflictingAllocs = [], selfIdsToRemove = []) {
+    if (!candidateAllocToInsert || !candidateExecution) {
+        return { ok: false, reason: 'invalid-input' };
+    }
+
+    const intensiveStart = String(candidateExecution.dataInicio || candidateAllocToInsert.dataInicio || '').trim();
+    const intensiveEnd = String(candidateExecution.dataFim || candidateAllocToInsert.dataFim || intensiveStart || '').trim();
+
+    const snapshot = JSON.parse(JSON.stringify(store.allocations || []));
+    const moving = (Array.isArray(conflictingAllocs) ? conflictingAllocs : [])
+        .map((alloc) => JSON.parse(JSON.stringify(alloc)))
+        .sort((a, b) => String(a?.dataInicio || '').localeCompare(String(b?.dataInicio || '')));
+
+    try {
+        const movingIds = new Set(moving.map((alloc) => String(alloc.id)));
+        const selfIds = new Set((Array.isArray(selfIdsToRemove) ? selfIdsToRemove : []).map((id) => String(id)));
+        store.allocations = (store.allocations || []).filter(
+            (alloc) => !movingIds.has(String(alloc?.id)) && !selfIds.has(String(alloc?.id))
+        );
+        store.saveAllocations();
+
+        store.addAllocation(candidateAllocToInsert);
+
+        const relocatedNames = [];
+        const pausedNames = [];
+
+        for (const original of moving) {
+            const deferred = splitAndDeferAllocationAroundIntensive(original, intensiveStart, intensiveEnd);
+            if (!deferred) {
+                store.replaceAllocations(snapshot);
+                return {
+                    ok: false,
+                    reason: 'relocation-failed',
+                    disciplina: original?.disciplina || ''
+                };
+            }
+
+            store.allocations.push(deferred);
+            store.saveAllocations();
+            const nome = String(deferred.disciplina || '').trim() || '(sem nome)';
+            relocatedNames.push(nome);
+            if (deferred.pausedForIntensive) pausedNames.push(nome);
+        }
+
+        store.saveAllocations();
+        return {
+            ok: true,
+            relocatedCount: relocatedNames.length,
+            relocatedNames,
+            pausedCount: pausedNames.length,
+            pausedNames
+        };
+    } catch (err) {
+        console.error('Falha ao aplicar realocacao em cadeia:', err);
+        store.replaceAllocations(snapshot);
+        return {
+            ok: false,
+            reason: 'exception'
+        };
+    }
 }
 
 function getWeekAutoPositionMode() {
@@ -6276,9 +6591,13 @@ function createCell(classNames, text) {
 
 function isTurnoDividerSlot(slotLabel = '') {
     const normalized = String(slotLabel || '').trim();
+    // Considera apenas o horario de INICIO do slot. Caso contrario, uma faixa como
+    // "17:40-18:30" casaria com "18:30" (fim) e desenharia uma divisoria indevida.
+    const startMatch = normalized.match(/\d{1,2}:\d{2}/);
+    const start = startMatch ? startMatch[0] : '';
     // 10:20 indica o início da aula após o intervalo da manhã (pós-10:00)
     // 13:30 inicia o turno da tarde e 18:30 o da noite
-    return normalized.includes('10:20') || normalized.includes('13:30') || normalized.includes('18:30');
+    return start === '10:20' || start === '13:30' || start === '18:30';
 }
 
 function renderSlotContent(cell, allocs, dayOfWeek = 0) {
@@ -6507,6 +6826,13 @@ function handleAddManual() {
         let execution = null;
         let finalAdjustmentNotice = '';
 
+        // Estrategia B (automatica por tipo): a componente sendo salva so empurra as
+        // demais quando e INTENSIVA (dias consecutivos). Nesse caso ela ocupa o bloco
+        // "cheio" (sem desviar), expondo os conflitos reais. Componentes nao intensivas
+        // continuam desviando para os buracos livres (respectTurmaOccupancy).
+        const savingIsIntensive = isIntensiveComponentByFaixas(faixasConfig);
+        const respectTurmaOccupancy = !savingIsIntensive;
+
         for (let attempt = 0; attempt < 2; attempt++) {
             diasMarcados = [...new Set(faixasConfig.flatMap((f) => f.dias || []))].sort((a, b) => a - b);
             if (diasMarcados.length === 0) diasMarcados = [1, 2, 3, 4, 5];
@@ -6529,7 +6855,7 @@ function handleAddManual() {
                 faixas: faixasConfig
             };
 
-            execution = computeIntensiveExecution(previewIntensive, { respectPriority: true, respectTurmaOccupancy: true });
+            execution = computeIntensiveExecution(previewIntensive, { respectPriority: true, respectTurmaOccupancy: respectTurmaOccupancy });
             if (execution.totalHours === 0) {
                 showToastWarning('Nenhuma aula foi gerada com as faixas configuradas.', 'error', 3000);
                 return;
@@ -6612,17 +6938,52 @@ function handleAddManual() {
         };
 
         const intensiveConflict = findTurmaConflictForCandidateExecution(candidateIntensiveForConflict, execution);
+        const turmaConflictGroups = collectTurmaConflictAllocationsForExecution(candidateIntensiveForConflict, execution);
 
         const isImportedSave = !!editingImportadoDraft;
+        let pushForwardRequested = false;
+        let pushForwardTargets = [];
 
         if (intensiveConflict) {
             if (!isImportedSave) {
-                showToastWarning(
-                    `Sobreposicao detectada: "${intensiveConflict.disciplina}" ja ocupa esse horario no mesmo periodo. Salvamento cancelado - sobreposicao so e permitida em disciplinas carregadas via importacao.`,
-                    'error',
-                    5600
-                );
-                return;
+                if (savingIsIntensive) {
+                    // Componente INTENSIVA: ocupa o bloco e empurra TODAS as conflitantes
+                    // (pausa e retoma). So entram as que tem faixas deslocaveis.
+                    const targets = turmaConflictGroups.all.filter((alloc) => getNormalizedIntensiveFaixas(alloc).length > 0);
+                    if (targets.length === 0) {
+                        showToastWarning(
+                            `Sobreposicao detectada: "${intensiveConflict.disciplina}" ja ocupa esse horario e nao pode ser realocada automaticamente. Ajuste manualmente.`,
+                            'error',
+                            5600
+                        );
+                        return;
+                    }
+                    const uniqueNames = [...new Set(targets.map((a) => String(a?.disciplina || '').trim()).filter(Boolean))];
+                    const previewNames = uniqueNames.slice(0, 4).join(', ');
+                    const moreCount = Math.max(0, uniqueNames.length - 4);
+                    const moreLabel = moreCount > 0 ? ` e mais ${moreCount}` : '';
+                    const confirmPush = confirm(
+                        `Conflito detectado com ${targets.length} componente(s) da mesma turma.\n\n` +
+                        `Deseja inserir esta componente intensiva, empurrando as demais para frente no tempo?\n` +
+                        `As aulas anteriores ao inicio dela sao mantidas; as demais pausam durante o periodo dela e retomam logo apos.\n\n` +
+                        `Conflitantes: ${previewNames}${moreLabel}`
+                    );
+                    if (!confirmPush) {
+                        showToastWarning('Salvamento cancelado. Nenhuma componente foi realocada.', 'warning', 3200);
+                        return;
+                    }
+                    pushForwardRequested = true;
+                    pushForwardTargets = targets;
+                } else {
+                    // Componente NAO intensiva: deveria ter desviado para os buracos. Se ainda
+                    // ha conflito, nao empurra as demais — bloqueia e pede ajuste manual.
+                    showToastWarning(
+                        `Sobreposicao detectada: "${intensiveConflict.disciplina}" ja ocupa esse horario no mesmo periodo. Componentes nao intensivas nao empurram as demais; ajuste manualmente.`,
+                        'error',
+                        5600
+                    );
+                    return;
+                }
             }
             showToastWarning(
                 `Sobreposicao permitida (disciplina importada): choque de horario com "${intensiveConflict.disciplina}". Sera destacada na aba Calendario Docente.`,
@@ -6674,6 +7035,93 @@ function handleAddManual() {
                 );
             })
             .map((a) => a.id);
+
+        if (pushForwardRequested && !isImportedSave) {
+            const pushTx = applyConflictPushForwardTransaction(
+                {
+                    turmaId: store.selectedTurma,
+                    disciplina: disciplina,
+                    docente: docData.docente,
+                    docentes: docData.docentesList,
+                    modo: 'faixas',
+                    ch: effectiveCH,
+                    dataInicio: inicioCalculado,
+                    dataFim: dataFimCalculada,
+                    modelo: 'Automatico',
+                    executionByDate: execution.byDate || {},
+                    horariosOcupados: slotsIntensiva,
+                    horariosUltimoDia: horariosUltimoDia,
+                    diasMarcados: diasMarcados,
+                    usaSabado: usaSabado,
+                    sabadoManha: sabadoManha,
+                    faixas: faixasConfigAjustadas,
+                    subGrupo: subGrupo || null,
+                    cor: inputConfig.cor ? inputConfig.cor.value : store.getDisciplinaColor(disciplina),
+                    importado: false
+                },
+                execution,
+                pushForwardTargets,
+                idsToRemove
+            );
+
+            if (!pushTx.ok) {
+                const failedDisc = pushTx.disciplina ? ` (${pushTx.disciplina})` : '';
+                showToastWarning(
+                    `Nao foi possivel concluir a realocacao automatica${failedDisc}. Nenhuma alteracao foi mantida.`,
+                    'error',
+                    6200
+                );
+                return;
+            }
+
+            if (inicioCalculado && store.selectedTurma) {
+                store.setTurmaLastStart(store.selectedTurma, inicioCalculado);
+            }
+
+            syncAllIntensiveDates();
+            const allocAtualizada = [...store.allocations].reverse().find((a) =>
+                String(a.turmaId) === String(store.selectedTurma) &&
+                isFaixaAllocation(a) &&
+                a.disciplina === disciplina &&
+                String(a.subGrupo || '') === String(subGrupo || '')
+            );
+            if (allocAtualizada) {
+                const faixasSidebar = alignFaixasToExecutionEnd(
+                    getNormalizedIntensiveFaixas(allocAtualizada),
+                    allocAtualizada.dataFim || dataFimCalculada
+                );
+                applyFaixasConfigToSidebar(faixasSidebar);
+            }
+
+            setComponentStartSelectionMode('auto');
+            editingDisciplinaDraft = normalizeDisciplinaInputValue(disciplina);
+            updateWeeklyFaixasTitleDisciplina();
+            refreshPendingFaixaStartPickUI();
+            updateWeeklyContextNote();
+            updateWeeklyFaixaHoursDisplay();
+            renderWeeklyGrid();
+            renderOfertasList();
+
+            const movedCount = pushTx.relocatedCount || 0;
+            const pausedCount = pushTx.pausedCount || 0;
+            const pausaMsg = pausedCount > 0
+                ? ` ${pausedCount} delas pausaram durante o periodo da intensiva e retomaram logo apos.`
+                : '';
+            showToastWarning(
+                `Componente intensiva inserida. ${movedCount} componente(s) conflitante(s) foram empurradas para frente no tempo.${pausaMsg}`,
+                'success',
+                5600
+            );
+
+            if (nonBlockingDistributionNotice) {
+                showToastWarning(nonBlockingDistributionNotice, nonBlockingDistributionNoticeType, 6200);
+            }
+
+            if (execution.wasTruncatedByCH && execution.truncationType === 'partial-day') {
+                showPersistentStatusMessage('Alocacao fracionada concluida com sucesso.', 'success');
+            }
+            return;
+        }
 
         const actionText = idsToRemove.length > 0 ? 'Atualizar alocacao existente?' : 'Confirmar alocacao?';
         if (!confirm(`${disciplina} (${formatDateBR(inicioCalculado)} a ${formatDateBR(dataFimCalculada)})\n\n${actionText}`)) return;
@@ -7302,8 +7750,16 @@ function buildTurmaCalendarSlots(eventsByDate = {}, turmaId = '') {
     const nativeSlots = buildHorariosForUI();
     const slotMap = new Map();
 
+    // Normaliza preservando o rotulo de intervalo (senao cleanHorarioLabel removeria
+    // a palavra "INTERVALO" e o calendario nao reconheceria a linha como intervalo).
+    const normSlotLabel = (s) => {
+        const str = String(s || '').trim();
+        if (str.toUpperCase().includes('INTERVALO')) return formatIntervaloLabel(str);
+        return cleanHorarioLabel(str);
+    };
+
     nativeSlots.forEach((slot) => {
-        const key = cleanHorarioLabel(String(slot || '').trim());
+        const key = normSlotLabel(slot);
         if (!key) return;
         slotMap.set(key, key);
     });
@@ -7332,7 +7788,7 @@ function buildTurmaCalendarSlots(eventsByDate = {}, turmaId = '') {
                 ...(Array.isArray(event.horariosUltimoDia) ? event.horariosUltimoDia : [])
             ];
             eventSlots.forEach((rawSlot) => {
-                const normalizedSlot = cleanHorarioLabel(String(rawSlot || '').trim());
+                const normalizedSlot = normSlotLabel(rawSlot);
                 if (!normalizedSlot) return;
                 if (!slotMap.has(normalizedSlot)) slotMap.set(normalizedSlot, normalizedSlot);
                 const shiftKey = letterToShiftKey[getTurnoLetter(normalizedSlot)];
@@ -7347,7 +7803,7 @@ function buildTurmaCalendarSlots(eventsByDate = {}, turmaId = '') {
         const fullShifter = getHorariosByTurno(shiftKey, hp);
         if (Array.isArray(fullShifter)) {
             fullShifter.forEach(s => {
-                const ks = cleanHorarioLabel(String(s || '').trim());
+                const ks = normSlotLabel(s);
                 if (ks && !slotMap.has(ks)) {
                     slotMap.set(ks, ks);
                 }
@@ -9624,12 +10080,12 @@ function buildCalendarTurmaResumeTable(turmaId, start, end) {
         <table class="calendar-turma-resume-table" style="width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 12px;">
             <thead>
                 <tr style="background: #f5f5f5; border-bottom: 2px solid #333;">
-                    <th style="padding: 8px; text-align: left; border-right: 1px solid #ddd; width: 5%;">#</th>
-                    <th style="padding: 8px; text-align: left; border-right: 2px solid #2d34c6; width: 13%;">Código</th>
-                    <th style="padding: 8px; text-align: center; border-right: 2px solid #2d34c6; width: 8%; color: #2d34c6;">CH</th>
-                    <th style="padding: 8px; text-align: left; border-right: 1px solid #ddd; width: 32%;">Disciplina</th>
-                    <th style="padding: 8px; text-align: left; border-right: 1px solid #ddd; width: 20%;">Docente</th>
-                    <th style="padding: 8px; text-align: left; width: 22%;">Período</th>
+                    <th style="padding: 8px 8px 16px 8px; text-align: left; border-right: 1px solid #ddd; width: 5%;">#</th>
+                    <th style="padding: 8px 8px 16px 8px; text-align: left; border-right: 2px solid #2d34c6; width: 13%;">Código</th>
+                    <th style="padding: 8px 8px 16px 8px; text-align: center; border-right: 2px solid #2d34c6; width: 8%; color: #2d34c6;">CH</th>
+                    <th style="padding: 8px 8px 16px 8px; text-align: left; border-right: 1px solid #ddd; width: 32%;">Disciplina</th>
+                    <th style="padding: 8px 8px 16px 8px; text-align: left; border-right: 1px solid #ddd; width: 20%;">Docente</th>
+                    <th style="padding: 8px 8px 16px 8px; text-align: left; width: 22%;">Período</th>
                 </tr>
             </thead>
             <tbody>
@@ -9944,11 +10400,6 @@ function generateCalendarGrid(container, turmaId, docenteName, start, end, title
                             rowStyle = `border-top: ${borderStyle}; margin-top: 2px; padding-top: 2px;`;
                         }
 
-                        // Reduz a altura dos slots entre 10:00 e 10:20 (intervalo da manhã)
-                        if (slotTime.includes('10:00') || (slotTime.includes('10:') && parseInt(slotTime.split(':')[1]) < 20)) {
-                            rowStyle += ' height: 12px; min-height: 12px;';
-                        }
-                        
                         let turnoClass = '';
                         const tLetter = getTurnoLetter(slotTime);
                         if (tLetter === 'M') turnoClass = 'turno-manha';
@@ -9956,7 +10407,7 @@ function generateCalendarGrid(container, turmaId, docenteName, start, end, title
                         else if (tLetter === 'N') turnoClass = 'turno-noite';
 
                         html += `
-              <div class="cal-slot-row ${turnoClass}" style="${rowStyle}">
+              <div class="cal-slot-row ${turnoClass}${isIntervalo ? ' cal-slot-interval' : ''}" style="${rowStyle}">
                 <div class="cal-slot-time">${timeLabel}</div>
                 <div class="${className}" style="${style}" ${tooltip}>${content}</div>
               </div>`;

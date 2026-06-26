@@ -1,6 +1,6 @@
 {
   "meta": {
-    "generated_at": "2026-06-25T14:15:41",
+    "generated_at": "2026-06-25T18:12:53",
     "source_file": "planilha_base.xlsx"
   },
   "docentes": [
@@ -3662,19 +3662,19 @@
     },
     {
       "data": "2026-11-09",
-      "feriado": "SEMIP",
+      "feriado": "SIEPE",
       "dia": "Segunda-feira",
       "tipo": "evento-academico"
     },
     {
       "data": "2026-11-10",
-      "feriado": "SEMIP",
+      "feriado": "SIEPE",
       "dia": "Terça-feira",
       "tipo": "evento-academico"
     },
     {
       "data": "2026-11-11",
-      "feriado": "SEMIP",
+      "feriado": "SIEPE",
       "dia": "Quarta-feira",
       "tipo": "evento-academico"
     }
