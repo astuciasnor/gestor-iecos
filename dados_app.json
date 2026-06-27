@@ -1,6 +1,6 @@
 {
   "meta": {
-    "generated_at": "2026-06-25T18:12:53",
+    "generated_at": "2026-06-27T11:01:50",
     "source_file": "planilha_base.xlsx"
   },
   "docentes": [
@@ -173,7 +173,7 @@
       "apelido": "Nelane"
     },
     {
-      "docente": "Nils Asp Edwin Neto",
+      "docente": "Nils Edvin Asp Neto",
       "unidade": "IECOS",
       "subunidade": "FEPESCA",
       "apelido": "Nils"
@@ -843,7 +843,7 @@
       "periodo": "VI",
       "codigo": "EP05041",
       "cor": "#a1e595",
-      "componente": "RELACOES ETNICO=RACIAIS E CIDADANIA",
+      "componente": "RELACOES ETNICO-RACIAIS E CIDADANIA",
       "abreviacao": "Relac Etnic Cida",
       "ch": 30
     },
@@ -1024,7 +1024,7 @@
       "codigo": "EP05072",
       "cor": "#d6d874",
       "componente": "TOPICOS ESPECIAIS EM TECNOLOGIA E ORDENAMENTO PESQUEIRO",
-      "abreviacao": "Siste Naveg",
+      "abreviacao": "TE Tecn Ord Pesq",
       "ch": 30
     },
     {

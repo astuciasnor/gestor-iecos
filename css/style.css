@@ -1650,6 +1650,27 @@ input[type="date"] { color-scheme: dark; }
     background: #c94334;
 }
 
+.btn-week-undo {
+    border-color: #6c5ce7;
+    color: #fff;
+    background: #7d6df0;
+    font-size: 0.78rem;
+    padding: 0 8px;
+    white-space: normal;
+    overflow: hidden;
+}
+
+.btn-week-undo:hover {
+    background: #6c5ce7;
+}
+
+.btn-week-undo:disabled {
+    background: #c5c0e8;
+    border-color: #b6b0df;
+    color: #f3f1ff;
+    cursor: not-allowed;
+}
+
 .btn-week-nav .btn-label-two-line {
     display: flex;
     flex-direction: column;
@@ -2377,8 +2398,26 @@ input[type="date"] { color-scheme: dark; }
     cursor: pointer;
 }
 
+.print-hint {
+    font-size: 0.78rem;
+    color: #64748b;
+    background: #f1f5f9;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    padding: 4px 10px;
+    margin-right: 10px;
+    white-space: nowrap;
+    line-height: 1.2;
+    cursor: help;
+}
+
+.print-hint strong {
+    color: var(--primary);
+    font-weight: 700;
+}
+
 @media print {
-    @page { margin: 0.8cm; size: 297mm 210mm; }
+    @page { margin: 0.8cm; size: A4 landscape; }
     
     html, body {
         height: auto !important;

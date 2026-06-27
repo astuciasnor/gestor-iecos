@@ -56,6 +56,15 @@ let editingDisciplinaDraft = '';
 // true quando a disciplina carregada no editor veio de importacao (bloco PPC ou arquivo).
 // Sobreposicao ao salvar so e permitida quando esta flag for true.
 let editingImportadoDraft = false;
+// Edicao segura: IDs das ofertas originais carregadas no editor. A remocao e
+// ADIADA ate o salvar (remover agora persistiria no localStorage e seria
+// perdido num reload antes de confirmar). Limpo ao salvar com sucesso ou ao
+// abandonar a edicao (troca de disciplina/turma/plano).
+let editingOriginalAllocationIds = [];
+// Data inicial (Faixa 1) original da componente em edicao. Usada pelo
+// "Limpar Faixas" para reposicionar a Faixa 1 na data que a componente ja
+// ocupava, em vez de recalcular o primeiro dia livre.
+let editingComponentOriginalStart = '';
 let lastDisciplinaInputNormalized = '';
 let componentStartSelectionMode = 'auto';
 window.isDrawingFaixa = null;
@@ -2058,9 +2067,17 @@ function buildFaixaOccupiedSlotsByDateDirect(turmaId, startDate, endDate) {
     if (!turmaId || !startDate || !endDate) return occupiedByDate;
     const turmIdStr = String(turmaId);
 
+    // Edicao segura: ignora a ocupacao da propria componente em edicao (ainda
+    // persistida no store ate o save) para que a busca da data inicial trate os
+    // slots dela como livres — senao ela "empurra" o inicio para depois de si mesma.
+    const hiddenEditIds = new Set(
+        (editingOriginalAllocationIds || []).map((id) => String(id))
+    );
+
     store.allocations.forEach((alloc) => {
         if (String(alloc?.turmaId) !== turmIdStr) return;
         if (!isFaixaAllocation(alloc)) return;
+        if (hiddenEditIds.has(String(alloc?.id))) return;
 
         const faixas = getNormalizedIntensiveFaixas(alloc);
         faixas.forEach((faixa) => {
@@ -2590,6 +2607,23 @@ function splitAndDeferAllocationAroundIntensive(baseAlloc, intensiveStart, inten
     // Nada a deferir: a componente ja cabe inteira antes da intensiva (nao deveria conflitar).
     if (deferHours <= 0) return null;
 
+    // Re-aloca a parte futura imediatamente apos a intensiva, buscando inicio livre.
+    const anchorStart = shiftISODate(end, 1);
+
+    // Caso a componente INTEIRA seja deslocada (nenhuma aula mantida antes da
+    // intensiva): preserva TODAS as faixas originais (multi-faixa), apenas
+    // deslocando-as para depois da intensiva. Evita colapsar para um unico
+    // padrao (que perdia a Faixa 1 quando havia 2+ faixas).
+    if (keptHours === 0) {
+        const relocatedWhole = relocateFaixaAllocationForward(baseAlloc, anchorStart);
+        if (!relocatedWhole) return null;
+        return {
+            ...relocatedWhole,
+            ch: totalCH,
+            pausedForIntensive: false
+        };
+    }
+
     const keptEnd = shiftISODate(start, -1);
     const keptFaixas = keptHours > 0 ? alignFaixasToExecutionEnd(origFaixas, keptEnd) : [];
 
@@ -2597,8 +2631,6 @@ function splitAndDeferAllocationAroundIntensive(baseAlloc, intensiveStart, inten
     const template = getActiveFaixaForDate(origFaixas, start) || origFaixas[origFaixas.length - 1];
     if (!template) return null;
 
-    // Re-aloca a parte futura imediatamente apos a intensiva, buscando inicio livre.
-    const anchorStart = shiftISODate(end, 1);
     const deferBase = {
         ...baseAlloc,
         ch: deferHours,
@@ -3079,15 +3111,27 @@ function handleClearFaixasRestart() {
     setComponentStartSelectionMode('auto');
 
     // useCurrentUI: false força a busca da data disponível ignorando as faixas atuais.
-    collapseFaixasForNewComponent({ useCurrentUI: false });
+    // Em EDICAO, porem, reposiciona a Faixa 1 na data inicial original da
+    // componente (onde ela ja estava) em vez do primeiro dia livre recalculado.
+    const editingStart = (editingOriginalAllocationIds.length > 0)
+        ? String(editingComponentOriginalStart || '').trim()
+        : '';
+    if (editingStart) {
+        collapseFaixasForNewComponent({ preferredStart: editingStart, useCurrentUI: false });
+    } else {
+        collapseFaixasForNewComponent({ useCurrentUI: false });
+    }
     autoEnterWeeklyEditingForFaixa(1);
     updateWeeklySavePatternButton();
     updateWeeklyFaixaHoursDisplay();
 
     const f1Ini = document.getElementById('inp-data-inicio-f1')?.value || '';
     const humanDate = f1Ini ? formatDateBR(f1Ini) : '';
+    const posicaoTxt = editingStart
+        ? '(data inicial original da componente)'
+        : '(primeiro dia com a 1ª ou 4ª aula livre)';
     showToastWarning(humanDate
-        ? `Faixas limpas. Data inicial posicionada em ${humanDate} (primeiro dia com a 1ª ou 4ª aula livre). Redesenhe os slots.`
+        ? `Faixas limpas. Data inicial posicionada em ${humanDate} ${posicaoTxt}. Redesenhe os slots.`
         : 'Faixas limpas. Redesenhe os slots para a componente.', 'warning', 2800);
 }
 
@@ -5291,6 +5335,8 @@ function resetWeeklyDraftStateForPlanSwitch(preferredStart = '') {
     deactivateDrawingMode();
     editingDisciplinaDraft = '';
     editingImportadoDraft = false;
+    editingOriginalAllocationIds = [];
+    editingComponentOriginalStart = '';
     lastDisciplinaInputNormalized = '';
     pendingFaixaStartPick = null;
     pendingFaixaQuickActionConfirm = null;
@@ -5327,7 +5373,10 @@ function applyPlanContextToUI(planMeta = {}, options = {}) {
     const didChangePlan = result.meta.key !== previousKey;
     const planStart = result.meta.termStart || store.settings.termStart || '';
 
-    if (didChangePlan) setComponentStartSelectionMode('auto');
+    if (didChangePlan) {
+        setComponentStartSelectionMode('auto');
+        clearAllocationUndoSnapshot();
+    }
 
     syncPlanInputsFromStore(result.meta);
     updateActivePlanStatus();
@@ -5577,6 +5626,8 @@ export function initUI() {
                 collapseFaixasForNewComponent({ useCurrentUI: false });
                 editingDisciplinaDraft = '';
                 editingImportadoDraft = false;
+                editingOriginalAllocationIds = [];
+                editingComponentOriginalStart = '';
             }
             lastDisciplinaInputNormalized = discNome;
             updateWeeklyFaixasTitleDisciplina();
@@ -5596,6 +5647,8 @@ export function initUI() {
                 collapseFaixasForNewComponent({ preferredStart: pendingPreferredStart, useCurrentUI: false });
                 editingDisciplinaDraft = '';
                 editingImportadoDraft = false;
+                editingOriginalAllocationIds = [];
+                editingComponentOriginalStart = '';
                 
                 // Aplica a cor automática (da paleta de 20 cores ou do JSON), com realce de croma
                 if (inputConfig.cor) {
@@ -5695,6 +5748,10 @@ export function initUI() {
 
     const btnAdd = document.getElementById('btn-add-oferta');
     if (btnAdd) btnAdd.addEventListener('click', handleAddManual);
+
+    const btnUndoAlloc = document.getElementById('btn-undo-alloc');
+    if (btnUndoAlloc) btnUndoAlloc.addEventListener('click', handleUndoLastAllocation);
+    updateUndoAllocationButtonUI();
 
     document.querySelectorAll('.tab-btn').forEach((btn) => {
         btn.addEventListener('click', () => switchTab(btn.dataset.tab));
@@ -5942,6 +5999,8 @@ function resetWeeklyEditorForTurma(turmaId, options = {}) {
     deactivateDrawingMode();
     editingDisciplinaDraft = '';
     editingImportadoDraft = false;
+    editingOriginalAllocationIds = [];
+    editingComponentOriginalStart = '';
     lastDisciplinaInputNormalized = '';
     updateWeeklyFaixasTitleDisciplina();
     updateWeeklyFaixaHoursDisplay();
@@ -6087,6 +6146,7 @@ function populateDocentes() {
 
 function onTurmaChange() {
     store.selectedTurma = selTurma.value;
+    clearAllocationUndoSnapshot();
     store.setLastContext(store.selectedCurso, store.selectedTurma || '');
     resetWeeklyEditorForTurma(store.selectedTurma, {
         preferredStart: store.settings.termStart || '',
@@ -6209,6 +6269,20 @@ function renderWeeklyGrid() {
         weeklyEventsByDate[d] = Array.isArray(weeklyEventsFull?.[d]) ? weeklyEventsFull[d] : [];
     });
 
+    // Edicao segura: oculta da grade as ofertas originais em edicao (ainda
+    // persistidas no store, removidas somente ao salvar), para que a edicao
+    // mostre apenas o desenho atual, sem duplicar a componente.
+    const hiddenEditIds = new Set(
+        (editingOriginalAllocationIds || []).map((id) => String(id))
+    );
+    if (hiddenEditIds.size > 0) {
+        weekDates.forEach((d) => {
+            weeklyEventsByDate[d] = weeklyEventsByDate[d].filter(
+                (ev) => !hiddenEditIds.has(String(ev?.id))
+            );
+        });
+    }
+
     const allWeeklySlots = new Set();
     Object.values(weeklyEventsByDate).forEach(arr => {
         arr.forEach(ev => {
@@ -6290,6 +6364,10 @@ function renderWeeklyGrid() {
 
         // Fallback anti-brecha: evita sumico indevido de dia util anterior por janela de renderizacao
         turmaAllocs.forEach((a) => {
+            // Edicao segura: nunca re-adicionar a propria componente em edicao
+            // (mesmo sem padrao desenhado, ex.: apos "Limpar Faixas"), senao ela
+            // reaparece como ocupada e bloqueia o redesenho dos proprios slots.
+            if (hiddenEditIds.has(String(a?.id))) return;
             if (hasAnyDraftPattern && drawingDisciplina && normalizeDisciplinaInputValue(a.disciplina || '') === drawingDisciplina) return;
             if (!isAllocationActiveInWeeklyCell(a, dayNumber, dateStr, slotLabel)) return;
 
@@ -6733,7 +6811,21 @@ function loadAllocationIntoEditor(allocation, idsToRemove = []) {
         setWeeklyViewByDate(a._pendingPreferredStart, { followFaixa: false, render: false });
         delete a._pendingPreferredStart;
     }
-    idsToRemove.forEach((id) => store.removeAllocation(id));
+    // Edicao segura: NAO remove a oferta antiga agora. A remocao persiste no
+    // localStorage e seria perdida num reload antes de salvar. Apenas rastreia
+    // os IDs originais para remove-los no momento do salvar (ver handleAddManual).
+    // A grade semanal oculta esses IDs durante a edicao (renderWeeklyGrid).
+    editingOriginalAllocationIds = Array.isArray(idsToRemove) ? idsToRemove.slice() : [];
+    // Guarda a data inicial original (menor inicio entre as faixas) para que o
+    // "Limpar Faixas" reposicione a Faixa 1 onde a componente ja estava, em vez
+    // de recalcular o primeiro dia livre.
+    editingComponentOriginalStart = (() => {
+        const inicios = (getNormalizedIntensiveFaixas(a) || [])
+            .map((f) => String(f?.inicio || '').trim())
+            .filter(Boolean)
+            .sort();
+        return inicios[0] || '';
+    })();
     syncAllRegularDates();
 
     // Ativa explicitamente o modo de desenho na Faixa 1 (ou na faixa com padrão carregado)
@@ -6760,6 +6852,57 @@ function loadAllocationIntoEditor(allocation, idsToRemove = []) {
     }
     switchTab('weekly');
     window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// Desfazer a ultima insercao: guarda um snapshot do estado das alocacoes ANTES
+// de cada save bem-sucedido (insercao individual, edicao de pendente ou de
+// ofertada). Undo de um nivel: restaura o estado anterior. Importacoes em lote
+// (handleImportBloco) nao passam por aqui, entao nao geram snapshot.
+let lastAllocationUndoSnapshot = null;
+
+function snapshotAllocationsForUndo() {
+    try {
+        return JSON.parse(JSON.stringify(store.allocations || []));
+    } catch (err) {
+        return null;
+    }
+}
+
+function commitAllocationUndoSnapshot(snapshot) {
+    lastAllocationUndoSnapshot = Array.isArray(snapshot) ? snapshot : null;
+    updateUndoAllocationButtonUI();
+}
+
+function clearAllocationUndoSnapshot() {
+    lastAllocationUndoSnapshot = null;
+    updateUndoAllocationButtonUI();
+}
+
+function updateUndoAllocationButtonUI() {
+    const btn = document.getElementById('btn-undo-alloc');
+    if (!btn) return;
+    const hasSnapshot = Array.isArray(lastAllocationUndoSnapshot);
+    btn.classList.toggle('hidden', !hasSnapshot);
+    btn.disabled = !hasSnapshot;
+}
+
+function handleUndoLastAllocation() {
+    if (!Array.isArray(lastAllocationUndoSnapshot)) {
+        showToastWarning('Nao ha insercao recente para desfazer.', 'warning', 2600);
+        return;
+    }
+    if (!confirm('Desfazer a ultima insercao e voltar ao estado anterior das alocacoes?')) return;
+    store.replaceAllocations(lastAllocationUndoSnapshot);
+    clearAllocationUndoSnapshot();
+    setComponentStartSelectionMode('auto');
+    editingOriginalAllocationIds = [];
+    updateWeeklyFaixasTitleDisciplina();
+    refreshPendingFaixaStartPickUI();
+    updateWeeklyContextNote();
+    updateWeeklyFaixaHoursDisplay();
+    renderWeeklyGrid();
+    renderOfertasList();
+    showToastWarning('Ultima insercao desfeita. Alocacoes voltaram ao estado anterior.', 'success', 3600);
 }
 
 function handleAddManual() {
@@ -6945,19 +7088,49 @@ function handleAddManual() {
         let pushForwardTargets = [];
 
         if (intensiveConflict) {
-            if (!isImportedSave) {
-                if (savingIsIntensive) {
-                    // Componente INTENSIVA: ocupa o bloco e empurra TODAS as conflitantes
-                    // (pausa e retoma). So entram as que tem faixas deslocaveis.
-                    const targets = turmaConflictGroups.all.filter((alloc) => getNormalizedIntensiveFaixas(alloc).length > 0);
-                    if (targets.length === 0) {
-                        showToastWarning(
-                            `Sobreposicao detectada: "${intensiveConflict.disciplina}" ja ocupa esse horario e nao pode ser realocada automaticamente. Ajuste manualmente.`,
-                            'error',
-                            5600
-                        );
+            // Passo 1 (aviso de revisao da data) — vale INCLUSIVE para disciplinas
+            // importadas: se a nova intensiva comeca SOBRE uma componente que JA havia
+            // comecado antes (data de inicio anterior), provavelmente foi engano de data.
+            // Avisa e pede revisao ANTES de qualquer outra etapa. Conflitantes que
+            // comecam no mesmo dia ou depois nao entram aqui.
+            if (savingIsIntensive) {
+                const startedBeforeTargets = turmaConflictGroups.all
+                    .filter((alloc) => getNormalizedIntensiveFaixas(alloc).length > 0)
+                    .filter((alloc) => {
+                        const di = String(alloc?.dataInicio || '').trim();
+                        return di && di < inicioCalculado;
+                    });
+                if (startedBeforeTargets.length > 0) {
+                    const overlapDetails = startedBeforeTargets
+                        .slice(0, 4)
+                        .map((a) => `- ${String(a?.disciplina || '').trim()} (de ${formatDateBR(a.dataInicio)} a ${formatDateBR(a.dataFim)})`)
+                        .join('\n');
+                    const overlapMore = startedBeforeTargets.length > 4
+                        ? `\n- ...e mais ${startedBeforeTargets.length - 4}`
+                        : '';
+                    const reviewOk = confirm(
+                        `Atencao: a data de inicio escolhida (${formatDateBR(inicioCalculado)}) cai SOBRE ` +
+                        `${startedBeforeTargets.length} componente(s) que JA havia(m) comecado antes:\n\n` +
+                        `${overlapDetails}${overlapMore}\n\n` +
+                        `Como essa(s) componente(s) ja estava(m) prevista(s) para comecar antes, ` +
+                        `o recomendado e revisar a data de inicio desta nova componente.\n\n` +
+                        `Clique em Cancelar para revisar a data de inicio, ou em OK para prosseguir assim mesmo.`
+                    );
+                    if (!reviewOk) {
+                        showToastWarning('Salvamento cancelado. Revise a data de inicio desta componente.', 'warning', 4200);
                         return;
                     }
+                }
+            }
+            // Empurrao (pausa/retoma) agora vale para MANUAL e IMPORTADA: quando a
+            // componente sendo salva e intensiva e ha conflitantes deslocaveis na
+            // mesma turma, ela ocupa o bloco e empurra as demais para frente no
+            // tempo (em vez de sobrepor). Importadas so mantem o privilegio de
+            // SOBREPOR quando nao ha como empurrar (sem faixas deslocaveis) ou quando
+            // a propria componente nova nao e intensiva.
+            if (savingIsIntensive) {
+                const targets = turmaConflictGroups.all.filter((alloc) => getNormalizedIntensiveFaixas(alloc).length > 0);
+                if (targets.length > 0) {
                     const uniqueNames = [...new Set(targets.map((a) => String(a?.disciplina || '').trim()).filter(Boolean))];
                     const previewNames = uniqueNames.slice(0, 4).join(', ');
                     const moreCount = Math.max(0, uniqueNames.length - 4);
@@ -6974,22 +7147,39 @@ function handleAddManual() {
                     }
                     pushForwardRequested = true;
                     pushForwardTargets = targets;
-                } else {
-                    // Componente NAO intensiva: deveria ter desviado para os buracos. Se ainda
-                    // ha conflito, nao empurra as demais — bloqueia e pede ajuste manual.
+                } else if (!isImportedSave) {
+                    // Manual sem alvos deslocaveis: nao da para empurrar -> bloqueia.
                     showToastWarning(
-                        `Sobreposicao detectada: "${intensiveConflict.disciplina}" ja ocupa esse horario no mesmo periodo. Componentes nao intensivas nao empurram as demais; ajuste manualmente.`,
+                        `Sobreposicao detectada: "${intensiveConflict.disciplina}" ja ocupa esse horario e nao pode ser realocada automaticamente. Ajuste manualmente.`,
                         'error',
                         5600
                     );
                     return;
+                } else {
+                    // Importada sem alvos deslocaveis: mantem o privilegio de sobrepor.
+                    showToastWarning(
+                        `Sobreposicao permitida (disciplina importada): choque de horario com "${intensiveConflict.disciplina}". Sera destacada na aba Calendario Docente.`,
+                        'warning',
+                        4800
+                    );
                 }
+            } else if (!isImportedSave) {
+                // Componente NAO intensiva: deveria ter desviado para os buracos. Se ainda
+                // ha conflito, nao empurra as demais — bloqueia e pede ajuste manual.
+                showToastWarning(
+                    `Sobreposicao detectada: "${intensiveConflict.disciplina}" ja ocupa esse horario no mesmo periodo. Componentes nao intensivas nao empurram as demais; ajuste manualmente.`,
+                    'error',
+                    5600
+                );
+                return;
+            } else {
+                // NAO intensiva importada: mantem o privilegio de sobrepor.
+                showToastWarning(
+                    `Sobreposicao permitida (disciplina importada): choque de horario com "${intensiveConflict.disciplina}". Sera destacada na aba Calendario Docente.`,
+                    'warning',
+                    4800
+                );
             }
-            showToastWarning(
-                `Sobreposicao permitida (disciplina importada): choque de horario com "${intensiveConflict.disciplina}". Sera destacada na aba Calendario Docente.`,
-                'warning',
-                4800
-            );
         }
 
         const teachersToCheck = (docData.mode === 'single' ? [docData.docente] : docData.docentesList.map(d => d.nome)).filter(n => n && n.trim().toUpperCase() !== 'A DEFINIR');
@@ -7036,7 +7226,22 @@ function handleAddManual() {
             })
             .map((a) => a.id);
 
-        if (pushForwardRequested && !isImportedSave) {
+        // Edicao segura: inclui os IDs originais rastreados mesmo que a componente
+        // tenha sido movida para um periodo SEM sobreposicao (o filtro acima exige
+        // overlap). Guardado por turma/disciplina/subGrupo para nunca remover algo
+        // de outra componente caso o rastreio tenha ficado obsoleto.
+        editingOriginalAllocationIds.forEach((id) => {
+            if (idsToRemove.includes(id)) return;
+            const al = store.allocations.find((a) => a.id === id);
+            if (!al) return;
+            if (String(al.turmaId) !== String(store.selectedTurma)) return;
+            if (al.disciplina !== disciplina || !isFaixaAllocation(al)) return;
+            if (String(al.subGrupo || '') !== String(subGrupo || '')) return;
+            idsToRemove.push(id);
+        });
+
+        if (pushForwardRequested) {
+            const undoSnapshot = snapshotAllocationsForUndo();
             const pushTx = applyConflictPushForwardTransaction(
                 {
                     turmaId: store.selectedTurma,
@@ -7057,7 +7262,7 @@ function handleAddManual() {
                     faixas: faixasConfigAjustadas,
                     subGrupo: subGrupo || null,
                     cor: inputConfig.cor ? inputConfig.cor.value : store.getDisciplinaColor(disciplina),
-                    importado: false
+                    importado: isImportedSave
                 },
                 execution,
                 pushForwardTargets,
@@ -7073,6 +7278,8 @@ function handleAddManual() {
                 );
                 return;
             }
+
+            commitAllocationUndoSnapshot(undoSnapshot);
 
             if (inicioCalculado && store.selectedTurma) {
                 store.setTurmaLastStart(store.selectedTurma, inicioCalculado);
@@ -7094,7 +7301,7 @@ function handleAddManual() {
             }
 
             setComponentStartSelectionMode('auto');
-            editingDisciplinaDraft = normalizeDisciplinaInputValue(disciplina);
+            editingOriginalAllocationIds = [];
             updateWeeklyFaixasTitleDisciplina();
             refreshPendingFaixaStartPickUI();
             updateWeeklyContextNote();
@@ -7126,6 +7333,7 @@ function handleAddManual() {
         const actionText = idsToRemove.length > 0 ? 'Atualizar alocacao existente?' : 'Confirmar alocacao?';
         if (!confirm(`${disciplina} (${formatDateBR(inicioCalculado)} a ${formatDateBR(dataFimCalculada)})\n\n${actionText}`)) return;
 
+        const undoSnapshot = snapshotAllocationsForUndo();
         idsToRemove.forEach((id) => store.removeAllocation(id));
 
         store.addAllocation({
@@ -7154,6 +7362,8 @@ function handleAddManual() {
             store.setTurmaLastStart(store.selectedTurma, inicioCalculado);
         }
 
+        commitAllocationUndoSnapshot(undoSnapshot);
+
         syncAllIntensiveDates();
         const allocAtualizada = [...store.allocations].reverse().find((a) =>
             String(a.turmaId) === String(store.selectedTurma) &&
@@ -7170,6 +7380,7 @@ function handleAddManual() {
         }
         setComponentStartSelectionMode('auto');
         editingDisciplinaDraft = normalizeDisciplinaInputValue(disciplina);
+        editingOriginalAllocationIds = [];
         updateWeeklyFaixasTitleDisciplina();
         refreshPendingFaixaStartPickUI();
         updateWeeklyContextNote();
@@ -7559,7 +7770,22 @@ function renderOfertasList() {
 
     const canonicalRows = buildCanonicalRows();
     const pendenteRows = buildPendenteRows();
+    // Ordena os COMPONENTES pela data de inicio alocada (cronologica), mantendo
+    // as linhas (faixas/docentes) de um mesmo componente agrupadas. Espelha a
+    // ordem da tabela resumo do calendario.
+    const componentEarliestStart = new Map();
+    canonicalRows.forEach((row) => {
+        const key = row.componentKey || '';
+        const start = row.start || '9999-12-31';
+        const prev = componentEarliestStart.get(key);
+        if (prev === undefined || start.localeCompare(prev) < 0) {
+            componentEarliestStart.set(key, start);
+        }
+    });
     canonicalRows.sort((a, b) => {
+        const aCompStart = componentEarliestStart.get(a.componentKey || '') || '9999-12-31';
+        const bCompStart = componentEarliestStart.get(b.componentKey || '') || '9999-12-31';
+        if (aCompStart !== bCompStart) return aCompStart.localeCompare(bCompStart);
         const comp = (a.componentKey || '').localeCompare(b.componentKey || '');
         if (comp !== 0) return comp;
         const startA = a.start || '9999-12-31';
@@ -8151,7 +8377,7 @@ function buildGanttMonthHeaderColumnsHtml(minTime, maxTime, totalTime) {
         const widthPct = ((endOfMonth - startOfMonth) / totalTime) * 100;
 
         if (widthPct > 0) {
-            html += `<div class="gantt-month-col" style="width: ${widthPct}%; flex: none; background: transparent; text-align: center; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.1em; color: var(--primary); border: none;">${mesNome}</div>`;
+            html += `<div class="gantt-month-col" style="width: ${widthPct}%; flex: none; background: transparent; text-align: center; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.95em; color: var(--primary); border: none;">${mesNome}</div>`;
         }
         cur = nextMonth;
     }
@@ -8483,30 +8709,67 @@ function buildGanttSharedSegmentLabelsHtml({ segmentMeta, leftPct, widthPct, cur
 
         const labelHtml = showSegmentLabel
             ? `
-                <div style="position:absolute; top:50%; left:${Math.max(1, innerLeftPct)}%; width:${innerWidthPct}%; transform:translateY(-50%); min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; text-align:center; font-size:0.78em; font-weight:800; color:#0f172a; text-shadow:0 1px 0 rgba(255,255,255,0.45); padding:0 12px; box-sizing:border-box;">
+                <div style="position:absolute; top:50%; left:${Math.max(1, innerLeftPct)}%; width:${innerWidthPct}%; transform:translateY(-50%); min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; text-align:center; font-size:0.68em; font-weight:800; color:#0f172a; text-shadow:0 1px 0 rgba(255,255,255,0.45); padding:0 12px; box-sizing:border-box;">
                     ${segment.label}
                 </div>
             `
             : '';
         const seamDateHtml = nextSegment
-            ? `<span style="position:absolute; left:${segment.endPct}%; top:${currentTop + (barHeight / 2)}px; transform:translate(-50%, -50%); font-size:0.64em; font-weight:900; color:#0f172a; text-shadow:0 1px 0 rgba(255,255,255,0.9), 0 0 4px rgba(255,255,255,0.72); white-space:nowrap; pointer-events:none; z-index:6;">${segment.endShort}</span>`
+            ? `<span style="position:absolute; left:${segment.endPct}%; top:${currentTop + (barHeight / 2)}px; transform:translate(-50%, -50%); font-size:0.34em; font-weight:900; color:#0f172a; text-shadow:0 1px 0 rgba(255,255,255,0.9), 0 0 4px rgba(255,255,255,0.72); white-space:nowrap; pointer-events:none; z-index:6;">${segment.endShort}</span>`
             : '';
 
         return `${labelHtml}${seamDateHtml}`;
     }).join('');
 }
 
+// Datas de inicio/fim de cada trecho (emendas) para componente compartilhada (mais de um docente).
+// A data da emenda fica por dentro da barra quando o trecho a esquerda couber; senao vai logo acima da barra.
+function buildGanttSharedSeamDatesHtml({ segmentMeta, leftPct, widthPct, currentTop, barHeight }) {
+    if (!Array.isArray(segmentMeta) || segmentMeta.length < 2) return '';
+    return segmentMeta.map((segment, idx) => {
+        const nextSegment = segmentMeta[idx + 1] || null;
+        if (!nextSegment) return '';
+        const innerLeftPct = widthPct > 0
+            ? clampGanttPercent(((segment.startPct - leftPct) / widthPct) * 100)
+            : 0;
+        const innerRightPct = widthPct > 0
+            ? clampGanttPercent(((segment.endPct - leftPct) / widthPct) * 100)
+            : 100;
+        const segInnerWidthPct = innerRightPct - innerLeftPct;
+        const fitsInside = segInnerWidthPct >= 10;
+        const verticalOffset = fitsInside
+            ? `top:${currentTop + (barHeight / 2)}px; transform:translate(-50%, -50%);`
+            : `top:${currentTop - 4}px; transform:translate(-50%, -100%);`;
+        return `<span style="position:absolute; left:${segment.endPct}%; ${verticalOffset} font-size:0.34em; font-weight:900; color:#0f172a; text-shadow:0 1px 0 rgba(255,255,255,0.9), 0 0 4px rgba(255,255,255,0.72); white-space:nowrap; pointer-events:none; z-index:6;">${segment.endShort}</span>`;
+    }).join('');
+}
+
 function buildGanttOuterDateLabelsHtml({ leftPct, widthPct, currentTop, barHeight, startShort, endShort }) {
+    const rightEdgePct = leftPct + widthPct;
+    // Quando a ponta da barra encosta na borda do calendario, a data desenhada por fora
+    // cairia fora do quadro (recortada pelo overflow). Nesses casos desenhamos por dentro,
+    // colada na borda interna da barrinha.
+    const startTouchesLeftEdge = leftPct <= 2;
+    const endTouchesRightEdge = rightEdgePct >= 98;
+    const verticalTop = currentTop + (barHeight / 2);
+    const insideShadow = 'text-shadow:0 1px 0 rgba(255,255,255,0.9), 0 0 4px rgba(255,255,255,0.72);';
+    const outsideShadow = 'text-shadow:0 1px 0 rgba(255,255,255,0.72);';
+    const startLabel = startTouchesLeftEdge
+        ? `<span style="position:absolute; left:${leftPct}%; top:${verticalTop}px; transform:translate(4px, -50%); font-size:0.34em; font-weight:900; color:#0f172a; ${insideShadow} white-space:nowrap; pointer-events:none; z-index:6;">${startShort}</span>`
+        : `<span style="position:absolute; left:${leftPct}%; top:${verticalTop}px; transform:translate(calc(-100% - 10px), -50%); font-size:0.34em; font-weight:900; color:#0f172a; ${outsideShadow} white-space:nowrap; pointer-events:none; z-index:6;">${startShort}</span>`;
+    const endLabel = endTouchesRightEdge
+        ? `<span style="position:absolute; left:${rightEdgePct}%; top:${verticalTop}px; transform:translate(calc(-100% - 4px), -50%); font-size:0.34em; font-weight:900; color:#0f172a; ${insideShadow} white-space:nowrap; pointer-events:none; z-index:6;">${endShort}</span>`
+        : `<span style="position:absolute; left:${rightEdgePct}%; top:${verticalTop}px; transform:translate(10px, -50%); font-size:0.34em; font-weight:900; color:#0f172a; ${outsideShadow} white-space:nowrap; pointer-events:none; z-index:6;">${endShort}</span>`;
     return `
-        <span style="position:absolute; left:${leftPct}%; top:${currentTop + (barHeight / 2)}px; transform:translate(calc(-100% - 10px), -50%); font-size:0.64em; font-weight:900; color:#0f172a; text-shadow:0 1px 0 rgba(255,255,255,0.72); white-space:nowrap; pointer-events:none; z-index:6;">${startShort}</span>
-        <span style="position:absolute; left:${leftPct + widthPct}%; top:${currentTop + (barHeight / 2)}px; transform:translate(10px, -50%); font-size:0.64em; font-weight:900; color:#0f172a; text-shadow:0 1px 0 rgba(255,255,255,0.72); white-space:nowrap; pointer-events:none; z-index:6;">${endShort}</span>
+        ${startLabel}
+        ${endLabel}
     `;
 }
 
 function buildGanttInnerDateLabelsHtml({ leftPct, widthPct, currentTop, barHeight, startShort, endShort }) {
     return `
-        <span style="position:absolute; left:${leftPct}%; top:${currentTop + (barHeight / 2)}px; transform:translate(6px, -50%); font-size:0.64em; font-weight:900; color:#0f172a; text-shadow:0 1px 0 rgba(255,255,255,0.72); white-space:nowrap; pointer-events:none; z-index:6;">${startShort}</span>
-        <span style="position:absolute; left:${leftPct + widthPct}%; top:${currentTop + (barHeight / 2)}px; transform:translate(calc(-100% - 6px), -50%); font-size:0.64em; font-weight:900; color:#0f172a; text-shadow:0 1px 0 rgba(255,255,255,0.72); white-space:nowrap; pointer-events:none; z-index:6;">${endShort}</span>
+        <span style="position:absolute; left:${leftPct}%; top:${currentTop + (barHeight / 2)}px; transform:translate(6px, -50%); font-size:0.34em; font-weight:900; color:#0f172a; text-shadow:0 1px 0 rgba(255,255,255,0.72); white-space:nowrap; pointer-events:none; z-index:6;">${startShort}</span>
+        <span style="position:absolute; left:${leftPct + widthPct}%; top:${currentTop + (barHeight / 2)}px; transform:translate(calc(-100% - 6px), -50%); font-size:0.34em; font-weight:900; color:#0f172a; text-shadow:0 1px 0 rgba(255,255,255,0.72); white-space:nowrap; pointer-events:none; z-index:6;">${endShort}</span>
     `;
 }
 
@@ -8539,9 +8802,6 @@ function renderGanttTurnoLane({ turnoConfig, dayItems, docenteName, dayConfig, m
             : '';
         const compactLabel = getGanttCompactDisciplinaLabel(item);
         const compactTurmaLabel = String(item.turmaId || '').trim();
-        const compactLabelWithTurma = compactTurmaLabel
-            ? `${compactLabel}<br><span style="font-size:0.90em; font-weight:700; opacity:0.92;">(${compactTurmaLabel})</span>`
-            : compactLabel;
         const compactRangeLabel = getGanttCompactRangeLabel(item);
         const startShort = formatDateBR(item.dataInicio || '').slice(0, 5) || '--/--';
         const endShort = formatDateBR(item.dataFim || '').slice(0, 5) || '--/--';
@@ -8551,9 +8811,10 @@ function renderGanttTurnoLane({ turnoConfig, dayItems, docenteName, dayConfig, m
             .replace(/[^a-z0-9_-]+/gi, '-');
         const defaultInsideLabelHtml = `
             <div style="position:absolute; inset:0; pointer-events:none; z-index:5;">
-                <div class="gantt-bar-label-2l" style="position:absolute; top:50%; left:${insideLabelInsetPx}px; right:${insideLabelInsetPx}px; transform:translateY(-50%); min-width:0; overflow:hidden; text-align:center; font-size:0.66em; line-height:1.12; font-weight:800; color:#0f172a; text-shadow:0 1px 0 rgba(255,255,255,0.35); white-space:normal; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; line-clamp:2; word-break:break-word; overflow-wrap:anywhere;">
-                    ${compactLabelWithTurma}
+                <div class="gantt-bar-label-2l" style="position:absolute; top:1px; left:${insideLabelInsetPx}px; right:${insideLabelInsetPx}px; min-width:0; overflow:hidden; text-align:center; font-size:0.58em; line-height:1.08; font-weight:800; color:#0f172a; text-shadow:0 1px 0 rgba(255,255,255,0.35); white-space:normal; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; line-clamp:2; word-break:break-word; overflow-wrap:anywhere;">
+                    ${compactLabel}
                 </div>
+                ${compactTurmaLabel ? `<div style="position:absolute; bottom:1px; left:${insideLabelInsetPx}px; right:${insideLabelInsetPx}px; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; text-align:center; font-size:0.52em; line-height:1.05; font-weight:700; opacity:0.92; color:#0f172a; text-shadow:0 1px 0 rgba(255,255,255,0.35);">(${compactTurmaLabel})</div>` : ''}
             </div>
         `;
 
@@ -8665,7 +8926,7 @@ function renderGanttTurnoLane({ turnoConfig, dayItems, docenteName, dayConfig, m
                         data-gantt-anchor="${anchorId}"
                         data-gantt-detail="${detailPayload}"
                         aria-label="Abrir detalhes de ${compactRangeLabel}"
-                        style="position:absolute; ${externalLabelPosition} top:${currentTop + 8}px; border:none; background:transparent; box-shadow:none; padding:0; display:block; box-sizing:border-box; font-size:0.79em; font-weight:800; color:#1f2937; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; cursor:pointer; z-index:6; text-shadow:0 1px 0 rgba(255,255,255,0.92);">
+                        style="position:absolute; ${externalLabelPosition} top:${currentTop + 8}px; border:none; background:transparent; box-shadow:none; padding:0; display:block; box-sizing:border-box; font-size:0.7em; font-weight:800; color:#1f2937; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; cursor:pointer; z-index:6; text-shadow:0 1px 0 rgba(255,255,255,0.92);">
                     ${compactLabel}
                 </button>
             `
@@ -8674,6 +8935,9 @@ function renderGanttTurnoLane({ turnoConfig, dayItems, docenteName, dayConfig, m
             ? (useInsideEdgeDates
                 ? buildGanttInnerDateLabelsHtml({ leftPct, widthPct, currentTop, barHeight, startShort, endShort })
                 : buildGanttOuterDateLabelsHtml({ leftPct, widthPct, currentTop, barHeight, startShort, endShort }))
+            : '';
+        const sharedSeamDatesHtml = (docentesList.length > 1)
+            ? buildGanttSharedSeamDatesHtml({ segmentMeta, leftPct, widthPct, currentTop, barHeight })
             : '';
         const barDetailAttrs = sharedTargetSegment
             ? ''
@@ -8689,6 +8953,7 @@ function renderGanttTurnoLane({ turnoConfig, dayItems, docenteName, dayConfig, m
                         ${insideLabelHtml}
                     </div>
                     ${edgeDateLabelsHtml}
+                    ${sharedSeamDatesHtml}
                     ${externalLabelHtml}
             `;
         currentTop += barHeight + 6;
@@ -8701,7 +8966,7 @@ function renderGanttTurnoLane({ turnoConfig, dayItems, docenteName, dayConfig, m
         height: laneHeight,
         html: `
                     <div style="display: flex; height: ${laneHeight}px; ${laneBorder} position: relative;">
-                        <div style="width: 30px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 0.8em; color: #64748b; border-right: 1px solid #cbd5e1; background: #e2e8f0; flex-shrink: 0;" title="${turnoConfig.label}">
+                        <div style="width: 30px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 0.7em; color: #64748b; border-right: 1px solid #cbd5e1; background: #e2e8f0; flex-shrink: 0;" title="${turnoConfig.label}">
                             ${turnoConfig.shortCode}
                         </div>
                         <div class="gantt-timeline" style="flex: 1; position: relative; background: transparent; border: none;">
@@ -8779,7 +9044,7 @@ function renderTeacherClassicGantt(container, {
 
     container.innerHTML = `
         <div class="gantt-container teacher-gantt-print" style="background:#f8fafc; border:1px solid #cbd5e1; border-radius:8px; overflow:hidden; box-shadow:0 1px 3px rgba(15,23,42,0.08);">
-            <h3 style="margin:16px 12px 12px 12px; text-align:center; color:var(--primary); font-size:2rem; font-weight:800; letter-spacing:0.3px; text-transform:uppercase;">CRONOGRAMA: ${String(docenteName || '').toUpperCase()} (${titleHours})</h3>
+            <h3 style="margin:16px 12px 12px 12px; text-align:center; color:var(--primary); font-size:1.55rem; font-weight:800; letter-spacing:0.3px; text-transform:uppercase;">CRONOGRAMA: ${String(docenteName || '').toUpperCase()} (${titleHours})</h3>
             ${buildGanttMonthHeaderColumnsHtml(minTime, maxTime, totalTime)}
             <div style="position:relative; background:#eef2f7; border-top:2px solid var(--primary);">
                 ${rowsHtml}
@@ -8792,7 +9057,7 @@ function renderGanttDayRow(dayConfig, laneRenders) {
     const totalRowHeight = laneRenders.reduce((sum, lane) => sum + lane.height, 0);
     return `
             <div class="gantt-row" style="display: flex; border-bottom: 1px solid #2c3e50; margin: 0; padding: 0; min-height: ${totalRowHeight}px; position: relative; z-index: 1;">
-                <div style="width: 50px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.9em; color: var(--primary); background: #e2e8f0; border-right: 1px solid #cbd5e1; flex-shrink: 0;">
+                <div style="width: 50px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.78em; color: var(--primary); background: #e2e8f0; border-right: 1px solid #cbd5e1; flex-shrink: 0;">
                     ${dayConfig.name}
                 </div>
                 <div style="flex: 1; display: flex; flex-direction: column;">
@@ -9986,11 +10251,13 @@ function buildCalendarTurmaResumeTable(turmaId, start, end) {
                 codigo: String(info?.codigo || baseAlloc?.componenteCode || '').trim(),
                 cor: baseAlloc?.cor || store.getDisciplinaColor(disciplina) || '#f39c12',
                 totalCH,
+                allocatedCH: null,
                 rows: []
             });
         }
 
         const disciplinaEntry = disciplinasMap.get(disciplina);
+        disciplinaEntry.allocatedCH = (disciplinaEntry.allocatedCH || 0) + toCH(offerGroup?.executedHours);
         const rows = buildRowsFromOfferGroup(offerGroup);
         rows.forEach((row) => disciplinaEntry.rows.push(row));
     });
@@ -10008,6 +10275,7 @@ function buildCalendarTurmaResumeTable(turmaId, start, end) {
                     codigo: String(info?.codigo || alloc?.componenteCode || '').trim(),
                     cor: alloc?.cor || store.getDisciplinaColor(disciplina) || '#f39c12',
                     totalCH,
+                    allocatedCH: null,
                     rows: []
                 });
             }
@@ -10033,7 +10301,7 @@ function buildCalendarTurmaResumeTable(turmaId, start, end) {
         });
     }
 
-    const disciplinas = [...disciplinasMap.values()].map((disciplina, index) => {
+    const disciplinas = [...disciplinasMap.values()].map((disciplina) => {
         const merged = new Map();
 
         disciplina.rows.forEach((row) => {
@@ -10066,26 +10334,46 @@ function buildCalendarTurmaResumeTable(turmaId, start, end) {
             });
 
         const totalFromRows = rows.reduce((sum, row) => sum + toCH(row.ch), 0);
+        // CH alocada = horas efetivamente executadas (projecao canonica). No
+        // caminho de fallback (sem projecao) usa a soma das linhas para nao
+        // sinalizar divergencia falsa.
+        const allocatedCH = (disciplina.allocatedCH === null || disciplina.allocatedCH === undefined)
+            ? totalFromRows
+            : toCH(disciplina.allocatedCH);
         return {
             ...disciplina,
-            numero: index + 1,
             rows,
+            allocatedCH,
             totalCH: toCH(disciplina.totalCH) > 0 ? toCH(disciplina.totalCH) : totalFromRows
         };
     });
 
+    // Ordena as disciplinas pela ordem cronologica de oferta (data de inicio mais
+    // antiga) e renumera (#1, #2, ...), em vez de ordem alfabetica/insercao.
+    disciplinas.sort((a, b) => {
+        const aStart = String(a.rows?.[0]?.dataInicio || '').trim();
+        const bStart = String(b.rows?.[0]?.dataInicio || '').trim();
+        const startCmp = aStart.localeCompare(bStart);
+        if (startCmp !== 0) return startCmp;
+        return String(a.disciplina || '').localeCompare(String(b.disciplina || ''), 'pt-BR', { sensitivity: 'base' });
+    });
+    disciplinas.forEach((disc, idx) => { disc.numero = idx + 1; });
+
     const totalGeralCH = disciplinas.reduce((sum, disc) => sum + toCH(disc.totalCH), 0);
+    const totalGeralAlocada = disciplinas.reduce((sum, disc) => sum + toCH(disc.allocatedCH), 0);
+    const totalAlocadaMismatch = Math.abs(totalGeralAlocada - totalGeralCH) > 0.01;
 
     let tableHtml = `
         <table class="calendar-turma-resume-table" style="width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 12px;">
             <thead>
                 <tr style="background: #f5f5f5; border-bottom: 2px solid #333;">
                     <th style="padding: 8px 8px 16px 8px; text-align: left; border-right: 1px solid #ddd; width: 5%;">#</th>
-                    <th style="padding: 8px 8px 16px 8px; text-align: left; border-right: 2px solid #2d34c6; width: 13%;">Código</th>
-                    <th style="padding: 8px 8px 16px 8px; text-align: center; border-right: 2px solid #2d34c6; width: 8%; color: #2d34c6;">CH</th>
-                    <th style="padding: 8px 8px 16px 8px; text-align: left; border-right: 1px solid #ddd; width: 32%;">Disciplina</th>
-                    <th style="padding: 8px 8px 16px 8px; text-align: left; border-right: 1px solid #ddd; width: 20%;">Docente</th>
-                    <th style="padding: 8px 8px 16px 8px; text-align: left; width: 22%;">Período</th>
+                    <th style="padding: 8px 8px 16px 8px; text-align: left; border-right: 2px solid #2d34c6; width: 12%;">Código</th>
+                    <th style="padding: 8px 8px 16px 8px; text-align: center; border-right: 1px solid #ddd; width: 8%; color: #2d34c6;">CH</th>
+                    <th style="padding: 8px 8px 16px 8px; text-align: center; border-right: 2px solid #2d34c6; width: 9%; color: #2d34c6;">CH alocada</th>
+                    <th style="padding: 8px 8px 16px 8px; text-align: left; border-right: 1px solid #ddd; width: 28%;">Disciplina</th>
+                    <th style="padding: 8px 8px 16px 8px; text-align: left; border-right: 1px solid #ddd; width: 18%;">Docente</th>
+                    <th style="padding: 8px 8px 16px 8px; text-align: left; width: 20%;">Período</th>
                 </tr>
             </thead>
             <tbody>
@@ -10093,14 +10381,20 @@ function buildCalendarTurmaResumeTable(turmaId, start, end) {
 
     disciplinas.forEach((disc) => {
         const safeRows = disc.rows.length > 0 ? disc.rows : [{ nome: '-', ch: 0, dataInicio: '', dataFim: '' }];
+        const allocatedMismatch = Math.abs(toCH(disc.allocatedCH) - toCH(disc.totalCH)) > 0.01;
+        const allocatedCellStyle = allocatedMismatch
+            ? 'color: #c0392b; font-weight: 800;'
+            : 'color: #1f2937; font-weight: 700;';
+        const allocatedDisplay = formatCH(disc.allocatedCH);
 
         safeRows.forEach((row, idx) => {
             const isFirst = idx === 0;
             tableHtml += `
-                <tr style="border-bottom: 1px solid #ddd;">
-                    <td style="padding: 8px; border-right: 1px solid #ddd; background-color: ${disc.cor}22; font-weight: bold;">${isFirst ? disc.numero : ''}</td>
+                <tr style="border-bottom: 1px solid #ddd; background-color: ${disc.cor}22;">
+                    <td style="padding: 8px; border-right: 1px solid #ddd; font-weight: bold;">${isFirst ? disc.numero : ''}</td>
                     <td style="padding: 8px; border-right: 2px solid #2d34c6;">${isFirst ? escapeHtml(disc.codigo || '-') : ''}</td>
-                    <td style="padding: 8px; text-align: center; border-right: 2px solid #2d34c6; font-weight: 700; color: #1f2937;">${formatCH(row.ch)}</td>
+                    <td style="padding: 8px; text-align: center; border-right: 1px solid #ddd; font-weight: 700; color: #1f2937;">${formatCH(row.ch)}</td>
+                    <td style="padding: 8px; text-align: center; border-right: 2px solid #2d34c6; ${allocatedCellStyle}">${isFirst ? (allocatedDisplay || '0') : ''}</td>
                     <td style="padding: 8px; border-right: 1px solid #ddd; font-weight: ${isFirst ? '700' : '500'}; color: #333;">${isFirst ? escapeHtml(disc.disciplina) : ''}</td>
                     <td style="padding: 8px; border-right: 1px solid #ddd; color: #333;">${escapeHtml(row.nome || '-')}</td>
                     <td style="padding: 8px; color: #4b5563;">${escapeHtml(formatPeriodo(row.dataInicio, row.dataFim))}</td>
@@ -10111,8 +10405,9 @@ function buildCalendarTurmaResumeTable(turmaId, start, end) {
 
     tableHtml += `
                 <tr style="background: #f8fafc; border-top: 2px solid #2d34c6; border-bottom: 2px solid #2d34c6;">
-                    <td colspan="2" style="padding: 8px; border-right: 2px solid #2d34c6; text-align: right; font-weight: 800; color: #1e3a8a;">Total</td>
-                    <td style="padding: 8px; text-align: center; border-right: 2px solid #2d34c6; font-weight: 800; color: #1e3a8a;">${formatCH(totalGeralCH)}</td>
+                    <td colspan="2" style="padding: 8px; border-right: 1px solid #ddd; text-align: right; font-weight: 800; color: #1e3a8a;">Total</td>
+                    <td style="padding: 8px; text-align: center; border-right: 1px solid #ddd; font-weight: 800; color: #1e3a8a;">${formatCH(totalGeralCH)}</td>
+                    <td style="padding: 8px; text-align: center; border-right: 2px solid #2d34c6; font-weight: 800; color: ${totalAlocadaMismatch ? '#c0392b' : '#1e3a8a'};">${formatCH(totalGeralAlocada) || '0'}</td>
                     <td colspan="3" style="padding: 8px;"></td>
                 </tr>
             </tbody>

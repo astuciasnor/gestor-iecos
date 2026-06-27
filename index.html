@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cardume – Planejador Acadêmico | IECOS</title>
-    <link rel="stylesheet" href="css/style.css??v=20260625v4">
+    <link rel="stylesheet" href="css/style.css??v=20260627v7">
 
     <style>
         :root {
@@ -275,7 +275,7 @@
         /* ================================================================= */
         @media print {
             @page {
-                size: 297mm 210mm;
+                size: A4 landscape;
                 margin: 5mm;
             }
 
@@ -797,7 +797,8 @@
                     <button class="tab-btn" data-tab="tutorial" style="color: var(--accent);">❓ Ajuda</button>
                 </nav>
 
-                <button onclick="window.print()" class="btn-print">🖨️ Imprimir</button>
+                <span class="print-hint no-print" title="A 'Microsoft Print to PDF' sai em retrato. Use 'Salvar como PDF' para sair em paisagem automaticamente.">💡 Para PDF em paisagem, use <strong>“Salvar como PDF”</strong></span>
+                <button onclick="window.print()" class="btn-print" title="Dica: no diálogo de impressão escolha 'Salvar como PDF' para sair em paisagem (a 'Microsoft Print to PDF' sai em retrato).">🖨️ Imprimir</button>
             </header>
 
             <div id="feedback-msg" class="feedback hidden"></div>
@@ -1005,6 +1006,7 @@
                                     <span class="btn-label-two-line" style="font-size:0.75rem; font-weight:bold; white-space:nowrap; line-height:1.1;"><span>Sábado p/</span><span>Manhã</span></span>
                                 </label>
                                 <button id="btn-add-oferta" type="button" class="btn-week-nav btn-week-save-comp"><span class="btn-label-two-line"><span>Salvar</span><span>Componente</span></span></button>
+                                <button id="btn-undo-alloc" type="button" class="btn-week-nav btn-week-undo hidden" disabled title="Desfazer a última inserção e voltar ao estado anterior das alocações"><span class="btn-label-two-line"><span>Desfazer</span><span>Inserção</span></span></button>
                             </div>
                         </div>
                     </div>
@@ -1491,7 +1493,7 @@
         </main>
     </div>
 
-    <script type="module" src="js/main.js??v=20260625v14"></script>
+    <script type="module" src="js/main.js??v=20260627v30"></script>
 </body>
 
 </html>
