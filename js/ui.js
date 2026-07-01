@@ -4,7 +4,7 @@ import { normalizePeriodo as normalizePeriodoLetivoCode } from './plan_storage.j
 import { getCalendarEvents } from './calendar.js??v=20260625v';
 import { countBusinessDays, countWeekdaysInPeriod, addBusinessDays, isDateOverlap, calculateEndDateByWeekday } from './utils.js';
 import { buildTeacherExecutionSnapshot, buildCanonicalOfferProjection } from './execution_engine.js';
-import { renderBidimensionalTeacherGantt } from './gantt_bidimensional.js';
+import { renderBidimensionalTeacherGantt, renderBidimensionalTurmaGantt } from './gantt_bidimensional.js??v=20260627v36';
 import { buildSigaaMetadataPayload, validateSigaaMetadataPayload } from './sigaa_metadata.js';
 import { parseBackupDataFile, extractImportPlanMeta } from './serialization.js';
 import {
@@ -5765,6 +5765,15 @@ export function initUI() {
         btnGantt.addEventListener('click', renderGanttChart);
     }
 
+    document.querySelectorAll('input[name="gantt-mode"]').forEach((radio) => {
+        radio.addEventListener('change', renderGanttForActiveMode);
+    });
+
+    const btnPrintGantt = document.getElementById('btn-print-gantt');
+    if (btnPrintGantt) {
+        btnPrintGantt.addEventListener('click', printGanttLandscape);
+    }
+
     const btnPrint = document.querySelector('.btn-print');
     if (btnPrint) {
         btnPrint.removeAttribute('onclick');
@@ -5810,6 +5819,11 @@ export function initUI() {
             inpGanttDocente.value = selViewDocente.value;
             // Dispara 'input' para que o botão X apareça quando o valor é copiado programaticamente
             inpGanttDocente.dispatchEvent(new Event('input', { bubbles: true }));
+        });
+    }
+    if (inpGanttDocente) {
+        inpGanttDocente.addEventListener('change', () => {
+            if (getActiveGanttMode() === 'docente') renderGanttForActiveMode();
         });
     }
 
@@ -9831,6 +9845,136 @@ function renderGanttChart() {
     renderTeacherGanttInto(container, inputDocente.value);
 }
 
+function renderTurmaGanttInto(container) {
+    try {
+        if (!container) return;
+
+        const turmaId = store.selectedTurma;
+        if (!turmaId) {
+            container.innerHTML = '<div style="text-align: center; color: #7f8c8d; margin-top: 50px; font-size: 1.1em;">Selecione uma turma na barra lateral para visualizar o Gantt da turma.</div>';
+            return;
+        }
+
+        let turmaLabel = String(turmaId);
+        const turmaInfo = (store.rawData?.turmas || []).find((entry) => String(entry?.turma_id) === String(turmaId));
+        if (turmaInfo?.turma_label) turmaLabel = turmaInfo.turma_label;
+
+        const fallbackStart = String(calStart?.value || store.settings.termStart || '2025-01-01').trim();
+        const fallbackEnd = String(calEnd?.value || store.settings.termEnd || fallbackStart || '2025-12-31').trim();
+        const allocs = filterExportableAllocations(
+            store.allocations.filter((alloc) => String(alloc?.turmaId) === String(turmaId))
+        );
+        const offerProjection = buildCanonicalOfferProjection({
+            allocations: allocs,
+            startDate: fallbackStart,
+            endDate: fallbackEnd
+        });
+        renderBidimensionalTurmaGantt(container, {
+            turmaId,
+            turmaLabel,
+            offerProjection,
+            startDate: fallbackStart,
+            endDate: fallbackEnd
+        });
+    } catch (err) {
+        console.error('Erro renderTurmaGanttInto:', err);
+        if (container) container.innerHTML = `<div style="color:red; margin-top:20px;"><b>Erro Inesperado no Grafico:</b><br>${err.message}</div>`;
+    }
+}
+
+function getActiveGanttMode() {
+    const checked = document.querySelector('input[name="gantt-mode"]:checked');
+    return checked?.value === 'docente' ? 'docente' : 'turma';
+}
+
+function renderGanttForActiveMode() {
+    const container = document.getElementById('gantt-container');
+    if (!container) return;
+    const docenteControls = document.getElementById('gantt-docente-controls');
+    const mode = getActiveGanttMode();
+    if (docenteControls) docenteControls.style.display = mode === 'docente' ? 'inline-flex' : 'none';
+
+    if (mode === 'docente') {
+        const inputDocente = document.getElementById('inp-gantt-docente');
+        renderTeacherGanttInto(container, inputDocente?.value || '');
+    } else {
+        renderTurmaGanttInto(container);
+    }
+}
+
+function printGanttLandscape() {
+    const container = document.getElementById('gantt-container');
+    if (!container) return;
+    const ganttHtml = container.innerHTML || '';
+    const styleEl = document.getElementById('gantt-bidimensional-style');
+    const styleText = styleEl ? styleEl.textContent : '';
+    let turmaLabel = store.selectedTurma || 'GERAL';
+    if (store.rawData?.turmas) {
+        const t = store.rawData.turmas.find(x => String(x.turma_id) === String(store.selectedTurma));
+        if (t) turmaLabel = t.turma_label;
+    }
+    const periodo = normalizePeriodoLetivoCode(store.settings.periodo || 'PL1');
+    let printTitle;
+    if (getActiveGanttMode() === 'docente') {
+        const ganttProf = document.getElementById('inp-gantt-docente')?.value || 'Gantt';
+        printTitle = `Gantt_${ganttProf}_${periodo}_Gestor_IECOS`;
+    } else {
+        printTitle = `Gantt_${turmaLabel}_${periodo}_Gestor_IECOS`;
+    }
+
+    const printWindow = window.open('', '_blank', 'width=1280,height=800');
+    if (!printWindow) {
+        showToastWarning('Permita pop-ups para imprimir o Gantt.', 'warning', 2600);
+        return;
+    }
+    printWindow.document.open();
+    printWindow.document.write(`<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>${printTitle}</title>
+<style>
+  @page { size: A4 landscape; margin: 0.4cm; }
+  * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+  html, body { margin: 0; padding: 0; font-family: Arial, Helvetica, sans-serif; background: #ffffff; }
+  ${styleText}
+  .gantt-bi__scroll { overflow: visible !important; border: none !important; box-shadow: none !important; }
+  .gantt-bi__canvas { width: auto !important; min-width: 0 !important; }
+  .gantt-bi__header, .gantt-bi__label { position: static !important; }
+  #gp-outer { overflow: hidden; }
+  #gp-inner { transform-origin: top left; display: inline-block; }
+</style>
+</head>
+<body><div id="gp-outer"><div id="gp-inner">${ganttHtml}</div></div>
+<script>
+(function () {
+  function fitAndPrint() {
+    var inner = document.getElementById('gp-inner');
+    var outer = document.getElementById('gp-outer');
+    if (!inner || !outer) { window.print(); return; }
+    // A4 paisagem a 96dpi (297x210mm) menos margem @page de 0.4cm em cada lado.
+    var MARGIN = 0.4 * 37.795275591; // 0.4cm -> px
+    var availW = (297 * 3.779527559) - (2 * MARGIN);
+    var availH = (210 * 3.779527559) - (2 * MARGIN);
+    var contentW = inner.scrollWidth;
+    var contentH = inner.scrollHeight;
+    var scale = Math.min(availW / contentW, availH / contentH, 1);
+    if (!isFinite(scale) || scale <= 0) scale = 1;
+    inner.style.transform = 'scale(' + scale + ')';
+    outer.style.width = Math.ceil(contentW * scale) + 'px';
+    outer.style.height = Math.ceil(contentH * scale) + 'px';
+    setTimeout(function () { try { window.print(); } catch (e) {} }, 120);
+  }
+  if (document.readyState === 'complete') fitAndPrint();
+  else window.addEventListener('load', fitAndPrint);
+})();
+<\/script>
+</body>
+</html>`);
+    printWindow.document.close();
+    printWindow.focus();
+}
+
 export function renderPublicTeacherGantt(target, docenteName) {
     const container = typeof target === 'string' ? document.getElementById(target) : target;
     renderTeacherGanttInto(container, docenteName);
@@ -10417,6 +10561,201 @@ function buildCalendarTurmaResumeTable(turmaId, start, end) {
     return tableHtml;
 }
 
+// Tabela resumo do Calendario Docente (espelha buildCalendarTurmaResumeTable,
+// mas com o docente fixo). Lista cada componente que o professor leciona, em
+// qual turma, com a CH sob sua responsabilidade, a CH efetivamente alocada
+// (horas executadas do professor) e o periodo em que ele atua na componente.
+function buildCalendarDocenteResumeTable(docenteName, start, end) {
+    const docente = String(docenteName || '').trim();
+    if (!docente) return null;
+
+    const allocations = store.allocations.filter((a) => (
+        (isScheduledRegularAllocation(a) || isFaixaAllocation(a))
+        && allocationHasTeacherMatch(a, docente)
+    ));
+    if (allocations.length === 0) return null;
+
+    function toCH(value) {
+        const num = Number.parseFloat(value);
+        return Number.isFinite(num) && num > 0 ? num : 0;
+    }
+
+    function formatCH(value) {
+        const num = Number.parseFloat(value);
+        if (!Number.isFinite(num) || num <= 0) return '';
+        return Number.isInteger(num)
+            ? String(num)
+            : num.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 1 });
+    }
+
+    function formatPeriodo(dataInicio, dataFim) {
+        if (!dataInicio || !dataFim) return '-';
+        return `${formatDateBR(dataInicio)} a ${formatDateBR(dataFim)}`;
+    }
+
+    function escapeHtml(value) {
+        return String(value ?? '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
+    const offerProjection = buildCanonicalOfferProjection({
+        allocations,
+        startDate: start,
+        endDate: end
+    });
+
+    const components = [];
+    (offerProjection?.offerGroups || []).forEach((offerGroup) => {
+        const baseAlloc = offerGroup?.baseAlloc || {};
+        const disciplina = String(offerGroup?.disciplina || baseAlloc?.disciplina || '').trim();
+        if (!disciplina) return;
+
+        const segments = Array.isArray(offerGroup?.teacherSegments) ? offerGroup.teacherSegments : [];
+        const segment = segments.find((seg) => teacherNamesMatch(seg?.nome, docente));
+
+        // Confirma que este professor realmente atua na oferta. Sem segmento
+        // (nenhuma aula observada) pula para nao listar oferta de outro docente.
+        if (segments.length > 0 && !segment) return;
+
+        const declaredDocente = (Array.isArray(offerGroup?.docentes) ? offerGroup.docentes : [])
+            .find((d) => teacherNamesMatch(d?.nome, docente));
+
+        const info = getDisciplinaInfo(disciplina);
+        const turmaId = String(offerGroup?.turmaId || baseAlloc?.turmaId || '').trim();
+
+        // CH curricular total da componente (coluna "CH").
+        const curricularCH = toCH(getDisciplinaCHGlobal(disciplina, turmaId))
+            || toCH(info?.ch) || toCH(baseAlloc?.ch);
+
+        // Parcela da CH atribuida a ESTE docente (coluna "CH alocada"). Quando o
+        // docente e o unico responsavel, assume a CH curricular inteira.
+        const allocatedDocenteCH = toCH(segment?.ch) || toCH(declaredDocente?.ch)
+            || (Array.isArray(offerGroup?.docentes) && offerGroup.docentes.length <= 1
+                ? curricularCH
+                : 0);
+
+        // Uma linha por faixa em que o docente ministra aula. Como as alocacoes
+        // ja foram filtradas para este docente, as faixas e as horas executadas
+        // refletem apenas a atuacao dele na componente.
+        const faixaRows = [];
+        (Array.isArray(offerGroup?.faixas) ? offerGroup.faixas : [])
+            .filter((faixa) => toCH(faixa?.executedHours) > 0
+                || (Array.isArray(faixa?.activeDates) && faixa.activeDates.length > 0))
+            .forEach((faixa) => {
+                const diaNums = [...new Set(
+                    (Array.isArray(faixa?.dias) ? faixa.dias : [])
+                        .map((d) => Number.parseInt(d, 10))
+                        .filter((n) => Number.isFinite(n) && n >= 1)
+                )].sort((a, b) => a - b);
+                faixaRows.push({
+                    allocatedCH: toCH(faixa?.executedHours),
+                    diasLabel: diaNums.map((n) => shortDayName(n)).join(', '),
+                    dataInicio: String(faixa?.inicio || '').trim(),
+                    dataFim: String(faixa?.fim || faixa?.inicio || '').trim()
+                });
+            });
+
+        // Fallback (sem faixas canonicas executadas): usa o segmento do docente e
+        // os dias derivados da grade horaria da oferta.
+        if (faixaRows.length === 0) {
+            const diaNums = [...new Set(
+                (Array.isArray(offerGroup?.scheduleEntries) ? offerGroup.scheduleEntries : [])
+                    .map((entry) => Number.parseInt(entry?.diaSemana, 10))
+                    .filter((n) => Number.isFinite(n) && n >= 1)
+            )].sort((a, b) => a - b);
+            faixaRows.push({
+                allocatedCH: toCH(segment?.hours),
+                diasLabel: diaNums.map((n) => shortDayName(n)).join(', '),
+                dataInicio: String(segment?.start || offerGroup?.start || start || '').trim(),
+                dataFim: String(segment?.end || offerGroup?.end || end || '').trim()
+            });
+        }
+
+        faixaRows.sort((a, b) => String(a.dataInicio || '').localeCompare(String(b.dataInicio || '')));
+
+        components.push({
+            disciplina,
+            codigo: String(info?.codigo || baseAlloc?.componenteCode || '').trim(),
+            cor: baseAlloc?.cor || store.getDisciplinaColor(disciplina) || '#f39c12',
+            turmaLabel: getTurmaLabel(turmaId, offerGroup?.subGrupo || baseAlloc?.subGrupo),
+            curricularCH,
+            allocatedDocenteCH,
+            faixaRows,
+            sortStart: faixaRows[0]?.dataInicio || String(offerGroup?.start || start || '').trim()
+        });
+    });
+
+    if (components.length === 0) return null;
+
+    components.sort((a, b) => {
+        const startCmp = String(a.sortStart || '').localeCompare(String(b.sortStart || ''));
+        if (startCmp !== 0) return startCmp;
+        return String(a.disciplina || '').localeCompare(String(b.disciplina || ''), 'pt-BR', { sensitivity: 'base' });
+    });
+    components.forEach((comp, idx) => { comp.numero = idx + 1; });
+
+    const totalGeralCH = components.reduce((sum, comp) => sum + toCH(comp.curricularCH), 0);
+    const totalGeralAlocada = components.reduce((sum, comp) => sum + toCH(comp.allocatedDocenteCH), 0);
+    const totalAlocadaMismatch = Math.abs(totalGeralAlocada - totalGeralCH) > 0.01;
+
+    let tableHtml = `
+        <table class="calendar-turma-resume-table" style="width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 12px;">
+            <thead>
+                <tr style="background: #f5f5f5; border-bottom: 2px solid #333;">
+                    <th style="padding: 8px 8px 16px 8px; text-align: left; border-right: 1px solid #ddd; width: 5%;">#</th>
+                    <th style="padding: 8px 8px 16px 8px; text-align: left; border-right: 2px solid #2d34c6; width: 12%;">Código</th>
+                    <th style="padding: 8px 8px 16px 8px; text-align: center; border-right: 1px solid #ddd; width: 8%; color: #2d34c6;">CH</th>
+                    <th style="padding: 8px 8px 16px 8px; text-align: center; border-right: 2px solid #2d34c6; width: 9%; color: #2d34c6;">CH alocada</th>
+                    <th style="padding: 8px 8px 16px 8px; text-align: left; border-right: 1px solid #ddd; width: 24%;">Disciplina</th>
+                    <th style="padding: 8px 8px 16px 8px; text-align: left; border-right: 1px solid #ddd; width: 13%;">Turma</th>
+                    <th style="padding: 8px 8px 16px 8px; text-align: left; border-right: 1px solid #ddd; width: 10%;">Dia</th>
+                    <th style="padding: 8px 8px 16px 8px; text-align: left; width: 19%;">Período</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+
+    components.forEach((comp) => {
+        const allocatedMismatch = Math.abs(toCH(comp.allocatedDocenteCH) - toCH(comp.curricularCH)) > 0.01;
+        const allocatedCellStyle = allocatedMismatch
+            ? 'color: #c0392b; font-weight: 800;'
+            : 'color: #1f2937; font-weight: 700;';
+
+        comp.faixaRows.forEach((faixaRow, idx) => {
+            const isFirst = idx === 0;
+            tableHtml += `
+                <tr style="border-bottom: 1px solid #ddd; background-color: ${comp.cor}22;">
+                    <td style="padding: 8px; border-right: 1px solid #ddd; font-weight: bold;">${isFirst ? comp.numero : ''}</td>
+                    <td style="padding: 8px; border-right: 2px solid #2d34c6;">${isFirst ? escapeHtml(comp.codigo || '-') : ''}</td>
+                    <td style="padding: 8px; text-align: center; border-right: 1px solid #ddd; font-weight: 700; color: #1f2937;">${formatCH(comp.curricularCH)}</td>
+                    <td style="padding: 8px; text-align: center; border-right: 2px solid #2d34c6; ${allocatedCellStyle}">${isFirst ? (formatCH(comp.allocatedDocenteCH) || '0') : ''}</td>
+                    <td style="padding: 8px; border-right: 1px solid #ddd; font-weight: 700; color: #333;">${isFirst ? escapeHtml(comp.disciplina) : ''}</td>
+                    <td style="padding: 8px; border-right: 1px solid #ddd; color: #333;">${isFirst ? escapeHtml(comp.turmaLabel || '-') : ''}</td>
+                    <td style="padding: 8px; border-right: 1px solid #ddd; color: #333;">${escapeHtml(faixaRow.diasLabel || '-')}</td>
+                    <td style="padding: 8px; color: #4b5563;">${escapeHtml(formatPeriodo(faixaRow.dataInicio, faixaRow.dataFim))}</td>
+                </tr>
+            `;
+        });
+    });
+
+    tableHtml += `
+                <tr style="background: #f8fafc; border-top: 2px solid #2d34c6; border-bottom: 2px solid #2d34c6;">
+                    <td colspan="2" style="padding: 8px; border-right: 1px solid #ddd; text-align: right; font-weight: 800; color: #1e3a8a;">Total</td>
+                    <td style="padding: 8px; text-align: center; border-right: 1px solid #ddd; font-weight: 800; color: #1e3a8a;">${formatCH(totalGeralCH)}</td>
+                    <td style="padding: 8px; text-align: center; border-right: 2px solid #2d34c6; font-weight: 800; color: ${totalAlocadaMismatch ? '#c0392b' : '#1e3a8a'};">${formatCH(totalGeralAlocada) || '0'}</td>
+                    <td colspan="4" style="padding: 8px;"></td>
+                </tr>
+            </tbody>
+        </table>
+    `;
+
+    return tableHtml;
+}
+
 function generateCalendarGrid(container, turmaId, docenteName, start, end, titleHTML, options = {}) {
     container.innerHTML = '';
 
@@ -10428,6 +10767,15 @@ function generateCalendarGrid(container, turmaId, docenteName, start, end, title
     // Adiciona tabela resumo de disciplinas para turmas
     if (turmaId) {
         const resumeTable = buildCalendarTurmaResumeTable(turmaId, start, end);
+        if (resumeTable) {
+            const tableDiv = document.createElement('div');
+            tableDiv.className = 'calendar-turma-resume-container';
+            tableDiv.innerHTML = resumeTable;
+            container.appendChild(tableDiv);
+        }
+    } else if (docenteName) {
+        // Tabela resumo das componentes lecionadas pelo docente (Calendario Docente)
+        const resumeTable = buildCalendarDocenteResumeTable(docenteName, start, end);
         if (resumeTable) {
             const tableDiv = document.createElement('div');
             tableDiv.className = 'calendar-turma-resume-container';
@@ -10770,6 +11118,9 @@ function switchTab(tabId) {
     }
     if (tabId === 'list') {
         renderOfertasList();
+    }
+    if (tabId === 'gantt') {
+        renderGanttForActiveMode();
     }
     if (tabId === 'weekly') {
         updateWeeklyNavigatorLabel();

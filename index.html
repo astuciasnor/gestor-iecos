@@ -1100,17 +1100,31 @@
             </section>
 
             <section id="tab-gantt" class="tab-content">
-                <div class="calendar-controls no-print" style="margin-bottom: 20px;">
-                    <label style="color: var(--primary); font-weight: bold;">Professor para o Gráfico:</label>
-                    <input type="text" id="inp-gantt-docente" list="list-view-docentes" placeholder="Digite o nome..."
-                        style="padding: 8px; border: 1px solid #ccc; border-radius: 4px; width: 300px; font-size: 1rem;">
-                    <button id="btn-gerar-gantt" class="btn-secondary"
-                        style="background: var(--primary); color:white; display:none;">Gerar Gantt</button>
+                <div class="calendar-controls no-print" style="margin-bottom: 20px; display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
+                    <div id="gantt-mode-switch" role="group" aria-label="Modo do gráfico Gantt"
+                        style="display:inline-flex; gap:14px; align-items:center; font-weight:bold; color: var(--primary);">
+                        <label style="display:inline-flex; align-items:center; gap:6px; cursor:pointer;">
+                            <input type="radio" name="gantt-mode" value="turma" checked> Por Turma
+                        </label>
+                        <label style="display:inline-flex; align-items:center; gap:6px; cursor:pointer;">
+                            <input type="radio" name="gantt-mode" value="docente"> Por Professor
+                        </label>
+                    </div>
+                    <div id="gantt-docente-controls" style="display:none; align-items:center; gap:8px;">
+                        <label style="color: var(--primary); font-weight: bold;">Professor:</label>
+                        <input type="text" id="inp-gantt-docente" list="list-view-docentes" placeholder="Digite o nome..."
+                            style="padding: 8px; border: 1px solid #ccc; border-radius: 4px; width: 300px; font-size: 1rem;">
+                        <button id="btn-gerar-gantt" class="btn-secondary"
+                            style="background: var(--primary); color:white; display:none;">Gerar Gantt</button>
+                    </div>
+                    <button id="btn-print-gantt" class="btn-secondary"
+                        style="margin-left:auto; background: var(--primary); color:white;"
+                        title="Abre o gráfico em uma nova janela já configurada para impressão em paisagem (PDF).">🖨️ Imprimir PDF (paisagem)</button>
                 </div>
 
                 <div id="gantt-container" class="gantt-wrapper">
                     <div style="text-align: center; color: #7f8c8d; margin-top: 50px; font-size: 1.1em;">
-                        Busque um professor acima para visualizar o mapa de disciplinas no tempo.
+                        Selecione uma turma na barra lateral para visualizar as componentes ao longo do tempo.
                     </div>
                 </div>
             </section>
@@ -1493,7 +1507,7 @@
         </main>
     </div>
 
-    <script type="module" src="js/main.js??v=20260627v30"></script>
+    <script type="module" src="js/main.js??v=20260627v43"></script>
 </body>
 
 </html>
