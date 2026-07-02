@@ -5192,6 +5192,12 @@ function getCalendarShiftBadgeHTML(allocLike = {}, slotLabel = '', dayOfWeek = 0
     const fallbackLabel = getShiftChangeLabel(fallbackLetter);
     if (!fallbackLabel) return '';
 
+    // Só é mudança de turno se o turno da aula de sábado difere do turno nativo da turma.
+    // Turmas cujo turno padrão já é o mesmo (ex.: turma de Manhã com sábado de manhã) não recebem badge.
+    const fallbackTurnoNorm = getTurnoNormalizedFromLetter(fallbackLetter);
+    const nativeTurnoNorm = normalizeTurnoOfertaKey(getNativeTurnoValueForAllocation(allocLike));
+    if (fallbackTurnoNorm && nativeTurnoNorm && fallbackTurnoNorm === nativeTurnoNorm) return '';
+
     return `<span style="display:inline-block; font-size:0.65em; background:#e67e22; color:#fff; padding:1px 4px; border-radius:3px; margin-left:2px; font-weight:bold;" title="Mudou de turno: aula no turno ${fallbackLabel}">&#9888; ${fallbackLabel}</span>`;
 }
 
@@ -10985,7 +10991,7 @@ function generateCalendarGrid(container, turmaId, docenteName, start, end, title
                                     const info = getDisciplinaInfo(event.disciplina);
                                     const shiftBadgeDisplay = getCalendarShiftBadgeHTML(
                                         event,
-                                        event.horario || (Array.isArray(event.horariosOcupados) ? event.horariosOcupados[0] : ''),
+                                        slotTime,
                                         dayOfWeek,
                                         dayData.date
                                     );
@@ -11000,7 +11006,7 @@ function generateCalendarGrid(container, turmaId, docenteName, start, end, title
                                     const docenteLabel = (docenteFirst && !/^a$/i.test(docenteFirst)) ? docenteFirst.toUpperCase() : '';
                                     const eBadgeDisplay = getCalendarShiftBadgeHTML(
                                         event,
-                                        event.horario || (Array.isArray(event.horariosOcupados) ? event.horariosOcupados[0] : ''),
+                                        slotTime,
                                         dayOfWeek,
                                         dayData.date
                                     );

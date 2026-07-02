@@ -6,7 +6,7 @@ import { buildCanonicalOfferProjection, buildTeacherExecutionSnapshot } from './
 import { renderBidimensionalTeacherGantt, hideBidimensionalTeacherGanttLens } from './gantt_bidimensional.js';
 
 const collator = new Intl.Collator('pt-BR', { sensitivity: 'base' });
-const PUBLIC_ASSET_VERSION = '20260701e';
+const PUBLIC_ASSET_VERSION = '20260701f';
 const PUBLIC_ROUTING_CONFIG_URL = 'publicacoes/publicacao_config.json';
 const PUBLIC_ROUTING_CATALOG_FALLBACK_URL = 'publicacoes/catalogo_publicacoes.json';
 
@@ -1726,11 +1726,17 @@ function getEventHorario(event, dateStr = '') {
 function getPublicShiftChangeMeta(event, dateStr = '') {
     const horario = getEventHorario(event, dateStr);
     const nativeLetter = getNativeTurnoLetterForEvent(event);
-    const currentLetter = getTurnoLetter(horario);
+    // Deriva o turno pelo slot REAL daquele dia (executionByDate/horariosUltimoDia/ocupados),
+    // permitindo detectar deslocamento de turno em qualquer dia da semana, não só no sábado.
+    const daySlots = getEventHorariosForDate(event, dateStr);
+    const currentLetter = getTurnoLetter(daySlots[0] || horario);
+    // Sábado de manhã só é mudança de turno se o turno nativo da turma NÃO for a manhã.
+    // Turmas cujo horário padrão já é a manhã não recebem a tag de atenção no sábado.
     const isSaturdayMorning = !!(
         event?.sabadoManha
         && dateStr
         && new Date(`${dateStr}T12:00:00`).getDay() === 6
+        && nativeLetter !== 'M'
     );
     const isShiftChange = !!(
         (nativeLetter && currentLetter && nativeLetter !== currentLetter)
