@@ -1,4 +1,4 @@
-import { store } from './store.js';
+import { store } from './store.js??v=20260625v';
 import { getCalendarEvents } from './calendar.js';
 import { detectTeacherConflicts } from './conflicts.js';
 import { filterExportableAllocations, getTeacherActiveShifts } from './academic_rules.mjs';

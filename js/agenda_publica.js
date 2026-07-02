@@ -1,4 +1,4 @@
-import { store, normalizeLoadedAllocation } from './store.js';
+import { store, normalizeLoadedAllocation } from './store.js??v=20260625v';
 import { getTurnoLetter } from './turns.js';
 import { getCalendarEvents } from './calendar.js';
 import { resolveActiveAcademicPeriod } from './academic_rules.mjs';
@@ -6,7 +6,7 @@ import { buildCanonicalOfferProjection, buildTeacherExecutionSnapshot } from './
 import { renderBidimensionalTeacherGantt, hideBidimensionalTeacherGanttLens } from './gantt_bidimensional.js';
 
 const collator = new Intl.Collator('pt-BR', { sensitivity: 'base' });
-const PUBLIC_ASSET_VERSION = '20260701b';
+const PUBLIC_ASSET_VERSION = '20260701c';
 const PUBLIC_ROUTING_CONFIG_URL = 'publicacoes/publicacao_config.json';
 const PUBLIC_ROUTING_CATALOG_FALLBACK_URL = 'publicacoes/catalogo_publicacoes.json';
 
