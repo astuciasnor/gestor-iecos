@@ -17,6 +17,7 @@ const TURNO_LABELS = {
 };
 const STYLE_ID = 'gantt-bidimensional-style';
 const LENS_ID = 'gantt-bidimensional-lens';
+const INFO_LENS_ID = 'gantt-bidimensional-info-lens';
 
 function normalizeKey(value) {
   return String(value || '')
@@ -650,6 +651,41 @@ function ensureBidimensionalGanttStyles() {
       pointer-events: auto;
       overflow: hidden;
     }
+    .gantt-bi__label-card--compact {
+      justify-content: center;
+    }
+    .gantt-bi__label-name--info {
+      cursor: help;
+    }
+    .gantt-bi__label-name--info:hover,
+    .gantt-bi__label-name--info:focus-visible {
+      text-decoration: underline;
+      text-decoration-style: dotted;
+      text-underline-offset: 3px;
+      outline: none;
+    }
+    .gantt-bi__lens.gantt-bi__infolens {
+      width: auto;
+      max-width: min(320px, calc(100vw - 24px));
+    }
+    .gantt-bi__lens.gantt-bi__infolens .gantt-bi__lens-card {
+      width: max-content;
+      max-width: min(320px, calc(100vw - 24px));
+    }
+    .gantt-bi__infolens .gantt-bi__lens-title {
+      margin-bottom: 8px;
+      font-size: 0.82rem;
+    }
+    .gantt-bi__infolens .gantt-bi__label-meta {
+      white-space: normal;
+      margin-bottom: 4px;
+    }
+    .gantt-bi__infolens .gantt-bi__label-turno-row {
+      margin-top: 4px;
+    }
+    .gantt-bi__infolens .gantt-bi__label-turno {
+      white-space: normal;
+    }
     .gantt-bi__lens {
       position: fixed;
       z-index: 1200;
@@ -915,6 +951,91 @@ function bindBidimensionalLensInteractions(container) {
   }
 }
 
+function ensureBidimensionalInfoLens() {
+  let lens = document.getElementById(INFO_LENS_ID);
+  if (lens) return lens;
+
+  lens = document.createElement('div');
+  lens.id = INFO_LENS_ID;
+  lens.className = 'gantt-bi__lens gantt-bi__infolens gantt-bi__lens--above';
+  lens.hidden = true;
+  lens.innerHTML = `
+    <div class="gantt-bi__lens-card">
+      <div class="gantt-bi__infolens-body"></div>
+      <div class="gantt-bi__lens-arrow"></div>
+    </div>
+  `;
+  document.body.appendChild(lens);
+  return lens;
+}
+
+function bindBidimensionalInfoInteractions(container) {
+  if (!container) return;
+  const lens = ensureBidimensionalInfoLens();
+  const state = lens._ganttInfoState || { hideTimer: 0, activeAnchor: null };
+  lens._ganttInfoState = state;
+  const scrollHost = container.querySelector('.gantt-bi__scroll');
+  const body = lens.querySelector('.gantt-bi__infolens-body');
+
+  const clearHideTimer = () => {
+    if (state.hideTimer) {
+      window.clearTimeout(state.hideTimer);
+      state.hideTimer = 0;
+    }
+  };
+
+  const scheduleHide = () => {
+    clearHideTimer();
+    state.hideTimer = window.setTimeout(() => {
+      state.activeAnchor = null;
+      hideBidimensionalLens(lens);
+    }, 140);
+  };
+
+  const activate = (target) => {
+    if (!(target instanceof HTMLElement)) return;
+    let html = '';
+    try {
+      html = decodeURIComponent(target.dataset.ganttBiInfo || '');
+    } catch (_) {
+      html = '';
+    }
+    if (!html) return;
+    clearHideTimer();
+    state.activeAnchor = target;
+    if (body) body.innerHTML = html;
+    lens.hidden = false;
+    positionBidimensionalLens(lens, target);
+    requestAnimationFrame(() => lens.classList.add('is-visible'));
+  };
+
+  container.querySelectorAll('[data-gantt-bi-info]').forEach((el) => {
+    el.addEventListener('mouseenter', () => activate(el));
+    el.addEventListener('focus', () => activate(el));
+    el.addEventListener('mouseleave', scheduleHide);
+    el.addEventListener('blur', scheduleHide);
+  });
+
+  scrollHost?.addEventListener('scroll', () => {
+    if (state.activeAnchor && lens.classList.contains('is-visible')) positionBidimensionalLens(lens, state.activeAnchor);
+  }, { passive: true });
+
+  lens.addEventListener('mouseenter', clearHideTimer);
+  lens.addEventListener('mouseleave', scheduleHide);
+
+  if (!lens.dataset.globalBound) {
+    window.addEventListener('scroll', () => {
+      const activeAnchor = lens._ganttInfoState?.activeAnchor;
+      if (activeAnchor && lens.classList.contains('is-visible')) positionBidimensionalLens(lens, activeAnchor);
+    }, { passive: true });
+    window.addEventListener('resize', () => {
+      const activeAnchor = lens._ganttInfoState?.activeAnchor;
+      if (activeAnchor && lens.classList.contains('is-visible')) positionBidimensionalLens(lens, activeAnchor);
+    });
+    lens.dataset.globalBound = '1';
+  }
+}
+
 function buildBarDateDecorations({
   row,
   left,
@@ -952,13 +1073,10 @@ function buildBarDateDecorations({
 
 function estimateLabelMinHeight(row) {
   const titleLength = String(row?.nome || '').trim().length;
-  let minHeight = 96;
+  let minHeight = 52;
 
-  if (titleLength > 26) minHeight += 14;
-  if (titleLength > 42) minHeight += 14;
-  if (String(row?.turnoLabel || '').trim().length > 18) minHeight += 8;
-  if (String(row?.horarioLabel || '').trim()) minHeight += 20;
-  if (String(row?.faixaBadge || '').trim()) minHeight += 4;
+  if (titleLength > 24) minHeight += 18;
+  if (titleLength > 44) minHeight += 18;
 
   return minHeight;
 }
@@ -972,22 +1090,22 @@ function renderRowLabelCard(row) {
     .join(', ');
   const horarioResumo = String(row.horarioLabel || '').trim();
   const horarioOrTurnoBlock = horarioResumo
-    ? `<div class="gantt-bi__label-turno" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;" title="${escapeHtml(horarioResumo)}"><span style="opacity:0.68; font-weight:700; margin-right:6px;">Horário</span>${escapeHtml(horarioResumo)}</div>`
+    ? `<div class="gantt-bi__label-turno" title="${escapeHtml(horarioResumo)}"><span style="opacity:0.68; font-weight:700; margin-right:6px;">Horário</span>${escapeHtml(horarioResumo)}</div>`
     : `<div class="gantt-bi__label-turno"><span style="opacity:0.68; font-weight:700; margin-right:6px;">Turno</span>${escapeHtml(row.turnoLabel)}</div>`;
+
+  const infoHtml = `
+    <div class="gantt-bi__lens-title">${escapeHtml(row.nome)}</div>
+    ${row.docenteLabel ? `<div class="gantt-bi__label-meta gantt-bi__label-docente"><span style="opacity:0.68; font-weight:700; margin-right:6px;">Docente</span>${escapeHtml(row.docenteLabel)}</div>` : ''}
+    <div class="gantt-bi__label-meta">CH ${escapeHtml(row.chLabel)} &middot; Turma ${escapeHtml(row.turmaId)}</div>
+    <div class="gantt-bi__label-meta">Periodo ${escapeHtml(periodoResumo)}</div>
+    <div class="gantt-bi__label-turno-row">${horarioOrTurnoBlock}</div>
+    <div class="gantt-bi__label-turno-row"><div class="gantt-bi__label-turno"><span style="opacity:0.68; font-weight:700; margin-right:6px;">Dias</span>${escapeHtml(diasResumo || '-')}</div></div>
+  `;
 
   return `
       <div class="gantt-bi__label">
-        <div class="gantt-bi__label-card" style="--accent:${baseColor};" title="${escapeHtml(row.tooltip)}">
-          <div class="gantt-bi__label-name">${escapeHtml(row.nome)}</div>
-          ${row.docenteLabel ? `<div class="gantt-bi__label-meta gantt-bi__label-docente"><span style="opacity:0.68; font-weight:700; margin-right:6px;">Docente</span>${escapeHtml(row.docenteLabel)}</div>` : ''}
-          <div class="gantt-bi__label-meta">CH ${escapeHtml(row.chLabel)} &middot; Turma ${escapeHtml(row.turmaId)}</div>
-          <div class="gantt-bi__label-meta">Periodo ${escapeHtml(periodoResumo)}</div>
-          <div class="gantt-bi__label-turno-row"${horarioResumo ? ' style="flex-wrap:nowrap;"' : ''}>
-            ${horarioOrTurnoBlock}
-            ${horarioResumo ? '' : `<div class="gantt-bi__label-turno"><span style="opacity:0.68; font-weight:700; margin-right:6px;">Dias</span>${escapeHtml(diasResumo || '-')}</div>`}
-            ${row.faixaBadge ? `<div class="gantt-bi__label-badge" style="background:${hexToRgba(baseColor, 0.14)}; color:${baseColor}; box-shadow:inset 0 0 0 1px ${hexToRgba(baseColor, 0.22)};">${escapeHtml(row.faixaBadge)}</div>` : ''}
-          </div>
-          ${horarioResumo ? `<div class="gantt-bi__label-turno-row"><div class="gantt-bi__label-turno"><span style="opacity:0.68; font-weight:700; margin-right:6px;">Dias</span>${escapeHtml(diasResumo || '-')}</div></div>` : ''}
+        <div class="gantt-bi__label-card gantt-bi__label-card--compact" style="--accent:${baseColor};">
+          <div class="gantt-bi__label-name gantt-bi__label-name--info" tabindex="0" data-gantt-bi-info="${encodeURIComponent(infoHtml)}" aria-label="${escapeHtml(row.tooltip)}">${escapeHtml(row.nome)}</div>
         </div>
       </div>`;
 }
@@ -1146,6 +1264,8 @@ function renderBidimensionalRowsInto(container, {
       </div>
     </div>
   `;
+
+  bindBidimensionalInfoInteractions(container);
 }
 
 export function renderBidimensionalTeacherGantt(container, {
