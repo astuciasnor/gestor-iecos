@@ -6,7 +6,7 @@ import { buildCanonicalOfferProjection, buildTeacherExecutionSnapshot } from './
 import { renderBidimensionalTeacherGantt, hideBidimensionalTeacherGanttLens } from './gantt_bidimensional.js';
 
 const collator = new Intl.Collator('pt-BR', { sensitivity: 'base' });
-const PUBLIC_ASSET_VERSION = '20260701f';
+const PUBLIC_ASSET_VERSION = '20260701g';
 const PUBLIC_ROUTING_CONFIG_URL = 'publicacoes/publicacao_config.json';
 const PUBLIC_ROUTING_CATALOG_FALLBACK_URL = 'publicacoes/catalogo_publicacoes.json';
 
