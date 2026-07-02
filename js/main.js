@@ -1,5 +1,5 @@
 import { store } from './store.js??v=20260625v';
-import { initUI, exportSigaaMetadataJSON, showToastWarning } from './ui.js??v=20260627v47';
+import { initUI, exportSigaaMetadataJSON, showToastWarning } from './ui.js??v=20260627v48';
 import { filterExportableAllocations, resolveActiveAcademicPeriod } from './academic_rules.mjs';
 import {
   buildPlanScopedPayload,
@@ -218,7 +218,7 @@ function exportarJSONCurso(sigla) {
   if (btnExportScopeAll) {
     btnExportScopeAll.addEventListener('click', () => {
       if (exportScopeCourseArea) exportScopeCourseArea.classList.add('hidden');
-      pendingAllExportSnapshot = buildTodosCursosExportSnapshot();
+      pendingAllExportSnapshot = buildTodosCursosExportSnapshot(store.allocations, store.rawData?.turmas, EXPORT_CURSOS_UNIDADE);
       renderAllSummary(pendingAllExportSnapshot);
     });
   }
