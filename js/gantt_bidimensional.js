@@ -624,6 +624,32 @@ function ensureBidimensionalGanttStyles() {
     .gantt-bi__segment:first-child {
       border-top: none;
     }
+    .gantt-bi__daychart {
+      position: absolute;
+      left: 0;
+      pointer-events: none;
+    }
+    .gantt-bi__daychart-baseline {
+      position: absolute;
+      bottom: 0;
+      height: 3px;
+      border-radius: 2px;
+    }
+    .gantt-bi__daybar {
+      position: absolute;
+      bottom: 0;
+      border-radius: 3px 3px 0 0;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.28);
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      font-size: 0.62rem;
+      font-weight: 800;
+      line-height: 1;
+      padding-top: 1px;
+      pointer-events: auto;
+      overflow: hidden;
+    }
     .gantt-bi__lens {
       position: fixed;
       z-index: 1200;
@@ -937,42 +963,19 @@ function estimateLabelMinHeight(row) {
   return minHeight;
 }
 
-function renderRow(row, layout) {
-  const blockHeight = row.activeDayIds.length * layout.segmentHeight;
-  const blockDrivenHeight = blockHeight + (layout.rowPadding * 2);
-  const rowHeight = Math.max(blockDrivenHeight, estimateLabelMinHeight(row));
-  const blockTop = Math.max(layout.rowPadding, Math.round((rowHeight - blockHeight) / 2));
-  const left = Math.max(0, daysBetween(layout.startDate, row.startDate)) * layout.dayWidth;
-  const width = (Math.max(0, daysBetween(row.startDate, row.endDate)) + 1) * layout.dayWidth;
-  const textColor = row.textColor;
+function renderRowLabelCard(row) {
   const baseColor = row.color;
-  const segmentBgEven = hexToRgba(baseColor, textColor === '#F8FAFC' ? 0.94 : 0.88);
-  const segmentBgOdd = hexToRgba(baseColor, textColor === '#F8FAFC' ? 0.82 : 0.72);
-  const showSegmentFrequency = width >= 132;
   const periodoResumo = `${formatDateBR(row?.startDate || '')} a ${formatDateBR(row?.endDate || '')}`;
   const diasResumo = row.activeDayIds
     .map((dayId) => DAY_META.find((entry) => entry.id === dayId)?.short || '')
     .filter(Boolean)
     .join(', ');
-  const dateDecorations = buildBarDateDecorations({
-    row,
-    left,
-    width,
-    blockTop,
-    blockHeight,
-    rowHeight,
-    timelineWidth: layout.timelineWidth,
-    baseColor,
-    textColor
-  });
-
   const horarioResumo = String(row.horarioLabel || '').trim();
   const horarioOrTurnoBlock = horarioResumo
     ? `<div class="gantt-bi__label-turno" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;" title="${escapeHtml(horarioResumo)}"><span style="opacity:0.68; font-weight:700; margin-right:6px;">Horário</span>${escapeHtml(horarioResumo)}</div>`
     : `<div class="gantt-bi__label-turno"><span style="opacity:0.68; font-weight:700; margin-right:6px;">Turno</span>${escapeHtml(row.turnoLabel)}</div>`;
 
   return `
-    <div class="gantt-bi__row" style="height:${rowHeight}px;">
       <div class="gantt-bi__label">
         <div class="gantt-bi__label-card" style="--accent:${baseColor};" title="${escapeHtml(row.tooltip)}">
           <div class="gantt-bi__label-name">${escapeHtml(row.nome)}</div>
@@ -986,7 +989,87 @@ function renderRow(row, layout) {
           </div>
           ${horarioResumo ? `<div class="gantt-bi__label-turno-row"><div class="gantt-bi__label-turno"><span style="opacity:0.68; font-weight:700; margin-right:6px;">Dias</span>${escapeHtml(diasResumo || '-')}</div></div>` : ''}
         </div>
+      </div>`;
+}
+
+function renderDailyBarRow(row, layout) {
+  const barAreaHeight = layout.dailyBarMaxHeight || 46;
+  const blockDrivenHeight = barAreaHeight + (layout.rowPadding * 2);
+  const rowHeight = Math.max(blockDrivenHeight, estimateLabelMinHeight(row));
+  const areaTop = Math.max(layout.rowPadding, Math.round((rowHeight - barAreaHeight) / 2));
+  const dayWidth = layout.dayWidth;
+  const left = Math.max(0, daysBetween(layout.startDate, row.startDate)) * dayWidth;
+  const spanWidth = (Math.max(0, daysBetween(row.startDate, row.endDate)) + 1) * dayWidth;
+  const baseColor = row.color;
+  const textColor = row.textColor;
+  const maxCount = Math.max(1, Number(layout.globalMaxDailyCount) || Number(row.maxDailyCount) || 1);
+  const barWidth = Math.max(3, Math.min(dayWidth - 1, Math.round(dayWidth * 0.82)));
+
+  const dateDecorations = buildBarDateDecorations({
+    row,
+    left,
+    width: spanWidth,
+    blockTop: areaTop,
+    blockHeight: barAreaHeight,
+    rowHeight,
+    timelineWidth: layout.timelineWidth,
+    baseColor,
+    textColor
+  });
+
+  const bars = (Array.isArray(row.dailyCounts) ? row.dailyCounts : []).map(({ date, count }) => {
+    const dayIndex = Math.max(0, daysBetween(layout.startDate, date));
+    const x = Math.round((dayIndex * dayWidth) + ((dayWidth - barWidth) / 2));
+    const height = Math.max(4, Math.round((count / maxCount) * barAreaHeight));
+    const showNum = height >= 15 && barWidth >= 10;
+    return `<div class="gantt-bi__daybar" style="left:${x}px; width:${barWidth}px; height:${height}px; background:${hexToRgba(baseColor, 0.95)}; color:${textColor};" title="${escapeHtml(formatDateBR(date))} — ${count} aula${count === 1 ? '' : 's'}">${showNum ? count : ''}</div>`;
+  }).join('');
+
+  return `
+    <div class="gantt-bi__row" style="height:${rowHeight}px;">
+      ${renderRowLabelCard(row)}
+      <div class="gantt-bi__track" style="width:${layout.timelineWidth}px; height:${rowHeight}px;">
+        ${renderVerticalLines(layout.weekLines, 'gantt-bi__line--week')}
+        ${renderVerticalLines(layout.monthLines, 'gantt-bi__line--month')}
+        ${dateDecorations}
+        <div class="gantt-bi__daychart" style="top:${areaTop}px; height:${barAreaHeight}px; width:${layout.timelineWidth}px;">
+          <div class="gantt-bi__daychart-baseline" style="left:${left}px; width:${spanWidth}px; background:${hexToRgba(baseColor, 0.20)};"></div>
+          ${bars}
+        </div>
       </div>
+    </div>
+  `;
+}
+
+function renderRow(row, layout) {
+  if (row.barMode === 'daily') return renderDailyBarRow(row, layout);
+
+  const blockHeight = row.activeDayIds.length * layout.segmentHeight;
+  const blockDrivenHeight = blockHeight + (layout.rowPadding * 2);
+  const rowHeight = Math.max(blockDrivenHeight, estimateLabelMinHeight(row));
+  const blockTop = Math.max(layout.rowPadding, Math.round((rowHeight - blockHeight) / 2));
+  const left = Math.max(0, daysBetween(layout.startDate, row.startDate)) * layout.dayWidth;
+  const width = (Math.max(0, daysBetween(row.startDate, row.endDate)) + 1) * layout.dayWidth;
+  const textColor = row.textColor;
+  const baseColor = row.color;
+  const segmentBgEven = hexToRgba(baseColor, textColor === '#F8FAFC' ? 0.94 : 0.88);
+  const segmentBgOdd = hexToRgba(baseColor, textColor === '#F8FAFC' ? 0.82 : 0.72);
+  const showSegmentFrequency = width >= 132;
+  const dateDecorations = buildBarDateDecorations({
+    row,
+    left,
+    width,
+    blockTop,
+    blockHeight,
+    rowHeight,
+    timelineWidth: layout.timelineWidth,
+    baseColor,
+    textColor
+  });
+
+  return `
+    <div class="gantt-bi__row" style="height:${rowHeight}px;">
+      ${renderRowLabelCard(row)}
       <div class="gantt-bi__track" style="width:${layout.timelineWidth}px; height:${rowHeight}px;">
         ${renderVerticalLines(layout.weekLines, 'gantt-bi__line--week')}
         ${renderVerticalLines(layout.monthLines, 'gantt-bi__line--month')}
@@ -1040,12 +1123,19 @@ function renderBidimensionalRowsInto(container, {
   const monthCells = buildMonthCells(rangeStart, rangeEnd, dayWidth);
   const { weekLines, monthLines } = buildVerticalLines(rangeStart, rangeEnd, dayWidth);
 
+  const globalMaxDailyCount = Math.max(
+    1,
+    ...rows.map((row) => Number(row?.maxDailyCount) || 1)
+  );
+
   const layout = {
     startDate: rangeStart,
     endDate: rangeEnd,
     dayWidth,
     segmentHeight,
     rowPadding,
+    dailyBarMaxHeight: 46,
+    globalMaxDailyCount,
     timelineWidth,
     weekLines,
     monthLines
@@ -1200,6 +1290,15 @@ function buildTurmaGanttRows({ offerProjection, turmaId } = {}) {
       || String(group.docenteLabel || '').trim();
     const horarioLabel = sortedSlots.join(', ');
 
+    // Nº de aulas por dia do mês (proporcional à altura da barra no Gantt da turma).
+    const dailyCounts = activeDates.map((dateStr) => {
+      const dayOfWeek = toDate(dateStr)?.getDay() || 0;
+      const daySlots = Array.isArray(timeRangesByDay[dayOfWeek]) ? timeRangesByDay[dayOfWeek] : [];
+      const count = daySlots.length > 0 ? daySlots.length : 1;
+      return { date: dateStr, count };
+    });
+    const maxDailyCount = dailyCounts.reduce((max, entry) => Math.max(max, entry.count), 1);
+
     rows.push({
       key: `${group.offerKey}|turma`,
       offerKey: group.offerKey,
@@ -1214,6 +1313,9 @@ function buildTurmaGanttRows({ offerProjection, turmaId } = {}) {
       horarioLabel,
       turnoLabel: resolveTurnoLabelFromSlots(sortedSlots),
       faixaBadge: '',
+      barMode: 'daily',
+      dailyCounts,
+      maxDailyCount,
       activeDayIds: sortedDayIds,
       slots: sortedSlots,
       slotsByDay: Object.fromEntries(
