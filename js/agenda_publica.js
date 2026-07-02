@@ -6,7 +6,7 @@ import { buildCanonicalOfferProjection, buildTeacherExecutionSnapshot } from './
 import { renderBidimensionalTeacherGantt, hideBidimensionalTeacherGanttLens } from './gantt_bidimensional.js';
 
 const collator = new Intl.Collator('pt-BR', { sensitivity: 'base' });
-const PUBLIC_ASSET_VERSION = '20260328e';
+const PUBLIC_ASSET_VERSION = '20260701b';
 const PUBLIC_ROUTING_CONFIG_URL = 'publicacoes/publicacao_config.json';
 const PUBLIC_ROUTING_CATALOG_FALLBACK_URL = 'publicacoes/catalogo_publicacoes.json';
 
@@ -14,6 +14,8 @@ const state = {
     activeTab: 'discente',
     publicCatalog: null,
     publicPublicationRoute: null,
+    publicPublications: [],
+    activePublicationKey: '',
     publicTurmaIds: null,
     componentInfoByName: new Map(),
     turmaById: new Map(),
@@ -198,6 +200,7 @@ async function init() {
     syncDocenteInputState();
     syncTabUI();
     renderActiveEmptyState();
+    setupPlanSwitcher();
 }
 
 function cacheElements() {
@@ -318,24 +321,33 @@ async function loadPublicData() {
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
         const dadosPublicos = await response.json();
-        if (Array.isArray(dadosPublicos)) {
-            store.allocations = dadosPublicos.map(normalizeLoadedAllocation);
-            state.publicCatalog = sourceDescriptor.publication || null;
+        const publications = extractPublicationsFromPayload(dadosPublicos, sourceDescriptor);
+
+        if (publications.length) {
+            state.publicPublications = publications;
+            const params = new URLSearchParams(window.location.search || '');
+            const planQueryParam = String(sourceDescriptor.routingConfig?.studentRouting?.planQueryParam || 'pl').trim() || 'pl';
+            const requestedSelector = String(
+                params.get(planQueryParam)
+                || sourceDescriptor.publication?.periodo
+                || ''
+            ).trim();
+            const activePublication = pickActivePublication(publications, requestedSelector);
+            state.activePublicationKey = activePublication?.key || '';
+            applySelectedPublication(activePublication);
         } else {
-            store.allocations = Array.isArray(dadosPublicos.allocations) ? dadosPublicos.allocations.map(normalizeLoadedAllocation) : [];
-            state.publicCatalog = dadosPublicos.meta && typeof dadosPublicos.meta === 'object'
-                ? { ...dadosPublicos.meta }
-                : (sourceDescriptor.publication || null);
-            if (state.publicCatalog && sourceDescriptor.publication?.periodo && !state.publicCatalog.periodoLetivo) {
-                state.publicCatalog.periodoLetivo = sourceDescriptor.publication.periodo;
-            }
-            applyPublicPlanSettings(dadosPublicos);
+            state.publicPublications = [];
+            state.activePublicationKey = '';
+            store.allocations = [];
+            state.publicCatalog = sourceDescriptor.publication || null;
         }
     } catch (error) {
         console.warn('Falha ao carregar alocacoes_publicas.json. Usando dados locais.', error);
         store.loadAllocations();
         state.publicCatalog = null;
         state.publicPublicationRoute = null;
+        state.publicPublications = [];
+        state.activePublicationKey = '';
     }
 
     applyFallbackTermDates();
@@ -393,6 +405,212 @@ function applyPublicPlanSettings(dadosPublicos = {}) {
 
     if (state.publicCatalog && !state.publicCatalog.periodoLetivo && publicPlan.periodo) {
         state.publicCatalog.periodoLetivo = publicPlan.periodo;
+    }
+}
+
+function normalizePublicationRecord(entry) {
+    if (!entry || typeof entry !== 'object' || Array.isArray(entry)) return null;
+
+    const allocations = Array.isArray(entry.allocations)
+        ? entry.allocations.map((alloc) => normalizeLoadedAllocation({ ...alloc }))
+        : [];
+    const settings = entry.settings && typeof entry.settings === 'object' ? entry.settings : {};
+    const plan = entry.plan && typeof entry.plan === 'object' ? entry.plan : {};
+    const meta = entry.meta && typeof entry.meta === 'object' ? { ...entry.meta } : null;
+
+    const periodo = String(meta?.periodoLetivo || plan.periodo || settings.periodo || '').trim();
+    const termStart = String(plan.termStart || settings.termStart || '').trim();
+    const termEnd = String(plan.termEnd || settings.termEnd || '').trim();
+    const key = String(
+        plan.key
+        || [periodo, termStart, termEnd].filter(Boolean).join('__')
+        || periodo
+        || 'plano'
+    ).trim();
+
+    return {
+        key,
+        periodo,
+        termStart,
+        termEnd,
+        label: buildPublicationLabel(periodo, termStart, plan),
+        plan,
+        meta,
+        settings,
+        allocations
+    };
+}
+
+function extractPublicationsFromPayload(payload, sourceDescriptor = {}) {
+    if (Array.isArray(payload)) {
+        const record = normalizePublicationRecord({
+            allocations: payload,
+            meta: sourceDescriptor?.publication || null
+        });
+        return record ? [record] : [];
+    }
+
+    if (payload && typeof payload === 'object' && Array.isArray(payload.publications) && payload.publications.length) {
+        return payload.publications
+            .map((entry) => normalizePublicationRecord(entry))
+            .filter(Boolean);
+    }
+
+    if (payload && typeof payload === 'object') {
+        const record = normalizePublicationRecord(payload);
+        return record ? [record] : [];
+    }
+
+    return [];
+}
+
+function buildPublicationLabel(periodo, termStart, plan = {}) {
+    if (plan?.label) return String(plan.label);
+    const year = String(termStart || '').slice(0, 4);
+    const base = periodo || 'Per\u00edodo';
+    return year ? `${base} \u00b7 ${year}` : base;
+}
+
+function publicationSelectors(publication) {
+    if (!publication) return [];
+    const year = String(publication.termStart || '').slice(0, 4);
+    return [...new Set([
+        normalizePublicationSelector(publication.periodo),
+        normalizePublicationSelector(publication.key),
+        normalizePublicationSelector([year, publication.periodo].filter(Boolean).join('-')),
+        normalizePublicationSelector(publication.label)
+    ].filter(Boolean))];
+}
+
+function getTodayIso() {
+    return new Date().toISOString().slice(0, 10);
+}
+
+function isPastPublication(publication, today = getTodayIso()) {
+    return !!(publication?.termEnd && publication.termEnd < today);
+}
+
+function getDisplayPublications(publications, activeKey = '') {
+    const list = Array.isArray(publications) ? publications : [];
+    const today = getTodayIso();
+    const nonPast = list.filter((pub) => !isPastPublication(pub, today));
+    let displayable = nonPast.length ? [...nonPast] : [...list];
+
+    if (activeKey && !displayable.some((pub) => pub.key === activeKey)) {
+        const active = list.find((pub) => pub.key === activeKey);
+        if (active) displayable = [active, ...displayable];
+    }
+
+    return displayable.sort((a, b) => String(a.termStart || '').localeCompare(String(b.termStart || '')));
+}
+
+function pickActivePublication(publications, requestedSelector = '') {
+    if (!Array.isArray(publications) || !publications.length) return null;
+
+    const requested = normalizePublicationSelector(requestedSelector);
+    if (requested) {
+        const match = publications.find((pub) => publicationSelectors(pub).includes(requested));
+        if (match) return match;
+    }
+
+    const today = getTodayIso();
+    const vigente = publications.find((pub) =>
+        pub.termStart && pub.termEnd && pub.termStart <= today && today <= pub.termEnd
+    );
+    if (vigente) return vigente;
+
+    const upcoming = publications
+        .filter((pub) => pub.termStart && pub.termStart > today)
+        .sort((a, b) => String(a.termStart || '').localeCompare(String(b.termStart || '')));
+    if (upcoming.length) return upcoming[0];
+
+    return [...publications]
+        .sort((a, b) => String(b.termStart || '').localeCompare(String(a.termStart || '')))[0];
+}
+
+function applySelectedPublication(publication) {
+    if (!publication) return;
+
+    store.allocations = Array.isArray(publication.allocations) ? publication.allocations : [];
+    state.publicCatalog = publication.meta ? { ...publication.meta } : null;
+    if (state.publicCatalog && publication.periodo && !state.publicCatalog.periodoLetivo) {
+        state.publicCatalog.periodoLetivo = publication.periodo;
+    }
+
+    applyPublicPlanSettings({
+        settings: publication.settings,
+        plan: publication.plan,
+        meta: publication.meta
+    });
+}
+
+function buildPlanOptionLabel(publication) {
+    const base = publication.periodo || publication.label || 'Per\u00edodo';
+    if (publication.termStart && publication.termEnd) {
+        return `${base} (${formatIsoDateBR(publication.termStart)} a ${formatIsoDateBR(publication.termEnd)})`;
+    }
+    return base;
+}
+
+function setupPlanSwitcher() {
+    const wrap = document.getElementById('pub-plan-switch');
+    const select = document.getElementById('pub-sel-plano');
+    if (!wrap || !select) return;
+
+    const publications = Array.isArray(state.publicPublications) ? state.publicPublications : [];
+    const ordered = getDisplayPublications(publications, state.activePublicationKey);
+    if (ordered.length <= 1) {
+        wrap.hidden = true;
+        select.innerHTML = '';
+        return;
+    }
+
+    select.innerHTML = '';
+    ordered.forEach((publication) => {
+        const option = document.createElement('option');
+        option.value = publication.key;
+        option.textContent = buildPlanOptionLabel(publication);
+        if (publication.key === state.activePublicationKey) option.selected = true;
+        select.appendChild(option);
+    });
+
+    wrap.hidden = false;
+    select.removeEventListener('change', handlePlanSwitchChange);
+    select.addEventListener('change', handlePlanSwitchChange);
+}
+
+function handlePlanSwitchChange(event) {
+    const key = String(event?.target?.value || '').trim();
+    const publication = (state.publicPublications || []).find((pub) => pub.key === key);
+    if (!publication || key === state.activePublicationKey) return;
+
+    state.activePublicationKey = key;
+    applySelectedPublication(publication);
+    refreshAfterPlanSwitch(publication);
+}
+
+function refreshAfterPlanSwitch(publication) {
+    buildLookups();
+    state.publicTurmaIds = getPublishedTurmaIdsSet();
+    state.docentesDisponiveis = collectPublishedTeachers();
+    updateMetaChips();
+
+    state.discente = { curso: '', turmaId: '', mes: '' };
+    state.docente = { nome: '', mes: '', totalHoras: null, view: state.docente?.view || 'calendar' };
+    if (els.selCurso) els.selCurso.value = '';
+    if (els.inpDocente) els.inpDocente.value = '';
+
+    preencherCursos();
+    syncDocenteInputState();
+    syncTabUI();
+    renderActiveEmptyState();
+
+    try {
+        const url = new URL(window.location.href);
+        url.searchParams.set('pl', normalizePublicationSelector(publication?.periodo) || publication?.key || '');
+        window.history.replaceState({}, '', url);
+    } catch (_) {
+        // ignora ambientes sem history API
     }
 }
 

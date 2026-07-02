@@ -136,6 +136,42 @@
             gap: 18px;
         }
 
+        .pub-plan-switch {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 10px 14px;
+            justify-self: start;
+            max-width: 100%;
+            padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.72);
+            border: 1px solid rgba(0, 78, 40, 0.12);
+            border-radius: 18px;
+            box-shadow: 0 8px 22px rgba(15, 23, 42, 0.06);
+            backdrop-filter: blur(8px);
+        }
+
+        .pub-plan-switch[hidden] {
+            display: none;
+        }
+
+        .pub-plan-switch label {
+            font-size: 0.9rem;
+            font-weight: 800;
+            letter-spacing: 0.02em;
+            color: var(--pub-ink);
+            text-transform: uppercase;
+        }
+
+        .pub-plan-switch .pub-select {
+            width: auto;
+            min-width: 240px;
+            max-width: 100%;
+            padding: 10px 14px;
+            border-radius: 14px;
+            font-weight: 700;
+        }
+
         .pub-tabs {
             display: inline-flex;
             flex-wrap: nowrap;
@@ -1408,6 +1444,10 @@
         </header>
 
         <div class="pub-main">
+            <div class="pub-plan-switch" id="pub-plan-switch" hidden>
+                <label for="pub-sel-plano">Per&iacute;odo letivo</label>
+                <select id="pub-sel-plano" class="pub-select" aria-label="Selecionar per&iacute;odo letivo publicado"></select>
+            </div>
             <div class="pub-tabs" role="tablist" aria-label="Modos de consulta">
                 <button id="tab-discente" type="button" class="pub-tab active" role="tab" aria-selected="true">Agenda
                     Discente</button>
@@ -1531,7 +1571,7 @@
     <div id="slot-lens" class="slot-lens" hidden></div>
     <div id="day-lens" class="day-lens" hidden></div>
 
-    <script type="module" src="js/agenda_publica.js?v=20260328e"></script>
+    <script type="module" src="js/agenda_publica.js?v=20260701b"></script>
 </body>
 
 </html>

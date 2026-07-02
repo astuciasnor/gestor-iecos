@@ -35,6 +35,7 @@ PUBLICATION_CONFIG_REL = Path("publicacoes") / "publicacao_config.json"
 DEFAULT_PUBLICATION_CATALOG_REL = "publicacoes/catalogo_publicacoes.json"
 DEFAULT_PLAN_DIRECTORY_TEMPLATE = "publicacoes/{year}/{periodo_slug}/alocacoes_publicas.json"
 DEFAULT_LAYOUT_MODE = "legacy_single_file"
+MAX_PUBLISHED_PLANS = 3
 
 
 def run_git(repo_root: Path, args: list[str], check: bool = True) -> subprocess.CompletedProcess:
@@ -358,6 +359,101 @@ def build_target_content(payload: Any) -> str:
     return json.dumps(payload, ensure_ascii=False, indent=2) + "\n"
 
 
+def publication_identity(pub: Any) -> str:
+    """Identidade estavel de um plano publicado (para deduplicar por periodo letivo)."""
+    pub = pub if isinstance(pub, dict) else {}
+    plan = pub.get("plan") if isinstance(pub.get("plan"), dict) else {}
+    settings = pub.get("settings") if isinstance(pub.get("settings"), dict) else {}
+    meta = pub.get("meta") if isinstance(pub.get("meta"), dict) else {}
+
+    key = str(plan.get("key") or "").strip()
+    if key:
+        return key
+
+    periodo = normalize_periodo(
+        meta.get("periodoLetivo") or plan.get("periodo") or settings.get("periodo") or ""
+    )
+    term_start = str(plan.get("termStart") or settings.get("termStart") or "").strip()
+    term_end = str(plan.get("termEnd") or settings.get("termEnd") or "").strip()
+    parts = [part for part in (periodo, term_start, term_end) if part]
+    return "__".join(parts) or periodo
+
+
+def publication_sort_value(pub: Any) -> str:
+    pub = pub if isinstance(pub, dict) else {}
+    plan = pub.get("plan") if isinstance(pub.get("plan"), dict) else {}
+    settings = pub.get("settings") if isinstance(pub.get("settings"), dict) else {}
+    return str(plan.get("termStart") or settings.get("termStart") or "")
+
+
+def publication_periodo_label(pub: Any) -> str:
+    pub = pub if isinstance(pub, dict) else {}
+    plan = pub.get("plan") if isinstance(pub.get("plan"), dict) else {}
+    settings = pub.get("settings") if isinstance(pub.get("settings"), dict) else {}
+    meta = pub.get("meta") if isinstance(pub.get("meta"), dict) else {}
+    return (
+        str(meta.get("periodoLetivo") or plan.get("periodo") or settings.get("periodo") or "").strip()
+        or "?"
+    )
+
+
+def extract_existing_publications(existing_data: Any) -> list[dict]:
+    """Normaliza o arquivo publico existente (v2 unico ou v3 multi) numa lista de planos."""
+    if isinstance(existing_data, dict) and isinstance(existing_data.get("publications"), list):
+        return [pub for pub in existing_data["publications"] if isinstance(pub, dict)]
+    if isinstance(existing_data, dict) and isinstance(existing_data.get("allocations"), list):
+        return [existing_data]
+    if isinstance(existing_data, list):
+        return [{"allocations": existing_data, "settings": {}}]
+    return []
+
+
+def merge_publications(
+    existing_publications: list[dict],
+    new_publication: dict,
+    max_plans: int = MAX_PUBLISHED_PLANS,
+) -> list[dict]:
+    """Substitui o plano de mesmo periodo, mantem os demais e limita aos mais recentes."""
+    new_identity = publication_identity(new_publication)
+    merged = [
+        pub for pub in existing_publications
+        if publication_identity(pub) != new_identity
+    ]
+    merged.append(new_publication)
+    merged.sort(key=publication_sort_value, reverse=True)
+    return merged[:max_plans]
+
+
+def build_multi_plan_document(publications: list[dict]) -> dict:
+    return {
+        "version": 3,
+        "exportedAt": datetime.now().isoformat() + "Z",
+        "layoutMode": "single_file_multi_plan",
+        "publications": publications,
+    }
+
+
+def build_output_document(
+    payload: dict,
+    target_path: Path,
+    layout_mode: str,
+) -> Any:
+    """No modo arquivo unico, mescla o plano novo com o(s) plano(s) ja publicado(s)."""
+    if str(layout_mode or "").strip().lower() != "legacy_single_file":
+        return payload
+
+    existing_data = None
+    if target_path.exists() and target_path.is_file():
+        try:
+            existing_data = json.loads(target_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            existing_data = None
+
+    existing_publications = extract_existing_publications(existing_data)
+    merged = merge_publications(existing_publications, payload)
+    return build_multi_plan_document(merged)
+
+
 def describe_source_mode(source_mode: str) -> str:
     if source_mode == "manual":
         return "Origem informada manualmente."
@@ -652,7 +748,8 @@ def main() -> int:
         print("Operacao cancelada.")
         return 0
 
-    target_content = build_target_content(payload)
+    output_document = build_output_document(payload, target_path, layout_mode)
+    target_content = build_target_content(output_document)
     target_parent = target_path.parent
     if not target_parent.exists():
         print(f"Criando diretorio de destino: {target_parent}")
@@ -670,8 +767,14 @@ def main() -> int:
     else:
         print(f"Arquivo de destino sera criado na raiz do projeto: {target_path}")
 
+    if isinstance(output_document, dict) and isinstance(output_document.get("publications"), list):
+        planos = ", ".join(publication_periodo_label(pub) for pub in output_document["publications"])
+        print(
+            f"Planos no arquivo publico unico ({len(output_document['publications'])}): {planos}"
+        )
+
     if not target_had_same_content:
-        write_public_file(payload, target_path)
+        write_public_file(output_document, target_path)
         print("Arquivo de destino gravado com sucesso.")
     else:
         print("Arquivo de destino ja continha conteudo identico; nenhuma regravacao foi necessaria.")

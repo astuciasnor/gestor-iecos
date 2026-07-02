@@ -1,12 +1,12 @@
 {
   "version": 1,
-  "layoutMode": "plan_directory",
+  "layoutMode": "legacy_single_file",
   "defaultJsonPath": "alocacoes_publicas.json",
   "catalogPath": "publicacoes/catalogo_publicacoes.json",
   "planDirectoryTemplate": "publicacoes/{year}/{periodo_slug}/alocacoes_publicas.json",
   "studentRouting": {
-    "strategy": "default_publication",
-    "allowManualPlanSelection": false,
+    "strategy": "single_file_multi_plan",
+    "allowManualPlanSelection": true,
     "planQueryParam": "pl"
   }
 }
