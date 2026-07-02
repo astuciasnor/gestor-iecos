@@ -6,7 +6,7 @@ import { buildCanonicalOfferProjection, buildTeacherExecutionSnapshot } from './
 import { renderBidimensionalTeacherGantt, hideBidimensionalTeacherGanttLens } from './gantt_bidimensional.js';
 
 const collator = new Intl.Collator('pt-BR', { sensitivity: 'base' });
-const PUBLIC_ASSET_VERSION = '20260701d';
+const PUBLIC_ASSET_VERSION = '20260701e';
 const PUBLIC_ROUTING_CONFIG_URL = 'publicacoes/publicacao_config.json';
 const PUBLIC_ROUTING_CATALOG_FALLBACK_URL = 'publicacoes/catalogo_publicacoes.json';
 
@@ -851,18 +851,20 @@ function getTermMonths() {
     const end = store.settings.termEnd;
     if (!start || !end) return [];
 
+    const startDate = new Date(`${start}T12:00:00`);
+    const endDate = new Date(`${end}T12:00:00`);
+    if (Number.isNaN(startDate.getTime()) || Number.isNaN(endDate.getTime())) return [];
+
     const months = [];
-    const cursor = new Date(`${start}T12:00:00`);
-    const limit = new Date(`${end}T12:00:00`);
-    const seen = new Set();
+    // Itera pelo 1o dia de cada mes para nao pular o ultimo mes quando o dia
+    // de inicio e maior que o dia de fim (ex.: 24/08 a 23/12 dropava dezembro).
+    const cursor = new Date(startDate.getFullYear(), startDate.getMonth(), 1, 12, 0, 0);
+    const limit = new Date(endDate.getFullYear(), endDate.getMonth(), 1, 12, 0, 0);
 
     while (cursor <= limit) {
         const key = `${cursor.getFullYear()}-${String(cursor.getMonth() + 1).padStart(2, '0')}`;
-        if (!seen.has(key)) {
-            seen.add(key);
-            const monthLabel = cursor.toLocaleString('pt-BR', { month: 'long' });
-            months.push({ key, label: capitalizeWord(monthLabel) });
-        }
+        const monthLabel = cursor.toLocaleString('pt-BR', { month: 'long' });
+        months.push({ key, label: capitalizeWord(monthLabel) });
         cursor.setMonth(cursor.getMonth() + 1);
     }
 
