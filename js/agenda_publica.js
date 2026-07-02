@@ -6,7 +6,7 @@ import { buildCanonicalOfferProjection, buildTeacherExecutionSnapshot } from './
 import { renderBidimensionalTeacherGantt, hideBidimensionalTeacherGanttLens } from './gantt_bidimensional.js';
 
 const collator = new Intl.Collator('pt-BR', { sensitivity: 'base' });
-const PUBLIC_ASSET_VERSION = '20260701c';
+const PUBLIC_ASSET_VERSION = '20260701d';
 const PUBLIC_ROUTING_CONFIG_URL = 'publicacoes/publicacao_config.json';
 const PUBLIC_ROUTING_CATALOG_FALLBACK_URL = 'publicacoes/catalogo_publicacoes.json';
 
@@ -1454,7 +1454,8 @@ function buildWeeklyGridHTML({ calendarData, year, month, mode }) {
 
             const holiday = events.find((event) => event?.type === 'holiday');
             if (holiday) {
-                html += `<div class="feriado-chip" title="${escapeHtmlAttr(holiday.title || 'Feriado')}">Feriado</div>`;
+                const feriadoNome = holiday.title || 'Feriado';
+                html += `<div class="feriado-chip" title="${escapeHtmlAttr(feriadoNome)}">${escapeHtml(formatHolidayLabel(feriadoNome, 26))}</div>`;
             } else {
                 const renderedEvents = mode === 'discente'
                     ? events.slice().sort((a, b) => {
@@ -2205,6 +2206,13 @@ function capitalizeWord(value) {
     return text.charAt(0).toUpperCase() + text.slice(1);
 }
 
+function formatHolidayLabel(value, maxLen = 24) {
+    const text = String(value || '').trim();
+    if (!text) return 'Feriado';
+    if (text.length <= maxLen) return text;
+    return `${text.slice(0, Math.max(1, maxLen - 1)).trimEnd()}\u2026`;
+}
+
 function escapeHtml(value) {
     return String(value ?? '')
         .replace(/&/g, '&amp;')
@@ -2249,6 +2257,7 @@ function buildMonthlyCalendarHTML({ calendarData, year, month }) {
         const dateStr = toIsoDate(dateObj);
         const events = Array.isArray(calendarData?.[dateStr]) ? calendarData[dateStr] : [];
         const isHoliday = events.some(e => e.type === 'holiday');
+        const holidayEvent = events.find(e => e.type === 'holiday');
         const classEvents = events.filter(e => e.type !== 'holiday');
         const isToday = dateStr === todayStr;
         if (classEvents.length > 0) hasAnyEvent = true;
@@ -2261,7 +2270,10 @@ function buildMonthlyCalendarHTML({ calendarData, year, month }) {
         grid += `<div class="${cls}" data-date="${dateStr}">`;
         grid += `<div class="mcd-num">${d}</div>`;
 
-        if (isHoliday) grid += `<div class="mcd-feriado">Feriado</div>`;
+        if (isHoliday) {
+            const feriadoNome = holidayEvent?.title || 'Feriado';
+            grid += `<div class="mcd-feriado" title="${escapeHtmlAttr(feriadoNome)}">${escapeHtml(formatHolidayLabel(feriadoNome, 14))}</div>`;
+        }
 
         // Group by discipline — one chip per component
         const discGroups = new Map();
