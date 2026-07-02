@@ -4,7 +4,7 @@ import { normalizePeriodo as normalizePeriodoLetivoCode } from './plan_storage.j
 import { getCalendarEvents } from './calendar.js??v=20260625v';
 import { countBusinessDays, countWeekdaysInPeriod, addBusinessDays, isDateOverlap, calculateEndDateByWeekday } from './utils.js';
 import { buildTeacherExecutionSnapshot, buildCanonicalOfferProjection } from './execution_engine.js';
-import { renderBidimensionalTeacherGantt, renderBidimensionalTurmaGantt } from './gantt_bidimensional.js??v=20260627v37';
+import { renderBidimensionalTeacherGantt, renderBidimensionalTurmaGantt } from './gantt_bidimensional.js??v=20260627v38';
 import { buildSigaaMetadataPayload, validateSigaaMetadataPayload } from './sigaa_metadata.js';
 import { parseBackupDataFile, extractImportPlanMeta } from './serialization.js';
 import {
