@@ -7,7 +7,6 @@ Sistema web para montagem, revisao, auditoria e publicacao de grades academicas 
 Links publicos:
 - App principal: `https://astuciasnor.github.io/gestor-iecos/`
 - Agenda publica: `https://astuciasnor.github.io/gestor-iecos/agenda_publica.html`
-- Agenda discente: `https://astuciasnor.github.io/gestor-iecos/agenda_discente.html`
 
 Documentacao tecnica:
 - [`docs/manual_desenvolvedor.md`](docs/manual_desenvolvedor.md)
@@ -23,7 +22,7 @@ Documentacao tecnica:
 - **Datas das faixas como referencia oficial:** a `Faixa 1` nasce por sugestao automatica, mas a edicao oficial da data e feita pelos mini calendarios das faixas.
 - **Turnos e sabado integrados ao motor:** mudancas de turno, sabado de manha e avisos `Atenção Turno` sao refletidos na Grade Semanal, calendarios, agendas e Gantt.
 - **Gantt bidimensional por docente:** leitura temporal mais clara, com turnos reais, detalhes de barra e mesma base de execucao usada nos calendarios.
-- **Agendas publicas coexistentes:** `agenda_publica.html` e `agenda_discente.html` seguem publicadas em paralelo durante a transicao, sem perda da URL antiga.
+- **Agenda publica:** `agenda_publica.html` e a pagina oficial de publicacao das grades.
 - **Exportacao, SIGAA e publicacao online:** backup, exportacao institucional e `alocacoes_publicas.json` partem do plano ativo.
 - **Base inicial de testes automatizados:** a suite `tests/academic_rules.test.mjs` cobre o nucleo atual do motor canonico.
 
