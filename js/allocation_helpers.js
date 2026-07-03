@@ -5,6 +5,17 @@ export function getAllocationModo(alloc) {
     return String(alloc?.modo || '').trim().toLowerCase();
 }
 
+export function getAllocationTeachersForConflict(alloc) {
+    if (alloc?.docentes && Array.isArray(alloc.docentes) && alloc.docentes.length > 0) {
+        return alloc.docentes
+            .map((d) => String(d?.nome || d || '').trim())
+            .filter((name) => name && name.toUpperCase() !== 'A DEFINIR');
+    }
+
+    const single = String(alloc?.docente || '').trim();
+    return single && single.toUpperCase() !== 'A DEFINIR' ? [single] : [];
+}
+
 export function isFaixaAllocation(alloc) {
     return getAllocationModo(alloc) === 'faixas';
 }

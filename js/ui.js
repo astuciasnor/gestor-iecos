@@ -34,7 +34,8 @@ import {
     teacherNamesMatch,
     allocationHasTeacherMatch,
     getDocenteShortLabel,
-    calculateTeacherTotalCH
+    calculateTeacherTotalCH,
+    getAllocationTeachersForConflict
 } from './allocation_helpers.js';
 import {
     normalizeConflictSlotLabel,
@@ -1984,17 +1985,6 @@ function buildTurmaOccupiedSlotsByDate(candidateAlloc, startDate, endDate) {
     });
 
     return occupiedByDate;
-}
-
-function getAllocationTeachersForConflict(alloc) {
-    if (alloc?.docentes && Array.isArray(alloc.docentes) && alloc.docentes.length > 0) {
-        return alloc.docentes
-            .map((d) => String(d?.nome || d || '').trim())
-            .filter((name) => name && name.toUpperCase() !== 'A DEFINIR');
-    }
-
-    const single = String(alloc?.docente || '').trim();
-    return single && single.toUpperCase() !== 'A DEFINIR' ? [single] : [];
 }
 
 function resolveTeacherForAllocationHour(alloc, hourIndex) {
