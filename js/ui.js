@@ -58,6 +58,7 @@ import {
 import {
     resolveTeacherShiftForSlot,
     getGanttTurnoConfigs,
+    getGanttTurnoCode,
     renderGanttChart,
     renderGanttForActiveMode,
     getActiveGanttMode,
