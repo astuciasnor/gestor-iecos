@@ -143,7 +143,9 @@ Commit: `refactor(ui): extrai date_utils_ui.js`.
 
 ### FASE 4 — `js/gantt_ui.js` (camada de UI do Gantt legado + interacoes)
 
-**STATUS: BLOQUEADA. Tentativa em 02/07/2026 quebrou o app (PLs e cursos nao carregavam). Revertida via `git reset --hard HEAD~1`. NAO reexecutar como esta descrito abaixo sem antes eliminar o ciclo — veja a nota "Licao aprendida" ao final desta fase.**
+**STATUS: CONCLUIDA em 02/07/2026 (commits 8a3f2d0 + fix cc9f51f). O `gantt_ui.js` foi extraido via as sub-fases 4a-4d (helpers neutros primeiro, Gantt por ultimo). ui.js caiu de ~10.614 para ~8.691 linhas. Validado no browser: PLs/cursos/Grade Semanal/Calendarios/Gantt/Lista de Ofertas OK, zero erros de console.**
+
+> As tres primeiras tentativas de extracao DIRETA do Gantt quebraram o app. As causas raiz e a estrategia correta estao em "Licoes aprendidas" ao final desta fase — leia antes de mexer no gantt_ui.js de novo.
 
 **Risco:** alto (originalmente estimado medio). **Tamanho estimado:** ~1.800 linhas. E o maior bloco isolavel: funcoes `*Gantt*` formam um cluster coeso que quase nao toca o estado da Grade Semanal.
 
@@ -169,22 +171,25 @@ Mover o bloco continuo de funcoes (todas com `Gantt` no nome + auxiliares exclus
 
 Commit: `refactor(ui): extrai gantt_ui.js (camada de UI do Gantt)`.
 
-#### Licao aprendida (Fase 4, tentativa 02/07/2026)
+#### Licoes aprendidas (Fase 4, 3 tentativas em 02/07/2026)
 
-A extracao direta criou um ciclo `ui.js <-> gantt_ui.js`: o `gantt_ui.js` precisava importar 15 funcoes que ficaram no `ui.js` (`isFaixaAllocation`, `getDisciplinaCHGlobal`, `getTurmaLabel`, `teacherNamesMatch`, `getAvailableTurnoOfertaOptions`, `normalizeTurnoOfertaKey`, `resolveTeacherShiftForSlot` etc.), e o `ui.js` precisava importar 7 funcoes do `gantt_ui.js` (`renderGanttChart`, `renderGanttForActiveMode`, `getGanttTurnoConfigs`, `resolveGanttTurnoForSlot`, `printGanttLandscape`, `getActiveGanttMode`, `renderPublicTeacherGantt`). Testes automatizados passaram, sintaxe passou, mas em runtime alguns bindings importados apareciam como `undefined` no momento em que `initUI` executava — resultado: PLs e cursos nao carregavam.
+Foram TRES causas distintas de quebra, todas descobertas so em runtime no browser (nem `node --check`, nem `node --test`, nem o linter pegam):
 
-**Regra nova:** ciclo `ui.js <-> modulo_novo` e PROIBIDO na pratica. Antes de qualquer nova tentativa da Fase 4, executar como pre-requisito:
+**1. Ciclo de import `ui.js <-> gantt_ui.js`.** Na 1a tentativa o `gantt_ui.js` importava 15 funcoes que ficaram no `ui.js`; em runtime alguns bindings apareciam `undefined` durante o `initUI` -> PLs/cursos nao carregavam. FIX: extrair os helpers para modulos NEUTROS primeiro (fases 4a-4c), para o `gantt_ui.js` nunca importar do `ui.js`.
 
-- **Fase 4a — extrair `js/allocation_helpers.js`**: mover as funcoes puras de classificacao/comparacao de alocacao e docente que hoje vivem no topo do `ui.js`, sem tocar em DOM ou estado do modulo:
-  - `getAllocationModo`, `isFaixaAllocation`, `isPriorityRegularAllocation`, `isRegularAllocation`, `isScheduledRegularAllocation`, `isPendingAllocation`
-  - `teacherNamesMatch`, `allocationHasTeacherMatch`, `normalizeTeacherNameForMatch`, `getDocenteShortLabel`
-- **Fase 4b — extrair `js/turno_helpers.js`**: mover funcoes puras de turno/slot que ficam antes das telas:
-  - `normalizeTurnoOfertaKey`, `formatTurnoOfertaLabel`, `getAvailableTurnoOfertaOptions`, `resolveTurnoOfertaValue`, `getTurnoNormalizedFromLetter`, `getTurnoValueFromLetter`, `getShiftChangeLabel`, `getNativeTurnoValueForAllocation`, `normalizeConflictSlotLabel`
-  - **Cuidado:** algumas dessas funcoes usam `store` — o novo modulo precisa importar `store`. Sem problema, so nao pode importar do `ui.js`.
-- **Fase 4c — avaliar `getDisciplinaCHGlobal`, `getTurmaLabel`, `getDisciplinaInfo`, `resolveTeacherShiftForSlot`**: as duas primeiras sao candidatas a `allocation_helpers.js`; a terceira depende de datalist DOM (deixar no `ui.js` por enquanto); a quarta e ponte com o calendario e nao deveria ser dependencia direta do Gantt — reavaliar o design.
-- **Fase 4d — so entao extrair `gantt_ui.js`**: com os helpers acima disponiveis, o `gantt_ui.js` importa dos modulos neutros (nao do `ui.js`) e o ciclo desaparece. O `ui.js` continua importando do `gantt_ui.js` num sentido unico e seguro.
+**2. Variaveis DOM de nivel de modulo.** O bloco Gantt usa `calStart`/`calEnd` (= `document.getElementById('cal-start'/'cal-end')`, declaradas no topo do `ui.js` L99-100) dentro de `renderTeacherGanttInto`/`renderTurmaGanttInto` como `calStart?.value`. Optional chaining NAO protege identificador NAO-DECLARADO -> `ReferenceError` ao renderizar o Gantt no init -> PLs travavam em "Carregando...". FIX: redeclarar essas refs DOM no topo do `gantt_ui.js` (`const calStart = document.getElementById('cal-start'); const calEnd = document.getElementById('cal-end');`). O modulo e deferred, entao o DOM ja esta pronto.
 
-Em outras palavras: **o Gantt so pode ser extraido depois que os helpers que ele usa forem extraidos primeiro.** Fazer o oposto e o que quebrou o app.
+**3. Mojibake por extracao via PowerShell.** Gerar o `gantt_ui.js` com `Get-Content -Raw` / `Out-File` (PowerShell 5.1 le/escreve como ANSI, nao UTF-8) CORROMPEU todos os acentos, transformando o regex `/[^A-Za-zÀ-ÿ0-9]/` de `getGanttTurnoCode` em range invalido -> `Invalid regular expression: Range out of order`. FIX: fazer a extracao com PYTHON (`io.open(..., encoding='utf-8')`), que preserva UTF-8. NUNCA usar Get-Content/Out-File para mover blocos de codigo com acentos.
+
+**4. Import reverso esquecido (core -> gantt).** Apos extrair, uma funcao que FICOU no `ui.js` (`getSigaaCode` -> chama `getGanttTurnoCode`) passou a referenciar uma funcao movida sem import de volta -> Lista de Ofertas quebrava inteira (getGanttTurnoCode is not defined). FIX: apos extrair, rodar um scanner dos DOIS sentidos: (a) gantt_ui.js chamando funcoes do ui.js; (b) ui.js chamando exports do gantt_ui.js. Comando usado: `python -c "import io,re; src=open('js/ui.js',encoding='utf-8').read(); gantt=set(re.findall(r'export function ([A-Za-z0-9_]+)', open('js/gantt_ui.js',encoding='utf-8').read())); called=set(re.findall(r'(?<![.\w])([A-Za-z0-9_]+)\s*\(', src)); print(sorted((gantt & called) - IMPORTED))"`.
+
+**Divisao final que funcionou (sentido unico ui.js -> gantt_ui.js, sem ciclo):**
+- Fase 4a `allocation_helpers.js`: getAllocationModo, isFaixaAllocation, isPriorityRegularAllocation, isRegularAllocation, isScheduledRegularAllocation, isPendingAllocation, normalizeTeacherNameForMatch, teacherNamesMatch, allocationHasTeacherMatch, getDocenteShortLabel, calculateTeacherTotalCH. Importa store + curso_turma_helpers.
+- Fase 4b `turno_helpers.js`: normalizeConflictSlotLabel, normalizeTurnoOfertaKey, formatTurnoOfertaLabel, getAvailableTurnoOfertaOptions, resolveTurnoOfertaValue, getTurnoNormalizedFromLetter, getTurnoValueFromLetter, getShiftChangeLabel, getNativeTurnoValueForAllocation. Importa store + turns.js.
+- Fase 4c `curso_turma_helpers.js`: getDisciplinaCHGlobal, derivarBloco, getTurmaSelectLabel, getTurmaLabel, getTurmaBaseLabel, getDisciplinaInfo. Importa store + plan_storage.js.
+- Fase 4d `gantt_ui.js`: resolveTeacherShiftForSlot + buildGanttFaixaDaySnapshots/Turno + todo o bloco getGanttTurnoCode..renderPublicTeacherGantt. Importa dos 3 modulos acima + store/calendar/execution_engine/gantt_bidimensional/academic_rules/plan_storage/color_utils/date_utils_ui/ui_feedback. Redeclara calStart/calEnd. O `ui.js` importa de volta: resolveTeacherShiftForSlot, getGanttTurnoConfigs, getGanttTurnoCode, renderGanttChart, renderGanttForActiveMode, getActiveGanttMode, printGanttLandscape.
+
+**Regra de ouro:** ao extrair um bloco, (1) nunca deixe o modulo novo importar do ui.js; (2) redeclare refs DOM de modulo usadas pelo bloco; (3) use Python para mover codigo com acentos; (4) valide os DOIS sentidos de import; (5) teste NO BROWSER com dados reais (subir `python -m http.server` e clicar cada aba), pois node --check/--test nao pegam esses erros.
 
 
 ---
