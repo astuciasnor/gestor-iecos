@@ -84,3 +84,21 @@ export function getDisciplinaInfo(nomeComponente) {
     if (c) return { abrev: c.abreviacao || c.componente, ch: c.ch || 0, codigo: c.codigo || '' };
     return { abrev: nomeComponente, ch: 0, codigo: '' };
 }
+
+
+export function getPeriodoExtenso(periodo) {
+    return normalizePeriodoLetivoCode(periodo) || '-';
+}
+
+export function getBlocoPpcExtenso(turmaId) {
+    const bloco = derivarBloco(turmaId, store.settings?.periodo, store.settings?.termStart);
+    const n = String(bloco || '').match(/^BL(\d+)$/i)?.[1];
+    return n ? n : '-';
+}
+
+export function getPrintAcademicMetaLine(turmaId) {
+    const turma = getTurmaBaseLabel(turmaId);
+    const periodo = getPeriodoExtenso(store.settings?.periodo);
+    const bloco = getBlocoPpcExtenso(turmaId);
+    return 'Turma: ' + turma + '; Per\u00edodo: ' + periodo + '; Bloco PPC: ' + bloco;
+}

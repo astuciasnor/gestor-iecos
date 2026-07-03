@@ -59,7 +59,8 @@ import {
     getTurmaSelectLabel,
     getTurmaLabel,
     getTurmaBaseLabel,
-    getDisciplinaInfo
+    getDisciplinaInfo,
+    getPrintAcademicMetaLine
 } from './curso_turma_helpers.js';
 import {
     resolveTeacherShiftForSlot,
@@ -4167,23 +4168,6 @@ function hasIntensiveConflictByDay(candidate, existing, candidateRange = {}, exi
     return false;
 }
 
-
-function getPeriodoExtenso(periodo) {
-    return normalizePeriodoLetivoCode(periodo) || '-';
-}
-
-function getBlocoPpcExtenso(turmaId) {
-    const bloco = derivarBloco(turmaId, store.settings?.periodo, store.settings?.termStart);
-    const n = String(bloco || '').match(/^BL(\d+)$/i)?.[1];
-    return n ? n : '-';
-}
-
-function getPrintAcademicMetaLine(turmaId) {
-    const turma = getTurmaBaseLabel(turmaId);
-    const periodo = getPeriodoExtenso(store.settings?.periodo);
-    const bloco = getBlocoPpcExtenso(turmaId);
-    return 'Turma: ' + turma + '; Per\u00edodo: ' + periodo + '; Bloco PPC: ' + bloco;
-}
 
 
 function syncAllRegularDates() {
