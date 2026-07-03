@@ -143,7 +143,9 @@ Commit: `refactor(ui): extrai date_utils_ui.js`.
 
 ### FASE 4 — `js/gantt_ui.js` (camada de UI do Gantt legado + interacoes)
 
-**Risco:** medio. **Tamanho estimado:** ~1.800 linhas. E o maior bloco isolavel: funcoes `*Gantt*` formam um cluster coeso que quase nao toca o estado da Grade Semanal.
+**STATUS: BLOQUEADA. Tentativa em 02/07/2026 quebrou o app (PLs e cursos nao carregavam). Revertida via `git reset --hard HEAD~1`. NAO reexecutar como esta descrito abaixo sem antes eliminar o ciclo — veja a nota "Licao aprendida" ao final desta fase.**
+
+**Risco:** alto (originalmente estimado medio). **Tamanho estimado:** ~1.800 linhas. E o maior bloco isolavel: funcoes `*Gantt*` formam um cluster coeso que quase nao toca o estado da Grade Semanal.
 
 Mover o bloco continuo de funcoes (todas com `Gantt` no nome + auxiliares exclusivas do Gantt):
 
@@ -166,6 +168,24 @@ Mover o bloco continuo de funcoes (todas com `Gantt` no nome + auxiliares exclus
 4. NAO mover `renderMonthlyCalendar`, `renderTeacherCalendar` nem nada de calendario nesta fase.
 
 Commit: `refactor(ui): extrai gantt_ui.js (camada de UI do Gantt)`.
+
+#### Licao aprendida (Fase 4, tentativa 02/07/2026)
+
+A extracao direta criou um ciclo `ui.js <-> gantt_ui.js`: o `gantt_ui.js` precisava importar 15 funcoes que ficaram no `ui.js` (`isFaixaAllocation`, `getDisciplinaCHGlobal`, `getTurmaLabel`, `teacherNamesMatch`, `getAvailableTurnoOfertaOptions`, `normalizeTurnoOfertaKey`, `resolveTeacherShiftForSlot` etc.), e o `ui.js` precisava importar 7 funcoes do `gantt_ui.js` (`renderGanttChart`, `renderGanttForActiveMode`, `getGanttTurnoConfigs`, `resolveGanttTurnoForSlot`, `printGanttLandscape`, `getActiveGanttMode`, `renderPublicTeacherGantt`). Testes automatizados passaram, sintaxe passou, mas em runtime alguns bindings importados apareciam como `undefined` no momento em que `initUI` executava — resultado: PLs e cursos nao carregavam.
+
+**Regra nova:** ciclo `ui.js <-> modulo_novo` e PROIBIDO na pratica. Antes de qualquer nova tentativa da Fase 4, executar como pre-requisito:
+
+- **Fase 4a — extrair `js/allocation_helpers.js`**: mover as funcoes puras de classificacao/comparacao de alocacao e docente que hoje vivem no topo do `ui.js`, sem tocar em DOM ou estado do modulo:
+  - `getAllocationModo`, `isFaixaAllocation`, `isPriorityRegularAllocation`, `isRegularAllocation`, `isScheduledRegularAllocation`, `isPendingAllocation`
+  - `teacherNamesMatch`, `allocationHasTeacherMatch`, `normalizeTeacherNameForMatch`, `getDocenteShortLabel`
+- **Fase 4b — extrair `js/turno_helpers.js`**: mover funcoes puras de turno/slot que ficam antes das telas:
+  - `normalizeTurnoOfertaKey`, `formatTurnoOfertaLabel`, `getAvailableTurnoOfertaOptions`, `resolveTurnoOfertaValue`, `getTurnoNormalizedFromLetter`, `getTurnoValueFromLetter`, `getShiftChangeLabel`, `getNativeTurnoValueForAllocation`, `normalizeConflictSlotLabel`
+  - **Cuidado:** algumas dessas funcoes usam `store` — o novo modulo precisa importar `store`. Sem problema, so nao pode importar do `ui.js`.
+- **Fase 4c — avaliar `getDisciplinaCHGlobal`, `getTurmaLabel`, `getDisciplinaInfo`, `resolveTeacherShiftForSlot`**: as duas primeiras sao candidatas a `allocation_helpers.js`; a terceira depende de datalist DOM (deixar no `ui.js` por enquanto); a quarta e ponte com o calendario e nao deveria ser dependencia direta do Gantt — reavaliar o design.
+- **Fase 4d — so entao extrair `gantt_ui.js`**: com os helpers acima disponiveis, o `gantt_ui.js` importa dos modulos neutros (nao do `ui.js`) e o ciclo desaparece. O `ui.js` continua importando do `gantt_ui.js` num sentido unico e seguro.
+
+Em outras palavras: **o Gantt so pode ser extraido depois que os helpers que ele usa forem extraidos primeiro.** Fazer o oposto e o que quebrou o app.
+
 
 ---
 
