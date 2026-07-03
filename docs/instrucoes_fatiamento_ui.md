@@ -196,17 +196,14 @@ Foram TRES causas distintas de quebra, todas descobertas so em runtime no browse
 
 ### FASE 5 — `js/calendarios_ui.js` (calendarios internos e visao docente)
 
-**Risco:** medio. **Tamanho estimado:** ~1.400 linhas.
+**STATUS: CONCLUIDA em 02/07/2026 (commits 8330d90 [5a] + 1f13eb0 [5b] + 4e284a3 [5c]). ui.js caiu de ~10.614 para ~7.482 linhas. Validado no browser: Calendario da Turma e Calendario Docente renderizam sem erro (grid + tabelas resumo + badges de turno + conflitos).**
 
-- `renderMonthlyCalendar` (7910)
-- `getTeacherCalendarTurnoConfigs` (7930), `resolveTeacherShiftForSlot` (7938), `collectSlotsForTurnoValues` (7943), `getSlotsForTeacherShifts` (7968)
-- `buildTurmaCalendarSlots` (7995)
-- `formatConflictDateRange` (8065), `renderTeacherConflictRows` (8071), `renderTeacherCalendar` (8126)
-- `buildCalendarTurmaResumeTable` (10286), `buildCalendarDocenteResumeTable` (10574), `generateCalendarGrid` (10765)
+Como na Fase 4, foi feita em sub-fases para evitar ciclo (os calendarios usam 6 helpers compartilhados com a Grade Semanal, que teve de virar neutro primeiro):
+- **5a** (turno_helpers.js): cleanHorarioLabel, formatIntervaloLabel, isTurnoDividerSlot, buildHorariosForUI, getShiftChangeMeta, getCalendarShiftBadgeHTML. turno_helpers passou a importar getTurnoLetter/mapSlotToTurno de turns.js.
+- **5b** (curso_turma_helpers.js): getPeriodoExtenso, getBlocoPpcExtenso, getPrintAcademicMetaLine.
+- **5c** (calendarios_ui.js): renderMonthlyCalendar, getTeacherCalendarTurnoConfigs, collectSlotsForTurnoValues, getSlotsForTeacherShifts, buildTurmaCalendarSlots, formatConflictDateRange, renderTeacherConflictRows, renderTeacherCalendar, buildCalendarTurmaResumeTable, buildCalendarDocenteResumeTable, generateCalendarGrid. Importa dos modulos neutros + gantt_ui (getGanttTurnoConfigs, resolveTeacherShiftForSlot). Redeclara calStart/calEnd/selViewDocente. ui.js importa de volta renderMonthlyCalendar, renderTeacherCalendar.
 
-**Cuidados:** `generateCalendarGrid` e grande e usa muitos helpers (`getTurmaLabel`, `getHolidayLabelMap`, `getCalendarShiftBadgeHTML` etc.). Antes de mover, liste as dependencias; helpers usados TAMBEM por outras areas (ex.: `getCalendarShiftBadgeHTML`, linha 5178, e usado pela Grade Semanal?) devem permanecer no `ui.js` e ser importados — mas evite ciclo de import. Se houver ciclo, mova o helper para modulo neutro ou reporte.
-
-Commit: `refactor(ui): extrai calendarios_ui.js`.
+Observacoes confirmadas: as funcoes de calendario NAO chamam as de conflito (sem risco de ciclo com a Fase 6). getHolidayLabelMap NAO e usada pelo calendario (fica no ui.js). O bloco de conflitos (Fase 6) fica FISICAMENTE entre os dois grupos de calendario no ui.js — extraiu-se os dois grupos e o bloco de conflitos permaneceu.
 
 ---
 
