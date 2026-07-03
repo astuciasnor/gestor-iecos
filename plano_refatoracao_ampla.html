@@ -597,7 +597,7 @@
           </div>
         </div>
         <div class="meta">
-          Atualizado em 30/03/2026<br />
+          Atualizado em 02/07/2026<br />
           Linha principal: <code>main</code><br />
           Substitui: <code>mapa_revisao_refatoracao.html</code> e <code>roteiro_testes_manuais.html</code>
         </div>
@@ -632,36 +632,36 @@
               <span class="section-icon" aria-hidden="true">&#128640;</span>
               <h2>Status Atual</h2>
             </div>
-            <p class="lead">O projeto saiu da fase de incerteza estrutural e entrou em estabilizacao com limpeza incremental. O motor canonico ja esta na <code>main</code>, o fluxo de publicacao foi validado, e as agendas funcionaram em desktop e celular no estado atual da producao.</p>
+            <p class="lead">O projeto concluiu a convergencia das agendas: <code>agenda_discente.html</code> foi removida e <code>agenda_publica.html</code> assumiu como agenda unica, em arquivo unico multi-PL com seletor de plano. A Grade Semanal ganhou apelidos de slot, badges de edicao e empurrao pausa-e-retoma para componentes intensivas. Turnos combinados, Gantt refinado e publicacao por PL ativa completam a base. A fase agora e de refinamento sobre base madura, nao de mudanca substancial.</p>
             <div class="badge-row">
               <span class="badge">Motor canonico ativo</span>
-              <span class="badge">Gantt validado</span>
-              <span class="badge">Turnos reais funcionando</span>
-              <span class="badge">Agendas publica e discente estaveis</span>
-              <span class="badge">Merge na main concluido</span>
+              <span class="badge">Agenda publica unificada multi-PL</span>
+              <span class="badge">Turnos combinados funcionando</span>
+              <span class="badge">Empurrao pausa-e-retoma</span>
+              <span class="badge">Publicacao por PL ativa</span>
             </div>
           </div>
           <aside class="hero-note" aria-label="Resumo da rodada atual">
             <h3>Janela atual</h3>
             <ul>
-              <li>Projeto em estado confiavel para pausa curta.</li>
-              <li>Proxima retomada prevista em cerca de <strong>2 semanas</strong>.</li>
-              <li>Foco da volta: conflitos, exportacao, importacao e publicacao.</li>
+              <li>Base consolidada; legado da agenda discente eliminado.</li>
+              <li>Foco: refinamento continuo, nao reinvencao.</li>
+              <li>Frentes estruturais restantes: fatiamento do <code>ui.js</code> e QA automatizado.</li>
             </ul>
           </aside>
         </div>
         <div class="summary">
           <div class="stat">
             <div class="label">Produto funcional</div>
-            <div class="value">96%</div>
+            <div class="value">98%</div>
           </div>
           <div class="stat">
             <div class="label">Arquitetura estabilizada</div>
-            <div class="value">93%</div>
+            <div class="value">97%</div>
           </div>
           <div class="stat">
             <div class="label">Fase atual</div>
-            <div class="value">Limpeza</div>
+            <div class="value">Refinamento</div>
           </div>
           <div class="stat">
             <div class="label">Modo de trabalho</div>
@@ -678,7 +678,7 @@
         <div class="grid">
           <article class="card">
             <h4>Grade Semanal</h4>
-            <p>Faixas, datas de inicio, fechamento final e comportamento de sabado ficaram coerentes com a execucao real.</p>
+            <p>Faixas, apelidos de slot, badges de edicao, turnos combinados e empurrao pausa-e-retoma para componentes intensivas, tudo coerente com a execucao real.</p>
           </article>
           <article class="card">
             <h4>Motor Canonico</h4>
@@ -686,11 +686,11 @@
           </article>
           <article class="card">
             <h4>Gantt e Calendarios</h4>
-            <p>O Gantt bidimensional e as agendas passaram a refletir melhor turnos, docentes, turmas e periodo publicado.</p>
+            <p>Barra continua por componente, popover de detalhes, tabela resumo por turma, feriados nomeados e turnos reais em todas as visualizacoes.</p>
           </article>
           <article class="card">
-            <h4>Publicacao</h4>
-            <p>O ciclo <code>Publicar Online</code> + <code>publish_online.py</code> foi validado com a estrutura atual da <code>main</code>.</p>
+            <h4>Agenda Publica Unificada</h4>
+            <p><code>agenda_publica.html</code> virou a agenda unica, em arquivo unico multi-PL com seletor de plano. A agenda discente legada e seu runtime foram removidos.</p>
           </article>
         </div>
       </section>
@@ -723,17 +723,17 @@
               <tr>
                 <td>Publicacao e agenda publica</td>
                 <td><span class="pill done">Consolidado</span></td>
-                <td>Fluxo atual validado; publicacao por PL segue preparada, mas nao ativada.</td>
+                <td>Fluxo validado; publicacao por PL ativa com seletor de plano em arquivo unico.</td>
               </tr>
               <tr>
                 <td>Limpeza interna</td>
-                <td><span class="pill progress">Em progresso</span></td>
-                <td>Ja comecou a remocao de artefatos de baixo risco, com teste e commit.</td>
+                <td><span class="pill done">Avancada</span></td>
+                <td>Agenda discente, runtime legado e artefatos ociosos removidos com teste e commit.</td>
               </tr>
               <tr>
                 <td>Convergencia das agendas</td>
-                <td><span class="pill future">Futuro proximo</span></td>
-                <td><code>agenda_discente.html</code> deve continuar existindo e depois apontar para o mesmo app da agenda publica.</td>
+                <td><span class="pill done">Concluida</span></td>
+                <td><code>agenda_publica.html</code> assumiu como agenda unica multi-PL; <code>agenda_discente.html</code> foi removida.</td>
               </tr>
               <tr>
                 <td>QA automatizado</td>
@@ -749,7 +749,7 @@
           </table>
         </div>
         <div class="callout info">
-          Leitura atual da maturidade: cerca de <strong>95% a 96%</strong> no projeto como um todo. O que mais segura a subida para <strong>98%+</strong> nao e falta de funcionalidade principal, e sim fechamento do legado, modularizacao do <code>ui.js</code>, QA automatizado e ativacao elegante da publicacao por PL.
+          Leitura atual da maturidade: cerca de <strong>97% a 98%</strong> no projeto como um todo. O que falta para <strong>99%+</strong> nao e funcionalidade principal, e sim fatiamento do <code>ui.js</code>, ampliacao do QA automatizado e refinamentos continuos de UI sobre a base ja madura.
         </div>
       </section>
 
@@ -761,12 +761,12 @@
         <ul>
           <li>Nao fazer limpezas em lote sem validacao humana.</li>
           <li>Toda remocao de arquivo deve vir acompanhada de teste rapido e commit proprio.</li>
-          <li>Preservar a URL publica de <code>agenda_discente.html</code> durante a transicao.</li>
-          <li>Nao obrigar o aluno a escolher o PL na agenda publica.</li>
+          <li>Nao obrigar o aluno a escolher o PL na agenda publica (o seletor e opcional).</li>
           <li>Priorizar pequenas correcoes de UI e clareza antes de grandes reorganizacoes novas.</li>
+          <li>Sobre a base atual, preferir refinamento a mudanca substancial.</li>
         </ul>
         <div class="callout info">
-          O projeto ja fez a transicao estrutural dificil. A fase atual nao pede reinvencao; pede acabamento tecnico, reducao de ruido e manutencao segura.
+          O projeto ja fez a transicao estrutural dificil e eliminou o legado das agendas. A fase atual nao pede reinvencao; pede acabamento tecnico, reducao de ruido e manutencao segura.
         </div>
       </section>
 
@@ -786,16 +786,6 @@
             </thead>
             <tbody>
               <tr>
-                <td>Convergencia das agendas</td>
-                <td><span class="pill progress">Planejada</span></td>
-                <td>Fazer <code>agenda_discente.html</code> servir o mesmo app de <code>agenda_publica.html</code> sem perder a URL antiga.</td>
-              </tr>
-              <tr>
-                <td>Publicacao por PL</td>
-                <td><span class="pill future">Preparada</span></td>
-                <td>Ativar <code>plan_directory</code>, atualizar catalogo publico e definir qual PL fica visivel ao aluno.</td>
-              </tr>
-              <tr>
                 <td>Fatiamento do <code>ui.js</code></td>
                 <td><span class="pill progress">Proxima rodada</span></td>
                 <td>Separar o arquivo por responsabilidades: Grade Semanal, Lista de Ofertas, calendarios, Gantt e camada de feedback.</td>
@@ -803,7 +793,7 @@
               <tr>
                 <td>QA automatizado</td>
                 <td><span class="pill progress">Proxima rodada</span></td>
-                <td>Ampliar a cobertura atual com smoke tests para publicacao, agenda publica, agenda discente e fluxos criticos da UI.</td>
+                <td>Ampliar a cobertura atual com smoke tests para publicacao, agenda publica e fluxos criticos da UI.</td>
               </tr>
               <tr>
                 <td>UI leve</td>
@@ -816,9 +806,9 @@
                 <td>Seguir removendo artefatos e arquivos ociosos em blocos pequenos, sempre com teste e commit.</td>
               </tr>
               <tr>
-                <td>Consolidacao de codigo legado</td>
-                <td><span class="pill hold">Depois</span></td>
-                <td>Reavaliar duplicacoes entre runtime legado da agenda discente e arquivos equivalentes na raiz quando a convergencia das agendas estiver mais perto.</td>
+                <td>Evolucao do empurrao de componentes</td>
+                <td><span class="pill progress">Refinamento</span></td>
+                <td>Refinar o empurrao pausa-e-retoma de componentes intensivas conforme o uso real apontar ajustes.</td>
               </tr>
             </tbody>
           </table>
@@ -830,15 +820,15 @@
           <span class="section-icon" aria-hidden="true">&#128260;</span>
           <h2>Transicao das Agendas</h2>
         </div>
-        <p>A estrategia recomendada permanece a mesma:</p>
+        <p>A convergencia foi concluida em 07/2026:</p>
         <ol>
-          <li>manter <code>agenda_discente.html</code> funcional e acessivel;</li>
-          <li>manter <code>agenda_publica.html</code> como frente evolutiva da arquitetura atual;</li>
-          <li>num proximo ciclo, fazer a URL discente servir o mesmo app da agenda publica;</li>
-          <li>so depois de um ciclo letivo validado reavaliar a remocao do runtime legado isolado.</li>
+          <li><code>agenda_discente.html</code> e o runtime legado foram removidos do projeto;</li>
+          <li><code>agenda_publica.html</code> assumiu como agenda unica, mais completa que a versao legada;</li>
+          <li>o arquivo unico atende multiplos PLs com seletor de plano (parametro <code>pl</code> opcional);</li>
+          <li>o aluno continua sem precisar escolher o PL manualmente: ha um plano padrao publicado.</li>
         </ol>
         <div class="callout">
-          A regra de ouro aqui e preservar endereco e previsibilidade. O usuario final nao deve sentir ruptura de URL nem perda de comportamento conhecido.
+          Reversao, se necessaria, e feita via historico do git. As referencias no app, README e documentacao ja apontam apenas para <code>agenda_publica.html</code>.
         </div>
       </section>
 
@@ -847,15 +837,15 @@
           <span class="section-icon" aria-hidden="true">&#128194;</span>
           <h2>Publicacao por PL</h2>
         </div>
-        <p>O projeto ja esta pronto para evoluir sem multiplicar HTMLs publicos. A ideia continua sendo manter uma unica <code>agenda_publica.html</code> e deslocar a selecao do PL para configuracao e catalogo publico.</p>
+        <p>A frente foi ativada mantendo uma unica <code>agenda_publica.html</code>, com a selecao do PL deslocada para configuracao, catalogo publico e seletor no proprio arquivo.</p>
         <ul>
-          <li><code>publicacoes/publicacao_config.json</code> ja existe;</li>
-          <li><code>publicacoes/catalogo_publicacoes.json</code> ja existe;</li>
-          <li><code>tools/publish_online.py</code> ja sabe ler a configuracao;</li>
-          <li>o aluno continua sem precisar escolher o PL manualmente.</li>
+          <li><code>publicacoes/publicacao_config.json</code> em uso;</li>
+          <li><code>publicacoes/catalogo_publicacoes.json</code> em uso;</li>
+          <li><code>tools/publish_online.py</code> le a configuracao e publica o JSON unico;</li>
+          <li>o aluno nao precisa escolher o PL manualmente: ha plano padrao e seletor opcional (ate 3 PLs).</li>
         </ul>
         <div class="callout info">
-          Quando essa frente for ativada, a mudanca certa nao e criar varios <code>agenda_publica_*.html</code>, e sim ativar roteamento por configuracao.
+          O principio se manteve: nenhum <code>agenda_publica_*.html</code> foi multiplicado. O roteamento e por configuracao e parametro de consulta.
         </div>
       </section>
 
@@ -886,11 +876,11 @@
         <ol>
           <li>manter <code>node --test tests/academic_rules.test.mjs</code> como check obrigatorio das limpezas;</li>
           <li>criar smoke tests para <code>publish_online.py</code> e publicacao publica;</li>
-          <li>cobrir carregamento minimo de <code>agenda_publica.html</code> e <code>agenda_discente.html</code>;</li>
+          <li>cobrir carregamento minimo de <code>agenda_publica.html</code> com plano padrao e com seletor de PL;</li>
           <li>adicionar checks simples para regressao de turnos, badges e navegacao critica.</li>
         </ol>
         <div class="callout info">
-          Quando essa frente estiver madura, o projeto fica muito mais perto de <strong>98% a 100%</strong> em confiabilidade operacional.
+          Quando essa frente estiver madura, o projeto fica muito mais perto de <strong>99% a 100%</strong> em confiabilidade operacional.
         </div>
       </section>
 
@@ -904,7 +894,7 @@
           <li>escolher um bloco pequeno de arquivos com baixo risco;</li>
           <li>confirmar que nao ha referencia no app, na publicacao ou na documentacao principal;</li>
           <li>remover;</li>
-          <li>testar <code>index.html</code>, <code>agenda_publica.html</code> e <code>agenda_discente.html</code>;</li>
+          <li>testar <code>index.html</code> e <code>agenda_publica.html</code>;</li>
           <li>commitar logo em seguida;</li>
           <li>retroagir imediatamente se surgir regressao.</li>
         </ol>
@@ -985,12 +975,11 @@
           <li>continuar testes pequenos e frequentes no fluxo principal;</li>
           <li>seguir removendo artefatos ociosos por blocos de baixo risco;</li>
           <li>fatiar <code>js/ui.js</code> por responsabilidade sem mudar o comportamento visivel;</li>
-          <li>ampliar o QA automatizado para publicacao, agendas e fluxos criticos;</li>
+          <li>ampliar o QA automatizado para publicacao, agenda publica e fluxos criticos;</li>
           <li>fazer correcoes minimas de UI conforme os testes apontarem necessidade;</li>
-          <li>preparar o ciclo futuro de convergencia entre agenda discente e agenda publica;</li>
-          <li>deixar a publicacao por PL pronta para ativacao quando houver necessidade real institucional;</li>
-          <li>na proxima rodada, validar com mais profundidade os conflitos por turma e por docente;</li>
-          <li>na proxima rodada, revisar exportacao, importacao e publicacao completa.</li>
+          <li>refinar o empurrao pausa-e-retoma de componentes conforme o uso real;</li>
+          <li>validar com mais profundidade os conflitos por turma e por docente;</li>
+          <li>revisar exportacao, importacao e publicacao completa.</li>
         </ul>
       </section>
 
@@ -999,26 +988,26 @@
           <span class="section-icon" aria-hidden="true">&#9201;</span>
           <h2>Retomada em 2 Semanas</h2>
         </div>
-        <p class="lead">Este painel fica como ponto oficial de retomada do projeto. A expectativa e voltar em cerca de duas semanas para fechar a fase atual e caminhar para a finalizacao completa do app.</p>
+        <p class="lead">Este painel fica como ponto oficial de acompanhamento do projeto. A retomada prevista ocorreu e rendeu a convergencia das agendas, os turnos combinados, o empurrao de componentes e amplos refinamentos de Gantt e calendarios. O ciclo agora e continuo: rodadas curtas de refinamento sobre base madura.</p>
         <div class="timeline">
           <article class="timeline-step">
-            <div class="step-tag">&#128161; Pausa curta</div>
-            <h4>Estado de saida</h4>
-            <p>Projeto estavel na <code>main</code>, agendas publicas funcionando e documentacao atualizada.</p>
+            <div class="step-tag">&#9989; Retomada concluida</div>
+            <h4>Entregas da rodada</h4>
+            <p>Agenda publica unificada multi-PL, remocao do legado discente, turnos combinados, empurrao pausa-e-retoma e Gantt refinado.</p>
           </article>
           <article class="timeline-step">
-            <div class="step-tag">&#129513; Primeira retomada</div>
-            <h4>Testes orientados</h4>
-            <p>Priorizar conflitos por turma e docente, exportacao, importacao e publicacao ponta a ponta.</p>
+            <div class="step-tag">&#129513; Rodada atual</div>
+            <h4>Refinamento continuo</h4>
+            <p>Polimentos de UI, validacao de conflitos por turma e docente, exportacao e importacao ponta a ponta.</p>
           </article>
           <article class="timeline-step">
             <div class="step-tag">&#128736; Proxima frente</div>
             <h4>Frentes estruturais</h4>
-            <p>Avancar no fatiamento do <code>ui.js</code>, no QA automatizado e na preparacao elegante da publicacao por PL.</p>
+            <p>Fatiamento do <code>ui.js</code> por responsabilidade e ampliacao do QA automatizado.</p>
           </article>
         </div>
         <div class="callout info">
-          Objetivo da volta: fechar o app com todas as funcionalidades principais, preservando o metodo que ja deu certo nesta fase final de refatoracao: teste curto, ajuste pequeno, commit limpo e avancos graduais.
+          Objetivo: fechar o app preservando o metodo que ja deu certo: teste curto, ajuste pequeno, commit limpo e avancos graduais. Sobre a base atual, espera-se mais refinamento que mudanca substancial.
         </div>
       </section>
     </main>
@@ -1084,7 +1073,7 @@
         subs: [
           'JSON publico gerado sem erro.',
           'Agenda publica carrega o plano publicado.',
-          'Agenda discente carrega o plano publicado.',
+          'Seletor de PL alterna entre planos publicados.',
           'Cursos, turmas e docentes respeitam o que foi publicado.'
         ]
       },
@@ -1105,17 +1094,17 @@
           'Arquivo removido nao tem referencia no app.',
           'index.html continua abrindo.',
           'agenda_publica.html continua abrindo.',
-          'agenda_discente.html continua abrindo.'
+          'Publicacao online continua coerente.'
         ]
       },
       {
         id: '9',
-        title: 'Convergencia das Agendas',
+        title: 'Agenda Publica Multi-PL',
         subs: [
-          'agenda_discente.html continua existindo como URL publica.',
-          'A futura convergencia nao quebra bookmarks e links.',
-          'O runtime legado so sai depois de validacao forte.',
-          'A transicao continua reversivel.'
+          'Plano padrao carrega sem escolha manual do aluno.',
+          'Seletor de PL funciona com ate 3 planos.',
+          'Feriados nomeados aparecem corretamente.',
+          'Badges de turno respeitam o turno nativo.'
         ]
       },
       {
@@ -1123,14 +1112,14 @@
         title: 'Publicacao por PL',
         subs: [
           'Catalogo e configuracao continuam coerentes.',
-          'Aluno nao precisara escolher PL manualmente.',
-          'O modo plan_directory sera ativado so quando houver necessidade real.',
-          'A mudanca nao deve multiplicar HTMLs publicos.'
+          'Aluno nao precisa escolher PL manualmente.',
+          'O seletor de PL permanece opcional.',
+          'A mudanca nao multiplicou HTMLs publicos.'
         ]
       },
       {
         id: '11',
-        title: 'Rodada de Retomada',
+        title: 'Rodada de Refinamento',
         subs: [
           'Conflitos por turma passam na revisao manual.',
           'Conflitos por docente passam na revisao manual.',

@@ -1,7 +1,7 @@
 # Manual Tecnico do Desenvolvedor - Cardume Planejador Academico (IECOS)
 
-**Versao do sistema:** 3.4
-**Status:** estavel em producao, com motor canonico adotado na `main` e limpeza incremental em andamento
+**Versao do sistema:** 3.5
+**Status:** estavel em producao, agenda publica unificada multi-PL, motor canonico consolidado e fase de refinamento continuo
 **Stack:** HTML5, CSS3, JavaScript ES modules, Python ETL/publicacao, `localStorage`, testes com `node:test`
 
 ---
@@ -80,7 +80,6 @@ Regras:
 |-- img/
 |-- js/
 |   |-- academic_rules.mjs
-|   |-- agenda_discente.js
 |   |-- agenda_publica.js
 |   |-- calendar.js
 |   |-- execution_engine.js
@@ -92,8 +91,6 @@ Regras:
 |   |-- store.js
 |   |-- ui.js
 |   `-- utils.js
-|-- legacy/
-|   `-- agenda_discente_runtime/
 |-- publicacoes/
 |   |-- catalogo_publicacoes.json
 |   `-- publicacao_config.json
@@ -103,7 +100,6 @@ Regras:
 |   |-- convert_data.py
 |   |-- publish_online.py
 |   `-- requirements.txt
-|-- agenda_discente.html
 |-- agenda_publica.html
 |-- alocacoes_publicas.json
 |-- dados_app.json
@@ -122,8 +118,7 @@ Regras:
 - `js/ui.js`: fluxo principal da interface, Grade Semanal, Lista de Ofertas, conflitos e exportacoes.
 - `js/calendar.js`: renderizacao de calendario a partir da execucao real.
 - `js/gantt_bidimensional.js`: renderizacao do Gantt docente bidimensional.
-- `js/agenda_publica.js`: runtime da agenda publica e da consulta docente/discente publicada.
-- `legacy/agenda_discente_runtime/`: runtime preservado da agenda discente legada em producao.
+- `js/agenda_publica.js`: runtime da agenda publica unificada (multi-PL, consulta docente/discente publicada).
 - `tools/publish_online.py`: validacao, copia e eventual push do arquivo publico.
 - `tests/academic_rules.test.mjs`: suite automatizada do nucleo canonico.
 - `js/main.js`: bootstrap, importacao/exportacao e publicacao.
@@ -247,7 +242,7 @@ A Lista de Ofertas tem funcao administrativa e de revisao. O comportamento esper
 - **Calendario da Turma**: leitura do cronograma final da turma, com avisos de mudanca de turno quando houver aula excepcional fora do turno nativo.
 - **Visao do Professor / Calendario Docente**: leitura e auditoria de ocupacao docente com a mesma base canonica e badges de turno.
 - **Gantt bidimensional**: leitura temporal do semestre por docente/equipe, com turnos reais, detalhes de barra e mesmos recortes usados nos calendarios.
-- **Agendas publicas**: `agenda_publica.html` e `agenda_discente.html` coexistem em producao durante a transicao, sem perda da URL antiga.
+- **Agenda publica**: `agenda_publica.html` e a agenda unica em producao, em arquivo unico multi-PL com seletor de plano; a agenda discente legada foi removida em 07/2026.
 
 Essas telas devem consumir a mesma base canonica de execucao.
 
@@ -384,16 +379,15 @@ Arquivos envolvidos:
 
 - `alocacoes_publicas.json`
 - `agenda_publica.html`
-- `agenda_discente.html`
 - `publicacoes/publicacao_config.json`
 - `publicacoes/catalogo_publicacoes.json`
 
-Preparacao futura ja assumida:
+Estado atual da publicacao:
 
 - `publicacoes/publicacao_config.json` define o layout de publicacao;
-- `publicacoes/catalogo_publicacoes.json` sera a fonte para decidir qual PL fica visivel ao aluno;
-- a agenda publica deve continuar sendo uma unica pagina, com fallback para `alocacoes_publicas.json` enquanto o modo legado permanecer ativo;
-- a `agenda_discente.html` segue preservada e publicada em paralelo durante a transicao.
+- `publicacoes/catalogo_publicacoes.json` alimenta o seletor de PL da agenda publica;
+- a agenda publica e uma unica pagina, em arquivo unico multi-PL (ate 3 planos), com plano padrao e fallback para `alocacoes_publicas.json`;
+- o aluno nao precisa escolher o PL manualmente.
 
 ### 9.4. Testes automatizados
 
@@ -417,8 +411,7 @@ Uso recomendado nas limpezas graduais:
 1. rodar a suite automatizada;
 2. testar `index.html`;
 3. testar `agenda_publica.html`;
-4. testar `agenda_discente.html`;
-5. so depois remover ou consolidar arquivos de baixo risco.
+4. so depois remover ou consolidar arquivos de baixo risco.
 
 ---
 
@@ -433,11 +426,11 @@ Direcoes ja assumidas:
 - manter Lista de Ofertas como painel de revisao;
 - preparar exportacoes e publicacao para evolucoes futuras sem reabrir a arquitetura;
 - fazer remocoes de arquivos em ciclos pequenos, sempre acompanhadas de teste e commit;
-- manter a agenda discente legada preservada ate a convergencia completa com a agenda publica.
+- sobre a base atual, priorizar refinamento a mudanca substancial.
 
 Itens ainda em observacao tecnica:
 
 - limpeza final de nomenclaturas internas legadas;
 - extracao mais explicita do motor canonico de execucao;
-- convergencia futura entre `agenda_discente.html` e `agenda_publica.html`;
-- ativacao futura da publicacao por plano letivo sem expor essa escolha ao aluno final.
+- fatiamento do `js/ui.js` por responsabilidade;
+- ampliacao do QA automatizado para publicacao, agenda publica e fluxos criticos da UI.
