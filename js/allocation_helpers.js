@@ -1,4 +1,5 @@
 import { store } from './store.js??v=20260625v';
+import { getDisciplinaCHGlobal } from './curso_turma_helpers.js';
 
 export function getAllocationModo(alloc) {
     return String(alloc?.modo || '').trim().toLowerCase();
@@ -72,4 +73,33 @@ export function getDocenteShortLabel(fullName) {
     const apelido = String(match?.apelido || '').trim();
     if (apelido) return apelido;
     return raw.split(/\s+/)[0] || raw;
+}
+
+export function calculateTeacherTotalCH(teacherName) {
+    if (!teacherName) return 0;
+
+    let totalCH = 0;
+    const handledGroups = new Set();
+
+    store.allocations.forEach(a => {
+        const groupKey = `${a.turmaId}|${a.disciplina}`;
+        if (!handledGroups.has(groupKey)) {
+            let teacherCH = 0;
+            if (a.docentes && a.docentes.length > 0) {
+                const tInfo = a.docentes.find(d => teacherNamesMatch(d?.nome, teacherName));
+                if (tInfo) {
+                    teacherCH = parseInt(tInfo.ch) || 0;
+                }
+            } else if (teacherNamesMatch(a.docente, teacherName)) {
+                teacherCH = getDisciplinaCHGlobal(a.disciplina, a.turmaId);
+            }
+
+            if (teacherCH > 0) {
+                totalCH += teacherCH;
+                handledGroups.add(groupKey);
+            }
+        }
+    });
+
+    return totalCH;
 }
