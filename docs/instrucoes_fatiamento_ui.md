@@ -209,12 +209,17 @@ Observacoes confirmadas: as funcoes de calendario NAO chamam as de conflito (sem
 
 ### FASE 6 — `js/conflitos_ui.js` (auditoria global de professores)
 
-**Risco:** baixo/medio. **Tamanho estimado:** ~300 linhas. Bloco marcado no fonte como `==== NOVO MOTOR: AUDITORIA GLOBAL DE PROFESSORES ====`.
+**STATUS: CONCLUIDA em 03/07/2026 (commits 707b38e [6a] + 6b). ui.js caiu para ~7.178 linhas. Validado no browser (Calendario Docente/Lista/Gantt sem erro apos limpar cache).**
 
-- `detectGlobalTeacherConflicts` (9989)
-- `detectGlobalTeacherConflictsStable` (10083)
-- `updateGlobalConflictsUI` (10215)
-- `refreshTeacherConflictsUI` (10277)
+Feita em 2 sub-fases:
+- **6a** (allocation_helpers.js): getAllocationTeachersForConflict (puro, compartilhado com findConfirmedTeacherConflictForCandidate que fica no ui.js).
+- **6b** (conflitos_ui.js): detectGlobalTeacherConflicts, detectGlobalTeacherConflictsStable, updateGlobalConflictsUI, refreshTeacherConflictsUI. Importa de: store, calendar, utils (isDateOverlap), date_utils_ui, allocation_helpers, turno_helpers, curso_turma_helpers, e calendarios_ui (renderTeacherCalendar). Redeclara selViewDocente. ui.js importa de volta refreshTeacherConflictsUI. As funcoes internas (getInvolvedTeachers, formatDaySummary, getTeacherEventIdentity etc.) sao aninhadas e moveram junto.
+
+Sem risco de ciclo: conflitos_ui -> calendarios_ui (sentido unico; calendarios_ui NAO importa conflitos_ui, confirmado na Fase 5).
+
+**LICAO DE CACHE (importante):** os modulos neutros novos (allocation_helpers.js, turno_helpers.js, etc.) sao importados SEM sufixo `??v=`, entao o navegador os mantem em cache por URL. Quando um desses modulos GANHA um export novo numa fase posterior (ex.: getAllocationTeachersForConflict entrou em allocation_helpers na 6a, mas o arquivo ja estava cacheado desde a 4a), um reload normal serve a versao velha e da `does not provide an export named ...`. Solucao no teste: limpar cache (CDP Network.clearBrowserCache) ou hard-refresh (Ctrl+F5). Em producao o usuario sempre faz Ctrl+F5 apos deploy, entao e seguro — mas vale lembrar.
+
+**SERIE COMPLETA (Fases 1-6):** ui.js foi de 11.136 para ~7.178 linhas (-3.958, -36%), com 11 modulos extraidos: ui_feedback, color_utils, date_utils_ui, allocation_helpers, turno_helpers, curso_turma_helpers, gantt_ui, calendarios_ui, conflitos_ui.
 
 Commit: `refactor(ui): extrai conflitos_ui.js (auditoria global)`.
 
