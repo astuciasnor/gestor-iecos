@@ -24,6 +24,21 @@ import {
     vividHexColor
 } from './color_utils.js';
 import {
+    timeToMinutes,
+    shortDayName,
+    shiftISODate,
+    isValidISODateValue,
+    diffDaysISO,
+    formatCompactFaixaDate,
+    toISODate,
+    addDaysISO,
+    getWeekStartISO,
+    formatDayMonthShort,
+    isDateInsideRange,
+    formatDateBRShortYear,
+    formatDateBR
+} from './date_utils_ui.js';
+import {
     buildSigaaExportPayload,
     computeRemainingFractionalHours,
 
@@ -349,13 +364,6 @@ function wrapGanttInput() {
             }
         });
     }
-}
-
-function timeToMinutes(str) {
-    if (!str) return 99999;
-    const match = str.match(/(\d{1,2}):(\d{2})/);
-    if (!match) return 99999;
-    return parseInt(match[1]) * 60 + parseInt(match[2]);
 }
 
 function setupClearButtonsSidebar() {
@@ -764,11 +772,6 @@ function updateWeeklyFaixaHoursDisplay(previewData = null) {
     const excede = total - targetCH;
     setConsistency(`A CH alocada excede a meta em ${excede}h. Isso nao bloqueia a insercao; se quiser, ajuste o padrao ou crie uma nova faixa depois.`, 'state-warn');
 }
-function shortDayName(dayNumber) {
-    const map = { 1: 'Seg', 2: 'Ter', 3: 'Qua', 4: 'Qui', 5: 'Sex', 6: 'Sab' };
-    return map[dayNumber] || String(dayNumber);
-}
-
 function formatSlotLabel(slot) {
     const text = String(slot || '').trim();
     if (!text) return '';
@@ -1393,13 +1396,6 @@ function deactivateDrawingMode() {
     renderWeeklyGrid();
 }
 
-function shiftISODate(dateStr, days) {
-    if (!dateStr) return '';
-    const d = new Date(`${dateStr}T12:00:00`);
-    d.setDate(d.getDate() + days);
-    return d.toISOString().split('T')[0];
-}
-
 function normalizeDisciplinaInputValue(rawValue) {
     return String(rawValue || '').replace(/\s*\(\s*\d+\s*h\s*\)\s*$/i, '').trim();
 }
@@ -1656,13 +1652,6 @@ function getActiveDrawingFaixaRange() {
 function rangeOverlaps(rangeA, rangeB) {
     if (!rangeA?.start || !rangeA?.end || !rangeB?.start || !rangeB?.end) return true;
     return isDateOverlap(rangeA.start, rangeA.end, rangeB.start, rangeB.end);
-}
-
-function isValidISODateValue(value) {
-    const text = String(value || '').trim();
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(text)) return false;
-    const date = new Date(`${text}T12:00:00`);
-    return !Number.isNaN(date.getTime());
 }
 
 function getLastValidFaixaFromUI() {
@@ -2205,14 +2194,6 @@ function findTurmaConflictForCandidateExecution(candidateAlloc, execution = {}) 
     return null;
 }
 
-function diffDaysISO(fromDate, toDate) {
-    if (!fromDate || !toDate) return 0;
-    const from = new Date(`${fromDate}T12:00:00`).getTime();
-    const to = new Date(`${toDate}T12:00:00`).getTime();
-    if (!Number.isFinite(from) || !Number.isFinite(to)) return 0;
-    return Math.round((to - from) / (24 * 60 * 60 * 1000));
-}
-
 function shiftFaixasByDays(faixas = [], deltaDays = 0) {
     return (Array.isArray(faixas) ? faixas : [])
         .map((faixa) => normalizeFaixaEntry(faixa))
@@ -2626,12 +2607,6 @@ function setupWeekAutoPositionControls() {
             syncWeekAutoPositionControls();
         });
     });
-}
-
-function formatCompactFaixaDate(value) {
-    const raw = String(value || '').trim();
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(raw)) return 'dd/mm/aaaa';
-    return `${raw.slice(8, 10)}/${raw.slice(5, 7)}/${raw.slice(0, 4)}`;
 }
 
 function refreshCompactFaixaDateDisplay(input) {
@@ -3211,35 +3186,6 @@ function hydrateFaixasFromComponente(allocation, options = {}) {
     return resolved;
 }
 
-function toISODate(dateObj) {
-    return dateObj.toISOString().split('T')[0];
-}
-
-function addDaysISO(dateStr, days) {
-    const d = new Date(dateStr + 'T12:00:00');
-    d.setDate(d.getDate() + days);
-    return toISODate(d);
-}
-
-function getWeekStartISO(dateStr) {
-    if (!dateStr) return '';
-    const d = new Date(`${dateStr}T12:00:00`);
-    if (Number.isNaN(d.getTime())) return '';
-    const dow = d.getDay();
-    const delta = dow === 0 ? -6 : (1 - dow);
-    d.setDate(d.getDate() + delta);
-    return toISODate(d);
-}
-
-function formatDayMonthShort(dateStr) {
-    if (!dateStr) return '';
-    const d = new Date(`${dateStr}T12:00:00`);
-    if (Number.isNaN(d.getTime())) return '';
-    const meses = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
-    const dd = String(d.getDate()).padStart(2, '0');
-    return `${dd}/${meses[d.getMonth()]}`;
-}
-
 function getHolidayLabelMap() {
     const map = new Map();
     const feriados = Array.isArray(store.rawData?.feriados) ? store.rawData.feriados : [];
@@ -3543,13 +3489,6 @@ function setupWeeklyWeekNavigator() {
     updateWeeklyNavigatorLabel();
     updateWeeklySavePatternButton();
     updateWeeklyFaixaNavButtons();
-}
-
-function isDateInsideRange(dateStr, start, end) {
-    if (!dateStr) return false;
-    const s = start || dateStr;
-    const e = end || s;
-    return dateStr >= s && dateStr <= e;
 }
 
 function isAllocationActiveInWeeklyCell(alloc, dayNumber, dateStr, horarioStr) {
@@ -5022,14 +4961,6 @@ function resolveOfficialPeriodoLetivoPlan(preferredMeta = null) {
         preferredMeta: fallback,
         fallbackMeta: getSuggestedOfficialPeriodoLetivoPlan() || fallback
     });
-}
-
-function formatDateBRShortYear(dateStr) {
-    if (!dateStr || typeof dateStr !== 'string') return '';
-    const parts = dateStr.split('-');
-    if (parts.length !== 3) return dateStr;
-    const [yyyy, mm, dd] = parts;
-    return `${dd}/${mm}/${yyyy.slice(-2)}`;
 }
 
 function buildPeriodoLetivoOptionLabel(plan) {
@@ -10885,11 +10816,6 @@ function generateCalendarGrid(container, turmaId, docenteName, start, end, title
         monthDiv.appendChild(grid);
         container.appendChild(monthDiv);
     });
-}
-
-function formatDateBR(dateStr) {
-    if (!dateStr) return '';
-    return dateStr.split('-').reverse().join('/');
 }
 
 function switchTab(tabId) {
