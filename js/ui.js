@@ -45,7 +45,13 @@ import {
     getTurnoNormalizedFromLetter,
     getTurnoValueFromLetter,
     getShiftChangeLabel,
-    getNativeTurnoValueForAllocation
+    getNativeTurnoValueForAllocation,
+    cleanHorarioLabel,
+    formatIntervaloLabel,
+    isTurnoDividerSlot,
+    buildHorariosForUI,
+    getShiftChangeMeta,
+    getCalendarShiftBadgeHTML
 } from './turno_helpers.js';
 import {
     getDisciplinaCHGlobal,
@@ -449,36 +455,6 @@ function addClearXToField(inputEl, inputId) {
         parent.appendChild(btn);
     }
     toggleVisibility();
-}
-
-function cleanHorarioLabel(s) {
-    const str = (s ?? '').toString();
-    const m = str.match(/\b\d{1,2}:\d{2}\s*[-–]\s*\d{1,2}:\d{2}\b/);
-    if (m) return m[0];
-    return str;
-}
-
-function formatIntervaloLabel(s) {
-    const str = (s ?? '').toString().trim();
-    if (!str) return str;
-    if (str.toUpperCase().startsWith('INTERVALO')) {
-        return 'Intervalo' + str.slice('INTERVALO'.length);
-    }
-    if (str.toLowerCase().startsWith('intervalo')) {
-        return 'Intervalo' + str.slice('intervalo'.length);
-    }
-    return str;
-}
-
-function buildHorariosForUI() {
-    const horariosRaw = store.getHorariosTurma() || [];
-    return horariosRaw
-        .map((h) => {
-            const s = String(h ?? '');
-            if (s.toUpperCase().includes('INTERVALO')) return formatIntervaloLabel(s);
-            return cleanHorarioLabel(s);
-        })
-        .filter((s) => s && s.trim().length > 0);
 }
 
 function applyWeeklyGridRowHeightScale() {
@@ -4512,87 +4488,6 @@ function getOfficialPeriodoLetivoPlans() {
     return plans;
 }
 
-function getShiftChangeMeta(allocLike = {}, slotLabel = '', dayOfWeek = 0, dateStr = '') {
-    const nativeTurnoValue = getNativeTurnoValueForAllocation(allocLike);
-    const nativeTurnoNorm = normalizeTurnoOfertaKey(nativeTurnoValue);
-    const currentLetter = getTurnoLetter(slotLabel);
-    const currentTurnoNorm = getTurnoNormalizedFromLetter(currentLetter);
-    const isShiftChange = !!(
-        nativeTurnoNorm
-        && currentTurnoNorm
-        && nativeTurnoNorm !== currentTurnoNorm
-    );
-    let mappedSlot = slotLabel;
-    if (isShiftChange && slotLabel) {
-        const normalizedSlotKey = normalizeConflictSlotLabel(slotLabel);
-        const actualDateSlots = dateStr
-            && allocLike?.executionByDate
-            && Array.isArray(allocLike.executionByDate[dateStr])
-            ? allocLike.executionByDate[dateStr]
-            : [];
-        const baseSlots = Array.isArray(allocLike?.horariosBase) && allocLike.horariosBase.length > 0
-            ? allocLike.horariosBase
-            : [];
-
-        if (baseSlots.length > 0 && actualDateSlots.length > 0) {
-            const slotIndex = actualDateSlots.findIndex((entry) => normalizeConflictSlotLabel(entry) === normalizedSlotKey);
-            if (slotIndex >= 0) {
-                mappedSlot = cleanHorarioLabel(baseSlots[slotIndex] || baseSlots[baseSlots.length - 1] || slotLabel);
-            }
-        }
-
-        if (mappedSlot === slotLabel) {
-            mappedSlot = mapSlotToTurno(
-                slotLabel,
-                getTurnoValueFromLetter(currentLetter),
-                nativeTurnoValue,
-                store.getActiveHorariosPorTurno()
-            );
-        }
-    }
-    const badgeLabel = isShiftChange ? getShiftChangeLabel(currentLetter) : '';
-    const badgeHTML = badgeLabel
-        ? `<span style="display:inline-block; font-size:0.65em; background:#e67e22; color:#fff; padding:1px 4px; border-radius:3px; margin-left:2px; font-weight:bold;" title="Mudou de turno: aula no turno ${badgeLabel}">&#9888; ${badgeLabel}</span>`
-        : '';
-
-    return {
-        nativeTurnoValue,
-        nativeTurnoNorm,
-        currentLetter,
-        currentTurnoNorm,
-        isShiftChange,
-        mappedSlot,
-        badgeLabel,
-        badgeHTML
-    };
-}
-
-
-function getCalendarShiftBadgeHTML(allocLike = {}, slotLabel = '', dayOfWeek = 0, dateStr = '') {
-    const effectiveSlot = String(
-        slotLabel
-        || allocLike?.horario
-        || (Array.isArray(allocLike?.horariosOcupados) ? allocLike.horariosOcupados[0] : '')
-        || ''
-    ).trim();
-
-    const shiftMeta = getShiftChangeMeta(allocLike, effectiveSlot, dayOfWeek, dateStr);
-    if (shiftMeta.badgeHTML) return shiftMeta.badgeHTML;
-
-    if (!(allocLike?.sabadoManha && dayOfWeek === 6)) return '';
-
-    const fallbackLetter = getTurnoLetter(effectiveSlot);
-    const fallbackLabel = getShiftChangeLabel(fallbackLetter);
-    if (!fallbackLabel) return '';
-
-    // Só é mudança de turno se o turno da aula de sábado difere do turno nativo da turma.
-    // Turmas cujo turno padrão já é o mesmo (ex.: turma de Manhã com sábado de manhã) não recebem badge.
-    const fallbackTurnoNorm = getTurnoNormalizedFromLetter(fallbackLetter);
-    const nativeTurnoNorm = normalizeTurnoOfertaKey(getNativeTurnoValueForAllocation(allocLike));
-    if (fallbackTurnoNorm && nativeTurnoNorm && fallbackTurnoNorm === nativeTurnoNorm) return '';
-
-    return `<span style="display:inline-block; font-size:0.65em; background:#e67e22; color:#fff; padding:1px 4px; border-radius:3px; margin-left:2px; font-weight:bold;" title="Mudou de turno: aula no turno ${fallbackLabel}">&#9888; ${fallbackLabel}</span>`;
-}
 
 function populateTurnoOfertaOptions(preferredValue = store.settings.turnoOferta || '') {
     if (!selTurnoOferta) return;
@@ -6062,17 +5957,6 @@ function createCell(classNames, text) {
     div.className = classNames;
     div.textContent = text;
     return div;
-}
-
-function isTurnoDividerSlot(slotLabel = '') {
-    const normalized = String(slotLabel || '').trim();
-    // Considera apenas o horario de INICIO do slot. Caso contrario, uma faixa como
-    // "17:40-18:30" casaria com "18:30" (fim) e desenharia uma divisoria indevida.
-    const startMatch = normalized.match(/\d{1,2}:\d{2}/);
-    const start = startMatch ? startMatch[0] : '';
-    // 10:20 indica o início da aula após o intervalo da manhã (pós-10:00)
-    // 13:30 inicia o turno da tarde e 18:30 o da noite
-    return start === '10:20' || start === '13:30' || start === '18:30';
 }
 
 function renderSlotContent(cell, allocs, dayOfWeek = 0) {
