@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cardume – Planejador Acadêmico | IECOS</title>
-    <link rel="stylesheet" href="css/style.css??v=20260627v7">
+    <link rel="stylesheet" href="css/style.css??v=20260627v23">
 
     <style>
         :root {
@@ -719,26 +719,6 @@
 
                     <datalist id="list-docentes"></datalist>
 
-                    <div id="auto-week-position-row" class="week-autopos-row"
-                        title="Apenas navega&ccedil;&atilde;o: reposiciona a grade ao trocar de componente.">
-                        <label for="chk-auto-week-position" class="week-autopos-toggle">
-                            <input type="checkbox" id="chk-auto-week-position">
-                            <span>Auto-posicionar semana</span>
-                        </label>
-                        <div id="auto-week-position-modes" class="week-autopos-modes hidden">
-                            <label class="week-autopos-mode" for="radio-auto-week-start">
-                                <input type="radio" id="radio-auto-week-start" name="auto-week-position-mode"
-                                    value="inicio" checked>
-                                <span>In&iacute;cio</span>
-                            </label>
-                            <label class="week-autopos-mode" for="radio-auto-week-end">
-                                <input type="radio" id="radio-auto-week-end" name="auto-week-position-mode"
-                                    value="fim">
-                                <span>Fim</span>
-                            </label>
-                        </div>
-                    </div>
-
                 <!-- Campo de Sub-grupo: aparece automaticamente quando a mesma disciplina já existe na turma -->
                 <div id="container-sub-turma" class="form-group hidden">
                     <label style="color: #feffcc;">
@@ -756,7 +736,7 @@
 
                 <small class="hidden" style="display:block; color:#bdc3c7; margin-top:8px; font-size:0.82em; line-height:1.45;">
                     A definição de faixas, datas e marcação de slots agora acontece exclusivamente na aba
-                    <b>Grade Semanal</b>.
+                    <b>Alocar Componentes</b>.
                 </small>
             </div>
 
@@ -789,101 +769,124 @@
 
             <header class="top-bar no-print">
                 <nav class="tabs" style="flex-grow: 1;">
-                    <button class="tab-btn active" data-tab="weekly">Grade Semanal</button>
+                    <button class="tab-btn tab-btn--oferta active" data-tab="weekly">Alocar Componentes</button>
+                    <button class="tab-btn tab-btn--oferta" data-tab="list">Lista de Ofertas</button>
                     <button class="tab-btn" data-tab="monthly">Calendário da Turma</button>
                     <button class="tab-btn" data-tab="teacher">Calendário Docente</button>
-                    <button class="tab-btn" data-tab="list">Lista de Ofertas</button>
-                    <button class="tab-btn" data-tab="gantt">📊 Gráfico Gantt</button>
                     <button class="tab-btn" data-tab="tutorial" style="color: var(--accent);">❓ Ajuda</button>
                 </nav>
 
                 <span class="print-hint no-print" title="A 'Microsoft Print to PDF' sai em retrato. Use 'Salvar como PDF' para sair em paisagem automaticamente.">💡 Para PDF em paisagem, use <strong>“Salvar como PDF”</strong></span>
                 <button onclick="window.print()" class="btn-print" title="Dica: no diálogo de impressão escolha 'Salvar como PDF' para sair em paisagem (a 'Microsoft Print to PDF' sai em retrato).">🖨️ Imprimir</button>
+
+                <!-- Botao de Instrucoes de preenchimento: exibido no header APENAS na aba Alocacao de Componentes (grade semanal) (ver CSS :has). O popover (weekly-instructions-body) e position:fixed, posicionado por JS a partir deste botao. -->
+                <div class="weekly-instructions-popover weekly-instructions-card is-collapsed" id="weekly-instructions-card">
+                    <button type="button" id="weekly-instructions-toggle" class="weekly-instructions-toggle" aria-expanded="false" aria-controls="weekly-instructions-body" aria-haspopup="dialog">
+                        <span class="weekly-instructions-icon" aria-hidden="true">&#8505;&#65039;</span>
+                        <h3>Instru&ccedil;&otilde;es de preenchimento</h3>
+                        <span class="weekly-instructions-chevron" aria-hidden="true">&#9662;</span>
+                    </button>
+                    <div id="weekly-instructions-body" class="weekly-instructions-body" role="dialog" aria-label="Instru&ccedil;&otilde;es de preenchimento">
+                        <div class="wi-header">
+                            <span class="wi-header-icon" aria-hidden="true">&#129517;</span>
+                            <div>
+                                <h4 class="wi-title">Como preencher a aba Alocar Componentes</h4>
+                                <p class="wi-subtitle">Siga os passos na ordem para montar a oferta da turma.</p>
+                            </div>
+                        </div>
+                        <ol class="wi-steps">
+                            <li class="wi-step wi-step--first">
+                                <span class="wi-step-num">1</span>
+                                <div class="wi-step-text">
+                                    <span class="wi-step-emoji" aria-hidden="true">&#128197;&#65039;</span>
+                                    <strong>Selecione o per&iacute;odo letivo do ano</strong> (ex.: 2026.1). Ele define o calend&aacute;rio-base de todo o planejamento.
+                                </div>
+                            </li>
+                            <li class="wi-step">
+                                <span class="wi-step-num">2</span>
+                                <div class="wi-step-text">
+                                    <span class="wi-step-emoji" aria-hidden="true">&#127891;</span>
+                                    Selecione o <strong>curso</strong> e a <strong>turma</strong> do IECOS.
+                                </div>
+                            </li>
+                            <li class="wi-step">
+                                <span class="wi-step-num">3</span>
+                                <div class="wi-step-text">
+                                    <span class="wi-step-emoji" aria-hidden="true">&#128218;</span>
+                                    Selecione a <strong>componente curricular</strong> &mdash; individualmente ou <strong>por bloco</strong>. No modo por bloco, v&aacute; &agrave; aba <strong>Lista de ofertas</strong> para editar a componente e alocar o(s) <strong>docente(s)</strong>.
+                                </div>
+                            </li>
+                            <li class="wi-step">
+                                <span class="wi-step-num">4</span>
+                                <div class="wi-step-text">
+                                    <span class="wi-step-emoji" aria-hidden="true">&#127919;</span>
+                                    Defina o <strong>in&iacute;cio da 1&ordf; faixa</strong> pelo calend&aacute;rio. Essa data alimenta a componente e a Faixa&nbsp;1.
+                                </div>
+                            </li>
+                            <li class="wi-step">
+                                <span class="wi-step-num">5</span>
+                                <div class="wi-step-text">
+                                    <span class="wi-step-emoji" aria-hidden="true">&#128433;&#65039;</span>
+                                    Na grade, <strong>desenhe o padr&atilde;o de hor&aacute;rios</strong> clicando ou arrastando sobre os slots dos dias.
+                                </div>
+                            </li>
+                            <li class="wi-step">
+                                <span class="wi-step-num">6</span>
+                                <div class="wi-step-text">
+                                    <span class="wi-step-emoji" aria-hidden="true">&#128256;</span>
+                                    Para <strong>redistribuir a carga hor&aacute;ria</strong>, clique no n&uacute;mero <strong>2</strong> ou <strong>3</strong>, depois no slot da data de in&iacute;cio do novo padr&atilde;o e, por fim, desenhe os slots dessa nova faixa.
+                                </div>
+                            </li>
+                            <li class="wi-step">
+                                <span class="wi-step-num">7</span>
+                                <div class="wi-step-text">
+                                    <span class="wi-step-emoji" aria-hidden="true">&#10024;</span>
+                                    Ao <strong>salvar</strong>, se o &uacute;ltimo dia ficar quebrado, o sistema prepara automaticamente a Faixa&nbsp;2 cobrindo o pen&uacute;ltimo e o &uacute;ltimo dia real de aula para ajuste fino.
+                                </div>
+                            </li>
+                        </ol>
+                        <div class="wi-note">
+                            <span class="wi-note-icon" aria-hidden="true">&#128161;</span>
+                            <div><strong>O que &eacute; uma faixa?</strong> &Eacute; o regime de hor&aacute;rios v&aacute;lido em um intervalo de datas. Quando uma nova faixa come&ccedil;a, ela substitui o padr&atilde;o anterior.</div>
+                        </div>
+                    </div>
+                </div>
             </header>
 
             <div id="feedback-msg" class="feedback hidden"></div>
 
             <section id="tab-weekly" class="tab-content active">
-                <div class="weekly-top-layout">
-                    <div class="weekly-top-bar">
-                        <div class="weekly-instructions-popover weekly-instructions-card is-collapsed" id="weekly-instructions-card">
-                            <button type="button" id="weekly-instructions-toggle" class="weekly-instructions-toggle" aria-expanded="false" aria-controls="weekly-instructions-body" aria-haspopup="dialog">
-                                <span class="weekly-instructions-icon" aria-hidden="true">&#8505;&#65039;</span>
-                                <h3>Instru&ccedil;&otilde;es de preenchimento</h3>
-                                <span class="weekly-instructions-chevron" aria-hidden="true">&#9662;</span>
-                            </button>
-                            <div id="weekly-instructions-body" class="weekly-instructions-body" role="dialog" aria-label="Instru&ccedil;&otilde;es de preenchimento">
-                                <div class="wi-header">
-                                    <span class="wi-header-icon" aria-hidden="true">&#129517;</span>
-                                    <div>
-                                        <h4 class="wi-title">Como preencher a Grade Semanal</h4>
-                                        <p class="wi-subtitle">Siga os passos na ordem para montar a oferta da turma.</p>
-                                    </div>
-                                </div>
-                                <ol class="wi-steps">
-                                    <li class="wi-step wi-step--first">
-                                        <span class="wi-step-num">1</span>
-                                        <div class="wi-step-text">
-                                            <span class="wi-step-emoji" aria-hidden="true">&#128197;&#65039;</span>
-                                            <strong>Selecione o per&iacute;odo letivo do ano</strong> (ex.: 2026.1). Ele define o calend&aacute;rio-base de todo o planejamento.
-                                        </div>
-                                    </li>
-                                    <li class="wi-step">
-                                        <span class="wi-step-num">2</span>
-                                        <div class="wi-step-text">
-                                            <span class="wi-step-emoji" aria-hidden="true">&#127891;</span>
-                                            Selecione o <strong>curso</strong> e a <strong>turma</strong> do IECOS.
-                                        </div>
-                                    </li>
-                                    <li class="wi-step">
-                                        <span class="wi-step-num">3</span>
-                                        <div class="wi-step-text">
-                                            <span class="wi-step-emoji" aria-hidden="true">&#128218;</span>
-                                            Selecione a <strong>componente curricular</strong> &mdash; individualmente ou <strong>por bloco</strong>. No modo por bloco, v&aacute; &agrave; aba <strong>Lista de ofertas</strong> para editar a componente e alocar o(s) <strong>docente(s)</strong>.
-                                        </div>
-                                    </li>
-                                    <li class="wi-step">
-                                        <span class="wi-step-num">4</span>
-                                        <div class="wi-step-text">
-                                            <span class="wi-step-emoji" aria-hidden="true">&#127919;</span>
-                                            Defina o <strong>in&iacute;cio da 1&ordf; faixa</strong> pelo calend&aacute;rio. Essa data alimenta a componente e a Faixa&nbsp;1.
-                                        </div>
-                                    </li>
-                                    <li class="wi-step">
-                                        <span class="wi-step-num">5</span>
-                                        <div class="wi-step-text">
-                                            <span class="wi-step-emoji" aria-hidden="true">&#128433;&#65039;</span>
-                                            Na grade, <strong>desenhe o padr&atilde;o de hor&aacute;rios</strong> clicando ou arrastando sobre os slots dos dias.
-                                        </div>
-                                    </li>
-                                    <li class="wi-step">
-                                        <span class="wi-step-num">6</span>
-                                        <div class="wi-step-text">
-                                            <span class="wi-step-emoji" aria-hidden="true">&#128256;</span>
-                                            Para <strong>redistribuir a carga hor&aacute;ria</strong>, clique no n&uacute;mero <strong>2</strong> ou <strong>3</strong>, depois no slot da data de in&iacute;cio do novo padr&atilde;o e, por fim, desenhe os slots dessa nova faixa.
-                                        </div>
-                                    </li>
-                                    <li class="wi-step">
-                                        <span class="wi-step-num">7</span>
-                                        <div class="wi-step-text">
-                                            <span class="wi-step-emoji" aria-hidden="true">&#10024;</span>
-                                            Ao <strong>salvar</strong>, se o &uacute;ltimo dia ficar quebrado, o sistema prepara automaticamente a Faixa&nbsp;2 cobrindo o pen&uacute;ltimo e o &uacute;ltimo dia real de aula para ajuste fino.
-                                        </div>
-                                    </li>
-                                </ol>
-                                <div class="wi-note">
-                                    <span class="wi-note-icon" aria-hidden="true">&#128161;</span>
-                                    <div><strong>O que &eacute; uma faixa?</strong> &Eacute; o regime de hor&aacute;rios v&aacute;lido em um intervalo de datas. Quando uma nova faixa come&ccedil;a, ela substitui o padr&atilde;o anterior.</div>
-                                </div>
-                            </div>
-                        </div>
+                <!-- Indicador unico de estado/proximo passo (sempre visivel). Populado
+                     por updateWeeklyContextNote() em js/ui.js a partir do estado atual. -->
+                <div id="weekly-status-bar" class="weekly-status-bar tone-info no-print" role="status" aria-live="polite">
+                    <span class="weekly-status-icon" aria-hidden="true">&#127919;</span>
+                    <div class="weekly-status-text">
+                        <span class="weekly-status-title">Comece selecionando curso e turma</span>
+                        <span class="weekly-status-hint">Na barra lateral, escolha o curso do IECOS e uma turma v&aacute;lida.</span>
                     </div>
+                    <span id="weekly-status-chip" class="weekly-status-chip hidden" aria-hidden="true"></span>
+                </div>
+                <!-- Nota discreta e dispensavel: avisa que ha um dia livre antes da
+                     ultima componente (gapBefore). Botoes: Ciente / Nao avisar mais. -->
+                <div id="weekly-gap-advisory" class="weekly-gap-advisory hidden no-print" role="note">
+                    <span class="wga-icon" aria-hidden="true">&#128161;</span>
+                    <span class="wga-text" id="weekly-gap-advisory-text"></span>
+                    <span class="wga-actions">
+                        <button type="button" id="btn-gap-ack" class="wga-btn">Ciente</button>
+                        <button type="button" id="btn-gap-mute" class="wga-btn wga-btn--muted">N&atilde;o avisar mais</button>
+                    </span>
+                </div>
+                <div class="weekly-top-layout">
                     <div class="weekly-faixas-stack">
                         <div id="container-faixas-componente" class="weekly-faixas-panel no-print">
                             <div class="weekly-faixas-title">
                                 <span id="weekly-faixas-title-prefix">Datas e CH das Faixas da Componente</span>
                                 <span id="weekly-faixas-title-disc" class="weekly-faixas-title-disc hidden"></span>
                             </div>
+                            <p class="weekly-faixas-help no-print">
+                                <span class="wfh-item"><span class="wfh-badge wfh-badge--f1">Faixa&nbsp;1</span> hor&aacute;rio inicial &mdash; escolha a <b>data no calend&aacute;rio</b> abaixo.</span>
+                                <span class="wfh-item"><span class="wfh-badge wfh-badge--fx">Faixas&nbsp;2&nbsp;e&nbsp;3</span> <i>(opcionais)</i> mudam o hor&aacute;rio no meio do per&iacute;odo: <b>clique no n&ordm; da faixa</b> e depois num dia da grade.</span>
+                            </p>
                             <div class="weekly-faixas-main">
                                 <table class="weekly-faixas-table">
                                     <colgroup>
@@ -1001,9 +1004,9 @@
                                 <button id="btn-week-next" type="button" class="btn-week-nav btn-week-shift"><span class="btn-label-two-line"><span>Proxima</span><span>Semana</span></span></button>
                                 <button id="btn-faixa-prev" type="button" class="btn-week-nav btn-week-faixa" disabled><span class="btn-label-two-line"><span>Faixa</span><span>Anterior</span></span></button>
                                 <button id="btn-faixa-next" type="button" class="btn-week-nav btn-week-faixa" disabled><span class="btn-label-two-line"><span>Proxima</span><span>Faixa</span></span></button>
-                                <label for="chk-sabado-manha" class="btn-week-nav" style="display:flex; flex-direction:row; align-items:center; justify-content:center; gap:6px; background:#fff3cd; color:#856404; border:1px solid #ffeeba; cursor:pointer; padding: 0 4px;" title="Salvar aulas de sábado atreladas ao equivalente destas faixas no turno da Manhã">
-                                    <input type="checkbox" id="chk-sabado-manha" checked style="margin:0; width:16px; height:16px; cursor:pointer; flex-shrink: 0;">
-                                    <span class="btn-label-two-line" style="font-size:0.75rem; font-weight:bold; white-space:nowrap; line-height:1.1;"><span>Sábado p/</span><span>Manhã</span></span>
+                                <label for="chk-sabado-manha" class="btn-week-nav weekly-sabado-toggle" title="Salvar aulas de sábado atreladas ao equivalente destas faixas no turno da Manhã">
+                                    <input type="checkbox" id="chk-sabado-manha" checked class="weekly-sabado-check">
+                                    <span class="btn-label-two-line weekly-sabado-label"><span>Sábado p/</span><span>Manhã</span></span>
                                 </label>
                                 <button id="btn-add-oferta" type="button" class="btn-week-nav btn-week-save-comp"><span class="btn-label-two-line"><span>Salvar</span><span>Componente</span></span></button>
                                 <button id="btn-undo-alloc" type="button" class="btn-week-nav btn-week-undo hidden" disabled title="Desfazer a última inserção e voltar ao estado anterior das alocações"><span class="btn-label-two-line"><span>Desfazer</span><span>Inserção</span></span></button>
@@ -1052,27 +1055,76 @@
             </section>
 
             <section id="tab-monthly" class="tab-content">
-                <div class="calendar-controls no-print">
-                    <label>Período de Visualização:</label>
-                    <input type="date" id="cal-start" value="2025-10-13"> a
-                    <input type="date" id="cal-end" value="2026-02-27">
-                    <button id="btn-gerar-cal" class="btn-secondary"
-                        style="position: fixed; top: 85px; right: 30px; z-index: 999; background: var(--primary); color: white; padding: 12px 24px; border-radius: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); font-weight: bold; font-size: 1rem; cursor: pointer; transition: transform 0.2s;">
-                        🔄 Atualizar
-                    </button>
+                <div class="subtab-bar subtab-bar--stacked no-print">
+                    <div class="subtab-switch" role="tablist" aria-label="Visualizações da turma">
+                        <button type="button" class="subtab-btn active" data-subtab="turma-calendar" role="tab" aria-selected="true">📅 Calendário</button>
+                        <button type="button" class="subtab-btn" data-subtab="turma-gantt" role="tab" aria-selected="false">📊 Gráfico de Gantt da Turma</button>
+                    </div>
+                    <div class="calendar-controls">
+                        <label>Período de Visualização:</label>
+                        <input type="date" id="cal-start" value="2025-10-13"> a
+                        <input type="date" id="cal-end" value="2026-02-27">
+                        <button id="btn-reset-view-period" type="button" class="btn-view-period-reset"
+                            title="Voltar a janela de visualizacao para o periodo do PL vigente.">↺ Período do PL</button>
+                        <button id="btn-gerar-cal" class="btn-secondary"
+                            style="position: fixed; top: 85px; right: 30px; z-index: 999; background: var(--primary); color: white; padding: 12px 24px; border-radius: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); font-weight: bold; font-size: 1rem; cursor: pointer; transition: transform 0.2s;">
+                            🔄 Atualizar
+                        </button>
+                    </div>
                 </div>
-                <div id="monthly-container"></div>
+                <div id="subview-turma-calendar" class="subtab-view active">
+                    <div id="monthly-container"></div>
+                </div>
+                <div id="subview-turma-gantt" class="subtab-view">
+                    <div class="gantt-subtab-toolbar no-print">
+                        <button id="btn-print-gantt-turma" class="btn-secondary"
+                            style="background: var(--primary); color:white;"
+                            title="Abre o gráfico em uma nova janela já configurada para impressão em paisagem (PDF).">🖨️ Imprimir PDF (paisagem)</button>
+                    </div>
+                    <div id="gantt-container-turma" class="gantt-wrapper">
+                        <div style="text-align: center; color: #7f8c8d; margin-top: 50px; font-size: 1.1em;">
+                            Selecione uma turma na barra lateral para visualizar as componentes ao longo do tempo.
+                        </div>
+                    </div>
+                </div>
             </section>
 
             <section id="tab-teacher" class="tab-content">
-                <div class="form-group no-print" style="max-width: 400px; margin-bottom: 20px; position: relative;">
-                    <label style="color: var(--primary);" for="sel-view-docente">Selecione o Professor para visualizar a
-                        agenda mensal:</label>
-                    <input type="text" id="sel-view-docente" list="list-view-docentes"
-                        placeholder="Busque o professor..." autocomplete="off">
-                    <datalist id="list-view-docentes"></datalist>
+                <div class="subtab-bar subtab-bar--docente no-print">
+                    <div class="subtab-switch" role="tablist" aria-label="Visualizações do docente">
+                        <button type="button" class="subtab-btn active" data-subtab="docente-calendar" role="tab" aria-selected="true">📅 Calendário</button>
+                        <button type="button" class="subtab-btn" data-subtab="docente-gantt" role="tab" aria-selected="false">📊 Gráfico de Gantt do Docente</button>
+                    </div>
+                    <div class="form-group" style="max-width: 400px; margin-bottom: 0; position: relative;">
+                        <label style="color: var(--primary);" for="sel-view-docente">Selecione o Professor para visualizar a
+                            agenda mensal:</label>
+                        <input type="text" id="sel-view-docente" list="list-view-docentes"
+                            placeholder="Busque o professor..." autocomplete="off">
+                        <datalist id="list-view-docentes"></datalist>
+                    </div>
+                    <div class="calendar-controls">
+                        <label>Período de Visualização:</label>
+                        <input type="date" id="cal-start-teacher" value="2025-10-13"> a
+                        <input type="date" id="cal-end-teacher" value="2026-02-27">
+                        <button id="btn-reset-view-period-teacher" type="button" class="btn-view-period-reset"
+                            title="Voltar a janela de visualizacao para o periodo do PL vigente.">↺ Período do PL</button>
+                        <button id="btn-gerar-cal-teacher" type="button" class="btn-secondary"
+                            style="background: var(--primary); color: white; font-weight: bold;">🔄 Atualizar</button>
+                    </div>
+                    <button id="btn-print-gantt-docente" class="btn-secondary subtab-bar-print"
+                        style="background: var(--primary); color:white;"
+                        title="Abre o gráfico em uma nova janela já configurada para impressão em paisagem (PDF).">🖨️ Imprimir PDF (paisagem)</button>
                 </div>
-                <div id="teacher-calendar-container"></div>
+                <div id="subview-docente-calendar" class="subtab-view active">
+                    <div id="teacher-calendar-container"></div>
+                </div>
+                <div id="subview-docente-gantt" class="subtab-view">
+                    <div id="gantt-container-docente" class="gantt-wrapper">
+                        <div style="text-align: center; color: #7f8c8d; margin-top: 50px; font-size: 1.1em;">
+                            Selecione um professor acima para visualizar o cronograma (Gantt).
+                        </div>
+                    </div>
+                </div>
             </section>
 
             <section id="tab-list" class="tab-content">
@@ -1099,36 +1151,6 @@
                 </table>
             </section>
 
-            <section id="tab-gantt" class="tab-content">
-                <div class="calendar-controls no-print" style="margin-bottom: 20px; display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
-                    <div id="gantt-mode-switch" role="group" aria-label="Modo do gráfico Gantt"
-                        style="display:inline-flex; gap:14px; align-items:center; font-weight:bold; color: var(--primary);">
-                        <label style="display:inline-flex; align-items:center; gap:6px; cursor:pointer;">
-                            <input type="radio" name="gantt-mode" value="turma" checked> Por Turma
-                        </label>
-                        <label style="display:inline-flex; align-items:center; gap:6px; cursor:pointer;">
-                            <input type="radio" name="gantt-mode" value="docente"> Por Professor
-                        </label>
-                    </div>
-                    <div id="gantt-docente-controls" style="display:none; align-items:center; gap:8px;">
-                        <label style="color: var(--primary); font-weight: bold;">Professor:</label>
-                        <input type="text" id="inp-gantt-docente" list="list-view-docentes" placeholder="Digite o nome..."
-                            style="padding: 8px; border: 1px solid #ccc; border-radius: 4px; width: 300px; font-size: 1rem;">
-                        <button id="btn-gerar-gantt" class="btn-secondary"
-                            style="background: var(--primary); color:white; display:none;">Gerar Gantt</button>
-                    </div>
-                    <button id="btn-print-gantt" class="btn-secondary"
-                        style="margin-left:auto; background: var(--primary); color:white;"
-                        title="Abre o gráfico em uma nova janela já configurada para impressão em paisagem (PDF).">🖨️ Imprimir PDF (paisagem)</button>
-                </div>
-
-                <div id="gantt-container" class="gantt-wrapper">
-                    <div style="text-align: center; color: #7f8c8d; margin-top: 50px; font-size: 1.1em;">
-                        Selecione uma turma na barra lateral para visualizar as componentes ao longo do tempo.
-                    </div>
-                </div>
-            </section>
-
             <section id="tab-tutorial" class="tab-content">
                 <div class="help-layout">
 
@@ -1139,7 +1161,7 @@
                         <div class="wi-header">
                             <span class="wi-header-icon" aria-hidden="true">&#129517;</span>
                             <div>
-                                <h4 class="wi-title">Como preencher a Grade Semanal</h4>
+                                <h4 class="wi-title">Como preencher a aba Alocar Componentes</h4>
                                 <p class="wi-subtitle">Siga os passos na ordem para montar a oferta da turma.</p>
                             </div>
                         </div>
@@ -1240,7 +1262,7 @@
                                         <span class="wf-cell"></span><span class="wf-cell"></span><span class="wf-cell wf-cell--on"></span><span class="wf-cell"></span><span class="wf-cell wf-cell--on"></span>
                                     </div>
                                 </div>
-                                <p class="wf-step__caption">Definir datas da Faixa&nbsp;1, pintar os hor&aacute;rios na Grade Semanal e salvar.</p>
+                                <p class="wf-step__caption">Definir datas da Faixa&nbsp;1, pintar os hor&aacute;rios na aba Alocar Componentes e salvar.</p>
                             </article>
 
                             <article class="wf-step wf-step--4">
@@ -1492,7 +1514,7 @@
         </main>
     </div>
 
-    <script type="module" src="js/main.js??v=20260627v48"></script>
+    <script type="module" src="js/main.js??v=20260627v76"></script>
 </body>
 
 </html>

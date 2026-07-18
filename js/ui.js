@@ -3,6 +3,7 @@ import { getTurnoLetter, mapSlotToTurno, normalizeTurnoKey, getHorariosByTurno }
 import { normalizePeriodo as normalizePeriodoLetivoCode } from './plan_storage.js';
 import { getCalendarEvents } from './calendar.js??v=20260625v';
 import { countBusinessDays, countWeekdaysInPeriod, addBusinessDays, isDateOverlap, calculateEndDateByWeekday } from './utils.js';
+import { weeklyState } from './weekly_state.js';
 import { buildTeacherExecutionSnapshot, buildCanonicalOfferProjection } from './execution_engine.js';
 import { renderBidimensionalTeacherGantt, renderBidimensionalTurmaGantt } from './gantt_bidimensional.js??v=20260627v39';
 import { buildSigaaMetadataPayload, validateSigaaMetadataPayload } from './sigaa_metadata.js';
@@ -68,8 +69,7 @@ import {
     getGanttTurnoConfigs,
     getGanttTurnoCode,
     renderGanttChart,
-    renderGanttForActiveMode,
-    getActiveGanttMode,
+    renderTurmaGantt,
     printGanttLandscape
 } from './gantt_ui.js';
 import {
@@ -143,6 +143,10 @@ const activePlanStatus = document.getElementById('active-plan-status');
 
 const calStart = document.getElementById('cal-start');
 const calEnd = document.getElementById('cal-end');
+// Espelho do viewport na aba Calendario Docente (mesma janela de visualizacao,
+// controles duplicados para a direcao ajustar o periodo direto na aba do docente).
+const calStartTeacher = document.getElementById('cal-start-teacher');
+const calEndTeacher = document.getElementById('cal-end-teacher');
 
 const inputConfig = {
     disciplina: document.getElementById('inp-disciplina'),
@@ -154,27 +158,29 @@ const inputConfig = {
 let tempImportData = null;
 let tempImportPlanMeta = null;
 let activeFaixaIndex = 1;
-let faixasPatterns = {
-    1: [],
-    2: [],
-    3: []
-};
-let editingDisciplinaDraft = '';
-// true quando a disciplina carregada no editor veio de importacao (bloco PPC ou arquivo).
-// Sobreposicao ao salvar so e permitida quando esta flag for true.
-let editingImportadoDraft = false;
-// Edicao segura: IDs das ofertas originais carregadas no editor. A remocao e
-// ADIADA ate o salvar (remover agora persistiria no localStorage e seria
-// perdido num reload antes de confirmar). Limpo ao salvar com sucesso ou ao
-// abandonar a edicao (troca de disciplina/turma/plano).
-let editingOriginalAllocationIds = [];
-// Data inicial (Faixa 1) original da componente em edicao. Usada pelo
-// "Limpar Faixas" para reposicionar a Faixa 1 na data que a componente ja
-// ocupava, em vez de recalcular o primeiro dia livre.
-let editingComponentOriginalStart = '';
-let lastDisciplinaInputNormalized = '';
+// faixasPatterns agora vive em weeklyState (storage centralizado). Alias LOCAL
+// para o mesmo objeto — mutacoes in-place (faixasPatterns[i]=...) valem no
+// weeklyState. Para limpar os 3, use weeklyState.clearFaixasPatterns().
+const faixasPatterns = weeklyState.faixasPatterns;
+// Estado da SESSAO DE EDICAO (editingDisciplinaDraft, editingImportadoDraft,
+// editingOriginalAllocationIds, editingComponentOriginalStart,
+// lastDisciplinaInputNormalized) foi migrado para o objeto `weeklyState`
+// (js/weekly_state.js) — dono unico, com reset atomico. Acesse via
+// weeklyState.<campo>. Ver resetEditingComponentState() logo abaixo.
+
+// Wrapper fino: mantem o nome usado nos 3 caminhos de reset completo (troca de
+// plano, reset da turma, pos-salvamento) e delega para o reset atomico do
+// weeklyState. Se um novo campo de edicao surgir, adicione-o em
+// weeklyState.resetEditing() e todos os caminhos ficam sincronizados.
+function resetEditingComponentState() {
+    weeklyState.resetEditing();
+    clearWeeklyBlock();
+}
+
 let componentStartSelectionMode = 'auto';
-window.isDrawingFaixa = null;
+// Faixa em modo de DESENHO (1|2|3) ou null. Antes era window.isDrawingFaixa
+// (global exposto). Agora e modulo-privado — nada externo o le/escreve (blindado).
+let drawingFaixaIndex = null;
 let drawingViewMode = 'context';
 const drawingDragState = {
     active: false,
@@ -190,10 +196,9 @@ let weeklyShiftAnimationFrame = 0;
 let weeklyShiftAnimationTimer = 0;
 const WEEKLY_SHIFT_ANIMATION_MS = 360;
 
-const weeklyViewState = {
-    weekStartISO: '',
-    followActiveFaixa: true
-};
+// Estado de visualizacao da grade: alias LOCAL para weeklyState.view (storage
+// centralizado). weeklyViewState.<campo> muta o mesmo objeto no weeklyState.
+const weeklyViewState = weeklyState.view;
 
 // ==========================================
 // AJUSTES VISUAIS DA BARRA LATERAL (SIDEBAR)
@@ -332,87 +337,6 @@ function wrapTeacherSelect() {
                 btnRefresh.dataset.rot = parseInt(btnRefresh.dataset.rot || 360) + 360;
             } else {
                 showToastWarning('Selecione um professor primeiro para atualizar a vistoria.', 'warning', 2200);
-            }
-        });
-    }
-}
-
-function wrapGanttInput() {
-    const inpGanttDocente = document.getElementById('inp-gantt-docente');
-    if (inpGanttDocente && !document.getElementById('btn-refresh-gantt')) {
-        let inputWrapper = inpGanttDocente.parentNode;
-
-        // Garantir o wrapper do Input + X
-        if (!inputWrapper.classList.contains('input-wrapper-gantt')) {
-            inputWrapper = document.createElement('div');
-            inputWrapper.className = 'input-wrapper-gantt';
-            inputWrapper.style.position = 'relative';
-            inputWrapper.style.display = 'inline-block';
-            inputWrapper.style.width = 'fit-content';
-
-            inpGanttDocente.parentNode.insertBefore(inputWrapper, inpGanttDocente);
-            inputWrapper.appendChild(inpGanttDocente);
-            inpGanttDocente.style.margin = '0';
-        }
-
-        // Renderiza o X dentro do wrapper apertadinho
-        addClearXToField(inpGanttDocente, 'inp-gantt-docente');
-
-        // Cria o Flex Container para colocar o Botão Refresh ao lado
-        const flexContainer = document.createElement('div');
-        flexContainer.style.display = 'inline-flex';
-        flexContainer.style.alignItems = 'center';
-        flexContainer.style.gap = '8px';
-
-        inputWrapper.parentNode.insertBefore(flexContainer, inputWrapper);
-        flexContainer.appendChild(inputWrapper);
-
-        // Move e estiliza o botão "Gerar Gantt" do HTML para bater lado a lado com o Refresh
-        const btnGerarGantt = document.getElementById('btn-gerar-gantt');
-        if (btnGerarGantt) {
-            btnGerarGantt.style.display = 'inline-block';
-            btnGerarGantt.style.background = '#27ae60';
-            btnGerarGantt.style.color = '#fff';
-            btnGerarGantt.style.border = 'none';
-            btnGerarGantt.style.borderRadius = '4px';
-            btnGerarGantt.style.padding = '6px 12px';
-            btnGerarGantt.style.cursor = 'pointer';
-            btnGerarGantt.style.fontWeight = 'bold';
-            btnGerarGantt.style.fontSize = '0.95em';
-            btnGerarGantt.style.transition = 'background 0.2s';
-            btnGerarGantt.onmouseover = () => btnGerarGantt.style.background = '#219653';
-            btnGerarGantt.onmouseout = () => btnGerarGantt.style.background = '#27ae60';
-            flexContainer.appendChild(btnGerarGantt);
-        }
-
-        // Botão Refresh do Gantt
-        const btnRefreshGantt = document.createElement('button');
-        btnRefreshGantt.id = 'btn-refresh-gantt';
-        btnRefreshGantt.innerHTML = '🔄';
-        btnRefreshGantt.title = 'Atualizar Gráfico de Gantt';
-        btnRefreshGantt.style.background = '#3498db';
-        btnRefreshGantt.style.color = '#fff';
-        btnRefreshGantt.style.border = 'none';
-        btnRefreshGantt.style.borderRadius = '4px';
-        btnRefreshGantt.style.padding = '6px 10px';
-        btnRefreshGantt.style.cursor = 'pointer';
-        btnRefreshGantt.style.fontSize = '1.1em';
-        btnRefreshGantt.style.transition = 'transform 0.3s ease, background 0.2s';
-        btnRefreshGantt.style.flexShrink = '0';
-
-        btnRefreshGantt.onmouseover = () => btnRefreshGantt.style.background = '#2980b9';
-        btnRefreshGantt.onmouseout = () => btnRefreshGantt.style.background = '#3498db';
-
-        flexContainer.appendChild(btnRefreshGantt);
-
-        btnRefreshGantt.addEventListener('click', (e) => {
-            e.preventDefault();
-            if (inpGanttDocente.value.trim()) {
-                renderGanttChart();
-                btnRefreshGantt.style.transform = `rotate(${btnRefreshGantt.dataset.rot || 360}deg)`;
-                btnRefreshGantt.dataset.rot = parseInt(btnRefreshGantt.dataset.rot || 360) + 360;
-            } else {
-                showToastWarning('Digite o nome de um professor primeiro para atualizar o gráfico.', 'warning', 2200);
             }
         });
     }
@@ -794,19 +718,6 @@ function updateWeeklyFaixaHoursDisplay(previewData = null) {
     const excede = total - targetCH;
     setConsistency(`A CH alocada excede a meta em ${excede}h. Isso nao bloqueia a insercao; se quiser, ajuste o padrao ou crie uma nova faixa depois.`, 'state-warn');
 }
-function formatSlotLabel(slot) {
-    const text = String(slot || '').trim();
-    if (!text) return '';
-    if (text.includes('-')) {
-        return text.replace(/\s*-\s*/g, ' - ');
-    }
-    const match = text.match(/^(\d{1,2}):(\d{2})$/);
-    if (match) {
-        return `${match[1]}h:${match[2]}`;
-    }
-    return text;
-}
-
 function calcFaixaCHFromPattern(faixaIndex, patternInput) {
     const start = document.getElementById(`inp-data-inicio-f${faixaIndex}`)?.value || '';
     const endRaw = document.getElementById(`inp-data-fim-f${faixaIndex}`)?.value || '';
@@ -960,7 +871,7 @@ function refreshPendingFaixaStartPickUI() {
         if (selectable) {
             numCell.title = waiting
                 ? `Aguardando clique na grade para definir inicio da Faixa ${i}.`
-                : `Clique para definir o inicio da Faixa ${i} pela grade semanal.`;
+                : `Clique para definir o inicio da Faixa ${i} pela grade de alocacao.`;
         } else {
             numCell.title = '';
         }
@@ -975,8 +886,8 @@ function clearPendingFaixaStartPick() {
 }
 
 function refreshActiveFaixaHighlight() {
-    const activeIdx = window.isDrawingFaixa
-        ? parseInt(window.isDrawingFaixa, 10)
+    const activeIdx = drawingFaixaIndex
+        ? parseInt(drawingFaixaIndex, 10)
         : (parseInt(activeFaixaIndex, 10) || null);
     for (let i = 1; i <= 3; i++) {
         const row = document.getElementById(`faixa-${i}`);
@@ -1116,7 +1027,7 @@ function tryApplyDrawingSelection(cell, shouldSelect, styles) {
 
     if (cell.classList.contains('selected-slot')) return true;
 
-    const faixaIndex = parseInt(window.isDrawingFaixa, 10);
+    const faixaIndex = parseInt(drawingFaixaIndex, 10);
     if (Number.isNaN(faixaIndex) || faixaIndex < 1 || faixaIndex > 3) {
         setDrawingCellSelection(cell, true, styles);
         return true;
@@ -1140,22 +1051,6 @@ function tryApplyDrawingSelection(cell, shouldSelect, styles) {
     setDrawingCellSelection(cell, true, styles);
     return true;
 }
-function resolveFaixaTurno(faixaIndex) {
-    const { slots } = getFaixaSlotsAndDays(faixaIndex);
-    if (slots.length === 0) return '-';
-    let hasM = false;
-    let hasT = false;
-    slots.forEach((s) => {
-        const mins = timeToMinutes(s);
-        if (mins < 780) hasM = true;
-        else hasT = true;
-    });
-    if (hasM && hasT) return 'M/T';
-    if (hasM) return 'M';
-    if (hasT) return 'T';
-    return '-';
-}
-
 function buildFaixaSummaryText(faixaIndex, count, previewData = null) {
     const start = document.getElementById(`inp-data-inicio-f${faixaIndex}`)?.value || '';
     const end = document.getElementById(`inp-data-fim-f${faixaIndex}`)?.value || '';
@@ -1179,7 +1074,7 @@ function getWeeklyFaixasTitleDisciplinaAtiva() {
     const selected = normalizeDisciplinaInputValue(inputConfig.disciplina?.value || '');
     if (selected) return selected;
 
-    const editing = normalizeDisciplinaInputValue(editingDisciplinaDraft || '');
+    const editing = normalizeDisciplinaInputValue(weeklyState.editingDisciplinaDraft || '');
     if (editing) return editing;
 
     return '';
@@ -1259,7 +1154,7 @@ function setDrawingCellSelection(cell, selected, styles) {
 }
 
 function endDrawingDrag() {
-    const shouldPersist = !!window.isDrawingFaixa && drawingDragState.active && drawingDragState.touchedAnyCell;
+    const shouldPersist = !!drawingFaixaIndex && drawingDragState.active && drawingDragState.touchedAnyCell;
     drawingDragState.active = false;
     drawingDragState.shouldSelect = true;
     drawingDragState.touchedAnyCell = false;
@@ -1268,7 +1163,7 @@ function endDrawingDrag() {
 }
 
 function getDrawingSelectionFromDOM() {
-    if (!window.isDrawingFaixa) return [];
+    if (!drawingFaixaIndex) return [];
     return normalizeFaixaPattern(
         Array.from(document.querySelectorAll('.slot.selected-slot')).map((el) => ({
             dia: parseInt(el.dataset.dia, 10),
@@ -1284,8 +1179,8 @@ function updateWeeklySavePatternButton() {
     let isActive = false;
     let hasSelection = false;
 
-    if (window.isDrawingFaixa) {
-        const faixaIndex = parseInt(window.isDrawingFaixa, 10);
+    if (drawingFaixaIndex) {
+        const faixaIndex = parseInt(drawingFaixaIndex, 10);
         if (!Number.isNaN(faixaIndex) && faixaIndex >= 1 && faixaIndex <= 3) {
             isActive = true;
             hasSelection = normalizeFaixaPattern(faixasPatterns[faixaIndex]).length > 0;
@@ -1300,8 +1195,8 @@ function updateWeeklySavePatternButton() {
 }
 
 function persistActiveDrawingSelection() {
-    if (!window.isDrawingFaixa) return 0;
-    const faixaIndex = parseInt(window.isDrawingFaixa, 10);
+    if (!drawingFaixaIndex) return 0;
+    const faixaIndex = parseInt(drawingFaixaIndex, 10);
     if (Number.isNaN(faixaIndex) || faixaIndex < 1 || faixaIndex > 3) return 0;
 
     const selectedPattern = getDrawingSelectionFromDOM();
@@ -1340,8 +1235,8 @@ function persistActiveDrawingSelection() {
     return finalPattern.length;
 }
 function clearActiveDrawingSelection() {
-    if (!window.isDrawingFaixa) return 0;
-    const faixaIndex = window.isDrawingFaixa;
+    if (!drawingFaixaIndex) return 0;
+    const faixaIndex = drawingFaixaIndex;
     const domSelected = getDrawingSelectionFromDOM().length;
     const persisted = normalizeFaixaPattern(faixasPatterns[faixaIndex]).length;
     const clearedCount = Math.max(domSelected, persisted);
@@ -1360,7 +1255,7 @@ function activateDrawingMode(faixaIndex, options = {}) {
         return;
     }
 
-    const prevFaixa = parseInt(window.isDrawingFaixa, 10);
+    const prevFaixa = parseInt(drawingFaixaIndex, 10);
     if (!Number.isNaN(prevFaixa) && prevFaixa >= 1 && prevFaixa <= 3 && prevFaixa !== faixaIndex) {
         if (drawingDragState.active) {
             endDrawingDrag();
@@ -1372,7 +1267,7 @@ function activateDrawingMode(faixaIndex, options = {}) {
     }
 
     activeFaixaIndex = faixaIndex;
-    window.isDrawingFaixa = faixaIndex;
+    drawingFaixaIndex = faixaIndex;
 
     if (jumpToFaixaStart) {
         const faixaStart = getActiveFaixaStartDate(faixaIndex);
@@ -1407,7 +1302,7 @@ function activateDrawingMode(faixaIndex, options = {}) {
 function deactivateDrawingMode() {
     endDrawingDrag();
     if (pendingFaixaStartPick) clearPendingFaixaStartPick();
-    window.isDrawingFaixa = null;
+    drawingFaixaIndex = null;
     weeklyViewState.followActiveFaixa = false;
     updateWeeklySavePatternButton();
     const toolbar = document.getElementById('drawing-toolbar');
@@ -1434,7 +1329,7 @@ function collapseFaixasForNewComponent(options = {}) {
     faixasPatterns[2] = [];
     faixasPatterns[3] = [];
     activeFaixaIndex = 1;
-    if (window.isDrawingFaixa) window.isDrawingFaixa = 1;
+    if (drawingFaixaIndex) drawingFaixaIndex = 1;
 
     setFaixaStatus(1, 0);
     setFaixaStatus(2, 0);
@@ -1527,7 +1422,7 @@ function executeFaixaQuickAction(faixaNum) {
     if (idx === 1) {
         endDrawingDrag();
         if (pendingFaixaStartPick) clearPendingFaixaStartPick();
-        window.isDrawingFaixa = null;
+        drawingFaixaIndex = null;
         weeklyViewState.followActiveFaixa = false;
         setComponentStartSelectionMode('auto');
 
@@ -1567,10 +1462,10 @@ function executeFaixaQuickAction(faixaNum) {
         clearFaixaState(2);
         clearFaixaState(3);
         activeFaixaIndex = 1;
-        if (window.isDrawingFaixa && parseInt(window.isDrawingFaixa, 10) > 1) window.isDrawingFaixa = 1;
+        if (drawingFaixaIndex && parseInt(drawingFaixaIndex, 10) > 1) drawingFaixaIndex = 1;
     } else {
         clearFaixaState(3);
-        if (window.isDrawingFaixa && parseInt(window.isDrawingFaixa, 10) === 3) window.isDrawingFaixa = 2;
+        if (drawingFaixaIndex && parseInt(drawingFaixaIndex, 10) === 3) drawingFaixaIndex = 2;
         if (activeFaixaIndex === 3) activeFaixaIndex = 2;
     }
 
@@ -1648,8 +1543,8 @@ function applyFaixasConfigToSidebar(faixasConfig = []) {
 }
 
 function getActiveDrawingFaixaRange() {
-    if (!window.isDrawingFaixa) return null;
-    const idx = parseInt(window.isDrawingFaixa, 10);
+    if (!drawingFaixaIndex) return null;
+    const idx = parseInt(drawingFaixaIndex, 10);
     if (Number.isNaN(idx) || idx < 1 || idx > 3) return null;
 
     const iniEl = document.getElementById(`inp-data-inicio-f${idx}`);
@@ -1669,11 +1564,6 @@ function getActiveDrawingFaixaRange() {
     if (end < start) end = start;
 
     return { start, end };
-}
-
-function rangeOverlaps(rangeA, rangeB) {
-    if (!rangeA?.start || !rangeA?.end || !rangeB?.start || !rangeB?.end) return true;
-    return isDateOverlap(rangeA.start, rangeA.end, rangeB.start, rangeB.end);
 }
 
 function getLastValidFaixaFromUI() {
@@ -1806,14 +1696,208 @@ function getFaixaStartDateValidation(faixaIndex, candidateDate) {
     return { isValid: true, message: '' };
 }
 
-function getPreferredStartDateForCurrentTurma(options = {}) {
-    const { useCurrentUI = false } = options;
+// Slots de "encaixe" onde uma nova componente pode INICIAR o dia, na ordem de
+// exibicao da grade. O dia e candidato quando QUALQUER um destes slots estiver
+// livre (regra do OU). Para CADA turno presente (unico ou combinado):
+//  - 1a aula do turno (ex.: manha 08:00, tarde 14:00);
+//  - 4a aula do turno (1a apos o intervalo, ex.: 10:50 / 16:50), quando o
+//    turno tem 4+ aulas — e o encaixe do par 3+2 que subdivide o turno.
+function getComponentStartCandidateSlots() {
+    const slots = buildHorariosForUI()
+        .map((slot) => normalizeConflictSlotLabel(slot))
+        .filter((slot) => slot && !slot.toUpperCase().includes('INTERVALO'));
+    if (slots.length === 0) return [];
+
+    const byTurno = new Map();
+    slots.forEach((slot) => {
+        const turno = getTurnoLetter(slot);
+        if (!byTurno.has(turno)) byTurno.set(turno, []);
+        byTurno.get(turno).push(slot);
+    });
+
+    const candidates = [];
+    byTurno.forEach((turnoSlots) => {
+        candidates.push(turnoSlots[0]);
+        if (turnoSlots.length >= 4) candidates.push(turnoSlots[3]);
+    });
+    return [...new Set(candidates)];
+}
+
+function getTurmaUsaSabadoForStartSearch() {
+    return store.allocations.some((a) =>
+        String(a?.turmaId) === String(store.selectedTurma) &&
+        isFaixaAllocation(a) &&
+        getNormalizedIntensiveFaixas(a).some((f) => Array.isArray(f.dias) && f.dias.includes(6))
+    );
+}
+
+// Inicio da Faixa 1 de uma componente = menor "inicio" entre suas faixas.
+function getComponentFaixa1Start(alloc) {
+    const inicios = (getNormalizedIntensiveFaixas(alloc) || [])
+        .map((f) => String(f?.inicio || '').trim())
+        .filter(Boolean)
+        .sort();
+    return inicios[0] || '';
+}
+
+// "Ultima componente" do planejamento da turma = a de MAIOR inicio de Faixa 1
+// (reflete o estado do planejamento, nao a ordem de insercao/cliques). Ignora
+// pendentes e as componentes em edicao (editingOriginalAllocationIds), para a
+// componente reeditada nao ancorar em si mesma.
+function getLastPlannedComponentForCurrentTurma() {
+    if (!store.selectedTurma) return null;
+    const hiddenEditIds = new Set((weeklyState.editingOriginalAllocationIds || []).map((id) => String(id)));
+    let best = null;
+    let bestStart = '';
+    (store.allocations || []).forEach((alloc) => {
+        if (String(alloc?.turmaId) !== String(store.selectedTurma)) return;
+        if (!isFaixaAllocation(alloc)) return;
+        if (hiddenEditIds.has(String(alloc?.id))) return;
+        const f1 = getComponentFaixa1Start(alloc);
+        if (!f1) return;
+        if (!best || f1 > bestStart) {
+            best = alloc;
+            bestStart = f1;
+        }
+    });
+    return best;
+}
+
+// Ultima sugestao calculada {date, slot, gapBefore, exhausted, anchor} — usada
+// pela nota de contexto e pelo destaque do slot sugerido na Grade Semanal.
+let lastStartSuggestion = null;
+
+// Sugestao inteligente de inicio {date, slot}: ancora a busca no inicio da
+// FAIXA 1 da ultima componente planejada e varre adiante pelo primeiro slot de
+// encaixe livre (1a/4a aula de cada turno). Essa unica varredura implementa o
+// despacho pelas 3 regras acordadas:
+//  - ultima INTENSIVA de MEIO TURNO (<=3 aulas): o encaixe complementar (4a ou
+//    1a aula, tanto faz a ordem do par) esta livre no proprio dia da F1 dela
+//    -> a sugestao forma o par 3+2 alinhado;
+//  - ultima INTENSIVA de TURNO INTEIRO (4+ aulas) ou PAR COMPLETO: nenhum
+//    encaixe livre durante o bloco -> a varredura para no primeiro dia util
+//    apos o fim. Em turnos combinados, se ela lota so a manha, o 1o slot da
+//    tarde do MESMO dia e encontrado antes;
+//  - ultima NAO INTENSIVA: ocupa poucos slots por semana -> o primeiro encaixe
+//    livre a partir do primeiro dia de aula dela (INCLUSIVE) e encontrado ali.
+// Fallbacks: nada livre da ancora ate o fim do periodo -> re-varre desde o
+// inicio do semestre; ainda nada -> exhausted:true (avisar). Se existir encaixe
+// livre ANTES da ancora (gap deixado por remocao), vai em gapBefore para o
+// sistema apenas AVISAR, sem posicionar la.
+function resolveSmartComponentStartSuggestion() {
     const termStart = String(store.settings.termStart || inpTermStart?.value || calStart?.value || '').trim();
     const termEnd = String(store.settings.termEnd || inpTermEnd?.value || calEnd?.value || termStart).trim();
-    const latestAllocationEnd = getLastValidAllocationEndForCurrentTurma();
-    // Varre sempre desde o início do semestre para encontrar o primeiro dia com
-    // 1º slot OU 4º slot livre — não usa latestAllocationEnd para evitar pular gaps.
-    const searchStart = termStart;
+    const empty = { date: termStart, slot: '', gapBefore: null, exhausted: false, anchor: termStart };
+    if (!termStart || !termEnd) return empty;
+
+    const targetSlots = getComponentStartCandidateSlots();
+    if (targetSlots.length === 0) return empty;
+
+    const occupiedByDate = buildFaixaOccupiedSlotsByDateDirect(store.selectedTurma, termStart, termEnd);
+    const holidays = new Set(
+        (store.rawData?.feriados || []).map((item) => String(item?.data || item || '').trim()).filter(Boolean)
+    );
+    const skipSaturday = !getTurmaUsaSabadoForStartSearch();
+
+    const scan = (fromDate, toDate) => {
+        if (!fromDate || !toDate || fromDate > toDate) return null;
+        let cursor = new Date(fromDate + 'T12:00:00');
+        const endDateObj = new Date(toDate + 'T12:00:00');
+        let safety = 0;
+        while (cursor <= endDateObj && safety < 800) {
+            safety++;
+            const dow = cursor.getDay();
+            const dateStr = toISODate(cursor);
+            cursor.setDate(cursor.getDate() + 1);
+            if (dow === 0 || (skipSaturday && dow === 6) || holidays.has(dateStr)) continue;
+            const occupied = occupiedByDate.get(dateStr) || new Set();
+            const freeSlot = targetSlots.find((slot) => !occupied.has(slot));
+            if (freeSlot) return { date: dateStr, slot: freeSlot };
+        }
+        return null;
+    };
+
+    const last = getLastPlannedComponentForCurrentTurma();
+    let anchor = last ? (getComponentFaixa1Start(last) || termStart) : termStart;
+    if (anchor < termStart) anchor = termStart;
+
+    let primary = scan(anchor, termEnd);
+    let exhausted = false;
+    if (!primary && anchor > termStart) primary = scan(termStart, termEnd);
+    if (!primary) {
+        exhausted = true;
+        primary = { date: termStart, slot: '' };
+    }
+
+    const gapBefore = (!exhausted && anchor > termStart && primary.date >= anchor)
+        ? scan(termStart, shiftISODate(anchor, -1))
+        : null;
+
+    return { ...primary, gapBefore, exhausted, anchor };
+}
+
+// Feedback nao bloqueante da sugestao: gap anterior existente (so avisa, nao
+// posiciona) e esgotamento do periodo letivo.
+function notifyStartSuggestionFeedback(suggestion = lastStartSuggestion) {
+    if (!suggestion) return;
+    if (suggestion.exhausted) {
+        showToastWarning(
+            'Nenhum slot de encaixe livre ate o fim do periodo letivo. A data inicial voltou para o inicio do periodo; ajuste manualmente ou libere espaco.',
+            'warning',
+            6200
+        );
+        return;
+    }
+    // O aviso de "gap livre antes da ultima componente" NAO e mais um toast
+    // repetitivo: virou uma nota INLINE discreta (updateGapAdvisory), com botoes
+    // "Ciente" (dispensa aquele gap) e "Nao avisar mais" (silencia de vez).
+    updateGapAdvisory();
+}
+
+// --- Aviso INLINE de "dia livre antes" (gapBefore) ---------------------------
+// Substitui o toast repetitivo por uma nota discreta e dispensavel.
+const GAP_ADVISORY_MUTE_KEY = 'weekly_gap_advisory_muted';
+let gapAdvisoryDismissedDate = '';
+
+function isGapAdvisoryMuted() {
+    try {
+        return localStorage.getItem(GAP_ADVISORY_MUTE_KEY) === '1';
+    } catch (e) {
+        return false;
+    }
+}
+
+function muteGapAdvisory() {
+    try {
+        localStorage.setItem(GAP_ADVISORY_MUTE_KEY, '1');
+    } catch (e) { /* noop */ }
+    updateGapAdvisory();
+}
+
+// Mostra/esconde a nota inline conforme a sugestao atual tem um gap antes, o
+// usuario ainda nao dispensou ESSE gap e nao silenciou de vez.
+function updateGapAdvisory() {
+    const el = document.getElementById('weekly-gap-advisory');
+    if (!el) return;
+    const gap = lastStartSuggestion?.gapBefore;
+    const shouldShow = !!(gap && gap.date)
+        && !isGapAdvisoryMuted()
+        && gapAdvisoryDismissedDate !== gap.date
+        && !weeklyBlockMessage;
+    if (!shouldShow) {
+        el.classList.add('hidden');
+        return;
+    }
+    const txt = document.getElementById('weekly-gap-advisory-text');
+    if (txt) {
+        const slotTxt = gap.slot ? ` (aula das ${gap.slot})` : '';
+        txt.textContent = `Existe um horario livre antes, em ${formatDateBR(gap.date)}${slotTxt}. Mantive a sugestao em sequencia — se preferir esse dia, e so definir a data.`;
+    }
+    el.classList.remove('hidden');
+}
+
+function getPreferredStartDateForCurrentTurma(options = {}) {
+    const { useCurrentUI = false } = options;
 
     if (useCurrentUI) {
         const lastUiFaixa = getLastValidFaixaFromUI();
@@ -1822,38 +1906,10 @@ function getPreferredStartDateForCurrentTurma(options = {}) {
         }
     }
 
-    const availableSlots = buildHorariosForUI()
-        .map((slot) => normalizeConflictSlotLabel(slot))
-        .filter((slot) => slot && !slot.toUpperCase().includes('INTERVALO'));
-    const firstSlot = availableSlots[0] || '';
-    const fourthSlot = availableSlots.length >= 4
-        ? availableSlots[3]
-        : (availableSlots[availableSlots.length - 1] || '');
-    const targetSlots = [firstSlot, fourthSlot].filter(Boolean);
-    const occupiedSlotsByDate = buildFaixaOccupiedSlotsByDateDirect(store.selectedTurma, termStart, termEnd);
-    const holidays = (store.rawData?.feriados || []).map((item) => String(item?.data || item || '').trim()).filter(Boolean);
-    const turmaUsaSabado = store.allocations.some((a) =>
-        String(a?.turmaId) === String(store.selectedTurma) &&
-        isFaixaAllocation(a) &&
-        getNormalizedIntensiveFaixas(a).some((f) => Array.isArray(f.dias) && f.dias.includes(6))
-    );
-    const firstGapDate = findFirstDateWithAvailableSlot({
-        termStart: searchStart,
-        termEnd,
-        availableSlots,
-        requiredFreeSlots: targetSlots,
-        occupiedSlotsByDate,
-        holidays,
-        requireAll: false,  // 1º slot livre OU 4º slot livre
-        skipSaturday: !turmaUsaSabado
-    });
-
-    const turmaPreferred = store.selectedTurma ? store.getTurmaLastStart(store.selectedTurma) : '';
-    return firstGapDate || initializeWeeklyScheduleForTurma({
-        termStart,
-        turmaLastStart: turmaPreferred,
-        latestAllocationEnd
-    }).firstFaixaStart || termStart;
+    // Despacho pelas regras da "ultima componente" (ver resolveSmartComponentStartSuggestion).
+    const suggestion = resolveSmartComponentStartSuggestion();
+    lastStartSuggestion = suggestion;
+    return suggestion.date || getCanonicalFirstFaixaStartDate();
 }
 
 // Lê a ocupação de slots diretamente das faixas das alocações, sem passar pelo
@@ -1868,7 +1924,7 @@ function buildFaixaOccupiedSlotsByDateDirect(turmaId, startDate, endDate) {
     // persistida no store ate o save) para que a busca da data inicial trate os
     // slots dela como livres — senao ela "empurra" o inicio para depois de si mesma.
     const hiddenEditIds = new Set(
-        (editingOriginalAllocationIds || []).map((id) => String(id))
+        (weeklyState.editingOriginalAllocationIds || []).map((id) => String(id))
     );
 
     store.allocations.forEach((alloc) => {
@@ -1910,54 +1966,11 @@ function buildFaixaOccupiedSlotsByDateDirect(turmaId, startDate, endDate) {
 }
 
 function getPreferredPendingStartDateForCurrentTurma() {
-    const termStart = String(store.settings.termStart || inpTermStart?.value || calStart?.value || '').trim();
-    const termEnd = String(store.settings.termEnd || inpTermEnd?.value || calEnd?.value || termStart).trim();
-    // Sempre varre desde o início do semestre para encontrar o primeiro dia com
-    // a 4ª aula livre — não usa latestAllocationEnd para evitar pular gaps.
-    const searchStart = termStart;
-
-    const availableSlots = buildHorariosForUI()
-        .map((slot) => normalizeConflictSlotLabel(slot))
-        .filter((slot) => slot && !slot.toUpperCase().includes('INTERVALO'));
-
-    // Regra: primeiro dia em que a 1ª aula OU a 4ª aula esteja livre
-    const firstSlot = availableSlots[0] || '';
-    const fourthSlot = availableSlots.length >= 4
-        ? availableSlots[3]
-        : (availableSlots[availableSlots.length - 1] || '');
-
-    if (!searchStart || !termEnd || (!firstSlot && !fourthSlot)) return searchStart || termStart;
-
-    // Lê ocupação diretamente das faixas — sem limite de CH do calendário
-    const occupiedByDate = buildFaixaOccupiedSlotsByDateDirect(store.selectedTurma, termStart, termEnd);
-    const holidays = new Set(
-        (store.rawData?.feriados || []).map((item) => String(item?.data || item || '').trim()).filter(Boolean)
-    );
-
-    // Verifica se a turma usa sábado (dia 6); caso contrário, sábado é pulado
-    // para evitar retornar um sábado "vazio" que não é dia letivo real.
-    const turmaUsaSabado = store.allocations.some((a) =>
-        String(a?.turmaId) === String(store.selectedTurma) &&
-        isFaixaAllocation(a) &&
-        getNormalizedIntensiveFaixas(a).some((f) => Array.isArray(f.dias) && f.dias.includes(6))
-    );
-
-    let cursor = new Date(searchStart + 'T12:00:00');
-    const endDateObj = new Date(termEnd + 'T12:00:00');
-    let safety = 0;
-    while (cursor <= endDateObj && safety < 500) {
-        safety++;
-        const dow = cursor.getDay();
-        const dateStr = toISODate(cursor);
-        cursor.setDate(cursor.getDate() + 1);
-        if (dow === 0 || (!turmaUsaSabado && dow === 6) || holidays.has(dateStr)) continue;
-        const occupied = occupiedByDate.get(dateStr) || new Set();
-        const firstFree = firstSlot && !occupied.has(firstSlot);
-        const fourthFree = fourthSlot && !occupied.has(fourthSlot);
-        if (firstFree || fourthFree) return dateStr;
-    }
-
-    return searchStart || termStart;
+    // Mesmo despacho da insercao individual (ver resolveSmartComponentStartSuggestion),
+    // garantindo que Pendentes e insercao individual sugiram a MESMA data/slot.
+    const suggestion = resolveSmartComponentStartSuggestion();
+    lastStartSuggestion = suggestion;
+    return suggestion.date || getCanonicalFirstFaixaStartDate();
 }
 
 function resolvePreferredStartForNewComponent(options = {}) {
@@ -2195,45 +2208,6 @@ function buildCandidateIntensiveFromFaixas(baseAlloc, faixas) {
     };
 }
 
-function collectTurmaConflictAllocationsForExecution(candidateAlloc, execution = {}) {
-    const result = {
-        all: [],
-        faixa: [],
-        nonFaixa: []
-    };
-
-    if (!candidateAlloc?.turmaId || !execution?.dataInicio || !execution?.dataFim) return result;
-
-    const allocById = new Map((store.allocations || []).map((alloc) => [String(alloc?.id || ''), alloc]));
-    const eventsByDate = getCalendarEvents(String(candidateAlloc.turmaId), execution.dataInicio, execution.dataFim);
-    const conflictIds = new Set();
-
-    const usedDates = getExecutionUsedDates(execution);
-    for (const dateStr of usedDates) {
-        const candidateSlots = new Set(
-            getExecutionSlotsForDate(execution, dateStr)
-                .map((slot) => normalizeConflictSlotLabel(slot))
-                .filter(Boolean)
-        );
-        if (candidateSlots.size === 0) continue;
-
-        const events = eventsByDate?.[dateStr] || [];
-        events.forEach((event) => {
-            if (shouldIgnoreTurmaEventForCandidate(event, candidateAlloc)) return;
-            const slot = normalizeConflictSlotLabel(event?.horario || '');
-            if (!slot || !candidateSlots.has(slot)) return;
-            if (event?.id !== undefined && event?.id !== null) conflictIds.add(String(event.id));
-        });
-    }
-
-    result.all = [...conflictIds]
-        .map((id) => allocById.get(id))
-        .filter(Boolean);
-    result.faixa = result.all.filter((alloc) => isFaixaAllocation(alloc));
-    result.nonFaixa = result.all.filter((alloc) => !isFaixaAllocation(alloc));
-    return result;
-}
-
 // Uma componente e considerada "intensiva" quando suas aulas caem em dias
 // CONSECUTIVOS da semana (sem buraco no meio). Ex.: seg-ter-qua e intensiva;
 // seg-qua-sex NAO e (ha buraco em ter/qui). O numero de slots por dia nao importa.
@@ -2255,29 +2229,49 @@ function isIntensiveComponentByFaixas(faixasInput = []) {
     return faixas.every((faixa) => diasSemanaSaoConsecutivos(faixa.dias));
 }
 
-function isIntensiveAllocation(alloc) {
-    if (!isFaixaAllocation(alloc)) return false;
-    return isIntensiveComponentByFaixas(getNormalizedIntensiveFaixas(alloc));
-}
+// Empilha uma componente intensiva EM SEQUENCIA: reposiciona-a como um bloco
+// CONTINUO logo apos a ultima componente ja alocada da turma, sem dividir nem
+// empurrar nenhuma outra (substitui o antigo empurrao com pausa/retoma, que
+// intercalava as componentes). Ancora no dia seguinte ao maior "fim" entre as
+// OUTRAS componentes da turma (ignora a propria, em caso de edicao) e procura
+// adiante ate achar um inicio sem conflito de turma nem de professor. Usa
+// respectTurmaOccupancy:false para manter o bloco continuo (nao desvia para
+// buracos, o que reintroduziria intercalamento).
+function stackIntensiveAfterAllocations(baseCandidate, turmaId, minStart = '') {
+    const origFaixas = getNormalizedIntensiveFaixas(baseCandidate);
+    if (!baseCandidate || origFaixas.length === 0) return null;
 
-function relocateFaixaAllocationForward(baseAlloc, anchorStartDate) {
-    const originalFaixas = getNormalizedIntensiveFaixas(baseAlloc);
-    if (!baseAlloc || originalFaixas.length === 0 || !anchorStartDate) return null;
+    const disc = normalizeDisciplinaInputValue(baseCandidate.disciplina || '');
+    const sub = String(baseCandidate.subGrupo || '');
 
-    const originalFirstStart = originalFaixas[0].inicio;
-    const anchor = String(anchorStartDate || '').trim();
+    let latestEnd = '';
+    (store.allocations || []).forEach((a) => {
+        if (String(a?.turmaId || '') !== String(turmaId)) return;
+        if (isPendingAllocation(a)) return;
+        // Ignora a propria componente (caso de edicao) para nao ancorar em si mesma.
+        if (normalizeDisciplinaInputValue(a.disciplina || '') === disc && String(a.subGrupo || '') === sub) return;
+        const end = String(a?.dataFim || a?.dataInicio || '').trim();
+        if (end && (!latestEnd || end > latestEnd)) latestEnd = end;
+    });
+
+    let anchor = latestEnd ? shiftISODate(latestEnd, 1) : String(minStart || origFaixas[0].inicio || '').trim();
+    if (minStart && anchor < minStart) anchor = minStart;
+    if (!anchor) return null;
+
+    const originalFirstStart = origFaixas[0].inicio;
     const maxShiftDays = 365;
 
     for (let offset = 0; offset <= maxShiftDays; offset++) {
         const candidateFirstStart = shiftISODate(anchor, offset);
         const delta = diffDaysISO(originalFirstStart, candidateFirstStart);
-        const shiftedFaixas = shiftFaixasByDays(originalFaixas, delta);
-        const shiftedCandidate = buildCandidateIntensiveFromFaixas(baseAlloc, shiftedFaixas);
+        const shiftedFaixas = shiftFaixasByDays(origFaixas, delta);
+        const shiftedCandidate = buildCandidateIntensiveFromFaixas(baseCandidate, shiftedFaixas);
         if (!shiftedCandidate) continue;
 
+        // respectTurmaOccupancy:false => bloco CONTINUO (nao desvia para buracos).
         const execution = computeIntensiveExecution(shiftedCandidate, {
             respectPriority: true,
-            respectTurmaOccupancy: true
+            respectTurmaOccupancy: false
         });
         if (!execution || execution.totalHours <= 0 || !execution.dataInicio || !execution.dataFim) continue;
 
@@ -2301,215 +2295,23 @@ function relocateFaixaAllocationForward(baseAlloc, anchorStartDate) {
         const teacherConflict = findConfirmedTeacherConflictForCandidate(finalCandidate, teacherNames);
         if (teacherConflict) continue;
 
-        return finalCandidate;
-    }
-
-    return null;
-}
-
-// Empurrao com "pausa e retoma": a componente conflitante MANTEM as aulas anteriores
-// ao inicio da intensiva, PAUSA durante o periodo ocupado por ela e RETOMA depois,
-// preservando o padrao de dias/slots e a carga horaria total. Caso "professor
-// visitante". Quando nao ha aulas antes da intensiva, equivale a deslocar tudo.
-function splitAndDeferAllocationAroundIntensive(baseAlloc, intensiveStart, intensiveEnd) {
-    const origFaixas = getNormalizedIntensiveFaixas(baseAlloc);
-    if (!baseAlloc || origFaixas.length === 0) return null;
-
-    const start = String(intensiveStart || '').trim();
-    const end = String(intensiveEnd || '').trim();
-    if (!start || !end) return null;
-
-    const totalCH = parseInt(baseAlloc.ch || 0, 10) || 0;
-
-    // Aulas originalmente planejadas (preferindo o que ja estava salvo).
-    const origByDate = (baseAlloc.executionByDate && typeof baseAlloc.executionByDate === 'object'
-        && Object.keys(baseAlloc.executionByDate).length > 0)
-        ? baseAlloc.executionByDate
-        : (computeIntensiveExecution(baseAlloc, { respectPriority: true }).byDate || {});
-
-    const keptByDate = {};
-    let keptHours = 0;
-    Object.keys(origByDate)
-        .filter((dateStr) => /^\d{4}-\d{2}-\d{2}$/.test(dateStr) && dateStr < start)
-        .forEach((dateStr) => {
-            const slots = Array.isArray(origByDate[dateStr]) ? origByDate[dateStr].slice() : [];
-            if (slots.length === 0) return;
-            keptByDate[dateStr] = slots;
-            keptHours += slots.length;
-        });
-
-    const deferHours = totalCH > 0 ? Math.max(0, totalCH - keptHours) : 0;
-    // Nada a deferir: a componente ja cabe inteira antes da intensiva (nao deveria conflitar).
-    if (deferHours <= 0) return null;
-
-    // Re-aloca a parte futura imediatamente apos a intensiva, buscando inicio livre.
-    const anchorStart = shiftISODate(end, 1);
-
-    // Caso a componente INTEIRA seja deslocada (nenhuma aula mantida antes da
-    // intensiva): preserva TODAS as faixas originais (multi-faixa), apenas
-    // deslocando-as para depois da intensiva. Evita colapsar para um unico
-    // padrao (que perdia a Faixa 1 quando havia 2+ faixas).
-    if (keptHours === 0) {
-        const relocatedWhole = relocateFaixaAllocationForward(baseAlloc, anchorStart);
-        if (!relocatedWhole) return null;
-        return {
-            ...relocatedWhole,
-            ch: totalCH,
-            pausedForIntensive: false
-        };
-    }
-
-    const keptEnd = shiftISODate(start, -1);
-    const keptFaixas = keptHours > 0 ? alignFaixasToExecutionEnd(origFaixas, keptEnd) : [];
-
-    // Padrao a retomar = faixa ativa no inicio da intensiva (ou a ultima existente).
-    const template = getActiveFaixaForDate(origFaixas, start) || origFaixas[origFaixas.length - 1];
-    if (!template) return null;
-
-    const deferBase = {
-        ...baseAlloc,
-        ch: deferHours,
-        executionByDate: undefined,
-        dataInicio: anchorStart,
-        dataFim: null,
-        faixas: [{
-            inicio: anchorStart,
-            fim: null,
-            dias: template.dias.slice(),
-            slots: template.slots.slice(),
-            drawnSlotsByDay: template.drawnSlotsByDay
-        }]
-    };
-    const deferred = relocateFaixaAllocationForward(deferBase, anchorStart);
-    if (!deferred) return null;
-
-    const combinedFaixas = [...keptFaixas, ...(Array.isArray(deferred.faixas) ? deferred.faixas : [])]
-        .map(normalizeFaixaEntry)
-        .filter(Boolean)
-        .sort((a, b) => a.inicio.localeCompare(b.inicio));
-    if (combinedFaixas.length === 0) return null;
-
-    const mergedByDate = { ...keptByDate, ...(deferred.executionByDate || {}) };
-    const allDays = new Set();
-    const allSlots = new Set();
-    Object.keys(mergedByDate).forEach((dateStr) => {
-        const dow = new Date(`${dateStr}T12:00:00`).getDay();
-        if (dow >= 1 && dow <= 6) allDays.add(dow);
-        (mergedByDate[dateStr] || []).forEach((slot) => allSlots.add(slot));
-    });
-    const usedDates = Object.keys(mergedByDate).sort();
-    const dataInicio = usedDates[0] || combinedFaixas[0].inicio;
-    const dataFim = usedDates[usedDates.length - 1] || combinedFaixas[combinedFaixas.length - 1].fim;
-
-    return {
-        ...baseAlloc,
-        ch: totalCH,
-        dataInicio,
-        dataFim,
-        executionByDate: mergedByDate,
-        horariosOcupados: [...allSlots].sort((a, b) => timeToMinutes(a) - timeToMinutes(b)),
-        horariosUltimoDia: Array.isArray(deferred.horariosUltimoDia) ? deferred.horariosUltimoDia.slice() : [],
-        diasMarcados: [...allDays].sort((a, b) => a - b),
-        usaSabado: allDays.has(6),
-        faixas: alignFaixasToExecutionEnd(combinedFaixas, dataFim),
-        pausedForIntensive: keptHours > 0
-    };
-}
-
-function applyConflictPushForwardTransaction(candidateAllocToInsert, candidateExecution, conflictingAllocs = [], selfIdsToRemove = []) {
-    if (!candidateAllocToInsert || !candidateExecution) {
-        return { ok: false, reason: 'invalid-input' };
-    }
-
-    const intensiveStart = String(candidateExecution.dataInicio || candidateAllocToInsert.dataInicio || '').trim();
-    const intensiveEnd = String(candidateExecution.dataFim || candidateAllocToInsert.dataFim || intensiveStart || '').trim();
-
-    const snapshot = JSON.parse(JSON.stringify(store.allocations || []));
-    const moving = (Array.isArray(conflictingAllocs) ? conflictingAllocs : [])
-        .map((alloc) => JSON.parse(JSON.stringify(alloc)))
-        .sort((a, b) => String(a?.dataInicio || '').localeCompare(String(b?.dataInicio || '')));
-
-    try {
-        const movingIds = new Set(moving.map((alloc) => String(alloc.id)));
-        const selfIds = new Set((Array.isArray(selfIdsToRemove) ? selfIdsToRemove : []).map((id) => String(id)));
-        store.allocations = (store.allocations || []).filter(
-            (alloc) => !movingIds.has(String(alloc?.id)) && !selfIds.has(String(alloc?.id))
-        );
-        store.saveAllocations();
-
-        store.addAllocation(candidateAllocToInsert);
-
-        const relocatedNames = [];
-        const pausedNames = [];
-
-        for (const original of moving) {
-            const deferred = splitAndDeferAllocationAroundIntensive(original, intensiveStart, intensiveEnd);
-            if (!deferred) {
-                store.replaceAllocations(snapshot);
-                return {
-                    ok: false,
-                    reason: 'relocation-failed',
-                    disciplina: original?.disciplina || ''
-                };
-            }
-
-            store.allocations.push(deferred);
-            store.saveAllocations();
-            const nome = String(deferred.disciplina || '').trim() || '(sem nome)';
-            relocatedNames.push(nome);
-            if (deferred.pausedForIntensive) pausedNames.push(nome);
-        }
-
-        store.saveAllocations();
-        return {
-            ok: true,
-            relocatedCount: relocatedNames.length,
-            relocatedNames,
-            pausedCount: pausedNames.length,
-            pausedNames
-        };
-    } catch (err) {
-        console.error('Falha ao aplicar realocacao em cadeia:', err);
-        store.replaceAllocations(snapshot);
-        return {
-            ok: false,
-            reason: 'exception'
-        };
-    }
-}
-
-function getWeekAutoPositionMode() {
-    const enabled = !!store.settings?.weekAutoPositionEnabled;
-    if (!enabled) return 'inicio';
-
-    const rawMode = String(store.settings?.weekAutoPositionMode || '').toLowerCase();
-    if (rawMode === 'fim' || rawMode === 'intensiva') return 'fim';
-    return 'inicio';
-}
-
-function getLatestAllocatedComponentForCurrentTurma() {
-    if (!store.selectedTurma || !Array.isArray(store.allocations)) return null;
-
-    for (let i = store.allocations.length - 1; i >= 0; i--) {
-        const alloc = store.allocations[i];
-        if (String(alloc?.turmaId) !== String(store.selectedTurma)) continue;
-        if (isPendingAllocation(alloc)) continue;
-        return alloc;
+        return { candidate: finalCandidate, execution };
     }
 
     return null;
 }
 
 function getWeekAutoPositionAnchorDate() {
-    const latestAlloc = getLatestAllocatedComponentForCurrentTurma();
-    if (latestAlloc) {
-        const mode = getWeekAutoPositionMode();
-        if (mode === 'fim') {
-            return latestAlloc.dataFim || latestAlloc.dataInicio || '';
-        }
-        return latestAlloc.dataInicio || latestAlloc.dataFim || '';
-    }
-
+    // A semana exibida segue o INICIO DA FAIXA 1 do editor — fonte unica de
+    // "onde esta componente comeca": para NOVA componente e a DATA SUGERIDA (ja
+    // escrita em inp-data-inicio-f1 por collapseFaixasForNewComponent); para
+    // EDICAO e o inicio REAL da componente carregada (por hydrateFaixasFromComponente).
+    // Isso UNIFICA a semana exibida com a data sugerida. Antes a semana usava a
+    // ULTIMA componente inserida (ordem do array), que divergia da ancora
+    // cronologica da sugestao (bug: ao reeditar uma oferta, a grade pulava para a
+    // semana de OUTRA componente, a ultima inserida).
+    const f1Start = String(document.getElementById('inp-data-inicio-f1')?.value || '').trim();
+    if (f1Start) return f1Start;
     return getPreferredStartDateForCurrentTurma();
 }
 
@@ -2518,63 +2320,6 @@ function applyWeekAutoPositionForComponentChange(options = {}) {
     const anchorDate = getWeekAutoPositionAnchorDate();
     if (!anchorDate) return;
     setWeeklyViewByDate(anchorDate, { followFaixa: false, render });
-}
-
-function syncWeekAutoPositionControls() {
-    const chk = document.getElementById('chk-auto-week-position');
-    const modesWrap = document.getElementById('auto-week-position-modes');
-    const radioStart = document.getElementById('radio-auto-week-start');
-    const radioEnd = document.getElementById('radio-auto-week-end');
-    if (!chk || !modesWrap || !radioStart || !radioEnd) return;
-
-    const enabled = !!store.settings?.weekAutoPositionEnabled;
-    const mode = getWeekAutoPositionMode();
-
-    chk.checked = enabled;
-    radioStart.checked = mode === 'inicio';
-    radioEnd.checked = mode === 'fim';
-    modesWrap.classList.toggle('hidden', !enabled);
-}
-
-function persistWeekAutoPositionSettings(enabled, mode) {
-    store.settings.weekAutoPositionEnabled = !!enabled;
-    store.settings.weekAutoPositionMode = mode === 'fim' ? 'fim' : 'inicio';
-    store.saveSettings();
-}
-
-function setupWeekAutoPositionControls() {
-    const chk = document.getElementById('chk-auto-week-position');
-    const radioStart = document.getElementById('radio-auto-week-start');
-    const radioEnd = document.getElementById('radio-auto-week-end');
-    if (!chk || !radioStart || !radioEnd) return;
-    if (chk.dataset.bound === '1') {
-        syncWeekAutoPositionControls();
-        return;
-    }
-
-    chk.dataset.bound = '1';
-
-    if (typeof store.settings.weekAutoPositionEnabled !== 'boolean') {
-        store.settings.weekAutoPositionEnabled = false;
-    }
-    if (!store.settings.weekAutoPositionMode) {
-        store.settings.weekAutoPositionMode = 'inicio';
-    }
-    syncWeekAutoPositionControls();
-
-    chk.addEventListener('change', () => {
-        const selectedMode = radioEnd.checked ? 'fim' : 'inicio';
-        persistWeekAutoPositionSettings(chk.checked, selectedMode);
-        syncWeekAutoPositionControls();
-    });
-
-    [radioStart, radioEnd].forEach((radio) => {
-        radio.addEventListener('change', () => {
-            if (!radio.checked) return;
-            persistWeekAutoPositionSettings(chk.checked, radio.value);
-            syncWeekAutoPositionControls();
-        });
-    });
 }
 
 function refreshCompactFaixaDateDisplay(input) {
@@ -2835,15 +2580,15 @@ function handleClearFaixasRestart() {
 
     endDrawingDrag();
     if (pendingFaixaStartPick) clearPendingFaixaStartPick();
-    window.isDrawingFaixa = null;
+    drawingFaixaIndex = null;
     weeklyViewState.followActiveFaixa = false;
     setComponentStartSelectionMode('auto');
 
     // useCurrentUI: false força a busca da data disponível ignorando as faixas atuais.
     // Em EDICAO, porem, reposiciona a Faixa 1 na data inicial original da
     // componente (onde ela ja estava) em vez do primeiro dia livre recalculado.
-    const editingStart = (editingOriginalAllocationIds.length > 0)
-        ? String(editingComponentOriginalStart || '').trim()
+    const editingStart = (weeklyState.editingOriginalAllocationIds.length > 0)
+        ? String(weeklyState.editingComponentOriginalStart || '').trim()
         : '';
     if (editingStart) {
         collapseFaixasForNewComponent({ preferredStart: editingStart, useCurrentUI: false });
@@ -2870,7 +2615,7 @@ function resolveInlineEditableFaixaIndex() {
 
     const hasStart = (idx) => !!document.getElementById(`inp-data-inicio-f${idx}`)?.value;
 
-    const current = parseInt(window.isDrawingFaixa || activeFaixaIndex, 10);
+    const current = parseInt(drawingFaixaIndex || activeFaixaIndex, 10);
     if (!Number.isNaN(current) && current >= 1 && current <= 3 && hasStart(current)) return current;
 
     if (hasStart(1)) return 1;
@@ -2975,11 +2720,11 @@ function setupFaixaControls() {
                         const f3Ini = document.getElementById('inp-data-inicio-f3');
                         if (f3Ini) f3Ini.value = '';
                         activeFaixaIndex = 1;
-                        if (window.isDrawingFaixa && parseInt(window.isDrawingFaixa, 10) > 1) window.isDrawingFaixa = 1;
+                        if (drawingFaixaIndex && parseInt(drawingFaixaIndex, 10) > 1) drawingFaixaIndex = 1;
                     }
                     if (i === 3 && !iniEl.value) {
                         clearFaixaState(3);
-                        if (window.isDrawingFaixa && parseInt(window.isDrawingFaixa, 10) === 3) window.isDrawingFaixa = 2;
+                        if (drawingFaixaIndex && parseInt(drawingFaixaIndex, 10) === 3) drawingFaixaIndex = 2;
                     }
 
                     if (pendingFaixaStartPick === i && iniEl.value) clearPendingFaixaStartPick();
@@ -3054,7 +2799,7 @@ function setupFaixaControls() {
         btnToggleDrawView.addEventListener('click', () => {
             drawingViewMode = drawingViewMode === 'clean' ? 'context' : 'clean';
             updateDrawingViewToggleButton();
-            if (window.isDrawingFaixa) renderWeeklyGrid();
+            if (drawingFaixaIndex) renderWeeklyGrid();
         });
     }
 
@@ -3063,7 +2808,7 @@ function setupFaixaControls() {
         btnSaveDraw.textContent = 'Salvar (Opcional)';
         btnSaveDraw.title = 'As selecoes sao aplicadas automaticamente ao clicar/arrastar.';
         btnSaveDraw.addEventListener('click', () => {
-            if (!window.isDrawingFaixa) return;
+            if (!drawingFaixaIndex) return;
             persistActiveDrawingSelection();
             deactivateDrawingMode();
         });
@@ -3116,7 +2861,7 @@ function hydrateFaixasFromComponente(allocation, options = {}) {
     if (!allocation || !isFaixaAllocation(allocation)) return;
     const { useStoredExecution = false } = options || {};
 
-    faixasPatterns = { 1: [], 2: [], 3: [] };
+    weeklyState.clearFaixasPatterns();
 
     const resolved = useStoredExecution
         ? resolveEditableFaixasFromStoredExecution(allocation)
@@ -3208,7 +2953,7 @@ function getAvailableFaixasForNavigation() {
 
 function getCurrentFaixaNavigationPosition(faixas) {
     if (!Array.isArray(faixas) || faixas.length === 0) return -1;
-    const currentIdx = parseInt(window.isDrawingFaixa || activeFaixaIndex || 0, 10);
+    const currentIdx = parseInt(drawingFaixaIndex || activeFaixaIndex || 0, 10);
     const byActive = faixas.findIndex((f) => f.idx === currentIdx);
     if (byActive >= 0) return byActive;
     return 0;
@@ -3240,7 +2985,7 @@ function navigateWeeklyFaixa(direction = 1) {
 
     activeFaixaIndex = target.idx;
 
-    if (window.isDrawingFaixa) {
+    if (drawingFaixaIndex) {
         activateDrawingMode(target.idx, {
             silent: true,
             jumpToFaixaStart: true,
@@ -3255,7 +3000,7 @@ function navigateWeeklyFaixa(direction = 1) {
 }
 
 function getDefaultWeeklyAnchorDate() {
-    const activeStart = getActiveFaixaStartDate(window.isDrawingFaixa || activeFaixaIndex);
+    const activeStart = getActiveFaixaStartDate(drawingFaixaIndex || activeFaixaIndex);
     const termStart = store.settings.termStart || inpTermStart?.value || calStart?.value || '';
     if (activeStart) return activeStart;
     if (termStart) return termStart;
@@ -3312,13 +3057,13 @@ function playWeeklyShiftAnimation() {
 
 function resolveWeeklyViewWeekStart() {
     if (!weeklyViewState.weekStartISO) {
-        setWeeklyViewByDate(getDefaultWeeklyAnchorDate(), { followFaixa: !!window.isDrawingFaixa, render: false });
+        setWeeklyViewByDate(getDefaultWeeklyAnchorDate(), { followFaixa: !!drawingFaixaIndex, render: false });
     }
     return weeklyViewState.weekStartISO;
 }
 
 function moveWeeklyViewWeek(weekDelta = 0) {
-    if (window.isDrawingFaixa) persistActiveDrawingSelection();
+    if (drawingFaixaIndex) persistActiveDrawingSelection();
     const currentStart = resolveWeeklyViewWeekStart();
     if (!currentStart) return;
     const nextDate = addDaysISO(currentStart, weekDelta * 7);
@@ -3340,8 +3085,8 @@ function updateWeeklyNavigatorLabel() {
     const weekEnd = addDaysISO(weekStart, 5);
     let suffix = '';
 
-    if (window.isDrawingFaixa) {
-        const idx = parseInt(window.isDrawingFaixa, 10);
+    if (drawingFaixaIndex) {
+        const idx = parseInt(drawingFaixaIndex, 10);
         const ini = document.getElementById(`inp-data-inicio-f${idx}`)?.value || '';
         const fim = document.getElementById(`inp-data-fim-f${idx}`)?.value || ini;
         if (ini) {
@@ -3354,51 +3099,194 @@ function updateWeeklyNavigatorLabel() {
     updateWeeklyContextNote();
 }
 
-function updateWeeklyContextNote() {
-    const noteEl = document.getElementById('weekly-week-context-note');
-    if (!noteEl) return;
+// Mensagem de BLOQUEIO persistente (ex.: salvamento barrado). Enquanto setada,
+// a barra de status mostra o aviso em tom vermelho ("bloqueado") ate o usuario
+// corrigir e tentar de novo — NAO some como um toast. Limpa em: nova tentativa
+// de salvar (inicio de handleAddManual), reset de edicao (sucesso/turma/plano)
+// e nova selecao de disciplina.
+let weeklyBlockMessage = null;
+function setWeeklyBlock(title, hint) {
+    weeklyBlockMessage = { title, hint };
+    updateWeeklyContextNote();
+}
+function clearWeeklyBlock() {
+    weeklyBlockMessage = null;
+}
 
-    const weekStart = resolveWeeklyViewWeekStart();
-    if (!weekStart) {
-        noteEl.textContent = '';
-        noteEl.style.display = 'none';
-        noteEl.classList.remove('is-pending');
-        return;
+function updateWeeklyContextNote() {
+    const bar = document.getElementById('weekly-status-bar');
+    if (!bar) return;
+
+    const status = computeWeeklyStatus();
+
+    bar.classList.remove('tone-info', 'tone-action', 'tone-editing', 'tone-pending', 'tone-blocked');
+    bar.classList.add(`tone-${status.tone}`);
+
+    const iconEl = bar.querySelector('.weekly-status-icon');
+    const titleEl = bar.querySelector('.weekly-status-title');
+    const hintEl = bar.querySelector('.weekly-status-hint');
+    if (iconEl) iconEl.textContent = status.icon;
+    if (titleEl) titleEl.textContent = status.title;
+    if (hintEl) hintEl.textContent = status.hint;
+
+    // Chip do "encaixe sugerido" (transparencia do deslocamento automatico).
+    const chipEl = document.getElementById('weekly-status-chip');
+    if (chipEl) {
+        if (status.chip) {
+            chipEl.innerHTML = buildStatusChipHTML(status.chip);
+            chipEl.classList.remove('hidden');
+        } else {
+            chipEl.classList.add('hidden');
+            chipEl.textContent = '';
+        }
     }
 
-    noteEl.style.display = 'block';
+    // Primeiro uso guiado: destaca no Guia Rapido o passo correspondente ao
+    // estado atual ("voce esta aqui"), conectando a instrucao ao momento.
+    highlightGuideStep(status.step);
+
+    // Nota inline discreta do "dia livre antes" (gapBefore), se aplicavel.
+    updateGapAdvisory();
+}
+
+// Monta o HTML do chip de encaixe sugerido: 📍 data · horario · Nº horario [em paralelo].
+// Os valores vem de dados internos (datas/horas/numeros) — sem texto do usuario.
+function buildStatusChipHTML(chip) {
+    const parts = ['<span class="wsc-pin" aria-hidden="true">\u{1F4CD}</span>'];
+    parts.push(`<span class="wsc-date">${chip.dateBR}</span>`);
+    if (chip.time) {
+        parts.push('<span class="wsc-sep">\u00b7</span>');
+        parts.push(`<span class="wsc-time">${chip.time}</span>`);
+    }
+    if (chip.ordinal) {
+        parts.push('<span class="wsc-sep">\u00b7</span>');
+        parts.push(`<span class="wsc-ord">${chip.ordinal}\u00ba hor\u00e1rio</span>`);
+    }
+    if (chip.parallel) {
+        parts.push('<span class="wsc-par">em paralelo</span>');
+    }
+    return parts.join('');
+}
+
+// Ordem (1..N) e horario do slot dentro do SEU turno (aulas, sem intervalo).
+function getSlotOrdinalInfo(slotLabel) {
+    const norm = normalizeConflictSlotLabel(slotLabel || '');
+    const time = (String(norm).match(/\d{1,2}:\d{2}/) || [''])[0];
+    const classSlots = buildHorariosForUI()
+        .map((s) => normalizeConflictSlotLabel(s))
+        .filter((s) => s && !s.toUpperCase().includes('INTERVALO'));
+    const turno = getTurnoLetter(norm);
+    const turnoSlots = classSlots.filter((s) => getTurnoLetter(s) === turno);
+    const idx = turnoSlots.indexOf(norm);
+    return { ordinal: idx >= 0 ? idx + 1 : null, time };
+}
+
+// Constroi o chip da sugestao ATIVA (so p/ NOVA componente cuja Faixa 1 ainda
+// esta na data sugerida; se o usuario mudou a data manualmente, some).
+function buildSuggestionChip(iniDate, isEditing) {
+    if (isEditing) return null;
+    const sug = lastStartSuggestion;
+    if (!sug || !sug.date || sug.exhausted || !sug.slot) return null;
+    if (sug.date !== iniDate) return null;
+    const info = getSlotOrdinalInfo(sug.slot);
+    return {
+        dateBR: formatDateBR(sug.date),
+        time: info.time || '',
+        ordinal: info.ordinal || null,
+        parallel: !!info.ordinal && info.ordinal > 1
+    };
+}
+
+// Destaca UM passo (1..7) do Guia Rapido do cabecalho como "passo atual".
+// step 0/undefined = nenhum destaque. Casa por indice (Nesimo li = passo N).
+function highlightGuideStep(step) {
+    const steps = document.querySelectorAll('#weekly-instructions-body .wi-step');
+    steps.forEach((el, i) => {
+        el.classList.toggle('wi-step--current', (i + 1) === Number(step));
+    });
+}
+
+// Deriva, a partir do estado atual da Alocacao de Componentes, uma unica
+// mensagem de "onde estou / proximo passo". Consolida o que antes ficava
+// espalhado (nota de contexto, badge de reedicao). Ordem = prioridade.
+function computeWeeklyStatus() {
+    // BLOQUEIO tem prioridade maxima: fica ate o usuario corrigir e re-tentar.
+    if (weeklyBlockMessage) {
+        return {
+            tone: 'blocked', icon: '\u26D4', step: 0,
+            title: weeklyBlockMessage.title,
+            hint: weeklyBlockMessage.hint
+        };
+    }
+
+    const disc = getWeeklyFaixasTitleDisciplinaAtiva();
+    const isEditing = (weeklyState.editingOriginalAllocationIds?.length || 0) > 0;
+
+    if (!store.selectedTurma) {
+        return {
+            tone: 'info', icon: '\u{1F3AF}', step: 2,
+            title: 'Comece selecionando curso e turma',
+            hint: 'Na barra lateral, escolha o curso do IECOS e uma turma valida.'
+        };
+    }
 
     if (pendingFaixaStartPick) {
-        noteEl.classList.add('is-pending');
-        const previousFaixa = pendingFaixaStartPick - 1;
-        noteEl.textContent = `Clique em um slot da grade para definir o inicio da Faixa ${pendingFaixaStartPick}. Ela passara a substituir a Faixa ${previousFaixa} a partir desta data.`;
-        return;
+        const prev = pendingFaixaStartPick - 1;
+        return {
+            tone: 'pending', icon: '\u{1F4CC}', step: 6,
+            title: `Defina o inicio da Faixa ${pendingFaixaStartPick}`,
+            hint: `Clique em um horario da grade. A Faixa ${pendingFaixaStartPick} passa a substituir a Faixa ${prev} a partir dessa data.`
+        };
     }
 
-    noteEl.classList.remove('is-pending');
-
-    const idx = parseInt(window.isDrawingFaixa || activeFaixaIndex, 10);
-    if (Number.isNaN(idx) || idx < 1 || idx > 3) {
-        noteEl.textContent = '';
-        noteEl.style.display = 'none';
-        return;
+    if (!disc) {
+        return {
+            tone: 'info', icon: '\u{1F4DA}', step: 3,
+            title: 'Selecione a componente',
+            hint: 'Escolha a disciplina que vai alocar no campo "Componente" da barra lateral.'
+        };
     }
+
+    const discUpper = disc.toLocaleUpperCase('pt-BR');
+    const parsedIdx = parseInt(drawingFaixaIndex || activeFaixaIndex, 10);
+    const idx = (!Number.isNaN(parsedIdx) && parsedIdx >= 1 && parsedIdx <= 3) ? parsedIdx : 1;
     const ini = document.getElementById(`inp-data-inicio-f${idx}`)?.value || '';
 
-    if (!ini) {
-        noteEl.textContent = idx === 1
-            ? 'Faixa = regime de funcionamento em um intervalo de datas. Defina o início da Faixa 1 pelo calendário ao lado para alinhar a alocação com a semana real.'
-            : `Defina o inicio da Faixa ${idx} para criar o novo regime que substituira a Faixa ${idx - 1}.`;
-        return;
+    if (idx === 1 && !ini) {
+        return {
+            tone: 'action', icon: '\u{1F5D3}\uFE0F', step: 4,
+            title: 'Defina a data de inicio da Faixa 1',
+            hint: `Escolha a data no calendario do painel e desenhe os horarios de ${discUpper} na grade.`
+        };
+    }
+
+    if (idx >= 2 && !ini) {
+        return {
+            tone: 'action', icon: '\u2795', step: 6,
+            title: `Defina o inicio da Faixa ${idx}`,
+            hint: `A Faixa ${idx} cria um novo regime de horarios que substitui a Faixa ${idx - 1}.`
+        };
     }
 
     if (idx === 1) {
-        noteEl.textContent = `Faixa 1 define o regime inicial da componente a partir de ${formatDateBR(ini)}.`;
-        return;
+        const chip = buildSuggestionChip(ini, isEditing);
+        return {
+            tone: isEditing ? 'editing' : 'action',
+            icon: isEditing ? '\u270F\uFE0F' : '\u{1F58A}\uFE0F', step: 5,
+            title: `${isEditing ? 'Editando' : 'Desenhando'} ${discUpper} \u2014 Faixa 1`,
+            hint: chip
+                ? 'Encaixe automatico para poupar cliques. Nao e a semana ideal? Ajuste a data de inicio ou navegue com \u25C0 Semana / Semana \u25B6.'
+                : 'Clique/arraste nos horarios vagos e clique em "Salvar Componente". Faixas 2 e 3 sao opcionais, para mudancas de horario no periodo.',
+            chip
+        };
     }
 
     const previousEnd = document.getElementById(`inp-data-fim-f${idx - 1}`)?.value || shiftISODate(ini, -1);
-    noteEl.textContent = `Faixa ${idx} substitui a Faixa ${idx - 1} a partir de ${formatDateBR(ini)}. O fim da Faixa ${idx - 1} fica automaticamente em ${formatDateBR(previousEnd)}. Desenhe explicitamente o novo padrao desta faixa na grade.`;
+    return {
+        tone: 'action', icon: '\u{1F58A}\uFE0F', step: 6,
+        title: `Desenhando a Faixa ${idx} de ${discUpper}`,
+        hint: `Substitui a Faixa ${idx - 1} a partir de ${formatDateBR(ini)} (fim da Faixa ${idx - 1}: ${formatDateBR(previousEnd)}). Desenhe o novo padrao na grade.`
+    };
 }
 
 function setupWeeklyWeekNavigator() {
@@ -3438,7 +3326,7 @@ function setupWeeklyWeekNavigator() {
     }
     if (btnSave) {
         btnSave.addEventListener('click', () => {
-            if (!window.isDrawingFaixa) {
+            if (!drawingFaixaIndex) {
                 showToastWarning('Defina uma faixa ativa para salvar o padrao.', 'warning', 2200);
                 return;
             }
@@ -3448,7 +3336,7 @@ function setupWeeklyWeekNavigator() {
                 updateWeeklySavePatternButton();
                 return;
             }
-            const idx = parseInt(window.isDrawingFaixa, 10);
+            const idx = parseInt(drawingFaixaIndex, 10);
             showToastWarning(`Padrao da Faixa ${idx} salvo (${qtd} slots).`, 'success', 1800);
             updateWeeklySavePatternButton();
         });
@@ -3618,34 +3506,6 @@ function buildIntensiveConflictFaixas(intense, rangeStart, rangeEnd) {
 
     return faixas;
 }
-
-function hasSlotsIntersection(slotsA, slotsB) {
-    if (!Array.isArray(slotsA) || !Array.isArray(slotsB) || slotsA.length === 0 || slotsB.length === 0) return false;
-    const setB = new Set(slotsB);
-    return slotsA.some((s) => setB.has(s));
-}
-
-function hasIntensiveConflictByDay(candidate, existing, candidateRange = {}, existingRange = {}) {
-    const faixasA = buildIntensiveConflictFaixas(candidate, candidateRange.start, candidateRange.end);
-    const faixasB = buildIntensiveConflictFaixas(existing, existingRange.start, existingRange.end);
-    if (faixasA.length === 0 || faixasB.length === 0) return false;
-
-    for (const faixaA of faixasA) {
-        for (const faixaB of faixasB) {
-            if (!isDateOverlap(faixaA.inicio, faixaA.fim, faixaB.inicio, faixaB.fim)) continue;
-
-            const daysA = Object.keys(faixaA.byDay).map((d) => parseInt(d, 10)).filter((d) => d >= 1 && d <= 6);
-            for (const day of daysA) {
-                const slotsA = faixaA.byDay[day] || [];
-                const slotsB = faixaB.byDay[day] || [];
-                if (hasSlotsIntersection(slotsA, slotsB)) return true;
-            }
-        }
-    }
-    return false;
-}
-
-
 
 function syncAllRegularDates() {
     const termStart = store.settings.termStart || '2025-01-01';
@@ -4042,12 +3902,114 @@ function getSelectedPeriodoLetivoMeta() {
     });
 }
 
+// ---------------------------------------------------------------------------
+// PERIODO DE VISUALIZACAO (viewport) — DESACOPLADO do termo do PL.
+// Os inputs #cal-start / #cal-end passam a ser uma JANELA de visualizacao livre
+// (a direcao pode olhar qualquer intervalo, inclusive fora do termo do PL). O
+// viewport e persistido POR PLANO (chave do PL) no localStorage; sem override,
+// usa o termo do PL como padrao. Editar o termo do PL continua sendo pelos
+// campos "Inicio/Fim" da barra lateral (#inp-term-start / #inp-term-end).
+// ---------------------------------------------------------------------------
+const CALENDAR_VIEWPORT_STORAGE_KEY = 'calendar_viewport_v1';
+
+function getCalendarViewportMap() {
+    try {
+        return JSON.parse(localStorage.getItem(CALENDAR_VIEWPORT_STORAGE_KEY)) || {};
+    } catch (e) {
+        return {};
+    }
+}
+
+function getActivePlanKey() {
+    return store.getActivePlanMeta()?.key || '';
+}
+
+function getStoredCalendarViewport(planKey = getActivePlanKey()) {
+    if (!planKey) return null;
+    const entry = getCalendarViewportMap()[planKey];
+    if (entry && entry.start && entry.end) return { start: entry.start, end: entry.end };
+    return null;
+}
+
+function saveCalendarViewport(start, end, planKey = getActivePlanKey()) {
+    if (!planKey || !start || !end) return;
+    const map = getCalendarViewportMap();
+    map[planKey] = { start, end };
+    try {
+        localStorage.setItem(CALENDAR_VIEWPORT_STORAGE_KEY, JSON.stringify(map));
+    } catch (e) { /* ignore */ }
+}
+
+function clearCalendarViewport(planKey = getActivePlanKey()) {
+    if (!planKey) return;
+    const map = getCalendarViewportMap();
+    if (map[planKey]) {
+        delete map[planKey];
+        try {
+            localStorage.setItem(CALENDAR_VIEWPORT_STORAGE_KEY, JSON.stringify(map));
+        } catch (e) { /* ignore */ }
+    }
+}
+
+// Re-renderiza o calendario/gantt da aba ativa (turma ou docente) com o
+// intervalo atual dos inputs. Nao toca no termo do PL.
+function refreshActiveCalendarView() {
+    const activeTab = document.querySelector('.tab-btn.active')?.dataset.tab;
+    if (activeTab === 'monthly') {
+        renderActiveSubtab('tab-monthly', 'turma-calendar');
+    } else if (activeTab === 'teacher') {
+        renderActiveSubtab('tab-teacher', 'docente-calendar');
+    }
+}
+
+// Mantem os inputs de viewport da aba Docente espelhando os da aba Turma
+// (ambos apontam para a MESMA janela de visualizacao persistida por PL).
+function syncTeacherViewportInputs() {
+    if (calStartTeacher && calStart) calStartTeacher.value = calStart.value || '';
+    if (calEndTeacher && calEnd) calEndTeacher.value = calEnd.value || '';
+}
+
+// Chamado quando o usuario altera as datas de visualizacao (change) ou clica em
+// "Atualizar": valida, persiste por PL e redesenha a visao ativa.
+function handleCalendarViewportChange() {
+    const start = calStart?.value || '';
+    const end = calEnd?.value || '';
+    if (start && end && start > end) {
+        showToastWarning('A data inicial e posterior a data final. Ajuste o intervalo de visualizacao.', 'warning', 2800);
+        return;
+    }
+    saveCalendarViewport(start, end);
+    syncTeacherViewportInputs();
+    refreshActiveCalendarView();
+}
+
+// Versao para os inputs da aba Docente: copia os valores para os inputs
+// canonicos (#cal-start/#cal-end, lidos pelo motor de render) e reaproveita o
+// fluxo padrao de viewport.
+function handleTeacherViewportChange() {
+    if (calStart && calStartTeacher) calStart.value = calStartTeacher.value || '';
+    if (calEnd && calEndTeacher) calEnd.value = calEndTeacher.value || '';
+    handleCalendarViewportChange();
+}
+
+// Volta o viewport ao termo do PL vigente (limpa o override persistido).
+function resetCalendarViewportToPlan() {
+    clearCalendarViewport();
+    if (calStart) calStart.value = store.settings.termStart || '';
+    if (calEnd) calEnd.value = store.settings.termEnd || '';
+    syncTeacherViewportInputs();
+    refreshActiveCalendarView();
+}
+
 function syncPlanInputsFromStore(preferredMeta = null) {
     const selPeriodo = document.getElementById('sel-periodo-letivo');
     if (inpTermStart) inpTermStart.value = store.settings.termStart || '';
     if (inpTermEnd) inpTermEnd.value = store.settings.termEnd || '';
-    if (calStart) calStart.value = store.settings.termStart || '';
-    if (calEnd) calEnd.value = store.settings.termEnd || '';
+    // Viewport: usa o override persistido do PL, senao o termo do PL como padrao.
+    const viewport = getStoredCalendarViewport((preferredMeta || store.getActivePlanMeta())?.key || '');
+    if (calStart) calStart.value = (viewport?.start) || store.settings.termStart || '';
+    if (calEnd) calEnd.value = (viewport?.end) || store.settings.termEnd || '';
+    syncTeacherViewportInputs();
     populatePeriodoLetivoOptions(preferredMeta || store.getActivePlanMeta());
     populateTurnoOfertaOptions(store.settings.turnoOferta || 'Tarde');
     if (selPeriodo) {
@@ -4080,14 +4042,10 @@ function updateActivePlanStatus() {
 
 function resetWeeklyDraftStateForPlanSwitch(preferredStart = '') {
     deactivateDrawingMode();
-    editingDisciplinaDraft = '';
-    editingImportadoDraft = false;
-    editingOriginalAllocationIds = [];
-    editingComponentOriginalStart = '';
-    lastDisciplinaInputNormalized = '';
+    resetEditingComponentState();
     pendingFaixaStartPick = null;
     pendingFaixaQuickActionConfirm = null;
-    faixasPatterns = { 1: [], 2: [], 3: [] };
+    weeklyState.clearFaixasPatterns();
     setFaixaStatus(1, 0);
     setFaixaStatus(2, 0);
     setFaixaStatus(3, 0);
@@ -4105,12 +4063,9 @@ function rerenderPlanBoundViews() {
 
     const activeTab = document.querySelector('.tab-btn.active')?.dataset.tab;
     if (activeTab === 'monthly') {
-        renderMonthlyCalendar();
+        renderActiveSubtab('tab-monthly', 'turma-calendar');
     } else if (activeTab === 'teacher' && selViewDocente?.value) {
-        renderTeacherCalendar();
-    } else if (activeTab === 'gantt') {
-        const inpGanttDocente = document.getElementById('inp-gantt-docente');
-        if (inpGanttDocente?.value?.trim()) renderGanttChart();
+        renderActiveSubtab('tab-teacher', 'docente-calendar');
     }
 }
 
@@ -4200,15 +4155,20 @@ function initPeriodoLetivoETurno() {
         });
     }
 
+    // Datas de visualizacao (viewport) — NAO editam o termo do PL; apenas mudam
+    // a janela exibida do calendario/gantt. O termo do PL segue nos campos
+    // Inicio/Fim da barra lateral (#inp-term-start / #inp-term-end).
     if (calStart) {
-        calStart.addEventListener('change', () => {
-            applyPlanContextFromInputs({ termStart: calStart.value });
-        });
+        calStart.addEventListener('change', handleCalendarViewportChange);
     }
     if (calEnd) {
-        calEnd.addEventListener('change', () => {
-            applyPlanContextFromInputs({ termEnd: calEnd.value });
-        });
+        calEnd.addEventListener('change', handleCalendarViewportChange);
+    }
+    if (calStartTeacher) {
+        calStartTeacher.addEventListener('change', handleTeacherViewportChange);
+    }
+    if (calEndTeacher) {
+        calEndTeacher.addEventListener('change', handleTeacherViewportChange);
     }
 
     applyPlanContextFromInputs({ options: { resetDraftOnChange: false } });
@@ -4350,7 +4310,6 @@ export function initUI() {
     // ORDEM IMPORTANTE: Primeiro conserta o layout e encapsula os selects
     applySidebarLayoutFixes();
     wrapTeacherSelect();
-    wrapGanttInput();
 
     // Depois aplica os botões X
     setupClearButtonsSidebar();
@@ -4366,17 +4325,18 @@ export function initUI() {
     if (inputConfig.disciplina) {
         inputConfig.disciplina.addEventListener('input', () => {
             const discNome = normalizeDisciplinaInputValue(inputConfig.disciplina.value || '');
-            const isEditingSameDisc = editingDisciplinaDraft && discNome === editingDisciplinaDraft;
-            const isNewDiscSelection = !!discNome && discNome !== lastDisciplinaInputNormalized && !isEditingSameDisc;
+            const isEditingSameDisc = weeklyState.editingDisciplinaDraft && discNome === weeklyState.editingDisciplinaDraft;
+            const isNewDiscSelection = !!discNome && discNome !== weeklyState.lastDisciplinaInputNormalized && !isEditingSameDisc;
             if (isNewDiscSelection) {
+                clearWeeklyBlock();
                 setComponentStartSelectionMode('auto');
                 collapseFaixasForNewComponent({ useCurrentUI: false });
-                editingDisciplinaDraft = '';
-                editingImportadoDraft = false;
-                editingOriginalAllocationIds = [];
-                editingComponentOriginalStart = '';
+                weeklyState.editingDisciplinaDraft = '';
+                weeklyState.editingImportadoDraft = false;
+                weeklyState.editingOriginalAllocationIds = [];
+                weeklyState.editingComponentOriginalStart = '';
             }
-            lastDisciplinaInputNormalized = discNome;
+            weeklyState.lastDisciplinaInputNormalized = discNome;
             updateWeeklyFaixasTitleDisciplina();
             updateWeeklyFaixaHoursDisplay();
             if (store.selectedTurma) renderWeeklyGrid();
@@ -4385,24 +4345,26 @@ export function initUI() {
         // Detecção de duplicata: mostra o campo sub-grupo quando a mesma disciplina já existe na turma
         inputConfig.disciplina.addEventListener('change', () => {
             const discNome = normalizeDisciplinaInputValue(inputConfig.disciplina.value || '');
-            const isEditingSameDisc = editingDisciplinaDraft && discNome === editingDisciplinaDraft;
-            const isNewDiscSelection = !!discNome && discNome !== lastDisciplinaInputNormalized && !isEditingSameDisc;
+            const isEditingSameDisc = weeklyState.editingDisciplinaDraft && discNome === weeklyState.editingDisciplinaDraft;
+            const isNewDiscSelection = !!discNome && discNome !== weeklyState.lastDisciplinaInputNormalized && !isEditingSameDisc;
             let pendingPreferredStart = '';
             if (isNewDiscSelection) {
+                clearWeeklyBlock();
                 setComponentStartSelectionMode('auto');
                 pendingPreferredStart = getPreferredStartDateForCurrentTurma();
+                notifyStartSuggestionFeedback();
                 collapseFaixasForNewComponent({ preferredStart: pendingPreferredStart, useCurrentUI: false });
-                editingDisciplinaDraft = '';
-                editingImportadoDraft = false;
-                editingOriginalAllocationIds = [];
-                editingComponentOriginalStart = '';
+                weeklyState.editingDisciplinaDraft = '';
+                weeklyState.editingImportadoDraft = false;
+                weeklyState.editingOriginalAllocationIds = [];
+                weeklyState.editingComponentOriginalStart = '';
                 
                 // Aplica a cor automática (da paleta de 20 cores ou do JSON), com realce de croma
                 if (inputConfig.cor) {
                     inputConfig.cor.value = vividHexColor(store.getDisciplinaColor(discNome));
                 }
             }
-            lastDisciplinaInputNormalized = discNome;
+            weeklyState.lastDisciplinaInputNormalized = discNome;
             updateWeeklyFaixasTitleDisciplina();
             updateWeeklyFaixaHoursDisplay();
             if (store.selectedTurma) {
@@ -4485,7 +4447,7 @@ export function initUI() {
 
     if (inputConfig.cor) {
         const repaintDrawing = () => {
-            if (!window.isDrawingFaixa) return;
+            if (!drawingFaixaIndex) return;
             applyDrawingToolbarTheme();
             renderWeeklyGrid();
         };
@@ -4504,21 +4466,28 @@ export function initUI() {
         btn.addEventListener('click', () => switchTab(btn.dataset.tab));
     });
 
-    const btnGerarCal = document.getElementById('btn-gerar-cal');
-    if (btnGerarCal) btnGerarCal.addEventListener('click', renderMonthlyCalendar);
+    setupSubtabs();
 
-    const btnGantt = document.getElementById('btn-gerar-gantt');
-    if (btnGantt) {
-        btnGantt.addEventListener('click', renderGanttChart);
+    const btnGerarCal = document.getElementById('btn-gerar-cal');
+    if (btnGerarCal) btnGerarCal.addEventListener('click', handleCalendarViewportChange);
+
+    const btnResetViewPeriod = document.getElementById('btn-reset-view-period');
+    if (btnResetViewPeriod) btnResetViewPeriod.addEventListener('click', resetCalendarViewportToPlan);
+
+    const btnGerarCalTeacher = document.getElementById('btn-gerar-cal-teacher');
+    if (btnGerarCalTeacher) btnGerarCalTeacher.addEventListener('click', handleTeacherViewportChange);
+
+    const btnResetViewPeriodTeacher = document.getElementById('btn-reset-view-period-teacher');
+    if (btnResetViewPeriodTeacher) btnResetViewPeriodTeacher.addEventListener('click', resetCalendarViewportToPlan);
+
+    const btnPrintGanttTurma = document.getElementById('btn-print-gantt-turma');
+    if (btnPrintGanttTurma) {
+        btnPrintGanttTurma.addEventListener('click', () => printGanttLandscape('turma'));
     }
 
-    document.querySelectorAll('input[name="gantt-mode"]').forEach((radio) => {
-        radio.addEventListener('change', renderGanttForActiveMode);
-    });
-
-    const btnPrintGantt = document.getElementById('btn-print-gantt');
-    if (btnPrintGantt) {
-        btnPrintGantt.addEventListener('click', printGanttLandscape);
+    const btnPrintGanttDocente = document.getElementById('btn-print-gantt-docente');
+    if (btnPrintGanttDocente) {
+        btnPrintGanttDocente.addEventListener('click', () => printGanttLandscape('docente'));
     }
 
     const btnPrint = document.querySelector('.btn-print');
@@ -4536,9 +4505,6 @@ export function initUI() {
 
             if (activeTab === 'teacher' && selViewDocente && selViewDocente.value) {
                 document.title = `${selViewDocente.value}_${periodo}_Gestor_IECOS_Coordenacoes(v2.0 Dev)`;
-            } else if (activeTab === 'gantt') {
-                const ganttProf = document.getElementById('inp-gantt-docente')?.value || 'Gantt';
-                document.title = `Gantt_${ganttProf}_${periodo}_Gestor_IECOS`;
             } else {
                 document.title = `${turmaLabel}_${periodo}_Gestor_IECOS_Coordenacoes(v2.0 Dev)`;
             }
@@ -4549,28 +4515,16 @@ export function initUI() {
 
     if (selViewDocente) {
         selViewDocente.addEventListener('change', () => {
-            renderTeacherCalendar();
+            renderActiveSubtab('tab-teacher', 'docente-calendar');
             selViewDocente.blur();
         });
         selViewDocente.addEventListener('input', () => {
             if (!selViewDocente.value) {
-                document.getElementById('teacher-calendar-container').innerHTML = '';
+                const cal = document.getElementById('teacher-calendar-container');
+                if (cal) cal.innerHTML = '';
+                const gantt = document.getElementById('gantt-container-docente');
+                if (gantt) gantt.innerHTML = '';
             }
-        });
-    }
-
-    // A ligação do Gantt (input -> X e change -> select)
-    const inpGanttDocente = document.getElementById('inp-gantt-docente');
-    if (selViewDocente && inpGanttDocente) {
-        selViewDocente.addEventListener('change', () => {
-            inpGanttDocente.value = selViewDocente.value;
-            // Dispara 'input' para que o botão X apareça quando o valor é copiado programaticamente
-            inpGanttDocente.dispatchEvent(new Event('input', { bubbles: true }));
-        });
-    }
-    if (inpGanttDocente) {
-        inpGanttDocente.addEventListener('change', () => {
-            if (getActiveGanttMode() === 'docente') renderGanttForActiveMode();
         });
     }
 
@@ -4758,11 +4712,7 @@ function resetWeeklyEditorForTurma(turmaId, options = {}) {
     });
 
     deactivateDrawingMode();
-    editingDisciplinaDraft = '';
-    editingImportadoDraft = false;
-    editingOriginalAllocationIds = [];
-    editingComponentOriginalStart = '';
-    lastDisciplinaInputNormalized = '';
+    resetEditingComponentState();
     updateWeeklyFaixasTitleDisciplina();
     updateWeeklyFaixaHoursDisplay();
     collapseFaixasForNewComponent({
@@ -4770,7 +4720,7 @@ function resetWeeklyEditorForTurma(turmaId, options = {}) {
         useCurrentUI: false
     });
 
-    faixasPatterns = { 1: [], 2: [], 3: [] };
+    weeklyState.clearFaixasPatterns();
     setFaixaStatus(1, 0);
     setFaixaStatus(2, 0);
     setFaixaStatus(3, 0);
@@ -4788,6 +4738,56 @@ function resetWeeklyEditorForTurma(turmaId, options = {}) {
     });
     refreshPendingFaixaStartPickUI();
     updateWeeklyContextNote();
+}
+
+// Encerra a sessao de edicao apos um salvamento bem-sucedido: sai do modo de
+// desenho e limpa o editor (disciplina/faixas/sub-turma), fazendo a componente
+// recem salva aparecer na Grade Semanal no estilo ALOCADA (cards fixos) em vez
+// de permanecer no visual de edicao/desenho. Preserva a semana em exibicao para
+// que o usuario veja a componente alocada exatamente onde estava desenhando.
+// Para reeditar, o fluxo e pela aba Lista de Ofertas (duplo clique / botao editar).
+function finalizeWeeklyEditorAfterSave() {
+    const currentWeekStart = resolveWeeklyViewWeekStart();
+
+    endDrawingDrag();
+    if (pendingFaixaStartPick) clearPendingFaixaStartPick();
+    drawingFaixaIndex = null;
+    weeklyViewState.followActiveFaixa = false;
+    setComponentStartSelectionMode('auto');
+
+    resetEditingComponentState();
+
+    weeklyState.clearFaixasPatterns();
+    setFaixaStatus(1, 0);
+    setFaixaStatus(2, 0);
+    setFaixaStatus(3, 0);
+
+    // Limpa o campo de disciplina para a proxima componente. Como o editor fica
+    // sem disciplina, resolveInlineEditableFaixaIndex retorna null e a grade nao
+    // reentra no modo de desenho -> a componente salva e exibida como alocada.
+    if (inputConfig.disciplina) inputConfig.disciplina.value = '';
+    const containerSub = document.getElementById('container-sub-turma');
+    const inpSub = document.getElementById('inp-sub-turma');
+    if (containerSub) containerSub.classList.add('hidden');
+    if (inpSub) inpSub.value = '';
+
+    const toolbar = document.getElementById('drawing-toolbar');
+    if (toolbar) toolbar.classList.add('hidden');
+    const reeditBadge = document.getElementById('reedit-badge');
+    if (reeditBadge) reeditBadge.classList.add('hidden');
+
+    updateWeeklyFaixasTitleDisciplina();
+    updateWeeklyFaixaHoursDisplay();
+    refreshActiveFaixaHighlight();
+    refreshPendingFaixaStartPickUI();
+    updateWeeklyContextNote();
+    updateWeeklySavePatternButton();
+
+    // Mantem a semana onde o usuario estava para que a componente recem salva
+    // apareca alocada exatamente ali.
+    if (currentWeekStart) setWeeklyViewByDate(currentWeekStart, { followFaixa: false, render: false });
+
+    renderWeeklyGrid();
 }
 
 function syncCursoTurmaSelectionAfterPlanChange() {
@@ -4953,12 +4953,12 @@ function renderWeeklyGrid() {
         { id: 5, nome: 'Sexta' },
         { id: 6, nome: 'Sabado' }
     ];
-    let isDrawing = !!window.isDrawingFaixa;
+    let isDrawing = !!drawingFaixaIndex;
     if (!isDrawing) {
         const inlineFaixaIndex = resolveInlineEditableFaixaIndex();
         if (inlineFaixaIndex) {
             activeFaixaIndex = inlineFaixaIndex;
-            window.isDrawingFaixa = inlineFaixaIndex;
+            drawingFaixaIndex = inlineFaixaIndex;
             weeklyViewState.followActiveFaixa = true;
             isDrawing = true;
         }
@@ -4968,7 +4968,7 @@ function renderWeeklyGrid() {
     const drawRange = isDrawing ? getActiveDrawingFaixaRange() : null;
     const drawingDisciplina = normalizeDisciplinaInputValue(inputConfig.disciplina?.value || '');
     const turmaAllocs = store.allocations.filter((a) => String(a.turmaId) === String(store.selectedTurma));
-    const pattern = isDrawing ? normalizeFaixaPattern(faixasPatterns[window.isDrawingFaixa]) : [];
+    const pattern = isDrawing ? normalizeFaixaPattern(faixasPatterns[drawingFaixaIndex]) : [];
     const hasAnyDraftPattern = isDrawing && [1, 2, 3].some((idx) => normalizeFaixaPattern(faixasPatterns[idx]).length > 0);
     const drawStyles = isDrawing ? getDrawingSelectedStyles() : null;
     const showContextWhileDrawing = !isDrawing || drawingViewMode === 'context';
@@ -5001,8 +5001,8 @@ function renderWeeklyGrid() {
         return;
     }
 
-    if (weeklyViewState.followActiveFaixa && window.isDrawingFaixa) {
-        const faixaStart = getActiveFaixaStartDate(window.isDrawingFaixa);
+    if (weeklyViewState.followActiveFaixa && drawingFaixaIndex) {
+        const faixaStart = getActiveFaixaStartDate(drawingFaixaIndex);
         if (faixaStart) setWeeklyViewByDate(faixaStart, { followFaixa: true, render: false });
     }
     const weekStartISO = resolveWeeklyViewWeekStart();
@@ -5026,7 +5026,7 @@ function renderWeeklyGrid() {
     // persistidas no store, removidas somente ao salvar), para que a edicao
     // mostre apenas o desenho atual, sem duplicar a componente.
     const hiddenEditIds = new Set(
-        (editingOriginalAllocationIds || []).map((id) => String(id))
+        (weeklyState.editingOriginalAllocationIds || []).map((id) => String(id))
     );
     if (hiddenEditIds.size > 0) {
         weekDates.forEach((d) => {
@@ -5143,7 +5143,7 @@ function renderWeeklyGrid() {
     const getSelfAllocsForCell = (dateStr, slotLabel, dayNumber) => {
         if (!hasAnyDraftPattern || !drawingDisciplina) return [];
 
-        const activeFaixa = parseInt(window.isDrawingFaixa || activeFaixaIndex, 10) || 1;
+        const activeFaixa = parseInt(drawingFaixaIndex || activeFaixaIndex, 10) || 1;
         const cor = inputConfig.cor?.value || '#cccccc';
         const docenteVal = inputConfig.docente?.value || '';
 
@@ -5408,9 +5408,38 @@ function renderWeeklyGrid() {
         }
     });
 
+    applyStartSuggestionHighlight();
     applyWeeklyGridRowHeightScale();
     updateWeeklySavePatternButton();
     playWeeklyShiftAnimation();
+}
+
+// Destaca na Grade Semanal a celula {data, slot} sugerida como encaixe da nova
+// componente (borda pontilhada), enquanto a Faixa 1 ainda estiver na data
+// sugerida e o slot continuar livre.
+function applyStartSuggestionHighlight() {
+    if (!gridContainer) return;
+    gridContainer.querySelectorAll('.slot-start-suggestion').forEach((cell) => {
+        cell.classList.remove('slot-start-suggestion');
+        if (cell.dataset.startSuggestionTitle !== undefined) {
+            if (cell.title === 'Encaixe sugerido para iniciar a componente') cell.title = cell.dataset.startSuggestionTitle;
+            delete cell.dataset.startSuggestionTitle;
+        }
+    });
+
+    if (!lastStartSuggestion?.date || !lastStartSuggestion.slot) return;
+    const f1Ini = document.getElementById('inp-data-inicio-f1')?.value || '';
+    if (f1Ini !== lastStartSuggestion.date) return;
+
+    const targetSlot = normalizeConflictSlotLabel(lastStartSuggestion.slot);
+    const cells = gridContainer.querySelectorAll(`[data-date="${lastStartSuggestion.date}"]`);
+    for (const cell of cells) {
+        if (normalizeConflictSlotLabel(cell.dataset.horario || '') !== targetSlot) continue;
+        cell.classList.add('slot-start-suggestion');
+        cell.dataset.startSuggestionTitle = cell.title || '';
+        cell.title = 'Encaixe sugerido para iniciar a componente';
+        break;
+    }
 }
 
 function createCell(classNames, text) {
@@ -5480,19 +5509,15 @@ function renderSlotContent(cell, allocs, dayOfWeek = 0) {
     cell.appendChild(container);
 }
 
-function handleSlotClick() {
-    showToastWarning('Clique direto na Grade Semanal para montar o padrao da faixa ativa.', 'success', 2200);
-}
-
 function loadAllocationIntoEditor(allocation, idsToRemove = []) {
     const a = allocation;
     if (!a) return;
 
     const info = getDisciplinaInfo(a.disciplina);
-    if (!confirm('Carregar para edicao? A oferta antiga sera removida e a Grade Semanal sera aberta para ajuste desta componente.')) return;
+    if (!confirm('Carregar para edicao? A oferta antiga sera removida e a aba Alocar Componentes sera aberta para ajuste desta componente.')) return;
 
-    editingDisciplinaDraft = normalizeDisciplinaInputValue(a.disciplina);
-    editingImportadoDraft = !!a.importado;
+    weeklyState.editingDisciplinaDraft = normalizeDisciplinaInputValue(a.disciplina);
+    weeklyState.editingImportadoDraft = !!a.importado;
     setComponentStartSelectionMode('auto');
     updateWeeklyFaixasTitleDisciplina();
     let editorFaixasAdjusted = false;
@@ -5516,6 +5541,7 @@ function loadAllocationIntoEditor(allocation, idsToRemove = []) {
         editorFaixasAdjusted = !!hydrated.wasAdjusted;
     } else {
         const preferredStart = getPreferredPendingStartDateForCurrentTurma();
+        notifyStartSuggestionFeedback();
         collapseFaixasForNewComponent({ preferredStart, useCurrentUI: false });
         // Guarda preferredStart para reposicionar a grade após applyWeekAutoPositionForComponentChange
         a._pendingPreferredStart = preferredStart;
@@ -5557,17 +5583,21 @@ function loadAllocationIntoEditor(allocation, idsToRemove = []) {
     // localStorage e seria perdida num reload antes de salvar. Apenas rastreia
     // os IDs originais para remove-los no momento do salvar (ver handleAddManual).
     // A grade semanal oculta esses IDs durante a edicao (renderWeeklyGrid).
-    editingOriginalAllocationIds = Array.isArray(idsToRemove) ? idsToRemove.slice() : [];
+    weeklyState.editingOriginalAllocationIds = Array.isArray(idsToRemove) ? idsToRemove.slice() : [];
     // Guarda a data inicial original (menor inicio entre as faixas) para que o
     // "Limpar Faixas" reposicione a Faixa 1 onde a componente ja estava, em vez
     // de recalcular o primeiro dia livre.
-    editingComponentOriginalStart = (() => {
+    weeklyState.editingComponentOriginalStart = (() => {
         const inicios = (getNormalizedIntensiveFaixas(a) || [])
             .map((f) => String(f?.inicio || '').trim())
             .filter(Boolean)
             .sort();
         return inicios[0] || '';
     })();
+    // Diagnostico: transicao "entrar em edicao" — traca e valida invariantes
+    // (so faz algo quando __weeklyStateDebug.trace(true) esta ligado).
+    weeklyState.trace('loadAllocation:enter', { disciplina: a?.disciplina });
+    weeklyState.checkInvariants('loadAllocation');
     syncAllRegularDates();
 
     // Ativa explicitamente o modo de desenho na Faixa 1 (ou na faixa com padrão carregado)
@@ -5576,7 +5606,7 @@ function loadAllocationIntoEditor(allocation, idsToRemove = []) {
         ? 1
         : ([2, 3].find((fi) => normalizeFaixaPattern(faixasPatterns[fi]).length > 0) || activeFaixaIndex || 1);
     activeFaixaIndex = faixaToActivate;
-    window.isDrawingFaixa = faixaToActivate;
+    drawingFaixaIndex = faixaToActivate;
     weeklyViewState.followActiveFaixa = true;
     const _drawNameEl = document.getElementById('drawing-faixa-name');
     if (_drawNameEl) _drawNameEl.textContent = `Faixa ${faixaToActivate}`;
@@ -5637,7 +5667,7 @@ function handleUndoLastAllocation() {
     store.replaceAllocations(lastAllocationUndoSnapshot);
     clearAllocationUndoSnapshot();
     setComponentStartSelectionMode('auto');
-    editingOriginalAllocationIds = [];
+    weeklyState.editingOriginalAllocationIds = [];
     updateWeeklyFaixasTitleDisciplina();
     refreshPendingFaixaStartPickUI();
     updateWeeklyContextNote();
@@ -5648,20 +5678,26 @@ function handleUndoLastAllocation() {
 }
 
 function handleAddManual() {
+    // Nova tentativa de salvar: limpa qualquer bloqueio anterior (sera re-setado
+    // abaixo se ainda houver impedimento).
+    clearWeeklyBlock();
     if (!store.selectedTurma) {
+        setWeeklyBlock('Selecione uma turma', 'Escolha uma turma valida na barra lateral antes de salvar a componente.');
         showToastWarning('Selecione uma turma.', 'warning', 2200);
         return;
     }
     const docData = getDocenteData();
     if (!docData.isValid) {
+        setWeeklyBlock('Preencha o(s) docente(s)', 'Informe ao menos um professor responsavel pela componente antes de salvar.');
         showToastWarning('Preencha o(s) Docente(s).', 'warning', 2200);
         return;
     }
     if (pendingFaixaStartPick) {
+        setWeeklyBlock(`Finalize o inicio da Faixa ${pendingFaixaStartPick}`, 'Clique em um dia da grade para definir a data de inicio dessa faixa e depois salve.');
         showToastWarning(`Finalize a definicao de inicio da Faixa ${pendingFaixaStartPick} antes de salvar a componente.`, 'warning', 2600);
         return;
     }
-    if (window.isDrawingFaixa) persistActiveDrawingSelection();
+    if (drawingFaixaIndex) persistActiveDrawingSelection();
 
     const disciplina = (inputConfig.disciplina?.value ?? '').replace(/\s*\(\s*\d+\s*h\s*\)\s*$/i, '');
     const tipo = 'faixas';
@@ -5823,112 +5859,98 @@ function handleAddManual() {
         };
 
         const intensiveConflict = findTurmaConflictForCandidateExecution(candidateIntensiveForConflict, execution);
-        const turmaConflictGroups = collectTurmaConflictAllocationsForExecution(candidateIntensiveForConflict, execution);
 
-        const isImportedSave = !!editingImportadoDraft;
-        let pushForwardRequested = false;
-        let pushForwardTargets = [];
+        const isImportedSave = !!weeklyState.editingImportadoDraft;
+        // Valores efetivos de posicionamento. Podem ser deslocados adiante quando
+        // ha conflito: a componente intensiva e EMPILHADA em sequencia (bloco
+        // continuo) logo apos as componentes ja alocadas, sem dividir nem empurrar
+        // nenhuma outra. Isso evita intercalar uma intensiva ENTRE as faixas de
+        // outra componente (comportamento antigo de "pausa e retoma", removido).
+        let effInicio = inicioCalculado;
+        let effFim = dataFimCalculada;
+        let effExecutionByDate = execution.byDate || {};
+        let effSlots = slotsIntensiva;
+        let effUltimoDia = horariosUltimoDia;
+        let effDias = diasMarcados;
+        let effUsaSabado = usaSabado;
+        let effFaixas = faixasConfigAjustadas;
 
         if (intensiveConflict) {
-            // Passo 1 (aviso de revisao da data) — vale INCLUSIVE para disciplinas
-            // importadas: se a nova intensiva comeca SOBRE uma componente que JA havia
-            // comecado antes (data de inicio anterior), provavelmente foi engano de data.
-            // Avisa e pede revisao ANTES de qualquer outra etapa. Conflitantes que
-            // comecam no mesmo dia ou depois nao entram aqui.
             if (savingIsIntensive) {
-                const startedBeforeTargets = turmaConflictGroups.all
-                    .filter((alloc) => getNormalizedIntensiveFaixas(alloc).length > 0)
-                    .filter((alloc) => {
-                        const di = String(alloc?.dataInicio || '').trim();
-                        return di && di < inicioCalculado;
-                    });
-                if (startedBeforeTargets.length > 0) {
-                    const overlapDetails = startedBeforeTargets
-                        .slice(0, 4)
-                        .map((a) => `- ${String(a?.disciplina || '').trim()} (de ${formatDateBR(a.dataInicio)} a ${formatDateBR(a.dataFim)})`)
-                        .join('\n');
-                    const overlapMore = startedBeforeTargets.length > 4
-                        ? `\n- ...e mais ${startedBeforeTargets.length - 4}`
-                        : '';
-                    const reviewOk = confirm(
-                        `Atencao: a data de inicio escolhida (${formatDateBR(inicioCalculado)}) cai SOBRE ` +
-                        `${startedBeforeTargets.length} componente(s) que JA havia(m) comecado antes:\n\n` +
-                        `${overlapDetails}${overlapMore}\n\n` +
-                        `Como essa(s) componente(s) ja estava(m) prevista(s) para comecar antes, ` +
-                        `o recomendado e revisar a data de inicio desta nova componente.\n\n` +
-                        `Clique em Cancelar para revisar a data de inicio, ou em OK para prosseguir assim mesmo.`
+                // EMPILHAR EM SEQUENCIA: reposiciona ESTA componente para logo apos
+                // as componentes ja alocadas da turma. Nenhuma outra e dividida nem
+                // empurrada, entao nunca ha intercalamento entre faixas.
+                const candidateForStacking = {
+                    ...candidateIntensiveForConflict,
+                    docente: docData.docente,
+                    docentes: docData.docentesList
+                };
+                const stacked = stackIntensiveAfterAllocations(
+                    candidateForStacking,
+                    store.selectedTurma,
+                    inicioCalculado
+                );
+                if (!stacked) {
+                    setWeeklyBlock(
+                        'Sem espaco no periodo letivo',
+                        `Nao ha espaco livre para empilhar "${disciplina}" em sequencia. Ajuste as datas do periodo (barra lateral) ou remova alguma componente ja alocada.`
                     );
-                    if (!reviewOk) {
-                        showToastWarning('Salvamento cancelado. Revise a data de inicio desta componente.', 'warning', 4200);
-                        return;
-                    }
-                }
-            }
-            // Empurrao (pausa/retoma) agora vale para MANUAL e IMPORTADA: quando a
-            // componente sendo salva e intensiva e ha conflitantes deslocaveis na
-            // mesma turma, ela ocupa o bloco e empurra as demais para frente no
-            // tempo (em vez de sobrepor). Importadas so mantem o privilegio de
-            // SOBREPOR quando nao ha como empurrar (sem faixas deslocaveis) ou quando
-            // a propria componente nova nao e intensiva.
-            if (savingIsIntensive) {
-                const targets = turmaConflictGroups.all.filter((alloc) => getNormalizedIntensiveFaixas(alloc).length > 0);
-                if (targets.length > 0) {
-                    const uniqueNames = [...new Set(targets.map((a) => String(a?.disciplina || '').trim()).filter(Boolean))];
-                    const previewNames = uniqueNames.slice(0, 4).join(', ');
-                    const moreCount = Math.max(0, uniqueNames.length - 4);
-                    const moreLabel = moreCount > 0 ? ` e mais ${moreCount}` : '';
-                    const confirmPush = confirm(
-                        `Conflito detectado com ${targets.length} componente(s) da mesma turma.\n\n` +
-                        `Deseja inserir esta componente intensiva, empurrando as demais para frente no tempo?\n` +
-                        `As aulas anteriores ao inicio dela sao mantidas; as demais pausam durante o periodo dela e retomam logo apos.\n\n` +
-                        `Conflitantes: ${previewNames}${moreLabel}`
-                    );
-                    if (!confirmPush) {
-                        showToastWarning('Salvamento cancelado. Nenhuma componente foi realocada.', 'warning', 3200);
-                        return;
-                    }
-                    pushForwardRequested = true;
-                    pushForwardTargets = targets;
-                } else if (!isImportedSave) {
-                    // Manual sem alvos deslocaveis: nao da para empurrar -> bloqueia.
                     showToastWarning(
-                        `Sobreposicao detectada: "${intensiveConflict.disciplina}" ja ocupa esse horario e nao pode ser realocada automaticamente. Ajuste manualmente.`,
+                        `Nao ha espaco livre para empilhar "${disciplina}" em sequencia dentro do periodo letivo. Ajuste as datas do periodo ou remova alguma componente.`,
                         'error',
-                        5600
+                        6200
                     );
                     return;
-                } else {
-                    // Importada sem alvos deslocaveis: mantem o privilegio de sobrepor.
-                    showToastWarning(
-                        `Sobreposicao permitida (disciplina importada): choque de horario com "${intensiveConflict.disciplina}". Sera destacada na aba Calendario Docente.`,
-                        'warning',
-                        4800
-                    );
                 }
-            } else if (!isImportedSave) {
-                // Componente NAO intensiva: deveria ter desviado para os buracos. Se ainda
-                // ha conflito, nao empurra as demais — bloqueia e pede ajuste manual.
+                effInicio = stacked.candidate.dataInicio;
+                effFim = stacked.candidate.dataFim;
+                effExecutionByDate = stacked.candidate.executionByDate || {};
+                effSlots = stacked.candidate.horariosOcupados || [];
+                effUltimoDia = stacked.candidate.horariosUltimoDia || [];
+                effDias = stacked.candidate.diasMarcados || diasMarcados;
+                effUsaSabado = (stacked.candidate.diasMarcados || []).includes(6);
+                effFaixas = Array.isArray(stacked.candidate.faixas) ? stacked.candidate.faixas : faixasConfigAjustadas;
+
                 showToastWarning(
-                    `Sobreposicao detectada: "${intensiveConflict.disciplina}" ja ocupa esse horario no mesmo periodo. Componentes nao intensivas nao empurram as demais; ajuste manualmente.`,
+                    `Havia conflito na data escolhida. "${disciplina}" foi posicionada em sequencia, de ${formatDateBR(effInicio)} a ${formatDateBR(effFim)}, logo apos as componentes ja alocadas.`,
+                    'success',
+                    5600
+                );
+            } else {
+                // Componente NAO intensiva com conflito residual: bloqueia (ela ja
+                // deveria ter desviado para os buracos livres). Nunca empurra nem
+                // intercala outras componentes.
+                setWeeklyBlock(
+                    'Sobreposicao de horario',
+                    `"${intensiveConflict.disciplina}" ja ocupa esse horario no mesmo periodo. Ajuste a data de inicio desta componente e salve de novo.`
+                );
+                showToastWarning(
+                    `Sobreposicao detectada: "${intensiveConflict.disciplina}" ja ocupa esse horario no mesmo periodo. Ajuste a data de inicio desta componente.`,
                     'error',
                     5600
                 );
                 return;
-            } else {
-                // NAO intensiva importada: mantem o privilegio de sobrepor.
-                showToastWarning(
-                    `Sobreposicao permitida (disciplina importada): choque de horario com "${intensiveConflict.disciplina}". Sera destacada na aba Calendario Docente.`,
-                    'warning',
-                    4800
-                );
             }
         }
 
         const teachersToCheck = (docData.mode === 'single' ? [docData.docente] : docData.docentesList.map(d => d.nome)).filter(n => n && n.trim().toUpperCase() !== 'A DEFINIR');
 
         if (teachersToCheck.length > 0) {
+            // Checa o conflito de professor na posicao EFETIVA (apos eventual
+            // empilhamento), nao na data originalmente escolhida.
+            const candidateForTeacherCheck = {
+                ...candidateIntensiveForConflict,
+                dataInicio: effInicio,
+                dataFim: effFim,
+                executionByDate: effExecutionByDate,
+                horariosOcupados: effSlots,
+                diasMarcados: effDias,
+                usaSabado: effUsaSabado,
+                sabadoManha,
+                faixas: effFaixas
+            };
             const confirmedTeacherConflict = findConfirmedTeacherConflictForCandidate(
-                candidateIntensiveForConflict,
+                candidateForTeacherCheck,
                 teachersToCheck
             );
 
@@ -5939,6 +5961,10 @@ function handleAddManual() {
                 );
                 const profNomes = confirmedTeacherConflict.teacherName;
                 if (!isImportedSave) {
+                    setWeeklyBlock(
+                        'Sobreposicao de professor',
+                        `${profNomes} ja tem ${confirmedTeacherConflict.event.disciplina} na turma ${turmaNomeConflito} em ${formatDateBR(confirmedTeacherConflict.date)} (${confirmedTeacherConflict.horario}). Salvamento cancelado — sobreposicao so e permitida via importacao.`
+                    );
                     showToastWarning(
                         `Sobreposicao de professor detectada: ${profNomes} ja tem ${confirmedTeacherConflict.event.disciplina} na turma ${turmaNomeConflito} em ${formatDateBR(confirmedTeacherConflict.date)} (${confirmedTeacherConflict.horario}). Salvamento cancelado - sobreposicao so e permitida em disciplinas carregadas via importacao.`,
                         'error',
@@ -5960,8 +5986,8 @@ function handleAddManual() {
                 if (a.disciplina !== disciplina || !isFaixaAllocation(a)) return false;
                 if (String(a.subGrupo || '') !== String(subGrupo || '')) return false;
                 return isDateOverlap(
-                    inicioCalculado,
-                    dataFimCalculada,
+                    effInicio,
+                    effFim,
                     a.dataInicio || store.settings.termStart,
                     a.dataFim || store.settings.termEnd
                 );
@@ -5972,108 +5998,28 @@ function handleAddManual() {
         // tenha sido movida para um periodo SEM sobreposicao (o filtro acima exige
         // overlap). Guardado por turma/disciplina/subGrupo para nunca remover algo
         // de outra componente caso o rastreio tenha ficado obsoleto.
-        editingOriginalAllocationIds.forEach((id) => {
+        weeklyState.editingOriginalAllocationIds.forEach((id) => {
             if (idsToRemove.includes(id)) return;
             const al = store.allocations.find((a) => a.id === id);
             if (!al) return;
             if (String(al.turmaId) !== String(store.selectedTurma)) return;
-            if (al.disciplina !== disciplina || !isFaixaAllocation(al)) return;
-            if (String(al.subGrupo || '') !== String(subGrupo || '')) return;
+            // Aceita tanto ofertas ja alocadas (faixas) quanto a oferta PENDENTE
+            // original (modo 'pendente', vinda do Bloco do PPC): ao salvar a edicao
+            // de uma pendente ela deve sair da lista de pendentes, entao seu id
+            // rastreado precisa entrar em idsToRemove.
+            const isPendingOriginal = isPendingAllocation(al);
+            if (al.disciplina !== disciplina || !(isFaixaAllocation(al) || isPendingOriginal)) return;
+            // A pendente importada do Bloco do PPC guarda subGrupo=blocoId (ex.: "BL1"),
+            // mas o editor limpa o campo de sub-turma ao carregar a disciplina. Como o id
+            // foi rastreado explicitamente da linha editada, nao exigimos igualdade de
+            // subGrupo para pendentes (senao ela nunca sairia da lista). Para faixas
+            // mantemos a checagem para nao remover outra componente por engano.
+            if (!isPendingOriginal && String(al.subGrupo || '') !== String(subGrupo || '')) return;
             idsToRemove.push(id);
         });
 
-        if (pushForwardRequested) {
-            const undoSnapshot = snapshotAllocationsForUndo();
-            const pushTx = applyConflictPushForwardTransaction(
-                {
-                    turmaId: store.selectedTurma,
-                    disciplina: disciplina,
-                    docente: docData.docente,
-                    docentes: docData.docentesList,
-                    modo: 'faixas',
-                    ch: effectiveCH,
-                    dataInicio: inicioCalculado,
-                    dataFim: dataFimCalculada,
-                    modelo: 'Automatico',
-                    executionByDate: execution.byDate || {},
-                    horariosOcupados: slotsIntensiva,
-                    horariosUltimoDia: horariosUltimoDia,
-                    diasMarcados: diasMarcados,
-                    usaSabado: usaSabado,
-                    sabadoManha: sabadoManha,
-                    faixas: faixasConfigAjustadas,
-                    subGrupo: subGrupo || null,
-                    cor: inputConfig.cor ? inputConfig.cor.value : store.getDisciplinaColor(disciplina),
-                    importado: isImportedSave
-                },
-                execution,
-                pushForwardTargets,
-                idsToRemove
-            );
-
-            if (!pushTx.ok) {
-                const failedDisc = pushTx.disciplina ? ` (${pushTx.disciplina})` : '';
-                showToastWarning(
-                    `Nao foi possivel concluir a realocacao automatica${failedDisc}. Nenhuma alteracao foi mantida.`,
-                    'error',
-                    6200
-                );
-                return;
-            }
-
-            commitAllocationUndoSnapshot(undoSnapshot);
-
-            if (inicioCalculado && store.selectedTurma) {
-                store.setTurmaLastStart(store.selectedTurma, inicioCalculado);
-            }
-
-            syncAllIntensiveDates();
-            const allocAtualizada = [...store.allocations].reverse().find((a) =>
-                String(a.turmaId) === String(store.selectedTurma) &&
-                isFaixaAllocation(a) &&
-                a.disciplina === disciplina &&
-                String(a.subGrupo || '') === String(subGrupo || '')
-            );
-            if (allocAtualizada) {
-                const faixasSidebar = alignFaixasToExecutionEnd(
-                    getNormalizedIntensiveFaixas(allocAtualizada),
-                    allocAtualizada.dataFim || dataFimCalculada
-                );
-                applyFaixasConfigToSidebar(faixasSidebar);
-            }
-
-            setComponentStartSelectionMode('auto');
-            editingOriginalAllocationIds = [];
-            updateWeeklyFaixasTitleDisciplina();
-            refreshPendingFaixaStartPickUI();
-            updateWeeklyContextNote();
-            updateWeeklyFaixaHoursDisplay();
-            renderWeeklyGrid();
-            renderOfertasList();
-
-            const movedCount = pushTx.relocatedCount || 0;
-            const pausedCount = pushTx.pausedCount || 0;
-            const pausaMsg = pausedCount > 0
-                ? ` ${pausedCount} delas pausaram durante o periodo da intensiva e retomaram logo apos.`
-                : '';
-            showToastWarning(
-                `Componente intensiva inserida. ${movedCount} componente(s) conflitante(s) foram empurradas para frente no tempo.${pausaMsg}`,
-                'success',
-                5600
-            );
-
-            if (nonBlockingDistributionNotice) {
-                showToastWarning(nonBlockingDistributionNotice, nonBlockingDistributionNoticeType, 6200);
-            }
-
-            if (execution.wasTruncatedByCH && execution.truncationType === 'partial-day') {
-                showPersistentStatusMessage('Alocacao fracionada concluida com sucesso.', 'success');
-            }
-            return;
-        }
-
         const actionText = idsToRemove.length > 0 ? 'Atualizar alocacao existente?' : 'Confirmar alocacao?';
-        if (!confirm(`${disciplina} (${formatDateBR(inicioCalculado)} a ${formatDateBR(dataFimCalculada)})\n\n${actionText}`)) return;
+        if (!confirm(`${disciplina} (${formatDateBR(effInicio)} a ${formatDateBR(effFim)})\n\n${actionText}`)) return;
 
         const undoSnapshot = snapshotAllocationsForUndo();
         idsToRemove.forEach((id) => store.removeAllocation(id));
@@ -6085,23 +6031,23 @@ function handleAddManual() {
             docentes: docData.docentesList,
             modo: 'faixas',
             ch: effectiveCH,
-            dataInicio: inicioCalculado,
-            dataFim: dataFimCalculada,
+            dataInicio: effInicio,
+            dataFim: effFim,
             modelo: 'Automatico',
-            executionByDate: execution.byDate || {},
-            horariosOcupados: slotsIntensiva,
-            horariosUltimoDia: horariosUltimoDia,
-            diasMarcados: diasMarcados,
-            usaSabado: usaSabado,
+            executionByDate: effExecutionByDate,
+            horariosOcupados: effSlots,
+            horariosUltimoDia: effUltimoDia,
+            diasMarcados: effDias,
+            usaSabado: effUsaSabado,
             sabadoManha: sabadoManha,
-            faixas: faixasConfigAjustadas,
+            faixas: effFaixas,
             subGrupo: subGrupo || null,
             cor: inputConfig.cor ? inputConfig.cor.value : store.getDisciplinaColor(disciplina),
             importado: isImportedSave
         });
 
-        if (inicioCalculado && store.selectedTurma) {
-            store.setTurmaLastStart(store.selectedTurma, inicioCalculado);
+        if (effInicio && store.selectedTurma) {
+            store.setTurmaLastStart(store.selectedTurma, effInicio);
         }
 
         commitAllocationUndoSnapshot(undoSnapshot);
@@ -6116,18 +6062,13 @@ function handleAddManual() {
         if (allocAtualizada) {
             const faixasSidebar = alignFaixasToExecutionEnd(
                 getNormalizedIntensiveFaixas(allocAtualizada),
-                allocAtualizada.dataFim || dataFimCalculada
+                allocAtualizada.dataFim || effFim
             );
             applyFaixasConfigToSidebar(faixasSidebar);
         }
-        setComponentStartSelectionMode('auto');
-        editingDisciplinaDraft = normalizeDisciplinaInputValue(disciplina);
-        editingOriginalAllocationIds = [];
-        updateWeeklyFaixasTitleDisciplina();
-        refreshPendingFaixaStartPickUI();
-        updateWeeklyContextNote();
-        updateWeeklyFaixaHoursDisplay();
-        renderWeeklyGrid();
+        // Encerra a edicao: a componente recem salva passa a aparecer alocada na
+        // Grade Semanal (cards fixos) em vez de permanecer no visual de desenho.
+        finalizeWeeklyEditorAfterSave();
         renderOfertasList();
 
         if (nonBlockingDistributionNotice) {
@@ -6640,20 +6581,64 @@ function switchTab(tabId) {
     if (btn) btn.classList.add('active');
 
     if (tabId === 'monthly') {
-        renderMonthlyCalendar();
+        renderActiveSubtab('tab-monthly', 'turma-calendar');
     }
     if (tabId === 'teacher') {
-        refreshTeacherConflictsUI();
+        renderActiveSubtab('tab-teacher', 'docente-calendar');
     }
     if (tabId === 'list') {
         renderOfertasList();
     }
-    if (tabId === 'gantt') {
-        renderGanttForActiveMode();
-    }
     if (tabId === 'weekly') {
         updateWeeklyNavigatorLabel();
     }
+}
+
+// Renderiza o conteudo da sub-aba (Calendario/Gantt) associada a uma aba de calendario.
+function renderSubtabContent(subtabId) {
+    switch (subtabId) {
+        case 'turma-calendar':
+            renderMonthlyCalendar();
+            break;
+        case 'turma-gantt':
+            renderTurmaGantt();
+            break;
+        case 'docente-calendar':
+            refreshTeacherConflictsUI();
+            break;
+        case 'docente-gantt':
+            renderGanttChart();
+            break;
+        default:
+            break;
+    }
+}
+
+function renderActiveSubtab(tabContentId, fallbackSubtab) {
+    const active = document.querySelector(`#${tabContentId} .subtab-btn.active`)?.dataset.subtab || fallbackSubtab;
+    renderSubtabContent(active);
+}
+
+function activateSubtab(subtabId) {
+    const btn = document.querySelector(`.subtab-btn[data-subtab="${subtabId}"]`);
+    if (!btn) return;
+    const tabContent = btn.closest('.tab-content');
+    if (!tabContent) return;
+    tabContent.querySelectorAll('.subtab-btn').forEach((b) => {
+        const isActive = b === btn;
+        b.classList.toggle('active', isActive);
+        b.setAttribute('aria-selected', isActive ? 'true' : 'false');
+    });
+    tabContent.querySelectorAll('.subtab-view').forEach((view) => {
+        view.classList.toggle('active', view.id === `subview-${subtabId}`);
+    });
+    renderSubtabContent(subtabId);
+}
+
+function setupSubtabs() {
+    document.querySelectorAll('.subtab-btn').forEach((btn) => {
+        btn.addEventListener('click', () => activateSubtab(btn.dataset.subtab));
+    });
 }
 
 export { renderWeeklyGrid, renderOfertasList, renderMonthlyCalendar, renderTeacherCalendar };

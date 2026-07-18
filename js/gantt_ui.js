@@ -1790,8 +1790,8 @@ export function renderTeacherGanttInto(container, docenteName) {
 }
 
 export function renderGanttChart() {
-    const container = document.getElementById('gantt-container');
-    const inputDocente = document.getElementById('inp-gantt-docente');
+    const container = document.getElementById('gantt-container-docente');
+    const inputDocente = document.getElementById('sel-view-docente');
     if (!container || !inputDocente) return;
     renderTeacherGanttInto(container, inputDocente.value);
 }
@@ -1833,28 +1833,16 @@ export function renderTurmaGanttInto(container) {
     }
 }
 
-export function getActiveGanttMode() {
-    const checked = document.querySelector('input[name="gantt-mode"]:checked');
-    return checked?.value === 'docente' ? 'docente' : 'turma';
-}
-
-export function renderGanttForActiveMode() {
-    const container = document.getElementById('gantt-container');
+export function renderTurmaGantt() {
+    const container = document.getElementById('gantt-container-turma');
     if (!container) return;
-    const docenteControls = document.getElementById('gantt-docente-controls');
-    const mode = getActiveGanttMode();
-    if (docenteControls) docenteControls.style.display = mode === 'docente' ? 'inline-flex' : 'none';
-
-    if (mode === 'docente') {
-        const inputDocente = document.getElementById('inp-gantt-docente');
-        renderTeacherGanttInto(container, inputDocente?.value || '');
-    } else {
-        renderTurmaGanttInto(container);
-    }
+    renderTurmaGanttInto(container);
 }
 
-export function printGanttLandscape() {
-    const container = document.getElementById('gantt-container');
+export function printGanttLandscape(mode = 'turma') {
+    const isDocente = mode === 'docente';
+    const containerId = isDocente ? 'gantt-container-docente' : 'gantt-container-turma';
+    const container = document.getElementById(containerId);
     if (!container) return;
     const ganttHtml = container.innerHTML || '';
     const styleEl = document.getElementById('gantt-bidimensional-style');
@@ -1866,8 +1854,8 @@ export function printGanttLandscape() {
     }
     const periodo = normalizePeriodoLetivoCode(store.settings.periodo || 'PL1');
     let printTitle;
-    if (getActiveGanttMode() === 'docente') {
-        const ganttProf = document.getElementById('inp-gantt-docente')?.value || 'Gantt';
+    if (isDocente) {
+        const ganttProf = document.getElementById('sel-view-docente')?.value || 'Gantt';
         printTitle = `Gantt_${ganttProf}_${periodo}_Gestor_IECOS`;
     } else {
         printTitle = `Gantt_${turmaLabel}_${periodo}_Gestor_IECOS`;

@@ -2,11 +2,9 @@ import { store, normalizeLoadedAllocation } from './store.js??v=20260625v';
 import { getTurnoLetter } from './turns.js';
 import { getCalendarEvents } from './calendar.js';
 import { resolveActiveAcademicPeriod } from './academic_rules.mjs';
-import { buildCanonicalOfferProjection, buildTeacherExecutionSnapshot } from './execution_engine.js';
-import { renderBidimensionalTeacherGantt, hideBidimensionalTeacherGanttLens } from './gantt_bidimensional.js';
 
 const collator = new Intl.Collator('pt-BR', { sensitivity: 'base' });
-const PUBLIC_ASSET_VERSION = '20260701g';
+const PUBLIC_ASSET_VERSION = '20260701h';
 const PUBLIC_ROUTING_CONFIG_URL = 'publicacoes/publicacao_config.json';
 const PUBLIC_ROUTING_CATALOG_FALLBACK_URL = 'publicacoes/catalogo_publicacoes.json';
 
@@ -28,8 +26,7 @@ const state = {
     docente: {
         nome: '',
         mes: '',
-        totalHoras: null,
-        view: 'calendar'
+        totalHoras: null
     }
 };
 
@@ -220,10 +217,6 @@ function cacheElements() {
     els.listaSugestoes = document.getElementById('lista-sugestoes-publico');
     els.containerMesesDocente = document.getElementById('container-meses-docente');
     els.docenteMonthGroup = document.getElementById('docente-month-group');
-    els.docenteSubtabs = document.getElementById('docente-subtabs');
-    els.tabDocenteCalendar = document.getElementById('tab-docente-calendar');
-    els.tabDocenteGantt = document.getElementById('tab-docente-gantt');
-    els.docenteGanttNote = document.getElementById('docente-gantt-note');
     els.resultadoAgenda = document.getElementById('resultado-agenda');
     els.btnTopo = document.getElementById('btn-topo');
     els.sheetOverlay = document.getElementById('sheet-overlay');
@@ -242,8 +235,6 @@ function cacheElements() {
 function bindEvents() {
     els.tabDiscente?.addEventListener('click', () => switchTab('discente'));
     els.tabDocente?.addEventListener('click', () => switchTab('docente'));
-    els.tabDocenteCalendar?.addEventListener('click', () => switchDocenteView('calendar'));
-    els.tabDocenteGantt?.addEventListener('click', () => switchDocenteView('gantt'));
 
     els.selCurso?.addEventListener('change', handleCursoChange);
     els.inpDocente?.addEventListener('input', handleDocenteInput);
@@ -1160,20 +1151,9 @@ function preencherMesesDocente() {
 
 function switchTab(tabName) {
     state.activeTab = tabName === 'docente' ? 'docente' : 'discente';
-    hideBidimensionalTeacherGanttLens();
     esconderSugestoes();
     fecharBottomSheet();
     syncTabUI();
-    renderActiveView();
-}
-
-function switchDocenteView(viewName) {
-    state.docente.view = viewName === 'gantt' ? 'gantt' : 'calendar';
-    hideBidimensionalTeacherGanttLens();
-    fecharSlotLens(true);
-    fecharDayLens(true);
-    esconderSugestoes();
-    syncDocenteViewUI();
     renderActiveView();
 }
 
@@ -1185,21 +1165,12 @@ function syncTabUI() {
 
     if (els.viewDiscente) els.viewDiscente.hidden = !isDiscente;
     if (els.viewDocente) els.viewDocente.hidden = isDiscente;
-    syncDocenteViewUI();
 }
 
 function toggleTabButton(button, active) {
     if (!button) return;
     button.classList.toggle('active', active);
     button.setAttribute('aria-selected', active ? 'true' : 'false');
-}
-
-function syncDocenteViewUI() {
-    const isCalendar = state.docente.view !== 'gantt';
-    toggleTabButton(els.tabDocenteCalendar, isCalendar);
-    toggleTabButton(els.tabDocenteGantt, !isCalendar);
-    if (els.docenteMonthGroup) els.docenteMonthGroup.hidden = !isCalendar;
-    if (els.docenteGanttNote) els.docenteGanttNote.hidden = isCalendar;
 }
 
 function renderActiveView() {
@@ -1219,10 +1190,6 @@ function renderActiveView() {
     }
 
     if (els.resultadoAgenda) els.resultadoAgenda.hidden = false;
-    if (state.docente.view === 'gantt') {
-        renderAgendaDocenteGantt();
-        return;
-    }
 
     if (!state.docente.mes) {
         renderActiveEmptyState();
@@ -1233,7 +1200,6 @@ function renderActiveView() {
 }
 
 function renderActiveEmptyState() {
-    hideBidimensionalTeacherGanttLens();
     fecharSlotLens(true);
 
     if (state.activeTab === 'discente') {
@@ -1260,7 +1226,6 @@ function renderActiveEmptyState() {
         }
         return;
     }
-    if (state.docente.view === 'gantt') return;
     if (!state.docente.mes) {
         if (els.resultadoAgenda) els.resultadoAgenda.hidden = false;
         renderResultEmpty('Escolha um mes para visualizar a agenda do professor.');
@@ -1268,7 +1233,6 @@ function renderActiveEmptyState() {
 }
 
 function renderAgendaDiscente() {
-    hideBidimensionalTeacherGanttLens();
     fecharSlotLens(true);
     const token = ++renderSequence;
     const [ano, mes] = state.discente.mes.split('-');
@@ -1293,7 +1257,6 @@ function renderAgendaDiscente() {
 }
 
 function renderAgendaDocente() {
-    hideBidimensionalTeacherGanttLens();
     fecharSlotLens(true);
     fecharDayLens(true);
     const token = ++renderSequence;
@@ -1321,71 +1284,20 @@ function renderAgendaDocente() {
     }, 140);
 }
 
-function renderAgendaDocenteGantt() {
-    fecharSlotLens(true);
-    fecharDayLens(true);
-    const token = ++renderSequence;
-    const dataInicio = String(store.settings.termStart || '').trim();
-    const dataFim = String(store.settings.termEnd || dataInicio || '').trim();
-
-    renderResultLoading('A montar o Gantt docente...');
-
-    window.setTimeout(() => {
-        if (token !== renderSequence) return;
-
-        const docenteName = String(state.docente.nome || '').trim();
-        const relevantAllocations = (store.allocations || []).filter((allocation) => allocationHasTeacherMatch(allocation, docenteName));
-        const offerProjection = buildCanonicalOfferProjection({
-            allocations: relevantAllocations,
-            startDate: dataInicio,
-            endDate: dataFim
-        });
-        const teacherSnapshot = buildTeacherExecutionSnapshot({
-            docenteName,
-            startDate: dataInicio,
-            endDate: dataFim
-        });
-
-        state.docente.totalHoras = Number(teacherSnapshot?.totalEvents || 0) || null;
-        els.resultadoAgenda.innerHTML = `
-            ${buildResultContextMarkup('docente', { variant: 'gantt' })}
-            <div id="public-docente-gantt-host"></div>
-        `;
-
-        const ganttHost = document.getElementById('public-docente-gantt-host');
-        renderBidimensionalTeacherGantt(ganttHost, {
-            docenteName,
-            totalCH: state.docente.totalHoras || 0,
-            offerProjection,
-            teacherSnapshot,
-            startDate: dataInicio,
-            endDate: dataFim
-        });
-        scrollResultIntoView();
-    }, 140);
-}
-
 function buildResultContextMarkup(mode, options = {}) {
     const isDocente = mode === 'docente';
-    const docenteVariant = String(options?.variant || state.docente.view || 'calendar').trim().toLowerCase();
     const title = isDocente
         ? state.docente.nome
         : `${getCursoLabel(state.discente.curso)} - ${getTurmaLabel(state.discente.turmaId)}`;
     const eyebrow = isDocente
-        ? (docenteVariant === 'gantt' ? 'Consulta Docente - Gantt' : 'Consulta Docente')
+        ? 'Consulta Docente'
         : 'Consulta Discente';
     const badges = isDocente
-        ? (docenteVariant === 'gantt'
-            ? [
-                'Per\u00edodo letivo completo',
-                Number.isFinite(state.docente.totalHoras) ? `${state.docente.totalHoras} horas-aula` : '',
-                store.settings.periodo ? `Per\u00edodo ${store.settings.periodo}` : ''
-            ]
-            : [
-                getMonthLabel(state.docente.mes),
-                Number.isFinite(state.docente.totalHoras) ? `${state.docente.totalHoras} horas-aula` : '',
-                store.settings.periodo ? `Per\u00edodo ${store.settings.periodo}` : ''
-            ])
+        ? [
+            getMonthLabel(state.docente.mes),
+            Number.isFinite(state.docente.totalHoras) ? `${state.docente.totalHoras} horas-aula` : '',
+            store.settings.periodo ? `Per\u00edodo ${store.settings.periodo}` : ''
+        ]
         : [
             getMonthLabel(state.discente.mes),
             getTurmaLabel(state.discente.turmaId),
@@ -1584,17 +1496,6 @@ function getEventTeacherLabel(event) {
 
     const uniqueNames = [...new Set(names.filter(Boolean))];
     return uniqueNames.length ? uniqueNames.join(' / ') : 'A definir';
-}
-
-function allocationHasTeacherMatch(allocation, teacherName = '') {
-    const target = normalizeText(teacherName);
-    if (!target) return false;
-    if (extractTeacherNamesFromAllocation(allocation).some((name) => normalizeText(name) === target)) return true;
-
-    const compositeLabel = typeof allocation?.docente === 'string'
-        ? normalizeText(allocation.docente)
-        : normalizeText(allocation?.docente?.nome || '');
-    return !!(compositeLabel && compositeLabel.includes(target));
 }
 
 function normalizePublicTurnoKey(value) {
