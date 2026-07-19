@@ -1,7 +1,7 @@
 import { store } from './store.js??v=20260625v';
 import { getCalendarEvents } from './calendar.js??v=20260625v';
 import { buildTeacherExecutionSnapshot, buildCanonicalOfferProjection } from './execution_engine.js';
-import { renderBidimensionalTeacherGantt, renderBidimensionalTurmaGantt } from './gantt_bidimensional.js??v=20260627v39';
+import { renderBidimensionalTeacherGantt } from './gantt_bidimensional.js??v=20260627v39';
 import { filterExportableAllocations } from './academic_rules.mjs';
 import { normalizePeriodo as normalizePeriodoLetivoCode } from './plan_storage.js';
 import { normalizeHexColor, hexToRgba } from './color_utils.js';
@@ -1796,70 +1796,15 @@ export function renderGanttChart() {
     renderTeacherGanttInto(container, inputDocente.value);
 }
 
-export function renderTurmaGanttInto(container) {
-    try {
-        if (!container) return;
-
-        const turmaId = store.selectedTurma;
-        if (!turmaId) {
-            container.innerHTML = '<div style="text-align: center; color: #7f8c8d; margin-top: 50px; font-size: 1.1em;">Selecione uma turma na barra lateral para visualizar o Gantt da turma.</div>';
-            return;
-        }
-
-        let turmaLabel = String(turmaId);
-        const turmaInfo = (store.rawData?.turmas || []).find((entry) => String(entry?.turma_id) === String(turmaId));
-        if (turmaInfo?.turma_label) turmaLabel = turmaInfo.turma_label;
-
-        const fallbackStart = String(calStart?.value || store.settings.termStart || '2025-01-01').trim();
-        const fallbackEnd = String(calEnd?.value || store.settings.termEnd || fallbackStart || '2025-12-31').trim();
-        const allocs = filterExportableAllocations(
-            store.allocations.filter((alloc) => String(alloc?.turmaId) === String(turmaId))
-        );
-        const offerProjection = buildCanonicalOfferProjection({
-            allocations: allocs,
-            startDate: fallbackStart,
-            endDate: fallbackEnd
-        });
-        renderBidimensionalTurmaGantt(container, {
-            turmaId,
-            turmaLabel,
-            offerProjection,
-            startDate: fallbackStart,
-            endDate: fallbackEnd
-        });
-    } catch (err) {
-        console.error('Erro renderTurmaGanttInto:', err);
-        if (container) container.innerHTML = `<div style="color:red; margin-top:20px;"><b>Erro Inesperado no Grafico:</b><br>${err.message}</div>`;
-    }
-}
-
-export function renderTurmaGantt() {
-    const container = document.getElementById('gantt-container-turma');
-    if (!container) return;
-    renderTurmaGanttInto(container);
-}
-
-export function printGanttLandscape(mode = 'turma') {
-    const isDocente = mode === 'docente';
-    const containerId = isDocente ? 'gantt-container-docente' : 'gantt-container-turma';
-    const container = document.getElementById(containerId);
+export function printGanttLandscape() {
+    const container = document.getElementById('gantt-container-docente');
     if (!container) return;
     const ganttHtml = container.innerHTML || '';
     const styleEl = document.getElementById('gantt-bidimensional-style');
     const styleText = styleEl ? styleEl.textContent : '';
-    let turmaLabel = store.selectedTurma || 'GERAL';
-    if (store.rawData?.turmas) {
-        const t = store.rawData.turmas.find(x => String(x.turma_id) === String(store.selectedTurma));
-        if (t) turmaLabel = t.turma_label;
-    }
     const periodo = normalizePeriodoLetivoCode(store.settings.periodo || 'PL1');
-    let printTitle;
-    if (isDocente) {
-        const ganttProf = document.getElementById('sel-view-docente')?.value || 'Gantt';
-        printTitle = `Gantt_${ganttProf}_${periodo}_Gestor_IECOS`;
-    } else {
-        printTitle = `Gantt_${turmaLabel}_${periodo}_Gestor_IECOS`;
-    }
+    const ganttProf = document.getElementById('sel-view-docente')?.value || 'Gantt';
+    const printTitle = `Gantt_${ganttProf}_${periodo}_Gestor_IECOS`;
 
     const printWindow = window.open('', '_blank', 'width=1280,height=800');
     if (!printWindow) {

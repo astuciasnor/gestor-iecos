@@ -291,9 +291,7 @@ body:has(#tab-weekly.active) .top-bar #weekly-instructions-card {
     padding: 16px 18px 14px;
 }
 
-/* Sub-abas (Calendario x Grafico de Gantt) dentro das abas Calendario da Turma
-   e Calendario Docente. A barra alinha os controles (datas / seletor de docente)
-   a esquerda e o alternador de sub-abas a direita. */
+/* Sub-abas do Calendario Docente. */
 .subtab-bar {
     display: flex;
     justify-content: space-between;
@@ -331,14 +329,6 @@ body:has(#tab-weekly.active) .top-bar #weekly-instructions-card {
 }
 .subtab-view { display: none; }
 .subtab-view.active { display: block; }
-.gantt-subtab-toolbar {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    flex-wrap: wrap;
-    margin-bottom: 16px;
-}
-
 /* Botao "Periodo do PL": reancoragem do viewport ao termo do PL vigente. */
 .btn-view-period-reset {
     margin-left: 10px;
@@ -365,13 +355,186 @@ body:has(#tab-weekly.active) .top-bar #weekly-instructions-card {
     align-self: flex-start;
 }
 
-/* Calendario Docente: alternador a esquerda, seletor unico de professor ao lado
-   e "Imprimir PDF" a direita, tudo numa linha (padrao da figura). O seletor
-   alimenta TANTO o calendario quanto o Gantt. */
+/* Calendario Docente: seletor vertical e painel de filtros no formato de
+   consulta rapida, com a acao de atualizacao sempre evidente. */
 .subtab-bar--docente {
+    align-items: stretch;
+    gap: 10px;
+    flex-wrap: nowrap;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+}
+.docente-view-card,
+.docente-toolbar {
+    border: 1px solid #dfe6e9;
+    border-radius: 8px;
+    background: #fff;
+    box-shadow: 0 3px 11px rgba(25, 57, 69, 0.10);
+}
+.docente-view-card {
+    flex: 0 0 122px;
+    padding: 8px;
+}
+.docente-toolbar {
+    display: flex;
+    flex: 1 1 auto;
+    min-width: 0;
+    align-items: stretch;
+    padding: 10px 18px;
+}
+.docente-control-group {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-width: 0;
+    padding: 2px 16px;
+    border-right: 1px solid #e3eaed;
+}
+.docente-control-label {
+    display: block;
+    margin: 0 0 7px;
+    color: #2d526b;
+    font-size: 0.72rem;
+    font-weight: 800;
+    line-height: 1;
+}
+.docente-control-group--teacher {
+    flex: 0 1 285px;
+    max-width: 285px;
+    padding-left: 0;
+}
+.docente-control-group--teacher input {
+    width: 100%;
+    min-width: 0;
+    height: 34px;
+    box-sizing: border-box;
+    border: 1px solid #d4dfe4;
+    border-radius: 6px;
+    padding: 0 11px;
+    color: #294554;
+    background: #fbfcfd;
+}
+.docente-control-group--teacher > div {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+}
+.docente-control-group--teacher > div > div { min-width: 0; }
+#btn-refresh-teacher {
+    width: 34px;
+    height: 34px;
+    padding: 0 !important;
+    border: 1px solid #d6e7ff !important;
+    border-radius: 6px !important;
+    color: #2585df !important;
+    background: #f3f8ff !important;
+    box-shadow: none !important;
+    font-size: 1rem !important;
+}
+#btn-refresh-teacher:hover { background: #e7f2ff !important; }
+.docente-control-group--teacher input:focus,
+.docente-date-range input:focus {
+    outline: none;
+    border-color: #0e7a5f;
+    box-shadow: 0 0 0 3px rgba(14, 122, 95, 0.13);
+    background: #fff;
+}
+.docente-control-group--period {
+    flex: 1 1 290px;
+}
+.docente-date-range {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+.docente-date-range input {
+    width: 118px;
+    min-width: 0;
+    height: 34px;
+    box-sizing: border-box;
+    border: 1px solid #d4dfe4;
+    border-radius: 6px;
+    padding: 0 8px;
+    color: #294554;
+    font: inherit;
+    font-size: 0.78rem;
+    background: #fbfcfd;
+}
+.docente-view-card .subtab-switch {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+.docente-view-card .subtab-btn {
+    display: flex;
+    align-items: center;
     justify-content: flex-start;
-    align-items: flex-end;
-    gap: 20px;
+    min-height: 34px;
+    padding: 7px 10px;
+    border: 1px solid #e5ebed;
+    border-radius: 6px;
+    color: #476477;
+    box-shadow: none;
+    font-size: 0.77rem;
+}
+.docente-view-card .subtab-btn:hover { background: #f1f8f6; }
+.docente-view-card .subtab-btn.active {
+    background: #00685b;
+    border-color: #00685b;
+    box-shadow: 0 2px 5px rgba(0, 78, 40, 0.20);
+}
+.docente-control-actions {
+    display: flex;
+    flex: 0 0 116px;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: space-between;
+    gap: 9px;
+    padding: 8px 0 2px 16px;
+}
+.docente-refresh-btn,
+.btn-view-period-reset.docente-plan-period-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    height: 34px;
+    margin: 0;
+    border-radius: 6px;
+    white-space: nowrap;
+    font-size: 0.78rem;
+}
+.docente-refresh-btn {
+    border: 1px solid #00685b;
+    padding: 0 10px;
+    color: #fff;
+    font-weight: 800;
+    background: #00685b;
+    box-shadow: 0 2px 5px rgba(0, 78, 40, 0.20);
+}
+.docente-refresh-btn:hover { background: #005648; border-color: #005648; }
+.btn-view-period-reset.docente-plan-period-btn {
+    justify-content: flex-start;
+    height: auto;
+    min-height: 20px;
+    padding: 0;
+    color: #31546a;
+    border: 0;
+    background: transparent;
+}
+.btn-view-period-reset.docente-plan-period-btn::before {
+    width: 11px;
+    height: 11px;
+    box-sizing: border-box;
+    border: 1px solid #9badb8;
+    border-radius: 2px;
+    content: '';
+}
+.btn-view-period-reset.docente-plan-period-btn:hover {
+    color: #00685b;
+    background: transparent;
 }
 .subtab-bar--docente .subtab-bar-print {
     margin-left: auto;
@@ -381,6 +544,45 @@ body:has(#tab-weekly.active) .top-bar #weekly-instructions-card {
     display: inline-flex;
     align-items: center;
     gap: 6px;
+}
+@media (max-width: 1120px) {
+    .subtab-bar--docente {
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+    .docente-toolbar { flex-wrap: wrap; }
+    .docente-control-group,
+    .docente-control-actions {
+        border: 0;
+        padding: 2px 4px;
+    }
+    .docente-control-group--teacher,
+    .docente-control-group--period {
+        flex: 1 1 280px;
+        max-width: none;
+    }
+    .docente-control-actions {
+        flex: 0 1 auto;
+        flex-direction: row;
+        align-items: flex-end;
+        padding-top: 20px;
+    }
+}
+@media (max-width: 620px) {
+    .subtab-bar--docente { align-items: stretch; }
+    .docente-view-card { flex: 1 1 100%; }
+    .docente-view-card .subtab-switch { flex-direction: row; }
+    .docente-view-card .subtab-btn { flex: 1 1 0; justify-content: center; }
+    .docente-toolbar { padding: 10px; }
+    .docente-control-group--view,
+    .docente-control-group--teacher,
+    .docente-control-group--period,
+    .docente-control-actions { flex: 1 1 100%; }
+    .docente-date-range { gap: 5px; }
+    .docente-date-range input { flex: 1 1 0; width: auto; }
+    .docente-control-actions { padding-top: 4px; }
+    .docente-refresh-btn,
+    .btn-view-period-reset.docente-plan-period-btn { flex: 1 1 0; }
 }
 
 .grid-header { margin-bottom: 20px; }
@@ -2516,6 +2718,355 @@ body:has(#tab-weekly.active) .top-bar #weekly-instructions-card {
     align-items: center; 
     gap: 15px; 
     box-shadow: 0 2px 5px rgba(0,0,0,0.03);
+}
+
+/* Deve permanecer depois de .calendar-controls: esta variante pertence somente
+   ao painel horizontal do Calendario Docente. */
+#tab-teacher .docente-toolbar .calendar-controls.docente-control-group--period {
+    display: flex;
+    flex: 1 1 290px;
+    align-items: center;
+    min-width: 0;
+    margin: 0;
+    padding: 2px 16px;
+    border: 0;
+    border-right: 1px solid #e3eaed;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+}
+#tab-teacher .docente-toolbar .docente-date-range {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 14px;
+}
+#tab-teacher .docente-toolbar .docente-date-range input {
+    flex: 0 1 118px;
+    width: 118px;
+}
+#tab-teacher .docente-toolbar .docente-control-actions {
+    display: flex;
+    flex: 0 0 116px;
+    margin: 0;
+    padding: 8px 0 2px 16px;
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+}
+@media (max-width: 1120px) {
+    #tab-teacher .docente-toolbar .calendar-controls.docente-control-group--period {
+        flex: 1 1 280px;
+        padding: 2px 4px;
+        border: 0;
+    }
+    #tab-teacher .docente-toolbar .docente-control-actions {
+        flex: 0 1 auto;
+        flex-direction: row;
+        padding: 20px 4px 2px;
+    }
+}
+@media (max-width: 620px) {
+    #tab-teacher .docente-toolbar .calendar-controls.docente-control-group--period,
+    #tab-teacher .docente-toolbar .docente-control-actions {
+        flex: 1 1 100%;
+    }
+    #tab-teacher .docente-toolbar .docente-date-range input {
+        flex: 1 1 0;
+        width: auto;
+    }
+}
+
+/* Painel de filtros do Calendario Docente: colocado apos as regras globais
+   para manter a geometria compacta e independente dos demais calendarios. */
+#tab-teacher {
+    --docente-teal: #006a6a;
+    --docente-teal-hover: #005858;
+    --docente-ink: #29485c;
+    --docente-line: #e6eaf0;
+    --docente-field: #fbfcfd;
+    background: #f7f9fa;
+}
+#tab-teacher .docente-filter-layout {
+    display: flex;
+    align-items: stretch;
+    gap: 12px;
+    width: 100%;
+    margin: 0 0 20px;
+    font-family: Inter, Arial, sans-serif;
+}
+#tab-teacher .docente-view-card,
+#tab-teacher .docente-filter-panel {
+    box-sizing: border-box;
+    border: 1px solid var(--docente-line);
+    border-radius: 8px;
+    background: #fff;
+    box-shadow: 0 2px 8px rgba(40, 72, 92, 0.08);
+}
+#tab-teacher .docente-view-card {
+    flex: 0 0 120px;
+    min-height: 76px;
+    padding: 7px;
+}
+#tab-teacher .docente-view-card .subtab-switch {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 6px;
+    width: 100%;
+}
+#tab-teacher .docente-view-card .subtab-btn {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 7px;
+    min-height: 29px;
+    padding: 5px 9px;
+    border: 1px solid #c5d8e8;
+    border-radius: 6px;
+    color: #0f4f7d;
+    background: #e3eef8;
+    box-shadow: none;
+    font-size: 0.78rem;
+    font-weight: 750;
+}
+#tab-teacher .docente-view-card .subtab-btn:hover { border-color: #8db4d2; background: #d3e5f4; }
+#tab-teacher .docente-view-icon {
+    display: inline-flex;
+    flex: 0 0 16px;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.88rem;
+}
+#tab-teacher .docente-view-card .subtab-btn.active {
+    border-color: var(--docente-teal);
+    color: #fff;
+    background: var(--docente-teal);
+    box-shadow: 0 2px 5px rgba(0, 88, 88, 0.18);
+}
+#tab-teacher .docente-filter-panel {
+    display: flex;
+    flex: 1 1 auto;
+    min-width: 0;
+    min-height: 76px;
+    padding: 10px 16px;
+}
+#tab-teacher .docente-filter-group--teacher {
+    display: grid;
+    grid-template-columns: minmax(180px, 1fr) 38px;
+    grid-template-rows: auto 34px;
+    column-gap: 12px;
+    flex: 1 1 312px;
+    min-width: 0;
+    padding-right: 20px;
+    border-right: 1px solid var(--docente-line);
+}
+#tab-teacher .docente-filter-label {
+    grid-column: 1 / -1;
+    margin: 0 0 5px;
+    color: #004e28;
+    font-size: 0.83rem;
+    font-weight: 700;
+    line-height: 1.15;
+    white-space: nowrap;
+}
+#tab-teacher .docente-search-control { position: relative; min-width: 0; }
+#tab-teacher .docente-new-hint {
+    position: absolute;
+    top: calc(100% + 5px);
+    left: 0;
+    z-index: 12;
+    min-width: max-content;
+    padding: 7px 10px;
+    border: 1px solid #cfe2d7;
+    border-radius: 6px;
+    color: #075438;
+    background: #f2faf5;
+    box-shadow: 0 4px 10px rgba(30, 72, 52, 0.12);
+    font-size: 0.72rem;
+    font-weight: 650;
+    white-space: nowrap;
+}
+#tab-teacher .docente-search-icon {
+    position: absolute;
+    top: 50%;
+    left: 12px;
+    z-index: 1;
+    color: #5b7283;
+    font-size: 1.25rem;
+    pointer-events: none;
+    transform: translateY(-52%);
+}
+#tab-teacher .docente-search-control input,
+#tab-teacher .docente-date-range input {
+    width: 100%;
+    height: 34px;
+    box-sizing: border-box;
+    border: 1px solid #dce4e9;
+    border-radius: 6px;
+    color: #29485c;
+    background: var(--docente-field);
+    font: inherit;
+    font-size: 0.79rem;
+}
+#tab-teacher .docente-search-control input { padding: 0 34px; }
+#tab-teacher .docente-date-range input { min-width: 0; padding: 0 8px; }
+#tab-teacher .docente-search-control input::placeholder { color: #92a1ac; }
+#tab-teacher .docente-search-control input:focus-visible,
+#tab-teacher .docente-date-range input:focus-visible,
+#tab-teacher button:focus-visible,
+#tab-teacher .docente-plan-period-check input:focus-visible {
+    outline: 3px solid rgba(0, 106, 106, 0.18);
+    outline-offset: 1px;
+    border-color: var(--docente-teal);
+}
+#tab-teacher .docente-icon-btn {
+    width: 34px;
+    height: 34px;
+    box-sizing: border-box;
+    border: 1px solid #dbe6f1;
+    border-radius: 6px;
+    color: #287fd0;
+    background: #f4f9ff;
+    cursor: pointer;
+    font-size: 1.08rem;
+    font-weight: 700;
+    transition: color 0.16s, background 0.16s, border-color 0.16s, transform 0.16s;
+}
+#tab-teacher .docente-icon-btn:hover { border-color: #b8d8f4; background: #eaf5ff; transform: translateY(-1px); }
+#tab-teacher .docente-icon-btn:active,
+#tab-teacher .docente-update-btn:active { transform: translateY(0); }
+#tab-teacher #btn-clear-view-docente {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    z-index: 2;
+    width: 30px;
+    height: 30px;
+    border-color: transparent;
+    color: #718492;
+    background: transparent;
+}
+#tab-teacher .docente-filter-group--period {
+    display: grid;
+    grid-template-columns: minmax(190px, 280px) 98px;
+    grid-template-rows: auto 34px;
+    column-gap: 16px;
+    flex: 0 1 504px;
+    min-width: 0;
+    padding-left: 20px;
+}
+#tab-teacher .docente-filter-group--period .docente-filter-label {
+    grid-column: 1;
+    grid-row: 1;
+}
+#tab-teacher .docente-date-range {
+    grid-column: 1;
+    grid-row: 2;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 158px));
+    gap: 12px;
+    min-width: 0;
+}
+#tab-teacher .docente-date-field { position: relative; min-width: 0; }
+#tab-teacher .docente-date-field input { padding-right: 30px; }
+#tab-teacher .docente-date-picker-btn {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 22px;
+    height: 22px;
+    padding: 0;
+    border: 0;
+    border-radius: 4px;
+    color: #43677d;
+    background: transparent;
+    cursor: pointer;
+    font-size: 0.76rem;
+}
+#tab-teacher .docente-date-picker-btn:hover { color: #0d6580; background: #e8f4f5; }
+#tab-teacher .docente-period-actions {
+    display: grid;
+    grid-row: 1 / span 2;
+    grid-column: 2;
+    grid-template-rows: 34px auto;
+    gap: 5px;
+    align-items: start;
+}
+#tab-teacher .docente-update-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    height: 34px;
+    border: 1px solid var(--docente-teal);
+    border-radius: 6px;
+    color: #fff;
+    background: var(--docente-teal);
+    box-shadow: 0 2px 5px rgba(0, 88, 88, 0.16);
+    cursor: pointer;
+    font-size: 0.78rem;
+    font-weight: 750;
+    transition: background 0.16s, border-color 0.16s, transform 0.16s;
+}
+#tab-teacher .docente-update-btn:hover { border-color: var(--docente-teal-hover); background: var(--docente-teal-hover); }
+#tab-teacher .docente-plan-period-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 24px;
+    padding: 0 8px;
+    border: 1px solid #005858;
+    border-radius: 5px;
+    color: #fff;
+    background: #006a6a;
+    cursor: pointer;
+    font-size: 0.72rem;
+    font-weight: 700;
+    line-height: 1;
+    white-space: nowrap;
+}
+#tab-teacher .docente-plan-period-btn:hover { border-color: #004e4e; background: #005858; }
+#tab-teacher .docente-plan-period-row {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    min-width: 0;
+}
+#tab-teacher .docente-plan-period-refresh {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    padding: 0;
+    border: 0;
+    border-radius: 5px;
+    color: #2676b7;
+    background: #eaf4fd;
+    cursor: pointer;
+    font-size: 0.88rem;
+    font-weight: 800;
+}
+#tab-teacher .docente-plan-period-refresh:hover { color: #14598f; background: #d8ebfa; }
+#tab-teacher .docente-icon-btn:disabled,
+#tab-teacher .docente-update-btn:disabled,
+#tab-teacher .docente-search-control input:disabled,
+#tab-teacher .docente-date-range input:disabled,
+#tab-teacher .docente-plan-period-btn:disabled { cursor: not-allowed; opacity: 0.55; }
+@media (max-width: 680px) {
+    #tab-teacher .docente-filter-layout { flex-wrap: wrap; }
+    #tab-teacher .docente-filter-panel { flex-wrap: wrap; gap: 16px; }
+    #tab-teacher .docente-filter-group--teacher,
+    #tab-teacher .docente-filter-group--period { flex: 1 1 100%; }
+    #tab-teacher .docente-filter-group--teacher { padding: 0 0 16px; border: 0; border-bottom: 1px solid var(--docente-line); }
+    #tab-teacher .docente-filter-group--period { padding: 0; }
+}
+@media (max-width: 580px) {
+    #tab-teacher .docente-view-card { flex: 1 1 100%; }
+    #tab-teacher .docente-view-card .subtab-switch { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    #tab-teacher .docente-view-card .subtab-btn { justify-content: center; }
+    #tab-teacher .docente-filter-panel { padding: 14px; }
+    #tab-teacher .docente-filter-group--period { grid-template-columns: 1fr; grid-template-rows: auto auto auto; }
+    #tab-teacher .docente-period-actions { grid-row: 3; grid-column: 1; grid-template-columns: 104px auto; grid-template-rows: 38px; align-items: center; }
 }
 
 .calendar-month { 

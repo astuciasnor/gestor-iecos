@@ -27,6 +27,9 @@ feriados:
 periodos_letivos:
   ano | periodo_letivo | inicio | fim
 
+salas (opcional):
+    campus | codigo | nome | capacidade | tipo | recursos
+
 Requisitos:
   pip install openpyxl
 """
@@ -172,6 +175,7 @@ def build_json_from_excel(xlsx_path: Path) -> Dict[str, Any]:
         SheetSpec("horarios", ["turno", "ordem", "faixa"]),
         SheetSpec("feriados", ["data", "feriado", "dia", "tipo"]),
         SheetSpec("periodos_letivos", ["ano", "periodo_letivo", "inicio", "fim"], optional=True),
+        SheetSpec("salas", ["campus", "codigo", "nome", "capacidade", "tipo", "recursos"], optional=True),
     ]
 
     raw: Dict[str, List[Dict[str, Any]]] = {}
@@ -305,6 +309,22 @@ def build_json_from_excel(xlsx_path: Path) -> Dict[str, Any]:
 
     periodos_letivos.sort(key=lambda item: (item.get("inicio", ""), item.get("periodo_letivo", "")))
     data["periodos_letivos"] = periodos_letivos
+
+    data["salas"] = [
+        {
+            "campus": to_str(row.get("campus")),
+            "codigo": to_str(row.get("codigo")),
+            "nome": to_str(row.get("nome")),
+            "capacidade": to_int(row.get("capacidade")),
+            "tipo": to_str(row.get("tipo")),
+            "recursos": [
+                recurso.strip()
+                for recurso in to_str(row.get("recursos")).split(";")
+                if recurso.strip()
+            ],
+        }
+        for row in raw["salas"]
+    ]
 
     return data
 

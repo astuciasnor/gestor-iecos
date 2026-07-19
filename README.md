@@ -10,6 +10,7 @@ Links publicos:
 
 Documentacao tecnica:
 - [`docs/manual_desenvolvedor.md`](docs/manual_desenvolvedor.md)
+- [`docs/plano_banco_dados_e_cadastro.md`](docs/plano_banco_dados_e_cadastro.md)
 
 ---
 

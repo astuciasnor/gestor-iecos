@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cardume – Planejador Acadêmico | IECOS</title>
-    <link rel="stylesheet" href="css/style.css??v=20260627v23">
+    <link rel="stylesheet" href="css/style.css??v=20260627v37">
 
     <style>
         :root {
@@ -1056,10 +1056,6 @@
 
             <section id="tab-monthly" class="tab-content">
                 <div class="subtab-bar subtab-bar--stacked no-print">
-                    <div class="subtab-switch" role="tablist" aria-label="Visualizações da turma">
-                        <button type="button" class="subtab-btn active" data-subtab="turma-calendar" role="tab" aria-selected="true">📅 Calendário</button>
-                        <button type="button" class="subtab-btn" data-subtab="turma-gantt" role="tab" aria-selected="false">📊 Gráfico de Gantt da Turma</button>
-                    </div>
                     <div class="calendar-controls">
                         <label>Período de Visualização:</label>
                         <input type="date" id="cal-start" value="2025-10-13"> a
@@ -1075,45 +1071,55 @@
                 <div id="subview-turma-calendar" class="subtab-view active">
                     <div id="monthly-container"></div>
                 </div>
-                <div id="subview-turma-gantt" class="subtab-view">
-                    <div class="gantt-subtab-toolbar no-print">
-                        <button id="btn-print-gantt-turma" class="btn-secondary"
-                            style="background: var(--primary); color:white;"
-                            title="Abre o gráfico em uma nova janela já configurada para impressão em paisagem (PDF).">🖨️ Imprimir PDF (paisagem)</button>
-                    </div>
-                    <div id="gantt-container-turma" class="gantt-wrapper">
-                        <div style="text-align: center; color: #7f8c8d; margin-top: 50px; font-size: 1.1em;">
-                            Selecione uma turma na barra lateral para visualizar as componentes ao longo do tempo.
-                        </div>
-                    </div>
-                </div>
             </section>
 
             <section id="tab-teacher" class="tab-content">
-                <div class="subtab-bar subtab-bar--docente no-print">
-                    <div class="subtab-switch" role="tablist" aria-label="Visualizações do docente">
-                        <button type="button" class="subtab-btn active" data-subtab="docente-calendar" role="tab" aria-selected="true">📅 Calendário</button>
-                        <button type="button" class="subtab-btn" data-subtab="docente-gantt" role="tab" aria-selected="false">📊 Gráfico de Gantt do Docente</button>
-                    </div>
-                    <div class="form-group" style="max-width: 400px; margin-bottom: 0; position: relative;">
-                        <label style="color: var(--primary);" for="sel-view-docente">Selecione o Professor para visualizar a
-                            agenda mensal:</label>
-                        <input type="text" id="sel-view-docente" list="list-view-docentes"
-                            placeholder="Busque o professor..." autocomplete="off">
-                        <datalist id="list-view-docentes"></datalist>
-                    </div>
-                    <div class="calendar-controls">
-                        <label>Período de Visualização:</label>
-                        <input type="date" id="cal-start-teacher" value="2025-10-13"> a
-                        <input type="date" id="cal-end-teacher" value="2026-02-27">
-                        <button id="btn-reset-view-period-teacher" type="button" class="btn-view-period-reset"
-                            title="Voltar a janela de visualizacao para o periodo do PL vigente.">↺ Período do PL</button>
-                        <button id="btn-gerar-cal-teacher" type="button" class="btn-secondary"
-                            style="background: var(--primary); color: white; font-weight: bold;">🔄 Atualizar</button>
-                    </div>
-                    <button id="btn-print-gantt-docente" class="btn-secondary subtab-bar-print"
-                        style="background: var(--primary); color:white;"
-                        title="Abre o gráfico em uma nova janela já configurada para impressão em paisagem (PDF).">🖨️ Imprimir PDF (paisagem)</button>
+                <div class="docente-filter-layout no-print">
+                    <nav class="docente-view-card" aria-label="Visualização da agenda docente">
+                        <div class="subtab-switch" role="tablist" aria-label="Visualizações do docente">
+                            <button type="button" class="subtab-btn active" data-subtab="docente-calendar" role="tab" aria-selected="true"><span class="docente-view-icon" aria-hidden="true">📅</span> Calendário</button>
+                            <button type="button" class="subtab-btn" data-subtab="docente-gantt" role="tab" aria-selected="false"><span class="docente-view-icon" aria-hidden="true">📊</span> Gantt</button>
+                        </div>
+                    </nav>
+                    <section class="docente-filter-panel" aria-label="Filtros da agenda docente">
+                        <div class="docente-filter-group docente-filter-group--teacher">
+                            <label class="docente-filter-label" for="sel-view-docente">Selecione o Docente para Visualizar sua Agenda:</label>
+                            <div class="docente-search-control">
+                                <span class="docente-search-icon" aria-hidden="true">⌕</span>
+                                <input type="text" id="sel-view-docente" list="list-view-docentes"
+                                    placeholder="Busque o professor..." autocomplete="off">
+                                <button id="btn-clear-view-docente" class="docente-icon-btn" type="button" title="Limpar docente" aria-label="Limpar docente" hidden>×</button>
+                                <div id="docente-new-hint" class="docente-new-hint" role="status" aria-live="polite" hidden>
+                                    Termine de digitar para adicionar o novo docente
+                                </div>
+                            </div>
+                            <datalist id="list-view-docentes"></datalist>
+                            <button id="btn-refresh-teacher" class="docente-icon-btn docente-icon-btn--refresh" type="button" title="Atualizar agenda deste docente" aria-label="Atualizar agenda deste docente">⟳</button>
+                        </div>
+                        <div class="docente-filter-group docente-filter-group--period">
+                            <label class="docente-filter-label" for="cal-start-teacher">Especifique um Período de Visualização:</label>
+                            <div class="docente-date-range">
+                                <div class="docente-date-field">
+                                    <input type="date" id="cal-start-teacher" value="2025-10-13" aria-label="Data inicial">
+                                    <button type="button" class="docente-date-picker-btn" data-date-picker-for="cal-start-teacher" title="Selecionar data inicial" aria-label="Selecionar data inicial">▣</button>
+                                </div>
+                                <div class="docente-date-field">
+                                    <input type="date" id="cal-end-teacher" value="2026-02-27" aria-label="Data final">
+                                    <button type="button" class="docente-date-picker-btn" data-date-picker-for="cal-end-teacher" title="Selecionar data final" aria-label="Selecionar data final">▣</button>
+                                </div>
+                            </div>
+                            <div class="docente-period-actions">
+                                <button id="btn-gerar-cal-teacher" type="button" class="docente-update-btn"
+                                    title="Atualizar a agenda do docente no período selecionado."><span aria-hidden="true">⟳</span> Atualizar</button>
+                                <div class="docente-plan-period-row">
+                                    <button id="btn-use-plan-period" type="button" class="docente-plan-period-btn"
+                                        title="Usar as datas de início e fim do período letivo.">Período do PL</button>
+                                    <button id="btn-reset-view-period-teacher" type="button" class="docente-plan-period-refresh"
+                                        title="Recarregar as datas de início e fim do período letivo." aria-label="Recarregar as datas do período letivo">⟳</button>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
                 </div>
                 <div id="subview-docente-calendar" class="subtab-view active">
                     <div id="teacher-calendar-container"></div>
@@ -1514,7 +1520,7 @@
         </main>
     </div>
 
-    <script type="module" src="js/main.js??v=20260627v76"></script>
+    <script type="module" src="js/main.js??v=20260627v81"></script>
 </body>
 
 </html>

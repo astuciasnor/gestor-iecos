@@ -1110,46 +1110,7 @@ function renderRowLabelCard(row) {
       </div>`;
 }
 
-function renderDailyBarRow(row, layout) {
-  const barHeight = 24;
-  const blockDrivenHeight = barHeight + (layout.rowPadding * 2);
-  const rowHeight = Math.max(blockDrivenHeight, estimateLabelMinHeight(row));
-  const barTop = Math.max(layout.rowPadding, Math.round((rowHeight - barHeight) / 2));
-  const left = Math.max(0, daysBetween(layout.startDate, row.startDate)) * layout.dayWidth;
-  const width = (Math.max(0, daysBetween(row.startDate, row.endDate)) + 1) * layout.dayWidth;
-  const baseColor = row.color;
-  const textColor = row.textColor;
-
-  const dateDecorations = buildBarDateDecorations({
-    row,
-    left,
-    width,
-    blockTop: barTop,
-    blockHeight: barHeight,
-    rowHeight,
-    timelineWidth: layout.timelineWidth,
-    baseColor,
-    textColor
-  });
-
-  return `
-    <div class="gantt-bi__row" style="height:${rowHeight}px;">
-      ${renderRowLabelCard(row)}
-      <div class="gantt-bi__track" style="width:${layout.timelineWidth}px; height:${rowHeight}px;">
-        ${renderVerticalLines(layout.weekLines, 'gantt-bi__line--week')}
-        ${renderVerticalLines(layout.monthLines, 'gantt-bi__line--month')}
-        ${dateDecorations}
-        <div class="gantt-bi__block gantt-bi__block--continuous"
-             style="left:${left}px; width:${width}px; top:${barTop}px; height:${barHeight}px; background:${hexToRgba(baseColor, 0.9)}; color:${textColor};"
-             aria-label="${escapeHtml(row.tooltip)}"></div>
-      </div>
-    </div>
-  `;
-}
-
 function renderRow(row, layout) {
-  if (row.barMode === 'daily') return renderDailyBarRow(row, layout);
-
   const blockHeight = row.activeDayIds.length * layout.segmentHeight;
   const blockDrivenHeight = blockHeight + (layout.rowPadding * 2);
   const rowHeight = Math.max(blockDrivenHeight, estimateLabelMinHeight(row));
@@ -1229,19 +1190,12 @@ function renderBidimensionalRowsInto(container, {
   const monthCells = buildMonthCells(rangeStart, rangeEnd, dayWidth);
   const { weekLines, monthLines } = buildVerticalLines(rangeStart, rangeEnd, dayWidth);
 
-  const globalMaxDailyCount = Math.max(
-    1,
-    ...rows.map((row) => Number(row?.maxDailyCount) || 1)
-  );
-
   const layout = {
     startDate: rangeStart,
     endDate: rangeEnd,
     dayWidth,
     segmentHeight,
     rowPadding,
-    dailyBarMaxHeight: 46,
-    globalMaxDailyCount,
     timelineWidth,
     weekLines,
     monthLines
@@ -1305,178 +1259,6 @@ export function renderBidimensionalTeacherGantt(container, {
 
   renderBidimensionalRowsInto(container, {
     title: `Gantt Docente: ${teacherName} (${titleHours})`,
-    rows,
-    startDate,
-    endDate
-  });
-}
-
-function buildTurmaGanttRows({ offerProjection, turmaId } = {}) {
-  const rows = [];
-  const targetTurma = String(turmaId || '').trim();
-
-  (Array.isArray(offerProjection?.offerGroups) ? offerProjection.offerGroups : []).forEach((group) => {
-    if (targetTurma && String(group.turmaId || '').trim() !== targetTurma) return;
-
-    const activeDates = (Array.isArray(group.activeDates) ? group.activeDates : [])
-      .map((date) => String(date || '').trim())
-      .filter(Boolean)
-      .sort((left, right) => left.localeCompare(right));
-    // Exclui componentes pendentes (sem datas alocadas).
-    if (activeDates.length === 0) return;
-
-    const componentMeta = getComponentMeta(group.disciplina, group.turmaId);
-    const baseColor = normalizeHexColor(group?.baseAlloc?.cor || componentMeta.cor || '#2563EB');
-    const textColor = getTextColorForHex(baseColor);
-    const timeRangesByDay = group.timeRangesByDay || {};
-
-    const activeDayIds = new Set();
-    const occurrenceCountByDayMap = new Map();
-    const slotsByDayMap = new Map();
-    const slotSet = new Set();
-
-    activeDates.forEach((dateStr) => {
-      const dayOfWeek = toDate(dateStr)?.getDay() || 0;
-      if (dayOfWeek < 1 || dayOfWeek > 6) return;
-      activeDayIds.add(dayOfWeek);
-      occurrenceCountByDayMap.set(dayOfWeek, (occurrenceCountByDayMap.get(dayOfWeek) || 0) + 1);
-      if (!slotsByDayMap.has(dayOfWeek)) slotsByDayMap.set(dayOfWeek, new Set());
-      (Array.isArray(timeRangesByDay[dayOfWeek]) ? timeRangesByDay[dayOfWeek] : []).forEach((slot) => {
-        const cleanSlot = String(slot || '').trim();
-        if (!cleanSlot) return;
-        slotSet.add(cleanSlot);
-        slotsByDayMap.get(dayOfWeek).add(cleanSlot);
-      });
-    });
-
-    const sortedDayIds = DAY_META.map((day) => day.id).filter((dayId) => activeDayIds.has(dayId));
-    if (sortedDayIds.length === 0) return;
-
-    // Coleta os horarios da componente de TODAS as fontes (independente do
-    // mapeamento por dia, que pode divergir na convencao de diaSemana).
-    const allSlotSet = new Set([...slotSet]);
-    Object.values(timeRangesByDay).forEach((slotList) => {
-      (Array.isArray(slotList) ? slotList : []).forEach((slot) => {
-        const cleanSlot = String(slot || '').trim();
-        if (cleanSlot) allSlotSet.add(cleanSlot);
-      });
-    });
-    (Array.isArray(group.scheduleEntries) ? group.scheduleEntries : []).forEach((entry) => {
-      const cleanSlot = String(entry?.horario || '').trim();
-      if (cleanSlot) allSlotSet.add(cleanSlot);
-    });
-    (Array.isArray(group.allocations) ? group.allocations : []).forEach((alloc) => {
-      const cleanSlot = String(alloc?.horario || '').trim();
-      if (cleanSlot) allSlotSet.add(cleanSlot);
-    });
-    // Fonte principal p/ componentes semanais: os horarios ficam nas faixas
-    // (faixa.slots / faixa.drawnSlotsByDay), nao num campo "horario" da alocacao.
-    (Array.isArray(group.faixas) ? group.faixas : []).forEach((faixa) => {
-      (Array.isArray(faixa?.slots) ? faixa.slots : []).forEach((slot) => {
-        const cleanSlot = String(slot || '').trim();
-        if (cleanSlot) allSlotSet.add(cleanSlot);
-      });
-      Object.values(faixa?.drawnSlotsByDay || {}).forEach((slotList) => {
-        (Array.isArray(slotList) ? slotList : []).forEach((slot) => {
-          const cleanSlot = String(slot || '').trim();
-          if (cleanSlot) allSlotSet.add(cleanSlot);
-        });
-      });
-    });
-    const sortedSlots = [...allSlotSet].sort((left, right) => timeToMinutes(left) - timeToMinutes(right));
-    const hours = Number.parseFloat(group.executedHours);
-    const chLabel = Number.isFinite(hours) && hours > 0
-      ? (Number.isInteger(hours)
-        ? `${hours}h`
-        : `${hours.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 1 })}h`)
-      : '-';
-
-    const docenteNames = (Array.isArray(group.docentes) ? group.docentes : [])
-      .map((entry) => String(entry?.nome || '').trim())
-      .filter((nome) => nome && nome.toUpperCase() !== 'A DEFINIR');
-    const docenteLabel = [...new Set(docenteNames)].join(', ')
-      || String(group.docenteLabel || '').trim();
-    const horarioLabel = sortedSlots.join(', ');
-
-    // Nº de aulas por dia do mês (proporcional à altura da barra no Gantt da turma).
-    const dailyCounts = activeDates.map((dateStr) => {
-      const dayOfWeek = toDate(dateStr)?.getDay() || 0;
-      const daySlots = Array.isArray(timeRangesByDay[dayOfWeek]) ? timeRangesByDay[dayOfWeek] : [];
-      const count = daySlots.length > 0 ? daySlots.length : 1;
-      return { date: dateStr, count };
-    });
-    const maxDailyCount = dailyCounts.reduce((max, entry) => Math.max(max, entry.count), 1);
-
-    rows.push({
-      key: `${group.offerKey}|turma`,
-      offerKey: group.offerKey,
-      groupStart: String(group.start || activeDates[0] || '').trim(),
-      groupEnd: String(group.end || activeDates[activeDates.length - 1] || '').trim(),
-      faixaOrder: 1,
-      segmentOrder: 1,
-      nome: group.disciplina,
-      turmaId: String(group.turmaId || '').trim(),
-      chLabel,
-      docenteLabel,
-      horarioLabel,
-      turnoLabel: resolveTurnoLabelFromSlots(sortedSlots),
-      faixaBadge: '',
-      barMode: 'daily',
-      dailyCounts,
-      maxDailyCount,
-      activeDayIds: sortedDayIds,
-      slots: sortedSlots,
-      slotsByDay: Object.fromEntries(
-        sortedDayIds.map((dayId) => [
-          dayId,
-          [...(slotsByDayMap.get(dayId) || new Set())].sort((left, right) => timeToMinutes(left) - timeToMinutes(right))
-        ])
-      ),
-      occurrenceCountByDay: Object.fromEntries(
-        sortedDayIds.map((dayId) => [dayId, occurrenceCountByDayMap.get(dayId) || 0])
-      ),
-      startDate: activeDates[0],
-      endDate: activeDates[activeDates.length - 1],
-      color: baseColor,
-      textColor,
-      tooltip: `${group.disciplina}\n${formatDateBR(activeDates[0])} a ${formatDateBR(activeDates[activeDates.length - 1])}\nDias: ${sortedDayIds.map((dayId) => DAY_META.find((day) => day.id === dayId)?.full || '').join(', ')}\nTurma: ${group.turmaId}\nTurno: ${resolveTurnoLabelFromSlots(sortedSlots)}`
-    });
-  });
-
-  // Ordena cronologicamente pela data de inicio (componentes correndo ao longo do tempo).
-  return rows.sort((left, right) => {
-    const groupStartDiff = String(left.groupStart || '').localeCompare(String(right.groupStart || ''));
-    if (groupStartDiff !== 0) return groupStartDiff;
-    const nameDiff = String(left.nome || '').localeCompare(String(right.nome || ''), 'pt-BR', { sensitivity: 'base' });
-    if (nameDiff !== 0) return nameDiff;
-    const startDiff = String(left.startDate || '').localeCompare(String(right.startDate || ''));
-    if (startDiff !== 0) return startDiff;
-    return String(left.endDate || '').localeCompare(String(right.endDate || ''));
-  });
-}
-
-export function renderBidimensionalTurmaGantt(container, {
-  turmaId = '',
-  turmaLabel = '',
-  offerProjection = null,
-  startDate = '',
-  endDate = ''
-} = {}) {
-  if (!container) return;
-
-  hideBidimensionalLens(document.getElementById(LENS_ID));
-  ensureBidimensionalGanttStyles();
-
-  const rows = buildTurmaGanttRows({ offerProjection, turmaId });
-  const label = String(turmaLabel || turmaId || '').trim();
-
-  if (rows.length === 0) {
-    container.innerHTML = `<div class="gantt-bi__empty">Nenhuma componente alocada encontrada para a turma <b>${escapeHtml(label || '-')}</b>.</div>`;
-    return;
-  }
-
-  renderBidimensionalRowsInto(container, {
-    title: `Gantt da Turma: ${label}`,
     rows,
     startDate,
     endDate

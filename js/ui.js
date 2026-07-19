@@ -5,7 +5,6 @@ import { getCalendarEvents } from './calendar.js??v=20260625v';
 import { countBusinessDays, countWeekdaysInPeriod, addBusinessDays, isDateOverlap, calculateEndDateByWeekday } from './utils.js';
 import { weeklyState } from './weekly_state.js';
 import { buildTeacherExecutionSnapshot, buildCanonicalOfferProjection } from './execution_engine.js';
-import { renderBidimensionalTeacherGantt, renderBidimensionalTurmaGantt } from './gantt_bidimensional.js??v=20260627v39';
 import { buildSigaaMetadataPayload, validateSigaaMetadataPayload } from './sigaa_metadata.js';
 import { parseBackupDataFile, extractImportPlanMeta } from './serialization.js';
 import {
@@ -68,9 +67,7 @@ import {
     resolveTeacherShiftForSlot,
     getGanttTurnoConfigs,
     getGanttTurnoCode,
-    renderGanttChart,
-    renderTurmaGantt,
-    printGanttLandscape
+    renderGanttChart
 } from './gantt_ui.js';
 import {
     renderMonthlyCalendar,
@@ -288,66 +285,60 @@ function applySidebarLayoutFixes() {
     }
 }
 
-// ==========================================
-// EMBALAGEM SEGURA PARA O REFRESH DO PROFESSOR E GANTT
-// ==========================================
-function wrapTeacherSelect() {
-    if (selViewDocente && !document.getElementById('btn-refresh-teacher')) {
-        const wrapper = document.createElement('div');
-        wrapper.style.display = 'flex';
-        wrapper.style.alignItems = 'center';
-        wrapper.style.gap = '8px';
-        wrapper.style.width = '100%';
+function setupTeacherFilterControls() {
+    const btnRefresh = document.getElementById('btn-refresh-teacher');
+    const btnClear = document.getElementById('btn-clear-view-docente');
+    const btnUsePlanPeriod = document.getElementById('btn-use-plan-period');
+    const newTeacherHint = document.getElementById('docente-new-hint');
 
-        const selectContainer = document.createElement('div');
-        selectContainer.style.position = 'relative';
-        selectContainer.style.flex = '1';
+    const updateClearButton = () => {
+        if (btnClear) btnClear.hidden = !String(selViewDocente?.value || '').trim();
+    };
+    const updateNewTeacherHint = () => {
+        const typedName = String(selViewDocente?.value || '').trim();
+        const normalizedName = typedName.toLocaleLowerCase('pt-BR');
+        const existingNames = Array.from(document.getElementById('list-view-docentes')?.options || [])
+            .map((option) => String(option.value || '').trim().toLocaleLowerCase('pt-BR'));
+        const hasMatch = normalizedName && existingNames.some((name) => name.includes(normalizedName));
+        if (newTeacherHint) newTeacherHint.hidden = !normalizedName || hasMatch;
+    };
 
-        selViewDocente.parentNode.insertBefore(wrapper, selViewDocente);
-        wrapper.appendChild(selectContainer);
-        selectContainer.appendChild(selViewDocente);
-        selViewDocente.style.width = '100%';
-        selViewDocente.style.boxSizing = 'border-box';
-        selViewDocente.style.margin = '0';
+    btnRefresh?.addEventListener('click', () => {
+        if (!String(selViewDocente?.value || '').trim()) {
+            showToastWarning('Selecione um professor primeiro para atualizar a agenda.', 'warning', 2200);
+            return;
+        }
+        renderActiveSubtab('tab-teacher', 'docente-calendar');
+    });
 
-        const btnRefresh = document.createElement('button');
-        btnRefresh.id = 'btn-refresh-teacher';
-        btnRefresh.innerHTML = '🔄';
-        btnRefresh.title = 'Atualizar vistoria deste professor';
-        btnRefresh.style.background = '#3498db';
-        btnRefresh.style.color = '#fff';
-        btnRefresh.style.border = 'none';
-        btnRefresh.style.borderRadius = '4px';
-        btnRefresh.style.padding = '6px 10px';
-        btnRefresh.style.cursor = 'pointer';
-        btnRefresh.style.fontSize = '1.1em';
-        btnRefresh.style.transition = 'transform 0.3s ease, background 0.2s';
-        btnRefresh.style.flexShrink = '0';
+    btnClear?.addEventListener('click', () => {
+        if (!selViewDocente) return;
+        selViewDocente.value = '';
+        btnClear.hidden = true;
+        selViewDocente.dispatchEvent(new Event('input', { bubbles: true }));
+        selViewDocente.focus();
+    });
 
-        btnRefresh.onmouseover = () => btnRefresh.style.background = '#2980b9';
-        btnRefresh.onmouseout = () => btnRefresh.style.background = '#3498db';
-
-        wrapper.appendChild(btnRefresh);
-
-        btnRefresh.addEventListener('click', (e) => {
-            e.preventDefault();
-            if (selViewDocente.value) {
-                renderTeacherCalendar();
-                btnRefresh.style.transform = `rotate(${btnRefresh.dataset.rot || 360}deg)`;
-                btnRefresh.dataset.rot = parseInt(btnRefresh.dataset.rot || 360) + 360;
-            } else {
-                showToastWarning('Selecione um professor primeiro para atualizar a vistoria.', 'warning', 2200);
-            }
+    selViewDocente?.addEventListener('input', () => {
+        updateClearButton();
+        updateNewTeacherHint();
+    });
+    btnUsePlanPeriod?.addEventListener('click', resetCalendarViewportToPlan);
+    document.querySelectorAll('[data-date-picker-for]').forEach((button) => {
+        button.addEventListener('click', () => {
+            const input = document.getElementById(button.dataset.datePickerFor);
+            if (!input) return;
+            if (typeof input.showPicker === 'function') input.showPicker();
+            else input.focus();
         });
-    }
+    });
+    updateClearButton();
+    updateNewTeacherHint();
 }
 
 function setupClearButtonsSidebar() {
     addClearXToField(inputConfig.disciplina, 'inp-disciplina');
     addClearXToField(inputConfig.docente, 'inp-docente');
-    if (selViewDocente) {
-        addClearXToField(selViewDocente, 'sel-view-docente');
-    }
 }
 
 function addClearXToField(inputEl, inputId) {
@@ -4307,9 +4298,9 @@ export function initUI() {
     initPeriodoLetivoETurno();
     setupCopyActionButtons();
 
-    // ORDEM IMPORTANTE: Primeiro conserta o layout e encapsula os selects
+    // Configura os controles fixos do painel de filtros da agenda docente.
     applySidebarLayoutFixes();
-    wrapTeacherSelect();
+    setupTeacherFilterControls();
 
     // Depois aplica os botões X
     setupClearButtonsSidebar();
@@ -4479,16 +4470,6 @@ export function initUI() {
 
     const btnResetViewPeriodTeacher = document.getElementById('btn-reset-view-period-teacher');
     if (btnResetViewPeriodTeacher) btnResetViewPeriodTeacher.addEventListener('click', resetCalendarViewportToPlan);
-
-    const btnPrintGanttTurma = document.getElementById('btn-print-gantt-turma');
-    if (btnPrintGanttTurma) {
-        btnPrintGanttTurma.addEventListener('click', () => printGanttLandscape('turma'));
-    }
-
-    const btnPrintGanttDocente = document.getElementById('btn-print-gantt-docente');
-    if (btnPrintGanttDocente) {
-        btnPrintGanttDocente.addEventListener('click', () => printGanttLandscape('docente'));
-    }
 
     const btnPrint = document.querySelector('.btn-print');
     if (btnPrint) {
@@ -6599,9 +6580,6 @@ function renderSubtabContent(subtabId) {
     switch (subtabId) {
         case 'turma-calendar':
             renderMonthlyCalendar();
-            break;
-        case 'turma-gantt':
-            renderTurmaGantt();
             break;
         case 'docente-calendar':
             refreshTeacherConflictsUI();
