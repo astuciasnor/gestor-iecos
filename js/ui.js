@@ -122,6 +122,7 @@ import {
     reconcileTurmaSelectionAfterPLChange,
     resetWeeklyViewOnTurmaChange,
     resolveActiveAcademicPeriod,
+    slotLabelsOverlap,
     validateOccurrenceWithinSemesterBounds
 } from './academic_rules.mjs';
 
@@ -2097,28 +2098,29 @@ function findConfirmedTeacherConflictForCandidate(candidateAlloc, teacherNames =
         if (candidateEntries.length === 0) continue;
 
         const existingEventsByDate = getCalendarEvents(null, candidateAlloc.dataInicio, candidateAlloc.dataFim, teacherName);
-        const existingByKey = new Map();
+        const existingByDate = new Map();
 
         Object.entries(existingEventsByDate || {}).forEach(([dateStr, events]) => {
             (events || []).forEach((event) => {
                 if (!event || String(event.turmaId) === String(store.selectedTurma)) return;
                 const slot = normalizeConflictSlotLabel(event.horario || '');
                 if (!slot) return;
-                const key = `${dateStr}|${slot}`;
-                if (!existingByKey.has(key)) existingByKey.set(key, event);
+                if (!existingByDate.has(dateStr)) existingByDate.set(dateStr, []);
+                existingByDate.get(dateStr).push({ slot, event });
             });
         });
 
         for (const entry of candidateEntries) {
-            const key = `${entry.date}|${entry.horario}`;
-            const existingEvent = existingByKey.get(key);
-            if (!existingEvent) continue;
+            // Pelo relogio: a outra turma pode usar outro quadro de horario.
+            const existing = (existingByDate.get(entry.date) || [])
+                .find((item) => slotLabelsOverlap(item.slot, entry.horario));
+            if (!existing) continue;
 
             return {
                 teacherName,
                 date: entry.date,
                 horario: entry.horario,
-                event: existingEvent
+                event: existing.event
             };
         }
     }
@@ -5985,8 +5987,12 @@ function handleAddManual() {
         if (teachersToCheck.length > 0) {
             // Checa o conflito de professor na posicao EFETIVA (apos eventual
             // empilhamento), nao na data originalmente escolhida.
+            // docente/docentes sao obrigatorios: e por eles que a checagem sabe
+            // quais horas da componente sao de cada professor.
             const candidateForTeacherCheck = {
                 ...candidateIntensiveForConflict,
+                docente: docData.docente,
+                docentes: docData.docentesList,
                 dataInicio: effInicio,
                 dataFim: effFim,
                 executionByDate: effExecutionByDate,
@@ -6007,13 +6013,18 @@ function handleAddManual() {
                     confirmedTeacherConflict.event.subGrupo
                 );
                 const profNomes = confirmedTeacherConflict.teacherName;
+                // Mostra o horario das duas aulas: os cursos podem usar quadros diferentes.
+                const horarioOutraAula = normalizeConflictSlotLabel(confirmedTeacherConflict.event.horario || '');
+                const horarioChoque = horarioOutraAula && horarioOutraAula !== confirmedTeacherConflict.horario
+                    ? `${confirmedTeacherConflict.horario} x ${horarioOutraAula}`
+                    : confirmedTeacherConflict.horario;
                 if (!isImportedSave) {
                     setWeeklyBlock(
                         'Sobreposicao de professor',
-                        `${profNomes} ja tem ${confirmedTeacherConflict.event.disciplina} na turma ${turmaNomeConflito} em ${formatDateBR(confirmedTeacherConflict.date)} (${confirmedTeacherConflict.horario}). Salvamento cancelado — sobreposicao so e permitida via importacao.`
+                        `${profNomes} ja tem ${confirmedTeacherConflict.event.disciplina} na turma ${turmaNomeConflito} em ${formatDateBR(confirmedTeacherConflict.date)} (${horarioChoque}). Salvamento cancelado — sobreposicao so e permitida via importacao.`
                     );
                     showToastWarning(
-                        `Sobreposicao de professor detectada: ${profNomes} ja tem ${confirmedTeacherConflict.event.disciplina} na turma ${turmaNomeConflito} em ${formatDateBR(confirmedTeacherConflict.date)} (${confirmedTeacherConflict.horario}). Salvamento cancelado - sobreposicao so e permitida em disciplinas carregadas via importacao.`,
+                        `Sobreposicao de professor detectada: ${profNomes} ja tem ${confirmedTeacherConflict.event.disciplina} na turma ${turmaNomeConflito} em ${formatDateBR(confirmedTeacherConflict.date)} (${horarioChoque}). Salvamento cancelado - sobreposicao so e permitida em disciplinas carregadas via importacao.`,
                         'error',
                         6200
                     );

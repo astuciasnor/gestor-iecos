@@ -1010,7 +1010,11 @@ export function generateCalendarGrid(container, turmaId, docenteName, start, end
                             if (docenteName) {
                                 if (hasSpecificConflict || implicitConflict) {
                                     style = 'background: #c0392b; color: white; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight:bold;';
-                                    const conflictNames = uniqueEventsInSlot.map((e) => `${getDisciplinaInfo(e.disciplina).abrev} - ${e.turmaId}`).join(' <b style="color:#fff">x</b> ');
+                                    const conflictEntries = [...uniqueEventsInSlot];
+                                    uniqueEventsInSlot.forEach((e) => (e.conflictPartners || []).forEach((p) => {
+                                        if (!conflictEntries.some((c) => c.turmaId === p.turmaId && c.disciplina === p.disciplina)) conflictEntries.push(p);
+                                    }));
+                                    const conflictNames = conflictEntries.map((e) => `${getDisciplinaInfo(e.disciplina).abrev} - ${e.turmaId}`).join(' <b style="color:#fff">x</b> ');
                                     content = `<span title="Choque: ${conflictNames.replace(/<[^>]+>/g, '')}">⚠️ ${conflictNames}</span>`;
                                 } else {
                                     const event = uniqueEventsInSlot[0];

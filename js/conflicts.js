@@ -1,4 +1,4 @@
-import { sortUniqueIsoDates, normalizeShiftKey } from './academic_rules.mjs';
+import { sortUniqueIsoDates, normalizeShiftKey, slotLabelsOverlap } from './academic_rules.mjs';
 
 function normalizeConflictSlotLabel(value = '') {
   return String(value || '')
@@ -36,58 +36,52 @@ export function detectTeacherConflicts({
   const aggregates = new Map();
 
   Object.entries(eventsByDate || {}).forEach(([dateStr, events]) => {
-    const slotMap = new Map();
+    const dayEvents = (Array.isArray(events) ? events : [])
+      .map((event) => ({ event, slot: normalizeConflictSlotLabel(event?.horario || '') }))
+      .filter((item) => item.slot);
 
-    (Array.isArray(events) ? events : []).forEach((event) => {
-      const slot = normalizeConflictSlotLabel(event?.horario || '');
-      if (!slot) return;
-      if (!slotMap.has(slot)) slotMap.set(slot, []);
-      slotMap.get(slot).push(event);
-    });
+    for (let i = 0; i < dayEvents.length; i++) {
+      for (let j = i + 1; j < dayEvents.length; j++) {
+        const { event: eventA, slot: slotA } = dayEvents[i];
+        const { event: eventB, slot: slotB } = dayEvents[j];
+        if (!slotLabelsOverlap(slotA, slotB)) continue;
+        // Quadros de horario diferentes: mostra os dois horarios do choque.
+        const slot = slotA === slotB ? slotA : [slotA, slotB].sort().join(' x ');
+        const turmaA = typeof formatTurmaLabel === 'function'
+          ? formatTurmaLabel(eventA)
+          : String(eventA?.turmaId || '').trim();
+        const turmaB = typeof formatTurmaLabel === 'function'
+          ? formatTurmaLabel(eventB)
+          : String(eventB?.turmaId || '').trim();
+        const componenteA = String(eventA?.disciplina || '').trim();
+        const componenteB = String(eventB?.disciplina || '').trim();
+        const eventKeyA = [turmaA, componenteA, String(eventA?.subGrupo || '').trim()].join('|');
+        const eventKeyB = [turmaB, componenteB, String(eventB?.subGrupo || '').trim()].join('|');
 
-    slotMap.forEach((slotEvents, slot) => {
-      if (!Array.isArray(slotEvents) || slotEvents.length < 2) return;
+        if (!eventKeyA || !eventKeyB || eventKeyA === eventKeyB) continue;
 
-      for (let i = 0; i < slotEvents.length; i++) {
-        for (let j = i + 1; j < slotEvents.length; j++) {
-          const eventA = slotEvents[i];
-          const eventB = slotEvents[j];
-          const turmaA = typeof formatTurmaLabel === 'function'
-            ? formatTurmaLabel(eventA)
-            : String(eventA?.turmaId || '').trim();
-          const turmaB = typeof formatTurmaLabel === 'function'
-            ? formatTurmaLabel(eventB)
-            : String(eventB?.turmaId || '').trim();
-          const componenteA = String(eventA?.disciplina || '').trim();
-          const componenteB = String(eventB?.disciplina || '').trim();
-          const eventKeyA = [turmaA, componenteA, String(eventA?.subGrupo || '').trim()].join('|');
-          const eventKeyB = [turmaB, componenteB, String(eventB?.subGrupo || '').trim()].join('|');
+        const orderedTurmas = [turmaA, turmaB].filter(Boolean).sort((a, b) => a.localeCompare(b, 'pt-BR', { sensitivity: 'base' }));
+        const orderedComponentes = [componenteA, componenteB].filter(Boolean).sort((a, b) => a.localeCompare(b, 'pt-BR', { sensitivity: 'base' }));
+        const shift = typeof resolveShift === 'function'
+          ? String(resolveShift(slotA, eventA) || resolveShift(slotB, eventB) || '').trim()
+          : '';
+        const aggregateKey = [
+          orderedTurmas.join('||'),
+          orderedComponentes.join('||'),
+          normalizeShiftKey(shift),
+          slot
+        ].join('|||');
 
-          if (!eventKeyA || !eventKeyB || eventKeyA === eventKeyB) continue;
-
-          const orderedTurmas = [turmaA, turmaB].filter(Boolean).sort((a, b) => a.localeCompare(b, 'pt-BR', { sensitivity: 'base' }));
-          const orderedComponentes = [componenteA, componenteB].filter(Boolean).sort((a, b) => a.localeCompare(b, 'pt-BR', { sensitivity: 'base' }));
-          const shift = typeof resolveShift === 'function'
-            ? String(resolveShift(slot, eventA) || resolveShift(slot, eventB) || '').trim()
-            : '';
-          const aggregateKey = [
-            orderedTurmas.join('||'),
-            orderedComponentes.join('||'),
-            normalizeShiftKey(shift),
-            slot
-          ].join('|||');
-
-          addPairConflictEntry(aggregates, aggregateKey, {
-            date: dateStr,
-            shift,
-            slot,
-            turmas: orderedTurmas,
-            componentes: orderedComponentes,
-            importado: !!(eventA?.importado || eventB?.importado)
-          });
-        }
+        addPairConflictEntry(aggregates, aggregateKey, {
+          date: dateStr,
+          shift,
+          slot,
+          turmas: orderedTurmas,
+          componentes: orderedComponentes,
+          importado: !!(eventA?.importado || eventB?.importado)
+        });
       }
-    });
+    }
   });
 
   return [...aggregates.values()]
@@ -106,7 +100,9 @@ export function detectTeacherConflicts({
         turmas,
         componentes,
         importado: !!entry.importado,
-        description: `Choque no mesmo horario (${entry.slot || 'horario nao identificado'}).`
+        description: entry.slot && entry.slot.includes(' x ')
+          ? `Choque de horario (${entry.slot}).`
+          : `Choque no mesmo horario (${entry.slot || 'horario nao identificado'}).`
       };
     })
     .sort((a, b) => {

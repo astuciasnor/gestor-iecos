@@ -8,6 +8,7 @@ import {
     getAllocationTeachersForConflict
 } from './allocation_helpers.js';
 import { normalizeConflictSlotLabel } from './turno_helpers.js';
+import { slotLabelsOverlap } from './academic_rules.mjs';
 import { getTurmaLabel } from './curso_turma_helpers.js';
 import { renderTeacherCalendar } from './calendarios_ui.js';
 
@@ -164,59 +165,56 @@ export function detectGlobalTeacherConflictsStable() {
         const pairAggregates = new Map();
 
         Object.entries(eventsByDate || {}).forEach(([dateStr, events]) => {
-            const slotMap = new Map();
+            const items = [];
 
             (events || []).forEach((event) => {
                 const slotKey = normalizeConflictSlotLabel(event?.horario || '');
                 if (!slotKey) return;
 
-                if (!slotMap.has(slotKey)) slotMap.set(slotKey, []);
-                const items = slotMap.get(slotKey);
                 const identity = getTeacherEventIdentity(event, slotKey);
                 if (!items.some((item) => item.identity === identity)) {
-                    items.push({ identity, event });
+                    items.push({ identity, event, slotKey });
                 }
             });
 
-            slotMap.forEach((items, slotKey) => {
-                if (items.length < 2) return;
+            for (let i = 0; i < items.length; i++) {
+                for (let j = i + 1; j < items.length; j++) {
+                    // Compara pelo relogio: cursos com quadros diferentes tambem chocam.
+                    if (!slotLabelsOverlap(items[i].slotKey, items[j].slotKey)) continue;
+                    const eventA = items[i].event;
+                    const eventB = items[j].event;
 
-                for (let i = 0; i < items.length; i++) {
-                    for (let j = i + 1; j < items.length; j++) {
-                        const eventA = items[i].event;
-                        const eventB = items[j].event;
-
-                        if (
-                            String(eventA?.turmaId) === String(eventB?.turmaId) &&
-                            String(eventA?.disciplina || '') === String(eventB?.disciplina || '') &&
-                            String(eventA?.modo || '') === String(eventB?.modo || '')
-                        ) {
-                            continue;
-                        }
-
-                        const labelA = getTeacherEventLabel(eventA);
-                        const labelB = getTeacherEventLabel(eventB);
-                        const orderedLabels = [labelA, labelB].sort((a, b) => a.localeCompare(b, 'pt-BR', { sensitivity: 'base' }));
-                        const pairKey = `${orderedLabels[0]}|||${orderedLabels[1]}`;
-                        const dayOfWeek = new Date(dateStr + 'T12:00:00').getDay();
-
-                        if (!pairAggregates.has(pairKey)) {
-                            pairAggregates.set(pairKey, {
-                                discA: orderedLabels[0],
-                                discB: orderedLabels[1],
-                                firstDate: dateStr,
-                                daySet: new Set(),
-                                slotSet: new Set()
-                            });
-                        }
-
-                        const aggregate = pairAggregates.get(pairKey);
-                        if (dateStr < aggregate.firstDate) aggregate.firstDate = dateStr;
-                        if (dayOfWeek >= 1 && dayOfWeek <= 6) aggregate.daySet.add(dayOfWeek);
-                        aggregate.slotSet.add(slotKey);
+                    if (
+                        String(eventA?.turmaId) === String(eventB?.turmaId) &&
+                        String(eventA?.disciplina || '') === String(eventB?.disciplina || '') &&
+                        String(eventA?.modo || '') === String(eventB?.modo || '')
+                    ) {
+                        continue;
                     }
+
+                    const labelA = getTeacherEventLabel(eventA);
+                    const labelB = getTeacherEventLabel(eventB);
+                    const orderedLabels = [labelA, labelB].sort((a, b) => a.localeCompare(b, 'pt-BR', { sensitivity: 'base' }));
+                    const pairKey = `${orderedLabels[0]}|||${orderedLabels[1]}`;
+                    const dayOfWeek = new Date(dateStr + 'T12:00:00').getDay();
+
+                    if (!pairAggregates.has(pairKey)) {
+                        pairAggregates.set(pairKey, {
+                            discA: orderedLabels[0],
+                            discB: orderedLabels[1],
+                            firstDate: dateStr,
+                            daySet: new Set(),
+                            slotSet: new Set()
+                        });
+                    }
+
+                    const aggregate = pairAggregates.get(pairKey);
+                    if (dateStr < aggregate.firstDate) aggregate.firstDate = dateStr;
+                    if (dayOfWeek >= 1 && dayOfWeek <= 6) aggregate.daySet.add(dayOfWeek);
+                    aggregate.slotSet.add(items[i].slotKey);
+                    aggregate.slotSet.add(items[j].slotKey);
                 }
-            });
+            }
         });
 
         if (pairAggregates.size === 0) return;

@@ -39,6 +39,33 @@ export function normalizeShiftKey(value = '') {
   return normalized;
 }
 
+const DEFAULT_SLOT_MINUTES = 50;
+
+// "13:30 - 14:20" -> { inicio: 810, fim: 860 } (minutos do dia). Rotulo so com
+// o inicio ("13:30") assume uma aula de 50 min. null se nao houver hora.
+export function parseSlotRangeMinutes(label = '') {
+  const text = String(label || '');
+  if (/intervalo/i.test(text)) return null;
+  const times = [...text.matchAll(/(\d{1,2}):(\d{2})/g)]
+    .map((m) => (Number(m[1]) * 60) + Number(m[2]));
+  if (times.length === 0) return null;
+  const inicio = times[0];
+  const fim = times.length > 1 ? times[1] : inicio + DEFAULT_SLOT_MINUTES;
+  return fim > inicio ? { inicio, fim } : null;
+}
+
+// Dois horarios chocam quando se sobrepoem no relogio. Os cursos usam quadros
+// de horario diferentes (13:30-14:20 x 14:00-14:50), entao comparar o rotulo
+// nao basta. Rotulos sem hora (ex.: "M1") so chocam se forem iguais.
+export function slotLabelsOverlap(labelA = '', labelB = '') {
+  const a = parseSlotRangeMinutes(labelA);
+  const b = parseSlotRangeMinutes(labelB);
+  if (a && b) return a.inicio < b.fim && b.inicio < a.fim;
+  const normalize = (value) => String(value || '').trim().replace(/\s+/g, ' ').replace(/\s*[-–]\s*/g, ' - ');
+  const normA = normalize(labelA);
+  return !!normA && normA === normalize(labelB);
+}
+
 function buildShiftLabelMap(order = []) {
   const labels = new Map();
   (Array.isArray(order) ? order : []).forEach((value) => {

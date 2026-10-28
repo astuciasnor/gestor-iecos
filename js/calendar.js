@@ -1,6 +1,7 @@
 import { store } from './store.js??v=20261028a';
 import { getDaysArray, toLocalDateString } from './utils.js';
 import { mapSlotToTurno, normalizeTurnoKey } from './turns.js';
+import { slotLabelsOverlap } from './academic_rules.mjs';
 
 function normalizeKeyPart(value) {
   return String(value || '').trim().toUpperCase();
@@ -103,29 +104,42 @@ function getCalendarConflictIdentity(event, slotKey) {
   ].join('|');
 }
 
+function markEventConflict({ event, slotKey }, other) {
+  if (!event.conflictsAt) event.conflictsAt = [];
+  if (!event.conflictsAt.includes(slotKey)) event.conflictsAt.push(slotKey);
+  event.isConflict = true;
+
+  // Com quem choca: a outra aula pode estar em outro quadro de horario e nao
+  // aparecer na mesma linha do calendario.
+  if (!event.conflictPartners) event.conflictPartners = [];
+  const partner = { turmaId: other?.turmaId, disciplina: other?.disciplina };
+  if (!event.conflictPartners.some((p) => p.turmaId === partner.turmaId && p.disciplina === partner.disciplina)) {
+    event.conflictPartners.push(partner);
+  }
+}
+
 function markCalendarVisualConflicts(events = []) {
-  const slotMap = new Map();
+  const items = [];
 
   (events || []).forEach((event) => {
     const slotKey = normalizeCalendarSlotKey(event?.horario || '');
     if (!slotKey) return;
 
-    if (!slotMap.has(slotKey)) slotMap.set(slotKey, []);
-    const items = slotMap.get(slotKey);
     const identity = getCalendarConflictIdentity(event, slotKey);
     if (!items.some((item) => item.identity === identity)) {
-      items.push({ identity, event });
+      items.push({ identity, event, slotKey });
     }
   });
 
-  slotMap.forEach((items, slotKey) => {
-    if (items.length < 2) return;
-    items.forEach(({ event }) => {
-      if (!event.conflictsAt) event.conflictsAt = [];
-      if (!event.conflictsAt.includes(slotKey)) event.conflictsAt.push(slotKey);
-      event.isConflict = true;
-    });
-  });
+  for (let i = 0; i < items.length; i++) {
+    for (let j = i + 1; j < items.length; j++) {
+      const a = items[i];
+      const b = items[j];
+      if (!slotLabelsOverlap(a.event?.horario || a.slotKey, b.event?.horario || b.slotKey)) continue;
+      markEventConflict(a, b.event);
+      markEventConflict(b, a.event);
+    }
+  }
 }
 
 function buildOfferKey(allocation) {
