@@ -1,4 +1,4 @@
-import { store } from './store.js??v=20261027b';
+import { store } from './store.js??v=20261028a';
 import { getDaysArray, toLocalDateString } from './utils.js';
 import { mapSlotToTurno, normalizeTurnoKey } from './turns.js';
 

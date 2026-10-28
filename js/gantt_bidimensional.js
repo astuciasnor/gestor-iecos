@@ -1,4 +1,4 @@
-import { store } from './store.js??v=20261027b';
+import { store } from './store.js??v=20261028a';
 import { getTurnoLetter } from './turns.js';
 
 const DAY_MS = 24 * 60 * 60 * 1000;

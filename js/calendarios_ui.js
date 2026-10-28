@@ -1,4 +1,4 @@
-import { store } from './store.js??v=20261027b';
+import { store } from './store.js??v=20261028a';
 import { getCalendarEvents } from './calendar.js??v=20260625v';
 import { buildTeacherExecutionSnapshot, buildCanonicalOfferProjection } from './execution_engine.js';
 import { getHorariosByTurno, normalizeTurnoKey, getTurnoLetter, mapSlotToTurno } from './turns.js';

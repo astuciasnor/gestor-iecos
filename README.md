@@ -125,6 +125,7 @@ Observacoes:
 - o app nao depende mais de datas padrao escritas manualmente no `index.html`;
 - o seletor lateral consome os periodos oficiais gerados no JSON;
 - `horarios_por_turno` e a base para a aba Alocar Componentes, calendarios e Gantt.
+- correcao de nome de docente: troque o nome na coluna `docente` e escreva a grafia antiga na coluna `nomes_anteriores` (varias separadas por `;`). Ao carregar ou importar, o app troca a grafia antiga pela nova nas alocacoes, para o mesmo professor nao aparecer com dois nomes (o que esconderia conflitos).
 - `regime_vigencia` (fixado em `tools/convert_data.py`, hoje `2026-08-24`) define a partir de quando cada curso usa o regime de horario proprio; planos que comecam antes seguem o regime padrao. Se houver nova mudanca de regime, revise esse valor.
 
 ### Abertura de um novo ano letivo (ex.: 2027)
@@ -137,6 +138,40 @@ Os planos ficam no `localStorage` do navegador, com chave `periodo + inicio + fi
 4. Teste o seletor e a importacao com uma copia dos dados antes de liberar para as coordenacoes.
 
 ---
+
+## Modo online (banco compartilhado)
+
+Provisorio, ate a hospedagem no servidor do CTIC-UFPA. As alocacoes ficam num
+banco Supabase, cada coordenador entra com e-mail e senha, e as alteracoes de
+um curso aparecem na hora para os outros (conflitos de docente entre cursos
+passam a ser vistos durante a alocacao).
+
+- Ativar neste navegador: abrir o app com `?backend=supabase`
+  (voltar ao modo local com `?backend=local`). O padrao fica em
+  `js/backend_config.js` (`DEFAULT_BACKEND_MODE`).
+- Banco: `supabase/schema.sql` (colar no SQL Editor do Supabase e executar).
+- Usuarios: Supabase > Authentication > Users > Add user (e-mail + senha,
+  marcar "Auto Confirm User"). Depois, no SQL Editor:
+
+```sql
+insert into public.perfis (usuario, nome, curso, papel)
+select id, 'Nome do coordenador', 'EP', 'coordenador'   -- ou 'admin'
+from auth.users where email = 'pessoa@ufpa.br'
+on conflict (usuario) do update
+  set nome = excluded.nome, curso = excluded.curso, papel = excluded.papel;
+```
+
+- Cada um altera so as turmas do proprio curso (o admin altera todas); todos
+  veem tudo. Alteracoes em turmas de outro curso sao desfeitas com aviso.
+- Na primeira entrada, se houver ofertas do curso salvas so no navegador, o app
+  pergunta se deve envia-las; uma copia do que havia fica em
+  `cardume_backup_v1::<plano>` no localStorage.
+- O historico de alteracoes fica em `alocacoes_historico` (visivel ao admin).
+- Codigo: `js/sync_remoto.js` (servidor), `js/sync_diff.mjs` (regras, testadas
+  em `tests/sync_diff.test.mjs`), `js/acesso_ui.js` (login e status).
+- Migracao para o CTIC: as tabelas `perfis`, `alocacoes` e
+  `alocacoes_historico` tem equivalente direto em MySQL/MariaDB (coluna JSON);
+  basta um modo novo em `js/sync_remoto.js` falando com uma API PHP.
 
 ## Publicacao online
 

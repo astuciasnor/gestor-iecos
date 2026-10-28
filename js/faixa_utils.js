@@ -1,4 +1,4 @@
-import { store } from './store.js??v=20261027b';
+import { store } from './store.js??v=20261028a';
 import { getCalendarEvents } from './calendar.js??v=20260625v';
 import { mapSlotToTurno } from './turns.js';
 import { addDaysISO, timeToMinutes, toISODate } from './date_utils_ui.js';

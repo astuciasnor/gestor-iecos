@@ -1,5 +1,7 @@
-import { store } from './store.js??v=20261027b';
-import { initUI, exportSigaaMetadataJSON, showToastWarning } from './ui.js??v=20260627v86';
+import { store } from './store.js??v=20261028a';
+import { initUI, exportSigaaMetadataJSON, showToastWarning, refreshAfterRemoteChange } from './ui.js??v=20260627v87';
+import { iniciarAcesso, isOnlineMode } from './acesso_ui.js??v=20261028a';
+import { fetchAllocationsForPlans } from './sync_remoto.js??v=20261028a';
 import { filterExportableAllocations, resolveActiveAcademicPeriod } from './academic_rules.mjs';
 import {
   buildPlanScopedPayload,
@@ -68,10 +70,8 @@ function getLocalTodayIso() {
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 }
 
-// Monta uma publicacao por periodo letivo em curso ou futuro que tenha ao menos
-// uma alocacao (o plano ativo entra sempre). O store e trocado temporariamente
-// para cada plano, porque a projecao de ofertas le datas e alocacoes dele.
-function buildPublicPublicationsForExport() {
+// Planos candidatos a publicacao: o ativo e os oficiais em curso ou futuros.
+function getPublicationTargets() {
   const today = getLocalTodayIso();
   const activeMeta = store.getActivePlanMeta();
   const officialPlans = getOfficialPlanCandidates();
@@ -93,6 +93,18 @@ function buildPublicPublicationsForExport() {
   officialPlans
     .filter((plan) => plan.termEnd && plan.termEnd >= today)
     .forEach(addTarget);
+  return targets;
+}
+
+// Monta uma publicacao por periodo letivo em curso ou futuro que tenha ao menos
+// uma alocacao (o plano ativo entra sempre). O store e trocado temporariamente
+// para cada plano, porque a projecao de ofertas le datas e alocacoes dele.
+// allocationsByKey: alocacoes ja trazidas do servidor (modo online).
+function buildPublicPublicationsForExport(allocationsByKey = null) {
+  const today = getLocalTodayIso();
+  const activeMeta = store.getActivePlanMeta();
+  const officialPlans = getOfficialPlanCandidates();
+  const targets = getPublicationTargets();
 
   const saved = {
     settings: store.settings,
@@ -105,7 +117,9 @@ function buildPublicPublicationsForExport() {
   try {
     targets.forEach((meta) => {
       const isActive = meta.key === activeMeta?.key;
-      const planAllocations = isActive ? saved.allocations : store.readPlanAllocations(meta);
+      const planAllocations = isActive
+        ? saved.allocations
+        : (allocationsByKey?.[meta.key] || store.readPlanAllocations(meta));
       const exportableAllocations = filterExportableAllocations(planAllocations);
       if (!exportableAllocations.length) return;
 
@@ -368,9 +382,18 @@ function exportarJSONCurso(sigla) {
   // NOVO: Exportar para o Portal Público (Nome Fixo + Datas do Semestre)
   const btnExportPublic = document.getElementById('btn-export-public');
   if (btnExportPublic) {
-    btnExportPublic.onclick = () => {
+    btnExportPublic.onclick = async () => {
       const fileName = 'alocacoes_publicas.json';
-      const { publications, issues } = buildPublicPublicationsForExport();
+      let allocationsByKey = null;
+      if (isOnlineMode()) {
+        try {
+          allocationsByKey = await fetchAllocationsForPlans(getPublicationTargets().map((meta) => meta.key));
+        } catch (error) {
+          showToastWarning(`Nao foi possivel ler os periodos do servidor: ${error?.message || error}`, 'error', 6000);
+          return;
+        }
+      }
+      const { publications, issues } = buildPublicPublicationsForExport(allocationsByKey);
 
       if (issues.length) {
         showToastWarning(
@@ -431,4 +454,6 @@ function exportarJSONCurso(sigla) {
   }
 
   document.getElementById('btn-clear').onclick = () => store.clearData();
+
+  await iniciarAcesso({ onRemoteChange: refreshAfterRemoteChange, showToast: showToastWarning });
 })();

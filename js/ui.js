@@ -1,4 +1,4 @@
-import { store } from './store.js??v=20261027b';
+import { store } from './store.js??v=20261028a';
 import { getTurnoLetter, mapSlotToTurno, normalizeTurnoKey, getHorariosByTurno } from './turns.js';
 import { normalizePeriodo as normalizePeriodoLetivoCode } from './plan_storage.js';
 import { getCalendarEvents } from './calendar.js??v=20260625v';
@@ -4107,6 +4107,15 @@ function rerenderPlanBoundViews() {
     } else if (activeTab === 'teacher' && selViewDocente?.value) {
         renderActiveSubtab('tab-teacher', 'docente-calendar');
     }
+}
+
+// Chamado pela sincronizacao online quando chegam alocacoes do servidor.
+// So redesenha: nao recalcula nem salva, para nao gerar novo envio.
+export function refreshAfterRemoteChange() {
+    updateActivePlanStatus();
+    updateDisciplinaDatalist();
+    rerenderPlanBoundViews();
+    refreshTeacherConflictsUI();
 }
 
 function applyPlanContextToUI(planMeta = {}, options = {}) {

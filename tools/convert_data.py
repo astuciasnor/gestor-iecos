@@ -7,7 +7,9 @@ convert_data.py
 Planilha esperada:
 
 docentes:
-  docente | unidade | subunidade | apelido (opcional)
+  docente | unidade | subunidade | apelido (opcional) | nomes_anteriores (opcional)
+  nomes_anteriores: grafias antigas do nome, separadas por ";". O app troca
+  essas grafias pelo nome atual nas alocacoes ja feitas.
 
 componentes:
   sigla | periodo | codigo | cor | componente | abreviacao | ch
@@ -195,6 +197,11 @@ def build_json_from_excel(xlsx_path: Path) -> Dict[str, Any]:
             "unidade": to_str(row.get("unidade")),
             "subunidade": to_str(row.get("subunidade")),
             "apelido": to_str(row.get("apelido")),
+            "nomes_anteriores": [
+                nome.strip()
+                for nome in to_str(row.get("nomes_anteriores")).split(";")
+                if nome.strip()
+            ],
         }
         for row in raw["docentes"]
     ]

@@ -1,10 +1,10 @@
-import { store, normalizeLoadedAllocation } from './store.js??v=20261027b';
+import { store, normalizeLoadedAllocation } from './store.js??v=20261028a';
 import { getTurnoLetter } from './turns.js';
 import { getCalendarEvents } from './calendar.js';
 import { resolveActiveAcademicPeriod } from './academic_rules.mjs';
 
 const collator = new Intl.Collator('pt-BR', { sensitivity: 'base' });
-const PUBLIC_ASSET_VERSION = '20261027b';
+const PUBLIC_ASSET_VERSION = '20261028a';
 const PUBLIC_ROUTING_CONFIG_URL = 'publicacoes/publicacao_config.json';
 const PUBLIC_ROUTING_CATALOG_FALLBACK_URL = 'publicacoes/catalogo_publicacoes.json';
 

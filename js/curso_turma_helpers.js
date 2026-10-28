@@ -1,4 +1,4 @@
-import { store } from './store.js??v=20261027b';
+import { store } from './store.js??v=20261028a';
 import { normalizePeriodo as normalizePeriodoLetivoCode } from './plan_storage.js';
 
 export function getDisciplinaCHGlobal(disciplina, turmaId) {

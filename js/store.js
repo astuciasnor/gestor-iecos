@@ -47,6 +47,9 @@ class Store {
   constructor() {
     this.rawData = null;
     this.allocations = [];
+    // Ganchos da sincronizacao com o servidor (sync_remoto.js); nulos no modo local.
+    this.onAllocationsSaved = null;
+    this.onPlanLoaded = null;
     this.selectedCurso = null; // sigla do curso (ex.: "EP")
     this.selectedTurma = null; // turma_id (ex.: "EP2025")
 
@@ -150,6 +153,37 @@ class Store {
     return getPlanStorageKey(meta);
   }
 
+  // Troca grafias antigas de nomes de docentes (coluna nomes_anteriores da
+  // planilha) pelo nome atual, para o mesmo professor nao virar duas pessoas.
+  // Retorna quantas alocacoes mudaram.
+  corrigirNomesDocentes(allocations = []) {
+    const atual = {};
+    (this.rawData?.docentes || []).forEach((d) => {
+      (d.nomes_anteriores || []).forEach((antigo) => {
+        if (antigo && d.docente) atual[antigo] = d.docente;
+      });
+    });
+    if (!Object.keys(atual).length) return 0;
+
+    let changed = 0;
+    allocations.forEach((alloc) => {
+      if (!alloc || typeof alloc !== 'object') return;
+      let touched = false;
+      if (atual[alloc.docente]) {
+        alloc.docente = atual[alloc.docente];
+        touched = true;
+      }
+      (Array.isArray(alloc.docentes) ? alloc.docentes : []).forEach((d) => {
+        if (d && atual[d.nome]) {
+          d.nome = atual[d.nome];
+          touched = true;
+        }
+      });
+      if (touched) changed++;
+    });
+    return changed;
+  }
+
   // ===== Data =====
   async loadData() {
     try {
@@ -213,7 +247,9 @@ class Store {
     if (isCompletePlanMeta(planMeta)) {
       this.maybeMigrateLegacyAllocations(planMeta);
       this.allocations = this.readPlanAllocations(planMeta);
+      if (this.corrigirNomesDocentes(this.allocations)) this.writeAllocationsCache();
       this.registerCurrentPlan(this.allocations.length);
+      if (typeof this.onPlanLoaded === 'function') this.onPlanLoaded(planMeta);
       return this.allocations;
     }
 
@@ -221,7 +257,8 @@ class Store {
     return this.allocations;
   }
 
-  saveAllocations() {
+  // Grava so no navegador (usado tambem ao receber alteracoes do servidor).
+  writeAllocationsCache() {
     if (isCompletePlanMeta(this.activePlanMeta)) {
       const storageKey = this.getPlanStorageKey(this.activePlanMeta);
       writeJsonStorage(localStorage, storageKey, this.allocations);
@@ -230,6 +267,11 @@ class Store {
     }
 
     writeJsonStorage(localStorage, LEGACY_ALLOCATIONS_KEY, this.allocations);
+  }
+
+  saveAllocations() {
+    this.writeAllocationsCache();
+    if (typeof this.onAllocationsSaved === 'function') this.onAllocationsSaved();
   }
 
   applyPlanContext(meta = {}) {
@@ -251,6 +293,7 @@ class Store {
 
   replaceAllocations(newAllocations = []) {
     this.allocations = Array.isArray(newAllocations) ? [...newAllocations] : [];
+    this.corrigirNomesDocentes(this.allocations);
     this.saveAllocations();
     return this.allocations.length;
   }
@@ -269,6 +312,7 @@ class Store {
   // Mescla por id: adiciona as novas e atualiza as existentes com a versao do
   // arquivo (um curso pode reenviar o JSON com alocacoes editadas).
   mergeAllocations(newAllocations) {
+    this.corrigirNomesDocentes(newAllocations);
     let addedCount = 0;
     let updatedCount = 0;
     newAllocations.forEach((newAlloc) => {
