@@ -55,6 +55,83 @@ function validatePublicExportData(exportData) {
   return issues;
 }
 
+const MAX_FUTURE_PUBLIC_PLANS = 4;
+
+function getLocalTodayIso() {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+}
+
+// Monta uma publicacao por periodo letivo em curso ou futuro que tenha ao menos
+// uma alocacao (o plano ativo entra sempre). O store e trocado temporariamente
+// para cada plano, porque a projecao de ofertas le datas e alocacoes dele.
+function buildPublicPublicationsForExport() {
+  const today = getLocalTodayIso();
+  const activeMeta = store.getActivePlanMeta();
+  const officialPlans = getOfficialPlanCandidates();
+
+  const targets = [];
+  const seen = new Set();
+  const addTarget = (meta) => {
+    const normalized = store.getPlanMetaFromSettings({
+      periodo: meta.periodo,
+      termStart: meta.termStart,
+      termEnd: meta.termEnd
+    });
+    if (!normalized?.key || seen.has(normalized.key)) return;
+    seen.add(normalized.key);
+    targets.push(normalized);
+  };
+
+  if (activeMeta?.key) addTarget(activeMeta);
+  officialPlans
+    .filter((plan) => plan.termEnd && plan.termEnd >= today)
+    .forEach(addTarget);
+
+  const saved = {
+    settings: store.settings,
+    allocations: store.allocations,
+    activePlanMeta: store.activePlanMeta
+  };
+
+  const publications = [];
+  const issues = [];
+  try {
+    targets.forEach((meta) => {
+      const isActive = meta.key === activeMeta?.key;
+      const planAllocations = isActive ? saved.allocations : store.readPlanAllocations(meta);
+      const exportableAllocations = filterExportableAllocations(planAllocations);
+      if (!exportableAllocations.length) return;
+
+      store.settings = { ...saved.settings, periodo: meta.periodo, termStart: meta.termStart, termEnd: meta.termEnd };
+      store.allocations = planAllocations;
+      store.activePlanMeta = meta;
+
+      const payload = buildPublicExportPayload(exportableAllocations, meta, store.settings, officialPlans);
+      const payloadIssues = validatePublicExportData(payload);
+      if (payloadIssues.length) {
+        issues.push(...payloadIssues.map((msg) => `${meta.periodo} (${meta.termStart}): ${msg}`));
+        return;
+      }
+      publications.push(payload);
+    });
+  } finally {
+    store.settings = saved.settings;
+    store.allocations = saved.allocations;
+    store.activePlanMeta = saved.activePlanMeta;
+  }
+
+  // Mesma janela do publish_online.py: periodo(s) em curso + ate 4 futuros.
+  publications.sort((a, b) => String(a.settings.termStart).localeCompare(String(b.settings.termStart)));
+  let futureCount = 0;
+  const windowed = publications.filter((pub) => {
+    if (String(pub.settings.termStart) <= today) return true;
+    futureCount += 1;
+    return futureCount <= MAX_FUTURE_PUBLIC_PLANS;
+  });
+  return { publications: windowed, issues };
+}
+
 function formatTimestampForFileName(date = new Date()) {
   const pad = (v) => String(v).padStart(2, '0');
   const yyyy = String(date.getFullYear());
@@ -276,15 +353,8 @@ function exportarJSONCurso(sigla) {
   if (btnExportPublic) {
     btnExportPublic.onclick = () => {
       const fileName = 'alocacoes_publicas.json';
-      const exportableAllocations = filterExportableAllocations(store.allocations);
-      const exportData = buildPublicExportPayload(
-        exportableAllocations,
-        store.getActivePlanMeta(),
-        store.settings,
-        getOfficialPlanCandidates()
-      );
+      const { publications, issues } = buildPublicPublicationsForExport();
 
-      const issues = validatePublicExportData(exportData);
       if (issues.length) {
         showToastWarning(
           'Publicação cancelada por inconsistências:<br>- ' +
@@ -295,13 +365,27 @@ function exportarJSONCurso(sigla) {
         return;
       }
 
+      if (!publications.length) {
+        showToastWarning('Nenhum período em curso ou futuro tem alocações para publicar.', 'warning', 4200);
+        return;
+      }
+
+      const resumo = publications
+        .map((pub) => `- ${String(pub.settings.termStart || '').slice(0, 4)} - ${pub.settings.periodo}: ${pub.allocations.length} alocação(ões)`)
+        .join('\n');
       const shouldExport = confirm(
         `Confirmar publicação online?\n\n` +
-        `Alocações: ${exportData.allocations.length}\n` +
-        `Plano: ${exportData.settings.periodo || 'P'} | ${exportData.settings.termStart} a ${exportData.settings.termEnd}\n\n` +
+        `Períodos em curso e futuros com turmas cadastradas:\n${resumo}\n\n` +
         `Clique em OK para gerar o arquivo público.`
       );
       if (!shouldExport) return;
+
+      const exportData = {
+        version: 3,
+        exportedAt: new Date().toISOString(),
+        layoutMode: 'single_file_multi_plan',
+        publications
+      };
 
       const dataStr =
         "data:text/json;charset=utf-8," +

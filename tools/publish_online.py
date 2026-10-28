@@ -35,7 +35,9 @@ PUBLICATION_CONFIG_REL = Path("publicacoes") / "publicacao_config.json"
 DEFAULT_PUBLICATION_CATALOG_REL = "publicacoes/catalogo_publicacoes.json"
 DEFAULT_PLAN_DIRECTORY_TEMPLATE = "publicacoes/{year}/{periodo_slug}/alocacoes_publicas.json"
 DEFAULT_LAYOUT_MODE = "legacy_single_file"
-MAX_PUBLISHED_PLANS = 3
+# Janela publicada: o(s) periodo(s) em curso e ate 4 futuros
+# (5 planos; 6 quando dois periodos correm ao mesmo tempo).
+MAX_FUTURE_PLANS = 4
 
 
 def run_git(repo_root: Path, args: list[str], check: bool = True) -> subprocess.CompletedProcess:
@@ -386,15 +388,24 @@ def publication_sort_value(pub: Any) -> str:
     return str(plan.get("termStart") or settings.get("termStart") or "")
 
 
+def publication_end_value(pub: Any) -> str:
+    pub = pub if isinstance(pub, dict) else {}
+    plan = pub.get("plan") if isinstance(pub.get("plan"), dict) else {}
+    settings = pub.get("settings") if isinstance(pub.get("settings"), dict) else {}
+    return str(plan.get("termEnd") or settings.get("termEnd") or "")
+
+
 def publication_periodo_label(pub: Any) -> str:
     pub = pub if isinstance(pub, dict) else {}
     plan = pub.get("plan") if isinstance(pub.get("plan"), dict) else {}
     settings = pub.get("settings") if isinstance(pub.get("settings"), dict) else {}
     meta = pub.get("meta") if isinstance(pub.get("meta"), dict) else {}
-    return (
+    periodo = (
         str(meta.get("periodoLetivo") or plan.get("periodo") or settings.get("periodo") or "").strip()
         or "?"
     )
+    year = publication_sort_value(pub)[:4]
+    return f"{year} - {periodo}" if year else periodo
 
 
 def extract_existing_publications(existing_data: Any) -> list[dict]:
@@ -410,18 +421,31 @@ def extract_existing_publications(existing_data: Any) -> list[dict]:
 
 def merge_publications(
     existing_publications: list[dict],
-    new_publication: dict,
-    max_plans: int = MAX_PUBLISHED_PLANS,
+    new_publications: list[dict],
+    today: str | None = None,
 ) -> list[dict]:
-    """Substitui o plano de mesmo periodo, mantem os demais e limita aos mais recentes."""
-    new_identity = publication_identity(new_publication)
+    """Substitui os planos de mesmo periodo e mantem a janela publicada:
+    todos os em curso e ate 4 futuros. Periodos encerrados saem."""
+    today = today or datetime.now().date().isoformat()
+    new_identities = {publication_identity(pub) for pub in new_publications}
     merged = [
         pub for pub in existing_publications
-        if publication_identity(pub) != new_identity
+        if publication_identity(pub) not in new_identities
     ]
-    merged.append(new_publication)
-    merged.sort(key=publication_sort_value, reverse=True)
-    return merged[:max_plans]
+    merged.extend(new_publications)
+
+    past = [pub for pub in merged if publication_end_value(pub) and publication_end_value(pub) < today]
+    future = [pub for pub in merged if publication_sort_value(pub) > today]
+    current = [pub for pub in merged if pub not in past and pub not in future]
+    if not current and not future:
+        # Nada em curso nem futuro: mantem o ultimo encerrado para a agenda nao ficar vazia.
+        past.sort(key=publication_end_value, reverse=True)
+        current = past[:1]
+
+    future.sort(key=publication_sort_value)
+    kept = current + future[:MAX_FUTURE_PLANS]
+    kept.sort(key=publication_sort_value, reverse=True)
+    return kept
 
 
 def build_multi_plan_document(publications: list[dict]) -> dict:
@@ -450,7 +474,7 @@ def build_output_document(
             existing_data = None
 
     existing_publications = extract_existing_publications(existing_data)
-    merged = merge_publications(existing_publications, payload)
+    merged = merge_publications(existing_publications, extract_existing_publications(payload))
     return build_multi_plan_document(merged)
 
 
@@ -691,7 +715,13 @@ def main() -> int:
         return 1
 
     print("JSON lido com sucesso.")
-    errors = validate_public_json(payload)
+    incoming_publications = extract_existing_publications(payload)
+    errors: list[str] = []
+    if not incoming_publications:
+        errors.append("Nenhum plano encontrado no JSON de origem.")
+    for pub in incoming_publications:
+        label = publication_periodo_label(pub)
+        errors.extend(f"{label}: {msg}" for msg in validate_public_json(pub))
     if errors:
         print("Erro: a validacao do JSON falhou. Publicacao cancelada.", file=sys.stderr)
         for item in errors:
@@ -703,13 +733,16 @@ def main() -> int:
         return 1
     print("JSON validado com sucesso.")
 
-    allocations_count = len(payload.get("allocations", []))
-    settings = payload.get("settings", {})
-    term_start = settings.get("termStart")
-    term_end = settings.get("termEnd")
+    allocations_count = sum(len(pub.get("allocations", [])) for pub in incoming_publications)
+    term_start = min(publication_sort_value(pub) for pub in incoming_publications)
+    term_end = max(publication_end_value(pub) for pub in incoming_publications)
+    print(
+        "Planos no arquivo de origem: "
+        + ", ".join(publication_periodo_label(pub) for pub in incoming_publications)
+    )
     target_path, target_mode, plan_descriptor = resolve_public_target_path(
         repo_root=repo_root,
-        payload=payload,
+        payload=incoming_publications[0],
         publication_config=publication_config,
         target_arg=args.target,
     )

@@ -142,7 +142,7 @@ Os planos ficam no `localStorage` do navegador, com chave `periodo + inicio + fi
 
 Fluxo recomendado:
 
-1. No app, clique em **Publicar Online**.
+1. No app, clique em **Publicar Online**. O arquivo gerado reune **os periodos letivos em curso e ate 4 futuros que tenham ao menos uma alocacao** neste navegador.
 2. No terminal, execute:
 
 ```bash
@@ -159,11 +159,10 @@ Arquivos e paginas envolvidos:
 
 - `alocacoes_publicas.json`
 - `agenda_publica.html`
-- `agenda_discente.html`
 - `publicacoes/publicacao_config.json`
 - `publicacoes/catalogo_publicacoes.json`
 
-Hoje a publicacao segue no modo legado de arquivo unico, com preparacao interna para evolucao futura por plano letivo.
+O arquivo publico e unico e guarda varios planos (`publications`). A cada publicacao, o script substitui os periodos enviados, mantem os demais e aplica a janela publicada: **o(s) periodo(s) em curso e ate 4 futuros** (5 planos; 6 quando dois periodos correm ao mesmo tempo). Periodos encerrados saem do arquivo. A agenda publica abre no periodo em curso e oferece a troca entre os periodos publicados.
 
 ---
 
@@ -180,8 +179,7 @@ Uso recomendado nas limpezas graduais:
 1. rodar a suite automatizada;
 2. testar `index.html`;
 3. testar `agenda_publica.html`;
-4. testar `agenda_discente.html`;
-5. so entao remover ou consolidar arquivos de baixo risco.
+4. so entao remover ou consolidar arquivos de baixo risco.
 
 ---
 
