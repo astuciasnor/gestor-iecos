@@ -126,6 +126,7 @@ async function iniciarOnline({ onRemoteChange, showToast }) {
 
   setLoginMessage('');
   showApp();
+  remoto.watchSessionChange(() => window.location.reload());
   montarBarraStatus(perfil, user);
   ajustarControlesOnline(showToast);
 

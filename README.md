@@ -127,6 +127,7 @@ Observacoes:
 - `horarios_por_turno` e a base para a aba Alocar Componentes, calendarios e Gantt.
 - correcao de nome de docente: troque o nome na coluna `docente` e escreva a grafia antiga na coluna `nomes_anteriores` (varias separadas por `;`). Ao carregar ou importar, o app troca a grafia antiga pela nova nas alocacoes, para o mesmo professor nao aparecer com dois nomes (o que esconderia conflitos).
 - `regime_vigencia` (fixado em `tools/convert_data.py`, hoje `2026-08-24`) define a partir de quando cada curso usa o regime de horario proprio; planos que comecam antes seguem o regime padrao. Se houver nova mudanca de regime, revise esse valor.
+- mudanca de quadro de um curso (coluna `regime` da aba `cursos`): ao carregar ou importar, as ofertas salvas no quadro antigo passam ao quadro novo aula por aula (1a aula do turno -> 1a aula, etc.; `js/quadro_horario.mjs`). Aulas sem correspondente no quadro novo ficam como estao e devem ser revistas.
 
 ### Abertura de um novo ano letivo (ex.: 2027)
 

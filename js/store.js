@@ -10,6 +10,7 @@ import {
   writeJsonStorage
 } from './plan_storage.js';
 import { generateUUID } from './utils.js';
+import { buildQuadroConversionMap, convertAllocationQuadro } from './quadro_horario.mjs';
 
 import { normalizeTurnoKey, getHorariosByTurno } from './turns.js';
 
@@ -184,6 +185,39 @@ class Store {
     return changed;
   }
 
+  // Ofertas salvas no quadro de horario antigo do curso (ex.: MT as 13:30 antes
+  // de passar ao quadro das 14:00) vao para o quadro atual, aula por aula.
+  // Mesma regra de getActiveRegime. Retorna quantas alocacoes mudaram.
+  converterQuadroHorario(allocations = []) {
+    const rd = this.rawData || {};
+    const quadros = rd.horarios_por_regime || {};
+    if (Object.keys(quadros).length < 2) return 0;
+
+    const cutoff = String(rd.regime_vigencia || '').trim();
+    const termStart = String(this.settings?.termStart || this.activePlanMeta?.termStart || '').trim();
+    const usaRegimeDoCurso = !(cutoff && termStart && termStart < cutoff);
+    const regimePadrao = String(rd.regime_default || 1);
+    const regimePorCurso = new Map((rd.cursos || []).map((c) => [String(c.sigla), String(c.regime || regimePadrao)]));
+    const cursoPorTurma = new Map((rd.turmas || []).map((t) => [String(t.turma_id), String(t.sigla)]));
+    const mapas = new Map();
+
+    let changed = 0;
+    allocations.forEach((alloc) => {
+      if (!alloc || typeof alloc !== 'object') return;
+      const regime = usaRegimeDoCurso
+        ? (regimePorCurso.get(cursoPorTurma.get(String(alloc.turmaId))) || regimePadrao)
+        : regimePadrao;
+      if (!mapas.has(regime)) mapas.set(regime, buildQuadroConversionMap(quadros, regime));
+      if (convertAllocationQuadro(alloc, mapas.get(regime))) changed++;
+    });
+    return changed;
+  }
+
+  // Correcoes aplicadas ao carregar, importar ou receber alocacoes.
+  corrigirAlocacoes(allocations = []) {
+    return this.corrigirNomesDocentes(allocations) + this.converterQuadroHorario(allocations);
+  }
+
   // ===== Data =====
   async loadData() {
     try {
@@ -247,7 +281,7 @@ class Store {
     if (isCompletePlanMeta(planMeta)) {
       this.maybeMigrateLegacyAllocations(planMeta);
       this.allocations = this.readPlanAllocations(planMeta);
-      if (this.corrigirNomesDocentes(this.allocations)) this.writeAllocationsCache();
+      if (this.corrigirAlocacoes(this.allocations)) this.writeAllocationsCache();
       this.registerCurrentPlan(this.allocations.length);
       if (typeof this.onPlanLoaded === 'function') this.onPlanLoaded(planMeta);
       return this.allocations;
@@ -293,7 +327,7 @@ class Store {
 
   replaceAllocations(newAllocations = []) {
     this.allocations = Array.isArray(newAllocations) ? [...newAllocations] : [];
-    this.corrigirNomesDocentes(this.allocations);
+    this.corrigirAlocacoes(this.allocations);
     this.saveAllocations();
     return this.allocations.length;
   }
@@ -312,7 +346,7 @@ class Store {
   // Mescla por id: adiciona as novas e atualiza as existentes com a versao do
   // arquivo (um curso pode reenviar o JSON com alocacoes editadas).
   mergeAllocations(newAllocations) {
-    this.corrigirNomesDocentes(newAllocations);
+    this.corrigirAlocacoes(newAllocations);
     let addedCount = 0;
     let updatedCount = 0;
     newAllocations.forEach((newAlloc) => {

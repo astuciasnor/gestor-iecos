@@ -73,6 +73,22 @@ export async function signOut() {
   await client.auth.signOut();
 }
 
+// Outra aba deste navegador entrou com outro usuario (ou saiu): esta pagina
+// continuaria mostrando o nome antigo enquanto o servidor ja usa o login novo.
+export function watchSessionChange(onChange) {
+  const startedAs = currentUser?.id || null;
+  const check = (id) => {
+    if (id !== startedAs) onChange();
+  };
+  client.auth.onAuthStateChange((_event, session) => check(session?.user?.id || null));
+  window.addEventListener('storage', (event) => {
+    if (!/^sb-.+-auth-token$/.test(event.key || '')) return;
+    let id = null;
+    try { id = JSON.parse(event.newValue || 'null')?.user?.id || null; } catch (e) { return; }
+    check(id);
+  });
+}
+
 export async function loadPerfil() {
   if (!currentUser) return null;
   const { data, error } = await client
@@ -217,7 +233,7 @@ function applyRemoteSnapshot(key, remote) {
   });
 
   store.allocations = merged.map((alloc) => structuredClone(alloc));
-  store.corrigirNomesDocentes(store.allocations);
+  store.corrigirAlocacoes(store.allocations);
   store.writeAllocationsCache();
   synced = buildSyncedMap(remote, cursoOf);
   remoteById = new Map(remote.map((a) => [a.id, a]));
