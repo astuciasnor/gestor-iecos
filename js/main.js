@@ -9,7 +9,13 @@ import {
   buildPublicExportPayload
 } from './serialization.js';
 
-const EXPORT_CURSOS_UNIDADE = ['EP', 'CB', 'CN'];
+// Cursos exportaveis: os cadastrados na aba cursos da planilha (dados_app.json).
+function getExportCursosUnidade() {
+  const siglas = (store.rawData?.cursos || [])
+    .map((curso) => String(curso?.sigla || '').trim().toUpperCase())
+    .filter(Boolean);
+  return siglas.length ? [...new Set(siglas)] : ['EP', 'CB', 'CN'];
+}
 
 function isValidIsoDate(value) {
   return typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value);
@@ -196,7 +202,7 @@ function downloadJSONFile(payload, fileName) {
 }
 
 function exportarJSONTodosCursos(snapshot = null) {
-  const effective = snapshot || buildTodosCursosExportSnapshot(store.allocations, store.rawData?.turmas, EXPORT_CURSOS_UNIDADE);
+  const effective = snapshot || buildTodosCursosExportSnapshot(store.allocations, store.rawData?.turmas, getExportCursosUnidade());
   const fileName = buildBackupFilename('TODOS');
   downloadJSONFile(
     buildPlanScopedPayload('TODOS', effective.allocations, store.getActivePlanMeta(), store.settings, {
@@ -209,7 +215,7 @@ function exportarJSONTodosCursos(snapshot = null) {
 
 function exportarJSONCurso(sigla) {
   const cursoSigla = String(sigla || '').trim().toUpperCase();
-  if (!EXPORT_CURSOS_UNIDADE.includes(cursoSigla)) {
+  if (!getExportCursosUnidade().includes(cursoSigla)) {
     showToastWarning('Selecione um curso para exportar.', 'warning', 2200);
     return;
   }
@@ -243,6 +249,17 @@ function exportarJSONCurso(sigla) {
   const btnExportScopeAllDownload = document.getElementById('btn-export-scope-all-download');
   let pendingAllExportSnapshot = null;
 
+  // Preenche o seletor de curso e os textos do modal a partir dos cursos cadastrados.
+  const exportCursos = getExportCursosUnidade();
+  if (selExportScopeCourse) {
+    selExportScopeCourse.innerHTML = '<option value="">Selecione...</option>' +
+      exportCursos.map((sigla) => `<option value="${sigla}">${sigla}</option>`).join('');
+  }
+  const scopeAllHelp = btnExportScopeAll?.querySelector('.export-scope-choice-help');
+  if (scopeAllHelp) scopeAllHelp.textContent = `Exporta ${exportCursos.join(' + ')}`;
+  const scopeOneTitle = btnExportScopeOne?.querySelector('.export-scope-choice-title');
+  if (scopeOneTitle) scopeOneTitle.textContent = `🎓 Um Curso (${exportCursos.join(', ')})`;
+
   const updateExportCourseActionState = () => {
     if (!btnExportScopeCourse || !selExportScopeCourse) return;
     btnExportScopeCourse.disabled = !selExportScopeCourse.value;
@@ -258,9 +275,9 @@ function exportarJSONCurso(sigla) {
   const renderAllSummary = (snapshot) => {
     if (!exportScopeAllSummary || !exportScopeAllSummaryBody || !btnExportScopeAllDownload) return;
     exportScopeAllSummaryBody.innerHTML =
-      `EP: <b>${snapshot.porCurso.EP || 0}</b> ofertas<br>` +
-      `CB: <b>${snapshot.porCurso.CB || 0}</b> ofertas<br>` +
-      `CN: <b>${snapshot.porCurso.CN || 0}</b> ofertas<br>` +
+      getExportCursosUnidade()
+        .map((sigla) => `${sigla}: <b>${snapshot.porCurso[sigla] || 0}</b> ofertas<br>`)
+        .join('') +
       `Total: <b>${snapshot.total || 0}</b>`;
     exportScopeAllSummary.classList.remove('hidden');
     btnExportScopeAllDownload.disabled = false;
@@ -295,7 +312,7 @@ function exportarJSONCurso(sigla) {
   if (btnExportScopeAll) {
     btnExportScopeAll.addEventListener('click', () => {
       if (exportScopeCourseArea) exportScopeCourseArea.classList.add('hidden');
-      pendingAllExportSnapshot = buildTodosCursosExportSnapshot(store.allocations, store.rawData?.turmas, EXPORT_CURSOS_UNIDADE);
+      pendingAllExportSnapshot = buildTodosCursosExportSnapshot(store.allocations, store.rawData?.turmas, getExportCursosUnidade());
       renderAllSummary(pendingAllExportSnapshot);
     });
   }
