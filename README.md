@@ -18,10 +18,10 @@ Documentacao tecnica:
 
 - **Periodos letivos oficiais:** o seletor lateral consome `periodos_letivos` do `dados_app.json` e preenche automaticamente inicio e fim do plano ativo.
 - **Persistencia por plano letivo:** cada combinacao `periodo + inicio + fim` fica isolada no navegador.
-- **Grade Semanal como centro operacional:** e o unico lugar para desenhar slots e definir regimes de funcionamento.
+- **Aba Alocar Componentes como centro operacional:** e o unico lugar para desenhar slots e definir regimes de funcionamento.
 - **Motor canonico por faixas:** toda oferta e tratada por datas, slots e execucao real, sem depender da UX legada por tipo.
 - **Datas das faixas como referencia oficial:** a `Faixa 1` nasce por sugestao automatica, mas a edicao oficial da data e feita pelos mini calendarios das faixas.
-- **Turnos e sabado integrados ao motor:** mudancas de turno, sabado de manha e avisos `Atenção Turno` sao refletidos na Grade Semanal, calendarios, agendas e Gantt.
+- **Turnos e sabado integrados ao motor:** mudancas de turno, sabado de manha e avisos `Atenção Turno` sao refletidos na aba Alocar Componentes, calendarios, agendas e Gantt.
 - **Gantt bidimensional por docente:** leitura temporal mais clara, com turnos reais, detalhes de barra e mesma base de execucao usada nos calendarios.
 - **Agenda publica:** `agenda_publica.html` e a pagina oficial de publicacao das grades.
 - **Exportacao, SIGAA e publicacao online:** backup, exportacao institucional e `alocacoes_publicas.json` partem do plano ativo.
@@ -40,7 +40,7 @@ Documentacao tecnica:
 ### 2. Montagem da grade
 
 1. Selecione a componente, a cor e o(s) docente(s) na lateral.
-2. Va para a aba **Grade Semanal**.
+2. Va para a aba **Alocar Componentes**.
 3. Defina o inicio da `Faixa 1` pelo mini calendario da tabela de faixas.
 4. Desenhe os slots diretamente na grade.
 5. Se o regime mudar ao longo do periodo, crie a `Faixa 2` ou `Faixa 3` e desenhe explicitamente o novo padrao.
@@ -124,7 +124,17 @@ Observacoes:
 
 - o app nao depende mais de datas padrao escritas manualmente no `index.html`;
 - o seletor lateral consome os periodos oficiais gerados no JSON;
-- `horarios_por_turno` e a base para Grade Semanal, calendarios e Gantt.
+- `horarios_por_turno` e a base para a aba Alocar Componentes, calendarios e Gantt.
+- `regime_vigencia` (fixado em `tools/convert_data.py`, hoje `2026-08-24`) define a partir de quando cada curso usa o regime de horario proprio; planos que comecam antes seguem o regime padrao. Se houver nova mudanca de regime, revise esse valor.
+
+### Abertura de um novo ano letivo (ex.: 2027)
+
+Os planos ficam no `localStorage` do navegador, com chave `periodo + inicio + fim`. Por isso:
+
+1. **Antes** de alterar a planilha, exporte um backup JSON (**Exportar (JSON)**) de cada plano em uso.
+2. Inclua os novos periodos na aba `periodos_letivos` do Excel e rode `python tools/convert_data.py`.
+3. Nao altere as datas de um periodo que ja tem plano salvo: a chave muda e o plano parece "sumir" do seletor (os dados continuam no navegador, sob a chave antiga). Se a data oficial mudar, importe o backup no periodo corrigido.
+4. Teste o seletor e a importacao com uma copia dos dados antes de liberar para as coordenacoes.
 
 ---
 

@@ -1,6 +1,6 @@
 {
   "meta": {
-    "generated_at": "2026-07-14T14:31:26",
+    "generated_at": "2026-10-27T23:46:47",
     "source_file": "planilha_base.xlsx"
   },
   "docentes": [
@@ -3036,6 +3036,13 @@
       "turma_label": "EP2026"
     },
     {
+      "sigla": "EP",
+      "ano": 2027,
+      "turno": "Tarde",
+      "turma_id": "EP2027",
+      "turma_label": "EP2027"
+    },
+    {
       "sigla": "CB",
       "ano": 2022,
       "turno": "Manhã",
@@ -3069,6 +3076,13 @@
       "turno": "Manhã",
       "turma_id": "CB2026",
       "turma_label": "CB2026"
+    },
+    {
+      "sigla": "CB",
+      "ano": 2027,
+      "turno": "Tarde",
+      "turma_id": "CB2027",
+      "turma_label": "CB2027"
     },
     {
       "sigla": "CN",
@@ -3106,6 +3120,13 @@
       "turma_label": "CN2026"
     },
     {
+      "sigla": "CN",
+      "ano": 2027,
+      "turno": "Manhã",
+      "turma_id": "CN2027",
+      "turma_label": "CN2027"
+    },
+    {
       "sigla": "MT",
       "ano": 2022,
       "turno": "Manhã",
@@ -3139,6 +3160,13 @@
       "turno": "tarde",
       "turma_id": "MT2026",
       "turma_label": "MT2026"
+    },
+    {
+      "sigla": "MT",
+      "ano": 2027,
+      "turno": "Noite",
+      "turma_id": "MT2027",
+      "turma_label": "MT2027"
     }
   ],
   "horarios": [
@@ -3572,7 +3600,7 @@
     },
     {
       "data": "2027-02-09",
-      "feriado": "Carnaval (Ponto Facultativo)",
+      "feriado": "Carnaval",
       "dia": "Terça-feira",
       "tipo": "Nacional"
     },
@@ -3677,6 +3705,66 @@
       "feriado": "SIEPE",
       "dia": "Quarta-feira",
       "tipo": "evento-academico"
+    },
+    {
+      "data": "2027-02-08",
+      "feriado": "Carnaval",
+      "dia": "Segunda-feira",
+      "tipo": "Nacional"
+    },
+    {
+      "data": "2027-02-10",
+      "feriado": "Carnaval",
+      "dia": "Quarta-feira",
+      "tipo": "Nacional"
+    },
+    {
+      "data": "2027-08-23",
+      "feriado": "COBEP",
+      "dia": "Segunda-feira",
+      "tipo": "evento-academico"
+    },
+    {
+      "data": "2027-08-24",
+      "feriado": "COBEP",
+      "dia": "Terça-feira",
+      "tipo": "evento-academico"
+    },
+    {
+      "data": "2027-08-25",
+      "feriado": "COBEP",
+      "dia": "Quarta-feira",
+      "tipo": "evento-academico"
+    },
+    {
+      "data": "2027-08-26",
+      "feriado": "COBEP",
+      "dia": "Quinta-feira",
+      "tipo": "evento-academico"
+    },
+    {
+      "data": "2027-08-27",
+      "feriado": "COBEP",
+      "dia": "Sexta-feira",
+      "tipo": "evento-academico"
+    },
+    {
+      "data": "2027-11-29",
+      "feriado": "SIEPE",
+      "dia": "Segunda-feira",
+      "tipo": "evento-academico"
+    },
+    {
+      "data": "2027-11-30",
+      "feriado": "SIEPE",
+      "dia": "Terça-feira",
+      "tipo": "evento-academico"
+    },
+    {
+      "data": "2027-12-01",
+      "feriado": "SIEPE",
+      "dia": "Quarta-feira",
+      "tipo": "evento-academico"
     }
   ],
   "periodos_letivos": [
@@ -3707,6 +3795,35 @@
       "inicio": "2026-08-24",
       "fim": "2026-12-23",
       "label": "2026 - PL4"
+    },
+    {
+      "ano": 2027,
+      "periodo_letivo": "PL1",
+      "inicio": "2027-01-04",
+      "fim": "2027-03-05",
+      "label": "2027 - PL1"
+    },
+    {
+      "ano": 2027,
+      "periodo_letivo": "PL2",
+      "inicio": "2027-03-15",
+      "fim": "2027-07-14",
+      "label": "2027 - PL2"
+    },
+    {
+      "ano": 2027,
+      "periodo_letivo": "PL3",
+      "inicio": "2027-06-28",
+      "fim": "2027-08-24",
+      "label": "2027 - PL3"
+    },
+    {
+      "ano": 2027,
+      "periodo_letivo": "PL4",
+      "inicio": "2027-08-23",
+      "fim": "2027-12-23",
+      "label": "2027 - PL4"
     }
-  ]
+  ],
+  "salas": []
 }

@@ -1,4 +1,4 @@
-import { store } from './store.js??v=20260625v';
+import { store } from './store.js??v=20261027b';
 import { getTurnoLetter, mapSlotToTurno, normalizeTurnoKey, getHorariosByTurno } from './turns.js';
 import { normalizePeriodo as normalizePeriodoLetivoCode } from './plan_storage.js';
 import { getCalendarEvents } from './calendar.js??v=20260625v';
@@ -3774,6 +3774,43 @@ function getSigaaCode(allocsForClass) {
     return parts.join(' ');
 }
 
+// Nome sugerido do PDF, ex.: EP2023_BL9_2027-PL2_Calendario_IECOS
+// ou Docente_Fulano-de-Tal_2027-PL2_Gantt_IECOS.
+function buildPrintFileName() {
+    const toFilePart = (value) => String(value || '')
+        .trim()
+        .replace(/[\\/:*?"<>|()]+/g, '')
+        .replace(/\s+/g, '-');
+
+    const periodo = normalizePeriodoLetivoCode(store.settings.periodo || 'PL1');
+    const ano = String(store.settings.termStart || '').slice(0, 4);
+    const periodoPart = ano ? `${ano}-${periodo}` : periodo;
+
+    const activeTab = document.querySelector('.tab-btn.active')?.dataset.tab;
+    const activeSubtab = document.querySelector(`#tab-${activeTab} .subtab-btn.active`)?.dataset.subtab || '';
+    const viewNames = {
+        weekly: 'Horario-Semanal',
+        list: 'Lista-de-Ofertas',
+        monthly: 'Calendario',
+        teacher: activeSubtab === 'docente-gantt' ? 'Gantt' : 'Calendario',
+        tutorial: 'Ajuda'
+    };
+    const viewPart = viewNames[activeTab] || '';
+
+    let subjectParts;
+    if (activeTab === 'teacher' && selViewDocente && selViewDocente.value) {
+        subjectParts = ['Docente', toFilePart(selViewDocente.value)];
+    } else if (store.selectedTurma) {
+        const t = (store.rawData?.turmas || []).find(x => String(x.turma_id) === String(store.selectedTurma));
+        const bloco = derivarBloco(store.selectedTurma, store.settings.periodo, store.settings.termStart);
+        subjectParts = [toFilePart(t?.turma_label || store.selectedTurma), bloco];
+    } else {
+        subjectParts = ['Geral'];
+    }
+
+    return [...subjectParts, periodoPart, viewPart, 'IECOS'].filter(Boolean).join('_');
+}
+
 function getOfficialPeriodoLetivoPlans() {
     const rawPlans = Array.isArray(store.rawData?.periodos_letivos) ? store.rawData.periodos_letivos : [];
     const plans = rawPlans
@@ -3816,11 +3853,17 @@ function populateTurnoOfertaOptions(preferredValue = store.settings.turnoOferta 
     selTurnoOferta.value = resolveTurnoOfertaValue(preferredValue);
 }
 
+// Data de hoje no fuso local (toISOString usa UTC e adianta o dia apos 21h no Brasil).
+function getLocalTodayIso() {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+}
+
 function getSuggestedOfficialPeriodoLetivoPlan() {
     const plans = getOfficialPeriodoLetivoPlans();
     if (!plans.length) return null;
 
-    const today = new Date().toISOString().slice(0, 10);
+    const today = getLocalTodayIso();
     const currentPlan = plans.find((plan) => plan.termStart <= today && plan.termEnd >= today);
     if (currentPlan) return currentPlan;
 
@@ -3853,7 +3896,13 @@ function populatePeriodoLetivoOptions(preferredMeta = null) {
     selPeriodo.innerHTML = '';
 
     if (officialPlans.length > 0) {
-        officialPlans.forEach((plan) => {
+        // Exibe apenas os PLs em curso (pode haver mais de um) e os seguintes.
+        // O plano ativo permanece visivel mesmo se ja encerrado, para nao perder a selecao.
+        const today = getLocalTodayIso();
+        let visiblePlans = officialPlans.filter((plan) => plan.termEnd >= today || plan.key === currentMeta?.key);
+        if (!visiblePlans.length) visiblePlans = officialPlans;
+
+        visiblePlans.forEach((plan) => {
             const opt = document.createElement('option');
             opt.value = plan.key;
             opt.textContent = buildPeriodoLetivoOptionLabel(plan);
@@ -3863,7 +3912,7 @@ function populatePeriodoLetivoOptions(preferredMeta = null) {
             selPeriodo.appendChild(opt);
         });
 
-        selPeriodo.value = currentMeta?.key || officialPlans[0].key;
+        selPeriodo.value = currentMeta?.key || visiblePlans[0].key;
         return;
     }
 
@@ -4453,8 +4502,21 @@ export function initUI() {
     if (btnUndoAlloc) btnUndoAlloc.addEventListener('click', handleUndoLastAllocation);
     updateUndoAllocationButtonUI();
 
-    document.querySelectorAll('.tab-btn').forEach((btn) => {
+    const tabButtons = Array.from(document.querySelectorAll('.tab-btn'));
+    tabButtons.forEach((btn, idx) => {
         btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+        // Navegacao por teclado no padrao WAI-ARIA de abas (setas, Home, End).
+        btn.addEventListener('keydown', (e) => {
+            let target = null;
+            if (e.key === 'ArrowRight') target = tabButtons[(idx + 1) % tabButtons.length];
+            else if (e.key === 'ArrowLeft') target = tabButtons[(idx - 1 + tabButtons.length) % tabButtons.length];
+            else if (e.key === 'Home') target = tabButtons[0];
+            else if (e.key === 'End') target = tabButtons[tabButtons.length - 1];
+            if (!target) return;
+            e.preventDefault();
+            switchTab(target.dataset.tab);
+            target.focus();
+        });
     });
 
     setupSubtabs();
@@ -4474,25 +4536,20 @@ export function initUI() {
     const btnPrint = document.querySelector('.btn-print');
     if (btnPrint) {
         btnPrint.removeAttribute('onclick');
-        btnPrint.addEventListener('click', () => {
-            const originalTitle = document.title;
-            let turmaLabel = store.selectedTurma || 'GERAL';
-            if (store.rawData?.turmas) {
-                const t = store.rawData.turmas.find(x => String(x.turma_id) === String(store.selectedTurma));
-                if (t) turmaLabel = t.turma_label;
-            }
-            const periodo = normalizePeriodoLetivoCode(store.settings.periodo || 'PL1');
-            const activeTab = document.querySelector('.tab-btn.active')?.dataset.tab;
-
-            if (activeTab === 'teacher' && selViewDocente && selViewDocente.value) {
-                document.title = `${selViewDocente.value}_${periodo}_Gestor_IECOS_Coordenacoes(v2.0 Dev)`;
-            } else {
-                document.title = `${turmaLabel}_${periodo}_Gestor_IECOS_Coordenacoes(v2.0 Dev)`;
-            }
-            window.print();
-            setTimeout(() => { document.title = originalTitle; }, 1000);
-        });
+        btnPrint.addEventListener('click', () => window.print());
     }
+
+    // O titulo da pagina vira o nome sugerido do PDF. Usa beforeprint/afterprint
+    // para valer tambem no Ctrl+P, nao so no botao Imprimir.
+    let titleBeforePrint = null;
+    window.addEventListener('beforeprint', () => {
+        titleBeforePrint = document.title;
+        document.title = buildPrintFileName();
+    });
+    window.addEventListener('afterprint', () => {
+        if (titleBeforePrint !== null) document.title = titleBeforePrint;
+        titleBeforePrint = null;
+    });
 
     if (selViewDocente) {
         selViewDocente.addEventListener('change', () => {
@@ -4550,11 +4607,11 @@ export function initUI() {
                     if (!shouldSwitch) return;
                     applyPlanContextToUI(tempImportPlanMeta, { resetDraftOnChange: true });
                 }
-                const count = store.mergeAllocations(markAllocationsAsImported(tempImportData));
+                const { addedCount, updatedCount } = store.mergeAllocations(markAllocationsAsImported(tempImportData));
                 syncAllRegularDates();
                 syncAllIntensiveDates();
                 populateDocentes();
-                showToastWarning(`Mesclagem concluida! ${count} novas alocacoes adicionadas com datas corrigidas.`, 'success', 3000);
+                showToastWarning(`Mesclagem concluida! ${addedCount} nova(s) e ${updatedCount} atualizada(s), com datas corrigidas.`, 'success', 3500);
                 rerenderPlanBoundViews();
             }
             closeModal();
@@ -6553,13 +6610,15 @@ export function exportSigaaMetadataJSON() {
 
 function switchTab(tabId) {
     document.querySelectorAll('.tab-content').forEach((c) => c.classList.remove('active'));
-    document.querySelectorAll('.tab-btn').forEach((b) => b.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach((b) => {
+        const isActive = b.dataset.tab === tabId;
+        b.classList.toggle('active', isActive);
+        b.setAttribute('aria-selected', isActive ? 'true' : 'false');
+        b.tabIndex = isActive ? 0 : -1;
+    });
 
     const tabEl = document.getElementById(`tab-${tabId}`);
     if (tabEl) tabEl.classList.add('active');
-
-    const btn = document.querySelector(`button[data-tab="${tabId}"]`);
-    if (btn) btn.classList.add('active');
 
     if (tabId === 'monthly') {
         renderActiveSubtab('tab-monthly', 'turma-calendar');

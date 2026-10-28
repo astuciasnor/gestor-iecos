@@ -11,7 +11,14 @@
     --sidebar-width: 360px;
 }
 
-* { box-sizing: border-box; outline: none; }
+* { box-sizing: border-box; }
+
+/* Foco visivel global para navegacao por teclado (mouse nao exibe o contorno). */
+:focus:not(:focus-visible) { outline: none; }
+:focus-visible {
+    outline: 3px solid #f39c12;
+    outline-offset: 2px;
+}
 
 body { 
     font-family: 'Segoe UI', 'Roboto', Helvetica, Arial, sans-serif; 
@@ -91,6 +98,16 @@ body {
     text-transform: uppercase;
     letter-spacing: 1px;
     margin-top: 20px;
+}
+
+/* Titulos de secao da barra lateral: mesmo espacamento e um divisor discreto. */
+.sidebar h3.sidebar-section-title {
+    margin: 18px 0 10px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+    font-size: 0.85rem;
+    font-weight: 600;
+    letter-spacing: 1.2px;
 }
 
 .form-group { margin-bottom: 15px; }

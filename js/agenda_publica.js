@@ -1,10 +1,10 @@
-import { store, normalizeLoadedAllocation } from './store.js??v=20260625v';
+import { store, normalizeLoadedAllocation } from './store.js??v=20261027b';
 import { getTurnoLetter } from './turns.js';
 import { getCalendarEvents } from './calendar.js';
 import { resolveActiveAcademicPeriod } from './academic_rules.mjs';
 
 const collator = new Intl.Collator('pt-BR', { sensitivity: 'base' });
-const PUBLIC_ASSET_VERSION = '20260701h';
+const PUBLIC_ASSET_VERSION = '20261027b';
 const PUBLIC_ROUTING_CONFIG_URL = 'publicacoes/publicacao_config.json';
 const PUBLIC_ROUTING_CATALOG_FALLBACK_URL = 'publicacoes/catalogo_publicacoes.json';
 
@@ -346,7 +346,7 @@ async function loadPublicData() {
 
 function applyFallbackTermDates() {
     if (store.settings.termStart && store.settings.termEnd) return;
-    const today = new Date().toISOString().slice(0, 10);
+    const today = getTodayIso();
     const periodos = Array.isArray(store.rawData?.periodos_letivos)
         ? store.rawData.periodos_letivos
         : [];
@@ -473,8 +473,10 @@ function publicationSelectors(publication) {
     ].filter(Boolean))];
 }
 
+// Data de hoje no fuso local (toISOString usa UTC e adianta o dia apos 21h no Brasil).
 function getTodayIso() {
-    return new Date().toISOString().slice(0, 10);
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 }
 
 function isPastPublication(publication, today = getTodayIso()) {
@@ -536,7 +538,9 @@ function applySelectedPublication(publication) {
 }
 
 function buildPlanOptionLabel(publication) {
-    const base = publication.periodo || publication.label || 'Per\u00edodo';
+    const year = String(publication.termStart || '').slice(0, 4);
+    const periodo = publication.periodo || publication.label || 'Per\u00edodo';
+    const base = year && publication.periodo ? `${year} - ${periodo}` : periodo;
     if (publication.termStart && publication.termEnd) {
         return `${base} (${formatIsoDateBR(publication.termStart)} a ${formatIsoDateBR(publication.termEnd)})`;
     }
@@ -598,7 +602,10 @@ function refreshAfterPlanSwitch(publication) {
 
     try {
         const url = new URL(window.location.href);
-        url.searchParams.set('pl', normalizePublicationSelector(publication?.periodo) || publication?.key || '');
+        // Inclui o ano (ex.: ?pl=2027-pl2) para nao confundir PLs de mesmo nome em anos diferentes.
+        const year = String(publication?.termStart || '').slice(0, 4);
+        const selector = normalizePublicationSelector([year, publication?.periodo].filter(Boolean).join('-'));
+        url.searchParams.set('pl', selector || publication?.key || '');
         window.history.replaceState({}, '', url);
     } catch (_) {
         // ignora ambientes sem history API

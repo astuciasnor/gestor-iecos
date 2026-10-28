@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cardume – Planejador Acadêmico | IECOS</title>
-    <link rel="stylesheet" href="css/style.css??v=20260627v37">
+    <link rel="stylesheet" href="css/style.css??v=20260627v38">
 
     <style>
         :root {
@@ -588,16 +588,16 @@
                 <hr style="width: 100%; border: none; border-top: 3px solid #95a5a6; margin: 0;">
             </div>
 
-            <h3 class="periodo-letivo-title" style="margin-top: 20px; margin-bottom: 10px; text-transform: uppercase; font-size: 0.9em;">Per&iacute;odo Letivo</h3>
+            <h3 class="sidebar-section-title periodo-letivo-title">Per&iacute;odo Letivo</h3>
 
             <div class="compact-row periodo-letivo-dates">
                 <div class="form-group">
-                    <label>In&iacute;cio</label>
+                    <label for="term-start">In&iacute;cio</label>
                     <input type="date" id="term-start" title="Defina as datas de in&iacute;cio e fim do semestre">
                 </div>
 
                 <div class="form-group">
-                    <label>Fim</label>
+                    <label for="term-end">Fim</label>
                     <input type="date" id="term-end" title="Defina as datas de in&iacute;cio e fim do semestre">
                 </div>
             </div>
@@ -616,17 +616,17 @@
                 Plano ativo ainda n&atilde;o definido.
             </div>
 
-            <h3 style="margin-top: 0; margin-bottom: 5px; text-transform: uppercase; font-size: 0.9em;">IDENTIFICA&Ccedil;&Atilde;O DA TURMA</h3>
+            <h3 class="sidebar-section-title">IDENTIFICA&Ccedil;&Atilde;O DA TURMA</h3>
 
             <div class="form-group" style="margin-top: 0;">
-                <label>Curso</label>
+                <label for="sel-curso">Curso</label>
                 <select id="sel-curso">
                     <option value="">Selecione...</option>
                 </select>
             </div>
 
             <div class="form-group">
-                <label>Turma</label>
+                <label for="sel-turma">Turma</label>
                 <select id="sel-turma" disabled>
                     <option value="">Selecione um curso...</option>
                 </select>
@@ -641,7 +641,7 @@
                 </select>
             </div>
 
-            <h3 style="text-transform: uppercase; letter-spacing: 1px; margin-bottom: 15px;">OFERTA DE DISCIPLINA</h3>
+            <h3 class="sidebar-section-title">OFERTA DE DISCIPLINA</h3>
 
             <div class="offer-mode-section">
                 <label class="offer-mode-label">
@@ -663,7 +663,7 @@
                 </label>
 
                 <div class="form-group">
-                    <label>Disciplina</label>
+                    <label for="inp-disciplina">Disciplina</label>
                     <div class="input-row-color">
                         <input type="color" id="inp-color" value="#e91e63" title="Escolha a cor da disciplina" list="list-cores-vibrantes">
                         <input type="text" id="inp-disciplina" list="list-disciplinas"
@@ -696,7 +696,7 @@
 
                 <div class="form-group">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
-                        <label style="margin:0;">Docente(s)</label>
+                        <label for="inp-docente" style="margin:0;">Docente(s)</label>
                         <div style="font-size:0.85em; display:flex; align-items:center; gap:5px;">
                             <input type="checkbox" id="chk-multi-docente" style="width:auto; transform: scale(1.2);">
                             <label for="chk-multi-docente"
@@ -721,7 +721,7 @@
 
                 <!-- Campo de Sub-grupo: aparece automaticamente quando a mesma disciplina já existe na turma -->
                 <div id="container-sub-turma" class="form-group hidden">
-                    <label style="color: #feffcc;">
+                    <label for="inp-sub-turma" style="color: #feffcc;">
                         🔢 Identificador do Sub-grupo
                         <small
                             style="font-weight:normal; display:block; color:#bdc3c7; font-size:0.78em; margin-top:2px;">
@@ -740,7 +740,7 @@
                 </small>
             </div>
 
-            <h3 style="text-transform: uppercase; letter-spacing: 1px; margin-bottom: 15px;">GERENCIANDO ARQUIVOS</h3>
+            <h3 class="sidebar-section-title">GERENCIANDO ARQUIVOS</h3>
 
             <div class="actions">
                 <div class="btn-duplo-container">
@@ -768,12 +768,12 @@
         <main class="content">
 
             <header class="top-bar no-print">
-                <nav class="tabs" style="flex-grow: 1;">
-                    <button class="tab-btn tab-btn--oferta active" data-tab="weekly">Alocar Componentes</button>
-                    <button class="tab-btn tab-btn--oferta" data-tab="list">Lista de Ofertas</button>
-                    <button class="tab-btn" data-tab="monthly">Calendário da Turma</button>
-                    <button class="tab-btn" data-tab="teacher">Calendário Docente</button>
-                    <button class="tab-btn" data-tab="tutorial" style="color: var(--accent);">❓ Ajuda</button>
+                <nav class="tabs" role="tablist" aria-label="Se&ccedil;&otilde;es do planejador" style="flex-grow: 1;">
+                    <button type="button" class="tab-btn tab-btn--oferta active" data-tab="weekly" id="tabbtn-weekly" role="tab" aria-controls="tab-weekly" aria-selected="true" tabindex="0">Alocar Componentes</button>
+                    <button type="button" class="tab-btn tab-btn--oferta" data-tab="list" id="tabbtn-list" role="tab" aria-controls="tab-list" aria-selected="false" tabindex="-1">Lista de Ofertas</button>
+                    <button type="button" class="tab-btn" data-tab="monthly" id="tabbtn-monthly" role="tab" aria-controls="tab-monthly" aria-selected="false" tabindex="-1">Calendário da Turma</button>
+                    <button type="button" class="tab-btn" data-tab="teacher" id="tabbtn-teacher" role="tab" aria-controls="tab-teacher" aria-selected="false" tabindex="-1">Calendário Docente</button>
+                    <button type="button" class="tab-btn" data-tab="tutorial" id="tabbtn-tutorial" role="tab" aria-controls="tab-tutorial" aria-selected="false" tabindex="-1" style="color: var(--accent);">❓ Ajuda</button>
                 </nav>
 
                 <span class="print-hint no-print" title="A 'Microsoft Print to PDF' sai em retrato. Use 'Salvar como PDF' para sair em paisagem automaticamente.">💡 Para PDF em paisagem, use <strong>“Salvar como PDF”</strong></span>
@@ -799,7 +799,7 @@
                                 <span class="wi-step-num">1</span>
                                 <div class="wi-step-text">
                                     <span class="wi-step-emoji" aria-hidden="true">&#128197;&#65039;</span>
-                                    <strong>Selecione o per&iacute;odo letivo do ano</strong> (ex.: 2026.1). Ele define o calend&aacute;rio-base de todo o planejamento.
+                                    <strong>Selecione o per&iacute;odo letivo do ano</strong> (ex.: <em>2026 - PL2</em>). Ele define o calend&aacute;rio-base de todo o planejamento.
                                 </div>
                             </li>
                             <li class="wi-step">
@@ -855,7 +855,7 @@
 
             <div id="feedback-msg" class="feedback hidden"></div>
 
-            <section id="tab-weekly" class="tab-content active">
+            <section id="tab-weekly" class="tab-content active" role="tabpanel" aria-labelledby="tabbtn-weekly">
                 <!-- Indicador unico de estado/proximo passo (sempre visivel). Populado
                      por updateWeeklyContextNote() em js/ui.js a partir do estado atual. -->
                 <div id="weekly-status-bar" class="weekly-status-bar tone-info no-print" role="status" aria-live="polite">
@@ -1054,7 +1054,7 @@
                 </div>
             </section>
 
-            <section id="tab-monthly" class="tab-content">
+            <section id="tab-monthly" class="tab-content" role="tabpanel" aria-labelledby="tabbtn-monthly">
                 <div class="subtab-bar subtab-bar--stacked no-print">
                     <div class="calendar-controls">
                         <label>Período de Visualização:</label>
@@ -1073,7 +1073,7 @@
                 </div>
             </section>
 
-            <section id="tab-teacher" class="tab-content">
+            <section id="tab-teacher" class="tab-content" role="tabpanel" aria-labelledby="tabbtn-teacher">
                 <div class="docente-filter-layout no-print">
                     <nav class="docente-view-card" aria-label="Visualização da agenda docente">
                         <div class="subtab-switch" role="tablist" aria-label="Visualizações do docente">
@@ -1133,7 +1133,7 @@
                 </div>
             </section>
 
-            <section id="tab-list" class="tab-content">
+            <section id="tab-list" class="tab-content" role="tabpanel" aria-labelledby="tabbtn-list">
                 <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:10px;">
                     <h3 style="margin:0;">Ofertas Cadastradas</h3>
                     <button id="btn-export-sigaa-json" class="btn-secondary"
@@ -1157,7 +1157,7 @@
                 </table>
             </section>
 
-            <section id="tab-tutorial" class="tab-content">
+            <section id="tab-tutorial" class="tab-content" role="tabpanel" aria-labelledby="tabbtn-tutorial">
                 <div class="help-layout">
 
                     <h2 class="help-fullwidth-title" style="border-bottom: 2px solid #2c3e50; padding-bottom: 10px; color: var(--primary);">🎓
@@ -1176,7 +1176,7 @@
                                 <span class="wi-step-num">1</span>
                                 <div class="wi-step-text">
                                     <span class="wi-step-emoji" aria-hidden="true">&#128197;&#65039;</span>
-                                    <strong>Selecione o per&iacute;odo letivo do ano</strong> (ex.: 2026.1). Ele define o calend&aacute;rio-base de todo o planejamento.
+                                    <strong>Selecione o per&iacute;odo letivo do ano</strong> (ex.: <em>2026 - PL2</em>). Ele define o calend&aacute;rio-base de todo o planejamento.
                                 </div>
                             </li>
                             <li class="wi-step">
@@ -1520,7 +1520,7 @@
         </main>
     </div>
 
-    <script type="module" src="js/main.js??v=20260627v81"></script>
+    <script type="module" src="js/main.js??v=20260627v86"></script>
 </body>
 
 </html>

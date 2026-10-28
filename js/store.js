@@ -153,7 +153,7 @@ class Store {
   // ===== Data =====
   async loadData() {
     try {
-      const response = await fetch('dados_app.json');
+      const response = await fetch('dados_app.json', { cache: 'no-cache' });
       this.rawData = await response.json();
       this.loadAllocations();
     } catch (e) {
@@ -266,17 +266,27 @@ class Store {
     this.saveAllocations();
   }
 
+  // Mescla por id: adiciona as novas e atualiza as existentes com a versao do
+  // arquivo (um curso pode reenviar o JSON com alocacoes editadas).
   mergeAllocations(newAllocations) {
     let addedCount = 0;
+    let updatedCount = 0;
     newAllocations.forEach((newAlloc) => {
-      const exists = this.allocations.some((a) => a.id === newAlloc.id);
-      if (!exists) {
+      const idx = this.allocations.findIndex((a) => a.id === newAlloc.id);
+      if (idx === -1) {
         this.allocations.push(newAlloc);
         addedCount++;
+        return;
+      }
+      const { importado: _a, ...current } = this.allocations[idx] || {};
+      const { importado: _b, ...incoming } = newAlloc || {};
+      if (JSON.stringify(current) !== JSON.stringify(incoming)) {
+        this.allocations[idx] = newAlloc;
+        updatedCount++;
       }
     });
     this.saveAllocations();
-    return addedCount;
+    return { addedCount, updatedCount };
   }
 
   clearData() {

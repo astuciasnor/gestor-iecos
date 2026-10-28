@@ -1,4 +1,4 @@
-import { store } from './store.js??v=20260625v';
+import { store } from './store.js??v=20261027b';
 import { getDisciplinaCHGlobal } from './curso_turma_helpers.js';
 
 export function getAllocationModo(alloc) {
