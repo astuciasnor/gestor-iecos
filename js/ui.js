@@ -3106,6 +3106,17 @@ function clearWeeklyBlock() {
     weeklyBlockMessage = null;
 }
 
+// Modo online: turmas de outro curso sao so para consulta. Barra a alteracao
+// antes de ela acontecer (o servidor recusaria e o app desfaria em silencio).
+function bloquearSeSomenteLeitura(turmaId = store.selectedTurma) {
+    if (!turmaId || store.podeEditarTurma(turmaId)) return false;
+    const curso = store.rawData?.turmas?.find((t) => String(t.turma_id) === String(turmaId))?.sigla || 'outro curso';
+    const hint = `A turma ${getTurmaLabel(turmaId)} e de ${curso}: voce pode consultar, mas so a coordenacao de ${curso} altera.`;
+    setWeeklyBlock('Modo leitura', hint);
+    showToastWarning(`Modo leitura. ${hint}`, 'warning', 6000);
+    return true;
+}
+
 function updateWeeklyContextNote() {
     const bar = document.getElementById('weekly-status-bar');
     if (!bar) return;
@@ -4264,6 +4275,7 @@ function handleImportBloco() {
         showToastWarning('Selecione um Curso e uma Turma primeiro.', 'warning', 2600);
         return;
     }
+    if (bloquearSeSomenteLeitura()) return;
 
     const comps = store.rawData?.componentes?.filter(c => c.sigla === store.selectedCurso) || [];
     if (comps.length === 0) {
@@ -5537,6 +5549,7 @@ function renderSlotContent(cell, allocs, dayOfWeek = 0) {
 
         card.querySelector('.remove-btn').onclick = (e) => {
             e.stopPropagation();
+            if (bloquearSeSomenteLeitura(alloc.turmaId)) return;
             if (confirm(`Remover alocação de ${alloc.disciplina}?`)) {
                 store.removeAllocation(alloc.id);
                 syncAllRegularDates();
@@ -5735,6 +5748,7 @@ function handleAddManual() {
         showToastWarning('Selecione uma turma.', 'warning', 2200);
         return;
     }
+    if (bloquearSeSomenteLeitura()) return;
     const docData = getDocenteData();
     if (!docData.isValid) {
         setWeeklyBlock('Preencha o(s) docente(s)', 'Informe ao menos um professor responsavel pela componente antes de salvar.');
@@ -6487,6 +6501,7 @@ function renderOfertasList() {
         const btnDelete = tr.querySelector('.btn-delete-row');
         if (btnDelete) {
             btnDelete.onclick = () => {
+                if (bloquearSeSomenteLeitura(row.baseAlloc?.turmaId)) return;
                 const msg = idsToRemove.length > 1
                     ? 'Remover este bloco (todas as linhas associadas)?'
                     : 'Remover esta oferta?';

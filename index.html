@@ -466,7 +466,7 @@
         <div
             style="background: white; padding: 40px; border-radius: 8px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.3); width: min(360px, calc(100% - 32px)); box-sizing: border-box;">
             <img src="img/logo_iecos.png" alt="IECOS" style="height: 60px; margin-bottom: 20px;">
-            <h2 style="margin: 0 0 20px 0; color: #333;">Acesso Restrito</h2>
+            <h2 id="login-titulo" style="margin: 0 0 20px 0; color: #333;">Acesso Restrito</h2>
             <form id="login-form">
                 <label for="inp-email" class="sr-only">E-mail</label>
                 <input type="email" id="inp-email" placeholder="E-mail" autocomplete="username"
@@ -476,6 +476,20 @@
                     style="padding: 10px; font-size: 16px; width: 100%; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box;">
                 <button type="submit"
                     style="background: #27ae60; color: white; border: none; padding: 10px 20px; font-size: 16px; cursor: pointer; border-radius: 4px; width: 100%;">Entrar</button>
+            </form>
+            <form id="senha-form" style="display: none;">
+                <p id="senha-instrucao" style="color: #555; font-size: 0.9em; margin: 0 0 12px;"></p>
+                <input type="email" id="inp-senha-usuario" autocomplete="username" aria-hidden="true" tabindex="-1" style="display: none;">
+                <label for="inp-senha-nova" class="sr-only">Nova senha</label>
+                <input type="password" id="inp-senha-nova" placeholder="Nova senha (minimo 8 caracteres)" autocomplete="new-password"
+                    style="padding: 10px; font-size: 16px; width: 100%; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box;">
+                <label for="inp-senha-conf" class="sr-only">Repita a nova senha</label>
+                <input type="password" id="inp-senha-conf" placeholder="Repita a nova senha" autocomplete="new-password"
+                    style="padding: 10px; font-size: 16px; width: 100%; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box;">
+                <button type="submit"
+                    style="background: #27ae60; color: white; border: none; padding: 10px 20px; font-size: 16px; cursor: pointer; border-radius: 4px; width: 100%;">Salvar senha</button>
+                <button type="button" id="btn-senha-cancelar"
+                    style="display: none; background: transparent; color: #555; border: 1px solid #ccc; padding: 8px 20px; font-size: 15px; cursor: pointer; border-radius: 4px; width: 100%; margin-top: 8px;">Cancelar</button>
             </form>
             <p id="msg-erro" role="alert" style="color: red; margin-top: 10px; display: none;"></p>
             <p id="login-modo" style="color: #777; font-size: 0.82em; margin: 12px 0 0;"></p>
@@ -1502,7 +1516,7 @@
         </main>
     </div>
 
-    <script type="module" src="js/main.js??v=20261028c"></script>
+    <script type="module" src="js/main.js??v=20261028d"></script>
 </body>
 
 </html>

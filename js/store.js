@@ -213,6 +213,12 @@ class Store {
     return changed;
   }
 
+  // Modo online: o servidor so aceita alteracoes nos cursos do usuario e
+  // sync_remoto troca esta regra ao iniciar. No modo local tudo e editavel.
+  podeEditarTurma(_turmaId) {
+    return true;
+  }
+
   // Correcoes aplicadas ao carregar, importar ou receber alocacoes.
   corrigirAlocacoes(allocations = []) {
     return this.corrigirNomesDocentes(allocations) + this.converterQuadroHorario(allocations);

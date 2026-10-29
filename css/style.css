@@ -3848,3 +3848,9 @@ body:has(#tab-weekly.active) .top-bar #weekly-instructions-card {
 .sync-bar-sair:hover {
     background: rgba(255, 255, 255, 0.12);
 }
+
+.sync-bar-acoes {
+    display: flex;
+    gap: 6px;
+    flex-shrink: 0;
+}

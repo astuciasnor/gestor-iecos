@@ -168,6 +168,19 @@ on conflict (usuario) do update
   pergunta se deve envia-las; uma copia do que havia fica em
   `cardume_backup_v1::<plano>` no localStorage.
 - O historico de alteracoes fica em `alocacoes_historico` (visivel ao admin).
+- Senhas: o admin cria a conta com uma senha inicial; no primeiro acesso o app
+  pede uma senha nova (marca `senha_definida` nos dados da conta) e o botao
+  "Senha" da barra permite trocar depois. Para quem esqueceu, no SQL Editor:
+
+```sql
+update auth.users
+set encrypted_password = extensions.crypt('SenhaProvisoria123', extensions.gen_salt('bf')),
+    raw_user_meta_data = coalesce(raw_user_meta_data, '{}'::jsonb) - 'senha_definida'
+where email = 'pessoa@ufpa.br';
+```
+
+- Modo leitura: salvar, excluir ou inserir por bloco numa turma de outro curso
+  e barrado antes, com aviso (`store.podeEditarTurma`).
 - Codigo: `js/sync_remoto.js` (servidor), `js/sync_diff.mjs` (regras, testadas
   em `tests/sync_diff.test.mjs`), `js/acesso_ui.js` (login e status).
 - Migracao para o CTIC: as tabelas `perfis`, `alocacoes` e

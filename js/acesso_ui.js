@@ -117,6 +117,10 @@ async function iniciarOnline({ onRemoteChange, showToast }) {
     });
   }
 
+  if (!remoto.senhaDefinida()) {
+    await definirSenha({ obrigatoria: true });
+  }
+
   let perfil = null;
   try {
     perfil = await remoto.loadPerfil();
@@ -127,7 +131,7 @@ async function iniciarOnline({ onRemoteChange, showToast }) {
   setLoginMessage('');
   showApp();
   remoto.watchSessionChange(() => window.location.reload());
-  montarBarraStatus(perfil, user);
+  montarBarraStatus(perfil, user, showToast);
   ajustarControlesOnline(showToast);
 
   if (!perfil) {
@@ -145,7 +149,81 @@ async function iniciarOnline({ onRemoteChange, showToast }) {
   });
 }
 
-function montarBarraStatus(perfil, user) {
+const MIN_SENHA = 8;
+
+function descreverErroSenha(error) {
+  const msg = String(error?.message || error || '');
+  if (/different from the old/i.test(msg)) return 'A nova senha precisa ser diferente da atual.';
+  if (/weak|at least|characters/i.test(msg)) return 'Senha fraca: use mais caracteres, misturando letras e numeros.';
+  if (/reauthenticat|recent/i.test(msg)) return 'Por seguranca, saia, entre de novo e troque a senha em seguida.';
+  return `Nao foi possivel trocar a senha: ${msg || 'erro desconhecido'}`;
+}
+
+// Usa a caixa da tela de login. Obrigatoria no primeiro acesso (sem Cancelar).
+// Resolve true se a senha foi trocada.
+function definirSenha({ obrigatoria }) {
+  const tela = el('login-screen');
+  const titulo = el('login-titulo');
+  const loginForm = el('login-form');
+  const modo = el('login-modo');
+  const form = el('senha-form');
+  const cancelar = el('btn-senha-cancelar');
+  const tituloAntes = titulo.textContent;
+
+  titulo.textContent = obrigatoria ? 'Crie sua senha' : 'Trocar senha';
+  el('senha-instrucao').textContent = obrigatoria
+    ? 'Primeiro acesso: troque a senha inicial por uma senha so sua.'
+    : 'Escolha a nova senha.';
+  loginForm.style.display = 'none';
+  modo.style.display = 'none';
+  form.style.display = 'block';
+  cancelar.style.display = obrigatoria ? 'none' : 'block';
+  el('inp-senha-usuario').value = remoto.getSessionEmail();
+  el('inp-senha-nova').value = '';
+  el('inp-senha-conf').value = '';
+  setLoginMessage('');
+  tela.style.display = 'flex';
+  el('inp-senha-nova').focus();
+
+  return new Promise((resolve) => {
+    const fechar = (trocou) => {
+      form.onsubmit = null;
+      cancelar.onclick = null;
+      form.style.display = 'none';
+      loginForm.style.display = '';
+      modo.style.display = '';
+      titulo.textContent = tituloAntes;
+      setLoginMessage('');
+      tela.style.display = 'none';
+      resolve(trocou);
+    };
+    cancelar.onclick = () => fechar(false);
+    form.onsubmit = async (event) => {
+      event.preventDefault();
+      const nova = el('inp-senha-nova').value;
+      if (nova.length < MIN_SENHA) {
+        setLoginMessage(`A senha precisa ter pelo menos ${MIN_SENHA} caracteres.`, true);
+        return;
+      }
+      if (nova !== el('inp-senha-conf').value) {
+        setLoginMessage('As duas senhas nao conferem.', true);
+        return;
+      }
+      const button = form.querySelector('button[type="submit"]');
+      button.disabled = true;
+      try {
+        await remoto.changePassword(nova);
+        fechar(true);
+      } catch (error) {
+        setLoginMessage(descreverErroSenha(error), true);
+      } finally {
+        button.disabled = false;
+      }
+    };
+  });
+}
+
+function montarBarraStatus(perfil, user, showToast) {
   const sidebar = document.querySelector('.sidebar');
   if (!sidebar || el('sync-bar')) return;
 
@@ -162,10 +240,17 @@ function montarBarraStatus(perfil, user) {
       <span id="sync-bar-status" class="sync-bar-status" data-state="carregando" role="status" aria-live="polite">
         ${STATUS_LABELS.carregando}
       </span>
-      <button type="button" id="btn-sync-sair" class="sync-bar-sair">Sair</button>
+      <span class="sync-bar-acoes">
+        <button type="button" id="btn-sync-senha" class="sync-bar-sair" title="Trocar senha" aria-label="Trocar senha">Senha</button>
+        <button type="button" id="btn-sync-sair" class="sync-bar-sair">Sair</button>
+      </span>
     </div>
   `;
   sidebar.insertBefore(bar, sidebar.firstChild);
+
+  el('btn-sync-senha').onclick = async () => {
+    if (await definirSenha({ obrigatoria: false })) showToast('Senha alterada.', 'success', 3000);
+  };
 
   el('btn-sync-sair').onclick = async () => {
     await remoto.signOut();
@@ -189,12 +274,14 @@ function ajustarControlesOnline(showToast) {
 
   const selCurso = el('sel-curso');
   if (selCurso) {
-    selCurso.addEventListener('change', () => {
+    const avisarSeLeitura = () => {
       const curso = selCurso.value;
       if (curso && !remoto.canEditCurso(curso)) {
-        showToast(`Curso ${curso} em modo leitura: voce pode consultar, mas as alteracoes nao serao salvas.`, 'warning', 5000);
+        showToast(`Curso ${curso} em modo leitura: voce pode consultar, mas nao alterar.`, 'warning', 5000);
       }
-    });
+    };
+    selCurso.addEventListener('change', avisarSeLeitura);
+    avisarSeLeitura(); // a pagina pode ja abrir num curso de outra coordenacao
   }
 }
 

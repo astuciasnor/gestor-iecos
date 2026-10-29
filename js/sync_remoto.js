@@ -67,6 +67,22 @@ export async function signIn(email, password) {
   return currentUser;
 }
 
+// Senha inicial e definida pelo administrador; no primeiro acesso a pessoa
+// cria a sua. A marca fica nos dados da propria conta de login.
+export function senhaDefinida(user = currentUser) {
+  return !!user?.user_metadata?.senha_definida;
+}
+
+export function getSessionEmail() {
+  return currentUser?.email || '';
+}
+
+export async function changePassword(password) {
+  const { data, error } = await client.auth.updateUser({ password, data: { senha_definida: true } });
+  if (error) throw error;
+  currentUser = data.user;
+}
+
 export async function signOut() {
   if (channel) await client.removeChannel(channel);
   channel = null;
@@ -126,6 +142,7 @@ export async function startSync(callbacks = {}) {
   onBlocked = callbacks.onBlocked || onBlocked;
   onStatus = callbacks.onStatus || onStatus;
 
+  store.podeEditarTurma = (turmaId) => canEditCurso(getCursoOfTurma(turmaId));
   store.onAllocationsSaved = schedulePush;
   store.onPlanLoaded = (meta) => { activatePlan(meta?.key); };
 
