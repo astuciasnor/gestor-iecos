@@ -1,6 +1,6 @@
 {
   "meta": {
-    "generated_at": "2026-10-28T20:19:00",
+    "generated_at": "2026-10-29T09:58:14",
     "source_file": "planilha_base.xlsx"
   },
   "docentes": [
@@ -3793,36 +3793,6 @@
       "feriado": "Carnaval",
       "dia": "Quarta-feira",
       "tipo": "Nacional"
-    },
-    {
-      "data": "2027-08-23",
-      "feriado": "COBEP",
-      "dia": "Segunda-feira",
-      "tipo": "evento-academico"
-    },
-    {
-      "data": "2027-08-24",
-      "feriado": "COBEP",
-      "dia": "Terça-feira",
-      "tipo": "evento-academico"
-    },
-    {
-      "data": "2027-08-25",
-      "feriado": "COBEP",
-      "dia": "Quarta-feira",
-      "tipo": "evento-academico"
-    },
-    {
-      "data": "2027-08-26",
-      "feriado": "COBEP",
-      "dia": "Quinta-feira",
-      "tipo": "evento-academico"
-    },
-    {
-      "data": "2027-08-27",
-      "feriado": "COBEP",
-      "dia": "Sexta-feira",
-      "tipo": "evento-academico"
     },
     {
       "data": "2027-11-29",
