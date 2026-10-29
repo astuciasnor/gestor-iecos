@@ -761,6 +761,12 @@ function calcTotalConfiguredCHWithOverride(faixaIndex, overridePattern) {
     return total;
 }
 
+// IDs das ofertas carregadas no editor: continuam no store ate o salvar, mas nao
+// devem contar como ocupacao da turma para a propria edicao.
+function getEditingOriginalAllocationIds() {
+    return (weeklyState.editingOriginalAllocationIds || []).slice();
+}
+
 function getDisciplinaTargetCHForDrawing() {
     const disciplina = normalizeDisciplinaInputValue(inputConfig.disciplina?.value || '');
     if (!disciplina) return 0;
@@ -806,7 +812,8 @@ function buildWeeklyFaixaExecutionPreview(options = {}) {
             horariosOcupados: [],
             diasMarcados,
             usaSabado: diasMarcados.includes(6),
-            faixas
+            faixas,
+            ignoreAllocationIds: getEditingOriginalAllocationIds()
         }, { respectPriority: true, respectTurmaOccupancy: true });
 
         preview.execution = execution;
@@ -1078,6 +1085,16 @@ function updateWeeklyFaixasTitleDisciplina() {
     if (!prefixEl || !discEl) return;
 
     const disciplina = getWeeklyFaixasTitleDisciplinaAtiva();
+    const replacing = weeklyState.replacingFromDisciplina;
+    if (replacing) {
+        const escolhida = normalizeDisciplinaInputValue(inputConfig.disciplina?.value || '');
+        prefixEl.textContent = escolhida
+            ? `Substituindo ${replacing.toLocaleUpperCase('pt-BR')} por`
+            : `Substituir ${replacing.toLocaleUpperCase('pt-BR')} por: escolha a componente na barra lateral`;
+        discEl.textContent = escolhida ? escolhida.toLocaleUpperCase('pt-BR') : '';
+        discEl.classList.toggle('hidden', !escolhida);
+        return;
+    }
     if (!disciplina) {
         prefixEl.textContent = 'Datas e CH das Faixas da Componente';
         discEl.textContent = '';
@@ -2243,6 +2260,7 @@ function stackIntensiveAfterAllocations(baseCandidate, turmaId, minStart = '') {
         if (isPendingAllocation(a)) return;
         // Ignora a propria componente (caso de edicao) para nao ancorar em si mesma.
         if (normalizeDisciplinaInputValue(a.disciplina || '') === disc && String(a.subGrupo || '') === sub) return;
+        if ((baseCandidate.ignoreAllocationIds || []).some((id) => String(id) === String(a.id))) return;
         const end = String(a?.dataFim || a?.dataInicio || '').trim();
         if (end && (!latestEnd || end > latestEnd)) latestEnd = end;
     });
@@ -4390,7 +4408,8 @@ export function initUI() {
             const discNome = normalizeDisciplinaInputValue(inputConfig.disciplina.value || '');
             const isEditingSameDisc = weeklyState.editingDisciplinaDraft && discNome === weeklyState.editingDisciplinaDraft;
             const isNewDiscSelection = !!discNome && discNome !== weeklyState.lastDisciplinaInputNormalized && !isEditingSameDisc;
-            if (isNewDiscSelection) {
+            // Em "Substituir por..." as faixas ficam; a troca e aplicada no 'change'.
+            if (isNewDiscSelection && !weeklyState.replacingFromDisciplina) {
                 clearWeeklyBlock();
                 setComponentStartSelectionMode('auto');
                 collapseFaixasForNewComponent({ useCurrentUI: false });
@@ -4408,6 +4427,17 @@ export function initUI() {
         // Detecção de duplicata: mostra o campo sub-grupo quando a mesma disciplina já existe na turma
         inputConfig.disciplina.addEventListener('change', () => {
             const discNome = normalizeDisciplinaInputValue(inputConfig.disciplina.value || '');
+            if (weeklyState.replacingFromDisciplina) {
+                const isValidDisc = !!discNome && getDisciplinaInfo(discNome).ch > 0;
+                if (isValidDisc && discNome !== weeklyState.editingDisciplinaDraft) {
+                    applyReplacementDisciplina(discNome);
+                }
+                weeklyState.lastDisciplinaInputNormalized = normalizeDisciplinaInputValue(inputConfig.disciplina.value || '');
+                updateWeeklyFaixasTitleDisciplina();
+                updateWeeklyFaixaHoursDisplay();
+                if (store.selectedTurma) renderWeeklyGrid();
+                return;
+            }
             const isEditingSameDisc = weeklyState.editingDisciplinaDraft && discNome === weeklyState.editingDisciplinaDraft;
             const isNewDiscSelection = !!discNome && discNome !== weeklyState.lastDisciplinaInputNormalized && !isEditingSameDisc;
             let pendingPreferredStart = '';
@@ -5571,14 +5601,80 @@ function renderSlotContent(cell, allocs, dayOfWeek = 0) {
     cell.appendChild(container);
 }
 
-function loadAllocationIntoEditor(allocation, idsToRemove = []) {
+// "Substituir por...": a edicao ja carregou faixas e horarios da oferta original.
+// Aqui so liberamos componente e docente para a nova escolha e abrimos o fim da
+// ultima faixa (senao uma componente de CH maior seria cortada no fim da antiga).
+function prepareEditorForReplacement(original) {
+    weeklyState.replacingFromDisciplina = normalizeDisciplinaInputValue(original?.disciplina || '');
+
+    for (let i = 3; i >= 1; i--) {
+        if (!document.getElementById(`inp-data-inicio-f${i}`)?.value) continue;
+        const fim = document.getElementById(`inp-data-fim-f${i}`);
+        if (fim) fim.value = '';
+        break;
+    }
+    refreshAllCompactFaixaDateDisplays();
+
+    const chkMulti = document.getElementById('chk-multi-docente');
+    if (chkMulti && chkMulti.checked) {
+        chkMulti.checked = false;
+        chkMulti.dispatchEvent(new Event('change'));
+    }
+    if (inputConfig.docente) {
+        inputConfig.docente.value = '';
+        inputConfig.docente.dispatchEvent(new Event('input'));
+    }
+    if (inputConfig.disciplina) {
+        inputConfig.disciplina.value = '';
+        inputConfig.disciplina.dispatchEvent(new Event('input'));
+        setTimeout(() => inputConfig.disciplina?.focus(), 300);
+    }
+    updateWeeklyFaixaHoursDisplay();
+}
+
+// Troca a componente da edicao em curso mantendo faixas e horarios desenhados.
+// Retorna false (e limpa o campo) quando a escolha nao pode substituir.
+function applyReplacementDisciplina(discNome) {
+    const jaAlocada = store.allocations.some((a) =>
+        String(a.turmaId) === String(store.selectedTurma) &&
+        a.disciplina === discNome &&
+        isFaixaAllocation(a) &&
+        !(weeklyState.editingOriginalAllocationIds || []).includes(a.id)
+    );
+    if (jaAlocada) {
+        showToastWarning(`"${discNome}" ja tem horarios nesta turma. Para substituir, escolha uma componente ainda nao alocada.`, 'error', 4200);
+        inputConfig.disciplina.value = '';
+        weeklyState.lastDisciplinaInputNormalized = '';
+        return false;
+    }
+
+    weeklyState.editingDisciplinaDraft = discNome;
+    const pendente = store.allocations.find((a) =>
+        String(a.turmaId) === String(store.selectedTurma) && a.disciplina === discNome && isPendingAllocation(a)
+    );
+    weeklyState.editingImportadoDraft = !!pendente?.importado;
+    if (inputConfig.cor) inputConfig.cor.value = vividHexColor(store.getDisciplinaColor(discNome));
+
+    const containerSub = document.getElementById('container-sub-turma');
+    const inpSub = document.getElementById('inp-sub-turma');
+    if (containerSub) containerSub.classList.add('hidden');
+    if (inpSub) inpSub.value = '';
+    return true;
+}
+
+function loadAllocationIntoEditor(allocation, idsToRemove = [], options = {}) {
     const a = allocation;
     if (!a) return;
+    const { replace = false } = options || {};
 
     const info = getDisciplinaInfo(a.disciplina);
-    if (!confirm('Carregar para edicao? A oferta antiga sera removida e a aba Alocar Componentes sera aberta para ajuste desta componente.')) return;
+    const confirmMsg = replace
+        ? `Substituir "${a.disciplina}" por outra componente?\n\nOs horarios e as faixas desta oferta serao mantidos. Escolha a nova componente no campo Componente da barra lateral e salve.\n"${a.disciplina}" volta para a lista de pendentes ao salvar.`
+        : 'Carregar para edicao? A aba Alocar Componentes sera aberta e a oferta so sera atualizada quando voce salvar.';
+    if (!confirm(confirmMsg)) return;
 
     weeklyState.editingDisciplinaDraft = normalizeDisciplinaInputValue(a.disciplina);
+    weeklyState.replacingFromDisciplina = '';
     weeklyState.editingImportadoDraft = !!a.importado;
     setComponentStartSelectionMode('auto');
     updateWeeklyFaixasTitleDisciplina();
@@ -5679,9 +5775,11 @@ function loadAllocationIntoEditor(allocation, idsToRemove = []) {
     const _toolbar = document.getElementById('drawing-toolbar');
     if (_toolbar) _toolbar.classList.add('hidden');
 
+    if (replace) prepareEditorForReplacement(a);
+
     renderWeeklyGrid();
     renderOfertasList();
-    if (editorFaixasAdjusted) {
+    if (editorFaixasAdjusted && !replace) {
         showToastWarning('A oferta foi carregada com faixas ajustadas para refletir a execucao real ja salva.', 'success', 3200);
     }
     switchTab('weekly');
@@ -5836,7 +5934,8 @@ function handleAddManual() {
                 diasMarcados,
                 usaSabado: diasMarcados.includes(6),
                 sabadoManha: sabadoManha,
-                faixas: faixasConfig
+                faixas: faixasConfig,
+                ignoreAllocationIds: getEditingOriginalAllocationIds()
             };
 
             execution = computeIntensiveExecution(previewIntensive, { respectPriority: true, respectTurmaOccupancy: respectTurmaOccupancy });
@@ -6066,6 +6165,19 @@ function handleAddManual() {
             })
             .map((a) => a.id);
 
+        const replacingFrom = weeklyState.replacingFromDisciplina && weeklyState.replacingFromDisciplina !== disciplina
+            ? weeklyState.replacingFromDisciplina
+            : '';
+        let replacedOriginal = null;
+        if (replacingFrom) {
+            // A nova componente sai da lista de pendentes ao ganhar os horarios.
+            store.allocations.forEach((a) => {
+                if (String(a.turmaId) !== String(store.selectedTurma)) return;
+                if (a.disciplina !== disciplina || !isPendingAllocation(a)) return;
+                if (!idsToRemove.includes(a.id)) idsToRemove.push(a.id);
+            });
+        }
+
         // Edicao segura: inclui os IDs originais rastreados mesmo que a componente
         // tenha sido movida para um periodo SEM sobreposicao (o filtro acima exige
         // overlap). Guardado por turma/disciplina/subGrupo para nunca remover algo
@@ -6080,7 +6192,10 @@ function handleAddManual() {
             // de uma pendente ela deve sair da lista de pendentes, entao seu id
             // rastreado precisa entrar em idsToRemove.
             const isPendingOriginal = isPendingAllocation(al);
-            if (al.disciplina !== disciplina || !(isFaixaAllocation(al) || isPendingOriginal)) return;
+            // "Substituir por...": a original tem outro nome, mas foi rastreada pela linha clicada.
+            const isReplacedOriginal = !!replacingFrom && normalizeDisciplinaInputValue(al.disciplina || '') === replacingFrom;
+            if ((al.disciplina !== disciplina && !isReplacedOriginal) || !(isFaixaAllocation(al) || isPendingOriginal)) return;
+            if (isReplacedOriginal && !replacedOriginal) replacedOriginal = al;
             // A pendente importada do Bloco do PPC guarda subGrupo=blocoId (ex.: "BL1"),
             // mas o editor limpa o campo de sub-turma ao carregar a disciplina. Como o id
             // foi rastreado explicitamente da linha editada, nao exigimos igualdade de
@@ -6090,11 +6205,32 @@ function handleAddManual() {
             idsToRemove.push(id);
         });
 
-        const actionText = idsToRemove.length > 0 ? 'Atualizar alocacao existente?' : 'Confirmar alocacao?';
+        const actionText = replacedOriginal
+            ? `Substituir "${replacedOriginal.disciplina}" por esta componente? "${replacedOriginal.disciplina}" volta para a lista de pendentes.`
+            : (idsToRemove.length > 0 ? 'Atualizar alocacao existente?' : 'Confirmar alocacao?');
         if (!confirm(`${disciplina} (${formatDateBR(effInicio)} a ${formatDateBR(effFim)})\n\n${actionText}`)) return;
 
         const undoSnapshot = snapshotAllocationsForUndo();
         idsToRemove.forEach((id) => store.removeAllocation(id));
+
+        if (replacedOriginal) {
+            const aindaNaTurma = store.allocations.some((a) =>
+                String(a.turmaId) === String(store.selectedTurma) && a.disciplina === replacedOriginal.disciplina
+            );
+            if (!aindaNaTurma) {
+                store.addAllocation({
+                    turmaId: store.selectedTurma,
+                    disciplina: replacedOriginal.disciplina,
+                    docente: 'A definir',
+                    modo: 'pendente',
+                    importado: !!replacedOriginal.importado,
+                    cor: replacedOriginal.cor || store.getDisciplinaColor(replacedOriginal.disciplina),
+                    dataInicio: store.settings.termStart,
+                    dataFim: store.settings.termEnd,
+                    subGrupo: replacedOriginal.subGrupo || null
+                });
+            }
+        }
 
         store.addAllocation({
             turmaId: store.selectedTurma,
@@ -6480,6 +6616,7 @@ function renderOfertasList() {
 
         const btnHtml = `
             <button class="btn-primary btn-edit-row" style="padding:4px 8px; margin:0; font-size:0.85em; background-color:#2980b9; border:none; color:white; border-radius:3px; cursor:pointer; margin-right:5px;" title="Editar">Editar</button>
+            ${row.rowType === 'pendente' ? '' : '<button class="btn-secondary btn-replace-row" style="padding:4px 8px; margin:0; font-size:0.85em; background-color:#8e44ad; border:none; color:white; border-radius:3px; cursor:pointer; margin-right:5px;" title="Manter faixas e horarios e trocar a componente">Substituir por...</button>'}
             <button class="btn-danger btn-delete-row" style="padding:4px 8px; margin:0; font-size:0.85em; border-radius:3px; cursor:pointer;" title="Excluir">Excluir</button>
         `;
 
@@ -6518,6 +6655,14 @@ function renderOfertasList() {
         if (btnEdit) {
             btnEdit.onclick = () => {
                 loadAllocationIntoEditor(row.baseAlloc, idsToRemove);
+            };
+        }
+
+        const btnReplace = tr.querySelector('.btn-replace-row');
+        if (btnReplace) {
+            btnReplace.onclick = () => {
+                if (bloquearSeSomenteLeitura(row.baseAlloc?.turmaId)) return;
+                loadAllocationIntoEditor(row.baseAlloc, idsToRemove, { replace: true });
             };
         }
 

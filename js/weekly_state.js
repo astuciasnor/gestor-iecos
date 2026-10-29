@@ -33,6 +33,10 @@ export const weeklyState = {
     // ocupava, em vez de recalcular o primeiro dia livre.
     editingComponentOriginalStart: '',
 
+    // "Substituir por...": nome da componente ORIGINAL quando a edicao foi aberta
+    // para troca-la por outra mantendo faixas e horarios. Vazio numa edicao comum.
+    replacingFromDisciplina: '',
+
     // Ultimo valor normalizado digitado no campo de disciplina (rastreio para
     // detectar "nova selecao de disciplina" nos handlers de input/change).
     lastDisciplinaInputNormalized: '',
@@ -79,6 +83,7 @@ export const weeklyState = {
         this.editingImportadoDraft = false;
         this.editingOriginalAllocationIds = [];
         this.editingComponentOriginalStart = '';
+        this.replacingFromDisciplina = '';
         this.lastDisciplinaInputNormalized = '';
         this.trace('resetEditing');
         this.checkInvariants('resetEditing');
@@ -115,6 +120,7 @@ export const weeklyState = {
             editingImportadoDraft: this.editingImportadoDraft,
             editingOriginalAllocationIds: [...this.editingOriginalAllocationIds],
             editingComponentOriginalStart: this.editingComponentOriginalStart,
+            replacingFromDisciplina: this.replacingFromDisciplina,
             lastDisciplinaInputNormalized: this.lastDisciplinaInputNormalized,
             faixasPatterns: {
                 1: (this.faixasPatterns?.[1] || []).length,

@@ -11,6 +11,10 @@ export function shouldIgnoreTurmaEventForCandidate(event, candidateAlloc) {
     if (candidateAlloc.id !== undefined && candidateAlloc.id !== null && event.id !== undefined && event.id !== null) {
         if (String(event.id) === String(candidateAlloc.id)) return true;
     }
+    // Ofertas em edicao (ainda no store ate o salvar) nao ocupam a grade da candidata.
+    if (Array.isArray(candidateAlloc.ignoreAllocationIds) && event.id !== undefined && event.id !== null) {
+        if (candidateAlloc.ignoreAllocationIds.some((id) => String(id) === String(event.id))) return true;
+    }
 
     const sameTurma = String(event.turmaId || '') === String(candidateAlloc.turmaId || '');
     if (!sameTurma) return false;
