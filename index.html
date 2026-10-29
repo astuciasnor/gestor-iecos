@@ -872,6 +872,16 @@
                         <button type="button" id="btn-gap-mute" class="wga-btn wga-btn--muted">N&atilde;o avisar mais</button>
                     </span>
                 </div>
+                <!-- Faixa criada pelo desenho: aparece uma vez quando a faixa nasce e fica
+                     ate salvar ou desfazer. -->
+                <div id="weekly-faixa-auto-note" class="weekly-gap-advisory weekly-faixa-auto-note hidden no-print" role="status">
+                    <span class="wga-icon" aria-hidden="true">&#128197;</span>
+                    <span class="wga-text" id="weekly-faixa-auto-note-text"></span>
+                    <span class="wga-actions">
+                        <button type="button" id="btn-faixa-auto-undo" class="wga-btn">Desfazer</button>
+                        <button type="button" id="btn-faixa-auto-fix" class="wga-btn wga-btn--muted"></button>
+                    </span>
+                </div>
                 <div class="weekly-top-layout">
                     <div class="weekly-faixas-stack">
                         <div id="container-faixas-componente" class="weekly-faixas-panel no-print">
@@ -1516,7 +1526,7 @@
         </main>
     </div>
 
-    <script type="module" src="js/main.js??v=20261029a"></script>
+    <script type="module" src="js/main.js??v=20261029b"></script>
 </body>
 
 </html>

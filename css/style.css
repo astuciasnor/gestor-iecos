@@ -1987,6 +1987,12 @@ body:has(#tab-weekly.active) .top-bar #weekly-instructions-card {
 .weekly-gap-advisory .wga-btn:hover { background: #eef2f7; border-color: #9fb2c6; }
 .weekly-gap-advisory .wga-btn--muted { color: #93a0af; }
 .weekly-gap-advisory .wga-btn--muted:hover { color: #64707e; }
+.weekly-faixa-auto-note {
+    background: #fffaf0;
+    border-color: #f0dfb8;
+    border-left: 4px solid #b8860b;
+    color: #5f4a1c;
+}
 /* Tons por estado. */
 .weekly-status-bar.tone-info {
     border-left-color: #0f7c96;

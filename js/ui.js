@@ -173,6 +173,7 @@ const faixasPatterns = weeklyState.faixasPatterns;
 function resetEditingComponentState() {
     weeklyState.resetEditing();
     clearWeeklyBlock();
+    hideFaixaAutoNote();
 }
 
 let componentStartSelectionMode = 'auto';
@@ -1016,38 +1017,274 @@ function syncFaixaStartFromGridClick(faixaIndex, cellDate, currentPattern = [], 
     return true;
 }
 
+// --- Faixa criada pelo proprio desenho ---------------------------------------
+// Cada celula da grade pertence a faixa vigente na sua data, e o clique grava
+// direto no padrao dessa faixa. Mudar o desenho numa semana POSTERIOR ao inicio
+// da faixa, de um jeito que alteraria aulas ja existentes antes daquela semana,
+// cria a proxima faixa: copia do padrao anterior + a mudanca, a partir da menor
+// data alterada na semana. Se nada antes muda, a mudanca fica na propria faixa.
+// Limite de 3 faixas.
+
+// Mudancas da semana atual que ficaram na propria faixa (nao alteravam o passado).
+// Se outra mudanca da mesma semana exigir nova faixa, elas migram juntas.
+let drawnWeekAbsorbed = { week: '', faixa: 0, changes: [] };
+// Barra da faixa recem-criada: { draft, created, previous, start, previousStart }.
+let faixaAutoNote = null;
+
+function getFaixaRangeFromUI(idx) {
+    if (Number.isNaN(idx) || idx < 1 || idx > 3) return null;
+    const iniEl = document.getElementById(`inp-data-inicio-f${idx}`);
+    const fimEl = document.getElementById(`inp-data-fim-f${idx}`);
+    const nextIniEl = document.getElementById(`inp-data-inicio-f${idx + 1}`);
+    const termStart = store.settings.termStart || inpTermStart?.value || calStart?.value || '';
+    const termEnd = store.settings.termEnd || inpTermEnd?.value || calEnd?.value || '';
+
+    let start = (iniEl?.value || '').trim();
+    if (!start && idx === 1) start = (termStart || '').trim();
+    if (!start) return null;
+
+    let end = (fimEl?.value || '').trim();
+    if (!end && nextIniEl?.value) end = shiftISODate(nextIniEl.value, -1);
+    if (!end) end = (termEnd || start || '').trim();
+    if (!end) return null;
+    if (end < start) end = start;
+
+    return { start, end };
+}
+
+function getFaixaIndexForDate(dateStr) {
+    if (!dateStr) return null;
+    for (let i = 3; i >= 1; i--) {
+        const range = getFaixaRangeFromUI(i);
+        if (range && isDateInsideRange(dateStr, range.start, range.end)) return i;
+    }
+    return null;
+}
+
+function toggleFaixaPatternSlot(pattern, dia, slot, select) {
+    const base = normalizeFaixaPattern(pattern).filter((p) => !(p.dia === dia && p.slot === slot));
+    if (select) base.push({ dia, slot });
+    return normalizeFaixaPattern(base);
+}
+
+// Ha algum dia letivo deste dia da semana em [inicio, fimExclusivo)?
+function weekdayOccursBetween(dia, startISO, endExclusiveISO) {
+    const feriados = getHolidayLabelMap();
+    let cursor = startISO;
+    while (cursor && cursor < endExclusiveISO) {
+        const dow = new Date(`${cursor}T12:00:00`).getDay();
+        if (dow === dia && !feriados.has(cursor)) return true;
+        cursor = addDaysISO(cursor, 1);
+    }
+    return false;
+}
+
+function captureFaixasDraft() {
+    const draft = { patterns: {}, ini: {}, fim: {} };
+    for (let i = 1; i <= 3; i++) {
+        draft.patterns[i] = normalizeFaixaPattern(faixasPatterns[i]);
+        draft.ini[i] = document.getElementById(`inp-data-inicio-f${i}`)?.value || '';
+        draft.fim[i] = document.getElementById(`inp-data-fim-f${i}`)?.value || '';
+    }
+    return draft;
+}
+
+function restoreFaixasDraft(draft) {
+    for (let i = 1; i <= 3; i++) {
+        const iniEl = document.getElementById(`inp-data-inicio-f${i}`);
+        const fimEl = document.getElementById(`inp-data-fim-f${i}`);
+        if (iniEl) iniEl.value = draft.ini[i] || '';
+        if (fimEl) fimEl.value = draft.fim[i] || '';
+        faixasPatterns[i] = normalizeFaixaPattern(draft.patterns[i]);
+    }
+}
+
+function moveFaixaInUI(from, to) {
+    const fromIni = document.getElementById(`inp-data-inicio-f${from}`);
+    const fromFim = document.getElementById(`inp-data-fim-f${from}`);
+    const toIni = document.getElementById(`inp-data-inicio-f${to}`);
+    const toFim = document.getElementById(`inp-data-fim-f${to}`);
+    if (toIni) toIni.value = fromIni?.value || '';
+    if (toFim) toFim.value = fromFim?.value || '';
+    faixasPatterns[to] = normalizeFaixaPattern(faixasPatterns[from]);
+}
+
+function insertFaixaAfter(faixaIndex, inicio, pattern) {
+    for (let i = 3; i > faixaIndex + 1; i--) moveFaixaInUI(i - 1, i);
+    const idx = faixaIndex + 1;
+    const iniEl = document.getElementById(`inp-data-inicio-f${idx}`);
+    const fimEl = document.getElementById(`inp-data-fim-f${idx}`);
+    if (iniEl) iniEl.value = inicio;
+    if (fimEl) fimEl.value = '';
+    faixasPatterns[idx] = normalizeFaixaPattern(pattern);
+}
+
+function removeFaixaFromUI(faixaIndex) {
+    for (let i = faixaIndex; i < 3; i++) moveFaixaInUI(i + 1, i);
+    const iniEl = document.getElementById('inp-data-inicio-f3');
+    const fimEl = document.getElementById('inp-data-fim-f3');
+    if (iniEl) iniEl.value = '';
+    if (fimEl) fimEl.value = '';
+    faixasPatterns[3] = [];
+}
+
+function refreshFaixasAfterStructureChange() {
+    applyFaixaDateAutofill();
+    for (let i = 1; i <= 3; i++) setFaixaStatus(i, normalizeFaixaPattern(faixasPatterns[i]).length);
+    refreshPendingFaixaStartPickUI();
+    refreshActiveFaixaHighlight();
+    updateWeeklySavePatternButton();
+}
+
+function setDrawingFaixaFollowingCell(faixaIndex) {
+    if (parseInt(drawingFaixaIndex, 10) === faixaIndex) return;
+    drawingFaixaIndex = faixaIndex;
+    activeFaixaIndex = faixaIndex;
+    // A grade fica na semana em que o usuario esta desenhando.
+    weeklyViewState.followActiveFaixa = false;
+    const nameEl = document.getElementById('drawing-faixa-name');
+    if (nameEl) nameEl.textContent = `Faixa ${faixaIndex}`;
+    refreshActiveFaixaHighlight();
+}
+
+function applyDrawnCellChange({ faixaIndex, date, dia, slot, select }) {
+    const k = faixaIndex;
+    const kRange = getFaixaRangeFromUI(k);
+    if (!kRange) return { applied: false };
+    const cellWeek = getWeekStartISO(date);
+    const kWeek = getWeekStartISO(kRange.start);
+
+    // A faixa seguinte comecou nesta mesma semana, depois deste dia: as mudancas
+    // da semana vao juntas para ela, que passa a comecar aqui.
+    const nextIniEl = k < 3 ? document.getElementById(`inp-data-inicio-f${k + 1}`) : null;
+    const nextStart = nextIniEl?.value || '';
+    if (nextStart && getWeekStartISO(nextStart) === cellWeek && date < nextStart && date > kRange.start) {
+        faixasPatterns[k + 1] = toggleFaixaPatternSlot(faixasPatterns[k + 1], dia, slot, select);
+        nextIniEl.value = date;
+        if (faixaAutoNote && faixaAutoNote.created === k + 1) faixaAutoNote.start = date;
+        renderFaixaAutoNote();
+        return { applied: true, structural: true, faixa: k + 1 };
+    }
+
+    const pattern = normalizeFaixaPattern(faixasPatterns[k]);
+    const nextPattern = toggleFaixaPatternSlot(pattern, dia, slot, select);
+    const changesPast = pattern.length > 0 && cellWeek > kWeek && weekdayOccursBetween(dia, kRange.start, cellWeek);
+
+    if (!changesPast) {
+        if (select) {
+            const limit = canSelectSlotWithoutExceedingTarget(k, nextPattern);
+            if (!limit.allowed) {
+                warnCHLimitReached(limit);
+                return { applied: false };
+            }
+        }
+        faixasPatterns[k] = nextPattern;
+        if (cellWeek > kWeek) {
+            if (drawnWeekAbsorbed.week !== cellWeek || drawnWeekAbsorbed.faixa !== k) {
+                drawnWeekAbsorbed = { week: cellWeek, faixa: k, changes: [] };
+            }
+            drawnWeekAbsorbed.changes.push({ dia, slot, select, date });
+        }
+        return { applied: true, structural: false, faixa: k };
+    }
+
+    const usedFaixas = [1, 2, 3].filter((i) => !!document.getElementById(`inp-data-inicio-f${i}`)?.value).length;
+    if (usedFaixas >= 3) {
+        showToastWarning('Limite de 3 faixas atingido. Para mudar o horario a partir desta semana, remova uma faixa ou ajuste o desenho na semana em que uma faixa comeca.', 'error', 5200);
+        return { applied: false };
+    }
+
+    const draft = captureFaixasDraft();
+    const absorbed = (drawnWeekAbsorbed.week === cellWeek && drawnWeekAbsorbed.faixa === k) ? drawnWeekAbsorbed.changes : [];
+    const start = absorbed.reduce((min, c) => (c.date < min ? c.date : min), date);
+    let previousPattern = pattern;
+    absorbed.slice().reverse().forEach((c) => {
+        previousPattern = toggleFaixaPatternSlot(previousPattern, c.dia, c.slot, !c.select);
+    });
+    faixasPatterns[k] = previousPattern;
+    insertFaixaAfter(k, start, nextPattern);
+    drawnWeekAbsorbed = { week: '', faixa: 0, changes: [] };
+    showFaixaAutoNote({ draft, created: k + 1, previous: k, start, previousStart: kRange.start });
+    return { applied: true, structural: true, faixa: k + 1 };
+}
+
+function renderFaixaAutoNote() {
+    const el = document.getElementById('weekly-faixa-auto-note');
+    if (!el) return;
+    if (!faixaAutoNote) {
+        el.classList.add('hidden');
+        return;
+    }
+    const { created, previous, start, previousStart } = faixaAutoNote;
+    const textEl = document.getElementById('weekly-faixa-auto-note-text');
+    const fixBtn = document.getElementById('btn-faixa-auto-fix');
+    if (textEl) textEl.innerHTML = `A partir de <b>${formatDateBR(start)}</b> o hor&aacute;rio mudou. Criei a <b>Faixa ${created}</b>.`;
+    if (fixBtn) fixBtn.textContent = `Não, corrigir a Faixa ${previous} desde ${formatDateBR(previousStart)}`;
+    el.classList.remove('hidden');
+}
+
+function showFaixaAutoNote(info) {
+    faixaAutoNote = info;
+    renderFaixaAutoNote();
+}
+
+function hideFaixaAutoNote() {
+    faixaAutoNote = null;
+    drawnWeekAbsorbed = { week: '', faixa: 0, changes: [] };
+    renderFaixaAutoNote();
+}
+
+function undoFaixaAutoCreation() {
+    if (!faixaAutoNote) return;
+    restoreFaixasDraft(faixaAutoNote.draft);
+    const previous = faixaAutoNote.previous;
+    hideFaixaAutoNote();
+    setDrawingFaixaFollowingCell(previous);
+    refreshFaixasAfterStructureChange();
+    renderWeeklyGrid();
+}
+
+// A faixa anterior adota o desenho novo desde o proprio inicio; a criada some.
+function mergeFaixaAutoCreationIntoPrevious() {
+    if (!faixaAutoNote) return;
+    const { created, previous, draft } = faixaAutoNote;
+    faixasPatterns[previous] = normalizeFaixaPattern(faixasPatterns[created]);
+    removeFaixaFromUI(created);
+    if (!document.getElementById(`inp-data-inicio-f${previous + 1}`)?.value) {
+        const fimEl = document.getElementById(`inp-data-fim-f${previous}`);
+        if (fimEl) fimEl.value = draft.fim[previous] || '';
+    }
+    hideFaixaAutoNote();
+    setDrawingFaixaFollowingCell(previous);
+    refreshFaixasAfterStructureChange();
+    renderWeeklyGrid();
+}
+
 function tryApplyDrawingSelection(cell, shouldSelect, styles) {
     if (!cell) return false;
-
-    if (!shouldSelect) {
-        setDrawingCellSelection(cell, false, styles);
-        return true;
-    }
-
-    if (cell.classList.contains('selected-slot')) return true;
-
-    const faixaIndex = parseInt(drawingFaixaIndex, 10);
-    if (Number.isNaN(faixaIndex) || faixaIndex < 1 || faixaIndex > 3) {
-        setDrawingCellSelection(cell, true, styles);
-        return true;
-    }
+    const select = !!shouldSelect;
+    if (cell.classList.contains('selected-slot') === select) return true;
 
     const dia = parseInt(cell.dataset.dia, 10);
     const slot = String(cell.dataset.horario || '');
-    if (Number.isNaN(dia) || !slot) return false;
+    const cellDate = String(cell.dataset.date || '');
+    const faixaIndex = getFaixaIndexForDate(cellDate);
+    if (Number.isNaN(dia) || !slot || !faixaIndex) return false;
 
-    const currentPattern = getDrawingSelectionFromDOM();
-    syncFaixaStartFromGridClick(faixaIndex, cell.dataset.date, currentPattern);
-    if (currentPattern.some((p) => p.dia === dia && p.slot === slot)) return true;
-
-    const candidatePattern = normalizeFaixaPattern([...currentPattern, { dia, slot }]);
-    const limit = canSelectSlotWithoutExceedingTarget(faixaIndex, candidatePattern);
-    if (!limit.allowed) {
-        warnCHLimitReached(limit);
-        return false;
+    if (faixaIndex === 1 && !document.getElementById('inp-data-inicio-f1')?.value) {
+        syncFaixaStartFromGridClick(1, cellDate, []);
     }
 
-    setDrawingCellSelection(cell, true, styles);
+    const result = applyDrawnCellChange({ faixaIndex, date: cellDate, dia, slot, select });
+    if (!result.applied) return false;
+
+    setDrawingFaixaFollowingCell(result.faixa);
+    if (result.structural) {
+        refreshFaixasAfterStructureChange();
+        renderWeeklyGrid();
+    } else {
+        setDrawingCellSelection(cell, select, styles);
+    }
     return true;
 }
 function buildFaixaSummaryText(faixaIndex, count, previewData = null) {
@@ -1203,45 +1440,16 @@ function updateWeeklySavePatternButton() {
     else btn.title = hasSelection ? 'Salvar o padr?o da faixa ativa' : 'Clique em pelo menos um slot para salvar o padr?o';
 }
 
+// O desenho grava direto em faixasPatterns a cada clique (tryApplyDrawingSelection);
+// aqui so atualizamos os resumos das faixas.
 function persistActiveDrawingSelection() {
     if (!drawingFaixaIndex) return 0;
     const faixaIndex = parseInt(drawingFaixaIndex, 10);
     if (Number.isNaN(faixaIndex) || faixaIndex < 1 || faixaIndex > 3) return 0;
 
-    const selectedPattern = getDrawingSelectionFromDOM();
-    const previousPattern = normalizeFaixaPattern(faixasPatterns[faixaIndex]);
-    let finalPattern = normalizeFaixaPattern(selectedPattern);
-
-    // Evita perda de slots do padrao em dias de feriado da semana visivel
-    // (esses slots nao ficam selecionaveis no DOM e nao devem ser apagados ao persistir).
-    const weekStartISO = resolveWeeklyViewWeekStart();
-    const weekDates = getWeeklyWeekDates(weekStartISO);
-    if (weekDates.length > 0 && previousPattern.length > 0) {
-        const feriadosMap = getHolidayLabelMap();
-        const holidayDays = new Set();
-
-        for (let i = 1; i <= 6; i++) {
-            const dStr = weekDates[i - 1] || '';
-            if (dStr && feriadosMap.has(dStr)) holidayDays.add(i);
-        }
-
-        if (holidayDays.size > 0) {
-            const keys = new Set(finalPattern.map((p) => (p.dia + '|' + p.slot)));
-            previousPattern.forEach((p) => {
-                if (!holidayDays.has(p.dia)) return;
-                const k = p.dia + '|' + p.slot;
-                if (keys.has(k)) return;
-                finalPattern.push({ ...p });
-                keys.add(k);
-            });
-            finalPattern = normalizeFaixaPattern(finalPattern);
-        }
-    }
-
-    faixasPatterns[faixaIndex] = finalPattern;
-    setFaixaStatus(faixaIndex, finalPattern.length);
+    for (let i = 1; i <= 3; i++) setFaixaStatus(i, normalizeFaixaPattern(faixasPatterns[i]).length);
     updateWeeklySavePatternButton();
-    return finalPattern.length;
+    return normalizeFaixaPattern(faixasPatterns[faixaIndex]).length;
 }
 function clearActiveDrawingSelection() {
     if (!drawingFaixaIndex) return 0;
@@ -1425,6 +1633,7 @@ function openFaixaQuickActionConfirm(faixaNum) {
 function executeFaixaQuickAction(faixaNum) {
     const idx = parseInt(faixaNum, 10);
     if (Number.isNaN(idx) || idx < 1 || idx > 3) return;
+    hideFaixaAutoNote();
 
     closeFaixaQuickActionConfirm();
 
@@ -1553,26 +1762,7 @@ function applyFaixasConfigToSidebar(faixasConfig = []) {
 
 function getActiveDrawingFaixaRange() {
     if (!drawingFaixaIndex) return null;
-    const idx = parseInt(drawingFaixaIndex, 10);
-    if (Number.isNaN(idx) || idx < 1 || idx > 3) return null;
-
-    const iniEl = document.getElementById(`inp-data-inicio-f${idx}`);
-    const fimEl = document.getElementById(`inp-data-fim-f${idx}`);
-    const nextIniEl = document.getElementById(`inp-data-inicio-f${idx + 1}`);
-    const termStart = store.settings.termStart || inpTermStart?.value || calStart?.value || '';
-    const termEnd = store.settings.termEnd || inpTermEnd?.value || calEnd?.value || '';
-
-    let start = (iniEl?.value || '').trim();
-    if (!start && idx === 1) start = (termStart || '').trim();
-    if (!start) return null;
-
-    let end = (fimEl?.value || '').trim();
-    if (!end && nextIniEl?.value) end = shiftISODate(nextIniEl.value, -1);
-    if (!end) end = (termEnd || start || '').trim();
-    if (!end) return null;
-    if (end < start) end = start;
-
-    return { start, end };
+    return getFaixaRangeFromUI(parseInt(drawingFaixaIndex, 10));
 }
 
 function getLastValidFaixaFromUI() {
@@ -2700,6 +2890,8 @@ function setupWeeklyInstructionsToggle() {
 
 function setupFaixaControls() {
     setupFaixaQuickActions();
+    document.getElementById('btn-faixa-auto-undo')?.addEventListener('click', undoFaixaAutoCreation);
+    document.getElementById('btn-faixa-auto-fix')?.addEventListener('click', mergeFaixaAutoCreationIntoPrevious);
     for (let i = 1; i <= 3; i++) {
         const iniEl = document.getElementById(`inp-data-inicio-f${i}`);
         const fimEl = document.getElementById(`inp-data-fim-f${i}`);
@@ -2873,6 +3065,7 @@ function hydrateFaixasFromComponente(allocation, options = {}) {
     const { useStoredExecution = false } = options || {};
 
     weeklyState.clearFaixasPatterns();
+    hideFaixaAutoNote();
 
     const resolved = useStoredExecution
         ? resolveEditableFaixasFromStoredExecution(allocation)
@@ -5056,10 +5249,8 @@ function renderWeeklyGrid() {
     }
     refreshActiveFaixaHighlight();
 
-    const drawRange = isDrawing ? getActiveDrawingFaixaRange() : null;
     const drawingDisciplina = normalizeDisciplinaInputValue(inputConfig.disciplina?.value || '');
     const turmaAllocs = store.allocations.filter((a) => String(a.turmaId) === String(store.selectedTurma));
-    const pattern = isDrawing ? normalizeFaixaPattern(faixasPatterns[drawingFaixaIndex]) : [];
     const hasAnyDraftPattern = isDrawing && [1, 2, 3].some((idx) => normalizeFaixaPattern(faixasPatterns[idx]).length > 0);
     const drawStyles = isDrawing ? getDrawingSelectedStyles() : null;
     const showContextWhileDrawing = !isDrawing || drawingViewMode === 'context';
@@ -5388,11 +5579,13 @@ function renderWeeklyGrid() {
                 }
 
                 if (isDrawing) {
-                    const isSelected = !isHolidayColumn && pattern.some((p) => p.dia === i && p.slot === horarioStr);
+                    const cellFaixaIndex = getFaixaIndexForDate(cellDate);
+                    const cellPattern = cellFaixaIndex ? normalizeFaixaPattern(faixasPatterns[cellFaixaIndex]) : [];
+                    const isSelected = !isHolidayColumn && cellPattern.some((p) => p.dia === i && p.slot === horarioStr);
                     setDrawingCellSelection(cell, isSelected, drawStyles);
                     cell.classList.remove('slot-free-draw', 'slot-week-disabled', 'slot-week-holiday');
 
-                    const isInsideFaixa = drawRange ? isDateInsideRange(cellDate, drawRange.start, drawRange.end) : true;
+                    const isInsideFaixa = !!cellFaixaIndex;
                     const isHoliday = !!cellDate && feriadosSet.has(cellDate);
                     const holidayLabel = isHoliday ? (feriadosMap.get(cellDate) || 'Feriado') : '';
                     const waitingStartPick = !!pendingFaixaStartPick;
@@ -5424,6 +5617,7 @@ function renderWeeklyGrid() {
                         if (!isSelected) cell.classList.add('slot-free-draw');
 
                         cell.style.cursor = 'crosshair';
+                        cell.title = `Faixa ${cellFaixaIndex}`;
                         cell.addEventListener('mousedown', (e) => {
                             if (e.button !== 0) return;
                             e.preventDefault();
@@ -5985,18 +6179,6 @@ function handleAddManual() {
         const faixaHoursSummary = buildFaixaHoursSummaryFromExecution(faixasConfig, execution.byDate);
         const faixasComCarga = faixaHoursSummary.filter((f) => f.horas > 0);
 
-        if (faixasComCarga.length > 1) {
-            const resumoFaixas = faixasComCarga
-                .map((f) => 'Faixa ' + f.faixa + ': ' + f.horas + 'h')
-                .join(' | ');
-
-            const msgConfirm =
-                'Distribuicao confirmada. A componente ficou organizada em ' + faixasComCarga.length + ' faixas: ' + resumoFaixas + '.\n\n' +
-                'Esse ajuste foi reconhecido normalmente pelo sistema e ajuda a evitar uma alocacao final pouco pratica (como slot isolado).\n\n' +
-                'Clique em OK para continuar.';
-
-            if (!confirm(msgConfirm)) return;
-        }
 
         const inicioCalculado = execution.dataInicio || inicio;
         const dataFimCalculada = execution.dataFim || inicioCalculado;
