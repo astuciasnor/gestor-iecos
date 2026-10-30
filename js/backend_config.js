@@ -1,7 +1,8 @@
 // Onde ficam as alocacoes:
 //   'local'    - somente no navegador (exportar/importar JSON);
-//   'supabase' - banco compartilhado online, com login por coordenador.
-// Para testar sem mudar o padrao: abra o app com ?backend=supabase (ou ?backend=local);
+//   'supabase' - banco compartilhado online, com login por coordenador;
+//   'ufpa'     - o mesmo, no servidor da UFPA (API PHP em api/ + MariaDB).
+// Para testar sem mudar o padrao: abra o app com ?backend=ufpa (ou supabase, local);
 // a escolha fica gravada neste navegador.
 export const DEFAULT_BACKEND_MODE = 'local';
 
@@ -11,8 +12,11 @@ export const SUPABASE_URL = 'https://gwkhjfxknjzvgbuiaior.supabase.co';
 export const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_IhUhwTft-8rVDcgTCH2UTA_vSl5Nq4c';
 export const SUPABASE_JS_URL = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/+esm';
 
+// API do servidor da UFPA, relativa a pagina do app (o app e a API ficam no mesmo site).
+export const UFPA_API_URL = 'api/';
+
 const BACKEND_STORAGE_KEY = 'cardume_backend_mode';
-const VALID_MODES = ['local', 'supabase'];
+const VALID_MODES = ['local', 'supabase', 'ufpa'];
 
 export function resolveBackendMode() {
   try {

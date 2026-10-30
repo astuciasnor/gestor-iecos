@@ -1,8 +1,8 @@
 // Tela de acesso e barra de status da sincronizacao.
-// Modo local: senha unica, como antes. Modo supabase: e-mail e senha de cada
-// coordenador, e as alocacoes passam a ser compartilhadas pelo servidor.
+// Modo local: senha unica, como antes. Modos supabase e ufpa: e-mail e senha de
+// cada coordenador, e as alocacoes passam a ser compartilhadas pelo servidor.
 import { resolveBackendMode } from './backend_config.js';
-import * as remoto from './sync_remoto.js??v=20261028a';
+import * as remoto from './sync_remoto.js??v=20261030a';
 
 const LOCAL_PASSWORD = 'ufpa2026';
 
@@ -15,7 +15,7 @@ const STATUS_LABELS = {
 };
 
 export function isOnlineMode() {
-  return resolveBackendMode() === 'supabase';
+  return resolveBackendMode() !== 'local';
 }
 
 // callbacks: { onRemoteChange, showToast }
@@ -110,8 +110,12 @@ async function iniciarOnline({ onRemoteChange, showToast }) {
       try {
         return await remoto.signIn(email, senha);
       } catch (error) {
-        const invalid = /invalid login credentials/i.test(error?.message || '');
-        setLoginMessage(invalid ? 'E-mail ou senha incorretos.' : `Falha no login: ${error?.message || error}`, true);
+        const invalid = error?.code === 'credenciais_invalidas' || /invalid login credentials/i.test(error?.message || '');
+        const limite = error?.status === 429;
+        setLoginMessage(
+          invalid ? 'E-mail ou senha incorretos.' : (limite ? error.message : `Falha no login: ${error?.message || error}`),
+          true
+        );
         return null;
       }
     });
@@ -153,7 +157,7 @@ const MIN_SENHA = 8;
 
 function descreverErroSenha(error) {
   const msg = String(error?.message || error || '');
-  if (/different from the old/i.test(msg)) return 'A nova senha precisa ser diferente da atual.';
+  if (/different from the old|diferente da atual/i.test(msg)) return 'A nova senha precisa ser diferente da atual.';
   if (/weak|at least|characters/i.test(msg)) return 'Senha fraca: use mais caracteres, misturando letras e numeros.';
   if (/reauthenticat|recent/i.test(msg)) return 'Por seguranca, saia, entre de novo e troque a senha em seguida.';
   return `Nao foi possivel trocar a senha: ${msg || 'erro desconhecido'}`;

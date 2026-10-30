@@ -1,11 +1,12 @@
-// Sincronizacao das alocacoes com o banco compartilhado (Supabase).
+// Sincronizacao das alocacoes com o banco compartilhado (Supabase ou servidor
+// da UFPA; a conversa com cada um fica em remoto_supabase.js / remoto_ufpa.js).
 // O navegador continua guardando uma copia (cache) de cada plano; este modulo
 // carrega o plano ativo do servidor, envia as alteracoes do curso do usuario e
-// recebe em tempo real as alteracoes dos outros cursos.
+// recebe as alteracoes dos outros cursos (tempo real ou consulta periodica).
 import { store } from './store.js??v=20261028a';
 import { buildTurmaParaCursoMap } from './serialization.js';
 import { readJsonStorage, writeJsonStorage } from './plan_storage.js';
-import { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, SUPABASE_JS_URL } from './backend_config.js';
+import { resolveBackendMode } from './backend_config.js';
 import {
   computePushPlan,
   reconcileAllocations,
@@ -15,13 +16,12 @@ import {
 
 const SYNCED_PREFIX = 'cardume_sync_v1::';
 const BACKUP_PREFIX = 'cardume_backup_v1::';
-const PAGE_SIZE = 1000;
 const WRITE_CHUNK = 200;
 const PUSH_DEBOUNCE_MS = 600;
 const RETRY_MS = 15000;
 const FOCUS_REFRESH_MIN_MS = 30000;
 
-let client = null;
+let servidor = null;
 let perfil = null;
 let currentUser = null;
 
@@ -30,7 +30,7 @@ let ready = false;
 let loadToken = 0;
 let synced = new Map();      // id -> { h, c } da ultima versao confirmada no servidor
 let remoteById = new Map();  // id -> copia da versao do servidor (para desfazer bloqueios)
-let channel = null;
+let stopListening = null;   // encerra a escuta de mudancas do plano ativo
 
 let pushTimer = null;
 let retryTimer = null;
@@ -46,31 +46,27 @@ let onStatus = () => {};
 // ===== Conexao e login =====
 
 export async function connect() {
-  if (client) return client;
-  const { createClient } = await import(SUPABASE_JS_URL);
-  client = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
-    auth: { persistSession: true, autoRefreshToken: true }
-  });
-  return client;
+  if (servidor) return;
+  servidor = resolveBackendMode() === 'ufpa'
+    ? await import('./remoto_ufpa.js??v=20261030a')
+    : await import('./remoto_supabase.js??v=20261030a');
+  await servidor.connect();
 }
 
 export async function getSessionUser() {
-  const { data } = await client.auth.getSession();
-  currentUser = data?.session?.user || null;
+  currentUser = await servidor.getSessionUser();
   return currentUser;
 }
 
 export async function signIn(email, password) {
-  const { data, error } = await client.auth.signInWithPassword({ email, password });
-  if (error) throw error;
-  currentUser = data.user;
+  currentUser = await servidor.signIn(email, password);
   return currentUser;
 }
 
 // Senha inicial e definida pelo administrador; no primeiro acesso a pessoa
-// cria a sua. A marca fica nos dados da propria conta de login.
+// cria a sua.
 export function senhaDefinida(user = currentUser) {
-  return !!user?.user_metadata?.senha_definida;
+  return !!user?.senhaDefinida;
 }
 
 export function getSessionEmail() {
@@ -78,42 +74,23 @@ export function getSessionEmail() {
 }
 
 export async function changePassword(password) {
-  const { data, error } = await client.auth.updateUser({ password, data: { senha_definida: true } });
-  if (error) throw error;
-  currentUser = data.user;
+  currentUser = await servidor.changePassword(password);
 }
 
 export async function signOut() {
-  if (channel) await client.removeChannel(channel);
-  channel = null;
-  await client.auth.signOut();
+  await unsubscribe();
+  await servidor.signOut();
 }
 
 // Outra aba deste navegador entrou com outro usuario (ou saiu): esta pagina
 // continuaria mostrando o nome antigo enquanto o servidor ja usa o login novo.
 export function watchSessionChange(onChange) {
-  const startedAs = currentUser?.id || null;
-  const check = (id) => {
-    if (id !== startedAs) onChange();
-  };
-  client.auth.onAuthStateChange((_event, session) => check(session?.user?.id || null));
-  window.addEventListener('storage', (event) => {
-    if (!/^sb-.+-auth-token$/.test(event.key || '')) return;
-    let id = null;
-    try { id = JSON.parse(event.newValue || 'null')?.user?.id || null; } catch (e) { return; }
-    check(id);
-  });
+  servidor.watchSessionChange(currentUser?.id || null, onChange);
 }
 
 export async function loadPerfil() {
   if (!currentUser) return null;
-  const { data, error } = await client
-    .from('perfis')
-    .select('nome, curso, papel')
-    .eq('usuario', currentUser.id)
-    .maybeSingle();
-  if (error) throw error;
-  perfil = data;
+  perfil = await servidor.loadPerfil(currentUser);
   return perfil;
 }
 
@@ -157,7 +134,7 @@ export async function startSync(callbacks = {}) {
 }
 
 async function activatePlan(key, { force = false } = {}) {
-  if (!key || !client) return;
+  if (!key || !servidor) return;
   if (key === activeKey && ready && !force) return;
 
   const switching = key !== activeKey;
@@ -172,10 +149,10 @@ async function activatePlan(key, { force = false } = {}) {
   setStatus('carregando');
 
   try {
-    const remote = await fetchPlanAllocations(key);
+    const remote = await servidor.fetchPlan(key);
     if (token !== loadToken || store.getActivePlanMeta().key !== key) return;
     applyRemoteSnapshot(key, remote);
-    if (!channel) subscribe(key);
+    if (!stopListening) subscribe(key);
     ready = true;
     setStatus('ok');
     schedulePush();
@@ -187,27 +164,11 @@ async function activatePlan(key, { force = false } = {}) {
   }
 }
 
-async function fetchPlanAllocations(key) {
-  const all = [];
-  for (let from = 0; ; from += PAGE_SIZE) {
-    const { data, error } = await client
-      .from('alocacoes')
-      .select('dados')
-      .eq('plano', key)
-      .order('id')
-      .range(from, from + PAGE_SIZE - 1);
-    if (error) throw error;
-    (data || []).forEach((row) => { if (row?.dados?.id) all.push(row.dados); });
-    if (!data || data.length < PAGE_SIZE) break;
-  }
-  return all;
-}
-
 // Usado pela publicacao online, que precisa de varios periodos de uma vez.
 export async function fetchAllocationsForPlans(keys = []) {
   const result = {};
   for (const key of keys) {
-    result[key] = key === activeKey && ready ? store.allocations : await fetchPlanAllocations(key);
+    result[key] = key === activeKey && ready ? store.allocations : await servidor.fetchPlan(key);
   }
   return result;
 }
@@ -266,7 +227,7 @@ function schedulePush() {
 }
 
 async function push() {
-  if (!ready || !client) return;
+  if (!ready || !servidor) return;
   if (store.getActivePlanMeta().key !== activeKey) return;
   if (pushing) {
     pushAgain = true;
@@ -300,8 +261,7 @@ async function push() {
 
     for (let i = 0; i < rows.length; i += WRITE_CHUNK) {
       const chunk = rows.slice(i, i + WRITE_CHUNK);
-      const { error } = await client.from('alocacoes').upsert(chunk.map((r) => r.row));
-      if (error) throw error;
+      await servidor.upsert(chunk.map((r) => r.row));
       chunk.forEach(({ row, hash }) => {
         syncedRef.set(row.id, { h: hash, c: row.curso });
         remoteRef.set(row.id, row.dados);
@@ -310,8 +270,7 @@ async function push() {
 
     for (let i = 0; i < plan.deletes.length; i += WRITE_CHUNK) {
       const ids = plan.deletes.slice(i, i + WRITE_CHUNK);
-      const { error } = await client.from('alocacoes').delete().in('id', ids);
-      if (error) throw error;
+      await servidor.remove(ids);
       ids.forEach((id) => {
         syncedRef.delete(id);
         remoteRef.delete(id);
@@ -360,60 +319,63 @@ function revertBlocked(blocked) {
   }
 }
 
-// ===== Tempo real =====
+// ===== Mudancas dos outros =====
 
 function subscribe(key) {
-  const handle = (payload) => handleRealtime(key, payload);
   let hadError = false;
-  channel = client
-    .channel(`alocacoes:${key}`)
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'alocacoes', filter: `plano=eq.${key}` }, handle)
-    .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'alocacoes' }, handle)
-    .subscribe((status) => {
-      if (status === 'SUBSCRIBED') {
+  stopListening = servidor.subscribe(key, {
+    onUpsert: (row) => handleRemoteUpsert(key, row),
+    onDelete: (id) => handleRemoteDelete(key, id),
+    onState: (state) => {
+      if (state === 'ok') {
         if (hadError) activatePlan(key, { force: true });
         hadError = false;
-      } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
-        if (key === activeKey) {
-          hadError = true;
-          setStatus('offline');
-        }
+      } else if (key === activeKey) {
+        hadError = true;
+        setStatus('offline');
       }
-    });
+    }
+  });
 }
 
 async function unsubscribe() {
-  if (!channel) return;
-  const old = channel;
-  channel = null;
-  try { await client.removeChannel(old); } catch (e) { /* ignora */ }
+  if (!stopListening) return;
+  const stop = stopListening;
+  stopListening = null;
+  try { await stop(); } catch (e) { /* ignora */ }
 }
 
 let remoteRenderTimer = null;
 
-function handleRealtime(key, payload) {
-  if (key !== activeKey || !ready || store.getActivePlanMeta().key !== key) return;
+function isCurrent(key) {
+  return key === activeKey && ready && store.getActivePlanMeta().key === key;
+}
 
-  if (payload.eventType === 'DELETE') {
-    const id = payload.old?.id;
-    if (!id || (!synced.has(id) && !remoteById.has(id))) return;
-    synced.delete(id);
-    remoteById.delete(id);
-    store.allocations = store.allocations.filter((a) => a?.id !== id);
-  } else {
-    const row = payload.new;
-    const alloc = row?.dados;
-    if (!alloc?.id || row.plano !== key) return;
-    const entry = buildSyncedMap([alloc], cursoOf).get(alloc.id);
-    if (synced.get(alloc.id)?.h === entry.h) return; // eco do proprio envio
-    synced.set(alloc.id, entry);
-    remoteById.set(alloc.id, alloc);
-    const copy = structuredClone(alloc);
-    const idx = store.allocations.findIndex((a) => a?.id === alloc.id);
-    if (idx >= 0) store.allocations[idx] = copy;
-    else store.allocations.push(copy);
-  }
+function handleRemoteDelete(key, id) {
+  if (!isCurrent(key)) return;
+  if (!id || (!synced.has(id) && !remoteById.has(id))) return;
+  synced.delete(id);
+  remoteById.delete(id);
+  store.allocations = store.allocations.filter((a) => a?.id !== id);
+  afterRemoteChange();
+}
 
+function handleRemoteUpsert(key, row) {
+  if (!isCurrent(key)) return;
+  const alloc = row?.dados;
+  if (!alloc?.id || row.plano !== key) return;
+  const entry = buildSyncedMap([alloc], cursoOf).get(alloc.id);
+  if (synced.get(alloc.id)?.h === entry.h) return; // eco do proprio envio
+  synced.set(alloc.id, entry);
+  remoteById.set(alloc.id, alloc);
+  const copy = structuredClone(alloc);
+  const idx = store.allocations.findIndex((a) => a?.id === alloc.id);
+  if (idx >= 0) store.allocations[idx] = copy;
+  else store.allocations.push(copy);
+  afterRemoteChange();
+}
+
+function afterRemoteChange() {
   store.writeAllocationsCache();
   persistSynced();
   clearTimeout(remoteRenderTimer);
@@ -446,7 +408,7 @@ function setStatus(state, detail = '') {
 
 function describeError(error) {
   const msg = String(error?.message || error || '');
-  if (/row-level security/i.test(msg)) return 'sem permissao para alterar este curso';
+  if (/row-level security|sem permissao/i.test(msg)) return 'sem permissao para alterar este curso';
   if (/Failed to fetch|NetworkError|network/i.test(msg)) return 'sem conexao com o servidor';
   if (/JWT|token/i.test(msg)) return 'sessao expirada, entre novamente';
   return msg || 'erro desconhecido';

@@ -1,0 +1,35 @@
+# Servidor de teste igual ao da UFPA (PHP 8.2 + MariaDB 11.8), so neste computador.
+#   Ligar:     docker compose -f tools/servidor_local/docker-compose.yml up -d --build
+#   Abrir:     http://localhost:8080/?backend=ufpa
+#   Usuario:   docker compose -f tools/servidor_local/docker-compose.yml exec web \
+#                php /var/www/html/tools/servidor_local/criar_usuario.php EMAIL SENHA NOME CURSO PAPEL
+#   Desligar:  docker compose -f tools/servidor_local/docker-compose.yml down -v   (-v apaga o banco de teste)
+name: cardume-local
+
+services:
+  db:
+    image: mariadb:11.8
+    environment:
+      MARIADB_DATABASE: cardume_iecos
+      MARIADB_USER: cardume_iecos
+      MARIADB_PASSWORD: senha-local-de-teste
+      MARIADB_RANDOM_ROOT_PASSWORD: "1"
+    volumes:
+      - ../../mysql/schema.sql:/docker-entrypoint-initdb.d/schema.sql:ro
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 3s
+      retries: 30
+
+  web:
+    build: .
+    ports:
+      - "8080:80"
+    environment:
+      CARDUME_CONFIG: /etc/cardume/config.php
+    volumes:
+      - ../..:/var/www/html:ro
+      - ./config.docker.php:/etc/cardume/config.php:ro
+    depends_on:
+      db:
+        condition: service_healthy

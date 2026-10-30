@@ -1,0 +1,5 @@
+# So index.php responde nesta pasta; config.php e os modelos ficam inacessiveis.
+Options -Indexes
+<FilesMatch "^(config|config\.exemplo)\.php$">
+    Require all denied
+</FilesMatch>

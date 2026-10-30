@@ -147,7 +147,7 @@ banco Supabase, cada coordenador entra com e-mail e senha, e as alteracoes de
 um curso aparecem na hora para os outros (conflitos de docente entre cursos
 passam a ser vistos durante a alocacao).
 
-- Ativar neste navegador: abrir o app com `?backend=supabase`
+- Ativar neste navegador: abrir o app com `?backend=supabase` (ou `?backend=ufpa`)
   (voltar ao modo local com `?backend=local`). O padrao fica em
   `js/backend_config.js` (`DEFAULT_BACKEND_MODE`).
 - Banco: `supabase/schema.sql` (colar no SQL Editor do Supabase e executar).
@@ -183,9 +183,23 @@ where email = 'pessoa@ufpa.br';
   e barrado antes, com aviso (`store.podeEditarTurma`).
 - Codigo: `js/sync_remoto.js` (servidor), `js/sync_diff.mjs` (regras, testadas
   em `tests/sync_diff.test.mjs`), `js/acesso_ui.js` (login e status).
-- Migracao para o CTIC: as tabelas `perfis`, `alocacoes` e
-  `alocacoes_historico` tem equivalente direto em MySQL/MariaDB (coluna JSON);
-  basta um modo novo em `js/sync_remoto.js` falando com uma API PHP.
+- Codigo de cada servidor: `js/remoto_supabase.js` e `js/remoto_ufpa.js`
+  (mesma interface; `js/sync_remoto.js` escolhe pelo modo).
+
+### Servidor da UFPA (modo `ufpa`)
+
+- Hospedagem CTIC: `cardume.iecos.ufpa.br` (PHP 8.2 + MariaDB 11.8). FTP e
+  painel so com a VPN da UFPA; o phpMyAdmin abre sem VPN.
+- Banco: `mysql/schema.sql` (phpMyAdmin > banco `cardume_iecos` > aba SQL).
+- API: `api/index.php`. A senha do banco fica em `api/config.php` (copiar de
+  `api/config.exemplo.php`; fora do Git e bloqueado pelo `api/.htaccess`).
+- O que no Supabase e feito pelo banco (login, permissao por curso, carimbo,
+  historico) aqui e feito pela API. Sem tempo real: o navegador consulta as
+  mudancas a cada 5 s (30 s com a aba em segundo plano).
+- Senhas vindas do Supabase (bcrypt `$2a$`) funcionam e sao convertidas ao
+  formato do PHP no primeiro login.
+- Teste local igual ao servidor (Docker): `tools/servidor_local/docker-compose.yml`
+  (instrucoes no proprio arquivo); abrir `http://localhost:8080/?backend=ufpa`.
 
 ## Publicacao online
 
