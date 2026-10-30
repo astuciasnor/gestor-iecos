@@ -1378,6 +1378,7 @@ body:has(#tab-weekly.active) .top-bar #weekly-instructions-card {
 }
 
 .weekly-faixas-main {
+    container-type: inline-size;
     display: grid;
     grid-template-columns: minmax(0, 1fr) 132px;
     align-items: center;
@@ -1433,7 +1434,7 @@ body:has(#tab-weekly.active) .top-bar #weekly-instructions-card {
 }
 
 .weekly-faixas-table .col-faixa-ch {
-    width: 58px;
+    width: 64px;
 }
 
 .weekly-faixas-table th,
@@ -1495,8 +1496,8 @@ body:has(#tab-weekly.active) .top-bar #weekly-instructions-card {
    (clique no numero + grade). Sempre visivel, compacta. */
 .weekly-faixas-help {
     display: flex;
-    flex-direction: column;
-    gap: 3px;
+    flex-wrap: wrap;
+    gap: 3px 18px;
     margin: 6px 0 8px 0;
     padding: 6px 9px;
     background: rgba(255, 255, 255, 0.55);
@@ -1705,6 +1706,15 @@ body:has(#tab-weekly.active) .top-bar #weekly-instructions-card {
 }
 .weekly-faixas-table .faixa-padrao-cell .fp-grupo { white-space: nowrap; }
 .weekly-faixas-table .faixa-padrao-cell .fp-sep { color: #93a0af; margin: 0 4px; }
+.weekly-faixas-table .faixa-padrao-cell .fp-hora { color: #7f8c9b; font-weight: 500; }
+.weekly-faixas-table .faixa-padrao-cell .fp-livre { color: #93a0af; font-weight: 500; font-style: italic; }
+/* Faixa ainda nao usada: discreta, mas clicavel pelo numero. */
+.weekly-faixas-table tr.faixa-item--livre:not(.faixa-start-pick-waiting) td { opacity: 0.6; }
+/* Sem largura para o horario de relogio: fica so o numero das aulas. */
+@container (max-width: 900px) {
+    .weekly-faixas-table .faixa-padrao-cell .fp-hora,
+    .weekly-faixas-table .faixa-padrao-cell .fp-livre-dica { display: none; }
+}
 
 .weekly-faixas-table .faixa-ch-cell {
     min-width: 52px;

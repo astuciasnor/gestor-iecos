@@ -643,11 +643,18 @@ function buildFaixaPadraoGrupos(patternInput) {
         porDia.get(p.dia).push(p.slot);
     });
     const grupos = new Map();
+    const horaPorGrupo = new Map();
     [...porDia.keys()].sort((a, b) => a - b).forEach((dia) => {
         const slots = porDia.get(dia).sort((a, b) => timeToMinutes(a) - timeToMinutes(b));
         const aulas = comprimir(slots.map(ordinalLabel));
         if (!grupos.has(aulas)) grupos.set(aulas, []);
         grupos.get(aulas).push(dia);
+        // Faixa de relogio so quando as aulas sao seguidas (sem virgula).
+        if (!aulas.includes(',')) {
+            const inicio = (String(slots[0]).match(/\d{1,2}:\d{2}/g) || [])[0];
+            const fim = (String(slots[slots.length - 1]).match(/\d{1,2}:\d{2}/g) || []).slice(-1)[0];
+            if (inicio && fim) horaPorGrupo.set(aulas, `${inicio}–${fim}`);
+        }
     });
 
     return [...grupos.entries()].map(([aulas, dias]) => {
@@ -658,7 +665,7 @@ function buildFaixaPadraoGrupos(patternInput) {
             trechos.push(i - 1 > ini ? `${nomes[dias[ini]]}-${nomes[dias[i - 1]]}` : nomes[dias[ini]]);
             ini = i;
         }
-        return `${trechos.join('/')} ${aulas}`;
+        return { texto: `${trechos.join('/')} ${aulas}`, hora: horaPorGrupo.get(aulas) || '' };
     });
 }
 
@@ -666,9 +673,22 @@ function updateFaixaPadraoCell(faixaIndex) {
     const cell = document.getElementById(`faixa-padrao-f${faixaIndex}`);
     if (!cell) return;
     const grupos = buildFaixaPadraoGrupos(faixasPatterns[faixaIndex]);
+    const livre = faixaIndex > 1 && !document.getElementById(`inp-data-inicio-f${faixaIndex}`)?.value;
+    document.getElementById(`faixa-${faixaIndex}`)?.classList.toggle('faixa-item--livre', livre);
     cell.innerHTML = '';
-    cell.title = grupos.join(' · ');
-    grupos.forEach((texto, i) => {
+    cell.title = grupos.map((g) => (g.hora ? `${g.texto} (${g.hora})` : g.texto)).join(' · ');
+    if (livre) {
+        const vazio = document.createElement('span');
+        vazio.className = 'fp-livre';
+        vazio.textContent = 'livre';
+        const dica = document.createElement('span');
+        dica.className = 'fp-livre-dica';
+        dica.textContent = ' · redesenhe numa semana posterior';
+        vazio.appendChild(dica);
+        cell.appendChild(vazio);
+        return;
+    }
+    grupos.forEach(({ texto, hora }, i) => {
         if (i > 0) {
             const sep = document.createElement('span');
             sep.className = 'fp-sep';
@@ -679,12 +699,17 @@ function updateFaixaPadraoCell(faixaIndex) {
         const grupo = document.createElement('span');
         grupo.className = 'fp-grupo';
         grupo.textContent = texto;
+        if (hora) {
+            const relogio = document.createElement('span');
+            relogio.className = 'fp-hora';
+            relogio.textContent = ` (${hora})`;
+            grupo.appendChild(relogio);
+        }
         cell.appendChild(grupo);
     });
 }
 
 function setFaixaStatus(faixaIndex, count) {
-    updateFaixaPadraoCell(faixaIndex);
     const status = document.getElementById(`status-draw-f${faixaIndex}`);
     const effectivePatterns = buildEffectiveFaixaPatternMap();
     const slotCount = (effectivePatterns[faixaIndex] || []).length || count || 0;
@@ -705,6 +730,7 @@ function updateWeeklyFaixaHoursDisplay(previewData = null) {
             : []
     );
     let total = preview?.execution ? (parseInt(preview.execution.totalHours, 10) || 0) : 0;
+    for (let i = 1; i <= 3; i++) updateFaixaPadraoCell(i);
     for (let i = 1; i <= 3; i++) {
         const ch = summaryHoursByFaixa.has(i) ? summaryHoursByFaixa.get(i) : calcFaixaCH(i);
         const chEl = document.getElementById(`faixa-ch-f${i}`);
@@ -1284,6 +1310,7 @@ function renderFaixaAutoNote() {
     if (!el) return;
     if (!faixaAutoNote) {
         el.classList.add('hidden');
+        updateWeeklyContextNote();
         return;
     }
     const { created, previous, start, previousStart } = faixaAutoNote;
@@ -1292,6 +1319,7 @@ function renderFaixaAutoNote() {
     if (textEl) textEl.innerHTML = `A partir de <b>${formatDateBR(start)}</b> o hor&aacute;rio mudou. Criei a <b>Faixa ${created}</b>.`;
     if (fixBtn) fixBtn.textContent = `Não, corrigir a Faixa ${previous} desde ${formatDateBR(previousStart)}`;
     el.classList.remove('hidden');
+    updateWeeklyContextNote();
 }
 
 function showFaixaAutoNote(info) {
@@ -3575,7 +3603,9 @@ function computeWeeklyStatus() {
     return {
         tone: 'action', icon: '\u{1F58A}\uFE0F', step: 6,
         title: `Desenhando a Faixa ${idx} de ${discUpper}`,
-        hint: `Substitui a Faixa ${idx - 1} a partir de ${formatDateBR(ini)} (fim da Faixa ${idx - 1}: ${formatDateBR(previousEnd)}). Desenhe o novo padrao na grade.`
+        hint: (faixaAutoNote && faixaAutoNote.created === idx)
+            ? 'Desenhe o novo padrao na grade.'
+            : `Substitui a Faixa ${idx - 1} a partir de ${formatDateBR(ini)} (fim da Faixa ${idx - 1}: ${formatDateBR(previousEnd)}). Desenhe o novo padrao na grade.`
     };
 }
 
