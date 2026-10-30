@@ -891,7 +891,7 @@
                             </div>
                             <p class="weekly-faixas-help no-print">
                                 <span class="wfh-item"><span class="wfh-badge wfh-badge--f1">Faixa&nbsp;1</span> hor&aacute;rio inicial &mdash; escolha a <b>data no calend&aacute;rio</b> abaixo.</span>
-                                <span class="wfh-item"><span class="wfh-badge wfh-badge--fx">Faixas&nbsp;2&nbsp;e&nbsp;3</span> <i>(opcionais)</i> mudam o hor&aacute;rio no meio do per&iacute;odo: <b>clique no n&ordm; da faixa</b> e depois num dia da grade.</span>
+                                <span class="wfh-item"><span class="wfh-badge wfh-badge--fx">Faixas&nbsp;2&nbsp;e&nbsp;3</span> <i>(opcionais)</i> nascem sozinhas: v&aacute; &agrave; <b>semana em que o hor&aacute;rio muda</b> e redesenhe na grade.</span>
                             </p>
                             <div class="weekly-faixas-main">
                                 <table class="weekly-faixas-table">
@@ -899,6 +899,7 @@
                                         <col class="col-faixa-id">
                                         <col class="col-faixa-date-start">
                                         <col class="col-faixa-date-end">
+                                        <col class="col-faixa-padrao">
                                         <col class="col-faixa-ch">
                                     </colgroup>
                                     <thead>
@@ -906,6 +907,7 @@
                                             <th>Faixa</th>
                                             <th>Inicio</th>
                                             <th>Fim</th>
+                                            <th>Hor&aacute;rio semanal</th>
                                             <th>CH</th>
                                         </tr>
                                     </thead>
@@ -930,6 +932,7 @@
                                                     <button type="button" class="faixa-date-trigger" data-date-target="inp-data-fim-f1" aria-label="Selecionar data de fim da faixa 1" title="Selecionar data">&#128197;</button>
                                                 </div>
                                             </td>
+                                            <td id="faixa-padrao-f1" class="faixa-padrao-cell"></td>
                                             <td id="faixa-ch-f1" class="faixa-ch-cell">0</td>
                                         </tr>
                                         <tr id="faixa-2" class="faixa-item">
@@ -952,6 +955,7 @@
                                                     <button type="button" class="faixa-date-trigger" data-date-target="inp-data-fim-f2" aria-label="Selecionar data de fim da faixa 2" title="Selecionar data">&#128197;</button>
                                                 </div>
                                             </td>
+                                            <td id="faixa-padrao-f2" class="faixa-padrao-cell"></td>
                                             <td id="faixa-ch-f2" class="faixa-ch-cell">0</td>
                                         </tr>
                                         <tr id="faixa-3" class="faixa-item">
@@ -974,6 +978,7 @@
                                                     <button type="button" class="faixa-date-trigger" data-date-target="inp-data-fim-f3" aria-label="Selecionar data de fim da faixa 3" title="Selecionar data">&#128197;</button>
                                                 </div>
                                             </td>
+                                            <td id="faixa-padrao-f3" class="faixa-padrao-cell"></td>
                                             <td id="faixa-ch-f3" class="faixa-ch-cell">0</td>
                                         </tr>
                                     </tbody>
@@ -1526,7 +1531,7 @@
         </main>
     </div>
 
-    <script type="module" src="js/main.js??v=20261029b"></script>
+    <script type="module" src="js/main.js??v=20261029c"></script>
 </body>
 
 </html>

@@ -613,7 +613,78 @@ function buildEffectiveFaixaPatternMap(overrideFaixaIndex = null, overridePatter
     return map;
 }
 
+// Resumo do horario semanal de uma faixa, pelo numero da aula no turno:
+// "Seg-Ter 4ª-5ª · Qua-Sex 1ª-3ª". Dias com o mesmo conjunto de aulas viram um grupo.
+function buildFaixaPadraoGrupos(patternInput) {
+    const nomes = { 1: 'Seg', 2: 'Ter', 3: 'Qua', 4: 'Qui', 5: 'Sex', 6: 'Sáb' };
+    const pattern = normalizeFaixaPattern(patternInput);
+    const turnos = new Set(pattern.map((p) => getTurnoLetter(normalizeConflictSlotLabel(p.slot))));
+    const ordinalLabel = (slot) => {
+        const { ordinal, time } = getSlotOrdinalInfo(slot);
+        const base = ordinal ? `${ordinal}ª` : time;
+        return turnos.size > 1 ? `${getTurnoLetter(normalizeConflictSlotLabel(slot))}${base}` : base;
+    };
+    const comprimir = (labels) => {
+        const nums = labels.map((l) => parseInt(String(l).replace(/^\D+/, ''), 10));
+        if (turnos.size > 1 || nums.some(Number.isNaN)) return labels.join(', ');
+        const partes = [];
+        let ini = 0;
+        for (let i = 1; i <= nums.length; i++) {
+            if (i < nums.length && nums[i] === nums[i - 1] + 1) continue;
+            partes.push(i - 1 > ini ? `${labels[ini]}-${labels[i - 1]}` : labels[ini]);
+            ini = i;
+        }
+        return partes.join(', ');
+    };
+
+    const porDia = new Map();
+    pattern.forEach((p) => {
+        if (!porDia.has(p.dia)) porDia.set(p.dia, []);
+        porDia.get(p.dia).push(p.slot);
+    });
+    const grupos = new Map();
+    [...porDia.keys()].sort((a, b) => a - b).forEach((dia) => {
+        const slots = porDia.get(dia).sort((a, b) => timeToMinutes(a) - timeToMinutes(b));
+        const aulas = comprimir(slots.map(ordinalLabel));
+        if (!grupos.has(aulas)) grupos.set(aulas, []);
+        grupos.get(aulas).push(dia);
+    });
+
+    return [...grupos.entries()].map(([aulas, dias]) => {
+        const trechos = [];
+        let ini = 0;
+        for (let i = 1; i <= dias.length; i++) {
+            if (i < dias.length && dias[i] === dias[i - 1] + 1) continue;
+            trechos.push(i - 1 > ini ? `${nomes[dias[ini]]}-${nomes[dias[i - 1]]}` : nomes[dias[ini]]);
+            ini = i;
+        }
+        return `${trechos.join('/')} ${aulas}`;
+    });
+}
+
+function updateFaixaPadraoCell(faixaIndex) {
+    const cell = document.getElementById(`faixa-padrao-f${faixaIndex}`);
+    if (!cell) return;
+    const grupos = buildFaixaPadraoGrupos(faixasPatterns[faixaIndex]);
+    cell.innerHTML = '';
+    cell.title = grupos.join(' · ');
+    grupos.forEach((texto, i) => {
+        if (i > 0) {
+            const sep = document.createElement('span');
+            sep.className = 'fp-sep';
+            sep.textContent = '·';
+            cell.appendChild(sep);
+            cell.appendChild(document.createTextNode(' '));
+        }
+        const grupo = document.createElement('span');
+        grupo.className = 'fp-grupo';
+        grupo.textContent = texto;
+        cell.appendChild(grupo);
+    });
+}
+
 function setFaixaStatus(faixaIndex, count) {
+    updateFaixaPadraoCell(faixaIndex);
     const status = document.getElementById(`status-draw-f${faixaIndex}`);
     const effectivePatterns = buildEffectiveFaixaPatternMap();
     const slotCount = (effectivePatterns[faixaIndex] || []).length || count || 0;
@@ -3292,7 +3363,11 @@ function updateWeeklyNavigatorLabel() {
     if (drawingFaixaIndex) {
         const idx = parseInt(drawingFaixaIndex, 10);
         const ini = document.getElementById(`inp-data-inicio-f${idx}`)?.value || '';
-        const fim = document.getElementById(`inp-data-fim-f${idx}`)?.value || ini;
+        let fim = document.getElementById(`inp-data-fim-f${idx}`)?.value || '';
+        if (ini && !fim) {
+            const summary = buildWeeklyFaixaExecutionPreview().summary || [];
+            fim = summary.find((item) => parseInt(item.faixa, 10) === idx)?.fim || ini;
+        }
         if (ini) {
             suffix = ` | Faixa ${idx}: ${formatDateBR(ini)} a ${formatDateBR(fim)}`;
         }
@@ -6175,9 +6250,6 @@ function handleAddManual() {
                 : diffMsg;
             if (nonBlockingDistributionNoticeType !== 'warning') nonBlockingDistributionNoticeType = 'warning';
         }
-
-        const faixaHoursSummary = buildFaixaHoursSummaryFromExecution(faixasConfig, execution.byDate);
-        const faixasComCarga = faixaHoursSummary.filter((f) => f.horas > 0);
 
 
         const inicioCalculado = execution.dataInicio || inicio;

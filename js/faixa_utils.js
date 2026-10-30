@@ -300,21 +300,24 @@ export function buildFaixaHoursSummaryFromExecution(faixas = [], executionByDate
 
     return list.map((faixa, idx) => {
         const inicio = String(faixa?.inicio || "").trim();
-        const fim = String(faixa?.fim || "").trim() || inicio;
+        // Sem fim declarado (ultima faixa em aberto), a faixa vai ate a ultima aula.
+        const fimDeclarado = String(faixa?.fim || "").trim();
         let total = 0;
+        let ultimaAula = "";
 
         Object.keys(byDate).forEach((dStr) => {
             if (!inicio) return;
             if (dStr < inicio) return;
-            if (fim && dStr > fim) return;
+            if (fimDeclarado && dStr > fimDeclarado) return;
             const slots = Array.isArray(byDate[dStr]) ? byDate[dStr] : [];
             total += slots.length;
+            if (slots.length > 0 && dStr > ultimaAula) ultimaAula = dStr;
         });
 
         return {
             faixa: idx + 1,
             inicio,
-            fim,
+            fim: fimDeclarado || ultimaAula || inicio,
             horas: total
         };
     });

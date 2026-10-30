@@ -1425,6 +1425,10 @@ body:has(#tab-weekly.active) .top-bar #weekly-instructions-card {
 
 .weekly-faixas-table .col-faixa-date-start,
 .weekly-faixas-table .col-faixa-date-end {
+    width: 140px;
+}
+
+.weekly-faixas-table .col-faixa-padrao {
     width: auto;
 }
 
@@ -1618,7 +1622,7 @@ body:has(#tab-weekly.active) .top-bar #weekly-instructions-card {
     align-items: center;
     justify-content: center;
     gap: 0;
-    padding: 4px 28px;
+    padding: 4px 24px 4px 6px;
     background: linear-gradient(180deg, #0c7f45 0%, #056b39 100%);
     border: 1px solid #0a8e4c;
     border-radius: 8px;
@@ -1690,6 +1694,17 @@ body:has(#tab-weekly.active) .top-bar #weekly-instructions-card {
 .weekly-faixas-table .faixa-date-trigger:focus {
     outline: none;
 }
+
+/* Horario semanal da faixa: grupos de dias quebram entre si, nunca no meio. */
+.weekly-faixas-table .faixa-padrao-cell {
+    font-size: 0.74rem;
+    font-weight: 600;
+    line-height: 1.25;
+    color: #2c3e50;
+    text-align: left;
+}
+.weekly-faixas-table .faixa-padrao-cell .fp-grupo { white-space: nowrap; }
+.weekly-faixas-table .faixa-padrao-cell .fp-sep { color: #93a0af; margin: 0 4px; }
 
 .weekly-faixas-table .faixa-ch-cell {
     min-width: 52px;
@@ -2713,7 +2728,7 @@ body:has(#tab-weekly.active) .top-bar #weekly-instructions-card {
     .weekly-faixas-table .faixa-date-compact {
         min-height: 32px;
         gap: 0;
-        padding: 4px 26px;
+        padding: 4px 22px 4px 6px;
     }
 
     .weekly-faixas-table .faixa-date-display {
