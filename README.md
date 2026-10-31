@@ -24,7 +24,7 @@ Documentacao tecnica:
 - **Datas das faixas como referencia oficial:** a `Faixa 1` nasce por sugestao automatica, mas a edicao oficial da data e feita pelos mini calendarios das faixas.
 - **Turnos e sabado integrados ao motor:** mudancas de turno, sabado de manha e avisos `Atenção Turno` sao refletidos na aba Alocar Componentes, calendarios, agendas e Gantt.
 - **Gantt por docente:** leitura temporal do semestre, com turnos reais e a mesma base de execucao usada nos calendarios.
-- **Agenda publica:** `agenda_publica.html` e a pagina oficial de publicacao das grades.
+- **Agenda publica:** `agenda_publica.html` e a pagina oficial de publicacao das grades. Na consulta docente, o **Resumo do ano** mostra todos os periodos publicados (em curso e futuros), com as componentes do professor e as semanas de aula; clicar numa semana abre o calendario dela.
 - **Exportacao, SIGAA e publicacao online:** backup, exportacao institucional e `alocacoes_publicas.json` partem do plano ativo.
 - **Testes automatizados:** `npm test` roda as suites de `tests/` (motor canonico, faixas, conflitos de horario, quadros, estado da grade e sincronizacao).
 

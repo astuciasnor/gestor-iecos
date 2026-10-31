@@ -1391,6 +1391,77 @@
             .mcd-event-sigla { font-size: 0.56rem; }
         }
 
+        /* ===== Resumo do ano do docente ===== */
+        .pub-pill--resumo { font-weight: 900; }
+        .resumo-voltar {
+            margin: 0 0 12px; padding: 8px 14px; border-radius: 999px; border: 1px solid var(--pub-line);
+            background: #fff; color: #004e28; font-weight: 800; font-size: 0.85rem; cursor: pointer;
+        }
+        .resumo-voltar:hover { background: var(--pub-soft); }
+        .resumo-ano { display: flex; flex-direction: column; gap: 14px; }
+        .resumo-pl {
+            background: var(--pub-card); border: 1px solid var(--pub-line); border-radius: 18px;
+            padding: 14px 16px; box-shadow: 0 6px 16px rgba(15, 23, 42, 0.04);
+        }
+        .resumo-pl.is-vazio { padding: 10px 16px; background: var(--pub-panel); box-shadow: none; }
+        .resumo-pl-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; }
+        .resumo-pl-titulo { margin: 0; font-size: 1rem; font-weight: 900; color: #004e28; }
+        .resumo-pl-datas { color: var(--pub-muted); font-size: 0.85rem; }
+        .resumo-selo {
+            padding: 3px 10px; border-radius: 999px; background: #004e28; color: #fff;
+            font-size: 0.72rem; font-weight: 800; letter-spacing: 0.03em;
+        }
+        .resumo-pl-vazio { margin-left: auto; color: var(--pub-muted); font-size: 0.85rem; font-style: italic; }
+        .resumo-comp {
+            margin-top: 12px; padding: 10px 12px 10px 14px; border-left: 5px solid var(--comp-cor);
+            border-radius: 10px; background: var(--pub-panel);
+        }
+        .resumo-comp-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 10px; }
+        .resumo-comp-nome { color: var(--pub-ink); font-size: 0.92rem; letter-spacing: 0.01em; }
+        .resumo-comp-turma { color: var(--pub-muted); font-size: 0.82rem; font-weight: 700; }
+        .resumo-comp-info { display: flex; flex-direction: column; gap: 2px; margin-top: 4px; color: #3d5548; font-size: 0.84rem; }
+        .resumo-semanas, .resumo-meses {
+            display: grid; grid-template-columns: repeat(var(--semanas), minmax(0, 1fr)); gap: 3px;
+        }
+        .resumo-semanas { margin-top: 10px; }
+        .resumo-semana {
+            position: relative; height: 16px; padding: 0; border: 1px solid var(--pub-line);
+            border-radius: 4px; background: #fff; cursor: default;
+        }
+        .resumo-semana.is-on { background: var(--comp-cor); border-color: rgba(23, 55, 40, 0.28); cursor: pointer; }
+        .resumo-semana.is-on:hover, .resumo-semana.is-on.is-armed { outline: 2px solid #004e28; outline-offset: 1px; }
+        .resumo-semana::after {
+            content: attr(data-tip); position: absolute; bottom: calc(100% + 8px); left: 50%;
+            transform: translateX(-50%); width: max-content; max-width: 230px; padding: 6px 10px;
+            border-radius: 8px; background: #173728; color: #fff; font-size: 0.75rem; font-weight: 600;
+            line-height: 1.3; text-align: left; white-space: normal; pointer-events: none;
+            opacity: 0; visibility: hidden; transition: opacity 0.12s; z-index: 5;
+        }
+        .resumo-semana.tip-left::after { left: 0; transform: none; }
+        .resumo-semana.tip-right::after { left: auto; right: 0; transform: none; }
+        .resumo-semana:hover::after, .resumo-semana:focus-visible::after, .resumo-semana.is-armed::after {
+            opacity: 1; visibility: visible;
+        }
+        /* No toque o balao so aparece no 1o toque (is-armed), nao no :hover que "gruda". */
+        @media (hover: none) {
+            .resumo-semana:hover::after { opacity: 0; visibility: hidden; }
+            .resumo-semana.is-armed::after { opacity: 1; visibility: visible; }
+        }
+        .resumo-meses { margin-top: 3px; color: var(--pub-muted); font-size: 0.68rem; }
+        .resumo-meses span { white-space: nowrap; overflow: visible; }
+        .resumo-ver-cal {
+            margin-top: 8px; padding: 0; border: 0; background: none; color: #004e28;
+            font-weight: 800; font-size: 0.82rem; cursor: pointer;
+        }
+        .resumo-ver-cal:hover { text-decoration: underline; }
+        .month-cal .month-cal-day.is-semana-destacada { background: #edf5f0; box-shadow: inset 0 0 0 2px #004e28; }
+        @media (max-width: 520px) {
+            .resumo-pl { padding: 12px; }
+            .resumo-pl-vazio { margin-left: 0; width: 100%; }
+            .resumo-semana { height: 14px; }
+            .resumo-semanas, .resumo-meses { gap: 2px; }
+        }
+
         @media print {
             @page {
                 size: A4 landscape;
@@ -1490,8 +1561,8 @@
                         </div>
 
                         <div id="docente-month-group" class="pub-group is-half">
-                            <label>2. M&ecirc;s</label>
-                            <p class="pub-hint">Escolha o m&ecirc;s para visualizar os slots do professor.</p>
+                            <label>2. Resumo ou m&ecirc;s</label>
+                            <p class="pub-hint">O resumo mostra todos os per&iacute;odos publicados; o m&ecirc;s abre o calend&aacute;rio do per&iacute;odo selecionado.</p>
                             <div id="container-meses-docente" class="pub-pillbox">
                                 <span class="pub-empty">Aguardando professor...</span>
                             </div>
@@ -1551,7 +1622,7 @@
     <div id="slot-lens" class="slot-lens" hidden></div>
     <div id="day-lens" class="day-lens" hidden></div>
 
-    <script type="module" src="js/agenda_publica.js?v=20261028a"></script>
+    <script type="module" src="js/agenda_publica.js?v=20261031a"></script>
 </body>
 
 </html>

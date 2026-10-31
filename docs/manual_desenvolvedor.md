@@ -117,6 +117,7 @@ Interface:
 - `conflitos_ui.js`: painel de conflitos globais de docentes.
 - `ui_feedback.js`: toasts, mensagens e botoes de copiar.
 - `agenda_publica.js`: runtime da agenda publica (multi-PL, consulta docente/discente).
+- `resumo_docente.mjs`: resumo do ano do docente na agenda publica (semanas do PL e componentes; puro, testado).
 
 Modo online:
 
@@ -413,7 +414,9 @@ Cobertura atual mais importante:
 - `slot_overlap`: choque de horarios entre quadros diferentes;
 - `quadro_horario`: conversao de ofertas entre quadros;
 - `weekly_state`: estado da aba Alocar Componentes;
-- `sync_diff`: regras da sincronizacao com o servidor.
+- `sync_diff`: regras da sincronizacao com o servidor;
+- `pendentes`: componente nao fica pendente e alocada ao mesmo tempo;
+- `resumo_docente`: semanas e componentes do resumo do ano na agenda publica.
 
 Uso recomendado nas limpezas graduais:
 

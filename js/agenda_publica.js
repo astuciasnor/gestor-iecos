@@ -2,6 +2,7 @@ import { store, normalizeLoadedAllocation } from './store.js??v=20261028a';
 import { getTurnoLetter } from './turns.js';
 import { getCalendarEvents } from './calendar.js';
 import { resolveActiveAcademicPeriod } from './academic_rules.mjs';
+import { summarizeTeacherPeriod } from './resumo_docente.mjs';
 
 const collator = new Intl.Collator('pt-BR', { sensitivity: 'base' });
 const PUBLIC_ASSET_VERSION = '20261028a';
@@ -26,7 +27,10 @@ const state = {
     docente: {
         nome: '',
         mes: '',
-        totalHoras: null
+        totalHoras: null,
+        // Sem mes escolhido, a consulta docente mostra o resumo do ano.
+        resumo: null,
+        highlightWeek: null
     }
 };
 
@@ -245,12 +249,14 @@ function bindEvents() {
 
     els.resultadoAgenda?.addEventListener('click', handleAgendaChipClick);
     els.resultadoAgenda?.addEventListener('keydown', handleAgendaChipKeydown);
+    els.resultadoAgenda?.addEventListener('click', handleResumoClick);
     els.slotLens?.addEventListener('click', handleSlotLensClick);
     els.dayLens?.addEventListener('click', (e) => { if (e.target.closest('.day-lens-close')) fecharDayLens(true); });
 
     els.btnFecharSheet?.addEventListener('click', fecharBottomSheet);
     els.sheetOverlay?.addEventListener('click', fecharBottomSheet);
     document.addEventListener('click', (event) => {
+        if (!event.target.closest('.resumo-semana')) desarmarSemanas();
         const clickedChip = event.target.closest('.mini-chip');
         if (clickedChip) return;
         if (els.slotLens?.contains(event.target)) return;
@@ -584,21 +590,27 @@ function handlePlanSwitchChange(event) {
     refreshAfterPlanSwitch(publication);
 }
 
-function refreshAfterPlanSwitch(publication) {
+// keepDocente: troca vinda do resumo do ano, que continua no mesmo professor.
+function refreshAfterPlanSwitch(publication, { keepDocente = false } = {}) {
     buildLookups();
     state.publicTurmaIds = getPublishedTurmaIdsSet();
     state.docentesDisponiveis = collectPublishedTeachers();
     updateMetaChips();
 
     state.discente = { curso: '', turmaId: '', mes: '' };
-    state.docente = { nome: '', mes: '', totalHoras: null, view: state.docente?.view || 'calendar' };
     if (els.selCurso) els.selCurso.value = '';
-    if (els.inpDocente) els.inpDocente.value = '';
+    if (!keepDocente) {
+        state.docente = { nome: '', mes: '', totalHoras: null, resumo: null, highlightWeek: null, view: state.docente?.view || 'calendar' };
+        if (els.inpDocente) els.inpDocente.value = '';
+    }
+
+    const select = document.getElementById('pub-sel-plano');
+    if (select && publication?.key) select.value = publication.key;
 
     preencherCursos();
     syncDocenteInputState();
     syncTabUI();
-    renderActiveEmptyState();
+    if (!keepDocente) renderActiveEmptyState();
 
     try {
         const url = new URL(window.location.href);
@@ -652,8 +664,14 @@ function collectPublishedTeachers() {
         });
     }
 
-    (store.allocations || []).forEach((alloc) => {
-        extractTeacherNamesFromAllocation(alloc).forEach((name) => names.add(name));
+    // Todos os periodos publicados: quem so tem aula num PL futuro tambem aparece na busca.
+    const sources = state.publicPublications?.length
+        ? getDisplayPublications(state.publicPublications, state.activePublicationKey).map((pub) => pub.allocations)
+        : [store.allocations];
+    sources.forEach((allocations) => {
+        (allocations || []).forEach((alloc) => {
+            extractTeacherNamesFromAllocation(alloc).forEach((name) => names.add(name));
+        });
     });
 
     return [...names].sort((a, b) => collator.compare(a, b));
@@ -1113,6 +1131,8 @@ function selecionarDocente(nomeProfessor) {
     state.docente.nome = teacherName;
     state.docente.mes = '';
     state.docente.totalHoras = null;
+    state.docente.resumo = null;
+    state.docente.highlightWeek = null;
 
     if (els.inpDocente) els.inpDocente.value = teacherName;
     if (els.btnLimparDocente) els.btnLimparDocente.style.display = 'flex';
@@ -1133,6 +1153,8 @@ function resetDocenteState(clearInput) {
     state.docente.nome = '';
     state.docente.mes = '';
     state.docente.totalHoras = null;
+    state.docente.resumo = null;
+    state.docente.highlightWeek = null;
 
     if (clearInput && els.inpDocente) els.inpDocente.value = '';
     if (els.btnLimparDocente) els.btnLimparDocente.style.display = 'none';
@@ -1150,10 +1172,23 @@ function preencherMesesDocente() {
         emptyLabel: state.docente.nome ? 'Nenhum mes letivo configurado.' : 'Aguardando professor...',
         onSelect: (monthKey) => {
             state.docente.mes = monthKey;
+            state.docente.highlightWeek = null;
             renderActiveView();
         },
         enabled: !!state.docente.nome
     });
+
+    if (!state.docente.nome) return;
+    const resumoBtn = document.createElement('button');
+    resumoBtn.type = 'button';
+    resumoBtn.className = 'pub-pill pub-pill--resumo';
+    resumoBtn.textContent = 'Resumo do ano';
+    if (!state.docente.mes) resumoBtn.classList.add('active');
+    resumoBtn.addEventListener('click', () => {
+        highlightActiveButton(els.containerMesesDocente, resumoBtn);
+        abrirResumoDocente();
+    });
+    els.containerMesesDocente.prepend(resumoBtn);
 }
 
 function switchTab(tabName) {
@@ -1199,7 +1234,7 @@ function renderActiveView() {
     if (els.resultadoAgenda) els.resultadoAgenda.hidden = false;
 
     if (!state.docente.mes) {
-        renderActiveEmptyState();
+        renderResumoDocente();
         return;
     }
 
@@ -1286,9 +1321,305 @@ function renderAgendaDocente() {
             year: Number(ano),
             month: Number(mes)
         });
-        els.resultadoAgenda.innerHTML = buildResultContextMarkup('docente', { variant: 'calendar' }) + gridHtml;
+        els.resultadoAgenda.innerHTML = '<button type="button" class="resumo-voltar">&larr; Resumo do ano</button>'
+            + buildResultContextMarkup('docente', { variant: 'calendar' }) + gridHtml;
         scrollResultIntoView();
     }, 140);
+}
+
+// ===== Resumo do ano do docente =====
+// Uma linha por periodo letivo publicado, com as componentes do professor e
+// uma faixa de semanas (cada PL na sua propria escala, porque os PLs tem
+// duracoes muito diferentes). Clicar numa semana abre o calendario dela.
+
+function abrirResumoDocente() {
+    state.docente.mes = '';
+    state.docente.highlightWeek = null;
+    preencherMesesDocente();
+    renderActiveView();
+}
+
+function renderResumoDocente() {
+    fecharSlotLens(true);
+    fecharDayLens(true);
+    const token = ++renderSequence;
+    renderResultLoading('A montar o resumo do ano...');
+
+    window.setTimeout(() => {
+        if (token !== renderSequence) return;
+        const periodos = buildTeacherYearSummary(state.docente.nome);
+        state.docente.resumo = periodos;
+        els.resultadoAgenda.innerHTML = buildResumoMarkup(periodos);
+        scrollResultIntoView();
+    }, 140);
+}
+
+// Calcula cada PL com o mesmo motor do calendario (feriados e divisao entre
+// docentes ja aplicados), trocando o plano do store so durante a conta.
+function buildTeacherYearSummary(teacherName) {
+    const publications = state.publicPublications?.length
+        ? getDisplayPublications(state.publicPublications, state.activePublicationKey)
+        : [{
+            key: '',
+            periodo: store.settings.periodo,
+            termStart: store.settings.termStart,
+            termEnd: store.settings.termEnd,
+            allocations: store.allocations
+        }];
+    const teacherKey = normalizeText(teacherName);
+    const today = getTodayIso();
+    const saved = {
+        allocations: store.allocations,
+        termStart: store.settings.termStart,
+        termEnd: store.settings.termEnd,
+        periodo: store.settings.periodo
+    };
+
+    // PLs cadastrados (em curso ou futuros) que ainda nao tem nenhuma oferta
+    // publicada: aparecem como "ainda sem ofertas", diferente de "sem aulas".
+    const publishedRanges = new Set(publications.map((pub) => `${pub.termStart}|${pub.termEnd}`));
+    const naoPublicados = getOfficialPlanCandidates()
+        .filter((plan) => plan.termStart && plan.termEnd && plan.termEnd >= today)
+        .filter((plan) => !publishedRanges.has(`${plan.termStart}|${plan.termEnd}`))
+        .map((plan) => ({
+            publication: { key: '', periodo: plan.periodo, termStart: plan.termStart, termEnd: plan.termEnd },
+            naoPublicado: true,
+            isCurrent: plan.termStart <= today && today <= plan.termEnd,
+            weeks: [],
+            components: [],
+            totalAulas: 0
+        }));
+
+    try {
+        const calculados = publications
+            .filter((pub) => pub.termStart && pub.termEnd)
+            .map((pub) => {
+                store.allocations = Array.isArray(pub.allocations) ? pub.allocations : [];
+                store.settings.termStart = pub.termStart;
+                store.settings.termEnd = pub.termEnd;
+                store.settings.periodo = pub.periodo || saved.periodo;
+
+                const calendarData = getCalendarEvents(null, pub.termStart, pub.termEnd, teacherName);
+                const entries = [];
+                Object.entries(calendarData || {}).forEach(([date, events]) => {
+                    (events || []).forEach((ev) => {
+                        if (ev?.type === 'holiday') return;
+                        const disciplina = ev.disciplina || ev.title || '';
+                        entries.push({
+                            date,
+                            key: `${ev.turmaId || ''}|${normalizeText(disciplina)}|${ev.subGrupo || ''}`,
+                            disciplina,
+                            turmaId: ev.turmaId,
+                            subGrupo: ev.subGrupo,
+                            cor: ev.cor,
+                            aulas: calculateEventHours(ev),
+                            horario: getEventHorario(ev, date),
+                            chTotal: ev.ch,
+                            coDocentes: (Array.isArray(ev.docentes) ? ev.docentes : [])
+                                .map((d) => String(d?.nome || d || '').trim())
+                                .filter((nome) => nome && normalizeText(nome) !== teacherKey && normalizeText(nome) !== 'A DEFINIR')
+                        });
+                    });
+                });
+
+                return {
+                    publication: pub,
+                    isCurrent: pub.termStart <= today && today <= pub.termEnd,
+                    ...summarizeTeacherPeriod({ termStart: pub.termStart, termEnd: pub.termEnd, entries })
+                };
+            });
+        return [...calculados, ...naoPublicados]
+            .sort((a, b) => String(a.publication.termStart).localeCompare(String(b.publication.termStart)));
+    } finally {
+        store.allocations = saved.allocations;
+        store.settings.termStart = saved.termStart;
+        store.settings.termEnd = saved.termEnd;
+        store.settings.periodo = saved.periodo;
+    }
+}
+
+function formatDayMonth(iso) {
+    const match = String(iso || '').match(/^\d{4}-(\d{2})-(\d{2})$/);
+    return match ? `${match[2]}/${match[1]}` : '';
+}
+
+// Fim da semana para exibicao: o domingo nao tem aula, mostra ate sabado.
+function getWeekDisplayEnd(week) {
+    const date = new Date(`${week.end}T12:00:00`);
+    if (date.getDay() === 0 && week.end !== week.start) date.setDate(date.getDate() - 1);
+    return toIsoDate(date);
+}
+
+function buildResumoMarkup(periodos) {
+    const comAula = periodos.filter((p) => p.components.length);
+    const totalComponentes = comAula.reduce((n, p) => n + p.components.length, 0);
+    const totalAulas = periodos.reduce((n, p) => n + p.totalAulas, 0);
+
+    const badges = [
+        'Resumo do ano',
+        `${totalComponentes} componente${totalComponentes === 1 ? '' : 's'}`,
+        `${comAula.length} de ${periodos.length} período${periodos.length === 1 ? '' : 's'} com aula`,
+        `${totalAulas} horas-aula`
+    ];
+    const context = `
+        <div class="pub-result-context">
+            <div class="pub-result-eyebrow">Consulta Docente</div>
+            <h2 class="pub-result-title">${escapeHtml(state.docente.nome)}</h2>
+            <div class="pub-result-meta">
+                ${badges.map((badge) => `<span class="pub-result-badge">${escapeHtml(badge)}</span>`).join('')}
+            </div>
+        </div>`;
+
+    if (!periodos.length) {
+        return context + '<div class="pub-empty-state">Nenhum período letivo publicado.</div>';
+    }
+
+    return `${context}<div class="resumo-ano">${periodos.map(buildResumoPeriodoMarkup).join('')}</div>`;
+}
+
+function buildResumoPeriodoMarkup(periodo) {
+    const pub = periodo.publication;
+    const year = String(pub.termStart || '').slice(0, 4);
+    const titulo = [year, pub.periodo].filter(Boolean).join(' - ') || pub.label || 'Período';
+    const datas = `${formatIsoDateBR(pub.termStart)} a ${formatIsoDateBR(pub.termEnd)}`;
+    const selo = periodo.isCurrent ? '<span class="resumo-selo">Em curso</span>' : '';
+
+    if (!periodo.components.length) {
+        const aviso = periodo.naoPublicado ? 'Ainda sem ofertas publicadas' : 'Sem aulas neste período';
+        return `
+            <section class="resumo-pl is-vazio">
+                <header class="resumo-pl-head">
+                    <h3 class="resumo-pl-titulo">${escapeHtml(titulo)}</h3>
+                    <span class="resumo-pl-datas">${escapeHtml(datas)}</span>
+                    ${selo}
+                    <span class="resumo-pl-vazio">${aviso}</span>
+                </header>
+            </section>`;
+    }
+
+    return `
+        <section class="resumo-pl">
+            <header class="resumo-pl-head">
+                <h3 class="resumo-pl-titulo">${escapeHtml(titulo)}</h3>
+                <span class="resumo-pl-datas">${escapeHtml(datas)}</span>
+                ${selo}
+            </header>
+            ${periodo.components.map((comp) => buildResumoComponenteMarkup(comp, periodo)).join('')}
+        </section>`;
+}
+
+function buildResumoComponenteMarkup(comp, periodo) {
+    const pubKey = periodo.publication.key;
+    const turmaInfo = state.turmaById.get(String(comp.turmaId || '').trim());
+    const curso = turmaInfo?.sigla ? getCursoLabel(turmaInfo.sigla) : '';
+    const turma = [getTurmaLabel(comp.turmaId, comp.subGrupo), curso].filter(Boolean).join(' · ');
+
+    let carga = `${comp.aulas}h`;
+    if (comp.chTotal && comp.chTotal !== comp.aulas) carga += ` de ${comp.chTotal}h`;
+    if (comp.coDocentes.length) carga += ` · com ${comp.coDocentes.join(', ')}`;
+
+    const quando = [
+        `${formatIsoDateBR(comp.firstDate)} a ${formatIsoDateBR(comp.lastDate)}`,
+        comp.weekdays,
+        comp.horario ? `${comp.horario}${comp.turnos ? ` (${comp.turnos})` : ''}` : ''
+    ].filter(Boolean).join(' · ');
+
+    const total = periodo.weeks.length;
+    const semanas = periodo.weeks.map((week, i) => {
+        const w = comp.weekly[i] || { dias: 0, aulas: 0, inicio: '' };
+        const intervalo = `${formatDayMonth(week.start)} a ${formatDayMonth(getWeekDisplayEnd(week))}`;
+        const tip = w.dias
+            ? `Semana ${week.index} · ${intervalo} · ${w.dias} dia${w.dias === 1 ? '' : 's'} de aula · ${w.aulas} aula${w.aulas === 1 ? '' : 's'}`
+            : `Semana ${week.index} · ${intervalo} · sem aula`;
+        let cls = 'resumo-semana';
+        if (w.dias) cls += ' is-on';
+        if (i < total / 4) cls += ' tip-left';
+        else if (i >= total * 3 / 4) cls += ' tip-right';
+        return `<button type="button" class="${cls}" data-pub="${escapeHtmlAttr(pubKey)}" data-week="${i}" data-date="${escapeHtmlAttr(w.inicio)}" data-tip="${escapeHtmlAttr(tip)}" aria-label="${escapeHtmlAttr(tip)}"></button>`;
+    }).join('');
+
+    let lastMonth = '';
+    const meses = periodo.weeks.map((week) => {
+        const month = week.start.slice(0, 7);
+        let label = '';
+        if (month !== lastMonth) {
+            const date = new Date(`${week.start}T12:00:00`);
+            label = date.toLocaleString('pt-BR', { month: 'short' }).replace('.', '');
+            lastMonth = month;
+        }
+        return `<span>${escapeHtml(label)}</span>`;
+    }).join('');
+
+    const firstWeek = comp.weekly.findIndex((w) => w.dias > 0);
+
+    return `
+        <article class="resumo-comp" style="--comp-cor:${escapeHtmlAttr(comp.cor || '#cfe4d6')}">
+            <div class="resumo-comp-head">
+                <strong class="resumo-comp-nome">${escapeHtml(comp.disciplina)}</strong>
+                <span class="resumo-comp-turma">${escapeHtml(turma)}</span>
+            </div>
+            <div class="resumo-comp-info">
+                <span>${escapeHtml(carga)}</span>
+                <span>${escapeHtml(quando)}</span>
+            </div>
+            <div class="resumo-semanas" style="--semanas:${total}">${semanas}</div>
+            <div class="resumo-meses" style="--semanas:${total}" aria-hidden="true">${meses}</div>
+            <button type="button" class="resumo-ver-cal" data-pub="${escapeHtmlAttr(pubKey)}" data-week="${firstWeek}" data-date="${escapeHtmlAttr(comp.firstDate)}">ver no calendário &rarr;</button>
+        </article>`;
+}
+
+function desarmarSemanas(except = null) {
+    els.resultadoAgenda?.querySelectorAll('.resumo-semana.is-armed').forEach((el) => {
+        if (el !== except) el.classList.remove('is-armed');
+    });
+}
+
+// Mouse: passar por cima mostra o balao (CSS) e o clique abre o calendario.
+// Toque: o 1o toque mostra o balao, o 2o abre o calendario.
+function handleResumoClick(event) {
+    if (event.target.closest('.resumo-voltar')) {
+        abrirResumoDocente();
+        return;
+    }
+
+    const square = event.target.closest('.resumo-semana');
+    const link = event.target.closest('.resumo-ver-cal');
+    if (!square && !link) {
+        desarmarSemanas();
+        return;
+    }
+
+    if (square) {
+        const toque = !!window.matchMedia?.('(hover: none)').matches;
+        const vazia = !square.classList.contains('is-on');
+        if (vazia || (toque && !square.classList.contains('is-armed'))) {
+            desarmarSemanas(square);
+            if (toque) square.classList.toggle('is-armed');
+            return;
+        }
+    }
+
+    const target = square || link;
+    abrirCalendarioDaSemana(target.dataset.pub, Number(target.dataset.week), target.dataset.date);
+}
+
+function abrirCalendarioDaSemana(pubKey, weekIndex, date) {
+    const periodo = (state.docente.resumo || []).find((p) => p.publication.key === pubKey);
+    const week = periodo?.weeks?.[weekIndex];
+    if (!periodo || !week) return;
+
+    const publication = (state.publicPublications || []).find((pub) => pub.key === pubKey);
+    if (publication && publication.key !== state.activePublicationKey) {
+        state.activePublicationKey = publication.key;
+        applySelectedPublication(publication);
+        refreshAfterPlanSwitch(publication, { keepDocente: true });
+    }
+
+    const day = date || week.start;
+    state.docente.mes = day.slice(0, 7);
+    state.docente.highlightWeek = { start: week.start, end: week.end };
+    preencherMesesDocente();
+    renderActiveView();
 }
 
 function buildResultContextMarkup(mode, options = {}) {
@@ -2181,6 +2512,9 @@ function buildMonthlyCalendarHTML({ calendarData, year, month }) {
         let cls = 'month-cal-day';
         if (dow === 6) cls += ' is-weekend'; // Saturday only
         if (isToday) cls += ' is-today';
+        // Semana clicada no resumo do ano.
+        const destaque = state.docente.highlightWeek;
+        if (destaque && destaque.start <= dateStr && dateStr <= destaque.end) cls += ' is-semana-destacada';
         const hasContent = isHoliday || classEvents.length > 0;
 
         grid += `<div class="${cls}" data-date="${dateStr}">`;
