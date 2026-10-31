@@ -1,5 +1,5 @@
 import { store } from './store.js??v=20261028a';
-import { getCalendarEvents } from './calendar.js??v=20260625v';
+import { getCalendarEvents } from './calendar.js';
 import { mapSlotToTurno } from './turns.js';
 import { addDaysISO, timeToMinutes, toISODate } from './date_utils_ui.js';
 import { normalizeConflictSlotLabel } from './turno_helpers.js';

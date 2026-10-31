@@ -1,5 +1,5 @@
 import { store } from './store.js??v=20261028a';
-import { getCalendarEvents } from './calendar.js??v=20260625v';
+import { getCalendarEvents } from './calendar.js';
 import { buildTeacherExecutionSnapshot, buildCanonicalOfferProjection } from './execution_engine.js';
 import { getHorariosByTurno, normalizeTurnoKey, getTurnoLetter, mapSlotToTurno } from './turns.js';
 import { vividHexColor } from './color_utils.js';

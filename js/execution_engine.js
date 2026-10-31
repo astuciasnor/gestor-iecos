@@ -164,14 +164,6 @@ function buildDocenteDisplayLabel(allocations = [], docentes = []) {
     return fallback || '';
 }
 
-function sortRegularAllocations(allocations = []) {
-    return allocations.slice().sort((left, right) => {
-        const dayDiff = (Number.parseInt(left?.diaSemana, 10) || 0) - (Number.parseInt(right?.diaSemana, 10) || 0);
-        if (dayDiff !== 0) return dayDiff;
-        return timeToMinutesSafe(left?.horario) - timeToMinutesSafe(right?.horario);
-    });
-}
-
 function shiftISODate(dateStr, days = 0) {
     const source = String(dateStr || '').trim();
     if (!/^\d{4}-\d{2}-\d{2}$/.test(source)) return '';
@@ -477,41 +469,6 @@ function collectTeacherSegmentsForGroup(group, calendarByTurma) {
         if (endDiff !== 0) return endDiff;
         return String(left.nome || '').localeCompare(String(right.nome || ''), 'pt-BR', { sensitivity: 'base' });
     });
-}
-
-export function buildExecutionSnapshotForAllocations(allocations = [], termStart = '', termEnd = '', docenteFilter = null) {
-    return buildExecutionContextForAllocations(allocations, termStart, termEnd, docenteFilter);
-}
-
-export function getUnifiedExecutionSnapshot(turmaId, termStart, termEnd) {
-    const allocations = filterExportableAllocations(
-        store.allocations.filter((allocation) => String(allocation?.turmaId || '') === String(turmaId || ''))
-    );
-    const { maps } = buildExecutionContextForAllocations(allocations, termStart, termEnd, null);
-    return maps;
-}
-
-export function getAllocationExecutionRangeMap(allocs, termStart, termEnd) {
-    const rangeMap = new Map();
-    const allocations = Array.isArray(allocs) ? allocs.filter(Boolean) : [];
-    if (allocations.length === 0) return rangeMap;
-
-    const { maps } = buildExecutionContextForAllocations(allocations, termStart, termEnd, null);
-    const builtRangeMap = buildRangeMapFromDates(maps.datesByAlloc, termStart, termEnd);
-
-    allocations.forEach((alloc) => {
-        if (!alloc?.id) return;
-        rangeMap.set(alloc.id, builtRangeMap.get(alloc.id) || {
-            start: termStart || '',
-            end: termEnd || termStart || ''
-        });
-    });
-
-    return rangeMap;
-}
-
-export function getNonIntensiveExecutionRangeMap(allocs, termStart, termEnd) {
-    return getAllocationExecutionRangeMap(allocs, termStart, termEnd);
 }
 
 export function buildCanonicalOfferProjection({

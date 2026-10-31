@@ -69,59 +69,66 @@ Regras:
 
 ```text
 /gestor-iecos
-|-- _backups/
-|-- css/
-|   `-- style.css
-|-- dados/
-|   `-- planilha_base.xlsx
-|-- docs/
-|   |-- implementacao_futura_publicacao_pl.html
-|   `-- manual_desenvolvedor.md
+|-- api/                  API PHP do servidor da UFPA (modo 'ufpa')
+|-- css/style.css
+|-- dados/                planilha_base.xlsx (fonte do dados_app.json) e modelo de cadastro de curso
+|-- docs/                 manual, planos e PDFs de referencia
 |-- img/
-|-- js/
-|   |-- academic_rules.mjs
-|   |-- agenda_publica.js
-|   |-- calendar.js
-|   |-- execution_engine.js
-|   |-- gantt_bidimensional.js
-|   |-- main.js
-|   |-- plan_storage.js
-|   |-- serialization.js
-|   |-- sigaa_metadata.js
-|   |-- store.js
-|   |-- ui.js
-|   `-- utils.js
-|-- publicacoes/
-|   |-- catalogo_publicacoes.json
-|   `-- publicacao_config.json
-|-- tests/
-|   `-- academic_rules.test.mjs
-|-- tools/
-|   |-- convert_data.py
-|   |-- publish_online.py
-|   `-- requirements.txt
+|-- js/                   codigo do app (modulos ES, sem etapa de build)
+|-- mysql/schema.sql      banco do servidor da UFPA (MariaDB)
+|-- publicacoes/          configuracao e catalogo da agenda publica
+|-- supabase/schema.sql   banco do modo 'supabase'
+|-- tests/                testes automatizados (node --test)
+|-- tools/                scripts Python (dados, publicacao, cadastro de curso) e servidor_local/ (Docker)
 |-- agenda_publica.html
 |-- alocacoes_publicas.json
 |-- dados_app.json
 |-- index.html
-|-- plano_refatoracao_ampla.html
+|-- package.json          so para "npm test" (o app nao usa npm)
 `-- README.md
 ```
 
-### Responsabilidades principais
+### Modulos do app (`js/`)
 
-- `tools/convert_data.py`: converte o Excel institucional para `dados_app.json`.
-- `js/plan_storage.js`: normalizacao de periodo letivo e persistencia por plano.
-- `js/execution_engine.js`: calculo central da execucao real por faixa/data/slot.
-- `js/academic_rules.mjs`: regras compartilhadas de plano, ocorrencias, exportacao e inicializacao da grade.
-- `js/store.js`: estado principal, leitura do JSON e gravação das alocacoes no plano ativo.
-- `js/ui.js`: fluxo principal da interface, Grade Semanal, Lista de Ofertas, conflitos e exportacoes.
-- `js/calendar.js`: renderizacao de calendario a partir da execucao real.
-- `js/gantt_bidimensional.js`: renderizacao do Gantt docente bidimensional.
-- `js/agenda_publica.js`: runtime da agenda publica unificada (multi-PL, consulta docente/discente publicada).
-- `tools/publish_online.py`: validacao, copia e eventual push do arquivo publico.
-- `tests/academic_rules.test.mjs`: suite automatizada do nucleo canonico.
-- `js/main.js`: bootstrap, importacao/exportacao e publicacao.
+Nucleo (sem DOM, testavel no Node):
+
+- `academic_rules.mjs`: regras compartilhadas de plano, slots, ocorrencias e exportacao.
+- `execution_engine.js`: calculo central da execucao real por faixa/data/slot.
+- `conflicts.js`: deteccao de choque de docente sobre a execucao real.
+- `quadro_horario.mjs`: conversao de ofertas entre quadros de horario (regimes).
+- `sync_diff.mjs`: regras puras da sincronizacao (o que enviar, o que aceitar do servidor).
+- `plan_storage.js`: normalizacao de periodo letivo e chaves de persistencia por plano.
+- `utils.js`, `turns.js`, `date_utils_ui.js`, `color_utils.js`: utilitarios de data, turno e cor.
+
+Estado e dados:
+
+- `store.js`: estado principal, leitura do `dados_app.json` e gravacao das alocacoes no plano ativo.
+- `weekly_state.js`: estado da aba Alocar Componentes (faixas, desenho, edicao).
+- `serialization.js`: backup/importacao JSON e payload da agenda publica.
+- `sigaa_metadata.js`: payload de metadados para cadastro no SIGAA.
+- `allocation_helpers.js`, `curso_turma_helpers.js`, `turno_helpers.js`, `faixa_utils.js`: consultas sobre ofertas, turmas, turnos e faixas.
+
+Interface:
+
+- `main.js`: bootstrap, importacao/exportacao e publicacao.
+- `ui.js`: fluxo principal (Alocar Componentes, Lista de Ofertas, exportacoes). Ainda e o maior arquivo; ver `docs/plano_refatoracao.md`.
+- `calendar.js`, `calendarios_ui.js`: calendarios da turma e do docente.
+- `gantt_ui.js`: Gantt do docente.
+- `conflitos_ui.js`: painel de conflitos globais de docentes.
+- `ui_feedback.js`: toasts, mensagens e botoes de copiar.
+- `agenda_publica.js`: runtime da agenda publica (multi-PL, consulta docente/discente).
+
+Modo online:
+
+- `backend_config.js`: escolhe o modo (`local`, `supabase`, `ufpa`) e guarda URLs/chave publica.
+- `sync_remoto.js`: sincronizacao; fala com o servidor por `remoto_supabase.js` ou `remoto_ufpa.js` (mesma interface).
+- `acesso_ui.js`: tela de login e barra de status da sincronizacao.
+
+Scripts (`tools/`):
+
+- `convert_data.py`: converte o Excel institucional para `dados_app.json`.
+- `publish_online.py`: validacao, copia e eventual push do arquivo publico.
+- `create_course_template.py`, `validate_course_import.py`, `merge_course_import.py`: cadastro de curso novo pela planilha modelo.
 
 ---
 
@@ -241,7 +248,7 @@ A Lista de Ofertas tem funcao administrativa e de revisao. O comportamento esper
 
 - **Calendario da Turma**: leitura do cronograma final da turma, com avisos de mudanca de turno quando houver aula excepcional fora do turno nativo.
 - **Visao do Professor / Calendario Docente**: leitura e auditoria de ocupacao docente com a mesma base canonica e badges de turno.
-- **Gantt bidimensional**: leitura temporal do semestre por docente/equipe, com turnos reais, detalhes de barra e mesmos recortes usados nos calendarios.
+- **Gantt do docente**: leitura temporal do semestre por docente, com turnos reais e os mesmos recortes usados nos calendarios.
 - **Agenda publica**: `agenda_publica.html` e a agenda unica em producao, em arquivo unico multi-PL com seletor de plano; a agenda discente legada foi removida em 07/2026.
 
 Essas telas devem consumir a mesma base canonica de execucao.
@@ -391,20 +398,22 @@ Estado atual da publicacao:
 
 ### 9.4. Testes automatizados
 
-Suite principal atual:
+Todas as suites (Node 22 ou mais novo):
 
 ```bash
-node --test tests/academic_rules.test.mjs
+npm test
+# ou, sem npm:
+node --test "tests/*.test.mjs"
 ```
 
 Cobertura atual mais importante:
 
-- resolucao de periodo letivo ativo;
-- reconciliacao de turma ao trocar de PL;
-- inicializacao e reset da Grade Semanal;
-- ocorrencias, truncamento final e limites de semestre;
-- turnos ativos de docente;
-- filtro de exportacao e payload SIGAA.
+- `academic_rules`: periodo letivo ativo, troca de PL, Grade Semanal, ocorrencias, limites de semestre, turnos de docente, filtro de exportacao e payload SIGAA;
+- `allocation_engine`: execucao real por faixas;
+- `slot_overlap`: choque de horarios entre quadros diferentes;
+- `quadro_horario`: conversao de ofertas entre quadros;
+- `weekly_state`: estado da aba Alocar Componentes;
+- `sync_diff`: regras da sincronizacao com o servidor.
 
 Uso recomendado nas limpezas graduais:
 
@@ -428,9 +437,4 @@ Direcoes ja assumidas:
 - fazer remocoes de arquivos em ciclos pequenos, sempre acompanhadas de teste e commit;
 - sobre a base atual, priorizar refinamento a mudanca substancial.
 
-Itens ainda em observacao tecnica:
-
-- limpeza final de nomenclaturas internas legadas;
-- extracao mais explicita do motor canonico de execucao;
-- fatiamento do `js/ui.js` por responsabilidade;
-- ampliacao do QA automatizado para publicacao, agenda publica e fluxos criticos da UI.
+Os proximos passos ficam em `docs/plano_refatoracao.md`.

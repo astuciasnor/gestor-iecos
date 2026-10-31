@@ -1,0 +1,12 @@
+{
+  "name": "cardume-gestor-iecos",
+  "private": true,
+  "description": "Cardume - Planejador Academico IECOS/UFPA. O app roda direto no navegador (sem build); este arquivo existe so para os testes.",
+  "type": "module",
+  "scripts": {
+    "test": "node --test \"tests/*.test.mjs\""
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

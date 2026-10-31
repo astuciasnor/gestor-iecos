@@ -1,0 +1,22 @@
+# Raiz do Cardume no servidor da UFPA (Apache). O GitHub Pages ignora este arquivo.
+# Se o site der "Erro 500" logo depois de enviar este arquivo, o servidor nao
+# aceita alguma das regras abaixo: apague o .htaccess da raiz e o site volta.
+
+Options -Indexes
+
+# O app usa modulos .mjs; Apache antigo pode servi-los com tipo errado e o
+# navegador se recusa a carregar o app.
+AddType text/javascript .mjs
+
+# O navegador sempre confere se o arquivo mudou (resposta curta 304 quando nao
+# mudou). Assim todos pegam a versao nova do app sem precisar limpar o cache.
+<IfModule mod_headers.c>
+    <FilesMatch "\.(html|js|mjs|css|json)$">
+        Header set Cache-Control "no-cache"
+    </FilesMatch>
+</IfModule>
+
+# Pastas e arquivos de trabalho nao ficam publicos, mesmo se enviados por engano.
+RedirectMatch 404 ^/(\.git|\.vscode|\.venv|dados|docs|mysql|supabase|tests|tools)(/|$)
+RedirectMatch 404 \.(md|py|sql)$
+RedirectMatch 404 ^/package\.json$

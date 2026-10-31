@@ -1,9 +1,7 @@
 import { store } from './store.js??v=20261028a';
-import { getCalendarEvents } from './calendar.js??v=20260625v';
-import { isDateOverlap } from './utils.js';
+import { getCalendarEvents } from './calendar.js';
 import { timeToMinutes } from './date_utils_ui.js';
 import {
-    isFaixaAllocation,
     isPendingAllocation,
     getAllocationTeachersForConflict
 } from './allocation_helpers.js';
@@ -14,101 +12,6 @@ import { renderTeacherCalendar } from './calendarios_ui.js';
 
 // Ref DOM de nivel de modulo (modulo deferred, DOM pronto).
 const selViewDocente = document.getElementById('sel-view-docente');
-
-// ==== NOVO MOTOR: AUDITORIA GLOBAL DE PROFESSORES ====
-export function detectGlobalTeacherConflicts() {
-    // Retorna Map<nomeDocente, [{dia, horario, dataInicio, discA, turmaA, discB, turmaB}]>
-    const conflictMap = new Map();
-    const allocs = store.allocations;
-
-    function getInvolvedTeachers(alloc) {
-        if (alloc.docentes && alloc.docentes.length > 0) return alloc.docentes.map(d => d.nome).filter(n => n && n.toUpperCase() !== 'A DEFINIR');
-        if (alloc.docente && alloc.docente.toUpperCase() !== 'A DEFINIR') return [alloc.docente];
-        return [];
-    }
-
-    const diasNomes = ['', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
-
-    for (let i = 0; i < allocs.length; i++) {
-        for (let j = i + 1; j < allocs.length; j++) {
-            const a = allocs[i];
-            const b = allocs[j];
-
-            if (String(a.turmaId) === String(b.turmaId) && a.disciplina === b.disciplina && a.modo === b.modo) continue;
-
-            const teachersA = getInvolvedTeachers(a);
-            const teachersB = getInvolvedTeachers(b);
-            const sharedTeachers = teachersA.filter(t => teachersB.includes(t));
-
-            if (sharedTeachers.length === 0) continue;
-
-            const startA = a.dataInicio || store.settings.termStart;
-            const endA = a.dataFim || store.settings.termEnd;
-            const startB = b.dataInicio || store.settings.termStart;
-            const endB = b.dataFim || store.settings.termEnd;
-
-            if (!isDateOverlap(startA, endA, startB, endB)) continue;
-
-            // Data em que o conflito começa = o maior dos dois starts
-            const dataConflito = startA > startB ? startA : startB;
-
-            let isSlotConflict = false;
-            let diaConflito = '';
-            let horarioConflito = '';
-
-            if (!isFaixaAllocation(a) && !isFaixaAllocation(b)) {
-                if (parseInt(a.diaSemana) === parseInt(b.diaSemana) && a.horario === b.horario) {
-                    isSlotConflict = true;
-                    diaConflito = diasNomes[parseInt(a.diaSemana)] || a.diaSemana;
-                    horarioConflito = a.horario;
-                }
-            } else if (isFaixaAllocation(a) && isFaixaAllocation(b)) {
-                if (a.horariosOcupados && b.horariosOcupados) {
-                    const sharedSlots = a.horariosOcupados.filter(h => b.horariosOcupados.includes(h));
-                    if (sharedSlots.length > 0) {
-                        isSlotConflict = true;
-                        diaConflito = 'Faixas';
-                        horarioConflito = sharedSlots.slice(0, 2).join(', ');
-                    }
-                }
-            } else {
-                const intAlloc = isFaixaAllocation(a) ? a : b;
-                const regAlloc = isFaixaAllocation(a) ? b : a;
-                const regDay = parseInt(regAlloc.diaSemana);
-
-                // Fallback de retrocompatibilidade
-                const diasPermitidos = Array.isArray(intAlloc.diasMarcados) ? intAlloc.diasMarcados : (intAlloc.usaSabado ? [1, 2, 3, 4, 5, 6] : [1, 2, 3, 4, 5]);
-
-                const isIntDayActive = diasPermitidos.includes(regDay);
-                if (isIntDayActive && intAlloc.horariosOcupados && intAlloc.horariosOcupados.includes(regAlloc.horario)) {
-                    isSlotConflict = true;
-                    diaConflito = diasNomes[regDay] || regDay;
-                    horarioConflito = regAlloc.horario;
-                }
-            }
-
-            if (isSlotConflict) {
-                const detail = {
-                    dia: diaConflito,
-                    horario: horarioConflito,
-                    dataInicio: dataConflito,
-                    discA: `${getTurmaLabel(a.turmaId)} – ${a.disciplina}`,
-                    discB: `${getTurmaLabel(b.turmaId)} – ${b.disciplina}`,
-                };
-                sharedTeachers.forEach(t => {
-                    if (!conflictMap.has(t)) conflictMap.set(t, []);
-                    // Evitar duplicatas exatas
-                    const existing = conflictMap.get(t);
-                    const isDup = existing.some(e => e.dia === detail.dia && e.horario === detail.horario &&
-                        ((e.discA === detail.discA && e.discB === detail.discB) ||
-                            (e.discA === detail.discB && e.discB === detail.discA)));
-                    if (!isDup) existing.push(detail);
-                });
-            }
-        }
-    }
-    return conflictMap;
-}
 
 export function detectGlobalTeacherConflictsStable() {
     const conflictMap = new Map();

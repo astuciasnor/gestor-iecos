@@ -1,10 +1,10 @@
 import { store } from './store.js??v=20261028a';
-import { getTurnoLetter, mapSlotToTurno, normalizeTurnoKey, getHorariosByTurno } from './turns.js';
+import { getTurnoLetter, mapSlotToTurno } from './turns.js';
 import { normalizePeriodo as normalizePeriodoLetivoCode } from './plan_storage.js';
-import { getCalendarEvents } from './calendar.js??v=20260625v';
-import { countBusinessDays, countWeekdaysInPeriod, addBusinessDays, isDateOverlap, calculateEndDateByWeekday } from './utils.js';
+import { getCalendarEvents } from './calendar.js';
+import { isDateOverlap } from './utils.js';
 import { weeklyState } from './weekly_state.js';
-import { buildTeacherExecutionSnapshot, buildCanonicalOfferProjection } from './execution_engine.js';
+import { buildCanonicalOfferProjection } from './execution_engine.js';
 import { buildSigaaMetadataPayload, validateSigaaMetadataPayload } from './sigaa_metadata.js';
 import { parseBackupDataFile, extractImportPlanMeta } from './serialization.js';
 import {
@@ -16,43 +16,27 @@ import {
 } from './ui_feedback.js';
 import {
     normalizeHexColor,
-    hexToRgb,
     adjustHexColor,
     hexToRgba,
-    rgbToHsl,
-    hslToRgb,
     vividHexColor
 } from './color_utils.js';
 import {
-    getAllocationModo,
     isFaixaAllocation,
     isPriorityRegularAllocation,
-    isRegularAllocation,
     isScheduledRegularAllocation,
     isPendingAllocation,
     normalizeTeacherNameForMatch,
-    teacherNamesMatch,
-    allocationHasTeacherMatch,
     getDocenteShortLabel,
-    calculateTeacherTotalCH,
     getAllocationTeachersForConflict
 } from './allocation_helpers.js';
 import {
     normalizeConflictSlotLabel,
-    normalizeTurnoOfertaKey,
-    formatTurnoOfertaLabel,
     getAvailableTurnoOfertaOptions,
     resolveTurnoOfertaValue,
-    getTurnoNormalizedFromLetter,
-    getTurnoValueFromLetter,
-    getShiftChangeLabel,
-    getNativeTurnoValueForAllocation,
     cleanHorarioLabel,
-    formatIntervaloLabel,
     isTurnoDividerSlot,
     buildHorariosForUI,
-    getShiftChangeMeta,
-    getCalendarShiftBadgeHTML
+    getShiftChangeMeta
 } from './turno_helpers.js';
 import {
     getDisciplinaCHGlobal,
@@ -64,8 +48,6 @@ import {
     getPrintAcademicMetaLine
 } from './curso_turma_helpers.js';
 import {
-    resolveTeacherShiftForSlot,
-    getGanttTurnoConfigs,
     getGanttTurnoCode,
     renderGanttChart
 } from './gantt_ui.js';
@@ -78,27 +60,20 @@ import {
 } from './conflitos_ui.js';
 import {
     shouldIgnoreTurmaEventForCandidate,
-    buildTurmaOccupiedSlotsByDate,
     normalizeDrawnSlotsByDay,
     normalizeFaixaEntry,
     getNormalizedIntensiveFaixas,
-    getActiveFaixaForDate,
     getIntensiveSlotsForDate,
     computeIntensiveExecution,
     buildFaixaHoursSummaryFromExecution,
     getExecutionUsedDates,
     getExecutionSlotsForDate,
-    buildSortedSlotSignature,
-    getFaixaSlotsForDay,
-    buildStoredExecutionSnapshot,
-    buildComparableFaixasSignature,
     resolveEditableFaixasFromStoredExecution,
     alignFaixasToExecutionEnd,
     buildFinalAdjustmentFaixaSuggestion
 } from './faixa_utils.js';
 import {
     timeToMinutes,
-    shortDayName,
     shiftISODate,
     isValidISODateValue,
     diffDaysISO,
@@ -112,18 +87,11 @@ import {
     formatDateBR
 } from './date_utils_ui.js';
 import {
-    buildSigaaExportPayload,
-    computeRemainingFractionalHours,
-
-    findFirstDateWithAvailableSlot,
-    filterExportableAllocations,
-    generateAllocationOccurrences,
     initializeWeeklyScheduleForTurma,
     reconcileTurmaSelectionAfterPLChange,
     resetWeeklyViewOnTurmaChange,
     resolveActiveAcademicPeriod,
-    slotLabelsOverlap,
-    validateOccurrenceWithinSemesterBounds
+    slotLabelsOverlap
 } from './academic_rules.mjs';
 
 const gridContainer = document.getElementById('weekly-grid');
@@ -1859,11 +1827,6 @@ function applyFaixasConfigToSidebar(faixasConfig = []) {
     applyFaixaDateAutofill();
 }
 
-function getActiveDrawingFaixaRange() {
-    if (!drawingFaixaIndex) return null;
-    return getFaixaRangeFromUI(parseInt(drawingFaixaIndex, 10));
-}
-
 function getLastValidFaixaFromUI() {
     const faixas = [];
 
@@ -1894,31 +1857,6 @@ function getLastValidFaixaFromUI() {
     });
 
     return faixas.length > 0 ? faixas[faixas.length - 1] : null;
-}
-
-function getLastValidAllocationEndForCurrentTurma() {
-    if (!store.selectedTurma || !Array.isArray(store.allocations)) return '';
-
-    let latestEnd = '';
-
-    store.allocations.forEach((alloc) => {
-        if (String(alloc?.turmaId) !== String(store.selectedTurma)) return;
-        if (isPendingAllocation(alloc)) return;
-
-        let candidateEnd = '';
-        if (isFaixaAllocation(alloc)) {
-            const faixas = getNormalizedIntensiveFaixas(alloc);
-            const lastFaixa = faixas.length > 0 ? faixas[faixas.length - 1] : null;
-            candidateEnd = String(lastFaixa?.fim || lastFaixa?.inicio || alloc?.dataFim || alloc?.dataInicio || '').trim();
-        } else {
-            candidateEnd = String(alloc?.dataFim || alloc?.dataInicio || '').trim();
-        }
-
-        if (!isValidISODateValue(candidateEnd)) return;
-        if (!latestEnd || candidateEnd > latestEnd) latestEnd = candidateEnd;
-    });
-
-    return latestEnd;
 }
 
 function setComponentStartSelectionMode(mode = 'auto') {
@@ -2163,6 +2101,12 @@ function isGapAdvisoryMuted() {
     } catch (e) {
         return false;
     }
+}
+
+// "Ciente": esconde a nota so para ESTE gap; um gap em outra data volta a avisar.
+function dismissGapAdvisory() {
+    gapAdvisoryDismissedDate = lastStartSuggestion?.gapBefore?.date || '';
+    updateGapAdvisory();
 }
 
 function muteGapAdvisory() {
@@ -2991,6 +2935,8 @@ function setupFaixaControls() {
     setupFaixaQuickActions();
     document.getElementById('btn-faixa-auto-undo')?.addEventListener('click', undoFaixaAutoCreation);
     document.getElementById('btn-faixa-auto-fix')?.addEventListener('click', mergeFaixaAutoCreationIntoPrevious);
+    document.getElementById('btn-gap-ack')?.addEventListener('click', dismissGapAdvisory);
+    document.getElementById('btn-gap-mute')?.addEventListener('click', muteGapAdvisory);
     for (let i = 1; i <= 3; i++) {
         const iniEl = document.getElementById(`inp-data-inicio-f${i}`);
         const fimEl = document.getElementById(`inp-data-fim-f${i}`);

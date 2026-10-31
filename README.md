@@ -11,6 +11,7 @@ Links publicos:
 Documentacao tecnica:
 - [`docs/manual_desenvolvedor.md`](docs/manual_desenvolvedor.md)
 - [`docs/plano_banco_dados_e_cadastro.md`](docs/plano_banco_dados_e_cadastro.md)
+- [`docs/plano_refatoracao.md`](docs/plano_refatoracao.md) (estado do codigo e proximos passos)
 
 ---
 
@@ -22,10 +23,10 @@ Documentacao tecnica:
 - **Motor canonico por faixas:** toda oferta e tratada por datas, slots e execucao real, sem depender da UX legada por tipo.
 - **Datas das faixas como referencia oficial:** a `Faixa 1` nasce por sugestao automatica, mas a edicao oficial da data e feita pelos mini calendarios das faixas.
 - **Turnos e sabado integrados ao motor:** mudancas de turno, sabado de manha e avisos `Atenção Turno` sao refletidos na aba Alocar Componentes, calendarios, agendas e Gantt.
-- **Gantt bidimensional por docente:** leitura temporal mais clara, com turnos reais, detalhes de barra e mesma base de execucao usada nos calendarios.
+- **Gantt por docente:** leitura temporal do semestre, com turnos reais e a mesma base de execucao usada nos calendarios.
 - **Agenda publica:** `agenda_publica.html` e a pagina oficial de publicacao das grades.
 - **Exportacao, SIGAA e publicacao online:** backup, exportacao institucional e `alocacoes_publicas.json` partem do plano ativo.
-- **Base inicial de testes automatizados:** a suite `tests/academic_rules.test.mjs` cobre o nucleo atual do motor canonico.
+- **Testes automatizados:** `npm test` roda as suites de `tests/` (motor canonico, faixas, conflitos de horario, quadros, estado da grade e sincronizacao).
 
 ---
 
@@ -198,6 +199,10 @@ where email = 'pessoa@ufpa.br';
   mudancas a cada 5 s (30 s com a aba em segundo plano).
 - Senhas vindas do Supabase (bcrypt `$2a$`) funcionam e sao convertidas ao
   formato do PHP no primeiro login.
+- `.htaccess` da raiz: tipo correto para os `.mjs`, cache sempre conferido
+  (todos pegam a versao nova sem limpar o cache) e pastas de trabalho
+  (`tools/`, `mysql/`, `docs/`...) fora do ar. Se o site der erro 500 depois de
+  envia-lo, apague esse arquivo.
 - Teste local igual ao servidor (Docker): `tools/servidor_local/docker-compose.yml`
   (instrucoes no proprio arquivo); abrir `http://localhost:8080/?backend=ufpa`.
 
@@ -231,10 +236,12 @@ O arquivo publico e unico e guarda varios planos (`publications`). A cada public
 
 ## Testes
 
-Suite automatizada principal do nucleo canonico:
+Todas as suites (Node 22 ou mais novo; o app em si nao usa npm):
 
 ```bash
-node --test tests/academic_rules.test.mjs
+npm test
+# ou, sem npm:
+node --test "tests/*.test.mjs"
 ```
 
 Uso recomendado nas limpezas graduais:
@@ -252,8 +259,8 @@ Diretrizes ja consolidadas:
 
 - motor canonico por faixas em producao;
 - mudancas de turno funcionando no app e nas agendas;
-- Gantt bidimensional validado;
-- agendas publica e discente funcionando em desktop e celular;
+- Gantt do docente validado;
+- agenda publica (consulta docente e discente) funcionando em desktop e celular;
 - publicacao online validada com `publish_online.py`;
-- agenda discente legada preservada durante a transicao;
+- modo online (Supabase) em uso pelas coordenacoes; API do servidor da UFPA pronta, aguardando a VPN;
 - limpezas e remocoes devem continuar em ciclos pequenos, sempre com teste e commit.
