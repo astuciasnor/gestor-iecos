@@ -1420,10 +1420,11 @@
         .resumo-comp-nome { color: var(--pub-ink); font-size: 0.92rem; letter-spacing: 0.01em; }
         .resumo-comp-turma { color: var(--pub-muted); font-size: 0.82rem; font-weight: 700; }
         .resumo-comp-info { display: flex; flex-direction: column; gap: 2px; margin-top: 4px; color: #3d5548; font-size: 0.84rem; }
-        .resumo-semanas, .resumo-meses {
-            display: grid; grid-template-columns: repeat(var(--semanas), minmax(0, 1fr)); gap: 3px;
+        /* --gap tambem entra na conta da posicao das linhas dos meses (agenda_publica.js). */
+        .resumo-faixa { --gap: 3px; position: relative; margin-top: 12px; }
+        .resumo-semanas {
+            display: grid; grid-template-columns: repeat(var(--semanas), minmax(0, 1fr)); gap: var(--gap);
         }
-        .resumo-semanas { margin-top: 10px; }
         .resumo-semana {
             position: relative; height: 16px; padding: 0; border: 1px solid var(--pub-line);
             border-radius: 4px; background: #fff; cursor: default;
@@ -1447,8 +1448,14 @@
             .resumo-semana:hover::after { opacity: 0; visibility: hidden; }
             .resumo-semana.is-armed::after { opacity: 1; visibility: visible; }
         }
-        .resumo-meses { margin-top: 3px; color: var(--pub-muted); font-size: 0.68rem; }
-        .resumo-meses span { white-space: nowrap; overflow: visible; }
+        .resumo-meses { position: relative; height: 1.15em; margin-top: 3px; color: var(--pub-muted); font-size: 0.68rem; }
+        .resumo-mes-rotulo { position: absolute; top: 0; padding-left: 4px; white-space: nowrap; }
+        .resumo-mes-rotulo.is-primeiro { padding-left: 0; }
+        /* Dia 1o de cada mes; nao bloqueia o clique nas semanas. */
+        .resumo-mes-linha {
+            position: absolute; top: -4px; bottom: 0; width: 0; margin-left: -1px;
+            border-left: 2px dotted #2e7d4f; pointer-events: none;
+        }
         .resumo-ver-cal {
             margin-top: 8px; padding: 0; border: 0; background: none; color: #004e28;
             font-weight: 800; font-size: 0.82rem; cursor: pointer;
@@ -1459,7 +1466,7 @@
             .resumo-pl { padding: 12px; }
             .resumo-pl-vazio { margin-left: 0; width: 100%; }
             .resumo-semana { height: 14px; }
-            .resumo-semanas, .resumo-meses { gap: 2px; }
+            .resumo-faixa { --gap: 2px; }
         }
 
         @media print {
@@ -1622,7 +1629,7 @@
     <div id="slot-lens" class="slot-lens" hidden></div>
     <div id="day-lens" class="day-lens" hidden></div>
 
-    <script type="module" src="js/agenda_publica.js?v=20261031b"></script>
+    <script type="module" src="js/agenda_publica.js?v=20261031c"></script>
 </body>
 
 </html>

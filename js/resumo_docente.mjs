@@ -40,6 +40,30 @@ export function findWeekIndex(weeks, iso) {
   return weeks.findIndex((week) => week.start <= iso && iso <= week.end);
 }
 
+// Onde cai o dia 1o de cada mes na faixa de semanas: semana e fracao dela
+// (0 = no comeco da semana, 0.5 = no meio). O mes em que o PL comeca nao tem
+// marca: o PL ja comeca no meio dele.
+export function buildMonthMarkers(weeks = []) {
+  if (!weeks.length) return [];
+  const first = weeks[0].start;
+  const last = weeks[weeks.length - 1].end;
+  const markers = [];
+  let [year, month] = first.split('-').map(Number);
+  for (;;) {
+    month += 1;
+    if (month > 12) { month = 1; year += 1; }
+    const iso = `${year}-${String(month).padStart(2, '0')}-01`;
+    if (iso > last) break;
+    const weekIndex = findWeekIndex(weeks, iso);
+    if (weekIndex < 0) continue;
+    const week = weeks[weekIndex];
+    const span = (isoToUtc(week.end) - isoToUtc(week.start)) / DAY_MS + 1;
+    const fraction = (isoToUtc(iso) - isoToUtc(week.start)) / DAY_MS / span;
+    markers.push({ weekIndex, fraction, month: iso.slice(0, 7) });
+  }
+  return markers;
+}
+
 // [1,2,3,4,5] -> "seg a sex"; [2,4] -> "ter e qui"; [1,3,5] -> "seg, qua e sex".
 export function formatWeekdays(days = []) {
   const sorted = [...new Set(days)].filter((d) => d >= 1 && d <= 6).sort((a, b) => a - b);

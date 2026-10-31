@@ -2,7 +2,7 @@ import { store, normalizeLoadedAllocation } from './store.js??v=20261028a';
 import { getTurnoLetter } from './turns.js';
 import { getCalendarEvents } from './calendar.js';
 import { resolveActiveAcademicPeriod } from './academic_rules.mjs';
-import { summarizeTeacherPeriod } from './resumo_docente.mjs';
+import { buildMonthMarkers, summarizeTeacherPeriod } from './resumo_docente.mjs';
 
 const collator = new Intl.Collator('pt-BR', { sensitivity: 'base' });
 const PUBLIC_ASSET_VERSION = '20261028a';
@@ -1543,18 +1543,7 @@ function buildResumoComponenteMarkup(comp, periodo) {
         return `<button type="button" class="${cls}" data-pub="${escapeHtmlAttr(pubKey)}" data-week="${i}" data-date="${escapeHtmlAttr(w.inicio)}" data-tip="${escapeHtmlAttr(tip)}" aria-label="${escapeHtmlAttr(tip)}"></button>`;
     }).join('');
 
-    let lastMonth = '';
-    const meses = periodo.weeks.map((week) => {
-        const month = week.start.slice(0, 7);
-        let label = '';
-        if (month !== lastMonth) {
-            const date = new Date(`${week.start}T12:00:00`);
-            label = date.toLocaleString('pt-BR', { month: 'short' }).replace('.', '');
-            lastMonth = month;
-        }
-        return `<span>${escapeHtml(label)}</span>`;
-    }).join('');
-
+    const { linhas, rotulos } = buildResumoMonthMarkup(periodo.weeks);
     const firstWeek = comp.weekly.findIndex((w) => w.dias > 0);
 
     return `
@@ -1567,10 +1556,46 @@ function buildResumoComponenteMarkup(comp, periodo) {
                 <span>${escapeHtml(carga)}</span>
                 <span>${escapeHtml(quando)}</span>
             </div>
-            <div class="resumo-semanas" style="--semanas:${total}">${semanas}</div>
-            <div class="resumo-meses" style="--semanas:${total}" aria-hidden="true">${meses}</div>
+            <div class="resumo-faixa" style="--semanas:${total}">
+                <div class="resumo-semanas">${semanas}</div>
+                <div class="resumo-meses" aria-hidden="true">${rotulos}</div>
+                ${linhas}
+            </div>
             <button type="button" class="resumo-ver-cal" data-pub="${escapeHtmlAttr(pubKey)}" data-week="${firstWeek}" data-date="${escapeHtmlAttr(comp.firstDate)}">ver no calendário &rarr;</button>
         </article>`;
+}
+
+function getMonthShortLabel(monthKey) {
+    const [year, month] = String(monthKey).split('-').map(Number);
+    return new Date(year, month - 1, 1, 12).toLocaleString('pt-BR', { month: 'short' }).replace('.', '');
+}
+
+// Linha pontilhada no dia 1o de cada mes e o nome do mes logo a direita dela.
+// As semanas sao colunas iguais separadas por --gap: a coluna k comeca em
+// k * (100% + gap) / N; dentro dela, a fracao do dia anda sobre a largura da coluna.
+function buildResumoMonthMarkup(weeks) {
+    const total = weeks.length;
+    if (!total) return { linhas: '', rotulos: '' };
+
+    const posicao = (k, f) => (f > 0
+        ? `calc((100% + var(--gap)) * ${k} / ${total} + (100% - var(--gap) * ${total - 1}) / ${total} * ${f.toFixed(4)})`
+        : `calc((100% + var(--gap)) * ${k} / ${total} - var(--gap) / 2)`);
+
+    // Rotulos que ficariam colados nao cabem: sai o do mes inicial (o PL so pega
+    // o fim dele); entre os demais, fica so a linha do mes apertado.
+    const DISTANCIA_MINIMA_PCT = 6;
+    const rotulos = [{ pct: 0, html: `<span class="resumo-mes-rotulo is-primeiro" style="left:0">${escapeHtml(getMonthShortLabel(weeks[0].start.slice(0, 7)))}</span>` }];
+    let linhas = '';
+    buildMonthMarkers(weeks).forEach((m) => {
+        const left = posicao(m.weekIndex, m.fraction);
+        linhas += `<span class="resumo-mes-linha" style="left:${left}" aria-hidden="true"></span>`;
+        const pct = ((m.weekIndex + m.fraction) / total) * 100;
+        const rotulo = { pct, html: `<span class="resumo-mes-rotulo" style="left:${left}">${escapeHtml(getMonthShortLabel(m.month))}</span>` };
+        const anterior = rotulos[rotulos.length - 1];
+        if (pct - anterior.pct >= DISTANCIA_MINIMA_PCT) rotulos.push(rotulo);
+        else if (anterior.pct === 0) rotulos[rotulos.length - 1] = rotulo;
+    });
+    return { linhas, rotulos: rotulos.map((r) => r.html).join('') };
 }
 
 function desarmarSemanas(except = null) {

@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
   buildTermWeeks,
+  buildMonthMarkers,
   formatWeekdays,
   summarizeHorarios,
   summarizeTeacherPeriod
@@ -62,4 +63,18 @@ test('agrupa as aulas por componente e por semana do PL', () => {
     { dias: 0, aulas: 0, inicio: '' },
     { dias: 1, aulas: 1, inicio: '2026-09-08' }
   ]);
+});
+
+test('marca o dia 1o de cada mes na semana certa, menos o mes em que o PL comeca', () => {
+  const weeks = buildTermWeeks('2026-08-24', '2026-12-23');
+  const marcas = buildMonthMarkers(weeks);
+  assert.deepEqual(marcas.map((m) => m.month), ['2026-09', '2026-10', '2026-11', '2026-12']);
+  // 01/09/2026 e terca: semana 2 (31/08 a 06/09), 1 dia depois do inicio de 7.
+  assert.equal(marcas[0].weekIndex, 1);
+  assert.equal(marcas[0].fraction, 1 / 7);
+  // 01/11/2026 e domingo: ultimo dia da semana 10 (26/10 a 01/11).
+  assert.equal(marcas[2].weekIndex, 9);
+  assert.equal(marcas[2].fraction, 6 / 7);
+  // PL que comeca no dia 1o: nao marca o proprio mes de inicio.
+  assert.deepEqual(buildMonthMarkers(buildTermWeeks('2027-03-01', '2027-04-10')).map((m) => [m.month, m.fraction]), [['2027-04', 3 / 7]]);
 });
