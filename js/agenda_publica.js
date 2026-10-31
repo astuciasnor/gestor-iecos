@@ -660,7 +660,7 @@ function collectPublishedTeachers() {
         state.publicCatalog.docentes.forEach((entry) => {
             const raw = typeof entry === 'string' ? entry : entry?.nome || entry?.docente;
             const name = String(raw || '').trim();
-            if (name && normalizeText(name) !== 'A DEFINIR') names.add(name);
+            if (isTeacherName(name)) names.add(name);
         });
     }
 
@@ -691,9 +691,14 @@ function extractTeacherNamesFromAllocation(alloc) {
         });
     }
 
-    return [...new Set(
-        names.filter((name) => name && normalizeText(name) !== 'A DEFINIR')
-    )];
+    return [...new Set(names.filter(isTeacherName))];
+}
+
+// Componente compartilhada guarda tambem um rotulo combinado ("Marileide /
+// Evaldo (Múltiplos)"); ele nao e um professor: cada nome vem da lista docentes.
+function isTeacherName(name) {
+    if (!name || normalizeText(name) === 'A DEFINIR') return false;
+    return !/\(m[uú]ltiplos\)/i.test(name) && !/\s\/\s/.test(name);
 }
 
 function updateMetaChips() {
