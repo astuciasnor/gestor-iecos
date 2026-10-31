@@ -4,6 +4,7 @@ import { normalizePeriodo as normalizePeriodoLetivoCode } from './plan_storage.j
 import { getCalendarEvents } from './calendar.js';
 import { isDateOverlap } from './utils.js';
 import { weeklyState } from './weekly_state.js';
+import { findPendentesCobertas, isPendenteJaAlocada } from './pendentes.mjs';
 import { buildCanonicalOfferProjection } from './execution_engine.js';
 import { buildSigaaMetadataPayload, validateSigaaMetadataPayload } from './sigaa_metadata.js';
 import { parseBackupDataFile, extractImportPlanMeta } from './serialization.js';
@@ -4499,8 +4500,7 @@ function initPeriodoLetivoETurno() {
     if (selTurnoOferta) {
         selTurnoOferta.addEventListener('change', () => {
             store.setTurnoOferta(selTurnoOferta.value);
-            renderWeeklyGrid();
-            renderOfertasList();
+            rerenderPlanBoundViews();
         });
     }
 }
@@ -5182,8 +5182,7 @@ function onCursoChange() {
         preferredStart: store.settings.termStart || '',
         resetWeekToPlanStart: true
     });
-    renderWeeklyGrid();
-    renderOfertasList();
+    rerenderPlanBoundViews();
 }
 
 function updateDisciplinaDatalist() {
@@ -5269,8 +5268,8 @@ function onTurmaChange() {
         populateTurnoOfertaOptions(store.settings.turnoOferta || 'Tarde');
     }
 
-    renderWeeklyGrid();
-    renderOfertasList();
+    // Inclui a aba aberta (ex.: Calendario da Turma), para nao ficar mostrando a turma anterior.
+    rerenderPlanBoundViews();
 }
 
 
@@ -6399,14 +6398,6 @@ function handleAddManual() {
             ? weeklyState.replacingFromDisciplina
             : '';
         let replacedOriginal = null;
-        if (replacingFrom) {
-            // A nova componente sai da lista de pendentes ao ganhar os horarios.
-            store.allocations.forEach((a) => {
-                if (String(a.turmaId) !== String(store.selectedTurma)) return;
-                if (a.disciplina !== disciplina || !isPendingAllocation(a)) return;
-                if (!idsToRemove.includes(a.id)) idsToRemove.push(a.id);
-            });
-        }
 
         // Edicao segura: inclui os IDs originais rastreados mesmo que a componente
         // tenha sido movida para um periodo SEM sobreposicao (o filtro acima exige
@@ -6439,6 +6430,11 @@ function handleAddManual() {
             ? `Substituir "${replacedOriginal.disciplina}" por esta componente? "${replacedOriginal.disciplina}" volta para a lista de pendentes.`
             : (idsToRemove.length > 0 ? 'Atualizar alocacao existente?' : 'Confirmar alocacao?');
         if (!confirm(`${disciplina} (${formatDateBR(effInicio)} a ${formatDateBR(effFim)})\n\n${actionText}`)) return;
+
+        // A componente salva sai da lista de pendentes, venha de onde vier
+        // (linha da lista, barra lateral ou "Substituir por...").
+        findPendentesCobertas({ turmaId: store.selectedTurma, disciplina, subGrupo }, store.allocations)
+            .forEach((id) => { if (!idsToRemove.includes(id)) idsToRemove.push(id); });
 
         const undoSnapshot = snapshotAllocationsForUndo();
         idsToRemove.forEach((id) => store.removeAllocation(id));
@@ -6554,7 +6550,8 @@ function renderOfertasList() {
         startDate: semesterStart,
         endDate: semesterEnd
     });
-    const pendentes = list.filter((a) => isPendingAllocation(a));
+    // Pendente que sobrou de uma edicao antiga, com a componente ja alocada, nao aparece.
+    const pendentes = list.filter((a) => isPendingAllocation(a) && !isPendenteJaAlocada(a, list));
 
     const appendSeparator = (label) => {
         const tr = document.createElement('tr');

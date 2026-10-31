@@ -1,5 +1,5 @@
 import { store } from './store.js??v=20261028a';
-import { initUI, exportSigaaMetadataJSON, showToastWarning, refreshAfterRemoteChange } from './ui.js??v=20261031a';
+import { initUI, exportSigaaMetadataJSON, showToastWarning, refreshAfterRemoteChange } from './ui.js??v=20261031c';
 import { iniciarAcesso, isOnlineMode } from './acesso_ui.js??v=20261030a';
 import { fetchAllocationsForPlans } from './sync_remoto.js??v=20261030a';
 import { filterExportableAllocations } from './academic_rules.mjs';
