@@ -122,6 +122,7 @@ export function summarizeHorarios(horarios = []) {
 export function summarizeTeacherPeriod({ termStart, termEnd, entries = [] }) {
   const weeks = buildTermWeeks(termStart, termEnd);
   const byKey = new Map();
+  const aulasPorAno = {};
 
   entries.forEach((entry) => {
     if (!entry?.date || !entry.key) return;
@@ -144,6 +145,8 @@ export function summarizeTeacherPeriod({ termStart, termEnd, entries = [] }) {
     }
     const comp = byKey.get(entry.key);
     const aulas = Number(entry.aulas) || 1;
+    const ano = entry.date.slice(0, 4);
+    aulasPorAno[ano] = (aulasPorAno[ano] || 0) + aulas;
     comp.aulas += aulas;
     comp.dates.add(entry.date);
     if (entry.horario) comp.horarios.push(entry.horario);
@@ -176,6 +179,8 @@ export function summarizeTeacherPeriod({ termStart, termEnd, entries = [] }) {
   return {
     weeks,
     components,
-    totalAulas: components.reduce((sum, comp) => sum + comp.aulas, 0)
+    totalAulas: components.reduce((sum, comp) => sum + comp.aulas, 0),
+    // Pelo ano da data da aula: um PL que vira o ano soma nos dois.
+    aulasPorAno
   };
 }

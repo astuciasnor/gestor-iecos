@@ -50,6 +50,7 @@ test('agrupa as aulas por componente e por semana do PL', () => {
   const resumo = summarizeTeacherPeriod({ termStart: '2026-08-24', termEnd: '2026-12-23', entries });
 
   assert.equal(resumo.totalAulas, 8);
+  assert.deepEqual(resumo.aulasPorAno, { 2026: 8 });
   assert.deepEqual(resumo.components.map((c) => c.disciplina), ['BIOQUIMICA', 'ESTATISTICA']);
   const bio = resumo.components[0];
   assert.equal(bio.aulas, 7);
@@ -77,4 +78,11 @@ test('marca o dia 1o de cada mes na semana certa, menos o mes em que o PL comeca
   assert.equal(marcas[2].fraction, 6 / 7);
   // PL que comeca no dia 1o: nao marca o proprio mes de inicio.
   assert.deepEqual(buildMonthMarkers(buildTermWeeks('2027-03-01', '2027-04-10')).map((m) => [m.month, m.fraction]), [['2027-04', 3 / 7]]);
+});
+
+test('soma as aulas pelo ano da data, mesmo quando o PL vira o ano', () => {
+  const base = { key: 'EP2026|BIO', disciplina: 'BIOQUIMICA', aulas: 2 };
+  const entries = ['2026-12-14', '2026-12-15', '2027-01-04'].map((date) => ({ ...base, date }));
+  const resumo = summarizeTeacherPeriod({ termStart: '2026-12-01', termEnd: '2027-01-31', entries });
+  assert.deepEqual(resumo.aulasPorAno, { 2026: 4, 2027: 2 });
 });

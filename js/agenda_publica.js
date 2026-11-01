@@ -2,7 +2,7 @@ import { store, normalizeLoadedAllocation } from './store.js??v=20261028a';
 import { getTurnoLetter } from './turns.js';
 import { getCalendarEvents } from './calendar.js';
 import { resolveActiveAcademicPeriod } from './academic_rules.mjs';
-import { buildMonthMarkers, summarizeTeacherPeriod } from './resumo_docente.mjs';
+import { buildMonthMarkers, summarizeTeacherPeriod } from './resumo_docente.mjs?v=20261031d';
 
 const collator = new Intl.Collator('pt-BR', { sensitivity: 'base' });
 const PUBLIC_ASSET_VERSION = '20261028a';
@@ -1459,13 +1459,19 @@ function buildResumoMarkup(periodos) {
     const comAula = periodos.filter((p) => p.components.length);
     const totalComponentes = comAula.reduce((n, p) => n + p.components.length, 0);
     const totalAulas = periodos.reduce((n, p) => n + p.totalAulas, 0);
+    const aulasPorAno = {};
+    periodos.forEach((p) => Object.entries(p.aulasPorAno || {}).forEach(([ano, aulas]) => {
+        aulasPorAno[ano] = (aulasPorAno[ano] || 0) + aulas;
+    }));
+    const anos = Object.keys(aulasPorAno).sort();
 
     const badges = [
         'Resumo do ano',
         `${totalComponentes} componente${totalComponentes === 1 ? '' : 's'}`,
         `${comAula.length} de ${periodos.length} período${periodos.length === 1 ? '' : 's'} com aula`,
-        `${totalAulas} horas-aula`
-    ];
+        ...anos.map((ano) => `${ano}: ${aulasPorAno[ano]} horas-aula`),
+        anos.length === 1 ? '' : `${totalAulas} horas-aula no total`
+    ].filter(Boolean);
     const context = `
         <div class="pub-result-context">
             <div class="pub-result-eyebrow">Consulta Docente</div>
