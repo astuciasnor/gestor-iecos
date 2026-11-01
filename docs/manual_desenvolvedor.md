@@ -118,6 +118,7 @@ Interface:
 - `ui_feedback.js`: toasts, mensagens e botoes de copiar.
 - `agenda_publica.js`: runtime da agenda publica (multi-PL, consulta docente/discente).
 - `resumo_docente.mjs`: resumo do ano do docente na agenda publica (semanas do PL e componentes; puro, testado).
+- `troca_ordem.mjs`: regras do botao "Trocar" da Lista de Ofertas (mesma carga em qualquer posicao; carga diferente so em sequencia e com padrao unico; puro, testado). O calculo das novas posicoes e as checagens de turma e professor ficam em `ui.js` (`planejarTrocaDeOrdem`).
 
 Modo online:
 
@@ -417,6 +418,7 @@ Cobertura atual mais importante:
 - `sync_diff`: regras da sincronizacao com o servidor;
 - `pendentes`: componente nao fica pendente e alocada ao mesmo tempo;
 - `resumo_docente`: semanas e componentes do resumo do ano na agenda publica.
+- `troca_ordem`: quando duas componentes podem trocar de lugar (mesma carga, sequencia, sub-turma, faixas).
 
 Uso recomendado nas limpezas graduais:
 

@@ -5,6 +5,7 @@ import { getCalendarEvents } from './calendar.js';
 import { isDateOverlap } from './utils.js';
 import { weeklyState } from './weekly_state.js';
 import { findPendentesCobertas, isPendenteJaAlocada } from './pendentes.mjs';
+import { classifySwap } from './troca_ordem.mjs';
 import { buildCanonicalOfferProjection } from './execution_engine.js';
 import { buildSigaaMetadataPayload, validateSigaaMetadataPayload } from './sigaa_metadata.js';
 import { parseBackupDataFile, extractImportPlanMeta } from './serialization.js';
@@ -6525,6 +6526,244 @@ function updateListPrintHeader() {
     header.innerHTML = `<span class="print-title-line">LISTA DE OFERTAS (${meta})</span>`;
 }
 
+// --- Botao "Trocar" (trocar a ordem) -------------------------------------------------
+// Quem pode trocar com quem esta em troca_ordem.mjs. Aqui: as componentes da
+// turma, as novas posicoes calculadas com o mesmo motor do salvar e as checagens
+// de turma e de professor antes de gravar.
+
+const CAMPOS_DE_POSICAO = ['dataInicio', 'dataFim', 'faixas', 'executionByDate', 'horariosOcupados', 'horariosUltimoDia', 'diasMarcados', 'usaSabado', 'sabadoManha'];
+
+function escapeTrocaHtml(value) {
+    return String(value ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+function contarHorasExecutadas(byDate) {
+    return Object.values(byDate || {}).reduce((n, slots) => n + (Array.isArray(slots) ? slots.length : 0), 0);
+}
+
+function buildComponentesParaTroca(turmaId) {
+    const grupos = new Map();
+    store.allocations.forEach((a) => {
+        if (String(a.turmaId) !== String(turmaId) || !isFaixaAllocation(a)) return;
+        const key = `${normalizeDisciplinaInputValue(a.disciplina || '')}|${a.subGrupo || ''}`;
+        if (!grupos.has(key)) grupos.set(key, []);
+        grupos.get(key).push(a);
+    });
+    return [...grupos.values()]
+        .map((registros) => {
+            const alloc = registros[0];
+            return {
+                alloc,
+                ids: registros.map((r) => r.id),
+                disciplina: alloc.disciplina,
+                subGrupo: alloc.subGrupo || '',
+                ch: parseInt(alloc.ch, 10) || parseInt(getDisciplinaInfo(alloc.disciplina).ch, 10) || 0,
+                dataInicio: alloc.dataInicio || '',
+                dataFim: alloc.dataFim || alloc.dataInicio || '',
+                registros: registros.length,
+                faixas: getNormalizedIntensiveFaixas(alloc)
+            };
+        })
+        .sort((x, y) => String(x.dataInicio).localeCompare(String(y.dataInicio)));
+}
+
+// Posicao de uma componente comecando em "inicio", com o padrao de horarios da
+// sua 1a faixa e a faixa de ajuste do ultimo dia, como o salvar faz.
+function calcularPosicaoAPartirDe(alloc, inicio) {
+    const padrao = getNormalizedIntensiveFaixas(alloc)[0];
+    if (!padrao || !inicio) return null;
+    const opcoes = { respectPriority: true, respectTurmaOccupancy: false };
+    let faixas = [normalizeFaixaEntry({ inicio, fim: null, drawnSlotsByDay: padrao.drawnSlotsByDay })].filter(Boolean);
+    let execution = computeIntensiveExecution(buildCandidateIntensiveFromFaixas(alloc, faixas), opcoes);
+    const ajuste = buildFinalAdjustmentFaixaSuggestion(faixas, execution);
+    if (ajuste?.faixas?.length) {
+        faixas = ajuste.faixas.map(normalizeFaixaEntry).filter(Boolean);
+        execution = computeIntensiveExecution(buildCandidateIntensiveFromFaixas(alloc, faixas), opcoes);
+    }
+    if (!execution?.dataFim || execution.totalHours <= 0) return null;
+    return {
+        horas: execution.totalHours,
+        posicao: {
+            dataInicio: execution.dataInicio,
+            dataFim: execution.dataFim,
+            faixas: alignFaixasToExecutionEnd(faixas, execution.dataFim),
+            executionByDate: execution.byDate || {},
+            horariosOcupados: execution.unionSlots || [],
+            horariosUltimoDia: execution.horariosUltimoDia || [],
+            diasMarcados: execution.unionDias || [],
+            usaSabado: (execution.unionDias || []).includes(6)
+        }
+    };
+}
+
+// Choque com outra componente da mesma turma. Sub-turmas diferentes podem
+// ter aula em paralelo; as posicoes antigas das duas que trocam sao ignoradas.
+function acharChoqueNaTurma(candidato) {
+    const eventos = getCalendarEvents(String(candidato.turmaId), candidato.dataInicio, candidato.dataFim);
+    const sub = String(candidato.subGrupo || '');
+    const ocupados = new Map();
+    Object.entries(eventos || {}).forEach(([data, lista]) => (lista || []).forEach((ev) => {
+        if (shouldIgnoreTurmaEventForCandidate(ev, candidato)) return;
+        const evSub = String(ev?.subGrupo || '');
+        if (sub && evSub && sub !== evSub) return;
+        const slot = normalizeConflictSlotLabel(ev?.horario || '');
+        if (slot && !ocupados.has(`${data}|${slot}`)) ocupados.set(`${data}|${slot}`, ev);
+    }));
+    for (const [data, slots] of Object.entries(candidato.executionByDate || {})) {
+        for (const slot of (slots || [])) {
+            const ev = ocupados.get(`${data}|${normalizeConflictSlotLabel(slot)}`);
+            if (ev) return { date: data, horario: slot, disciplina: ev.disciplina || '' };
+        }
+    }
+    return null;
+}
+
+// Resultado: { novas: Map(alloc -> posicao), avisos } ou { erro }.
+function planejarTrocaDeOrdem(compA, compB, modo) {
+    const a = compA.alloc;
+    const b = compB.alloc;
+    const novas = new Map();
+
+    if (modo === 'mesma-ch') {
+        const posicaoDe = (x) => JSON.parse(JSON.stringify(Object.fromEntries(CAMPOS_DE_POSICAO.map((c) => [c, x[c] ?? null]))));
+        // Uma oferta cortada no fim do periodo tem menos aulas que a carga: a
+        // outra perderia aulas ao ocupar o lugar dela.
+        for (const [alloc, outra] of [[a, b], [b, a]]) {
+            const horas = contarHorasExecutadas(alloc.executionByDate);
+            const cabem = contarHorasExecutadas(outra.executionByDate);
+            if (cabem < horas) {
+                return { erro: `"${alloc.disciplina}" não caberia no lugar de "${outra.disciplina}" (${cabem}h de ${horas}h).` };
+            }
+        }
+        novas.set(a, posicaoDe(b));
+        novas.set(b, posicaoDe(a));
+    } else {
+        const [first, second] = String(a.dataInicio) <= String(b.dataInicio) ? [a, b] : [b, a];
+        const novaSegunda = calcularPosicaoAPartirDe(second, first.dataInicio);
+        const novaPrimeira = novaSegunda && calcularPosicaoAPartirDe(first, addDaysISO(novaSegunda.posicao.dataFim, 1));
+        if (!novaSegunda || !novaPrimeira) return { erro: 'Não foi possível calcular as novas posições.' };
+        for (const [alloc, nova] of [[second, novaSegunda], [first, novaPrimeira]]) {
+            const horasAntes = contarHorasExecutadas(alloc.executionByDate) || parseInt(alloc.ch, 10) || 0;
+            if (nova.horas < horasAntes) {
+                return { erro: `"${alloc.disciplina}" não caberia até o fim do período letivo (${nova.horas}h de ${horasAntes}h).` };
+            }
+            novas.set(alloc, nova.posicao);
+        }
+    }
+
+    const avisos = [];
+    for (const [alloc, posicao] of novas) {
+        const candidato = { ...alloc, ...posicao, ignoreAllocationIds: [a.id, b.id] };
+        const choque = acharChoqueNaTurma(candidato);
+        if (choque) {
+            return { erro: `"${alloc.disciplina}" ficaria em choque com "${choque.disciplina}" em ${formatDateBR(choque.date)} (${choque.horario}).` };
+        }
+        const prof = findConfirmedTeacherConflictForCandidate(candidato, getAllocationTeachersForConflict(candidato));
+        if (prof) {
+            const onde = `${prof.teacherName} já tem ${prof.event.disciplina} na turma ${getTurmaLabel(prof.event.turmaId, prof.event.subGrupo)} em ${formatDateBR(prof.date)} (${prof.horario}).`;
+            if (!alloc.importado) return { erro: `Choque de professor: ${onde}` };
+            avisos.push(`Sobreposição de professor permitida (componente importada): ${onde}`);
+        }
+    }
+    return { novas, avisos };
+}
+
+function formatPeriodoTroca(inicio, fim) {
+    return `${formatDateBR(inicio)} a ${formatDateBR(fim)}`;
+}
+
+function fecharTrocaDeOrdem() {
+    document.getElementById('troca-ordem-modal')?.remove();
+    document.removeEventListener('keydown', onTrocaKeydown);
+}
+
+function onTrocaKeydown(e) {
+    if (e.key === 'Escape') fecharTrocaDeOrdem();
+}
+
+function abrirTrocaDeOrdem(baseAlloc) {
+    if (!baseAlloc || bloquearSeSomenteLeitura(baseAlloc.turmaId)) return;
+    const componentes = buildComponentesParaTroca(baseAlloc.turmaId);
+    const atual = componentes.find((c) => c.ids.includes(baseAlloc.id));
+    if (!atual) return;
+    const outras = componentes.filter((c) => c !== atual);
+    const feriados = (store.rawData?.feriados || []).map((f) => String(f?.data || f || ''));
+    const opcoes = outras.map((outra) => ({ outra, regra: classifySwap(atual, outra, { feriados }) }));
+
+    const itens = opcoes.map(({ outra, regra }, idx) => {
+        const selo = regra.ok
+            ? `<span class="troca-selo">${regra.modo === 'mesma-ch' ? 'mesma carga' : 'em sequência'}</span>`
+            : `<span class="troca-motivo">${escapeTrocaHtml(regra.motivo)}</span>`;
+        return `
+            <li>
+                <button type="button" class="troca-opcao" data-idx="${idx}" ${regra.ok ? '' : 'disabled'}>
+                    <strong>${escapeTrocaHtml(outra.disciplina)}${outra.subGrupo ? ` (${escapeTrocaHtml(outra.subGrupo)})` : ''}</strong>
+                    <span class="troca-info">${formatPeriodoTroca(outra.dataInicio, outra.dataFim)} · ${outra.ch}h</span>
+                    ${selo}
+                </button>
+            </li>`;
+    }).join('');
+
+    fecharTrocaDeOrdem();
+    const overlay = document.createElement('div');
+    overlay.id = 'troca-ordem-modal';
+    overlay.className = 'troca-modal no-print';
+    overlay.innerHTML = `
+        <div class="troca-caixa" role="dialog" aria-modal="true" aria-labelledby="troca-titulo">
+            <h3 id="troca-titulo">Trocar a ordem de ${escapeTrocaHtml(atual.disciplina)}</h3>
+            <p class="troca-sub">${formatPeriodoTroca(atual.dataInicio, atual.dataFim)} · ${atual.ch}h. Escolha com qual componente ela troca de lugar:</p>
+            ${itens ? `<ul class="troca-lista">${itens}</ul>` : '<p class="troca-sub">Não há outra componente alocada nesta turma.</p>'}
+            <p class="troca-nota">Mesma carga: troca em qualquer posição. Carga diferente: só se estiverem em sequência.</p>
+            <div class="troca-acoes"><button type="button" class="btn-secondary troca-cancelar">Cancelar</button></div>
+        </div>`;
+    document.body.appendChild(overlay);
+    document.addEventListener('keydown', onTrocaKeydown);
+
+    overlay.addEventListener('click', (e) => {
+        if (e.target === overlay || e.target.closest('.troca-cancelar')) {
+            fecharTrocaDeOrdem();
+            return;
+        }
+        const botao = e.target.closest('.troca-opcao');
+        if (!botao || botao.disabled) return;
+        const { outra, regra } = opcoes[Number(botao.dataset.idx)];
+        const plano = planejarTrocaDeOrdem(atual, outra, regra.modo);
+        if (plano.erro) {
+            botao.disabled = true;
+            botao.querySelector('.troca-selo')?.remove();
+            botao.insertAdjacentHTML('beforeend', `<span class="troca-motivo">${escapeTrocaHtml(plano.erro)}</span>`);
+            return;
+        }
+        const linhas = [...plano.novas].map(([alloc, posicao]) =>
+            `${alloc.disciplina}\n   antes: ${formatPeriodoTroca(alloc.dataInicio, alloc.dataFim)}\n   depois: ${formatPeriodoTroca(posicao.dataInicio, posicao.dataFim)}`);
+        if (!confirm(`Trocar a ordem das componentes?\n\n${linhas.join('\n\n')}\n\nSe precisar, use o botão Desfazer.`)) return;
+        aplicarTrocaDeOrdem(plano);
+    });
+}
+
+function aplicarTrocaDeOrdem(plano) {
+    const undoSnapshot = snapshotAllocationsForUndo();
+    const esperado = [...plano.novas].map(([alloc, posicao]) => [alloc, contarHorasExecutadas(posicao.executionByDate)]);
+    plano.novas.forEach((posicao, alloc) => Object.assign(alloc, posicao));
+    syncAllIntensiveDates();
+
+    // O recalculo geral nao pode ter cortado aulas de nenhuma das duas.
+    const cortada = esperado.find(([alloc, horas]) => contarHorasExecutadas(alloc.executionByDate) < horas);
+    if (cortada && undoSnapshot) {
+        store.replaceAllocations(undoSnapshot);
+        rerenderPlanBoundViews();
+        fecharTrocaDeOrdem();
+        showToastWarning(`Troca cancelada: "${cortada[0].disciplina}" perderia aulas na nova posição.`, 'error', 6000);
+        return;
+    }
+
+    commitAllocationUndoSnapshot(undoSnapshot);
+    fecharTrocaDeOrdem();
+    rerenderPlanBoundViews();
+    plano.avisos.forEach((aviso) => showToastWarning(aviso, 'warning', 6000));
+    if (!plano.avisos.length) showToastWarning('Ordem trocada. Se precisar, use o botão Desfazer.', 'success', 4200);
+}
+
 function renderOfertasList() {
     const tbody = document.querySelector('#ofertas-table tbody');
     if (!tbody) return;
@@ -6842,8 +7081,9 @@ function renderOfertasList() {
             : `<span style="color:#999;">-</span>`;
 
         const btnHtml = `
-            <button class="btn-primary btn-edit-row" style="padding:4px 8px; margin:0; font-size:0.85em; background-color:#2980b9; border:none; color:white; border-radius:3px; cursor:pointer; margin-right:5px;" title="Editar">Editar</button>
-            ${row.rowType === 'pendente' ? '' : '<button class="btn-secondary btn-replace-row" style="padding:4px 8px; margin:0; font-size:0.85em; background-color:#8e44ad; border:none; color:white; border-radius:3px; cursor:pointer; margin-right:5px;" title="Manter faixas e horarios e trocar a componente">Substituir por...</button>'}
+            <button class="btn-primary btn-edit-row" style="padding:4px 8px; margin:0; font-size:0.85em; background-color:#2980b9; border:none; color:white; border-radius:3px; cursor:pointer;" title="Editar">Editar</button>
+            ${row.rowType === 'pendente' ? '' : '<button class="btn-secondary btn-replace-row" style="padding:4px 8px; margin:0; font-size:0.85em; background-color:#8e44ad; border:none; color:white; border-radius:3px; cursor:pointer;" title="Substituir por outra componente (mantem faixas e horarios)">Substituir</button>'}
+            ${row.rowType === 'pendente' ? '' : '<button class="btn-secondary btn-swap-row" style="padding:4px 8px; margin:0; font-size:0.85em; background-color:#16a085; border:none; color:white; border-radius:3px; cursor:pointer;" title="Trocar a ordem com outra componente da turma">Trocar</button>'}
             <button class="btn-danger btn-delete-row" style="padding:4px 8px; margin:0; font-size:0.85em; border-radius:3px; cursor:pointer;" title="Excluir">Excluir</button>
         `;
 
@@ -6854,7 +7094,7 @@ function renderOfertasList() {
             <td>${row.horarioTxt}</td>
             <td style="text-align:center;">${chInfo}</td>
             <td style="text-align:center;">${btnCopySigaa}</td>
-            <td style="white-space:nowrap;"><div style="display:flex; justify-content:center;">${btnHtml}</div></td>
+            <td style="white-space:nowrap;"><div style="display:grid; grid-template-columns:repeat(2, auto); gap:5px; justify-content:center;">${btnHtml}</div></td>
         `;
 
         const idsToRemove = Array.isArray(row.groupIds) && row.groupIds.length > 0 ? row.groupIds : [row.baseAlloc.id];
@@ -6892,6 +7132,9 @@ function renderOfertasList() {
                 loadAllocationIntoEditor(row.baseAlloc, idsToRemove, { replace: true });
             };
         }
+
+        const btnSwap = tr.querySelector('.btn-swap-row');
+        if (btnSwap) btnSwap.onclick = () => abrirTrocaDeOrdem(row.baseAlloc);
 
         tbody.appendChild(tr);
     };

@@ -55,6 +55,7 @@ Observacoes importantes:
 ### 3. Revisao e auditoria
 
 - Use a aba **Lista de Ofertas** para revisar, editar ou excluir ofertas.
+- **Trocar** (na Lista de Ofertas) troca duas componentes da turma de lugar: com a mesma carga horaria, em qualquer posicao; com cargas diferentes, so quando estao em sequencia. A troca e barrada se houver choque na turma ou de professor, e pode ser desfeita com **Desfazer**.
 - Use **Calendario da Turma**, **Calendario Docente** e **Grafico Gantt** para leitura e auditoria.
 - Quando aparecer o aviso de turno, ele indica que aquela aula ocorre excepcionalmente em um turno diferente do turno nativo da turma.
 
