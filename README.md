@@ -56,7 +56,7 @@ Observacoes importantes:
 
 - Use a aba **Lista de Ofertas** para revisar, editar ou excluir ofertas.
 - **Trocar** (na Lista de Ofertas) troca duas componentes da turma de lugar: com a mesma carga horaria, em qualquer posicao; com cargas diferentes, so quando estao em sequencia. A troca e barrada se houver choque na turma ou de professor, e pode ser desfeita com **Desfazer**.
-- **Completar** aparece na oferta com o selo "faltam Xh" (menos aulas que a carga horaria). Mostra as alternativas ja conferidas: estender o fim, comecar antes, aulas aos sabados ou um horario a mais por dia. Nenhuma alternativa tira aulas de outra oferta; tambem pode ser desfeita com **Desfazer**.
+- O selo **"faltam Xh"** na Lista de Ofertas marca a oferta com menos aulas que a carga horaria (cortada no fim do periodo ou da faixa). Ajuste pelo **Editar** (datas, horarios ou sabados) ou leve a componente para outro periodo.
 - Use **Calendario da Turma**, **Calendario Docente** e **Grafico Gantt** para leitura e auditoria.
 - Quando aparecer o aviso de turno, ele indica que aquela aula ocorre excepcionalmente em um turno diferente do turno nativo da turma.
 
@@ -210,20 +210,16 @@ where email = 'pessoa@ufpa.br';
 
 ## Publicacao online
 
-Fluxo recomendado:
-
-1. No app, clique em **Publicar Online**. O arquivo gerado reune **os periodos letivos em curso e ate 4 futuros que tenham ao menos uma alocacao** neste navegador.
-2. No terminal, execute:
+1. No app, clique em **Publicar Online**. O arquivo gerado (pasta Downloads) reune **os periodos letivos em curso e ate 4 futuros que tenham ao menos uma alocacao** neste navegador.
+2. No terminal, na pasta do projeto, rode e responda `s`:
 
 ```bash
 python tools/publish_online.py
 ```
 
-3. Se quiser publicar no GitHub Pages no mesmo fluxo:
+   O script pega o arquivo mais recente de Downloads, valida, mostra os periodos e a hora do download, grava, faz o commit **so do arquivo publico** (outras alteracoes do projeto ficam de fora) e envia ao GitHub. A agenda atualiza em 1 a 3 minutos.
 
-```bash
-python tools/publish_online.py --push
-```
+Outras opcoes: `--check` (so confere, nao grava), `--no-push` (commit sem enviar), `--no-git` (so grava). O antigo `--push` continua aceito.
 
 Arquivos e paginas envolvidos:
 

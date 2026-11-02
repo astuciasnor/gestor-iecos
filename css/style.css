@@ -3986,7 +3986,7 @@ body:has(#tab-weekly.active) .top-bar #weekly-instructions-card {
     margin-top: 14px;
 }
 
-/* "Completar" (carga incompleta) na lista de ofertas */
+/* Selo "faltam Xh" (carga incompleta) na lista de ofertas */
 .falta-badge {
     display: inline-block;
     margin-top: 3px;
@@ -4010,16 +4010,4 @@ body:has(#tab-weekly.active) .top-bar #weekly-instructions-card {
 
 .troca-acoes .troca-cancelar:hover {
     background: #dfe4e6;
-}
-
-.completar-outro-pl {
-    margin-top: 12px;
-    padding: 10px 12px;
-    border: 1px solid #f0c36d;
-    border-left: 5px solid #e67e22;
-    border-radius: 6px;
-    background: #fef5e7;
-    color: #6e4a12;
-    font-size: 0.9em;
-    line-height: 1.45;
 }

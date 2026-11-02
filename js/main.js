@@ -1,5 +1,5 @@
 import { store } from './store.js??v=20261028a';
-import { initUI, exportSigaaMetadataJSON, showToastWarning, refreshAfterRemoteChange } from './ui.js??v=20261101d';
+import { initUI, exportSigaaMetadataJSON, showToastWarning, refreshAfterRemoteChange } from './ui.js??v=20261102a';
 import { iniciarAcesso, isOnlineMode } from './acesso_ui.js??v=20261030a';
 import { fetchAllocationsForPlans } from './sync_remoto.js??v=20261030a';
 import { filterExportableAllocations } from './academic_rules.mjs';
@@ -439,9 +439,9 @@ function exportarJSONCurso(sigla) {
       a.remove();
 
       showToastWarning(
-        "Arquivo '" + fileName + "' gerado com sucesso.<br>" +
-        "Publicação automática recomendada na raiz do projeto:<br>" +
-        "<code>python tools/publish_online.py --push</code>",
+        "Arquivo '" + fileName + "' gerado na pasta Downloads.<br>" +
+        "Para publicar, rode no terminal, na pasta do projeto:<br>" +
+        "<code>python tools/publish_online.py</code>",
         'success',
         7000
       );

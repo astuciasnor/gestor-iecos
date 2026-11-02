@@ -119,7 +119,6 @@ Interface:
 - `agenda_publica.js`: runtime da agenda publica (multi-PL, consulta docente/discente).
 - `resumo_docente.mjs`: resumo do ano do docente na agenda publica (semanas do PL e componentes; puro, testado).
 - `troca_ordem.mjs`: regras do botao "Trocar" da Lista de Ofertas (mesma carga em qualquer posicao; carga diferente so em sequencia e com padrao unico; puro, testado). O calculo das novas posicoes e as checagens de turma e professor ficam em `ui.js` (`planejarTrocaDeOrdem`).
-- `completar_carga.mjs`: pecas do botao "Completar" da Lista de Ofertas (janelas de semanas, acrescimo de sabados ou de um horario dentro da janela, horario vizinho; puro, testado). Em `ui.js`, `montarOpcoesCompletar` calcula as alternativas e `ensaiarRecalculo` ensaia cada uma numa copia das ofertas com o recalculo geral (`recalcularOfertasPorFaixa`).
 
 Modo online:
 
@@ -380,10 +379,9 @@ Consequencias:
 
 Fluxo:
 
-1. clicar em **Publicar Online** no app;
-2. executar `python tools/publish_online.py`;
-3. opcionalmente validar antes com `python tools/publish_online.py --check`;
-4. opcionalmente publicar com `python tools/publish_online.py --push`.
+1. clicar em **Publicar Online** no app (o JSON vai para Downloads);
+2. executar `python tools/publish_online.py` e confirmar: valida, junta com os planos ja publicados, grava, faz o commit so dos arquivos publicos (`git commit -- <arquivos>`) e envia (`git push origin main`);
+3. opcoes: `--check` (so confere), `--no-push` (commit sem enviar), `--no-git` (so grava); `--push` continua aceito por compatibilidade.
 
 Arquivos envolvidos:
 
@@ -396,7 +394,7 @@ Estado atual da publicacao:
 
 - `publicacoes/publicacao_config.json` define o layout de publicacao;
 - `publicacoes/catalogo_publicacoes.json` alimenta o seletor de PL da agenda publica;
-- a agenda publica e uma unica pagina, em arquivo unico multi-PL (ate 3 planos), com plano padrao e fallback para `alocacoes_publicas.json`;
+- a agenda publica e uma unica pagina, em arquivo unico multi-PL (periodo(s) em curso e ate 4 futuros), com plano padrao e fallback para `alocacoes_publicas.json`;
 - o aluno nao precisa escolher o PL manualmente.
 
 ### 9.4. Testes automatizados
@@ -420,7 +418,6 @@ Cobertura atual mais importante:
 - `pendentes`: componente nao fica pendente e alocada ao mesmo tempo;
 - `resumo_docente`: semanas e componentes do resumo do ano na agenda publica.
 - `troca_ordem`: quando duas componentes podem trocar de lugar (mesma carga, sequencia, sub-turma, faixas).
-- `completar_carga`: janelas, acrescimo de horarios e horario vizinho do botao "Completar".
 
 Uso recomendado nas limpezas graduais:
 

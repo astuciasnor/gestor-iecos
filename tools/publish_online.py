@@ -1,12 +1,17 @@
 #!/usr/bin/env python3
 """
-Publica o arquivo alocacoes_publicas.json com validacoes e travas de seguranca.
+Publica a agenda publica: pega o alocacoes_publicas.json mais recente em
+Downloads (gerado pelo botao Publicar Online), valida, junta com os periodos
+ja publicados, grava na raiz do projeto, faz o commit SO desse arquivo e envia
+ao GitHub. Uma confirmacao so.
 
-Uso tipico:
-  python tools/publish_online.py
-  python tools/publish_online.py --check
-  python tools/publish_online.py --no-git
-  python tools/publish_online.py --push
+Uso:
+  python tools/publish_online.py            publica (grava, commit e envia)
+  python tools/publish_online.py --check    so confere, sem gravar nada
+  python tools/publish_online.py --no-push  grava e faz o commit, sem enviar
+  python tools/publish_online.py --no-git   so grava o arquivo, sem Git
+
+--push continua aceito (enviar ja e o padrao).
 """
 
 from __future__ import annotations
@@ -256,39 +261,32 @@ def debug_print(enabled: bool, label: str, value: Any) -> None:
         print(f"[debug] {label}: {value}")
 
 
-def require_clean_tree(repo_root: Path, allow_dirty: bool, status: str | None = None) -> None:
-    status = get_git_status(repo_root) if status is None else status
-    if status and not allow_dirty:
-        print("Erro: repositorio com alteracoes pendentes.", file=sys.stderr)
-        print("Use --allow-dirty para ignorar esta trava.", file=sys.stderr)
-        print("\nArquivos pendentes:", file=sys.stderr)
-        for line in status.splitlines()[:20]:
-            print(f"  {line}", file=sys.stderr)
-        raise SystemExit(1)
-
-
-def require_main_branch(repo_root: Path, allow_non_main: bool, branch: str | None = None) -> None:
-    branch = get_git_branch(repo_root) if branch is None else branch
-    if branch != "main" and not allow_non_main:
-        print(
-            f"Erro: branch atual e '{branch}'. Publique em 'main' ou use --allow-non-main.",
-            file=sys.stderr,
-        )
-        raise SystemExit(1)
-
-
-def can_run_git_publish(
-    allow_dirty: bool,
-    allow_non_main: bool,
-    branch: str,
-    git_status: str,
-) -> tuple[bool, list[str]]:
+def can_run_git_publish(allow_non_main: bool, branch: str) -> tuple[bool, list[str]]:
+    # Outras alteracoes no projeto nao travam: o commit leva so o arquivo publico.
     reasons: list[str] = []
     if branch != "main" and not allow_non_main:
         reasons.append(f"branch atual e '{branch}' (use --allow-non-main para ignorar)")
-    if git_status and not allow_dirty:
-        reasons.append("repositorio com alteracoes pendentes (use --allow-dirty para ignorar)")
     return (not reasons), reasons
+
+
+def count_unpushed_commits(repo_root: Path) -> int:
+    result = run_git(repo_root, ["rev-list", "--count", "origin/main..HEAD"], check=False)
+    try:
+        return int(result.stdout.strip() or 0)
+    except ValueError:
+        return 0
+
+
+def describe_download_time(path: Path) -> str:
+    """'baixado hoje as 14:32' (ou com a data); avisa se o arquivo e antigo."""
+    stamp = datetime.fromtimestamp(path.stat().st_mtime)
+    if stamp.date() == datetime.now().date():
+        text = f"baixado hoje as {stamp:%H:%M}"
+    else:
+        text = f"baixado em {stamp:%d/%m/%Y as %H:%M}"
+    if (datetime.now() - stamp).days >= 1:
+        text += "  <-- ATENCAO: arquivo antigo. Clique de novo em Publicar Online?"
+    return text
 
 
 def write_public_file(payload: Any, target_path: Path) -> None:
@@ -562,23 +560,20 @@ def print_publication_summary(
     source_mode: str,
     source_path: Path,
     target_path: Path,
-    allocations_count: int,
-    term_start: Any,
-    term_end: Any,
-    layout_mode: str,
-    target_mode: str,
-    plan_descriptor: dict[str, str],
+    publications: list[dict],
 ) -> None:
-    print("Resumo da publicacao:")
-    print(f"  {describe_source_mode(source_mode)}")
-    print(f"  Origem: {source_path}")
+    print()
+    print("Resumo da publicacao")
+    print(f"  Arquivo: {source_path}")
+    if source_mode == "downloads":
+        print(f"           {describe_download_time(source_path)}")
+    else:
+        print(f"           {describe_source_mode(source_mode)}")
+    print("  Periodos no arquivo:")
+    for pub in publications:
+        print(f"    - {publication_periodo_label(pub)}: {len(pub.get('allocations', []))} alocacoes")
     print(f"  Destino: {target_path}")
-    print(f"  Layout publico: {layout_mode}")
-    print(f"  Resolucao do destino: {target_mode}")
-    if plan_descriptor.get("periodo") or plan_descriptor.get("year"):
-        print(f"  Plano detectado: {plan_descriptor.get('periodo') or '--'} / {plan_descriptor.get('year') or '--'}")
-    print(f"  Alocacoes: {allocations_count}")
-    print(f"  Periodo: {term_start} a {term_end}")
+    print()
 
 
 def print_public_urls(repo_root: Path, target_path: Path, publication_config: dict[str, Any]) -> None:
@@ -597,7 +592,7 @@ def main() -> int:
     publication_config = load_publication_config(repo_root)
 
     parser = argparse.ArgumentParser(
-        description="Automatiza a publicacao do alocacoes_publicas.json (commit e push opcional)."
+        description="Publica a agenda publica (alocacoes_publicas.json): grava, faz o commit desse arquivo e envia ao GitHub."
     )
     parser.add_argument(
         "--from-download",
@@ -618,27 +613,27 @@ def main() -> int:
     parser.add_argument(
         "--push",
         action="store_true",
-        help="Executa git push origin main apos commit.",
+        help="Mantido por compatibilidade: enviar ao GitHub ja e o padrao.",
+    )
+    parser.add_argument(
+        "--no-push",
+        action="store_true",
+        help="Grava e faz o commit, mas nao envia ao GitHub.",
     )
     parser.add_argument(
         "--check",
         action="store_true",
-        help="Apenas localiza, valida e resume a publicacao, sem gravar ou executar Git.",
+        help="So localiza, valida e resume a publicacao, sem gravar nada.",
     )
     parser.add_argument(
         "--no-git",
         action="store_true",
-        help="Grava o arquivo localmente, mas pula git add, commit e push.",
+        help="So grava o arquivo, sem commit nem envio.",
     )
     parser.add_argument(
         "--yes",
         action="store_true",
-        help="Pula confirmacoes interativas.",
-    )
-    parser.add_argument(
-        "--allow-dirty",
-        action="store_true",
-        help="Permite publicar com mudancas locais ja existentes.",
+        help="Nao pergunta nada (confirma sozinho).",
     )
     parser.add_argument(
         "--allow-non-main",
@@ -657,10 +652,8 @@ def main() -> int:
     branch = get_git_branch(repo_root)
     git_status = get_git_status(repo_root)
     git_publish_allowed, git_publish_reasons = can_run_git_publish(
-        allow_dirty=args.allow_dirty,
         allow_non_main=args.allow_non_main,
         branch=branch,
-        git_status=git_status,
     )
 
     debug_print(args.debug, "repo_root", repo_root)
@@ -733,13 +726,6 @@ def main() -> int:
         return 1
     print("JSON validado com sucesso.")
 
-    allocations_count = sum(len(pub.get("allocations", [])) for pub in incoming_publications)
-    term_start = min(publication_sort_value(pub) for pub in incoming_publications)
-    term_end = max(publication_end_value(pub) for pub in incoming_publications)
-    print(
-        "Planos no arquivo de origem: "
-        + ", ".join(publication_periodo_label(pub) for pub in incoming_publications)
-    )
     target_path, target_mode, plan_descriptor = resolve_public_target_path(
         repo_root=repo_root,
         payload=incoming_publications[0],
@@ -759,23 +745,25 @@ def main() -> int:
         source_mode=source_mode,
         source_path=source_path,
         target_path=target_path,
-        allocations_count=allocations_count,
-        term_start=term_start,
-        term_end=term_end,
-        layout_mode=layout_mode,
-        target_mode=target_mode,
-        plan_descriptor=plan_descriptor,
+        publications=incoming_publications,
     )
 
     if args.check:
-        print("Verificacao concluida com sucesso. Nenhum arquivo foi gravado e nenhuma etapa Git foi executada.")
-        print("Se desejar publicar depois, rode: python tools/publish_online.py --push")
+        print("Verificacao concluida. Nada foi gravado.")
+        print("Para publicar: python tools/publish_online.py")
         print_public_urls(repo_root, target_path, publication_config)
         return 0
 
-    confirm_prompt = "Confirmar gravacao do arquivo publico?"
-    if not args.no_git:
-        confirm_prompt = "Confirmar gravacao e commit do arquivo publico?"
+    send = not args.no_git and not args.no_push
+    if send:
+        unpushed = count_unpushed_commits(repo_root)
+        if unpushed:
+            print(f"Atencao: ha {unpushed} commit(s) local(is) ainda nao enviado(s); eles vao junto no envio.")
+        confirm_prompt = "Publicar agora (gravar, commit e enviar ao GitHub)?"
+    elif args.no_git:
+        confirm_prompt = "Gravar o arquivo publico (sem Git)?"
+    else:
+        confirm_prompt = "Gravar e fazer o commit (sem enviar)?"
 
     if not args.yes and not confirm(confirm_prompt):
         print("Operacao cancelada.")
@@ -828,20 +816,15 @@ def main() -> int:
     debug_print(args.debug, "target_size_after", file_size_or_none(target_path))
 
     if args.no_git:
-        print("Atualizacao local concluida com sucesso.")
-        print("Nenhuma etapa Git foi executada porque voce usou --no-git.")
-        print("Quando quiser publicar, rode novamente sem --no-git ou use --push.")
-        if args.push:
-            print("Observacao: --push foi ignorado porque --no-git desativa git add, commit e push.")
+        print("Arquivo gravado (sem Git, por causa do --no-git).")
+        print("Para publicar: python tools/publish_online.py")
         print_public_urls(repo_root, target_path, publication_config)
         return 0
 
     if not git_publish_allowed:
-        print("Arquivo de destino resolvido e atualizado localmente com sucesso.")
-        print("A etapa Git foi bloqueada pelas travas de seguranca:")
+        print("Arquivo gravado, mas o commit foi bloqueado:")
         for reason in git_publish_reasons:
             print(f"  - {reason}")
-        print("Proximo passo: regularize o Git e rode novamente para commitar ou publicar.")
         print_public_urls(repo_root, target_path, publication_config)
         return 0
 
@@ -859,7 +842,7 @@ def main() -> int:
         return 1
 
     run_git(repo_root, ["add", "--", rel_target], check=True)
-    
+
     rel_catalog = ""
     if catalog_updated and catalog_path:
         try:
@@ -872,26 +855,28 @@ def main() -> int:
     has_catalog_changes = has_staged_changes(repo_root, rel_catalog) if rel_catalog else False
 
     if not has_target_changes and not has_catalog_changes:
-        print(
-            "O arquivo publico foi validado e comparado com o repositorio, mas o conteudo final ja era "
-            "identico ao existente. Nao ha alteracao para commitar."
-        )
-        print("Proximo passo: nenhum. O repositorio ja estava atualizado.")
+        print("Nada mudou: a agenda publicada ja tem exatamente este conteudo.")
         print_public_urls(repo_root, target_path, publication_config)
         return 0
 
-    run_git(repo_root, ["commit", "-m", args.message], check=True)
-    print("Commit criado com sucesso.")
+    # Commit so dos arquivos publicos: outras alteracoes do projeto ficam de fora.
+    commit_paths = [rel_target] + ([rel_catalog] if rel_catalog else [])
+    run_git(repo_root, ["commit", "-m", args.message, "--", *commit_paths], check=True)
+    print("Commit feito (so o arquivo publico).")
 
-    if args.push:
-        if args.yes or confirm("Deseja enviar para origin/main agora?"):
-            run_git(repo_root, ["push", "origin", "main"], check=True)
-            print("Push concluido. A publicacao no GitHub Pages sera atualizada em seguida.")
-        else:
-            print("Push nao executado. Proximo passo: rode git push origin main quando desejar.")
-    else:
-        print("Commit pronto. Proximo passo: rode git push origin main quando quiser publicar.")
+    if not send:
+        print("Envio nao feito (--no-push). Para enviar: git push origin main")
+        print_public_urls(repo_root, target_path, publication_config)
+        return 0
 
+    pushed = run_git(repo_root, ["push", "origin", "main"], check=False)
+    if pushed.returncode != 0:
+        print("Erro ao enviar ao GitHub:", file=sys.stderr)
+        print(pushed.stderr.strip(), file=sys.stderr)
+        print("O commit ficou salvo. Para tentar de novo: git push origin main", file=sys.stderr)
+        return 1
+
+    print("Publicado. A agenda publica atualiza em 1 a 3 minutos.")
     print_public_urls(repo_root, target_path, publication_config)
     return 0
 
