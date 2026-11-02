@@ -916,19 +916,23 @@ export function renderTeacherGanttInto(container, docenteName) {
     try {
         if (!container) return;
 
-        const teacherName = String(docenteName || '').trim();
-        if (!teacherName) {
+        if (!String(docenteName || '').trim()) {
             container.innerHTML = '<div style="text-align: center; color: #7f8c8d; margin-top: 50px; font-size: 1.1em;">Por favor, digite o nome de um professor.</div>';
             return;
         }
 
         const allocs = filterExportableAllocations(
-            store.allocations.filter((alloc) => allocationHasTeacherMatch(alloc, teacherName))
+            store.allocations.filter((alloc) => allocationHasTeacherMatch(alloc, docenteName))
         );
         if (allocs.length === 0) {
-            container.innerHTML = `<div style="text-align: center; color: #7f8c8d; margin-top: 50px; font-size: 1.1em;">Nenhuma disciplina encontrada para <b>${teacherName}</b>.</div>`;
+            container.innerHTML = `<div style="text-align: center; color: #7f8c8d; margin-top: 50px; font-size: 1.1em;">Nenhuma disciplina encontrada para <b>${String(docenteName).trim()}</b>.</div>`;
             return;
         }
+        // Usa o nome como esta cadastrado (o digitado pode diferir em maiusculas/acentos).
+        const teacherName = allocs
+            .flatMap((alloc) => [alloc.docente, ...(Array.isArray(alloc.docentes) ? alloc.docentes.map((d) => d?.nome) : [])])
+            .map((nome) => String(nome || '').trim())
+            .find((nome) => nome && teacherNamesMatch(nome, docenteName)) || String(docenteName).trim();
 
         const totalCH = calculateTeacherTotalCH(teacherName);
         const fallbackStart = String(calStart?.value || store.settings.termStart || '2025-01-01').trim();
