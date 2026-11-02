@@ -56,6 +56,7 @@ Observacoes importantes:
 
 - Use a aba **Lista de Ofertas** para revisar, editar ou excluir ofertas.
 - **Trocar** (na Lista de Ofertas) troca duas componentes da turma de lugar: com a mesma carga horaria, em qualquer posicao; com cargas diferentes, so quando estao em sequencia. A troca e barrada se houver choque na turma ou de professor, e pode ser desfeita com **Desfazer**.
+- **Completar** aparece na oferta com o selo "faltam Xh" (menos aulas que a carga horaria). Mostra as alternativas ja conferidas: estender o fim, comecar antes, aulas aos sabados ou um horario a mais por dia. Nenhuma alternativa tira aulas de outra oferta; tambem pode ser desfeita com **Desfazer**.
 - Use **Calendario da Turma**, **Calendario Docente** e **Grafico Gantt** para leitura e auditoria.
 - Quando aparecer o aviso de turno, ele indica que aquela aula ocorre excepcionalmente em um turno diferente do turno nativo da turma.
 

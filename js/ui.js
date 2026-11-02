@@ -6,6 +6,7 @@ import { isDateOverlap } from './utils.js';
 import { weeklyState } from './weekly_state.js';
 import { findPendentesCobertas, isPendenteJaAlocada } from './pendentes.mjs';
 import { classifySwap } from './troca_ordem.mjs';
+import { addToPatternBetween, adjacentSlot, candidateWindows, isMorningPattern } from './completar_carga.mjs';
 import { buildCanonicalOfferProjection } from './execution_engine.js';
 import { buildSigaaMetadataPayload, validateSigaaMetadataPayload } from './sigaa_metadata.js';
 import { parseBackupDataFile, extractImportPlanMeta } from './serialization.js';
@@ -3878,7 +3879,19 @@ function syncAllRegularDates() {
  * Robusto e genérico para qualquer CH e combinação de horários.
  */
 function syncAllIntensiveDates() {
-    const ofertasPorFaixa = store.allocations.filter((a) => isFaixaAllocation(a));
+    recalcularOfertasPorFaixa(store.allocations);
+
+    // REAÇÃO EM CADEIA: Após ajustar as Intensivas,
+    // precisamos ajustar as Regulares que podem ter sido empurradas por elas.
+    syncAllRegularDates();
+
+    store.saveAllocations();
+}
+
+// Recalcula datas e aulas de cada oferta por faixas, sem salvar. O ensaio do
+// "Completar" usa o mesmo calculo numa copia das ofertas.
+function recalcularOfertasPorFaixa(allocations) {
+    const ofertasPorFaixa = allocations.filter((a) => isFaixaAllocation(a));
 
     ofertasPorFaixa.forEach(intense => {
         const execution = computeIntensiveExecution(intense, { respectPriority: true, respectTurmaOccupancy: true });
@@ -3894,12 +3907,6 @@ function syncAllIntensiveDates() {
             : getNormalizedIntensiveFaixas(intense);
         intense.faixas = alignFaixasToExecutionEnd(sourceFaixas, intense.dataFim || execution.dataFim);
     });
-
-    // REAÇÃO EM CADEIA: Após ajustar as Intensivas, 
-    // precisamos ajustar as Regulares que podem ter sido empurradas por elas.
-    syncAllRegularDates();
-
-    store.saveAllocations();
 }
 
 function buildScopedSigaaAllocationFromOfferFaixa(offerGroup, faixa, planContext = {}) {
@@ -6581,18 +6588,20 @@ function calcularPosicaoAPartirDe(alloc, inicio) {
         execution = computeIntensiveExecution(buildCandidateIntensiveFromFaixas(alloc, faixas), opcoes);
     }
     if (!execution?.dataFim || execution.totalHours <= 0) return null;
+    return { horas: execution.totalHours, posicao: posicaoDaExecucao(faixas, execution) };
+}
+
+// Campos de posicao de uma oferta a partir das faixas e da execucao calculada.
+function posicaoDaExecucao(faixas, execution) {
     return {
-        horas: execution.totalHours,
-        posicao: {
-            dataInicio: execution.dataInicio,
-            dataFim: execution.dataFim,
-            faixas: alignFaixasToExecutionEnd(faixas, execution.dataFim),
-            executionByDate: execution.byDate || {},
-            horariosOcupados: execution.unionSlots || [],
-            horariosUltimoDia: execution.horariosUltimoDia || [],
-            diasMarcados: execution.unionDias || [],
-            usaSabado: (execution.unionDias || []).includes(6)
-        }
+        dataInicio: execution.dataInicio,
+        dataFim: execution.dataFim,
+        faixas: alignFaixasToExecutionEnd(faixas, execution.dataFim),
+        executionByDate: execution.byDate || {},
+        horariosOcupados: execution.unionSlots || [],
+        horariosUltimoDia: execution.horariosUltimoDia || [],
+        diasMarcados: execution.unionDias || [],
+        usaSabado: (execution.unionDias || []).includes(6)
     };
 }
 
@@ -6672,13 +6681,13 @@ function formatPeriodoTroca(inicio, fim) {
     return `${formatDateBR(inicio)} a ${formatDateBR(fim)}`;
 }
 
-function fecharTrocaDeOrdem() {
-    document.getElementById('troca-ordem-modal')?.remove();
-    document.removeEventListener('keydown', onTrocaKeydown);
+function fecharJanelaDaLista() {
+    document.getElementById('lista-acao-modal')?.remove();
+    document.removeEventListener('keydown', onJanelaDaListaKeydown);
 }
 
-function onTrocaKeydown(e) {
-    if (e.key === 'Escape') fecharTrocaDeOrdem();
+function onJanelaDaListaKeydown(e) {
+    if (e.key === 'Escape') fecharJanelaDaLista();
 }
 
 function abrirTrocaDeOrdem(baseAlloc) {
@@ -6704,9 +6713,9 @@ function abrirTrocaDeOrdem(baseAlloc) {
             </li>`;
     }).join('');
 
-    fecharTrocaDeOrdem();
+    fecharJanelaDaLista();
     const overlay = document.createElement('div');
-    overlay.id = 'troca-ordem-modal';
+    overlay.id = 'lista-acao-modal';
     overlay.className = 'troca-modal no-print';
     overlay.innerHTML = `
         <div class="troca-caixa" role="dialog" aria-modal="true" aria-labelledby="troca-titulo">
@@ -6717,11 +6726,11 @@ function abrirTrocaDeOrdem(baseAlloc) {
             <div class="troca-acoes"><button type="button" class="btn-secondary troca-cancelar">Cancelar</button></div>
         </div>`;
     document.body.appendChild(overlay);
-    document.addEventListener('keydown', onTrocaKeydown);
+    document.addEventListener('keydown', onJanelaDaListaKeydown);
 
     overlay.addEventListener('click', (e) => {
         if (e.target === overlay || e.target.closest('.troca-cancelar')) {
-            fecharTrocaDeOrdem();
+            fecharJanelaDaLista();
             return;
         }
         const botao = e.target.closest('.troca-opcao');
@@ -6752,16 +6761,267 @@ function aplicarTrocaDeOrdem(plano) {
     if (cortada && undoSnapshot) {
         store.replaceAllocations(undoSnapshot);
         rerenderPlanBoundViews();
-        fecharTrocaDeOrdem();
+        fecharJanelaDaLista();
         showToastWarning(`Troca cancelada: "${cortada[0].disciplina}" perderia aulas na nova posição.`, 'error', 6000);
         return;
     }
 
     commitAllocationUndoSnapshot(undoSnapshot);
-    fecharTrocaDeOrdem();
+    fecharJanelaDaLista();
     rerenderPlanBoundViews();
     plano.avisos.forEach((aviso) => showToastWarning(aviso, 'warning', 6000));
     if (!plano.avisos.length) showToastWarning('Ordem trocada. Se precisar, use o botão Desfazer.', 'success', 4200);
+}
+
+// --- Botao "Completar" (carga incompleta) ----------------------------------
+// Pecas puras em completar_carga.mjs. Cada alternativa e calculada com o motor
+// do salvar e so pode ser escolhida se completar a carga sem choque na turma
+// nem de professor.
+
+function getCargaDaOferta(alloc) {
+    return parseInt(alloc?.ch, 10) || parseInt(getDisciplinaInfo(alloc?.disciplina).ch, 10) || 0;
+}
+
+// Horas que faltam para a carga. Sem execucao calculada, nao acusa nada.
+function getHorasFaltando(alloc) {
+    if (!isFaixaAllocation(alloc)) return 0;
+    const feitas = contarHorasExecutadas(alloc.executionByDate);
+    const carga = getCargaDaOferta(alloc);
+    return feitas > 0 && carga > feitas ? carga - feitas : 0;
+}
+
+// Ensaia a alternativa numa copia das ofertas com o recalculo geral (o mesmo do
+// salvar): o calendario reparte os horarios pelas faixas, entao um acrescimo
+// pode tirar aulas de outra oferta mesmo sem choque nas aulas ja calculadas.
+function ensaiarRecalculo(alloc, posicao) {
+    const original = store.allocations;
+    const copia = JSON.parse(JSON.stringify(original));
+    const antes = new Map(copia.filter(isFaixaAllocation).map((a) => [a.id, contarHorasExecutadas(a.executionByDate)]));
+    const alvo = copia.find((a) => a.id === alloc.id);
+    if (!alvo) return 'oferta não encontrada';
+    Object.assign(alvo, JSON.parse(JSON.stringify(posicao)));
+    store.allocations = copia;
+    try {
+        recalcularOfertasPorFaixa(copia);
+    } finally {
+        store.allocations = original;
+    }
+    if (contarHorasExecutadas(alvo.executionByDate) < getCargaDaOferta(alloc)) return 'a carga não fecha no recálculo geral';
+    const perde = copia.find((a) => a.id !== alloc.id && isFaixaAllocation(a) && contarHorasExecutadas(a.executionByDate) < (antes.get(a.id) || 0));
+    return perde ? `tiraria aulas de "${perde.disciplina}"` : '';
+}
+
+function avaliarCompletar(alloc, faixasBrutas, extras = {}) {
+    const faixas = faixasBrutas.map(normalizeFaixaEntry).filter(Boolean);
+    if (!faixas.length) return null;
+    const execution = computeIntensiveExecution(
+        buildCandidateIntensiveFromFaixas({ ...alloc, ...extras }, faixas),
+        { respectPriority: true, respectTurmaOccupancy: true }
+    );
+    if (!execution?.dataFim || execution.totalHours < getCargaDaOferta(alloc)) return null;
+
+    const posicao = { ...posicaoDaExecucao(faixas, execution), ...extras };
+    const candidato = { ...alloc, ...posicao, ignoreAllocationIds: [alloc.id] };
+    const choque = acharChoqueNaTurma(candidato);
+    if (choque) return { motivo: `choque com "${choque.disciplina}" em ${formatDateBR(choque.date)}` };
+    const prof = findConfirmedTeacherConflictForCandidate(candidato, getAllocationTeachersForConflict(candidato));
+    const onde = prof
+        ? `${prof.teacherName} já tem ${prof.event.disciplina} (${getTurmaLabel(prof.event.turmaId, prof.event.subGrupo)}) em ${formatDateBR(prof.date)}, ${prof.horario}`
+        : '';
+    if (prof && !alloc.importado) return { motivo: `choque de professor: ${onde}` };
+    const falha = ensaiarRecalculo(alloc, posicao);
+    if (falha) return { motivo: falha, ensaiou: true };
+    return { posicao, aviso: prof ? `Sobreposição de professor permitida (componente importada): ${onde}.` : '' };
+}
+
+// Tenta as montagens na ordem e fica com a primeira que completa a carga. O
+// ensaio do recalculo e o passo caro: no maximo 6 por alternativa.
+function primeiraQueCompleta(alloc, tentativas) {
+    let motivo = '';
+    let ensaios = 0;
+    for (const { faixas, extras } of tentativas) {
+        const r = avaliarCompletar(alloc, faixas, extras);
+        if (r?.posicao) return r;
+        if (r?.motivo && !motivo) motivo = r.motivo;
+        if (r?.ensaiou && ++ensaios >= 6) break;
+    }
+    return { motivo: motivo || 'não há horários livres suficientes' };
+}
+
+function diaMes(iso) {
+    return formatDateBR(iso).slice(0, 5);
+}
+
+function montarOpcoesCompletar(alloc) {
+    const faixas = getNormalizedIntensiveFaixas(alloc);
+    const { termStart, termEnd } = store.settings;
+    const antes = alloc.executionByDate || {};
+    const depoisDe = (r) => r.posicao.executionByDate || {};
+    const opcoes = [];
+    const incluir = (titulo, r, descrever) => opcoes.push({ titulo, ...r, descricao: r.posicao ? descrever(r) : '' });
+
+    // 1. Estender o fim ate onde houver horario livre.
+    if (alloc.dataFim && termEnd && alloc.dataFim < termEnd) {
+        const ultima = faixas.length - 1;
+        incluir('Estender o fim',
+            primeiraQueCompleta(alloc, [{ faixas: faixas.map((f, i) => (i === ultima ? { ...f, fim: null } : f)) }]),
+            (r) => `termina em ${formatDateBR(r.posicao.dataFim)} (hoje termina em ${formatDateBR(alloc.dataFim)})`);
+    } else {
+        opcoes.push({ titulo: 'Estender o fim', motivo: 'já vai até o fim do período letivo' });
+    }
+
+    // 2. Comecar ate 3 semanas antes.
+    const inicios = [];
+    for (let k = 1; k <= 21; k++) {
+        const dia = addDaysISO(alloc.dataInicio, -k);
+        if (termStart && dia < termStart) break;
+        inicios.push(dia);
+    }
+    if (inicios.length) {
+        incluir('Começar antes',
+            primeiraQueCompleta(alloc, inicios.map((dia) => ({ faixas: faixas.map((f, i) => (i === 0 ? { ...f, inicio: dia } : f)) }))),
+            (r) => `começa em ${formatDateBR(Object.keys(depoisDe(r)).sort()[0])} (hoje começa em ${formatDateBR(alloc.dataInicio)})`);
+    } else {
+        opcoes.push({ titulo: 'Começar antes', motivo: 'já começa no início do período letivo' });
+    }
+
+    // 3 e 4. Acrescimos so nas semanas necessarias (menor janela primeiro).
+    const janelas = candidateWindows(alloc.dataInicio, alloc.dataFim);
+    const comAcrescimo = (extraFor, extras = {}) => primeiraQueCompleta(alloc, janelas.map(([desde, ate]) => ({
+        faixas: addToPatternBetween(faixas, desde, ate, extraFor),
+        extras
+    })));
+
+    // 3. Sabados.
+    const descreverSabados = (r) => {
+        const sabados = Object.keys(depoisDe(r)).filter((d) => new Date(`${d}T12:00:00`).getDay() === 6 && !antes[d]?.length).sort();
+        return `${sabados.length} sábado${sabados.length === 1 ? '' : 's'}: ${sabados.map((d) => `${diaMes(d)} (${depoisDe(r)[d].length}h)`).join(', ')}`;
+    };
+    const sabadoNoPadrao = (f) => ({ 6: f.slots });
+    if ((alloc.diasMarcados || []).includes(6)) {
+        opcoes.push({ titulo: 'Aulas aos sábados', motivo: 'já tem aulas aos sábados' });
+    } else {
+        incluir('Aulas aos sábados, no mesmo horário', comAcrescimo(sabadoNoPadrao), descreverSabados);
+        const padrao = alloc.horariosOcupados?.length ? alloc.horariosOcupados : (faixas[0]?.slots || []);
+        if (!isMorningPattern(padrao)) {
+            incluir('Aulas aos sábados, pela manhã', comAcrescimo(sabadoNoPadrao, { sabadoManha: true }), descreverSabados);
+        }
+    }
+
+    // 4. Um horario a mais por dia (de segunda a sexta), vizinho ao padrao de cada dia.
+    const quadro = buildHorariosForUI().filter((s) => !/intervalo/i.test(s));
+    const vizinhosDa = (f) => Object.fromEntries(Object.entries(f.drawnSlotsByDay || {})
+        .filter(([d]) => d !== '6')
+        .map(([d, slots]) => [d, adjacentSlot(slots, quadro)])
+        .filter(([, slot]) => slot)
+        .map(([d, slot]) => [d, [slot]]));
+    if (faixas.some((f) => Object.keys(vizinhosDa(f)).length)) {
+        incluir('Um horário a mais por dia', comAcrescimo(vizinhosDa), (r) => {
+            const dias = Object.keys(depoisDe(r)).filter((d) => depoisDe(r)[d].length > (antes[d]?.length || 0)).sort();
+            const novos = [...new Set(dias.flatMap((d) => depoisDe(r)[d].filter((s) => !(antes[d] || []).includes(s))))];
+            const periodo = dias.length > 1 ? `de ${diaMes(dias[0])} a ${diaMes(dias[dias.length - 1])}` : `em ${diaMes(dias[0])}`;
+            return `+${novos.join(', ')} em ${dias.length} dia${dias.length === 1 ? '' : 's'}, ${periodo}`;
+        });
+    } else {
+        opcoes.push({ titulo: 'Um horário a mais por dia', motivo: 'não há horário vizinho no quadro do turno' });
+    }
+
+    return opcoes;
+}
+
+function abrirCompletarCarga(baseAlloc) {
+    const alloc = store.allocations.find((a) => a.id === baseAlloc?.id);
+    if (!alloc || bloquearSeSomenteLeitura(alloc.turmaId)) return;
+    const falta = getHorasFaltando(alloc);
+    if (!falta) return;
+    const carga = getCargaDaOferta(alloc);
+
+    fecharJanelaDaLista();
+    const overlay = document.createElement('div');
+    overlay.id = 'lista-acao-modal';
+    overlay.className = 'troca-modal no-print';
+    overlay.innerHTML = `
+        <div class="troca-caixa" role="dialog" aria-modal="true" aria-labelledby="completar-titulo">
+            <h3 id="completar-titulo">Completar a carga de ${escapeTrocaHtml(alloc.disciplina)}</h3>
+            <p class="troca-sub">${formatPeriodoTroca(alloc.dataInicio, alloc.dataFim)} · ${carga - falta}h de ${carga}h: <strong>faltam ${falta}h</strong>. Escolha como completar:</p>
+            <div class="completar-opcoes"><p class="troca-sub">Calculando as alternativas...</p></div>
+            <p class="troca-nota">Cada alternativa já foi conferida: sem choque na turma nem de professor.</p>
+            <div class="troca-acoes"><button type="button" class="btn-secondary troca-cancelar">Cancelar</button></div>
+        </div>`;
+    document.body.appendChild(overlay);
+    document.addEventListener('keydown', onJanelaDaListaKeydown);
+
+    let opcoes = [];
+    overlay.addEventListener('click', (e) => {
+        if (e.target === overlay || e.target.closest('.troca-cancelar')) {
+            fecharJanelaDaLista();
+            return;
+        }
+        const botao = e.target.closest('.troca-opcao');
+        if (!botao || botao.disabled) return;
+        const opcao = opcoes[Number(botao.dataset.idx)];
+        if (!confirm(`Completar ${alloc.disciplina}?\n\n${opcao.titulo}: ${opcao.descricao}\n\nSe precisar, use o botão Desfazer.`)) return;
+        aplicarCompletar(alloc, opcao);
+    });
+
+    // Deixa a janela aparecer antes da conta (pode levar um instante).
+    setTimeout(() => {
+        if (!document.body.contains(overlay)) return;
+        opcoes = montarOpcoesCompletar(alloc);
+        overlay.querySelector('.completar-opcoes').innerHTML = `<ul class="troca-lista">${opcoes.map((opcao, idx) => `
+            <li>
+                <button type="button" class="troca-opcao" data-idx="${idx}" ${opcao.posicao ? '' : 'disabled'}>
+                    <strong>${escapeTrocaHtml(opcao.titulo)}</strong>
+                    ${opcao.posicao
+                        ? `<span class="troca-info">${escapeTrocaHtml(opcao.descricao)}</span>`
+                        : `<span class="troca-motivo">${escapeTrocaHtml(opcao.motivo)}</span>`}
+                </button>
+            </li>`).join('')}</ul>${opcoes.some((opcao) => opcao.posicao) ? '' : sugestaoOutroPeriodo()}`;
+    }, 30);
+}
+
+// Sem alternativa neste PL: sugere ofertar a componente em outro periodo letivo.
+function sugestaoOutroPeriodo() {
+    const proximo = getOfficialPeriodoLetivoPlans()
+        .filter((plan) => plan.termStart > (store.settings.termEnd || ''))
+        .sort((a, b) => a.termStart.localeCompare(b.termStart))[0];
+    const exemplo = proximo ? `, por exemplo ${escapeTrocaHtml(buildPeriodoLetivoOptionLabel(proximo))}` : '';
+    return `
+        <div class="completar-outro-pl">
+            <strong>Nenhuma alternativa completa a carga neste período letivo.</strong>
+            Sugestão: ofertar a componente em outro período${exemplo}. Para isso, exclua a oferta aqui e aloque-a no outro período.
+        </div>`;
+}
+
+function horasPorOferta() {
+    return new Map(store.allocations.filter(isFaixaAllocation).map((a) => [a.id, contarHorasExecutadas(a.executionByDate)]));
+}
+
+function aplicarCompletar(alloc, opcao) {
+    const undoSnapshot = snapshotAllocationsForUndo();
+    const antes = horasPorOferta();
+    Object.assign(alloc, opcao.posicao);
+    syncAllIntensiveDates();
+
+    // A carga tem de fechar, e nenhuma outra oferta pode ter perdido aulas.
+    const depois = horasPorOferta();
+    const incompleta = contarHorasExecutadas(alloc.executionByDate) < getCargaDaOferta(alloc);
+    const prejudicada = store.allocations.find((a) => a.id !== alloc.id && (depois.get(a.id) || 0) < (antes.get(a.id) || 0));
+    if ((incompleta || prejudicada) && undoSnapshot) {
+        store.replaceAllocations(undoSnapshot);
+        rerenderPlanBoundViews();
+        fecharJanelaDaLista();
+        showToastWarning(prejudicada
+            ? `Nada foi alterado: "${prejudicada.disciplina}" perderia aulas.`
+            : `Nada foi alterado: "${alloc.disciplina}" continuaria incompleta.`, 'error', 6000);
+        return;
+    }
+
+    commitAllocationUndoSnapshot(undoSnapshot);
+    fecharJanelaDaLista();
+    rerenderPlanBoundViews();
+    if (opcao.aviso) showToastWarning(opcao.aviso, 'warning', 6000);
+    else showToastWarning(`Carga completa: ${opcao.titulo.toLowerCase()}. Se precisar, use o botão Desfazer.`, 'success', 4600);
 }
 
 function renderOfertasList() {
@@ -7069,9 +7329,11 @@ function renderOfertasList() {
             if (row.totalHoras === row.chMax) color = '#27ae60';
             if (row.totalHoras > row.chMax) color = '#c0392b';
         }
+        const horasFaltando = row.rowType === 'pendente' ? 0 : getHorasFaltando(row.baseAlloc);
         const chInfo = row.rowType === 'pendente'
             ? `<span style="color:#7f8c8d;">--- / ${row.chMax}h</span>`
-            : `<b style="color:${color}">${row.totalHoras}</b> / ${row.chMax}h <small>(${row.details})</small>${row.sabadoLabel || ''}`;
+            : `<b style="color:${color}">${row.totalHoras}</b> / ${row.chMax}h <small>(${row.details})</small>${row.sabadoLabel || ''}`
+                + (horasFaltando ? `<br><span class="falta-badge" title="A oferta tem menos aulas que a carga horaria">faltam ${horasFaltando}h</span>` : '');
 
         const btnCopySigaa = row.sigaaCode && row.sigaaCode !== '-'
             ? `<div style="display:flex; align-items:center; justify-content:center; gap:6px;">
@@ -7085,6 +7347,7 @@ function renderOfertasList() {
             ${row.rowType === 'pendente' ? '' : '<button class="btn-secondary btn-replace-row" style="padding:4px 8px; margin:0; font-size:0.85em; background-color:#8e44ad; border:none; color:white; border-radius:3px; cursor:pointer;" title="Substituir por outra componente (mantem faixas e horarios)">Substituir</button>'}
             ${row.rowType === 'pendente' ? '' : '<button class="btn-secondary btn-swap-row" style="padding:4px 8px; margin:0; font-size:0.85em; background-color:#16a085; border:none; color:white; border-radius:3px; cursor:pointer;" title="Trocar a ordem com outra componente da turma">Trocar</button>'}
             <button class="btn-danger btn-delete-row" style="padding:4px 8px; margin:0; font-size:0.85em; border-radius:3px; cursor:pointer;" title="Excluir">Excluir</button>
+            ${horasFaltando ? '<button class="btn-secondary btn-complete-row" style="grid-column:span 2; padding:4px 8px; margin:0; font-size:0.85em; background-color:#e67e22; border:none; color:white; border-radius:3px; cursor:pointer;" title="Completar a carga horaria que falta">Completar</button>' : ''}
         `;
 
         tr.innerHTML = `
@@ -7135,6 +7398,9 @@ function renderOfertasList() {
 
         const btnSwap = tr.querySelector('.btn-swap-row');
         if (btnSwap) btnSwap.onclick = () => abrirTrocaDeOrdem(row.baseAlloc);
+
+        const btnComplete = tr.querySelector('.btn-complete-row');
+        if (btnComplete) btnComplete.onclick = () => abrirCompletarCarga(row.baseAlloc);
 
         tbody.appendChild(tr);
     };

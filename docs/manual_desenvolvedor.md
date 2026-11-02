@@ -119,6 +119,7 @@ Interface:
 - `agenda_publica.js`: runtime da agenda publica (multi-PL, consulta docente/discente).
 - `resumo_docente.mjs`: resumo do ano do docente na agenda publica (semanas do PL e componentes; puro, testado).
 - `troca_ordem.mjs`: regras do botao "Trocar" da Lista de Ofertas (mesma carga em qualquer posicao; carga diferente so em sequencia e com padrao unico; puro, testado). O calculo das novas posicoes e as checagens de turma e professor ficam em `ui.js` (`planejarTrocaDeOrdem`).
+- `completar_carga.mjs`: pecas do botao "Completar" da Lista de Ofertas (janelas de semanas, acrescimo de sabados ou de um horario dentro da janela, horario vizinho; puro, testado). Em `ui.js`, `montarOpcoesCompletar` calcula as alternativas e `ensaiarRecalculo` ensaia cada uma numa copia das ofertas com o recalculo geral (`recalcularOfertasPorFaixa`).
 
 Modo online:
 
@@ -419,6 +420,7 @@ Cobertura atual mais importante:
 - `pendentes`: componente nao fica pendente e alocada ao mesmo tempo;
 - `resumo_docente`: semanas e componentes do resumo do ano na agenda publica.
 - `troca_ordem`: quando duas componentes podem trocar de lugar (mesma carga, sequencia, sub-turma, faixas).
+- `completar_carga`: janelas, acrescimo de horarios e horario vizinho do botao "Completar".
 
 Uso recomendado nas limpezas graduais:
 

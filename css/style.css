@@ -3985,3 +3985,41 @@ body:has(#tab-weekly.active) .top-bar #weekly-instructions-card {
     justify-content: flex-end;
     margin-top: 14px;
 }
+
+/* "Completar" (carga incompleta) na lista de ofertas */
+.falta-badge {
+    display: inline-block;
+    margin-top: 3px;
+    padding: 1px 7px;
+    border-radius: 10px;
+    background: #fdecea;
+    color: #b03a2e;
+    font-size: 0.8em;
+    font-weight: bold;
+}
+
+.troca-acoes .troca-cancelar {
+    padding: 6px 16px;
+    border: 1px solid #bdc3c7;
+    border-radius: 4px;
+    background: #ecf0f1;
+    color: #2c3e50;
+    font: inherit;
+    cursor: pointer;
+}
+
+.troca-acoes .troca-cancelar:hover {
+    background: #dfe4e6;
+}
+
+.completar-outro-pl {
+    margin-top: 12px;
+    padding: 10px 12px;
+    border: 1px solid #f0c36d;
+    border-left: 5px solid #e67e22;
+    border-radius: 6px;
+    background: #fef5e7;
+    color: #6e4a12;
+    font-size: 0.9em;
+    line-height: 1.45;
+}
