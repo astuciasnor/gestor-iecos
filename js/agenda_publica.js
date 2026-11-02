@@ -202,6 +202,18 @@ async function init() {
     syncTabUI();
     renderActiveEmptyState();
     setupPlanSwitcher();
+    abrirDocenteDaUrl();
+}
+
+// ?docente=Nome abre direto na consulta desse professor (Resumo do ano). Usado
+// pela moldura de celular da aba Calendario Docente do app.
+function abrirDocenteDaUrl() {
+    const nome = String(new URLSearchParams(window.location.search || '').get('docente') || '').trim();
+    if (!nome) return;
+    const alvo = normalizeText(nome);
+    const publicado = (state.docentesDisponiveis || []).find((d) => normalizeText(d) === alvo);
+    switchTab('docente');
+    selecionarDocente(publicado || nome);
 }
 
 function cacheElements() {
@@ -2415,6 +2427,12 @@ function syncBackToTopButton() {
 function scrollResultIntoView() {
     if (!els.resultadoAgenda) return;
     requestAnimationFrame(() => {
+        // Dentro da moldura de celular do app, rola so a agenda (scrollIntoView
+        // rolaria tambem a pagina do app).
+        if (window.self !== window.top) {
+            window.scrollTo({ top: els.resultadoAgenda.getBoundingClientRect().top + window.scrollY, behavior: 'smooth' });
+            return;
+        }
         els.resultadoAgenda.scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
 }

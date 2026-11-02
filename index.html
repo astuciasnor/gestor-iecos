@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cardume – Planejador Acadêmico | IECOS</title>
-    <link rel="stylesheet" href="css/style.css??v=20261102a">
+    <link rel="stylesheet" href="css/style.css??v=20261102d">
 
     <style>
         :root {
@@ -1090,6 +1090,7 @@
                         <div class="subtab-switch" role="tablist" aria-label="Visualizações do docente">
                             <button type="button" class="subtab-btn active" data-subtab="docente-calendar" role="tab" aria-selected="true"><span class="docente-view-icon" aria-hidden="true">📅</span> Calendário</button>
                             <button type="button" class="subtab-btn" data-subtab="docente-gantt" role="tab" aria-selected="false"><span class="docente-view-icon" aria-hidden="true">📊</span> Gantt</button>
+                            <button type="button" class="subtab-btn" data-subtab="docente-celular" role="tab" aria-selected="false" title="Como o professor vê a agenda pública no celular"><span class="docente-view-icon" aria-hidden="true">📱</span> Celular</button>
                         </div>
                     </nav>
                     <section class="docente-filter-panel" aria-label="Filtros da agenda docente">
@@ -1140,6 +1141,21 @@
                         <div style="text-align: center; color: #7f8c8d; margin-top: 50px; font-size: 1.1em;">
                             Selecione um professor acima para visualizar o cronograma (Gantt).
                         </div>
+                    </div>
+                </div>
+                <div id="subview-docente-celular" class="subtab-view">
+                    <div class="celular-docente">
+                        <p id="celular-docente-vazio" class="celular-docente-vazio">
+                            Selecione um professor acima para ver a agenda como ele vê no celular.
+                        </p>
+                        <div id="celular-docente-moldura" class="celular-moldura" hidden>
+                            <iframe id="celular-docente-frame" title="Agenda pública no celular"></iframe>
+                        </div>
+                        <p class="celular-docente-nota">
+                            É a agenda pública, como o professor vê: <b>Resumo do ano</b> e calendário de cada mês.
+                            Mostra o que está publicado; alterações aparecem depois do <b>Publicar Online</b>.
+                            <button type="button" id="btn-celular-recarregar" class="celular-docente-recarregar">⟳ Recarregar</button>
+                        </p>
                     </div>
                 </div>
             </section>
@@ -1517,7 +1533,7 @@
         </main>
     </div>
 
-    <script type="module" src="js/main.js??v=20261102b"></script>
+    <script type="module" src="js/main.js??v=20261102c"></script>
 </body>
 
 </html>

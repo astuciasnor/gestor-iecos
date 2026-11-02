@@ -7314,8 +7314,30 @@ function renderSubtabContent(subtabId) {
         case 'docente-gantt':
             renderGanttChart();
             break;
+        case 'docente-celular':
+            renderCelularDocente();
+            break;
         default:
             break;
+    }
+}
+
+// Visao "Celular" do docente: a propria agenda publica numa moldura de celular,
+// ja aberta no professor escolhido (Resumo do ano e calendario de cada mes).
+function renderCelularDocente({ recarregar = false } = {}) {
+    const moldura = document.getElementById('celular-docente-moldura');
+    const frame = document.getElementById('celular-docente-frame');
+    const vazio = document.getElementById('celular-docente-vazio');
+    if (!moldura || !frame || !vazio) return;
+    const nome = String(selViewDocente?.value || '').trim();
+    vazio.hidden = !!nome;
+    moldura.hidden = !nome;
+    if (!nome) return;
+    const url = `agenda_publica.html?docente=${encodeURIComponent(nome)}`;
+    // So recarrega ao trocar de professor (ou a pedido), para nao perder a navegacao.
+    if (recarregar || frame.dataset.url !== url) {
+        frame.dataset.url = url;
+        frame.src = url;
     }
 }
 
@@ -7344,6 +7366,7 @@ function setupSubtabs() {
     document.querySelectorAll('.subtab-btn').forEach((btn) => {
         btn.addEventListener('click', () => activateSubtab(btn.dataset.subtab));
     });
+    document.getElementById('btn-celular-recarregar')?.addEventListener('click', () => renderCelularDocente({ recarregar: true }));
 }
 
 export { renderWeeklyGrid, renderOfertasList, renderMonthlyCalendar, renderTeacherCalendar };

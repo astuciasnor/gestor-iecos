@@ -55,6 +55,7 @@ Observacoes importantes:
 ### 3. Revisao e auditoria
 
 - Use a aba **Lista de Ofertas** para revisar, editar ou excluir ofertas.
+- Na aba **Calendario Docente**, a visao **📱 Celular** mostra a agenda publica numa moldura de celular, ja no professor escolhido (Resumo do ano e calendario de cada mes), como ele ve no celular. Mostra o que esta publicado (no Live Server, o rascunho deste computador).
 - **Trocar** (na Lista de Ofertas) troca duas componentes da turma de lugar: com a mesma carga horaria, em qualquer posicao; com cargas diferentes, so quando estao em sequencia. A troca e barrada se houver choque na turma ou de professor, e pode ser desfeita com **Desfazer**.
 - O selo **"faltam Xh"** na Lista de Ofertas marca a oferta com menos aulas que a carga horaria (cortada no fim do periodo ou da faixa). Ajuste pelo **Editar** (datas, horarios ou sabados) ou leve a componente para outro periodo.
 - Use **Calendario da Turma**, **Calendario Docente** e **Grafico Gantt** para leitura e auditoria.
