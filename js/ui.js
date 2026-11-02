@@ -5209,7 +5209,8 @@ function populateDocentes() {
     const nomesAlloc = [];
     (store.allocations || []).forEach((a) => {
         const single = String(a?.docente || '').trim();
-        if (single && !/^a definir$/i.test(single) && !/\(multiplos\)/i.test(single)) {
+        // Rotulo de componente compartilhada ("Marileide / Evaldo (Múltiplos)") nao e um docente.
+        if (single && !/^a definir$/i.test(single) && !/\(m[uú]ltiplos\)/i.test(single) && !/\s\/\s/.test(single)) {
             nomesAlloc.push(single);
         }
         if (Array.isArray(a?.docentes)) {
