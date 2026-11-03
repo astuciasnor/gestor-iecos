@@ -1,6 +1,6 @@
 {
   "meta": {
-    "generated_at": "2026-10-29T09:58:14",
+    "generated_at": "2026-11-03T16:52:09",
     "source_file": "planilha_base.xlsx"
   },
   "docentes": [
@@ -3081,168 +3081,200 @@
       "ano": 2022,
       "turno": "Manhã",
       "turma_id": "EP2022",
-      "turma_label": "EP2022"
+      "turma_label": "EP2022",
+      "periodos": "pares"
     },
     {
       "sigla": "EP",
       "ano": 2023,
       "turno": "Tarde",
       "turma_id": "EP2023",
-      "turma_label": "EP2023"
+      "turma_label": "EP2023",
+      "periodos": "pares"
     },
     {
       "sigla": "EP",
       "ano": 2024,
       "turno": "Manhã",
       "turma_id": "EP2024",
-      "turma_label": "EP2024"
+      "turma_label": "EP2024",
+      "periodos": "pares"
     },
     {
       "sigla": "EP",
       "ano": 2025,
       "turno": "Tarde",
       "turma_id": "EP2025",
-      "turma_label": "EP2025"
+      "turma_label": "EP2025",
+      "periodos": "pares"
     },
     {
       "sigla": "EP",
       "ano": 2026,
       "turno": "Manhã",
       "turma_id": "EP2026",
-      "turma_label": "EP2026"
+      "turma_label": "EP2026",
+      "periodos": "pares"
     },
     {
       "sigla": "EP",
       "ano": 2027,
       "turno": "Tarde",
       "turma_id": "EP2027",
-      "turma_label": "EP2027"
+      "turma_label": "EP2027",
+      "periodos": "pares"
+    },
+    {
+      "sigla": "EP",
+      "ano": 2027,
+      "turno": "Manhã+Tarde",
+      "turma_id": "EP2027C",
+      "turma_label": "EP2027C",
+      "periodos": "impares"
     },
     {
       "sigla": "CB",
       "ano": 2022,
       "turno": "Manhã",
       "turma_id": "CB2022",
-      "turma_label": "CB2022"
+      "turma_label": "CB2022",
+      "periodos": "pares"
     },
     {
       "sigla": "CB",
       "ano": 2023,
       "turno": "Tarde",
       "turma_id": "CB2023",
-      "turma_label": "CB2023"
+      "turma_label": "CB2023",
+      "periodos": "pares"
     },
     {
       "sigla": "CB",
       "ano": 2024,
       "turno": "Manhã",
       "turma_id": "CB2024",
-      "turma_label": "CB2024"
+      "turma_label": "CB2024",
+      "periodos": "pares"
     },
     {
       "sigla": "CB",
       "ano": 2025,
       "turno": "Tarde",
       "turma_id": "CB2025",
-      "turma_label": "CB2025"
+      "turma_label": "CB2025",
+      "periodos": "pares"
     },
     {
       "sigla": "CB",
       "ano": 2026,
       "turno": "Manhã",
       "turma_id": "CB2026",
-      "turma_label": "CB2026"
+      "turma_label": "CB2026",
+      "periodos": "pares"
     },
     {
       "sigla": "CB",
       "ano": 2027,
       "turno": "Tarde",
       "turma_id": "CB2027",
-      "turma_label": "CB2027"
+      "turma_label": "CB2027",
+      "periodos": "pares"
     },
     {
       "sigla": "CN",
       "ano": 2022,
       "turno": "Tarde",
       "turma_id": "CN2022",
-      "turma_label": "CN2022"
+      "turma_label": "CN2022",
+      "periodos": "pares"
     },
     {
       "sigla": "CN",
       "ano": 2023,
       "turno": "Manhã",
       "turma_id": "CN2023",
-      "turma_label": "CN2023"
+      "turma_label": "CN2023",
+      "periodos": "pares"
     },
     {
       "sigla": "CN",
       "ano": 2024,
       "turno": "Tarde",
       "turma_id": "CN2024",
-      "turma_label": "CN2024"
+      "turma_label": "CN2024",
+      "periodos": "pares"
     },
     {
       "sigla": "CN",
       "ano": 2025,
       "turno": "Manhã",
       "turma_id": "CN2025",
-      "turma_label": "CN2025"
+      "turma_label": "CN2025",
+      "periodos": "pares"
     },
     {
       "sigla": "CN",
       "ano": 2026,
       "turno": "Tarde",
       "turma_id": "CN2026",
-      "turma_label": "CN2026"
+      "turma_label": "CN2026",
+      "periodos": "pares"
     },
     {
       "sigla": "CN",
       "ano": 2027,
       "turno": "Manhã",
       "turma_id": "CN2027",
-      "turma_label": "CN2027"
+      "turma_label": "CN2027",
+      "periodos": "pares"
     },
     {
       "sigla": "MT",
       "ano": 2022,
       "turno": "Manhã",
       "turma_id": "MT2022",
-      "turma_label": "MT2022"
+      "turma_label": "MT2022",
+      "periodos": "pares"
     },
     {
       "sigla": "MT",
       "ano": 2023,
       "turno": "Tarde",
       "turma_id": "MT2023",
-      "turma_label": "MT2023"
+      "turma_label": "MT2023",
+      "periodos": "pares"
     },
     {
       "sigla": "MT",
       "ano": 2024,
       "turno": "Tarde",
       "turma_id": "MT2024",
-      "turma_label": "MT2024"
+      "turma_label": "MT2024",
+      "periodos": "pares"
     },
     {
       "sigla": "MT",
       "ano": 2025,
       "turno": "noite",
       "turma_id": "MT2025",
-      "turma_label": "MT2025"
+      "turma_label": "MT2025",
+      "periodos": "pares"
     },
     {
       "sigla": "MT",
       "ano": 2026,
       "turno": "tarde",
       "turma_id": "MT2026",
-      "turma_label": "MT2026"
+      "turma_label": "MT2026",
+      "periodos": "pares"
     },
     {
       "sigla": "MT",
       "ano": 2027,
       "turno": "Noite",
       "turma_id": "MT2027",
-      "turma_label": "MT2027"
+      "turma_label": "MT2027",
+      "periodos": "pares"
     }
   ],
   "horarios": [

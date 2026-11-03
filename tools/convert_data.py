@@ -15,7 +15,8 @@ componentes:
   sigla | periodo | codigo | cor | componente | abreviacao | ch
 
 turmas:
-  sigla | ano | turno
+  sigla | ano | turno | turma_id (opcional; padrao sigla+ano, ex.: EP2027C)
+  | periodos (opcional; "impares" = so PL1/PL3, padrao "pares")
 
 cursos:
   sigla | curso
@@ -233,7 +234,9 @@ def build_json_from_excel(xlsx_path: Path) -> Dict[str, Any]:
         sigla = to_str(row.get("sigla"))
         ano = to_int(row.get("ano"))
         turno = to_str(row.get("turno"))
-        turma_id = f"{sigla}{ano}" if sigla and ano else ""
+        # turma_id (opcional) distingue turmas do mesmo curso e ano (ex.: EP2027C).
+        # Sem ele, vale sigla+ano.
+        turma_id = to_str(row.get("turma_id")) or (f"{sigla}{ano}" if sigla and ano else "")
         turmas_out.append(
             {
                 "sigla": sigla,
@@ -241,6 +244,8 @@ def build_json_from_excel(xlsx_path: Path) -> Dict[str, Any]:
                 "turno": turno,
                 "turma_id": turma_id,
                 "turma_label": turma_id,
+                # "impares": turma so tem aulas em PL1/PL3 (blocos contados nesses periodos)
+                "periodos": to_str(row.get("periodos")).lower() or "pares",
             }
         )
     data["turmas"] = turmas_out

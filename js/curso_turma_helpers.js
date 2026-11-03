@@ -20,24 +20,31 @@ export function getDisciplinaCHGlobal(disciplina, turmaId) {
  * @param {string} turmaId - Ex: 'EP2026', 'CB2024'
  * @param {string} periodo - 'PL1', 'PL2', 'PL3' ou 'PL4'
  * @param {string} termStart - Data de início do semestre (YYYY-MM-DD), usada para obter o ano de referência
- * @returns {string} - Ex: 'BL1', 'BL5', ou '' para PL1/PL3
+ * Turmas regulares tem bloco em PL2/PL4 (PL2 do ano de entrada = BL1).
+ * Turmas de periodos impares (turma.periodos = 'impares', ex.: EP2027C) tem bloco
+ * em PL3/PL1: PL3 do ano de entrada = BL1, PL1 do ano seguinte = BL2, e assim por diante.
+ * @returns {string} - Ex: 'BL1', 'BL5', ou '' fora dos periodos da turma
  */
 export function derivarBloco(turmaId, periodo, termStart) {
     const p = normalizePeriodoLetivoCode(periodo);
-    if (p !== 'PL2' && p !== 'PL4') return '';
 
-    const anoEntrada = parseInt(String(turmaId).slice(-4));
+    // Ano de entrada vem do cadastro (turma.ano): o id pode ter sufixo (ex.: EP2027C).
+    const turmaCad = (store.rawData?.turmas || []).find((t) => String(t.turma_id) === String(turmaId));
+    const impares = String(turmaCad?.periodos || '').toLowerCase() === 'impares';
+    if (impares ? (p !== 'PL3' && p !== 'PL1') : (p !== 'PL2' && p !== 'PL4')) return '';
+
+    const anoEntrada = parseInt(turmaCad?.ano ?? String(turmaId).match(/\d{4}/)?.[0]);
     const anoRef = parseInt((termStart || String(new Date().getFullYear())).slice(0, 4));
     if (Number.isNaN(anoEntrada) || Number.isNaN(anoRef)) return '';
 
     const anosDecorridos = anoRef - anoEntrada;
     if (anosDecorridos < 0) return '';
 
-    const numBloco = p === 'PL2'
-        ? 2 * anosDecorridos + 1
-        : 2 * anosDecorridos + 2;
+    let numBloco;
+    if (impares) numBloco = p === 'PL3' ? 2 * anosDecorridos + 1 : 2 * anosDecorridos;
+    else numBloco = p === 'PL2' ? 2 * anosDecorridos + 1 : 2 * anosDecorridos + 2;
 
-    return `BL${numBloco}`;
+    return numBloco > 0 ? `BL${numBloco}` : '';
 }
 
 export function getTurmaSelectLabel(turmaId) {
