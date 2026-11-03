@@ -383,6 +383,8 @@ export function buildCalendarTurmaResumeTable(turmaId, start, end) {
                     return {
                         nome: nome || '-',
                         ch: toCH(segment?.ch) || toCH(declared?.ch),
+                        // Horas executadas por este docente nesta oferta (coluna "CH alocada").
+                        horas: segments.length === 1 ? toCH(group?.executedHours) : toCH(segment?.hours),
                         dataInicio: String(segment?.start || fallbackStart || '').trim(),
                         dataFim: String(segment?.end || fallbackEnd || '').trim()
                     };
@@ -393,6 +395,7 @@ export function buildCalendarTurmaResumeTable(turmaId, start, end) {
             return declaredDocentes.map((docente) => ({
                 nome: String(docente?.nome || '').trim() || '-',
                 ch: toCH(docente?.ch),
+                horas: declaredDocentes.length === 1 ? toCH(group?.executedHours) : 0,
                 dataInicio: fallbackStart,
                 dataFim: fallbackEnd
             }));
@@ -402,6 +405,7 @@ export function buildCalendarTurmaResumeTable(turmaId, start, end) {
         return [{
             nome: fallbackDocente || '-',
             ch: 0,
+            horas: toCH(group?.executedHours),
             dataInicio: fallbackStart,
             dataFim: fallbackEnd
         }];
@@ -462,7 +466,7 @@ export function buildCalendarTurmaResumeTable(turmaId, start, end) {
             const docentes = extractDocentes(alloc, disciplinaEntry.totalCH);
 
             if (docentes.length === 0) {
-                disciplinaEntry.rows.push({ nome: '-', ch: 0, dataInicio, dataFim });
+                disciplinaEntry.rows.push({ nome: '-', ch: 0, horas: 0, dataInicio, dataFim });
                 return;
             }
 
@@ -470,6 +474,7 @@ export function buildCalendarTurmaResumeTable(turmaId, start, end) {
                 disciplinaEntry.rows.push({
                     nome: docente.nome,
                     ch: toCH(docente.ch),
+                    horas: toCH(docente.ch),
                     dataInicio,
                     dataFim
                 });
@@ -489,7 +494,8 @@ export function buildCalendarTurmaResumeTable(turmaId, start, end) {
             const current = merged.get(rowKey);
             merged.set(rowKey, {
                 ...current,
-                ch: Math.max(toCH(current?.ch), toCH(row?.ch))
+                ch: Math.max(toCH(current?.ch), toCH(row?.ch)),
+                horas: toCH(current?.horas) + toCH(row?.horas)
             });
         });
 
@@ -498,29 +504,27 @@ export function buildCalendarTurmaResumeTable(turmaId, start, end) {
                 const startCmp = String(a.dataInicio || '').localeCompare(String(b.dataInicio || ''));
                 if (startCmp !== 0) return startCmp;
                 return String(a.nome || '').localeCompare(String(b.nome || ''), 'pt-BR', { sensitivity: 'base' });
-            })
-            .map((row, rowIndex, arr) => {
-                const fallbackCH = (arr.length === 1 && toCH(row.ch) <= 0)
-                    ? toCH(disciplina.totalCH)
-                    : toCH(row.ch);
-                return {
-                    ...row,
-                    ch: fallbackCH
-                };
             });
 
-        const totalFromRows = rows.reduce((sum, row) => sum + toCH(row.ch), 0);
+        const totalFromRows = rows.reduce((sum, row) => sum + toCH(row.horas), 0);
         // CH alocada = horas efetivamente executadas (projecao canonica). No
         // caminho de fallback (sem projecao) usa a soma das linhas para nao
         // sinalizar divergencia falsa.
         const allocatedCH = (disciplina.allocatedCH === null || disciplina.allocatedCH === undefined)
             ? totalFromRows
             : toCH(disciplina.allocatedCH);
+        // Cada linha mostra as suas horas. Se as linhas nao fecham com o total
+        // (ex.: docente sem aula observada), mostra o total so na primeira linha.
+        const rowsFecham = rows.length === 1 || Math.abs(totalFromRows - allocatedCH) <= 0.01;
+        rows.forEach((row, idx) => {
+            row.horas = rowsFecham && rows.length > 1 ? toCH(row.horas) : (idx === 0 ? allocatedCH : null);
+        });
+        const totalChRows = rows.reduce((sum, row) => sum + toCH(row.ch), 0);
         return {
             ...disciplina,
             rows,
             allocatedCH,
-            totalCH: toCH(disciplina.totalCH) > 0 ? toCH(disciplina.totalCH) : totalFromRows
+            totalCH: toCH(disciplina.totalCH) > 0 ? toCH(disciplina.totalCH) : (totalChRows || totalFromRows)
         };
     });
 
@@ -556,21 +560,25 @@ export function buildCalendarTurmaResumeTable(turmaId, start, end) {
     `;
 
     disciplinas.forEach((disc) => {
-        const safeRows = disc.rows.length > 0 ? disc.rows : [{ nome: '-', ch: 0, dataInicio: '', dataFim: '' }];
+        const safeRows = disc.rows.length > 0 ? disc.rows : [{ nome: '-', ch: 0, horas: disc.allocatedCH, dataInicio: '', dataFim: '' }];
         const allocatedMismatch = Math.abs(toCH(disc.allocatedCH) - toCH(disc.totalCH)) > 0.01;
         const allocatedCellStyle = allocatedMismatch
             ? 'color: #c0392b; font-weight: 800;'
             : 'color: #1f2937; font-weight: 700;';
-        const allocatedDisplay = formatCH(disc.allocatedCH);
+        // Com divergencia, o aviso diz a soma alocada contra a CH da componente.
+        const allocatedTitle = allocatedMismatch
+            ? ` title="Alocado ${formatCH(disc.allocatedCH) || '0'}h para CH de ${formatCH(disc.totalCH) || '0'}h"`
+            : '';
 
         safeRows.forEach((row, idx) => {
             const isFirst = idx === 0;
+            const horasDisplay = row.horas === null || row.horas === undefined ? '' : (formatCH(row.horas) || '0');
             tableHtml += `
                 <tr style="border-bottom: 1px solid #ddd; background-color: ${disc.cor}22;">
                     <td style="padding: 8px; border-right: 1px solid #ddd; font-weight: bold;">${isFirst ? disc.numero : ''}</td>
                     <td style="padding: 8px; border-right: 2px solid #2d34c6;">${isFirst ? escapeHtml(disc.codigo || '-') : ''}</td>
-                    <td style="padding: 8px; text-align: center; border-right: 1px solid #ddd; font-weight: 700; color: #1f2937;">${formatCH(row.ch)}</td>
-                    <td style="padding: 8px; text-align: center; border-right: 2px solid #2d34c6; ${allocatedCellStyle}">${isFirst ? (allocatedDisplay || '0') : ''}</td>
+                    <td style="padding: 8px; text-align: center; border-right: 1px solid #ddd; font-weight: 700; color: #1f2937;">${isFirst ? formatCH(disc.totalCH) : ''}</td>
+                    <td style="padding: 8px; text-align: center; border-right: 2px solid #2d34c6; ${allocatedCellStyle}"${allocatedTitle}>${horasDisplay}</td>
                     <td style="padding: 8px; border-right: 1px solid #ddd; font-weight: ${isFirst ? '700' : '500'}; color: #333;">${isFirst ? escapeHtml(disc.disciplina) : ''}</td>
                     <td style="padding: 8px; border-right: 1px solid #ddd; color: #333;">${escapeHtml(row.nome || '-')}</td>
                     <td style="padding: 8px; color: #4b5563;">${escapeHtml(formatPeriodo(row.dataInicio, row.dataFim))}</td>
