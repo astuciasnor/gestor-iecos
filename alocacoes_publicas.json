@@ -1,11 +1,11 @@
 {
   "version": 3,
-  "exportedAt": "2026-11-03T14:02:54.908566Z",
+  "exportedAt": "2026-11-03T14:06:45.612059Z",
   "layoutMode": "single_file_multi_plan",
   "publications": [
     {
       "version": 2,
-      "exportedAt": "2026-11-03T17:02:42.599Z",
+      "exportedAt": "2026-11-03T17:06:20.817Z",
       "plan": {
         "periodo": "PL4",
         "termStart": "2027-08-23",
@@ -21162,7 +21162,7 @@
     },
     {
       "version": 2,
-      "exportedAt": "2026-11-03T17:02:42.565Z",
+      "exportedAt": "2026-11-03T17:06:20.788Z",
       "plan": {
         "periodo": "PL2",
         "termStart": "2027-03-15",
@@ -59083,7 +59083,7 @@
     },
     {
       "version": 2,
-      "exportedAt": "2026-11-03T17:02:42.587Z",
+      "exportedAt": "2026-11-03T17:06:20.805Z",
       "plan": {
         "periodo": "PL1",
         "termStart": "2027-01-04",
@@ -60000,7 +60000,7 @@
     },
     {
       "version": 2,
-      "exportedAt": "2026-11-03T17:02:42.586Z",
+      "exportedAt": "2026-11-03T17:06:20.804Z",
       "plan": {
         "periodo": "PL4",
         "termStart": "2026-08-24",
