@@ -79,12 +79,12 @@ Regras:
 |-- publicacoes/          configuracao e catalogo da agenda publica
 |-- supabase/schema.sql   banco do modo 'supabase'
 |-- tests/                testes automatizados (node --test)
-|-- tools/                scripts Python (dados, publicacao, cadastro de curso) e servidor_local/ (Docker)
+|-- tools/                scripts Python (dados, publicacao, cadastro de curso), smoke_test.mjs e bump_version.mjs (Node) e servidor_local/ (Docker)
 |-- agenda_publica.html
 |-- alocacoes_publicas.json
 |-- dados_app.json
 |-- index.html
-|-- package.json          so para "npm test" (o app nao usa npm)
+|-- package.json          so para "npm test", "npm run smoke" e "npm run versao" (o app nao usa npm)
 `-- README.md
 ```
 
@@ -418,10 +418,19 @@ Cobertura atual mais importante:
 - `pendentes`: componente nao fica pendente e alocada ao mesmo tempo;
 - `resumo_docente`: semanas e componentes do resumo do ano na agenda publica.
 - `troca_ordem`: quando duas componentes podem trocar de lugar (mesma carga, sequencia, sub-turma, faixas).
+- `versoes`: todos os `.js`/`.css` chamados com a mesma versao `?v=` (corrija com `npm run versao`).
+
+Teste de fumaca no navegador (`tools/smoke_test.mjs`): abre o app num Chrome/Edge invisivel com os dados de `alocacoes_publicas.json` e confere abas, Lista de Ofertas + Trocar, busca de docentes (so nomes individuais), Gantt e Celular; qualquer erro no console reprova. Leva uns 25 s. Outro navegador: `CHROME_PATH`.
+
+```bash
+npm run smoke
+```
+
+Versao dos arquivos: depois de mudar `js/` ou `css/`, rode `npm run versao` (`tools/bump_version.mjs`). Ele poe o mesmo carimbo de data e hora em todos os imports e nos `<script>`/`<link>` dos dois `.html`, para o navegador baixar tudo novo e nunca carregar um modulo duas vezes.
 
 Uso recomendado nas limpezas graduais:
 
-1. rodar a suite automatizada;
+1. rodar a suite automatizada e o `npm run smoke`;
 2. testar `index.html`;
 3. testar `agenda_publica.html`;
 4. so depois remover ou consolidar arquivos de baixo risco.

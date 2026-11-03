@@ -1,15 +1,15 @@
-import { store } from './store.js??v=20261028a';
-import { initUI, exportSigaaMetadataJSON, showToastWarning, refreshAfterRemoteChange } from './ui.js??v=20261102e';
-import { iniciarAcesso, isOnlineMode } from './acesso_ui.js??v=20261030a';
-import { fetchAllocationsForPlans } from './sync_remoto.js??v=20261030a';
-import { filterExportableAllocations } from './academic_rules.mjs';
+import { store } from './store.js?v=202611021217';
+import { initUI, exportSigaaMetadataJSON, showToastWarning, refreshAfterRemoteChange } from './ui.js?v=202611021217';
+import { iniciarAcesso, isOnlineMode } from './acesso_ui.js?v=202611021217';
+import { fetchAllocationsForPlans } from './sync_remoto.js?v=202611021217';
+import { filterExportableAllocations } from './academic_rules.mjs?v=202611021217';
 import {
   buildPlanScopedPayload,
   buildTurmaParaCursoMap,
   collectAllocationsByCurso,
   buildTodosCursosExportSnapshot,
   buildPublicExportPayload
-} from './serialization.js';
+} from './serialization.js?v=202611021217';
 
 // Cursos exportaveis: os cadastrados na aba cursos da planilha (dados_app.json).
 function getExportCursosUnidade() {

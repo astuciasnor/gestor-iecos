@@ -1,7 +1,7 @@
-import { store } from './store.js??v=20261028a';
-import { getCalendarEvents } from './calendar.js';
-import { detectTeacherConflicts } from './conflicts.js';
-import { filterExportableAllocations, getTeacherActiveShifts } from './academic_rules.mjs';
+import { store } from './store.js?v=202611021217';
+import { getCalendarEvents } from './calendar.js?v=202611021217';
+import { detectTeacherConflicts } from './conflicts.js?v=202611021217';
+import { filterExportableAllocations, getTeacherActiveShifts } from './academic_rules.mjs?v=202611021217';
 
 function ensureExecutionEntry(maps, allocId) {
     if (!allocId) return;

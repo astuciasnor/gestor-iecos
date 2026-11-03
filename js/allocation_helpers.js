@@ -1,5 +1,5 @@
-import { store } from './store.js??v=20261028a';
-import { getDisciplinaCHGlobal } from './curso_turma_helpers.js';
+import { store } from './store.js?v=202611021217';
+import { getDisciplinaCHGlobal } from './curso_turma_helpers.js?v=202611021217';
 
 export function getAllocationModo(alloc) {
     return String(alloc?.modo || '').trim().toLowerCase();

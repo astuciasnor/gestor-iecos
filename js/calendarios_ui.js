@@ -1,9 +1,9 @@
-import { store } from './store.js??v=20261028a';
-import { getCalendarEvents } from './calendar.js';
-import { buildTeacherExecutionSnapshot, buildCanonicalOfferProjection } from './execution_engine.js';
-import { getHorariosByTurno, normalizeTurnoKey, getTurnoLetter, mapSlotToTurno } from './turns.js';
-import { vividHexColor } from './color_utils.js';
-import { formatDateBR, timeToMinutes, shortDayName } from './date_utils_ui.js';
+import { store } from './store.js?v=202611021217';
+import { getCalendarEvents } from './calendar.js?v=202611021217';
+import { buildTeacherExecutionSnapshot, buildCanonicalOfferProjection } from './execution_engine.js?v=202611021217';
+import { getHorariosByTurno, normalizeTurnoKey, getTurnoLetter, mapSlotToTurno } from './turns.js?v=202611021217';
+import { vividHexColor } from './color_utils.js?v=202611021217';
+import { formatDateBR, timeToMinutes, shortDayName } from './date_utils_ui.js?v=202611021217';
 import {
     isFaixaAllocation,
     isScheduledRegularAllocation,
@@ -11,7 +11,7 @@ import {
     teacherNamesMatch,
     getDocenteShortLabel,
     calculateTeacherTotalCH
-} from './allocation_helpers.js';
+} from './allocation_helpers.js?v=202611021217';
 import {
     normalizeTurnoOfertaKey,
     formatTurnoOfertaLabel,
@@ -21,18 +21,18 @@ import {
     buildHorariosForUI,
     getShiftChangeMeta,
     getCalendarShiftBadgeHTML
-} from './turno_helpers.js';
+} from './turno_helpers.js?v=202611021217';
 import {
     getDisciplinaCHGlobal,
     getTurmaLabel,
     getTurmaBaseLabel,
     getDisciplinaInfo,
     getPrintAcademicMetaLine
-} from './curso_turma_helpers.js';
+} from './curso_turma_helpers.js?v=202611021217';
 import {
     getGanttTurnoConfigs,
     resolveTeacherShiftForSlot
-} from './gantt_ui.js';
+} from './gantt_ui.js?v=202611021217';
 
 // Referencias DOM de nivel de modulo (espelham as de ui.js; modulo deferred, DOM pronto).
 const selViewDocente = document.getElementById('sel-view-docente');

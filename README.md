@@ -243,9 +243,23 @@ npm test
 node --test "tests/*.test.mjs"
 ```
 
+Teste do app aberto no navegador (Chrome ou Edge invisivel, com os dados de `alocacoes_publicas.json`): abre o app, passa pelas abas, Lista de Ofertas e Trocar, busca de docentes, Gantt e Celular, e falha se aparecer erro no console. Rode antes de publicar uma mudanca no codigo:
+
+```bash
+npm run smoke
+```
+
+**Versao dos arquivos (cache do navegador):** todos os `.js`/`.css` do app sao chamados com o mesmo `?v=CARIMBO`. Depois de mudar qualquer arquivo de `js/` ou `css/`, rode:
+
+```bash
+npm run versao        # o mesmo que: node tools/bump_version.mjs
+```
+
+O `npm test` confere se ficou tudo com a mesma versao (`tests/versoes.test.mjs`).
+
 Uso recomendado nas limpezas graduais:
 
-1. rodar a suite automatizada;
+1. rodar a suite automatizada e o `npm run smoke`;
 2. testar `index.html`;
 3. testar `agenda_publica.html`;
 4. so entao remover ou consolidar arquivos de baixo risco.
