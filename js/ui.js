@@ -1166,33 +1166,43 @@ function restoreFaixasDraft(draft) {
     }
 }
 
-function moveFaixaInUI(from, to) {
-    const fromIni = document.getElementById(`inp-data-inicio-f${from}`);
-    const fromFim = document.getElementById(`inp-data-fim-f${from}`);
-    const toIni = document.getElementById(`inp-data-inicio-f${to}`);
-    const toFim = document.getElementById(`inp-data-fim-f${to}`);
-    if (toIni) toIni.value = fromIni?.value || '';
-    if (toFim) toFim.value = fromFim?.value || '';
-    faixasPatterns[to] = normalizeFaixaPattern(faixasPatterns[from]);
-}
-
-function insertFaixaAfter(faixaIndex, inicio, pattern) {
-    for (let i = 3; i > faixaIndex + 1; i--) moveFaixaInUI(i - 1, i);
+// A mudanca de horario recomeca as faixas: as seguintes sao apagadas e a nova
+// faixa vai do dia da mudanca ate completar a CH. O coordenador redesenha o resto.
+function restartFaixasAfter(faixaIndex, inicio, pattern) {
+    for (let i = 3; i > faixaIndex; i--) clearFaixaState(i);
     const idx = faixaIndex + 1;
     const iniEl = document.getElementById(`inp-data-inicio-f${idx}`);
-    const fimEl = document.getElementById(`inp-data-fim-f${idx}`);
     if (iniEl) iniEl.value = inicio;
-    if (fimEl) fimEl.value = '';
     faixasPatterns[idx] = normalizeFaixaPattern(pattern);
 }
 
-function removeFaixaFromUI(faixaIndex) {
-    for (let i = faixaIndex; i < 3; i++) moveFaixaInUI(i + 1, i);
-    const iniEl = document.getElementById('inp-data-inicio-f3');
-    const fimEl = document.getElementById('inp-data-fim-f3');
-    if (iniEl) iniEl.value = '';
-    if (fimEl) fimEl.value = '';
-    faixasPatterns[3] = [];
+// Datas letivas em [inicio, fimExclusivo) cujo dia da semana muda entre os dois desenhos.
+function listDatesAffectedByPatternChange(before, after, startISO, endExclusiveISO) {
+    const slotsByDia = (pattern) => {
+        const map = new Map();
+        normalizeFaixaPattern(pattern).forEach((p) => {
+            if (!map.has(p.dia)) map.set(p.dia, new Set());
+            map.get(p.dia).add(p.slot);
+        });
+        return map;
+    };
+    const a = slotsByDia(before);
+    const b = slotsByDia(after);
+    const changedDias = new Set();
+    for (let dia = 0; dia <= 6; dia++) {
+        const sa = a.get(dia) || new Set();
+        const sb = b.get(dia) || new Set();
+        if (sa.size !== sb.size || [...sa].some((s) => !sb.has(s))) changedDias.add(dia);
+    }
+    const feriados = getHolidayLabelMap();
+    const dates = [];
+    let cursor = startISO;
+    while (cursor && cursor < endExclusiveISO) {
+        const dow = new Date(`${cursor}T12:00:00`).getDay();
+        if (changedDias.has(dow) && !feriados.has(cursor)) dates.push(cursor);
+        cursor = addDaysISO(cursor, 1);
+    }
+    return dates;
 }
 
 function refreshFaixasAfterStructureChange() {
@@ -1255,9 +1265,8 @@ function applyDrawnCellChange({ faixaIndex, date, dia, slot, select }) {
         return { applied: true, structural: false, faixa: k };
     }
 
-    const usedFaixas = [1, 2, 3].filter((i) => !!document.getElementById(`inp-data-inicio-f${i}`)?.value).length;
-    if (usedFaixas >= 3) {
-        showToastWarning('Limite de 3 faixas atingido. Para mudar o horario a partir desta semana, remova uma faixa ou ajuste o desenho na semana em que uma faixa comeca.', 'error', 5200);
+    if (k >= 3) {
+        showToastWarning('A Faixa 3 e a ultima. Para mudar o horario a partir desta semana, redesenhe numa semana da Faixa 2: as faixas recomecam dali.', 'error', 5600);
         return { applied: false };
     }
 
@@ -1268,10 +1277,12 @@ function applyDrawnCellChange({ faixaIndex, date, dia, slot, select }) {
     absorbed.slice().reverse().forEach((c) => {
         previousPattern = toggleFaixaPatternSlot(previousPattern, c.dia, c.slot, !c.select);
     });
+    const removed = [1, 2, 3].filter((i) => i > k && !!draft.ini[i]);
+    const affectedDates = listDatesAffectedByPatternChange(previousPattern, nextPattern, kRange.start, start);
     faixasPatterns[k] = previousPattern;
-    insertFaixaAfter(k, start, nextPattern);
+    restartFaixasAfter(k, start, nextPattern);
     drawnWeekAbsorbed = { week: '', faixa: 0, changes: [] };
-    showFaixaAutoNote({ draft, created: k + 1, previous: k, start, previousStart: kRange.start });
+    showFaixaAutoNote({ draft, created: k + 1, previous: k, start, previousStart: kRange.start, removed, affectedDates });
     return { applied: true, structural: true, faixa: k + 1 };
 }
 
@@ -1283,11 +1294,31 @@ function renderFaixaAutoNote() {
         updateWeeklyContextNote();
         return;
     }
-    const { created, previous, start, previousStart } = faixaAutoNote;
+    const { created, previous, start, previousStart, removed = [], affectedDates = [] } = faixaAutoNote;
     const textEl = document.getElementById('weekly-faixa-auto-note-text');
     const fixBtn = document.getElementById('btn-faixa-auto-fix');
-    if (textEl) textEl.innerHTML = `A partir de <b>${formatDateBR(start)}</b> o hor&aacute;rio mudou. Criei a <b>Faixa ${created}</b>.`;
-    if (fixBtn) fixBtn.textContent = `Não, corrigir a Faixa ${previous} desde ${formatDateBR(previousStart)}`;
+    const dayMonth = (iso) => formatDateBR(iso).slice(0, 5);
+    const before = affectedDates.filter((d) => d < start);
+    const MAX_DATAS = 4;
+    let motivo = '';
+    if (before.length) {
+        const lista = before.slice(0, MAX_DATAS).map(dayMonth).join(', ');
+        const resto = before.length > MAX_DATAS ? ` e mais ${before.length - MAX_DATAS}` : '';
+        motivo = ` para n&atilde;o mudar as aulas anteriores (${lista}${resto})`;
+    }
+    let apagadas = '';
+    if (removed.length === 1) {
+        apagadas = ` A antiga Faixa ${removed[0]} foi apagada: confira o fim e redesenhe se precisar.`;
+    } else if (removed.length > 1) {
+        apagadas = ` As antigas Faixas ${removed.join(' e ')} foram apagadas: confira o fim e redesenhe se precisar.`;
+    }
+    if (textEl) textEl.innerHTML = `A partir de <b>${formatDateBR(start)}</b> o hor&aacute;rio mudou. Criei a <b>Faixa ${created}</b>${motivo}.${apagadas}`;
+    if (fixBtn) {
+        fixBtn.textContent = before.length
+            ? `Aplicar desde ${formatDateBR(previousStart)} (inclui essas datas)`
+            : `Aplicar desde ${formatDateBR(previousStart)}`;
+        fixBtn.title = `A Faixa ${previous} inteira passa a ter o horário novo; as faixas seguintes voltam como estavam.`;
+    }
     el.classList.remove('hidden');
     updateWeeklyContextNote();
 }
@@ -1313,16 +1344,14 @@ function undoFaixaAutoCreation() {
     renderWeeklyGrid();
 }
 
-// A faixa anterior adota o desenho novo desde o proprio inicio; a criada some.
+// Era correcao, nao mudanca: a faixa anterior adota o desenho novo desde o
+// proprio inicio e as faixas seguintes voltam como estavam antes.
 function mergeFaixaAutoCreationIntoPrevious() {
     if (!faixaAutoNote) return;
     const { created, previous, draft } = faixaAutoNote;
-    faixasPatterns[previous] = normalizeFaixaPattern(faixasPatterns[created]);
-    removeFaixaFromUI(created);
-    if (!document.getElementById(`inp-data-inicio-f${previous + 1}`)?.value) {
-        const fimEl = document.getElementById(`inp-data-fim-f${previous}`);
-        if (fimEl) fimEl.value = draft.fim[previous] || '';
-    }
+    const newPattern = normalizeFaixaPattern(faixasPatterns[created]);
+    restoreFaixasDraft(draft);
+    faixasPatterns[previous] = newPattern;
     hideFaixaAutoNote();
     setDrawingFaixaFollowingCell(previous);
     refreshFaixasAfterStructureChange();
