@@ -3,16 +3,16 @@
 // O navegador continua guardando uma copia (cache) de cada plano; este modulo
 // carrega o plano ativo do servidor, envia as alteracoes do curso do usuario e
 // recebe as alteracoes dos outros cursos (tempo real ou consulta periodica).
-import { store } from './store.js?v=202611021217';
-import { buildTurmaParaCursoMap } from './serialization.js?v=202611021217';
-import { readJsonStorage, writeJsonStorage } from './plan_storage.js?v=202611021217';
-import { resolveBackendMode } from './backend_config.js?v=202611021217';
+import { store } from './store.js?v=202611031708';
+import { buildTurmaParaCursoMap } from './serialization.js?v=202611031708';
+import { readJsonStorage, writeJsonStorage } from './plan_storage.js?v=202611031708';
+import { resolveBackendMode } from './backend_config.js?v=202611031708';
 import {
   computePushPlan,
   reconcileAllocations,
   buildSyncedMap,
   getAllocationCurso
-} from './sync_diff.mjs?v=202611021217';
+} from './sync_diff.mjs?v=202611031708';
 
 const SYNCED_PREFIX = 'cardume_sync_v1::';
 const BACKUP_PREFIX = 'cardume_backup_v1::';
@@ -48,8 +48,8 @@ let onStatus = () => {};
 export async function connect() {
   if (servidor) return;
   servidor = resolveBackendMode() === 'ufpa'
-    ? await import('./remoto_ufpa.js?v=202611021217')
-    : await import('./remoto_supabase.js?v=202611021217');
+    ? await import('./remoto_ufpa.js?v=202611031708')
+    : await import('./remoto_supabase.js?v=202611031708');
   await servidor.connect();
 }
 

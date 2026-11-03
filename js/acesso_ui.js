@@ -1,8 +1,8 @@
 // Tela de acesso e barra de status da sincronizacao.
 // Modo local: senha unica, como antes. Modos supabase e ufpa: e-mail e senha de
 // cada coordenador, e as alocacoes passam a ser compartilhadas pelo servidor.
-import { resolveBackendMode } from './backend_config.js?v=202611021217';
-import * as remoto from './sync_remoto.js?v=202611021217';
+import { resolveBackendMode } from './backend_config.js?v=202611031708';
+import * as remoto from './sync_remoto.js?v=202611031708';
 
 const LOCAL_PASSWORD = 'ufpa2026';
 

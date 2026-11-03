@@ -1,5 +1,5 @@
-import { buildSigaaExportPayload, filterExportableAllocations } from './academic_rules.mjs?v=202611021217';
-import { buildCanonicalOfferProjection } from './execution_engine.js?v=202611021217';
+import { buildSigaaExportPayload, filterExportableAllocations } from './academic_rules.mjs?v=202611031708';
+import { buildCanonicalOfferProjection } from './execution_engine.js?v=202611031708';
 
 export function buildSigaaOfertaBase(allocation, info = {}) {
     return {

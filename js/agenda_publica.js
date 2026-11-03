@@ -1,8 +1,8 @@
-import { store, normalizeLoadedAllocation } from './store.js?v=202611021217';
-import { getTurnoLetter } from './turns.js?v=202611021217';
-import { getCalendarEvents } from './calendar.js?v=202611021217';
-import { resolveActiveAcademicPeriod } from './academic_rules.mjs?v=202611021217';
-import { buildMonthMarkers, summarizeTeacherPeriod } from './resumo_docente.mjs?v=202611021217';
+import { store, normalizeLoadedAllocation } from './store.js?v=202611031708';
+import { getTurnoLetter } from './turns.js?v=202611031708';
+import { getCalendarEvents } from './calendar.js?v=202611031708';
+import { resolveActiveAcademicPeriod } from './academic_rules.mjs?v=202611031708';
+import { buildMonthMarkers, summarizeTeacherPeriod } from './resumo_docente.mjs?v=202611031708';
 
 const collator = new Intl.Collator('pt-BR', { sensitivity: 'base' });
 const PUBLIC_ASSET_VERSION = '20261028a';
