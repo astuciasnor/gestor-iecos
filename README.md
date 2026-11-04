@@ -208,6 +208,15 @@ where email = 'pessoa@ufpa.br';
   envia-lo, apague esse arquivo.
 - Teste local igual ao servidor (Docker): `tools/servidor_local/docker-compose.yml`
   (instrucoes no proprio arquivo); abrir `http://localhost:8080/?backend=ufpa`.
+- Em enderecos `*.ufpa.br` o modo padrao e `ufpa` (sem precisar de `?backend=`).
+- Enviar pelo FileZilla para a raiz `/`: `.htaccess`, `index.html`,
+  `agenda_publica.html`, `dados_app.json`, `alocacoes_publicas.json`, `css/`,
+  `img/`, `js/`, `publicacoes/` e `api/` (`index.php`, `.htaccess`). Nas
+  atualizacoes, nunca sobrescrever o `api/config.php` do servidor.
+- Copiar os dados do Supabase (pode repetir; substitui as alocacoes e encerra as
+  sessoes): `tools/migracao_supabase_ufpa.py` (consultas e passos no proprio
+  arquivo) gera um `.sql` para a aba Importar do phpMyAdmin. Os CSV trazem os
+  hashes das senhas: pasta fora do repositorio, apagar depois.
 
 ## Publicacao online
 
@@ -275,5 +284,5 @@ Diretrizes ja consolidadas:
 - Gantt do docente validado;
 - agenda publica (consulta docente e discente) funcionando em desktop e celular;
 - publicacao online validada com `publish_online.py`;
-- modo online (Supabase) em uso pelas coordenacoes; API do servidor da UFPA pronta, aguardando a VPN;
+- modo online (Supabase) em uso pelas coordenacoes; copia no servidor da UFPA (cardume.iecos.ufpa.br) instalada e testada, aguardando a decisao da virada;
 - limpezas e remocoes devem continuar em ciclos pequenos, sempre com teste e commit.

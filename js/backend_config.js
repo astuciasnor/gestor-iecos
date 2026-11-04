@@ -3,7 +3,7 @@
 //   'supabase' - banco compartilhado online, com login por coordenador;
 //   'ufpa'     - o mesmo, no servidor da UFPA (API PHP em api/ + MariaDB).
 // Para testar sem mudar o padrao: abra o app com ?backend=ufpa (ou supabase, local);
-// a escolha fica gravada neste navegador.
+// a escolha fica gravada neste navegador. Em enderecos *.ufpa.br o padrao e 'ufpa'.
 export const DEFAULT_BACKEND_MODE = 'local';
 
 // Chave publica (publishable): pode ficar no codigo; a protecao vem das
@@ -28,5 +28,7 @@ export function resolveBackendMode() {
     const saved = localStorage.getItem(BACKEND_STORAGE_KEY);
     if (VALID_MODES.includes(saved)) return saved;
   } catch (e) { /* storage indisponivel: usa o padrao */ }
+  // No site da UFPA o padrao e o banco de la; no GitHub Pages segue DEFAULT_BACKEND_MODE.
+  if (/(^|\.)ufpa\.br$/i.test(window.location.hostname)) return 'ufpa';
   return DEFAULT_BACKEND_MODE;
 }
