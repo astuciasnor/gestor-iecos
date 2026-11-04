@@ -1,15 +1,15 @@
-import { store } from './store.js?v=202611031708';
-import { initUI, exportSigaaMetadataJSON, showToastWarning, refreshAfterRemoteChange } from './ui.js?v=202611031708';
-import { iniciarAcesso, isOnlineMode } from './acesso_ui.js?v=202611031708';
-import { fetchAllocationsForPlans } from './sync_remoto.js?v=202611031708';
-import { filterExportableAllocations } from './academic_rules.mjs?v=202611031708';
+import { store } from './store.js?v=202611042052';
+import { initUI, exportSigaaMetadataJSON, showToastWarning, refreshAfterRemoteChange } from './ui.js?v=202611042052';
+import { iniciarAcesso, isOnlineMode } from './acesso_ui.js?v=202611042052';
+import { fetchAllocationsForPlans, canPublishToServer, publishAgenda, getPerfil } from './sync_remoto.js?v=202611042052';
+import { filterExportableAllocations } from './academic_rules.mjs?v=202611042052';
 import {
   buildPlanScopedPayload,
   buildTurmaParaCursoMap,
   collectAllocationsByCurso,
   buildTodosCursosExportSnapshot,
   buildPublicExportPayload
-} from './serialization.js?v=202611031708';
+} from './serialization.js?v=202611042052';
 
 // Cursos exportaveis: os cadastrados na aba cursos da planilha (dados_app.json).
 function getExportCursosUnidade() {
@@ -384,6 +384,13 @@ function exportarJSONCurso(sigla) {
   if (btnExportPublic) {
     btnExportPublic.onclick = async () => {
       const fileName = 'alocacoes_publicas.json';
+      // No servidor da UFPA a agenda vai direto para o servidor (so o administrador);
+      // nos outros modos sai o arquivo para tools/publish_online.py.
+      const noServidor = canPublishToServer();
+      if (noServidor && getPerfil()?.papel !== 'admin') {
+        showToastWarning('Somente o administrador pode publicar a agenda.', 'warning', 4200);
+        return;
+      }
       let allocationsByKey = null;
       if (isOnlineMode()) {
         try {
@@ -416,9 +423,30 @@ function exportarJSONCurso(sigla) {
       const shouldExport = confirm(
         `Confirmar publicação online?\n\n` +
         `Períodos em curso e futuros com turmas cadastradas:\n${resumo}\n\n` +
-        `Clique em OK para gerar o arquivo público.`
+        (noServidor
+          ? 'Clique em OK para publicar a agenda dos alunos agora.'
+          : 'Clique em OK para gerar o arquivo público.')
       );
       if (!shouldExport) return;
+
+      if (noServidor) {
+        try {
+          const resultado = await publishAgenda(publications);
+          const link = new URL('agenda_publica.html', window.location.href).href;
+          const lista = (resultado?.periodos || [])
+            .map((p) => `- ${p.periodo}: ${p.alocacoes} alocação(ões)`)
+            .join('<br>');
+          showToastWarning(
+            `Agenda publicada! Os alunos já veem em<br><a href="${link}" target="_blank" rel="noopener">${link}</a>` +
+            (lista ? `<br>${lista}` : ''),
+            'success',
+            9000
+          );
+        } catch (error) {
+          showToastWarning(`Não foi possível publicar a agenda: ${error?.message || error}`, 'error', 7000);
+        }
+        return;
+      }
 
       const exportData = {
         version: 3,

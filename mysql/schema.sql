@@ -67,6 +67,17 @@ CREATE TABLE IF NOT EXISTS sessoes (
   KEY sessoes_expira_idx (expira_em)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- Agenda publica (botao Publicar Online, so o administrador). Os alunos veem a
+-- linha mais recente; as anteriores permitem desfazer: apagar a ultima linha
+-- volta a publicacao anterior. A API guarda as 30 ultimas.
+CREATE TABLE IF NOT EXISTS agenda_publicada (
+  id             BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  documento      LONGTEXT     NOT NULL CHECK (JSON_VALID(documento)),
+  resumo         VARCHAR(500) NOT NULL DEFAULT '',
+  publicado_em   DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  publicado_por  CHAR(36)     NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- Senhas erradas por e-mail + endereco IP, para bloquear tentativas em serie.
 CREATE TABLE IF NOT EXISTS login_tentativas (
   chave     CHAR(64)  NOT NULL PRIMARY KEY,

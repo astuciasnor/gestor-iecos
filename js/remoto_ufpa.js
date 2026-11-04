@@ -1,7 +1,7 @@
 // Conversa com a API PHP do servidor da UFPA (modo 'ufpa', api/index.php).
 // Mesma interface de remoto_supabase.js. Sem tempo real no servidor: o
 // navegador pergunta as mudancas a cada poucos segundos.
-import { UFPA_API_URL } from './backend_config.js?v=202611031708';
+import { UFPA_API_URL } from './backend_config.js?v=202611042052';
 
 const POLL_MS = 5000;           // aba visivel
 const POLL_HIDDEN_MS = 30000;   // aba em segundo plano
@@ -94,6 +94,12 @@ export async function upsert(rows) {
 
 export async function remove(ids) {
   await chamar('excluir', { corpo: { ids } });
+}
+
+// Agenda publica gravada no proprio servidor (so o administrador).
+// Devolve { id, periodos: [{ periodo, alocacoes }] } do que ficou publicado.
+export async function publicarAgenda(publications) {
+  return chamar('publicar', { corpo: { publications } });
 }
 
 // Consulta periodica das mudancas. handlers: { onUpsert(row), onDelete(id), onState('ok' | 'offline') }.

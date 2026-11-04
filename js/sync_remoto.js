@@ -3,16 +3,16 @@
 // O navegador continua guardando uma copia (cache) de cada plano; este modulo
 // carrega o plano ativo do servidor, envia as alteracoes do curso do usuario e
 // recebe as alteracoes dos outros cursos (tempo real ou consulta periodica).
-import { store } from './store.js?v=202611031708';
-import { buildTurmaParaCursoMap } from './serialization.js?v=202611031708';
-import { readJsonStorage, writeJsonStorage } from './plan_storage.js?v=202611031708';
-import { resolveBackendMode } from './backend_config.js?v=202611031708';
+import { store } from './store.js?v=202611042052';
+import { buildTurmaParaCursoMap } from './serialization.js?v=202611042052';
+import { readJsonStorage, writeJsonStorage } from './plan_storage.js?v=202611042052';
+import { resolveBackendMode } from './backend_config.js?v=202611042052';
 import {
   computePushPlan,
   reconcileAllocations,
   buildSyncedMap,
   getAllocationCurso
-} from './sync_diff.mjs?v=202611031708';
+} from './sync_diff.mjs?v=202611042052';
 
 const SYNCED_PREFIX = 'cardume_sync_v1::';
 const BACKUP_PREFIX = 'cardume_backup_v1::';
@@ -48,8 +48,8 @@ let onStatus = () => {};
 export async function connect() {
   if (servidor) return;
   servidor = resolveBackendMode() === 'ufpa'
-    ? await import('./remoto_ufpa.js?v=202611031708')
-    : await import('./remoto_supabase.js?v=202611031708');
+    ? await import('./remoto_ufpa.js?v=202611042052')
+    : await import('./remoto_supabase.js?v=202611042052');
   await servidor.connect();
 }
 
@@ -171,6 +171,16 @@ export async function fetchAllocationsForPlans(keys = []) {
     result[key] = key === activeKey && ready ? store.allocations : await servidor.fetchPlan(key);
   }
   return result;
+}
+
+// So o servidor da UFPA guarda a agenda publica; no Supabase ela continua
+// indo para o GitHub pelo arquivo baixado + tools/publish_online.py.
+export function canPublishToServer() {
+  return typeof servidor?.publicarAgenda === 'function';
+}
+
+export async function publishAgenda(publications) {
+  return servidor.publicarAgenda(publications);
 }
 
 function applyRemoteSnapshot(key, remote) {

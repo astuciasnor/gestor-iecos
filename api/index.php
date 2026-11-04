@@ -15,6 +15,8 @@
 //   GET  mudancas &plano=K&desde=N mudancas do periodo K depois do cursor N
 //   POST salvar   {linhas: [{id, plano, curso, turma, dados}]}
 //   POST excluir  {ids: [...]}
+//   POST publicar {publications: [...]}  agenda publica (so o administrador)
+//   GET  agenda                    agenda publicada (aberta, sem login: e o que os alunos veem)
 // Todo POST exige o cabecalho "X-Cardume: 1" (barra envio a partir de outros sites).
 
 declare(strict_types=1);
@@ -27,6 +29,9 @@ const MIN_SENHA = 8;
 const MAX_LINHAS = 200;          // por chamada de salvar/excluir
 const MAX_MUDANCAS = 1000;       // por chamada de mudancas
 const MAX_CORPO = 16 * 1024 * 1024;
+const AGENDA_FUTUROS = 4;        // periodos futuros publicados (igual a tools/publish_online.py)
+const AGENDA_VERSOES = 30;       // publicacoes guardadas para desfazer
+const FUSO_UFPA = 'America/Belem';
 const JSON_OPCOES = JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRESERVE_ZERO_FRACTION;
 
 final class ErroApi extends Exception
@@ -68,6 +73,8 @@ $rotas = [
     'GET mudancas'  => 'acaoMudancas',
     'POST salvar'   => 'acaoSalvar',
     'POST excluir'  => 'acaoExcluir',
+    'POST publicar' => 'acaoPublicar',
+    'GET agenda'    => 'acaoAgenda',
 ];
 $metodo = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 $rota = $metodo . ' ' . (string) ($_GET['acao'] ?? '');
@@ -244,6 +251,151 @@ function acaoExcluir(mysqli $db): void
         }
     });
     responder(200, ['ok' => true]);
+}
+
+// ===== Agenda publica =====
+
+// Mesmas regras de tools/publish_online.py: os periodos enviados substituem os
+// de mesmo periodo; os demais ficam; saem os encerrados; ficam os em curso e
+// ate AGENDA_FUTUROS futuros.
+function acaoPublicar(mysqli $db): void
+{
+    $u = exigirUsuario($db);
+    if ($u['papel'] !== 'admin') throw new ErroApi(403, 'Somente o administrador pode publicar a agenda.', 'so_admin');
+    $novas = corpoJson()->publications ?? null;
+    if (!is_array($novas) || !$novas) throw new ErroApi(400, 'Nenhum periodo para publicar.');
+    foreach ($novas as $i => $pub) validarPublicacao($pub, $i + 1);
+
+    $hoje = (new DateTimeImmutable('now', new DateTimeZone(FUSO_UFPA)))->format('Y-m-d');
+    $resposta = [];
+    emEscritaExclusiva($db, function () use ($db, $u, $novas, $hoje, &$resposta) {
+        $atual = consultarUm($db, 'SELECT documento FROM agenda_publicada ORDER BY id DESC LIMIT 1');
+        // Primeira publicacao no servidor: parte do arquivo estatico enviado com o app.
+        $bruto = $atual['documento'] ?? (@file_get_contents(dirname(__DIR__) . '/alocacoes_publicas.json') ?: '');
+        $existentes = publicacoesDoDocumento(json_decode($bruto, false));
+        $ficam = mesclarPublicacoes($existentes, $novas, $hoje);
+
+        $documento = json_encode([
+            'version' => 3,
+            'exportedAt' => gmdate('Y-m-d\TH:i:s\Z'),
+            'layoutMode' => 'single_file_multi_plan',
+            'publications' => $ficam,
+        ], JSON_OPCOES | JSON_THROW_ON_ERROR);
+        $periodos = array_map(fn ($p) => [
+            'periodo' => rotuloPublicacao($p),
+            'alocacoes' => count($p->allocations ?? []),
+        ], $ficam);
+        $resumo = mb_substr(implode(', ', array_map(fn ($p) => $p['periodo'] . ' (' . $p['alocacoes'] . ')', $periodos)), 0, 500);
+
+        executar($db, 'INSERT INTO agenda_publicada (documento, resumo, publicado_por) VALUES (?, ?, ?)', [$documento, $resumo, $u['id']]);
+        $id = (int) $db->insert_id;
+        executar($db, 'DELETE FROM agenda_publicada WHERE id <= ?', [(string) ($id - AGENDA_VERSOES)]);
+        $resposta = ['ok' => true, 'id' => $id, 'periodos' => $periodos];
+    });
+    responder(200, $resposta);
+}
+
+// Aberta a todos (os alunos nao tem login). Responde 304 quando o navegador ja
+// tem a versao atual, para nao baixar a agenda inteira a cada visita.
+function acaoAgenda(mysqli $db): void
+{
+    $ultima = consultarUm($db, 'SELECT id FROM agenda_publicada ORDER BY id DESC LIMIT 1');
+    if (!$ultima) throw new ErroApi(404, 'agenda ainda nao publicada neste servidor');
+    $etag = '"agenda-' . $ultima['id'] . '"';
+    header('Cache-Control: no-cache');
+    header('ETag: ' . $etag);
+    // O Apache pode acrescentar -gzip a etiqueta quando comprime a resposta.
+    $doNavegador = str_replace('-gzip"', '"', trim((string) ($_SERVER['HTTP_IF_NONE_MATCH'] ?? '')));
+    if ($doNavegador === $etag) {
+        http_response_code(304);
+        exit;
+    }
+    $linha = consultarUm($db, 'SELECT documento FROM agenda_publicada WHERE id = ?', [(string) $ultima['id']]);
+    responderBruto($linha['documento']);
+}
+
+function validarPublicacao(mixed $pub, int $n): void
+{
+    $erro = fn (string $msg) => new ErroApi(400, "Periodo $n: $msg");
+    if (!is_object($pub)) throw $erro('formato invalido.');
+    $alocacoes = $pub->allocations ?? null;
+    if (!is_array($alocacoes) || !$alocacoes) throw $erro('sem alocacoes.');
+    foreach ($alocacoes as $a) {
+        if (!is_object($a)) throw $erro('alocacao invalida.');
+    }
+    $settings = $pub->settings ?? null;
+    if (!is_object($settings)) throw $erro('sem configuracoes do periodo.');
+    $inicio = $settings->termStart ?? null;
+    $fim = $settings->termEnd ?? null;
+    if (!dataIso($inicio) || !dataIso($fim)) throw $erro('datas de inicio e fim invalidas.');
+    if ($inicio > $fim) throw $erro('o inicio e depois do fim.');
+}
+
+function dataIso(mixed $valor): bool
+{
+    if (!is_string($valor)) return false;
+    $d = DateTimeImmutable::createFromFormat('!Y-m-d', $valor);
+    return $d !== false && $d->format('Y-m-d') === $valor;
+}
+
+function publicacoesDoDocumento(mixed $doc): array
+{
+    if (is_object($doc) && is_array($doc->publications ?? null)) {
+        return array_values(array_filter($doc->publications, 'is_object'));
+    }
+    if (is_object($doc) && is_array($doc->allocations ?? null)) return [$doc];
+    return [];
+}
+
+function mesclarPublicacoes(array $existentes, array $novas, string $hoje): array
+{
+    $idsNovos = array_map('identidadePublicacao', $novas);
+    $todas = array_merge(
+        array_filter($existentes, fn ($p) => !in_array(identidadePublicacao($p), $idsNovos, true)),
+        $novas
+    );
+    $passadas = $correntes = $futuras = [];
+    foreach ($todas as $p) {
+        $fim = campoPlano($p, 'termEnd');
+        if ($fim !== '' && $fim < $hoje) $passadas[] = $p;
+        elseif (campoPlano($p, 'termStart') > $hoje) $futuras[] = $p;
+        else $correntes[] = $p;
+    }
+    if (!$correntes && !$futuras && $passadas) {
+        // Nada em curso nem futuro: fica o ultimo encerrado, para a agenda nao ficar vazia.
+        usort($passadas, fn ($a, $b) => strcmp(campoPlano($b, 'termEnd'), campoPlano($a, 'termEnd')));
+        $correntes = [$passadas[0]];
+    }
+    usort($futuras, fn ($a, $b) => strcmp(campoPlano($a, 'termStart'), campoPlano($b, 'termStart')));
+    $ficam = array_merge($correntes, array_slice($futuras, 0, AGENDA_FUTUROS));
+    usort($ficam, fn ($a, $b) => strcmp(campoPlano($b, 'termStart'), campoPlano($a, 'termStart')));
+    return $ficam;
+}
+
+// Valor do plano, ou das configuracoes do periodo quando o plano nao traz.
+function campoPlano(object $p, string $campo): string
+{
+    foreach ([$p->plan ?? null, $p->settings ?? null] as $origem) {
+        $valor = is_object($origem) ? trim((string) ($origem->$campo ?? '')) : '';
+        if ($valor !== '') return $valor;
+    }
+    return '';
+}
+
+function identidadePublicacao(object $p): string
+{
+    $chave = campoPlano($p, 'key');
+    if ($chave !== '') return $chave;
+    $meta = is_object($p->meta ?? null) ? $p->meta : new stdClass();
+    $periodo = strtoupper(str_replace(' ', '', (string) ($meta->periodoLetivo ?? campoPlano($p, 'periodo'))));
+    return implode('__', array_filter([$periodo, campoPlano($p, 'termStart'), campoPlano($p, 'termEnd')]));
+}
+
+function rotuloPublicacao(object $p): string
+{
+    $ano = substr(campoPlano($p, 'termStart'), 0, 4);
+    $periodo = campoPlano($p, 'periodo');
+    return trim($ano . ' - ' . $periodo, ' -');
 }
 
 // ===== Usuario e sessao =====

@@ -1,8 +1,9 @@
-import { store, normalizeLoadedAllocation } from './store.js?v=202611031708';
-import { getTurnoLetter } from './turns.js?v=202611031708';
-import { getCalendarEvents } from './calendar.js?v=202611031708';
-import { resolveActiveAcademicPeriod } from './academic_rules.mjs?v=202611031708';
-import { buildMonthMarkers, summarizeTeacherPeriod } from './resumo_docente.mjs?v=202611031708';
+import { store, normalizeLoadedAllocation } from './store.js?v=202611042052';
+import { getTurnoLetter } from './turns.js?v=202611042052';
+import { getCalendarEvents } from './calendar.js?v=202611042052';
+import { resolveActiveAcademicPeriod } from './academic_rules.mjs?v=202611042052';
+import { buildMonthMarkers, summarizeTeacherPeriod } from './resumo_docente.mjs?v=202611042052';
+import { resolveBackendMode, UFPA_API_URL } from './backend_config.js?v=202611042052';
 
 const collator = new Intl.Collator('pt-BR', { sensitivity: 'base' });
 const PUBLIC_ASSET_VERSION = '20261028a';
@@ -61,6 +62,21 @@ function appendPublicAssetVersion(url) {
     const raw = String(url || '').trim();
     if (!raw) return '';
     return `${raw}${raw.includes('?') ? '&' : '?'}v=${PUBLIC_ASSET_VERSION}`;
+}
+
+// No servidor da UFPA a agenda publicada fica no banco (botao Publicar Online).
+// O arquivo alocacoes_publicas.json so vale enquanto nada foi publicado la
+// (e continua sendo a fonte no GitHub).
+async function fetchAgendaDoServidor() {
+    if (resolveBackendMode() !== 'ufpa') return null;
+    try {
+        const url = new URL(UFPA_API_URL, window.location.href);
+        url.searchParams.set('acao', 'agenda');
+        const response = await fetch(url, { cache: 'no-cache' });
+        return response.ok ? response : null;
+    } catch (_) {
+        return null;
+    }
 }
 
 async function fetchJsonIfAvailable(url) {
@@ -323,7 +339,8 @@ async function loadPublicData() {
     state.publicPublicationRoute = sourceDescriptor;
 
     try {
-        let response = await fetch(appendPublicAssetVersion(sourceDescriptor.jsonPath));
+        let response = await fetchAgendaDoServidor();
+        if (!response) response = await fetch(appendPublicAssetVersion(sourceDescriptor.jsonPath));
         if (!response.ok && sourceDescriptor.jsonPath !== 'alocacoes_publicas.json') {
             response = await fetch(appendPublicAssetVersion('alocacoes_publicas.json'));
         }

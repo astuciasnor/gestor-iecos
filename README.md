@@ -209,16 +209,25 @@ where email = 'pessoa@ufpa.br';
 - Teste local igual ao servidor (Docker): `tools/servidor_local/docker-compose.yml`
   (instrucoes no proprio arquivo); abrir `http://localhost:8080/?backend=ufpa`.
 - Em enderecos `*.ufpa.br` o modo padrao e `ufpa` (sem precisar de `?backend=`).
-- Enviar pelo FileZilla para a raiz `/`: `.htaccess`, `index.html`,
-  `agenda_publica.html`, `dados_app.json`, `alocacoes_publicas.json`, `css/`,
-  `img/`, `js/`, `publicacoes/` e `api/` (`index.php`, `.htaccess`). Nas
-  atualizacoes, nunca sobrescrever o `api/config.php` do servidor.
+- Atualizar o servidor: `python tools/montar_envio_ufpa.py` monta
+  `../cardume_envio_ufpa` (sem o `api/config.php`, que nunca deve ser
+  sobrescrito no servidor); no FileZilla, enviar tudo para a raiz `/`.
+- Agenda publica no modo `ufpa`: o botao **Publicar Online** (so o
+  administrador) grava a agenda no banco (`POST publicar`, mesmas regras do
+  `publish_online.py`) e `agenda_publica.html` le de `api/?acao=agenda`.
+  Enquanto nada foi publicado no servidor, vale o `alocacoes_publicas.json`
+  enviado com o app. Desfazer: apagar a ultima linha de `agenda_publicada`
+  (ficam as 30 ultimas).
 - Copiar os dados do Supabase (pode repetir; substitui as alocacoes e encerra as
   sessoes): `tools/migracao_supabase_ufpa.py` (consultas e passos no proprio
   arquivo) gera um `.sql` para a aba Importar do phpMyAdmin. Os CSV trazem os
   hashes das senhas: pasta fora do repositorio, apagar depois.
 
 ## Publicacao online
+
+No servidor da UFPA (modo `ufpa`) basta o botao **Publicar Online**: a agenda
+vai direto para o servidor (ver "Servidor da UFPA"). Os passos abaixo valem
+para o GitHub Pages (modos `local` e `supabase`).
 
 1. No app, clique em **Publicar Online**. O arquivo gerado (pasta Downloads) reune **os periodos letivos em curso e ate 4 futuros que tenham ao menos uma alocacao** neste navegador.
 2. No terminal, na pasta do projeto, rode e responda `s`:
