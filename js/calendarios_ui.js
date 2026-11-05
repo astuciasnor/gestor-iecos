@@ -1,9 +1,9 @@
-import { store } from './store.js?v=202611051241';
-import { getCalendarEvents } from './calendar.js?v=202611051241';
-import { buildTeacherExecutionSnapshot, buildCanonicalOfferProjection } from './execution_engine.js?v=202611051241';
-import { getHorariosByTurno, normalizeTurnoKey, getTurnoLetter, mapSlotToTurno } from './turns.js?v=202611051241';
-import { vividHexColor } from './color_utils.js?v=202611051241';
-import { formatDateBR, timeToMinutes, shortDayName } from './date_utils_ui.js?v=202611051241';
+import { store } from './store.js?v=202611051714';
+import { getCalendarEvents } from './calendar.js?v=202611051714';
+import { buildTeacherExecutionSnapshot, buildCanonicalOfferProjection } from './execution_engine.js?v=202611051714';
+import { getHorariosByTurno, normalizeTurnoKey, getTurnoLetter, mapSlotToTurno } from './turns.js?v=202611051714';
+import { vividHexColor } from './color_utils.js?v=202611051714';
+import { formatDateBR, timeToMinutes, shortDayName } from './date_utils_ui.js?v=202611051714';
 import {
     isFaixaAllocation,
     isScheduledRegularAllocation,
@@ -11,7 +11,7 @@ import {
     teacherNamesMatch,
     getDocenteShortLabel,
     calculateTeacherTotalCH
-} from './allocation_helpers.js?v=202611051241';
+} from './allocation_helpers.js?v=202611051714';
 import {
     normalizeTurnoOfertaKey,
     formatTurnoOfertaLabel,
@@ -21,18 +21,18 @@ import {
     buildHorariosForUI,
     getShiftChangeMeta,
     getCalendarShiftBadgeHTML
-} from './turno_helpers.js?v=202611051241';
+} from './turno_helpers.js?v=202611051714';
 import {
     getDisciplinaCHGlobal,
     getTurmaLabel,
     getTurmaBaseLabel,
     getDisciplinaInfo,
     getPrintAcademicMetaLine
-} from './curso_turma_helpers.js?v=202611051241';
+} from './curso_turma_helpers.js?v=202611051714';
 import {
     getGanttTurnoConfigs,
     resolveTeacherShiftForSlot
-} from './gantt_ui.js?v=202611051241';
+} from './gantt_ui.js?v=202611051714';
 
 // Referencias DOM de nivel de modulo (espelham as de ui.js; modulo deferred, DOM pronto).
 const selViewDocente = document.getElementById('sel-view-docente');

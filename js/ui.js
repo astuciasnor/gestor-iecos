@@ -1,32 +1,32 @@
-import { store } from './store.js?v=202611051241';
-import { getTurnoLetter, mapSlotToTurno } from './turns.js?v=202611051241';
-import { normalizePeriodo as normalizePeriodoLetivoCode } from './plan_storage.js?v=202611051241';
-import { getCalendarEvents } from './calendar.js?v=202611051241';
-import { isDateOverlap } from './utils.js?v=202611051241';
-import { weeklyState } from './weekly_state.js?v=202611051241';
-import { findPendentesCobertas, isPendenteJaAlocada } from './pendentes.mjs?v=202611051241';
-import { classifySwap } from './troca_ordem.mjs?v=202611051241';
-import { buildCanonicalOfferProjection } from './execution_engine.js?v=202611051241';
+import { store } from './store.js?v=202611051714';
+import { getTurnoLetter, mapSlotToTurno } from './turns.js?v=202611051714';
+import { normalizePeriodo as normalizePeriodoLetivoCode } from './plan_storage.js?v=202611051714';
+import { getCalendarEvents } from './calendar.js?v=202611051714';
+import { isDateOverlap } from './utils.js?v=202611051714';
+import { weeklyState } from './weekly_state.js?v=202611051714';
+import { findPendentesCobertas, isPendenteJaAlocada } from './pendentes.mjs?v=202611051714';
+import { classifySwap } from './troca_ordem.mjs?v=202611051714';
+import { buildCanonicalOfferProjection } from './execution_engine.js?v=202611051714';
 import {
     buildSigaaMetadataPayload,
     validateSigaaMetadataPayload,
     getSigaaCode,
     buildScopedSigaaAllocationFromOfferFaixa
-} from './sigaa_metadata.js?v=202611051241';
-import { parseBackupDataFile, extractImportPlanMeta } from './serialization.js?v=202611051241';
+} from './sigaa_metadata.js?v=202611051714';
+import { parseBackupDataFile, extractImportPlanMeta } from './serialization.js?v=202611051714';
 import {
     showToastWarning,
     showPersistentStatusMessage,
     copyTextToClipboard,
     flashButtonCopyState,
     setupCopyActionButtons
-} from './ui_feedback.js?v=202611051241';
+} from './ui_feedback.js?v=202611051714';
 import {
     normalizeHexColor,
     adjustHexColor,
     hexToRgba,
     vividHexColor
-} from './color_utils.js?v=202611051241';
+} from './color_utils.js?v=202611051714';
 import {
     isFaixaAllocation,
     isPriorityRegularAllocation,
@@ -35,7 +35,7 @@ import {
     normalizeTeacherNameForMatch,
     getDocenteShortLabel,
     getAllocationTeachersForConflict
-} from './allocation_helpers.js?v=202611051241';
+} from './allocation_helpers.js?v=202611051714';
 import {
     normalizeConflictSlotLabel,
     getAvailableTurnoOfertaOptions,
@@ -44,7 +44,7 @@ import {
     isTurnoDividerSlot,
     buildHorariosForUI,
     getShiftChangeMeta
-} from './turno_helpers.js?v=202611051241';
+} from './turno_helpers.js?v=202611051714';
 import {
     getDisciplinaCHGlobal,
     derivarBloco,
@@ -53,17 +53,17 @@ import {
     getTurmaBaseLabel,
     getDisciplinaInfo,
     getPrintAcademicMetaLine
-} from './curso_turma_helpers.js?v=202611051241';
+} from './curso_turma_helpers.js?v=202611051714';
 import {
     renderGanttChart
-} from './gantt_ui.js?v=202611051241';
+} from './gantt_ui.js?v=202611051714';
 import {
     renderMonthlyCalendar,
     renderTeacherCalendar
-} from './calendarios_ui.js?v=202611051241';
+} from './calendarios_ui.js?v=202611051714';
 import {
     refreshTeacherConflictsUI
-} from './conflitos_ui.js?v=202611051241';
+} from './conflitos_ui.js?v=202611051714';
 import {
     shouldIgnoreTurmaEventForCandidate,
     normalizeDrawnSlotsByDay,
@@ -77,7 +77,7 @@ import {
     resolveEditableFaixasFromStoredExecution,
     alignFaixasToExecutionEnd,
     buildFinalAdjustmentFaixaSuggestion
-} from './faixa_utils.js?v=202611051241';
+} from './faixa_utils.js?v=202611051714';
 import {
     timeToMinutes,
     shiftISODate,
@@ -91,14 +91,14 @@ import {
     isDateInsideRange,
     formatDateBRShortYear,
     formatDateBR
-} from './date_utils_ui.js?v=202611051241';
+} from './date_utils_ui.js?v=202611051714';
 import {
     initializeWeeklyScheduleForTurma,
     reconcileTurmaSelectionAfterPLChange,
     resetWeeklyViewOnTurmaChange,
     resolveActiveAcademicPeriod,
     slotLabelsOverlap
-} from './academic_rules.mjs?v=202611051241';
+} from './academic_rules.mjs?v=202611051714';
 
 const gridContainer = document.getElementById('weekly-grid');
 const selCurso = document.getElementById('sel-curso');

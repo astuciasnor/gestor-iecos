@@ -1,7 +1,7 @@
 // Janela "Usuarios e backup" do administrador (so no servidor da UFPA).
 // Cadastra, edita e exclui acessos, gera senha provisoria e baixa a copia do
 // banco. Quem garante que so o administrador faz isso e a API (api/index.php).
-import { store } from './store.js?v=202611051241';
+import { store } from './store.js?v=202611051714';
 
 let ctx = null;      // { tools, meuId, showToast }
 let usuarios = [];
@@ -46,8 +46,13 @@ function montarJanela() {
           <button type="button" class="admin-btn" id="admin-senha-copiar">Copiar</button>
           <button type="button" class="admin-btn" id="admin-senha-ok">Pronto</button>
         </div>
-        <div class="admin-ajuda">Envie à pessoa por um canal seguro. No primeiro acesso ela cria a própria senha.
-          Esta senha não será mostrada de novo.</div>
+        <label class="admin-msg-rotulo" for="admin-senha-msg">Mensagem pronta para enviar (pode ajustar o texto antes de copiar):</label>
+        <textarea id="admin-senha-msg" class="admin-senha-msg" rows="14" spellcheck="false"></textarea>
+        <div class="admin-senha-linha">
+          <button type="button" class="admin-btn admin-btn-primario" id="admin-msg-copiar">Copiar mensagem</button>
+        </div>
+        <div class="admin-ajuda">Envie à pessoa por mensagem individual (e-mail ou WhatsApp privado, nunca em grupo).
+          No primeiro acesso ela cria a própria senha. Esta senha não será mostrada de novo.</div>
       </div>
 
       <form class="admin-form" id="admin-form" hidden>
@@ -84,14 +89,8 @@ function montarJanela() {
   el('admin-f-cancelar').onclick = esconderFormulario;
   el('admin-form').onsubmit = salvar;
   el('admin-senha-ok').onclick = esconderSenha;
-  el('admin-senha-copiar').onclick = async () => {
-    try {
-      await navigator.clipboard.writeText(el('admin-senha-valor').textContent);
-      ctx.showToast('Senha copiada.', 'success', 2000);
-    } catch (e) {
-      ctx.showToast('Não foi possível copiar: selecione e copie com Ctrl+C.', 'warning', 4000);
-    }
-  };
+  el('admin-senha-copiar').onclick = (e) => copiar(el('admin-senha-valor').textContent, e.currentTarget);
+  el('admin-msg-copiar').onclick = (e) => copiar(el('admin-senha-msg').value, e.currentTarget);
   el('admin-lista').addEventListener('click', aoClicarNaLista);
 }
 
@@ -142,7 +141,8 @@ async function aoClicarNaLista(event) {
     if (!confirm(`Gerar uma senha provisória nova para ${u.nome}?\n\nA senha atual deixa de valer e a pessoa é desconectada.`)) return;
     await executar(botao, async () => {
       const r = await ctx.tools.novaSenhaUsuario(u.id);
-      mostrarSenha(`Senha provisória de <strong>${esc(u.nome)}</strong> (${esc(u.email)}):`, r.senha_provisoria);
+      mostrarSenha(`Senha provisória de <strong>${esc(u.nome)}</strong> (${esc(u.email)}):`, r.senha_provisoria,
+        montarMensagem({ ...u, senha: r.senha_provisoria, novo: false }));
       await carregar();
     });
   } else if (botao.dataset.acao === 'excluir') {
@@ -197,7 +197,8 @@ async function salvar(event) {
     const r = await ctx.tools.salvarUsuario(dados);
     esconderFormulario();
     if (r.senha_provisoria) {
-      mostrarSenha(`Usuário <strong>${esc(dados.nome)}</strong> criado. Senha provisória para ${esc(dados.email)}:`, r.senha_provisoria);
+      mostrarSenha(`Usuário <strong>${esc(dados.nome)}</strong> criado. Senha provisória para ${esc(dados.email)}:`, r.senha_provisoria,
+        montarMensagem({ ...dados, senha: r.senha_provisoria, novo: true }));
     } else {
       ctx.showToast('Usuário atualizado.', 'success', 3000);
     }
@@ -205,9 +206,10 @@ async function salvar(event) {
   });
 }
 
-function mostrarSenha(textoHtml, senha) {
+function mostrarSenha(textoHtml, senha, mensagem) {
   el('admin-senha-texto').innerHTML = textoHtml;
   el('admin-senha-valor').textContent = senha;
+  el('admin-senha-msg').value = mensagem;
   el('admin-senha').hidden = false;
 }
 
@@ -216,6 +218,74 @@ function esconderSenha() {
   if (!caixa) return;
   caixa.hidden = true;
   el('admin-senha-valor').textContent = '';
+  el('admin-senha-msg').value = '';
+}
+
+// A confirmacao aparece no proprio botao: o aviso geral do app fica atras desta janela.
+async function copiar(texto, botao) {
+  let ok = false;
+  try {
+    await navigator.clipboard.writeText(texto);
+    ok = true;
+  } catch (e) {
+    ok = copiarPorSelecao(texto); // navegador recusou a area de transferencia: plano B
+  }
+  if (!botao.dataset.rotulo) botao.dataset.rotulo = botao.textContent;
+  botao.textContent = ok ? 'Copiado ✓' : 'Selecione e use Ctrl+C';
+  clearTimeout(botao._timer);
+  botao._timer = setTimeout(() => { botao.textContent = botao.dataset.rotulo; }, ok ? 2500 : 5000);
+}
+
+function copiarPorSelecao(texto) {
+  const area = document.createElement('textarea');
+  area.value = texto;
+  area.setAttribute('readonly', '');
+  area.className = 'admin-copia-oculta';
+  el('admin-modal').appendChild(area);
+  area.select();
+  let ok = false;
+  try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
+  area.remove();
+  return ok;
+}
+
+// Mensagem para a pessoa: endereco, usuario, senha provisoria e dicas basicas.
+// { nome, email, curso, papel, senha, novo }
+function montarMensagem({ nome, email, curso, papel, senha, novo }) {
+  const primeiroNome = String(nome || '').trim().split(/\s+/)[0] || '';
+  const endereco = new URL('.', window.location.href).href;
+  const nomeCurso = (store.rawData?.cursos || []).find((c) => String(c.sigla || '').toUpperCase() === curso)?.curso || curso;
+  const eu = usuarios.find((x) => x.id === ctx.meuId);
+  const permissao = papel === 'admin'
+    ? 'Você é administrador: pode editar todos os cursos e publicar a agenda dos alunos.'
+    : `Você edita as turmas de ${nomeCurso || 'seu curso'}; os outros cursos aparecem só para consulta.`;
+  const abertura = novo
+    ? 'Seu acesso ao Cardume (Planejador Acadêmico do IECOS) está pronto.'
+    : 'Gerei uma senha provisória nova para o seu acesso ao Cardume (Planejador Acadêmico do IECOS). A senha anterior não vale mais.';
+  return [
+    `Olá, ${primeiroNome}!`,
+    '',
+    abertura,
+    '',
+    `Endereço: ${endereco}`,
+    `Usuário: ${email}`,
+    `Senha provisória: ${senha}`,
+    '',
+    novo ? 'No primeiro acesso:' : 'No próximo acesso:',
+    '1. Entre com o seu e-mail e a senha provisória acima.',
+    '2. O Cardume pede uma senha nova, só sua (mínimo de 8 caracteres).',
+    novo ? '3. Salve o endereço nos favoritos do navegador.' : '3. Se o Cardume estiver aberto em outro computador, entre de novo lá também.',
+    '',
+    'Dicas:',
+    `- ${permissao}`,
+    '- Tudo é salvo sozinho no servidor da UFPA e aparece para os outros coordenadores em poucos segundos. Não é preciso exportar nem enviar arquivos.',
+    '- Use sempre o endereço acima. O endereço antigo (GitHub) não grava mais alterações.',
+    '- Para trocar a senha depois, use o botão "Senha", no menu à esquerda.',
+    '- Se esquecer a senha, me avise que eu gero uma nova.',
+    '- Não compartilhe a sua senha com ninguém.',
+    '',
+    eu?.nome ? `${eu.nome} (administrador do Cardume)` : 'Administrador do Cardume'
+  ].join('\n');
 }
 
 async function baixarBackup() {

@@ -4278,6 +4278,35 @@ body:has(#tab-weekly.active) .top-bar #weekly-instructions-card {
     user-select: all;
 }
 
+.admin-copia-oculta {
+    position: fixed;
+    top: 0;
+    left: 0;
+    opacity: 0;
+}
+
+.admin-msg-rotulo {
+    display: block;
+    margin-top: 10px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #33475b;
+}
+
+.admin-senha-msg {
+    width: 100%;
+    box-sizing: border-box;
+    margin-top: 6px;
+    padding: 8px 10px;
+    border: 1px solid #f0c36d;
+    border-radius: 6px;
+    background: #ffffff;
+    font-family: inherit;
+    font-size: 0.88rem;
+    line-height: 1.45;
+    resize: vertical;
+}
+
 .admin-ajuda {
     margin-top: 10px;
     color: #5b6778;
