@@ -1,9 +1,9 @@
-import { store, normalizeLoadedAllocation } from './store.js?v=202611042155';
-import { getTurnoLetter } from './turns.js?v=202611042155';
-import { getCalendarEvents } from './calendar.js?v=202611042155';
-import { resolveActiveAcademicPeriod } from './academic_rules.mjs?v=202611042155';
-import { buildMonthMarkers, summarizeTeacherPeriod } from './resumo_docente.mjs?v=202611042155';
-import { resolveBackendMode, UFPA_API_URL } from './backend_config.js?v=202611042155';
+import { store, normalizeLoadedAllocation } from './store.js?v=202611051236';
+import { getTurnoLetter } from './turns.js?v=202611051236';
+import { getCalendarEvents } from './calendar.js?v=202611051236';
+import { resolveActiveAcademicPeriod } from './academic_rules.mjs?v=202611051236';
+import { buildMonthMarkers, summarizeTeacherPeriod } from './resumo_docente.mjs?v=202611051236';
+import { resolveBackendMode, UFPA_API_URL } from './backend_config.js?v=202611051236';
 
 const collator = new Intl.Collator('pt-BR', { sensitivity: 'base' });
 const PUBLIC_ASSET_VERSION = '20261028a';
@@ -251,15 +251,6 @@ function cacheElements() {
     els.docenteMonthGroup = document.getElementById('docente-month-group');
     els.resultadoAgenda = document.getElementById('resultado-agenda');
     els.btnTopo = document.getElementById('btn-topo');
-    els.sheetOverlay = document.getElementById('sheet-overlay');
-    els.bottomSheet = document.getElementById('bottom-sheet');
-    els.sheetTitle = document.getElementById('sheet-title');
-    els.sheetTipo = document.getElementById('sheet-tipo');
-    els.sheetData = document.getElementById('sheet-data');
-    els.sheetHorario = document.getElementById('sheet-horario');
-    els.sheetDocente = document.getElementById('sheet-docente');
-    els.sheetTurma = document.getElementById('sheet-turma');
-    els.btnFecharSheet = document.getElementById('btn-fechar-sheet');
     els.slotLens = document.getElementById('slot-lens');
     els.dayLens = document.getElementById('day-lens');
 }
@@ -281,8 +272,6 @@ function bindEvents() {
     els.slotLens?.addEventListener('click', handleSlotLensClick);
     els.dayLens?.addEventListener('click', (e) => { if (e.target.closest('.day-lens-close')) fecharDayLens(true); });
 
-    els.btnFecharSheet?.addEventListener('click', fecharBottomSheet);
-    els.sheetOverlay?.addEventListener('click', fecharBottomSheet);
     document.addEventListener('click', (event) => {
         if (!event.target.closest('.resumo-semana')) desarmarSemanas();
         const clickedChip = event.target.closest('.mini-chip');
@@ -296,7 +285,6 @@ function bindEvents() {
     });
     document.addEventListener('keydown', (event) => {
         if (event.key === 'Escape') {
-            fecharBottomSheet();
             fecharSlotLens(true);
             fecharDayLens(true);
             esconderSugestoes();
@@ -1228,7 +1216,6 @@ function preencherMesesDocente() {
 function switchTab(tabName) {
     state.activeTab = tabName === 'docente' ? 'docente' : 'discente';
     esconderSugestoes();
-    fecharBottomSheet();
     syncTabUI();
     renderActiveView();
 }
@@ -2344,34 +2331,6 @@ function fecharSlotLens(immediate = false) {
     }
 
     window.setTimeout(finalize, 180);
-}
-
-function abrirBottomSheet(chip) {
-    if (!chip) return;
-
-    if (els.sheetTitle) {
-        els.sheetTitle.textContent = chip.getAttribute('data-titulo') || 'Componente';
-        els.sheetTitle.style.color = chip.getAttribute('data-cor') || '#173728';
-    }
-    if (els.sheetTipo) els.sheetTipo.textContent = getAgendaModoTexto(chip.getAttribute('data-modo'));
-    if (els.sheetData) els.sheetData.textContent = chip.getAttribute('data-data') || '--';
-    if (els.sheetHorario) els.sheetHorario.textContent = chip.getAttribute('data-horario') || '--';
-    if (els.sheetDocente) els.sheetDocente.textContent = chip.getAttribute('data-docente') || '--';
-    if (els.sheetTurma) els.sheetTurma.textContent = chip.getAttribute('data-turma') || '--';
-
-    els.sheetOverlay?.classList.add('active');
-    els.bottomSheet?.classList.add('active');
-}
-
-function fecharBottomSheet() {
-    els.sheetOverlay?.classList.remove('active');
-    els.bottomSheet?.classList.remove('active');
-}
-
-function getAgendaModoTexto(modo) {
-    const normalized = String(modo || '').trim().toLowerCase();
-    if (normalized === 'intensiva') return 'Oferta por Faixas';
-    return 'Oferta';
 }
 
 function formatHorarioIntervalo(horario) {

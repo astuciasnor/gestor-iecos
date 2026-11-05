@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cardume | Agenda de Aulas IECOS</title>
-    <link rel="stylesheet" href="css/style.css?v=202611042155">
+    <link rel="stylesheet" href="css/style.css?v=202611051236">
     <style>
         :root {
             --pub-bg: #eef3ef;
@@ -797,122 +797,6 @@
             font-weight: 900;
         }
 
-        .sheet-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(9, 20, 14, 0.56);
-            z-index: 2000;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.24s ease;
-        }
-
-        .sheet-overlay.active {
-            opacity: 1;
-            pointer-events: auto;
-        }
-
-        .bottom-sheet {
-            position: fixed;
-            left: 0;
-            right: 0;
-            bottom: -100%;
-            z-index: 2001;
-            width: min(680px, calc(100% - 16px));
-            margin: 0 auto;
-            border-radius: 24px 24px 0 0;
-            background: #fff;
-            box-shadow: 0 -14px 40px rgba(15, 23, 42, 0.28);
-            transition: bottom 0.28s cubic-bezier(0.12, 0.8, 0.24, 1);
-            padding: 18px 18px 22px 18px;
-            max-height: 86vh;
-            overflow-y: auto;
-        }
-
-        .bottom-sheet.active {
-            bottom: 0;
-        }
-
-        .sheet-handle {
-            width: 56px;
-            height: 6px;
-            border-radius: 999px;
-            background: #d5ddd7;
-            margin: 0 auto 18px auto;
-        }
-
-        .sheet-title {
-            margin: 0;
-            font-size: 1.34rem;
-            font-weight: 900;
-            line-height: 1.15;
-        }
-
-        .sheet-tipo {
-            display: inline-flex;
-            margin-top: 8px;
-            padding: 5px 10px;
-            border-radius: 999px;
-            background: #eef4ef;
-            color: #50665a;
-            font-size: 0.78rem;
-            font-weight: 800;
-            text-transform: uppercase;
-            letter-spacing: 0.04em;
-        }
-
-        .sheet-grid {
-            margin-top: 18px;
-            display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 12px;
-        }
-
-        .sheet-info-row {
-            display: flex;
-            gap: 10px;
-            align-items: flex-start;
-            padding: 14px 14px;
-            border-radius: 16px;
-            background: #f8faf9;
-            border: 1px solid #e4ece6;
-        }
-
-        .sheet-info-icon {
-            font-size: 1.18rem;
-            line-height: 1;
-        }
-
-        .sheet-info-copy strong {
-            display: block;
-            margin-bottom: 4px;
-            color: #627469;
-            font-size: 0.76rem;
-            font-weight: 900;
-            text-transform: uppercase;
-            letter-spacing: 0.04em;
-        }
-
-        .sheet-info-copy span {
-            color: #16291f;
-            font-size: 0.96rem;
-            font-weight: 700;
-            line-height: 1.25;
-        }
-
-        .sheet-btn-fechar {
-            margin-top: 18px;
-            width: 100%;
-            border: none;
-            border-radius: 16px;
-            padding: 14px;
-            background: #edf2ef;
-            color: #40564b;
-            font-size: 0.98rem;
-            font-weight: 900;
-            cursor: pointer;
-        }
-
         .btn-topo {
             position: fixed;
             right: 18px;
@@ -1128,10 +1012,6 @@
             .feriado-chip {
                 padding: 5px 2px;
                 font-size: 0.48rem;
-            }
-
-            .sheet-grid {
-                grid-template-columns: 1fr;
             }
 
             .slot-lens-inline {
@@ -1479,8 +1359,6 @@
                 background: #fff !important;
             }
 
-            .bottom-sheet,
-            .sheet-overlay,
             .btn-topo,
             .slot-lens,
             .day-lens {
@@ -1586,50 +1464,10 @@
 
     <button id="btn-topo" class="btn-topo" title="Voltar ao topo">&#8593;</button>
 
-    <div id="sheet-overlay" class="sheet-overlay"></div>
-    <div id="bottom-sheet" class="bottom-sheet">
-        <div class="sheet-handle"></div>
-        <h3 id="sheet-title" class="sheet-title">Componente</h3>
-        <div id="sheet-tipo" class="sheet-tipo">Oferta</div>
-
-        <div class="sheet-grid">
-            <div class="sheet-info-row">
-                <span class="sheet-info-icon">&#128197;</span>
-                <div class="sheet-info-copy">
-                    <strong>Data</strong>
-                    <span id="sheet-data">--/--/----</span>
-                </div>
-            </div>
-            <div class="sheet-info-row">
-                <span class="sheet-info-icon">&#9200;</span>
-                <div class="sheet-info-copy">
-                    <strong>Hor&aacute;rio</strong>
-                    <span id="sheet-horario">--:--</span>
-                </div>
-            </div>
-            <div class="sheet-info-row">
-                <span class="sheet-info-icon">&#128101;</span>
-                <div class="sheet-info-copy">
-                    <strong>Docente</strong>
-                    <span id="sheet-docente">--</span>
-                </div>
-            </div>
-            <div class="sheet-info-row">
-                <span class="sheet-info-icon">&#127891;</span>
-                <div class="sheet-info-copy">
-                    <strong>Turma</strong>
-                    <span id="sheet-turma">--</span>
-                </div>
-            </div>
-        </div>
-
-        <button id="btn-fechar-sheet" class="sheet-btn-fechar">Fechar</button>
-    </div>
-
     <div id="slot-lens" class="slot-lens" hidden></div>
     <div id="day-lens" class="day-lens" hidden></div>
 
-    <script type="module" src="js/agenda_publica.js?v=202611042155"></script>
+    <script type="module" src="js/agenda_publica.js?v=202611051236"></script>
 </body>
 
 </html>

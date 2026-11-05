@@ -16,6 +16,18 @@ AddType text/javascript .mjs
     </FilesMatch>
 </IfModule>
 
+# Compactacao. O servidor ja compacta HTML, JS e CSS, mas nao JSON, e a agenda
+# dos alunos (api/?acao=agenda e alocacoes_publicas.json) tem mais de 1 MB;
+# compactada, fica umas 15 a 20 vezes menor. Vale tambem para a pasta api/.
+# Cuidado: esta lista SUBSTITUI a do servidor, por isso repete os tipos que ele
+# ja compactava. Ao acrescentar um tipo, nao apague os outros.
+<IfModule mod_filter.c>
+    AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css text/javascript
+    AddOutputFilterByType DEFLATE application/javascript application/x-javascript application/ecmascript
+    AddOutputFilterByType DEFLATE application/xml application/rss+xml image/svg+xml
+    AddOutputFilterByType DEFLATE application/json
+</IfModule>
+
 # Pastas e arquivos de trabalho nao ficam publicos, mesmo se enviados por engano.
 RedirectMatch 404 ^/(\.git|\.vscode|\.venv|dados|docs|mysql|supabase|tests|tools)(/|$)
 RedirectMatch 404 \.(md|py|sql)$
