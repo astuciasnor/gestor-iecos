@@ -1462,8 +1462,8 @@
                                     Calendário (Turma/Professor) e Gráfico Gantt, use os botões azuis <b>🔄
                                         Atualizar</b> sempre que fizer uma mudança, para renderizar as novidades
                                     imediatamente.</li>
-                                <li>🌐 <strong>Publicação:</strong><br>O botão verde <b>"Publicar Online"</b> gera o arquivo da
-                                    agenda pública; depois é só rodar um comando (veja <b>Publicar a agenda pública</b>, abaixo).</li>
+                                <li>🌐 <strong>Publicação:</strong><br>O botão verde <b>"Publicar Online"</b> (só o administrador)
+                                    atualiza a agenda dos alunos (veja <b>Publicar a agenda pública</b>, abaixo).</li>
                             </ul>
                         </div>
 
@@ -1480,39 +1480,17 @@
                             style="background: #dfe7df; border: 1px solid #a8d3a8; padding:18px; border-radius:10px; margin-top:15px;">
                             <h4 style="margin-top:0; margin-bottom:14px; color:#1e7e34; font-size:1.18em;">Publicar a agenda pública</h4>
                             <ol style="padding-left:24px; font-size:0.98em; line-height:1.7; margin:0; color:#34495e;">
-                                <li style="margin-bottom:6px;">Clique em <strong>Publicar Online</strong>. O arquivo
-                                    <code>alocacoes_publicas.json</code> vai para a pasta Downloads, com os períodos em
-                                    curso e futuros.</li>
-                                <li style="margin-bottom:10px;">No terminal, na pasta do projeto, rode o comando abaixo e
-                                    responda <b>s</b>. Ele confere o arquivo, mostra os períodos e a hora do download e
-                                    envia ao GitHub.</li>
-                            </ol>
-                            <div
-                                style="background:#174b3d; color:#f4fff7; border-radius:10px; padding:14px 16px; font-family:Consolas, 'Courier New', monospace; font-size:0.94em; line-height:1.55; word-break:break-all; margin:0 0 10px 24px;">
-                                python tools/publish_online.py
-                            </div>
-                            <div style="display:flex; align-items:center; gap:10px; margin:0 0 16px 24px; flex-wrap:wrap;">
-                                <button type="button"
-                                    data-copy-text="python tools/publish_online.py"
-                                    data-copy-feedback-target="publish-command-feedback"
-                                    data-copy-success-label="Comando copiado"
-                                    style="background:#2b9140; color:#fff; border:none; border-radius:7px; padding:8px 14px; font-weight:bold; cursor:pointer;">
-                                    Copiar comando
-                                </button>
-                                <span id="publish-command-feedback"
-                                    style="font-size:0.85em; color:#2f6f3e; min-height:1.2em;">&nbsp;</span>
-                            </div>
-                            <ol start="3"
-                                style="padding-left:24px; font-size:0.98em; line-height:1.7; margin:0; color:#34495e;">
-                                <li style="margin-bottom:10px;">Em 1 a 3 minutos a agenda está atualizada:</li>
+                                <li style="margin-bottom:6px;">Quando um período estiver pronto, o coordenador avisa o administrador.</li>
+                                <li style="margin-bottom:6px;">O administrador clica em <strong>Publicar Online</strong> e confirma.</li>
+                                <li style="margin-bottom:10px;">Em menos de 1 minuto os alunos já veem a agenda nova:</li>
                             </ol>
                             <div
                                 style="background:#eef3ee; border:1px solid #b8d1b8; color:#173f35; border-radius:10px; padding:12px 14px; margin:0 0 14px 24px; font-family:Consolas, 'Courier New', monospace; font-size:0.9em; line-height:1.55; word-break:break-all;">
-                                https://astuciasnor.github.io/gestor-iecos/agenda_publica.html
+                                https://cardume.iecos.ufpa.br/agenda_publica.html
                             </div>
                             <div style="display:flex; align-items:center; gap:10px; margin:0 0 14px 24px; flex-wrap:wrap;">
                                 <button type="button"
-                                    data-copy-text="https://astuciasnor.github.io/gestor-iecos/agenda_publica.html"
+                                    data-copy-text="https://cardume.iecos.ufpa.br/agenda_publica.html"
                                     data-copy-feedback-target="agenda-publica-feedback"
                                     data-copy-success-label="URL copiada"
                                     style="background:#2b9140; color:#fff; border:none; border-radius:7px; padding:8px 14px; font-weight:bold; cursor:pointer;">
@@ -1522,8 +1500,7 @@
                                     style="font-size:0.85em; color:#2f6f3e; min-height:1.2em;">&nbsp;</span>
                             </div>
                             <p style="font-size:0.88em; line-height:1.55; margin:0 0 0 24px; color:#46604f;">
-                                Só conferir, sem publicar: <code>python tools/publish_online.py --check</code>.<br>
-                                O comando grava e envia só o arquivo da agenda; outras alterações do projeto não vão junto.
+                                O QR code da agenda (<code>img/qrcode_agenda_publica.png</code>) aponta para este endereço.
                             </p>
                         </div>
 

@@ -5,8 +5,9 @@
 Sistema web para montagem, revisao, auditoria e publicacao de grades academicas do IECOS/UFPA. O app roda no navegador, usa `localStorage` como persistencia local por plano letivo e hoje opera com o motor canonico por faixas ja consolidado na `main`.
 
 Links publicos:
-- App principal: `https://astuciasnor.github.io/gestor-iecos/`
-- Agenda publica: `https://astuciasnor.github.io/gestor-iecos/agenda_publica.html`
+- App principal: `https://cardume.iecos.ufpa.br/` (servidor da UFPA, desde 05/11/2026)
+- Agenda publica: `https://cardume.iecos.ufpa.br/agenda_publica.html`
+- Endereco antigo (GitHub Pages): o app mostra o aviso de mudanca (`mudou.html`)
 
 Documentacao tecnica:
 - [`docs/manual_desenvolvedor.md`](docs/manual_desenvolvedor.md)
