@@ -1,27 +1,32 @@
-import { store } from './store.js?v=202611051236';
-import { getTurnoLetter, mapSlotToTurno } from './turns.js?v=202611051236';
-import { normalizePeriodo as normalizePeriodoLetivoCode } from './plan_storage.js?v=202611051236';
-import { getCalendarEvents } from './calendar.js?v=202611051236';
-import { isDateOverlap } from './utils.js?v=202611051236';
-import { weeklyState } from './weekly_state.js?v=202611051236';
-import { findPendentesCobertas, isPendenteJaAlocada } from './pendentes.mjs?v=202611051236';
-import { classifySwap } from './troca_ordem.mjs?v=202611051236';
-import { buildCanonicalOfferProjection } from './execution_engine.js?v=202611051236';
-import { buildSigaaMetadataPayload, validateSigaaMetadataPayload } from './sigaa_metadata.js?v=202611051236';
-import { parseBackupDataFile, extractImportPlanMeta } from './serialization.js?v=202611051236';
+import { store } from './store.js?v=202611051241';
+import { getTurnoLetter, mapSlotToTurno } from './turns.js?v=202611051241';
+import { normalizePeriodo as normalizePeriodoLetivoCode } from './plan_storage.js?v=202611051241';
+import { getCalendarEvents } from './calendar.js?v=202611051241';
+import { isDateOverlap } from './utils.js?v=202611051241';
+import { weeklyState } from './weekly_state.js?v=202611051241';
+import { findPendentesCobertas, isPendenteJaAlocada } from './pendentes.mjs?v=202611051241';
+import { classifySwap } from './troca_ordem.mjs?v=202611051241';
+import { buildCanonicalOfferProjection } from './execution_engine.js?v=202611051241';
+import {
+    buildSigaaMetadataPayload,
+    validateSigaaMetadataPayload,
+    getSigaaCode,
+    buildScopedSigaaAllocationFromOfferFaixa
+} from './sigaa_metadata.js?v=202611051241';
+import { parseBackupDataFile, extractImportPlanMeta } from './serialization.js?v=202611051241';
 import {
     showToastWarning,
     showPersistentStatusMessage,
     copyTextToClipboard,
     flashButtonCopyState,
     setupCopyActionButtons
-} from './ui_feedback.js?v=202611051236';
+} from './ui_feedback.js?v=202611051241';
 import {
     normalizeHexColor,
     adjustHexColor,
     hexToRgba,
     vividHexColor
-} from './color_utils.js?v=202611051236';
+} from './color_utils.js?v=202611051241';
 import {
     isFaixaAllocation,
     isPriorityRegularAllocation,
@@ -30,7 +35,7 @@ import {
     normalizeTeacherNameForMatch,
     getDocenteShortLabel,
     getAllocationTeachersForConflict
-} from './allocation_helpers.js?v=202611051236';
+} from './allocation_helpers.js?v=202611051241';
 import {
     normalizeConflictSlotLabel,
     getAvailableTurnoOfertaOptions,
@@ -39,7 +44,7 @@ import {
     isTurnoDividerSlot,
     buildHorariosForUI,
     getShiftChangeMeta
-} from './turno_helpers.js?v=202611051236';
+} from './turno_helpers.js?v=202611051241';
 import {
     getDisciplinaCHGlobal,
     derivarBloco,
@@ -48,18 +53,17 @@ import {
     getTurmaBaseLabel,
     getDisciplinaInfo,
     getPrintAcademicMetaLine
-} from './curso_turma_helpers.js?v=202611051236';
+} from './curso_turma_helpers.js?v=202611051241';
 import {
-    getGanttTurnoCode,
     renderGanttChart
-} from './gantt_ui.js?v=202611051236';
+} from './gantt_ui.js?v=202611051241';
 import {
     renderMonthlyCalendar,
     renderTeacherCalendar
-} from './calendarios_ui.js?v=202611051236';
+} from './calendarios_ui.js?v=202611051241';
 import {
     refreshTeacherConflictsUI
-} from './conflitos_ui.js?v=202611051236';
+} from './conflitos_ui.js?v=202611051241';
 import {
     shouldIgnoreTurmaEventForCandidate,
     normalizeDrawnSlotsByDay,
@@ -73,7 +77,7 @@ import {
     resolveEditableFaixasFromStoredExecution,
     alignFaixasToExecutionEnd,
     buildFinalAdjustmentFaixaSuggestion
-} from './faixa_utils.js?v=202611051236';
+} from './faixa_utils.js?v=202611051241';
 import {
     timeToMinutes,
     shiftISODate,
@@ -87,14 +91,14 @@ import {
     isDateInsideRange,
     formatDateBRShortYear,
     formatDateBR
-} from './date_utils_ui.js?v=202611051236';
+} from './date_utils_ui.js?v=202611051241';
 import {
     initializeWeeklyScheduleForTurma,
     reconcileTurmaSelectionAfterPLChange,
     resetWeeklyViewOnTurmaChange,
     resolveActiveAcademicPeriod,
     slotLabelsOverlap
-} from './academic_rules.mjs?v=202611051236';
+} from './academic_rules.mjs?v=202611051241';
 
 const gridContainer = document.getElementById('weekly-grid');
 const selCurso = document.getElementById('sel-curso');
@@ -3931,155 +3935,6 @@ function syncAllIntensiveDates() {
     store.saveAllocations();
 }
 
-function buildScopedSigaaAllocationFromOfferFaixa(offerGroup, faixa, planContext = {}) {
-    const base = offerGroup?.baseAlloc || (Array.isArray(offerGroup?.allocations) ? offerGroup.allocations[0] : null) || {};
-    const rawDrawnSlotsByDay = faixa?.drawnSlotsByDay || offerGroup?.timeRangesByDay || {};
-    const dias = [...new Set(
-        (Array.isArray(faixa?.dias) ? faixa.dias : Object.keys(rawDrawnSlotsByDay))
-            .map((value) => Number.parseInt(value, 10))
-            .filter((value) => value >= 1 && value <= 6)
-    )].sort((left, right) => left - right);
-    const slots = [...new Set(
-        (Array.isArray(faixa?.slots) && faixa.slots.length > 0 ? faixa.slots : Object.values(rawDrawnSlotsByDay).flat())
-            .map((value) => String(value || '').trim())
-            .filter(Boolean)
-    )].sort((left, right) => timeToMinutes(left) - timeToMinutes(right));
-    const drawnSlotsByDay = {};
-
-    dias.forEach((day) => {
-        const daySlots = Array.isArray(rawDrawnSlotsByDay?.[day]) && rawDrawnSlotsByDay[day].length > 0
-            ? rawDrawnSlotsByDay[day]
-            : slots;
-        drawnSlotsByDay[day] = [...new Set(daySlots.map((value) => String(value || '').trim()).filter(Boolean))]
-            .sort((left, right) => timeToMinutes(left) - timeToMinutes(right));
-    });
-
-    const inicio = String(faixa?.inicio || offerGroup?.start || base?.dataInicio || planContext.termStart || '').trim();
-    const fim = String(faixa?.fim || offerGroup?.end || base?.dataFim || planContext.termEnd || inicio || '').trim();
-
-    return {
-        ...base,
-        modo: 'faixas',
-        ch: 0,
-        dataInicio: inicio,
-        dataFim: fim,
-        diasMarcados: dias,
-        horariosOcupados: slots,
-        usaSabado: dias.includes(6),
-        faixas: [{
-            inicio,
-            fim,
-            dias,
-            slots,
-            drawnSlotsByDay
-        }]
-    };
-}
-
-function getSigaaCode(allocsForClass) {
-    function buildSigaaSlotsMap() {
-        // Usa os numeros SIGAA explicitos do regime ativo (coluna `sigaa` da planilha).
-        // O 4o horario (intervalo) nao tem numero e e ignorado.
-        const entries = (typeof store.getActiveSigaaSlots === 'function') ? store.getActiveSigaaSlots() : [];
-        const dynamicSlots = [];
-
-        entries.forEach((entry) => {
-            const shiftCode = getGanttTurnoCode(entry.turno);
-            if (!['M', 'T', 'N'].includes(shiftCode)) return;
-            const sigaaNum = parseInt(entry.sigaa, 10);
-            if (!Number.isFinite(sigaaNum) || sigaaNum <= 0) return;
-            const rawLabel = String(entry.faixa || '');
-            if (!rawLabel || rawLabel.toUpperCase().includes('INTERVALO')) return;
-            const startMinutes = timeToMinutes(cleanHorarioLabel(rawLabel));
-            if (!Number.isFinite(startMinutes) || startMinutes >= 99999) return;
-            dynamicSlots.push({ m: startMinutes, s: shiftCode, sl: sigaaNum });
-        });
-
-        if (dynamicSlots.length > 0) {
-            return dynamicSlots.sort((a, b) => (a.m - b.m) || a.s.localeCompare(b.s) || (a.sl - b.sl));
-        }
-
-        return [
-            { m: 450, s: 'M', sl: 1 }, { m: 500, s: 'M', sl: 2 }, { m: 550, s: 'M', sl: 3 },
-            { m: 620, s: 'M', sl: 4 }, { m: 670, s: 'M', sl: 5 }, { m: 720, s: 'M', sl: 6 },
-            { m: 810, s: 'T', sl: 1 }, { m: 860, s: 'T', sl: 2 }, { m: 910, s: 'T', sl: 3 },
-            { m: 980, s: 'T', sl: 4 }, { m: 1030, s: 'T', sl: 5 }, { m: 1080, s: 'T', sl: 6 },
-            { m: 1110, s: 'N', sl: 1 }, { m: 1160, s: 'N', sl: 2 }, { m: 1210, s: 'N', sl: 3 }, { m: 1260, s: 'N', sl: 4 }
-        ];
-    }
-
-    const slotsMap = buildSigaaSlotsMap();
-
-    function getSlot(horario) {
-        if (!horario) return null;
-        const min = timeToMinutes(horario);
-        for (let i = slotsMap.length - 1; i >= 0; i--) {
-            if (min >= slotsMap[i].m - 10 && min <= slotsMap[i].m + 40) return slotsMap[i];
-        }
-        return null;
-    }
-
-    const slotsList = [];
-    allocsForClass.forEach(a => {
-        if (isScheduledRegularAllocation(a)) {
-            const dSigaa = parseInt(a.diaSemana) + 1;
-            const sInfo = getSlot(a.horario);
-            if (sInfo) slotsList.push({ day: dSigaa, shift: sInfo.s, slot: sInfo.sl });
-        } else if (isFaixaAllocation(a)) {
-            const execution = computeIntensiveExecution(a, { respectPriority: true, respectTurmaOccupancy: true });
-            const byDate = execution.byDate || {};
-            Object.keys(byDate).sort().forEach((dStr) => {
-                const dSigaa = new Date(dStr + "T12:00:00").getDay() + 1;
-                (byDate[dStr] || []).forEach((h) => {
-                    const sInfo = getSlot(h);
-                    if (sInfo) slotsList.push({ day: dSigaa, shift: sInfo.s, slot: sInfo.sl });
-                });
-            });
-        }
-    });
-
-    if (slotsList.length === 0) return '-';
-
-    const unique = [];
-    const seen = new Set();
-    slotsList.forEach(s => {
-        const key = `${s.day}-${s.shift}-${s.slot}`;
-        if (!seen.has(key)) {
-            seen.add(key);
-            unique.push(s);
-        }
-    });
-
-    const dayShiftMap = {};
-    unique.forEach(s => {
-        const k = `${s.day}${s.shift}`;
-        if (!dayShiftMap[k]) dayShiftMap[k] = [];
-        dayShiftMap[k].push(s.slot);
-    });
-
-    const shiftSlotsMap = {};
-    for (const k in dayShiftMap) {
-        dayShiftMap[k].sort((a, b) => a - b);
-        const day = k.charAt(0);
-        const shift = k.charAt(1);
-        const slotsStr = dayShiftMap[k].join('');
-        const comboKey = `${shift}${slotsStr}`;
-        if (!shiftSlotsMap[comboKey]) shiftSlotsMap[comboKey] = [];
-        shiftSlotsMap[comboKey].push(day);
-    }
-
-    const parts = [];
-    for (const combo in shiftSlotsMap) {
-        const shift = combo.charAt(0);
-        const slotsStr = combo.substring(1);
-        const daysStr = shiftSlotsMap[combo].sort().join('');
-        parts.push(`${daysStr}${shift}${slotsStr}`);
-    }
-
-    parts.sort();
-    return parts.join(' ');
-}
-
 // Nome sugerido do PDF, ex.: EP2023_BL9_2027-PL2_Calendario_IECOS
 // ou Docente_Fulano-de-Tal_2027-PL2_Gantt_IECOS.
 function buildPrintFileName() {
@@ -7272,8 +7127,6 @@ export function exportSigaaMetadataJSON() {
     
     const contextMap = {
         getDisciplinaInfo,
-        getSigaaCode,
-        buildScopedSigaaAllocationFromOfferFaixa,
         formatDateBR
     };
 

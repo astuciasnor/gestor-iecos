@@ -1,25 +1,26 @@
-import { store } from './store.js?v=202611051236';
-import { buildTeacherExecutionSnapshot, buildCanonicalOfferProjection } from './execution_engine.js?v=202611051236';
-import { filterExportableAllocations } from './academic_rules.mjs?v=202611051236';
-import { normalizeHexColor, hexToRgba } from './color_utils.js?v=202611051236';
-import { formatDateBR, timeToMinutes } from './date_utils_ui.js?v=202611051236';
+import { store } from './store.js?v=202611051241';
+import { buildTeacherExecutionSnapshot, buildCanonicalOfferProjection } from './execution_engine.js?v=202611051241';
+import { filterExportableAllocations } from './academic_rules.mjs?v=202611051241';
+import { normalizeHexColor, hexToRgba } from './color_utils.js?v=202611051241';
+import { formatDateBR, timeToMinutes } from './date_utils_ui.js?v=202611051241';
 import {
     teacherNamesMatch,
     allocationHasTeacherMatch,
     getDocenteShortLabel,
     calculateTeacherTotalCH
-} from './allocation_helpers.js?v=202611051236';
+} from './allocation_helpers.js?v=202611051241';
 import {
     normalizeConflictSlotLabel,
     normalizeTurnoOfertaKey,
     formatTurnoOfertaLabel,
-    getAvailableTurnoOfertaOptions
-} from './turno_helpers.js?v=202611051236';
+    getAvailableTurnoOfertaOptions,
+    getGanttTurnoCode
+} from './turno_helpers.js?v=202611051241';
 import {
     getDisciplinaCHGlobal,
     getTurmaLabel,
     getDisciplinaInfo
-} from './curso_turma_helpers.js?v=202611051236';
+} from './curso_turma_helpers.js?v=202611051241';
 
 // Referencias DOM de nivel de modulo (espelham as de ui.js). O modulo e carregado
 // como script deferred (via ui.js <- main.js), entao o DOM ja esta pronto aqui.
@@ -29,15 +30,6 @@ const calEnd = document.getElementById('cal-end');
 export function resolveTeacherShiftForSlot(slot) {
     const config = resolveGanttTurnoForSlot(slot, getGanttTurnoConfigs());
     return config?.value || '';
-}
-
-export function getGanttTurnoCode(turnoValue = '') {
-    const normalized = normalizeTurnoOfertaKey(turnoValue);
-    if (normalized === 'manha') return 'M';
-    if (normalized === 'tarde') return 'T';
-    if (normalized === 'noite') return 'N';
-    const label = formatTurnoOfertaLabel(turnoValue).replace(/[^A-Za-zÀ-ÿ0-9]/g, '');
-    return String(label || 'T').slice(0, 2).toUpperCase();
 }
 
 export function getGanttTurnoConfigs() {

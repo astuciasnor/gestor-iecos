@@ -105,7 +105,7 @@ Estado e dados:
 - `store.js`: estado principal, leitura do `dados_app.json` e gravacao das alocacoes no plano ativo.
 - `weekly_state.js`: estado da aba Alocar Componentes (faixas, desenho, edicao).
 - `serialization.js`: backup/importacao JSON e payload da agenda publica.
-- `sigaa_metadata.js`: payload de metadados para cadastro no SIGAA.
+- `sigaa_metadata.js`: codigo de horario SIGAA (`getSigaaCode`, ex.: 24M12) e payload de metadados para cadastro no SIGAA (testes em `tests/sigaa.test.mjs`).
 - `allocation_helpers.js`, `curso_turma_helpers.js`, `turno_helpers.js`, `faixa_utils.js`: consultas sobre ofertas, turmas, turnos e faixas.
 
 Interface:

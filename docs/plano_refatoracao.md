@@ -39,6 +39,8 @@ no navegador).
 
 ## Fase 1 - Migracao para o servidor da UFPA (quando a VPN sair)
 
+- [x] Compactacao do JSON no `.htaccess` (05/11/2026): a agenda da API ia com
+      1,1 MB sem compactar. A lista do `.htaccess` substitui a do servidor.
 - [ ] Enviar por FTP so o que o app usa: `index.html`, `agenda_publica.html`,
       `.htaccess`, `dados_app.json`, `alocacoes_publicas.json`, `api/`
       (com `config.php` criado no servidor), `css/`, `img/`, `js/`, `publicacoes/`.
@@ -59,15 +61,23 @@ Se a UFPA nao sair, nada disso bloqueia: o modo `supabase` continua como esta.
 - [ ] Revisar com o usuario o que a exportacao de metadados SIGAA
       (`sigaa_metadata.js`, botao "Exportar Metadados SIGAA") gera hoje e o que
       falta para o cadastro das turmas no SIGAA.
-- [ ] Testes para `buildSigaaMetadataPayload` (hoje sem teste; so o payload
-      de `academic_rules.mjs` e testado).
+- [x] Testes do codigo de horario SIGAA (`tests/sigaa.test.mjs`, 05/11/2026).
+- [ ] Testes para `buildSigaaMetadataPayload` (o payload inteiro).
 
-## Fase 3 - Fatiar o `ui.js` (7.092 linhas, 224 funcoes)
+## Fase 3 - Fatiar o `ui.js` (7.250 linhas em 05/11/2026)
 
 Uma extracao por commit, movendo codigo sem reescrever, do mais isolado para o
-mais acoplado:
+mais acoplado. Conferencia de cada extracao: alem de `npm test` e
+`npm run smoke`, comparar a Lista de Ofertas e o arquivo SIGAA de todas as
+turmas antes e depois (tem que dar identico).
 
-- [ ] Lista de Ofertas -> `ofertas_ui.js` (montagem das linhas ja e quase pura).
+- [x] Codigo de horario SIGAA (`getSigaaCode`, `buildScopedSigaaAllocationFromOfferFaixa`)
+      -> `sigaa_metadata.js`; `getGanttTurnoCode` -> `turno_helpers.js` (05/11/2026).
+- [ ] Lista de Ofertas + Trocar -> `ofertas_ui.js`. Mais acoplada do que parecia:
+      usa 16 funcoes internas do `ui.js` (editor, desfazer, grade semanal,
+      conflitos do candidato) e e chamada de 9 lugares. Fazer depois da virada,
+      recebendo essas funcoes num objeto de contexto (`initOfertasUI({...})`),
+      ja que modulo novo nao importa de `ui.js`.
 - [ ] Exportacoes e importacao (botoes da aba Exportar) -> `exportacoes_ui.js`.
 - [ ] Sugestao de inicio e aviso de dia livre -> modulo proprio, com testes.
 - [ ] Por ultimo, a grade da aba Alocar Componentes (concentra o estado de
@@ -77,6 +87,6 @@ mais acoplado:
 
 - [ ] Conflitos de docente: `conflicts.js` (motor) e `conflitos_ui.js`
       (painel global) ainda calculam cada um a sua maneira; unificar no motor.
-- [ ] `agenda_publica.js`: a gaveta de detalhes no celular (`abrirBottomSheet`)
-      nunca e aberta; decidir se religa ou remove junto com o HTML dela.
+- [x] `agenda_publica.js`: a gaveta de detalhes no celular, que nunca abria,
+      foi removida com o HTML e o CSS dela (05/11/2026; a lupa continua).
 - [ ] Estilos inline (`.style`) da interface para classes CSS, aos poucos.

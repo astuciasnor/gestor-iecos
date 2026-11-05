@@ -1,5 +1,5 @@
-import { store } from './store.js?v=202611051236';
-import { normalizeTurnoKey, getTurnoLetter, mapSlotToTurno } from './turns.js?v=202611051236';
+import { store } from './store.js?v=202611051241';
+import { normalizeTurnoKey, getTurnoLetter, mapSlotToTurno } from './turns.js?v=202611051241';
 
 export function normalizeConflictSlotLabel(value) {
     return String(value || '')
@@ -22,6 +22,16 @@ export function formatTurnoOfertaLabel(value) {
     if (normalized === 'manha_noite') return 'Manhã e Noite';
     if (normalized === 'integral') return 'Integral (M+T+N)';
     return String(value || '').trim() || 'Turno';
+}
+
+// Letra do turno (M, T, N) usada no Gantt e no codigo de horario SIGAA.
+export function getGanttTurnoCode(turnoValue = '') {
+    const normalized = normalizeTurnoOfertaKey(turnoValue);
+    if (normalized === 'manha') return 'M';
+    if (normalized === 'tarde') return 'T';
+    if (normalized === 'noite') return 'N';
+    const label = formatTurnoOfertaLabel(turnoValue).replace(/[^A-Za-zÀ-ÿ0-9]/g, '');
+    return String(label || 'T').slice(0, 2).toUpperCase();
 }
 
 export function getAvailableTurnoOfertaOptions() {
