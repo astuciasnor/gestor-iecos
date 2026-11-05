@@ -1,18 +1,22 @@
 // Conversa com a API PHP do servidor da UFPA (modo 'ufpa', api/index.php).
 // Mesma interface de remoto_supabase.js. Sem tempo real no servidor: o
 // navegador pergunta as mudancas a cada poucos segundos.
-import { UFPA_API_URL } from './backend_config.js?v=202611042052';
+import { UFPA_API_URL } from './backend_config.js?v=202611042116';
 
 const POLL_MS = 5000;           // aba visivel
 const POLL_HIDDEN_MS = 30000;   // aba em segundo plano
 const MAX_MUDANCAS = 1000;      // igual a api/index.php
 const SESSION_KEY = 'cardume_ufpa_usuario';
+// O servidor da UFPA recusa envios maiores que 128 KB (erro 413, antes de
+// chegar a API). Envios maiores vao em partes de ate MAX_ENVIO bytes.
+const MAX_ENVIO = 100 * 1024;
 
 let perfilAtual = null;
 const cursors = new Map();      // plano -> ultimo seq do historico ja aplicado
 let sessionCheck = () => {};
 
-async function chamar(acao, { params = {}, corpo } = {}) {
+// corpo: objeto enviado como JSON; bruto: bytes enviados como estao.
+async function chamar(acao, { params = {}, corpo, bruto } = {}) {
   const url = new URL(UFPA_API_URL, window.location.href);
   url.searchParams.set('acao', acao);
   Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, String(v)));
@@ -21,12 +25,19 @@ async function chamar(acao, { params = {}, corpo } = {}) {
     options.method = 'POST';
     options.headers = { 'Content-Type': 'application/json', 'X-Cardume': '1' };
     options.body = JSON.stringify(corpo);
+  } else if (bruto !== undefined) {
+    options.method = 'POST';
+    options.headers = { 'Content-Type': 'application/octet-stream', 'X-Cardume': '1' };
+    options.body = bruto;
   }
   const resp = await fetch(url, options);
   let data = null;
   try { data = await resp.json(); } catch (e) { /* resposta sem JSON */ }
   if (!resp.ok) {
-    const error = new Error(data?.erro || `erro ${resp.status} no servidor`);
+    const fallback = resp.status === 413
+      ? 'o servidor recusou um envio grande demais'
+      : `erro ${resp.status} no servidor`;
+    const error = new Error(data?.erro || fallback);
     error.code = data?.codigo || '';
     error.status = resp.status;
     throw error;
@@ -89,7 +100,29 @@ export async function fetchPlan(key) {
 
 // rows: [{ id, plano, curso, turma, dados }]
 export async function upsert(rows) {
-  await chamar('salvar', { corpo: { linhas: rows } });
+  for (const linhas of lotesPorTamanho(rows)) {
+    await chamar('salvar', { corpo: { linhas } });
+  }
+}
+
+// Agrupa as linhas em envios de ate MAX_ENVIO bytes (uma linha maior vai sozinha).
+export function lotesPorTamanho(rows, max = MAX_ENVIO) {
+  const encoder = new TextEncoder();
+  const lotes = [];
+  let atual = [];
+  let tamanho = 0;
+  for (const row of rows) {
+    const bytes = encoder.encode(JSON.stringify(row)).length + 1;
+    if (atual.length && tamanho + bytes > max) {
+      lotes.push(atual);
+      atual = [];
+      tamanho = 0;
+    }
+    atual.push(row);
+    tamanho += bytes;
+  }
+  if (atual.length) lotes.push(atual);
+  return lotes;
 }
 
 export async function remove(ids) {
@@ -99,7 +132,16 @@ export async function remove(ids) {
 // Agenda publica gravada no proprio servidor (so o administrador).
 // Devolve { id, periodos: [{ periodo, alocacoes }] } do que ficou publicado.
 export async function publicarAgenda(publications) {
-  return chamar('publicar', { corpo: { publications } });
+  const bytes = new TextEncoder().encode(JSON.stringify({ publications }));
+  if (bytes.length <= MAX_ENVIO) return chamar('publicar', { corpo: { publications } });
+  // Maior que o limite do servidor: vai em pedacos e o servidor monta no fim.
+  const lote = crypto.randomUUID();
+  let partes = 0;
+  for (let inicio = 0; inicio < bytes.length; inicio += MAX_ENVIO) {
+    await chamar('publicar_parte', { params: { lote, parte: partes }, bruto: bytes.slice(inicio, inicio + MAX_ENVIO) });
+    partes += 1;
+  }
+  return chamar('publicar', { corpo: { lote, partes } });
 }
 
 // Consulta periodica das mudancas. handlers: { onUpsert(row), onDelete(id), onState('ok' | 'offline') }.

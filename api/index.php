@@ -16,6 +16,9 @@
 //   POST salvar   {linhas: [{id, plano, curso, turma, dados}]}
 //   POST excluir  {ids: [...]}
 //   POST publicar {publications: [...]}  agenda publica (so o administrador)
+//   POST publicar_parte &lote=L&parte=N  (corpo: um pedaco do JSON acima)
+//   POST publicar {lote: L, partes: N}   monta e publica os pedacos enviados
+//     (o servidor da UFPA recusa envios maiores que 128 KB; a agenda e maior)
 //   GET  agenda                    agenda publicada (aberta, sem login: e o que os alunos veem)
 // Todo POST exige o cabecalho "X-Cardume: 1" (barra envio a partir de outros sites).
 
@@ -31,6 +34,8 @@ const MAX_MUDANCAS = 1000;       // por chamada de mudancas
 const MAX_CORPO = 16 * 1024 * 1024;
 const AGENDA_FUTUROS = 4;        // periodos futuros publicados (igual a tools/publish_online.py)
 const AGENDA_VERSOES = 30;       // publicacoes guardadas para desfazer
+const MAX_PARTE = 128 * 1024;    // limite de cada envio no servidor da UFPA
+const MAX_PARTES = 500;
 const FUSO_UFPA = 'America/Belem';
 const JSON_OPCOES = JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRESERVE_ZERO_FRACTION;
 
@@ -74,6 +79,7 @@ $rotas = [
     'POST salvar'   => 'acaoSalvar',
     'POST excluir'  => 'acaoExcluir',
     'POST publicar' => 'acaoPublicar',
+    'POST publicar_parte' => 'acaoPublicarParte',
     'GET agenda'    => 'acaoAgenda',
 ];
 $metodo = $_SERVER['REQUEST_METHOD'] ?? 'GET';
@@ -260,9 +266,10 @@ function acaoExcluir(mysqli $db): void
 // ate AGENDA_FUTUROS futuros.
 function acaoPublicar(mysqli $db): void
 {
-    $u = exigirUsuario($db);
-    if ($u['papel'] !== 'admin') throw new ErroApi(403, 'Somente o administrador pode publicar a agenda.', 'so_admin');
-    $novas = corpoJson()->publications ?? null;
+    $u = exigirAdmin($db);
+    $corpo = corpoJson();
+    if (isset($corpo->lote)) $corpo = montarLote($db, $corpo);
+    $novas = $corpo->publications ?? null;
     if (!is_array($novas) || !$novas) throw new ErroApi(400, 'Nenhum periodo para publicar.');
     foreach ($novas as $i => $pub) validarPublicacao($pub, $i + 1);
 
@@ -293,6 +300,48 @@ function acaoPublicar(mysqli $db): void
         $resposta = ['ok' => true, 'id' => $id, 'periodos' => $periodos];
     });
     responder(200, $resposta);
+}
+
+// Um pedaco da publicacao (bytes do JSON, na ordem). Repetir a mesma parte
+// substitui a anterior.
+function acaoPublicarParte(mysqli $db): void
+{
+    exigirAdmin($db);
+    $lote = loteValido($_GET['lote'] ?? null);
+    $parte = filter_var($_GET['parte'] ?? '', FILTER_VALIDATE_INT, ['options' => ['min_range' => 0, 'max_range' => MAX_PARTES - 1]]);
+    if ($parte === false) throw new ErroApi(400, 'parte invalida');
+    $bruto = file_get_contents('php://input', false, null, 0, MAX_PARTE + 1);
+    if ($bruto === false || $bruto === '') throw new ErroApi(400, 'parte vazia');
+    if (strlen($bruto) > MAX_PARTE) throw new ErroApi(413, 'parte grande demais');
+
+    $db->query('DELETE FROM agenda_partes WHERE criada_em < NOW() - INTERVAL 1 HOUR');
+    executar($db, 'REPLACE INTO agenda_partes (lote, parte, dados) VALUES (?, ?, ?)', [$lote, (string) $parte, $bruto]);
+    responder(200, ['ok' => true]);
+}
+
+function montarLote(mysqli $db, object $corpo): object
+{
+    $lote = loteValido($corpo->lote ?? null);
+    $total = $corpo->partes ?? null;
+    if (!is_int($total) || $total < 1 || $total > MAX_PARTES) throw new ErroApi(400, 'numero de partes invalido');
+    $linhas = consultar($db, 'SELECT parte, dados FROM agenda_partes WHERE lote = ? ORDER BY parte', [$lote]);
+    if (count($linhas) !== $total || (int) end($linhas)['parte'] !== $total - 1) {
+        throw new ErroApi(400, 'A publicacao chegou incompleta. Tente publicar de novo.');
+    }
+    $json = implode('', array_column($linhas, 'dados'));
+    executar($db, 'DELETE FROM agenda_partes WHERE lote = ?', [$lote]);
+    if (strlen($json) > MAX_CORPO) throw new ErroApi(413, 'envio grande demais');
+    $montado = json_decode($json, false);
+    if (!is_object($montado)) throw new ErroApi(400, 'A publicacao chegou corrompida. Tente publicar de novo.');
+    return $montado;
+}
+
+function loteValido(mixed $lote): string
+{
+    if (!is_string($lote) || !preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/', $lote)) {
+        throw new ErroApi(400, 'lote invalido');
+    }
+    return $lote;
 }
 
 // Aberta a todos (os alunos nao tem login). Responde 304 quando o navegador ja
@@ -412,6 +461,13 @@ function exigirUsuario(mysqli $db): array
 {
     $u = usuarioLogado($db);
     if (!$u) throw new ErroApi(401, 'sessao expirada, entre novamente', 'sessao_expirada');
+    return $u;
+}
+
+function exigirAdmin(mysqli $db): array
+{
+    $u = exigirUsuario($db);
+    if ($u['papel'] !== 'admin') throw new ErroApi(403, 'Somente o administrador pode publicar a agenda.', 'so_admin');
     return $u;
 }
 

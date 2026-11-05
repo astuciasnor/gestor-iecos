@@ -78,6 +78,17 @@ CREATE TABLE IF NOT EXISTS agenda_publicada (
   publicado_por  CHAR(36)     NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- Pedacos de uma publicacao em andamento. O servidor da UFPA recusa envios
+-- maiores que 128 KB; a agenda vai em pedacos e e montada no fim (a API apaga
+-- os pedacos depois de montar, ou depois de 1 hora se o envio parar no meio).
+CREATE TABLE IF NOT EXISTS agenda_partes (
+  lote       CHAR(36)     NOT NULL,
+  parte      INT          NOT NULL,
+  dados      MEDIUMBLOB   NOT NULL,
+  criada_em  DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (lote, parte)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- Senhas erradas por e-mail + endereco IP, para bloquear tentativas em serie.
 CREATE TABLE IF NOT EXISTS login_tentativas (
   chave     CHAR(64)  NOT NULL PRIMARY KEY,
