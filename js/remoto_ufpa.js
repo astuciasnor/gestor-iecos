@@ -1,7 +1,7 @@
 // Conversa com a API PHP do servidor da UFPA (modo 'ufpa', api/index.php).
 // Mesma interface de remoto_supabase.js. Sem tempo real no servidor: o
 // navegador pergunta as mudancas a cada poucos segundos.
-import { UFPA_API_URL } from './backend_config.js?v=202611042116';
+import { UFPA_API_URL } from './backend_config.js?v=202611042134';
 
 const POLL_MS = 5000;           // aba visivel
 const POLL_HIDDEN_MS = 30000;   // aba em segundo plano
@@ -23,7 +23,10 @@ async function chamar(acao, { params = {}, corpo, bruto } = {}) {
   const options = { method: 'GET', credentials: 'same-origin', cache: 'no-store', headers: {} };
   if (corpo !== undefined) {
     options.method = 'POST';
-    options.headers = { 'Content-Type': 'application/json', 'X-Cardume': '1' };
+    // JSON vai como texto: o firewall do servidor (ModSecurity) desmonta corpos
+    // application/json e recusa (400) os que tem 1000 campos ou mais, o que
+    // umas 20 alocacoes ja passam. A API le o corpo do mesmo jeito.
+    options.headers = { 'Content-Type': 'text/plain;charset=UTF-8', 'X-Cardume': '1' };
     options.body = JSON.stringify(corpo);
   } else if (bruto !== undefined) {
     options.method = 'POST';

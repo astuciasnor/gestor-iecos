@@ -218,10 +218,12 @@ where email = 'pessoa@ufpa.br';
   Enquanto nada foi publicado no servidor, vale o `alocacoes_publicas.json`
   enviado com o app. Desfazer: apagar a ultima linha de `agenda_publicada`
   (ficam as 30 ultimas).
-- O servidor da UFPA recusa envios maiores que 128 KB (erro 413, antes da
-  API). `js/remoto_ufpa.js` divide o salvar em envios de ate 100 KB e manda a
-  agenda em pedacos (`publicar_parte`), montada no fim. O servidor local
-  (Docker) tem o mesmo limite.
+- Firewall do servidor da UFPA (ModSecurity, configuracao recomendada):
+  recusa envios maiores que 128 KB (413) e corpos `application/json` com 1000
+  campos ou mais (400), antes da API. Por isso `js/remoto_ufpa.js` manda o JSON
+  como `text/plain`, divide o salvar em envios de ate 100 KB e manda a agenda
+  em pedacos (`publicar_parte`), montada no fim. O servidor local (Docker) tem
+  o mesmo firewall e os mesmos limites.
 - Copiar os dados do Supabase (pode repetir; substitui as alocacoes e encerra as
   sessoes): `tools/migracao_supabase_ufpa.py` (consultas e passos no proprio
   arquivo) gera um `.sql` para a aba Importar do phpMyAdmin. Os CSV trazem os
