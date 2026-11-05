@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>O Cardume mudou de endereço | IECOS</title>
+    <!-- Aberta pelo index.html quando o Cardume e acessado pelo endereco antigo
+         (GitHub). O app agora funciona no servidor da UFPA. -->
+    <style>
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #eef2ef;
+            font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+            color: #1f2d25;
+        }
+        .cartao {
+            max-width: 520px;
+            margin: 24px;
+            padding: 36px 32px;
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 6px 24px rgba(0, 0, 0, 0.08);
+            text-align: center;
+        }
+        .cartao img { height: 70px; margin-bottom: 12px; }
+        h1 { margin: 0 0 12px; font-size: 1.5rem; color: #004e28; }
+        p { margin: 0 0 14px; line-height: 1.5; }
+        .botao {
+            display: inline-block;
+            margin: 10px 0 18px;
+            padding: 14px 26px;
+            border-radius: 10px;
+            background: #004e28;
+            color: #fff;
+            font-weight: 700;
+            font-size: 1.05rem;
+            text-decoration: none;
+        }
+        .botao:hover { background: #006633; }
+        .endereco { font-family: monospace; font-size: 1rem; color: #004e28; word-break: break-all; }
+        .nota { font-size: 0.9rem; color: #5a6b61; }
+    </style>
+</head>
+
+<body>
+    <main class="cartao">
+        <img src="img/logo_cardume.png" alt="Cardume">
+        <h1>O Cardume mudou de endereço</h1>
+        <p>Desde 05/11/2026, o Cardume funciona no servidor da UFPA:</p>
+        <p class="endereco">https://cardume.iecos.ufpa.br</p>
+        <a class="botao" href="https://cardume.iecos.ufpa.br/">Abrir o Cardume</a>
+        <p class="nota">Entre com o mesmo e-mail e a mesma senha de antes.
+            Atualize o endereço nos seus favoritos.</p>
+        <p class="nota">Este endereço antigo não grava mais alterações.</p>
+    </main>
+</body>
+
+</html>
