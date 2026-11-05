@@ -5,6 +5,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cardume | Agenda de Aulas IECOS</title>
+    <script>
+        // Endereco antigo (GitHub): a agenda mudou para o servidor da UFPA em 05/11/2026.
+        // Leva o aluno para o endereco novo mantendo o que veio no link (QR codes antigos).
+        if (/\.github\.io$/i.test(location.hostname)) {
+            location.replace('https://cardume.iecos.ufpa.br/agenda_publica.html' + location.search + location.hash);
+        }
+    </script>
     <link rel="stylesheet" href="css/style.css?v=202611051714">
     <style>
         :root {
