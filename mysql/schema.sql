@@ -25,6 +25,9 @@ CREATE TABLE IF NOT EXISTS usuarios (
   UNIQUE KEY usuarios_email_uq (email)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- Quando a pessoa usou o Cardume pela ultima vez (tela de usuarios).
+ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS ultimo_acesso DATETIME NULL;
+
 -- Uma linha por alocacao. "dados" guarda o objeto inteiro que o app usa.
 CREATE TABLE IF NOT EXISTS alocacoes (
   id              VARCHAR(100) NOT NULL PRIMARY KEY, -- o mesmo id gerado pelo app

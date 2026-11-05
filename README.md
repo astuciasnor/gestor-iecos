@@ -218,6 +218,11 @@ where email = 'pessoa@ufpa.br';
   Enquanto nada foi publicado no servidor, vale o `alocacoes_publicas.json`
   enviado com o app. Desfazer: apagar a ultima linha de `agenda_publicada`
   (ficam as 30 ultimas).
+- Administrador (modo `ufpa`): botao **Usuarios e backup** na barra lateral
+  (`js/admin_ui.js`). Cadastra, edita e exclui acessos, gera senha provisoria
+  (a pessoa cria a sua no primeiro acesso) e baixa um `.sql` com usuarios,
+  alocacoes e agenda publicada, importavel no phpMyAdmin para restaurar (o
+  historico nao entra). Tudo conferido na API (`exigirAdmin`).
 - Firewall do servidor da UFPA (ModSecurity, configuracao recomendada):
   recusa envios maiores que 128 KB (413) e corpos `application/json` com 1000
   campos ou mais (400), antes da API. Por isso `js/remoto_ufpa.js` manda o JSON

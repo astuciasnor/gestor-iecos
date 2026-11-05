@@ -20,6 +20,12 @@
 //   POST publicar {lote: L, partes: N}   monta e publica os pedacos enviados
 //     (o servidor da UFPA recusa envios maiores que 128 KB; a agenda e maior)
 //   GET  agenda                    agenda publicada (aberta, sem login: e o que os alunos veem)
+// Administracao (so o administrador):
+//   GET  usuarios                  lista de quem tem acesso
+//   POST usuario_salvar  {id?, email, nome, curso, papel}  novo (devolve senha provisoria) ou edicao
+//   POST usuario_senha   {id}      nova senha provisoria (a pessoa cria a sua no proximo acesso)
+//   POST usuario_excluir {id}
+//   GET  backup                    copia do banco em .sql (importavel no phpMyAdmin)
 // Todo POST exige o cabecalho "X-Cardume: 1" (barra envio a partir de outros sites).
 
 declare(strict_types=1);
@@ -81,6 +87,11 @@ $rotas = [
     'POST publicar' => 'acaoPublicar',
     'POST publicar_parte' => 'acaoPublicarParte',
     'GET agenda'    => 'acaoAgenda',
+    'GET usuarios'  => 'acaoUsuarios',
+    'POST usuario_salvar'  => 'acaoUsuarioSalvar',
+    'POST usuario_senha'   => 'acaoUsuarioSenha',
+    'POST usuario_excluir' => 'acaoUsuarioExcluir',
+    'GET backup'    => 'acaoBackup',
 ];
 $metodo = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 $rota = $metodo . ' ' . (string) ($_GET['acao'] ?? '');
@@ -95,7 +106,10 @@ $rotas[$rota]($db);
 function acaoSessao(mysqli $db): void
 {
     $u = usuarioLogado($db);
-    if ($u) renovarSessao($db);
+    if ($u) {
+        renovarSessao($db);
+        marcarAcesso($db, $u['id']);
+    }
     responder(200, $u ? respostaUsuario($u) : ['usuario' => null, 'perfil' => null]);
 }
 
@@ -122,6 +136,7 @@ function acaoEntrar(mysqli $db): void
         throw new ErroApi(401, 'E-mail ou senha incorretos.', 'credenciais_invalidas');
     }
     executar($db, 'DELETE FROM login_tentativas WHERE chave = ?', [$chave]);
+    marcarAcesso($db, $u['id']);
 
     // Hash vindo do Supabase ($2a$) passa ao formato atual do PHP no primeiro login.
     if (password_needs_rehash($hash, PASSWORD_DEFAULT)) {
@@ -445,6 +460,164 @@ function rotuloPublicacao(object $p): string
     $ano = substr(campoPlano($p, 'termStart'), 0, 4);
     $periodo = campoPlano($p, 'periodo');
     return trim($ano . ' - ' . $periodo, ' -');
+}
+
+// ===== Administracao: usuarios e backup =====
+
+function acaoUsuarios(mysqli $db): void
+{
+    exigirAdmin($db);
+    $linhas = consultarEsquemaNovo($db, 'SELECT id, email, nome, curso, papel, senha_definida, ultimo_acesso, criado_em
+                              FROM usuarios ORDER BY papel = \'admin\' DESC, curso, nome, email');
+    foreach ($linhas as &$l) $l['senha_definida'] = (bool) $l['senha_definida'];
+    responder(200, ['usuarios' => $linhas]);
+}
+
+function acaoUsuarioSalvar(mysqli $db): void
+{
+    $admin = exigirAdmin($db);
+    $c = corpoJson();
+    $email = mb_strtolower(trim((string) ($c->email ?? '')));
+    $nome = trim((string) ($c->nome ?? ''));
+    $curso = strtoupper(trim((string) ($c->curso ?? '')));
+    $papel = (string) ($c->papel ?? 'coordenador');
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL) || mb_strlen($email) > 255) throw new ErroApi(400, 'E-mail invalido.');
+    if ($nome === '' || mb_strlen($nome) > 120) throw new ErroApi(400, 'Informe o nome (ate 120 letras).');
+    if (mb_strlen($curso) > 10) throw new ErroApi(400, 'Curso invalido.');
+    if (!in_array($papel, ['coordenador', 'admin'], true)) throw new ErroApi(400, 'Papel invalido.');
+    if ($papel === 'coordenador' && $curso === '') throw new ErroApi(400, 'Coordenador precisa de um curso.');
+
+    $id = isset($c->id) ? textoCampo($c->id, 'id', 36, false) : null;
+    $outro = consultarUm($db, 'SELECT id FROM usuarios WHERE email = ?', [$email]);
+    if ($outro && $outro['id'] !== $id) throw new ErroApi(409, 'Ja existe um usuario com este e-mail.');
+
+    if ($id === null) {
+        $id = novoUuid();
+        $senha = senhaProvisoria();
+        executar($db, 'INSERT INTO usuarios (id, email, senha_hash, senha_definida, nome, curso, papel) VALUES (?, ?, ?, 0, ?, ?, ?)',
+            [$id, $email, password_hash($senha, PASSWORD_DEFAULT), $nome, $curso, $papel]);
+        responder(200, ['ok' => true, 'id' => $id, 'senha_provisoria' => $senha]);
+    }
+
+    $atual = consultarUm($db, 'SELECT papel FROM usuarios WHERE id = ?', [$id]);
+    if (!$atual) throw new ErroApi(404, 'Usuario nao encontrado.');
+    if ($id === $admin['id'] && $papel !== 'admin') {
+        throw new ErroApi(400, 'Voce nao pode tirar o seu proprio papel de administrador.');
+    }
+    executar($db, 'UPDATE usuarios SET email = ?, nome = ?, curso = ?, papel = ? WHERE id = ?', [$email, $nome, $curso, $papel, $id]);
+    responder(200, ['ok' => true, 'id' => $id]);
+}
+
+function acaoUsuarioSenha(mysqli $db): void
+{
+    $admin = exigirAdmin($db);
+    $id = textoCampo(corpoJson()->id ?? null, 'id', 36, false);
+    if ($id === $admin['id']) throw new ErroApi(400, 'Para a sua propria senha, use o botao Senha.');
+    if (!consultarUm($db, 'SELECT id FROM usuarios WHERE id = ?', [$id])) throw new ErroApi(404, 'Usuario nao encontrado.');
+    $senha = senhaProvisoria();
+    executar($db, 'UPDATE usuarios SET senha_hash = ?, senha_definida = 0 WHERE id = ?', [password_hash($senha, PASSWORD_DEFAULT), $id]);
+    executar($db, 'DELETE FROM sessoes WHERE usuario = ?', [$id]);
+    responder(200, ['ok' => true, 'senha_provisoria' => $senha]);
+}
+
+function acaoUsuarioExcluir(mysqli $db): void
+{
+    $admin = exigirAdmin($db);
+    $id = textoCampo(corpoJson()->id ?? null, 'id', 36, false);
+    if ($id === $admin['id']) throw new ErroApi(400, 'Voce nao pode excluir o seu proprio acesso.');
+    executar($db, 'DELETE FROM sessoes WHERE usuario = ?', [$id]);
+    executar($db, 'DELETE FROM usuarios WHERE id = ?', [$id]);
+    responder(200, ['ok' => true]);
+}
+
+// Copia em .sql para o phpMyAdmin (aba Importar). Restaurar substitui usuarios,
+// alocacoes e agenda publicada pelos do arquivo e desconecta todo mundo; o
+// historico de alteracoes fica como esta (nao entra na copia).
+function acaoBackup(mysqli $db): void
+{
+    $admin = exigirAdmin($db);
+    $agora = new DateTimeImmutable('now', new DateTimeZone(FUSO_UFPA));
+    $db->query('START TRANSACTION WITH CONSISTENT SNAPSHOT');
+    $usuarios = consultarEsquemaNovo($db, 'SELECT id, email, senha_hash, senha_definida, nome, curso, papel, criado_em, ultimo_acesso FROM usuarios ORDER BY email');
+    $alocacoes = consultar($db, 'SELECT id, plano, curso, turma, dados, atualizado_em, atualizado_por FROM alocacoes ORDER BY plano, id');
+    $agenda = consultar($db, 'SELECT documento, resumo, publicado_em, publicado_por FROM agenda_publicada ORDER BY id DESC LIMIT 1');
+    $db->commit();
+
+    $sql = [
+        '-- Cardume: copia de seguranca de ' . $agora->format('d/m/Y H:i') . ' (por ' . $admin['email'] . ')',
+        '-- ' . count($usuarios) . ' usuarios, ' . count($alocacoes) . ' alocacoes, ' . count($agenda) . ' agenda publicada.',
+        '-- Restaurar: phpMyAdmin > cardume_iecos > Importar > este arquivo.',
+        '-- Substitui usuarios, alocacoes e agenda publicada pelos deste arquivo; todos entram de novo.',
+        '-- Guarde em lugar seguro: contem as senhas embaralhadas dos usuarios.',
+        'SET NAMES utf8mb4;',
+        'START TRANSACTION;',
+        'DELETE FROM sessoes;',
+        'DELETE FROM usuarios;',
+        ...insertsSql($db, 'usuarios', $usuarios),
+        'DELETE FROM alocacoes;',
+        ...insertsSql($db, 'alocacoes', $alocacoes),
+        'DELETE FROM agenda_publicada;',
+        ...insertsSql($db, 'agenda_publicada', $agenda),
+        'COMMIT;',
+        '',
+    ];
+    header('Content-Type: application/sql; charset=utf-8');
+    header('Content-Disposition: attachment; filename="cardume_backup_' . $agora->format('Y-m-d_Hi') . '.sql"');
+    responderBruto(implode("\n", $sql));
+}
+
+function insertsSql(mysqli $db, string $tabela, array $linhas): array
+{
+    $saida = [];
+    foreach (array_chunk($linhas, 100) as $lote) {
+        $colunas = '(' . implode(', ', array_keys($lote[0])) . ')';
+        $valores = array_map(fn ($l) => '(' . implode(', ', array_map(
+            fn ($v) => $v === null ? 'NULL' : "'" . $db->real_escape_string((string) $v) . "'",
+            array_values($l)
+        )) . ')', $lote);
+        $saida[] = "INSERT INTO $tabela $colunas VALUES\n" . implode(",\n", $valores) . ';';
+    }
+    return $saida;
+}
+
+// Ultimo acesso e so informativo: se a coluna ainda nao existir (schema.sql
+// nao rodado de novo no servidor), o login segue normalmente.
+function marcarAcesso(mysqli $db, string $id): void
+{
+    try {
+        executar($db, 'UPDATE usuarios SET ultimo_acesso = NOW() WHERE id = ?', [$id]);
+    } catch (mysqli_sql_exception $e) {
+        error_log('[cardume] ultimo_acesso: ' . $e->getMessage());
+    }
+}
+
+function consultarEsquemaNovo(mysqli $db, string $sql): array
+{
+    try {
+        return consultar($db, $sql);
+    } catch (mysqli_sql_exception $e) {
+        if (in_array($e->getCode(), [1054, 1146], true)) {
+            throw new ErroApi(500, 'O banco esta desatualizado: rode o mysql/schema.sql de novo no phpMyAdmin.');
+        }
+        throw $e;
+    }
+}
+
+function novoUuid(): string
+{
+    $b = random_bytes(16);
+    $b[6] = chr((ord($b[6]) & 0x0f) | 0x40);
+    $b[8] = chr((ord($b[8]) & 0x3f) | 0x80);
+    return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($b), 4));
+}
+
+// Facil de ditar ou digitar: sem letras e numeros parecidos (l/1, o/0).
+function senhaProvisoria(): string
+{
+    $letras = 'abcdefghjkmnpqrstuvwxyz23456789';
+    $s = '';
+    for ($i = 0; $i < 12; $i++) $s .= $letras[random_int(0, strlen($letras) - 1)];
+    return substr($s, 0, 4) . '-' . substr($s, 4, 4) . '-' . substr($s, 8, 4);
 }
 
 // ===== Usuario e sessao =====

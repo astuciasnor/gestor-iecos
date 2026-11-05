@@ -1,8 +1,8 @@
 // Tela de acesso e barra de status da sincronizacao.
 // Modo local: senha unica, como antes. Modos supabase e ufpa: e-mail e senha de
 // cada coordenador, e as alocacoes passam a ser compartilhadas pelo servidor.
-import { resolveBackendMode } from './backend_config.js?v=202611042134';
-import * as remoto from './sync_remoto.js?v=202611042134';
+import { resolveBackendMode } from './backend_config.js?v=202611042155';
+import * as remoto from './sync_remoto.js?v=202611042155';
 
 const LOCAL_PASSWORD = 'ufpa2026';
 
@@ -231,6 +231,7 @@ function montarBarraStatus(perfil, user, showToast) {
   const sidebar = document.querySelector('.sidebar');
   if (!sidebar || el('sync-bar')) return;
 
+  const admin = remoto.getAdminTools();
   const bar = document.createElement('div');
   bar.id = 'sync-bar';
   bar.className = 'sync-bar';
@@ -249,8 +250,16 @@ function montarBarraStatus(perfil, user, showToast) {
         <button type="button" id="btn-sync-sair" class="sync-bar-sair">Sair</button>
       </span>
     </div>
+    ${admin ? '<button type="button" id="btn-sync-admin" class="sync-bar-admin">Usuários e backup</button>' : ''}
   `;
   sidebar.insertBefore(bar, sidebar.firstChild);
+
+  if (admin) {
+    el('btn-sync-admin').onclick = async () => {
+      const { abrirAdministracao } = await import('./admin_ui.js?v=202611042155');
+      abrirAdministracao({ tools: admin, meuId: user?.id || '', showToast });
+    };
+  }
 
   el('btn-sync-senha').onclick = async () => {
     if (await definirSenha({ obrigatoria: false })) showToast('Senha alterada.', 'success', 3000);

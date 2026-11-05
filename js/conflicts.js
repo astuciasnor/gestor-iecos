@@ -1,4 +1,4 @@
-import { sortUniqueIsoDates, normalizeShiftKey, slotLabelsOverlap } from './academic_rules.mjs?v=202611042134';
+import { sortUniqueIsoDates, normalizeShiftKey, slotLabelsOverlap } from './academic_rules.mjs?v=202611042155';
 
 function normalizeConflictSlotLabel(value = '') {
   return String(value || '')

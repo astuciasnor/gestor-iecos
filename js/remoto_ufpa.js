@@ -1,7 +1,7 @@
 // Conversa com a API PHP do servidor da UFPA (modo 'ufpa', api/index.php).
 // Mesma interface de remoto_supabase.js. Sem tempo real no servidor: o
 // navegador pergunta as mudancas a cada poucos segundos.
-import { UFPA_API_URL } from './backend_config.js?v=202611042134';
+import { UFPA_API_URL } from './backend_config.js?v=202611042155';
 
 const POLL_MS = 5000;           // aba visivel
 const POLL_HIDDEN_MS = 30000;   // aba em segundo plano
@@ -130,6 +130,41 @@ export function lotesPorTamanho(rows, max = MAX_ENVIO) {
 
 export async function remove(ids) {
   await chamar('excluir', { corpo: { ids } });
+}
+
+// ===== Administracao: usuarios e backup (so o administrador) =====
+
+export async function listarUsuarios() {
+  return (await chamar('usuarios'))?.usuarios || [];
+}
+
+// usuario: { id?, email, nome, curso, papel }. Novo: devolve { senha_provisoria }.
+export async function salvarUsuario(usuario) {
+  return chamar('usuario_salvar', { corpo: usuario });
+}
+
+export async function novaSenhaUsuario(id) {
+  return chamar('usuario_senha', { corpo: { id } });
+}
+
+export async function excluirUsuario(id) {
+  return chamar('usuario_excluir', { corpo: { id } });
+}
+
+// Devolve { blob, nome } do arquivo .sql gerado pelo servidor.
+export async function baixarBackup() {
+  const url = new URL(UFPA_API_URL, window.location.href);
+  url.searchParams.set('acao', 'backup');
+  const resp = await fetch(url, { credentials: 'same-origin', cache: 'no-store' });
+  if (!resp.ok) {
+    let data = null;
+    try { data = await resp.json(); } catch (e) { /* resposta sem JSON */ }
+    const error = new Error(data?.erro || `erro ${resp.status} no servidor`);
+    error.status = resp.status;
+    throw error;
+  }
+  const nome = /filename="([^"]+)"/.exec(resp.headers.get('Content-Disposition') || '')?.[1] || 'cardume_backup.sql';
+  return { blob: await resp.blob(), nome };
 }
 
 // Agenda publica gravada no proprio servidor (so o administrador).
