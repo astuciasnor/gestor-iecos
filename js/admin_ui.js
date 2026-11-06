@@ -1,7 +1,7 @@
 // Janela "Usuarios e backup" do administrador (so no servidor da UFPA).
 // Cadastra, edita e exclui acessos, gera senha provisoria e baixa a copia do
 // banco. Quem garante que so o administrador faz isso e a API (api/index.php).
-import { store } from './store.js?v=202611051714';
+import { store } from './store.js?v=202611061814';
 
 let ctx = null;      // { tools, meuId, showToast }
 let usuarios = [];

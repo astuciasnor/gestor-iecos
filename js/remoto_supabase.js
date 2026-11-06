@@ -1,6 +1,6 @@
 // Conversa com o Supabase (modo 'supabase'). Mesma interface de remoto_ufpa.js;
 // a logica da sincronizacao fica em sync_remoto.js.
-import { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, SUPABASE_JS_URL } from './backend_config.js?v=202611051714';
+import { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, SUPABASE_JS_URL } from './backend_config.js?v=202611061814';
 
 const PAGE_SIZE = 1000;
 

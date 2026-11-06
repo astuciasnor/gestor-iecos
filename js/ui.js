@@ -1,32 +1,32 @@
-import { store } from './store.js?v=202611051714';
-import { getTurnoLetter, mapSlotToTurno } from './turns.js?v=202611051714';
-import { normalizePeriodo as normalizePeriodoLetivoCode } from './plan_storage.js?v=202611051714';
-import { getCalendarEvents } from './calendar.js?v=202611051714';
-import { isDateOverlap } from './utils.js?v=202611051714';
-import { weeklyState } from './weekly_state.js?v=202611051714';
-import { findPendentesCobertas, isPendenteJaAlocada } from './pendentes.mjs?v=202611051714';
-import { classifySwap } from './troca_ordem.mjs?v=202611051714';
-import { buildCanonicalOfferProjection } from './execution_engine.js?v=202611051714';
+import { store } from './store.js?v=202611061814';
+import { getTurnoLetter, mapSlotToTurno } from './turns.js?v=202611061814';
+import { normalizePeriodo as normalizePeriodoLetivoCode } from './plan_storage.js?v=202611061814';
+import { getCalendarEvents } from './calendar.js?v=202611061814';
+import { isDateOverlap } from './utils.js?v=202611061814';
+import { weeklyState } from './weekly_state.js?v=202611061814';
+import { findPendentesCobertas, isPendenteJaAlocada } from './pendentes.mjs?v=202611061814';
+import { classifySwap } from './troca_ordem.mjs?v=202611061814';
+import { buildCanonicalOfferProjection } from './execution_engine.js?v=202611061814';
 import {
     buildSigaaMetadataPayload,
     validateSigaaMetadataPayload,
     getSigaaCode,
     buildScopedSigaaAllocationFromOfferFaixa
-} from './sigaa_metadata.js?v=202611051714';
-import { parseBackupDataFile, extractImportPlanMeta } from './serialization.js?v=202611051714';
+} from './sigaa_metadata.js?v=202611061814';
+import { parseBackupDataFile, extractImportPlanMeta } from './serialization.js?v=202611061814';
 import {
     showToastWarning,
     showPersistentStatusMessage,
     copyTextToClipboard,
     flashButtonCopyState,
     setupCopyActionButtons
-} from './ui_feedback.js?v=202611051714';
+} from './ui_feedback.js?v=202611061814';
 import {
     normalizeHexColor,
     adjustHexColor,
     hexToRgba,
     vividHexColor
-} from './color_utils.js?v=202611051714';
+} from './color_utils.js?v=202611061814';
 import {
     isFaixaAllocation,
     isPriorityRegularAllocation,
@@ -35,7 +35,7 @@ import {
     normalizeTeacherNameForMatch,
     getDocenteShortLabel,
     getAllocationTeachersForConflict
-} from './allocation_helpers.js?v=202611051714';
+} from './allocation_helpers.js?v=202611061814';
 import {
     normalizeConflictSlotLabel,
     getAvailableTurnoOfertaOptions,
@@ -44,7 +44,7 @@ import {
     isTurnoDividerSlot,
     buildHorariosForUI,
     getShiftChangeMeta
-} from './turno_helpers.js?v=202611051714';
+} from './turno_helpers.js?v=202611061814';
 import {
     getDisciplinaCHGlobal,
     derivarBloco,
@@ -53,17 +53,17 @@ import {
     getTurmaBaseLabel,
     getDisciplinaInfo,
     getPrintAcademicMetaLine
-} from './curso_turma_helpers.js?v=202611051714';
+} from './curso_turma_helpers.js?v=202611061814';
 import {
     renderGanttChart
-} from './gantt_ui.js?v=202611051714';
+} from './gantt_ui.js?v=202611061814';
 import {
     renderMonthlyCalendar,
     renderTeacherCalendar
-} from './calendarios_ui.js?v=202611051714';
+} from './calendarios_ui.js?v=202611061814';
 import {
     refreshTeacherConflictsUI
-} from './conflitos_ui.js?v=202611051714';
+} from './conflitos_ui.js?v=202611061814';
 import {
     shouldIgnoreTurmaEventForCandidate,
     normalizeDrawnSlotsByDay,
@@ -77,7 +77,7 @@ import {
     resolveEditableFaixasFromStoredExecution,
     alignFaixasToExecutionEnd,
     buildFinalAdjustmentFaixaSuggestion
-} from './faixa_utils.js?v=202611051714';
+} from './faixa_utils.js?v=202611061814';
 import {
     timeToMinutes,
     shiftISODate,
@@ -91,14 +91,14 @@ import {
     isDateInsideRange,
     formatDateBRShortYear,
     formatDateBR
-} from './date_utils_ui.js?v=202611051714';
+} from './date_utils_ui.js?v=202611061814';
 import {
     initializeWeeklyScheduleForTurma,
     reconcileTurmaSelectionAfterPLChange,
     resetWeeklyViewOnTurmaChange,
     resolveActiveAcademicPeriod,
     slotLabelsOverlap
-} from './academic_rules.mjs?v=202611051714';
+} from './academic_rules.mjs?v=202611061814';
 
 const gridContainer = document.getElementById('weekly-grid');
 const selCurso = document.getElementById('sel-curso');
@@ -4275,6 +4275,7 @@ function rerenderPlanBoundViews() {
 export function refreshAfterRemoteChange() {
     updateActivePlanStatus();
     updateDisciplinaDatalist();
+    populateDocentes();
     rerenderPlanBoundViews();
     refreshTeacherConflictsUI();
 }
@@ -5085,7 +5086,9 @@ function updateDisciplinaDatalist() {
     });
 }
 
-function populateDocentes() {
+// Nomes de docentes conhecidos: os da planilha (dados_app.json) mais os ja usados
+// nas alocacoes do periodo aberto, que e compartilhado por todos os coordenadores.
+function getKnownDocenteNames() {
     const nomesRaw = Array.isArray(store.rawData?.docentes)
         ? store.rawData.docentes.map((d) => String(d.docente || '').trim())
         : [];
@@ -5105,9 +5108,56 @@ function populateDocentes() {
         }
     });
 
-    const nomes = [...new Set([...nomesRaw, ...nomesAlloc].filter(Boolean))].sort((a, b) =>
+    return [...new Set([...nomesRaw, ...nomesAlloc].filter(Boolean))].sort((a, b) =>
         a.localeCompare(b, 'pt-BR', { sensitivity: 'base' })
     );
+}
+
+// Nomes digitados que ainda nao estao na lista (ignora maiusculas e acentos).
+function findNewDocenteNames(nomes = []) {
+    const conhecidos = new Set(getKnownDocenteNames().map(normalizeTeacherNameForMatch));
+    return [...new Set(nomes.map((n) => String(n || '').trim()))]
+        .filter((n) => n && !/^a definir$/i.test(n))
+        .filter((n) => !conhecidos.has(normalizeTeacherNameForMatch(n)));
+}
+
+function confirmNewDocenteNames(novos = []) {
+    if (!novos.length) return true;
+    const cabecalho = novos.length === 1
+        ? `Docente novo: "${novos[0]}"`
+        : `Docentes novos:\n${novos.map((n) => `"${n}"`).join('\n')}`;
+    return confirm([
+        cabecalho,
+        '',
+        novos.length === 1 ? 'Este nome ainda não está na lista do Cardume.' : 'Estes nomes ainda não estão na lista do Cardume.',
+        'Pode ser um Docente Temporário (Substituto, Visitante).',
+        'Lembre: o Docente Temporário precisa estar cadastrado no SIGAA',
+        'para lançar os conceitos da componente.',
+        '',
+        'Antes de salvar, confira se o nome está:',
+        '• completo, igual ao cadastro do SIGAA;',
+        '• escrito corretamente, com acentos;',
+        '• sem abreviações (ex.: "M. Silva", "Prof. João").',
+        '',
+        'Use sempre o mesmo nome em todas as turmas.',
+        'Assim o Cardume consegue avisar sobre choques de horário desse docente.',
+        '',
+        'Se for um professor efetivo, envie um e-mail para evaldomartins@ufpa.br',
+        'com o nome completo, a Faculdade (Subunidade) e a Unidade do docente.',
+        '',
+        'OK = o nome está correto, salvar',
+        'Cancelar = voltar e corrigir'
+    ].join('\n'));
+}
+
+let lastDocentesListKey = null;
+
+function populateDocentes() {
+    const nomes = getKnownDocenteNames();
+    // So refaz as listas quando mudam, para nao fechar as sugestoes de quem esta digitando.
+    const key = nomes.join('\n');
+    if (key === lastDocentesListKey) return;
+    lastDocentesListKey = key;
 
     if (listDocentes) {
         listDocentes.innerHTML = '';
@@ -5983,6 +6033,11 @@ function handleAddManual() {
         showToastWarning('Preencha o(s) Docente(s).', 'warning', 2200);
         return;
     }
+    const nomesDigitados = docData.mode === 'multi' ? docData.docentesList.map((d) => d.nome) : [docData.docente];
+    if (!confirmNewDocenteNames(findNewDocenteNames(nomesDigitados))) {
+        showToastWarning('Salvamento cancelado. Confira o nome do docente e salve de novo.', 'warning', 3200);
+        return;
+    }
     if (pendingFaixaStartPick) {
         setWeeklyBlock(`Finalize o inicio da Faixa ${pendingFaixaStartPick}`, 'Clique em um dia da grade para definir a data de inicio dessa faixa e depois salve.');
         showToastWarning(`Finalize a definicao de inicio da Faixa ${pendingFaixaStartPick} antes de salvar a componente.`, 'warning', 2600);
@@ -6390,6 +6445,7 @@ function handleAddManual() {
         // Grade Semanal (cards fixos) em vez de permanecer no visual de desenho.
         finalizeWeeklyEditorAfterSave();
         renderOfertasList();
+        populateDocentes();
 
         if (nonBlockingDistributionNotice) {
             showToastWarning(nonBlockingDistributionNotice, nonBlockingDistributionNoticeType, 6200);

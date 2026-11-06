@@ -8,11 +8,11 @@ import {
   readJsonStorage,
   upsertPlanIndexEntry,
   writeJsonStorage
-} from './plan_storage.js?v=202611051714';
-import { generateUUID } from './utils.js?v=202611051714';
-import { buildQuadroConversionMap, convertAllocationQuadro } from './quadro_horario.mjs?v=202611051714';
+} from './plan_storage.js?v=202611061814';
+import { generateUUID } from './utils.js?v=202611061814';
+import { buildQuadroConversionMap, convertAllocationQuadro } from './quadro_horario.mjs?v=202611061814';
 
-import { normalizeTurnoKey, getHorariosByTurno } from './turns.js?v=202611051714';
+import { normalizeTurnoKey, getHorariosByTurno } from './turns.js?v=202611061814';
 
 export function normalizeLoadedAllocation(alloc) {
   if (!alloc || typeof alloc !== 'object') return alloc;
