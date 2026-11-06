@@ -1,7 +1,7 @@
-import { store } from './store.js?v=202611061814';
-import { getDaysArray, toLocalDateString } from './utils.js?v=202611061814';
-import { mapSlotToTurno, normalizeTurnoKey } from './turns.js?v=202611061814';
-import { slotLabelsOverlap } from './academic_rules.mjs?v=202611061814';
+import { store } from './store.js?v=202611062035';
+import { getDaysArray, toLocalDateString } from './utils.js?v=202611062035';
+import { mapSlotToTurno, normalizeTurnoKey } from './turns.js?v=202611062035';
+import { slotLabelsOverlap } from './academic_rules.mjs?v=202611062035';
 
 function normalizeKeyPart(value) {
   return String(value || '').trim().toUpperCase();

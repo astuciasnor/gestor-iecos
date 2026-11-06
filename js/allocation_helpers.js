@@ -1,5 +1,6 @@
-import { store } from './store.js?v=202611061814';
-import { getDisciplinaCHGlobal } from './curso_turma_helpers.js?v=202611061814';
+import { store } from './store.js?v=202611062035';
+import { getDisciplinaCHGlobal } from './curso_turma_helpers.js?v=202611062035';
+import { normalizeTeacherNameForMatch } from './docente_nomes.mjs?v=202611062035';
 
 export function getAllocationModo(alloc) {
     return String(alloc?.modo || '').trim().toLowerCase();
@@ -36,15 +37,7 @@ export function isPendingAllocation(alloc) {
     return getAllocationModo(alloc) === 'pendente';
 }
 
-export function normalizeTeacherNameForMatch(value) {
-    return String(value || '')
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
-        .toLowerCase()
-        .replace(/[^a-z0-9\s]/g, ' ')
-        .replace(/\s+/g, ' ')
-        .trim();
-}
+export { normalizeTeacherNameForMatch };
 
 export function teacherNamesMatch(candidate, selected) {
     const cand = normalizeTeacherNameForMatch(candidate);

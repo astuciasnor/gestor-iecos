@@ -231,6 +231,47 @@ async function run() {
       assert(!ruins.length, `nomes combinados: ${ruins.join('; ')}`);
     });
 
+    // Nome fora da lista: aviso ao sair do campo, janela de cadastro com conferencia.
+    // Nada e salvo (so cadastra na memoria da pagina e limpa o campo no fim).
+    await check('docente novo: aviso e janela de cadastro', async () => {
+      await evaluate(`(() => {
+        document.querySelector('.tab-btn[data-tab="weekly"]').click();
+        const chk = document.getElementById('chk-multi-docente');
+        if (chk.checked) { chk.checked = false; chk.dispatchEvent(new Event('change')); }
+        const i = document.getElementById('inp-docente');
+        i.value = 'Fulano Smoke de Teste';
+        i.dispatchEvent(new Event('input', { bubbles: true }));
+      })()`);
+      assert(await evaluate("!document.getElementById('aviso-docente-novo') || document.getElementById('aviso-docente-novo').classList.contains('hidden')"), 'aviso apareceu durante a digitacao');
+      await evaluate("document.getElementById('inp-docente').dispatchEvent(new Event('change', { bubbles: true }))");
+      assert(await waitFor("!!document.querySelector('#aviso-docente-novo:not(.hidden) .btn-cadastrar-docente')", 3000), 'aviso sem o botao Cadastrar');
+      await evaluate("document.querySelector('.btn-cadastrar-docente').click()");
+      assert(await waitFor("!!document.getElementById('cadastro-docente-modal')", 3000), 'janela de cadastro nao abriu');
+      assert(await evaluate("document.querySelector('#cadastro-docente-modal .cad-ok').disabled"), 'Cadastrar liberado sem preencher');
+      await evaluate(`(() => {
+        const m = document.getElementById('cadastro-docente-modal');
+        const fire = (el) => el.dispatchEvent(new Event('change', { bubbles: true }));
+        const radio = m.querySelector('input[name="cad-vinculo"][value="Substituto"]'); radio.checked = true; fire(radio);
+        const u = m.querySelector('#cad-unidade'); u.value = 'IECOS'; fire(u);
+        const s = m.querySelector('#cad-subunidade'); s.value = 'FEPESCA'; fire(s);
+        const n = m.querySelector('#cad-nome'); n.value = 'Fulano Smoke de Teste'; n.dispatchEvent(new Event('input', { bubbles: true }));
+      })()`);
+      assert(await evaluate("document.querySelector('#cadastro-docente-modal .cad-ok').disabled"), 'Cadastrar liberado sem a caixa Conferi');
+      await evaluate(`(() => {
+        const c = document.querySelector('#cad-conferi'); c.checked = true;
+        c.dispatchEvent(new Event('change', { bubbles: true }));
+      })()`);
+      assert(!(await evaluate("document.querySelector('#cadastro-docente-modal .cad-ok').disabled")), 'Cadastrar nao liberou com tudo preenchido');
+      await evaluate("document.querySelector('#cadastro-docente-modal .cad-ok').click()");
+      assert(await waitFor("!document.getElementById('cadastro-docente-modal') && document.querySelector('#aviso-docente-novo .is-ok')", 3000), 'cadastro nao marcou o nome como cadastrado');
+      await evaluate(`(() => {
+        const i = document.getElementById('inp-docente');
+        i.value = ''; i.dispatchEvent(new Event('input', { bubbles: true }));
+      })()`);
+      assert(await evaluate("document.getElementById('aviso-docente-novo').classList.contains('hidden')"), 'aviso nao sumiu ao limpar o campo');
+      await evaluate("document.querySelector('.tab-btn[data-tab=\"teacher\"]').click()");
+    });
+
     await check('Gantt do docente', async () => {
       await evaluate(`(() => {
         const i = document.getElementById('sel-view-docente'); i.value = ${JSON.stringify(data.teacher)};

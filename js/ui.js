@@ -1,32 +1,32 @@
-import { store } from './store.js?v=202611061814';
-import { getTurnoLetter, mapSlotToTurno } from './turns.js?v=202611061814';
-import { normalizePeriodo as normalizePeriodoLetivoCode } from './plan_storage.js?v=202611061814';
-import { getCalendarEvents } from './calendar.js?v=202611061814';
-import { isDateOverlap } from './utils.js?v=202611061814';
-import { weeklyState } from './weekly_state.js?v=202611061814';
-import { findPendentesCobertas, isPendenteJaAlocada } from './pendentes.mjs?v=202611061814';
-import { classifySwap } from './troca_ordem.mjs?v=202611061814';
-import { buildCanonicalOfferProjection } from './execution_engine.js?v=202611061814';
+import { store } from './store.js?v=202611062035';
+import { getTurnoLetter, mapSlotToTurno } from './turns.js?v=202611062035';
+import { normalizePeriodo as normalizePeriodoLetivoCode } from './plan_storage.js?v=202611062035';
+import { getCalendarEvents } from './calendar.js?v=202611062035';
+import { isDateOverlap } from './utils.js?v=202611062035';
+import { weeklyState } from './weekly_state.js?v=202611062035';
+import { findPendentesCobertas, isPendenteJaAlocada } from './pendentes.mjs?v=202611062035';
+import { classifySwap } from './troca_ordem.mjs?v=202611062035';
+import { buildCanonicalOfferProjection } from './execution_engine.js?v=202611062035';
 import {
     buildSigaaMetadataPayload,
     validateSigaaMetadataPayload,
     getSigaaCode,
     buildScopedSigaaAllocationFromOfferFaixa
-} from './sigaa_metadata.js?v=202611061814';
-import { parseBackupDataFile, extractImportPlanMeta } from './serialization.js?v=202611061814';
+} from './sigaa_metadata.js?v=202611062035';
+import { parseBackupDataFile, extractImportPlanMeta } from './serialization.js?v=202611062035';
 import {
     showToastWarning,
     showPersistentStatusMessage,
     copyTextToClipboard,
     flashButtonCopyState,
     setupCopyActionButtons
-} from './ui_feedback.js?v=202611061814';
+} from './ui_feedback.js?v=202611062035';
 import {
     normalizeHexColor,
     adjustHexColor,
     hexToRgba,
     vividHexColor
-} from './color_utils.js?v=202611061814';
+} from './color_utils.js?v=202611062035';
 import {
     isFaixaAllocation,
     isPriorityRegularAllocation,
@@ -35,7 +35,15 @@ import {
     normalizeTeacherNameForMatch,
     getDocenteShortLabel,
     getAllocationTeachersForConflict
-} from './allocation_helpers.js?v=202611061814';
+} from './allocation_helpers.js?v=202611062035';
+import {
+    VINCULOS_TEMPORARIOS,
+    UNIDADES,
+    findNewNames,
+    findSimilarNames,
+    problemaNoNome,
+    limparEspacos
+} from './docente_nomes.mjs?v=202611062035';
 import {
     normalizeConflictSlotLabel,
     getAvailableTurnoOfertaOptions,
@@ -44,7 +52,7 @@ import {
     isTurnoDividerSlot,
     buildHorariosForUI,
     getShiftChangeMeta
-} from './turno_helpers.js?v=202611061814';
+} from './turno_helpers.js?v=202611062035';
 import {
     getDisciplinaCHGlobal,
     derivarBloco,
@@ -53,17 +61,17 @@ import {
     getTurmaBaseLabel,
     getDisciplinaInfo,
     getPrintAcademicMetaLine
-} from './curso_turma_helpers.js?v=202611061814';
+} from './curso_turma_helpers.js?v=202611062035';
 import {
     renderGanttChart
-} from './gantt_ui.js?v=202611061814';
+} from './gantt_ui.js?v=202611062035';
 import {
     renderMonthlyCalendar,
     renderTeacherCalendar
-} from './calendarios_ui.js?v=202611061814';
+} from './calendarios_ui.js?v=202611062035';
 import {
     refreshTeacherConflictsUI
-} from './conflitos_ui.js?v=202611061814';
+} from './conflitos_ui.js?v=202611062035';
 import {
     shouldIgnoreTurmaEventForCandidate,
     normalizeDrawnSlotsByDay,
@@ -77,7 +85,7 @@ import {
     resolveEditableFaixasFromStoredExecution,
     alignFaixasToExecutionEnd,
     buildFinalAdjustmentFaixaSuggestion
-} from './faixa_utils.js?v=202611061814';
+} from './faixa_utils.js?v=202611062035';
 import {
     timeToMinutes,
     shiftISODate,
@@ -91,14 +99,14 @@ import {
     isDateInsideRange,
     formatDateBRShortYear,
     formatDateBR
-} from './date_utils_ui.js?v=202611061814';
+} from './date_utils_ui.js?v=202611062035';
 import {
     initializeWeeklyScheduleForTurma,
     reconcileTurmaSelectionAfterPLChange,
     resetWeeklyViewOnTurmaChange,
     resolveActiveAcademicPeriod,
     slotLabelsOverlap
-} from './academic_rules.mjs?v=202611061814';
+} from './academic_rules.mjs?v=202611062035';
 
 const gridContainer = document.getElementById('weekly-grid');
 const selCurso = document.getElementById('sel-curso');
@@ -450,6 +458,7 @@ function setupMultiDocenteUI() {
     if (containerMulti.querySelector('.teacher-row') === null) {
         addTeacherRow();
     }
+    setupAvisoDocenteNovo();
 
     chk.addEventListener('change', () => {
         if (chk.checked) {
@@ -491,6 +500,7 @@ function addTeacherRow(nome = '', ch = '') {
             div.querySelector('.inp-multi-ch').value = '';
             updateTotalCHDisplay();
         }
+        refreshAvisoDocenteNovo('ocultar');
     };
 
     div.querySelector('.inp-multi-ch').addEventListener('input', updateTotalCHDisplay);
@@ -5113,41 +5123,250 @@ function getKnownDocenteNames() {
     );
 }
 
-// Nomes digitados que ainda nao estao na lista (ignora maiusculas e acentos).
-function findNewDocenteNames(nomes = []) {
-    const conhecidos = new Set(getKnownDocenteNames().map(normalizeTeacherNameForMatch));
-    return [...new Set(nomes.map((n) => String(n || '').trim()))]
-        .filter((n) => n && !/^a definir$/i.test(n))
-        .filter((n) => !conhecidos.has(normalizeTeacherNameForMatch(n)));
+// ---- Docente novo: aviso embaixo do campo + "Cadastrar Docente Temporario" ----
+// Nome fora da lista so e salvo depois de cadastrado na janela (Substituto ou
+// Visitante, com unidade e subunidade). O cadastro vai junto na alocacao, no
+// campo docentesCadastrados; o historico do servidor guarda quem salvou.
+const cadastrosDocentes = new Map(); // nome normalizado -> { nome, vinculo, unidade, subunidade, em }
+let avisoDocenteNomes = [];
+
+function getNomesDocenteDigitados() {
+    if (document.getElementById('chk-multi-docente')?.checked) {
+        return [...document.querySelectorAll('#multi-docente-list .inp-multi-name')].map((inp) => inp.value);
+    }
+    return [inputConfig.docente?.value || ''];
 }
 
-function confirmNewDocenteNames(novos = []) {
-    if (!novos.length) return true;
-    const cabecalho = novos.length === 1
-        ? `Docente novo: "${novos[0]}"`
-        : `Docentes novos:\n${novos.map((n) => `"${n}"`).join('\n')}`;
-    return confirm([
-        cabecalho,
-        '',
-        novos.length === 1 ? 'Este nome ainda não está na lista do Cardume.' : 'Estes nomes ainda não estão na lista do Cardume.',
-        'Pode ser um Docente Temporário (Substituto, Visitante).',
-        'Lembre: o Docente Temporário precisa estar cadastrado no SIGAA',
-        'para lançar os conceitos da componente.',
-        '',
-        'Antes de salvar, confira se o nome está:',
-        '• completo, igual ao cadastro do SIGAA;',
-        '• escrito corretamente, com acentos;',
-        '• sem abreviações (ex.: "M. Silva", "Prof. João").',
-        '',
-        'Use sempre o mesmo nome em todas as turmas.',
-        'Assim o Cardume consegue avisar sobre choques de horário desse docente.',
-        '',
-        'Se for um professor efetivo, envie um e-mail para evaldomartins@ufpa.br',
-        'com o nome completo, a Faculdade (Subunidade) e a Unidade do docente.',
-        '',
-        'OK = o nome está correto, salvar',
-        'Cancelar = voltar e corrigir'
-    ].join('\n'));
+// Nomes digitados que ainda nao estao na lista (ignora maiusculas e acentos).
+function findNewDocenteNames(nomes = getNomesDocenteDigitados()) {
+    return findNewNames(nomes, getKnownDocenteNames());
+}
+
+function getCadastroDocente(nome) {
+    return cadastrosDocentes.get(normalizeTeacherNameForMatch(nome)) || null;
+}
+
+function getUnidadeNome(sigla) {
+    return UNIDADES.find((u) => u.sigla === sigla)?.nome || sigla;
+}
+
+// 'mostrar': ao sair do campo ou ao tentar salvar. 'ocultar': durante a digitacao
+// o aviso so perde nomes, nunca ganha (assim nao fica piscando a cada letra).
+function refreshAvisoDocenteNovo(modo = 'ocultar') {
+    const novos = findNewDocenteNames();
+    if (modo === 'mostrar') {
+        avisoDocenteNomes = novos;
+    } else {
+        const mostrados = new Set(avisoDocenteNomes.map(normalizeTeacherNameForMatch));
+        avisoDocenteNomes = novos.filter((n) => mostrados.has(normalizeTeacherNameForMatch(n)));
+    }
+
+    let aviso = document.getElementById('aviso-docente-novo');
+    if (!aviso) {
+        aviso = document.createElement('div');
+        aviso.id = 'aviso-docente-novo';
+        aviso.className = 'aviso-docente-novo hidden';
+        aviso.addEventListener('click', (e) => {
+            const btn = e.target.closest('.btn-cadastrar-docente');
+            if (btn) abrirCadastroDocente(btn.dataset.nome);
+        });
+    }
+    // Um docente: logo abaixo do campo. Varios: abaixo da lista, antes do "Total".
+    const multi = document.getElementById('container-multi-docente');
+    if (document.getElementById('chk-multi-docente')?.checked && multi) {
+        multi.insertBefore(aviso, multi.lastElementChild);
+    } else {
+        // Depois do bloco do campo, nao dentro: o "x" de limpar se centraliza nele.
+        document.getElementById('container-single-docente')?.after(aviso);
+    }
+
+    if (!avisoDocenteNomes.length) {
+        aviso.classList.add('hidden');
+        aviso.innerHTML = '';
+        return;
+    }
+    const esc = escapeTrocaHtml;
+    const linhas = avisoDocenteNomes.map((nome) => {
+        const cad = getCadastroDocente(nome);
+        if (cad) {
+            return `<div class="aviso-docente-nome is-ok"><span>✓ <b>${esc(nome)}</b> cadastrado (${esc(cad.vinculo)} · ${esc(getUnidadeNome(cad.unidade))} / ${esc(cad.subunidade)})</span></div>`;
+        }
+        const problema = problemaNoNome(nome);
+        if (problema) {
+            return `<div class="aviso-docente-nome"><span><b>${esc(nome)}</b>: ${esc(problema)}</span></div>`;
+        }
+        return `<div class="aviso-docente-nome"><b>${esc(nome)}</b><button type="button" class="btn-cadastrar-docente" data-nome="${esc(nome)}">Cadastrar Docente Temporário…</button></div>`;
+    }).join('');
+    const pendentes = avisoDocenteNomes.some((nome) => !getCadastroDocente(nome));
+    aviso.innerHTML = (pendentes
+        ? '<div>⚠ Nome novo no Cardume. Confira se está completo, igual ao SIGAA, e sem abreviações.</div>'
+        : '') + linhas;
+    aviso.classList.remove('hidden');
+}
+
+// Troca o nome no campo Docente (ou na linha certa, com varios docentes).
+function trocarNomeDocenteDigitado(antigo, novo) {
+    const chave = normalizeTeacherNameForMatch(antigo);
+    const campos = document.getElementById('chk-multi-docente')?.checked
+        ? [...document.querySelectorAll('#multi-docente-list .inp-multi-name')]
+        : [inputConfig.docente].filter(Boolean);
+    campos.filter((inp) => normalizeTeacherNameForMatch(inp.value) === chave).forEach((inp) => {
+        inp.value = novo;
+        inp.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+}
+
+function fecharCadastroDocente() {
+    document.getElementById('cadastro-docente-modal')?.remove();
+    document.removeEventListener('keydown', onCadastroDocenteKeydown);
+}
+
+function onCadastroDocenteKeydown(e) {
+    if (e.key === 'Escape') fecharCadastroDocente();
+}
+
+function abrirCadastroDocente(nome) {
+    fecharCadastroDocente();
+    const esc = escapeTrocaHtml;
+    const parecidos = findSimilarNames(nome, getKnownDocenteNames());
+    const overlay = document.createElement('div');
+    overlay.id = 'cadastro-docente-modal';
+    overlay.className = 'troca-modal no-print';
+    overlay.innerHTML = `
+        <div class="troca-caixa cad-docente" role="dialog" aria-modal="true" aria-labelledby="cad-docente-titulo">
+            <h3 id="cad-docente-titulo">Cadastrar Docente Temporário</h3>
+            <p class="troca-sub">Nome digitado no campo Docente: <b>${esc(nome)}</b></p>
+            ${parecidos.length ? `
+            <div class="cad-parecido">
+                Já existe nome parecido. Se for a mesma pessoa, use o nome da lista:
+                ${parecidos.map((p) => `<div class="cad-parecido-item"><b>${esc(p)}</b><button type="button" class="cad-usar" data-nome="${esc(p)}">Usar este</button></div>`).join('')}
+            </div>` : ''}
+            <div class="cad-campo">
+                <span class="cad-rotulo">Vínculo</span>
+                <div class="cad-opcoes">
+                    ${VINCULOS_TEMPORARIOS.map((v) => `<label><input type="radio" name="cad-vinculo" value="${v}"> ${v}</label>`).join('')}
+                </div>
+            </div>
+            <div class="cad-linha">
+                <label class="cad-campo"><span class="cad-rotulo">Unidade</span>
+                    <select id="cad-unidade">
+                        <option value="">Escolha…</option>
+                        ${UNIDADES.map((u) => `<option value="${u.sigla}">${esc(u.nome)}</option>`).join('')}
+                    </select>
+                </label>
+                <label class="cad-campo"><span class="cad-rotulo">Subunidade (faculdade)</span>
+                    <select id="cad-subunidade" disabled><option value="">Escolha a unidade</option></select>
+                </label>
+            </div>
+            <label class="cad-campo"><span class="cad-rotulo">Nome completo, igual ao SIGAA (digite de novo)</span>
+                <input type="text" id="cad-nome" autocomplete="off" spellcheck="false">
+            </label>
+            <div class="cad-erro" id="cad-erro"></div>
+            <label class="cad-conferi">
+                <input type="checkbox" id="cad-conferi">
+                <span>Conferi: o docente está cadastrado no SIGAA com este nome, completo e sem abreviações. Sem o SIGAA ele não consegue lançar os conceitos.</span>
+            </label>
+            <p class="troca-nota">
+                <b>Professor efetivo</b> não é cadastrado aqui: envie e-mail para evaldomartins@ufpa.br com o nome completo, a Unidade e a Subunidade.<br>
+                <b>Pós-graduando, colaborador ou voluntário:</b> deixe a componente no nome do professor responsável.
+            </p>
+            <div class="troca-acoes">
+                <button type="button" class="btn-secondary troca-cancelar">Voltar e corrigir</button>
+                <button type="button" class="cad-ok" disabled>Cadastrar</button>
+            </div>
+        </div>`;
+    document.body.appendChild(overlay);
+    document.addEventListener('keydown', onCadastroDocenteKeydown);
+
+    const el = (sel) => overlay.querySelector(sel);
+    const validar = () => {
+        const vinculo = el('input[name="cad-vinculo"]:checked')?.value || '';
+        const redigitado = limparEspacos(el('#cad-nome').value);
+        let erro = '';
+        if (redigitado) {
+            erro = problemaNoNome(redigitado);
+            if (!erro && normalizeTeacherNameForMatch(redigitado) !== normalizeTeacherNameForMatch(nome)) {
+                erro = 'Não confere com o nome do campo Docente. Confira as letras dos dois.';
+            }
+        }
+        el('#cad-erro').textContent = erro;
+        const ok = !!(vinculo && el('#cad-unidade').value && el('#cad-subunidade').value
+            && redigitado && !erro && el('#cad-conferi').checked);
+        el('.cad-ok').disabled = !ok;
+        return ok ? { vinculo, redigitado } : null;
+    };
+
+    el('#cad-unidade').addEventListener('change', () => {
+        const unidade = UNIDADES.find((u) => u.sigla === el('#cad-unidade').value);
+        const sub = el('#cad-subunidade');
+        sub.innerHTML = unidade
+            ? `<option value="">Escolha…</option>${unidade.subunidades.map((s) => `<option value="${s}">${s}</option>`).join('')}`
+            : '<option value="">Escolha a unidade</option>';
+        sub.disabled = !unidade;
+    });
+    overlay.addEventListener('input', validar);
+    overlay.addEventListener('change', validar);
+
+    // Clicar fora nao fecha: e um formulario, um clique perdido apagaria o que foi digitado.
+    overlay.addEventListener('click', (e) => {
+        if (e.target.closest('.troca-cancelar')) {
+            fecharCadastroDocente();
+            return;
+        }
+        const usar = e.target.closest('.cad-usar');
+        if (usar) {
+            trocarNomeDocenteDigitado(nome, usar.dataset.nome);
+            fecharCadastroDocente();
+            refreshAvisoDocenteNovo('mostrar');
+            showToastWarning(`Nome trocado por "${usar.dataset.nome}", da lista do Cardume.`, 'success', 3200);
+            return;
+        }
+        if (!e.target.closest('.cad-ok')) return;
+        const dados = validar();
+        if (!dados) return;
+        cadastrosDocentes.set(normalizeTeacherNameForMatch(dados.redigitado), {
+            nome: dados.redigitado,
+            vinculo: dados.vinculo,
+            unidade: el('#cad-unidade').value,
+            subunidade: el('#cad-subunidade').value,
+            em: new Date().toISOString().slice(0, 10)
+        });
+        // Mesmas letras, mas com acento ou maiuscula diferente: vale o redigitado.
+        if (dados.redigitado !== limparEspacos(nome)) trocarNomeDocenteDigitado(nome, dados.redigitado);
+        fecharCadastroDocente();
+        refreshAvisoDocenteNovo('mostrar');
+        showToastWarning(`${dados.redigitado} cadastrado. Agora é só salvar a componente.`, 'success', 3600);
+    });
+
+    setTimeout(() => el('input[name="cad-vinculo"]')?.focus(), 50);
+}
+
+// Cadastros de docente novo que vao junto na alocacao: os feitos agora e os que
+// ja estavam nas alocacoes substituidas (edicao), so dos nomes que continuam nela.
+function coletarCadastrosDocentes(nomes = [], idsAntigos = []) {
+    const chaves = new Set(nomes.map(normalizeTeacherNameForMatch));
+    const porChave = new Map();
+    store.allocations
+        .filter((a) => idsAntigos.includes(a.id))
+        .forEach((a) => (Array.isArray(a.docentesCadastrados) ? a.docentesCadastrados : [])
+            .forEach((c) => porChave.set(normalizeTeacherNameForMatch(c?.nome), c)));
+    cadastrosDocentes.forEach((c, chave) => porChave.set(chave, c));
+    return [...porChave.entries()]
+        .filter(([chave]) => chaves.has(chave))
+        .map(([, c]) => ({ ...c }));
+}
+
+function setupAvisoDocenteNovo() {
+    inputConfig.docente?.addEventListener('input', () => refreshAvisoDocenteNovo('ocultar'));
+    inputConfig.docente?.addEventListener('change', () => refreshAvisoDocenteNovo('mostrar'));
+    const lista = document.getElementById('multi-docente-list');
+    lista?.addEventListener('input', (e) => {
+        if (e.target.matches('.inp-multi-name')) refreshAvisoDocenteNovo('ocultar');
+    });
+    lista?.addEventListener('change', (e) => {
+        if (e.target.matches('.inp-multi-name')) refreshAvisoDocenteNovo('mostrar');
+    });
+    document.getElementById('chk-multi-docente')?.addEventListener('change', () => refreshAvisoDocenteNovo('ocultar'));
 }
 
 let lastDocentesListKey = null;
@@ -5896,6 +6115,7 @@ function loadAllocationIntoEditor(allocation, idsToRemove = [], options = {}) {
             listMulti.innerHTML = '';
             a.docentes.forEach((d) => addTeacherRow(d.nome, d.ch));
             updateTotalCHDisplay();
+            refreshAvisoDocenteNovo('ocultar');
         }
     } else {
         if (chkMulti && chkMulti.checked) {
@@ -6034,8 +6254,14 @@ function handleAddManual() {
         return;
     }
     const nomesDigitados = docData.mode === 'multi' ? docData.docentesList.map((d) => d.nome) : [docData.docente];
-    if (!confirmNewDocenteNames(findNewDocenteNames(nomesDigitados))) {
-        showToastWarning('Salvamento cancelado. Confira o nome do docente e salve de novo.', 'warning', 3200);
+    const semCadastro = findNewDocenteNames(nomesDigitados).filter((n) => !getCadastroDocente(n));
+    if (semCadastro.length) {
+        refreshAvisoDocenteNovo('mostrar');
+        setWeeklyBlock(
+            'Docente novo sem cadastro',
+            `${semCadastro.join(', ')}: use o botão "Cadastrar Docente Temporário…" abaixo do campo Docente(s), ou escolha um nome da lista.`
+        );
+        showToastWarning(`Docente novo sem cadastro: ${semCadastro.join(', ')}. Cadastre (botão abaixo do campo) ou escolha um nome da lista.`, 'warning', 4800);
         return;
     }
     if (pendingFaixaStartPick) {
@@ -6377,6 +6603,7 @@ function handleAddManual() {
         findPendentesCobertas({ turmaId: store.selectedTurma, disciplina, subGrupo }, store.allocations)
             .forEach((id) => { if (!idsToRemove.includes(id)) idsToRemove.push(id); });
 
+        const docentesCadastrados = coletarCadastrosDocentes(nomesDigitados, idsToRemove);
         const undoSnapshot = snapshotAllocationsForUndo();
         idsToRemove.forEach((id) => store.removeAllocation(id));
 
@@ -6418,8 +6645,10 @@ function handleAddManual() {
             faixas: effFaixas,
             subGrupo: subGrupo || null,
             cor: inputConfig.cor ? inputConfig.cor.value : store.getDisciplinaColor(disciplina),
-            importado: isImportedSave
+            importado: isImportedSave,
+            ...(docentesCadastrados.length ? { docentesCadastrados } : {})
         });
+        docentesCadastrados.forEach((c) => cadastrosDocentes.delete(normalizeTeacherNameForMatch(c.nome)));
 
         if (effInicio && store.selectedTurma) {
             store.setTurmaLastStart(store.selectedTurma, effInicio);
@@ -6446,6 +6675,7 @@ function handleAddManual() {
         finalizeWeeklyEditorAfterSave();
         renderOfertasList();
         populateDocentes();
+        refreshAvisoDocenteNovo('ocultar');
 
         if (nonBlockingDistributionNotice) {
             showToastWarning(nonBlockingDistributionNotice, nonBlockingDistributionNoticeType, 6200);

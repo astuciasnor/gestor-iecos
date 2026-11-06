@@ -4012,6 +4012,147 @@ body:has(#tab-weekly.active) .top-bar #weekly-instructions-card {
     background: #dfe4e6;
 }
 
+/* Docente novo: aviso embaixo do campo Docente(s) e janela de cadastro */
+.aviso-docente-novo {
+    margin-top: 6px;
+    font-size: 0.82em;
+    line-height: 1.45;
+    color: #ffd166;
+}
+
+.aviso-docente-nome {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    margin-top: 5px;
+    padding: 3px 0 3px 10px;
+    border-left: 2px solid #ffd166;
+}
+
+.aviso-docente-nome b {
+    color: #fff3c4;
+}
+
+.aviso-docente-nome.is-ok {
+    border-left-color: #a8e6cf;
+    color: #a8e6cf;
+}
+
+.aviso-docente-nome.is-ok b {
+    color: #d8f5e8;
+}
+
+.btn-cadastrar-docente {
+    flex-shrink: 0;
+    padding: 3px 8px;
+    border: 1px solid #ffd166;
+    border-radius: 4px;
+    background: transparent;
+    color: #ffd166;
+    font: inherit;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.btn-cadastrar-docente:hover {
+    background: rgba(255, 209, 102, 0.15);
+}
+
+.cad-docente .cad-parecido {
+    margin-bottom: 12px;
+    padding: 8px 10px;
+    border: 1px solid #f3d27a;
+    border-radius: 5px;
+    background: #fff8e1;
+    font-size: 0.9em;
+}
+
+.cad-parecido-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    margin-top: 6px;
+}
+
+.cad-parecido-item button {
+    padding: 2px 10px;
+    border: 1px solid var(--primary);
+    border-radius: 4px;
+    background: #fff;
+    color: var(--primary);
+    font: inherit;
+    cursor: pointer;
+}
+
+.cad-docente .cad-campo {
+    display: block;
+    flex: 1;
+    margin-bottom: 12px;
+}
+
+.cad-docente .cad-rotulo {
+    display: block;
+    margin-bottom: 4px;
+    font-weight: 600;
+    font-size: 0.9em;
+    color: #2c3e50;
+}
+
+.cad-docente .cad-opcoes {
+    display: flex;
+    gap: 18px;
+}
+
+.cad-docente .cad-linha {
+    display: flex;
+    gap: 12px;
+}
+
+.cad-docente select,
+.cad-docente input[type="text"] {
+    width: 100%;
+    padding: 7px 9px;
+    border: 1px solid #bdc3c7;
+    border-radius: 4px;
+    font: inherit;
+}
+
+.cad-docente .cad-erro {
+    min-height: 1.2em;
+    margin: -6px 0 8px;
+    color: #c0392b;
+    font-size: 0.85em;
+}
+
+.cad-docente .cad-conferi {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    font-size: 0.9em;
+}
+
+.cad-docente .troca-acoes {
+    gap: 10px;
+}
+
+.cad-docente .cad-ok {
+    padding: 6px 16px;
+    border: none;
+    border-radius: 4px;
+    background: var(--primary);
+    color: #fff;
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.cad-docente .cad-ok:disabled {
+    background: #9fb8a9;
+    cursor: not-allowed;
+}
+
 /* Calendario Docente > Celular: a agenda publica numa moldura de celular */
 .celular-docente {
     display: flex;
