@@ -10,7 +10,7 @@
         // Vai para o aviso antes de carregar o programa. A agenda publica nao passa por aqui.
         if (/\.github\.io$/i.test(location.hostname)) location.replace('mudou.html');
     </script>
-    <link rel="stylesheet" href="css/style.css?v=202611071134">
+    <link rel="stylesheet" href="css/style.css?v=202611071144">
 
     <style>
         :root {
@@ -778,7 +778,7 @@
                     <button type="button" class="tab-btn" data-tab="tutorial" id="tabbtn-tutorial" role="tab" aria-controls="tab-tutorial" aria-selected="false" tabindex="-1" style="color: var(--accent);">❓ Ajuda</button>
                 </nav>
 
-                <span class="print-hint no-print" title="A 'Microsoft Print to PDF' sai em retrato. Use 'Salvar como PDF' para sair em paisagem automaticamente.">💡 Para PDF em paisagem, use <strong>“Salvar como PDF”</strong></span>
+                <span class="print-hint no-print" title="A 'Microsoft Print to PDF' sai em retrato. Use 'Salvar como PDF' para sair em paisagem automaticamente.">💡 Para PDF em paisagem,<br>use <strong>“Salvar como PDF”</strong></span>
                 <button onclick="window.print()" class="btn-print" title="Dica: no diálogo de impressão escolha 'Salvar como PDF' para sair em paisagem (a 'Microsoft Print to PDF' sai em retrato).">🖨️ Imprimir</button>
 
                 <!-- Botao de Instrucoes de preenchimento: exibido no header APENAS na aba Alocacao de Componentes (grade semanal) (ver CSS :has). O popover (weekly-instructions-body) e position:fixed, posicionado por JS a partir deste botao. -->
@@ -1375,8 +1375,8 @@
                                 <li><strong>CH alocada:</strong> horas já colocadas no calendário para ele —
                                     <span style="color:#15803d; font-weight:700;">verde</span> quando batem com a CH docente,
                                     <span style="color:#c0392b; font-weight:700;">vermelha</span> quando não.</li>
-                                <li><strong>Conflitos:</strong> o selo no topo fica verde sem conflito; com conflito, fica vermelho
-                                    e a tabela de conflitos aparece logo abaixo.</li>
+                                <li><strong>Conflitos:</strong> só aparecem quando existem — um selo vermelho no topo, com a
+                                    tabela de conflitos logo abaixo.</li>
                             </ul>
                             <p style="font-size:0.97em;">O menu <strong>Agenda Pública</strong> mostra o que os alunos e os professores
                                 veem (Agenda Discente e Agenda Docente), em tela larga. É o que está <b>publicado</b>: as alocações
@@ -1494,7 +1494,7 @@
         </main>
     </div>
 
-    <script type="module" src="js/main.js?v=202611071134"></script>
+    <script type="module" src="js/main.js?v=202611071144"></script>
 </body>
 
 </html>

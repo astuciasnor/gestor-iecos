@@ -1,9 +1,9 @@
-import { store } from './store.js?v=202611071134';
-import { getCalendarEvents } from './calendar.js?v=202611071134';
-import { buildTeacherExecutionSnapshot, buildCanonicalOfferProjection } from './execution_engine.js?v=202611071134';
-import { getHorariosByTurno, normalizeTurnoKey, getTurnoLetter, mapSlotToTurno } from './turns.js?v=202611071134';
-import { vividHexColor } from './color_utils.js?v=202611071134';
-import { formatDateBR, timeToMinutes, shortDayName } from './date_utils_ui.js?v=202611071134';
+import { store } from './store.js?v=202611071144';
+import { getCalendarEvents } from './calendar.js?v=202611071144';
+import { buildTeacherExecutionSnapshot, buildCanonicalOfferProjection } from './execution_engine.js?v=202611071144';
+import { getHorariosByTurno, normalizeTurnoKey, getTurnoLetter, mapSlotToTurno } from './turns.js?v=202611071144';
+import { vividHexColor } from './color_utils.js?v=202611071144';
+import { formatDateBR, timeToMinutes, shortDayName } from './date_utils_ui.js?v=202611071144';
 import {
     isFaixaAllocation,
     isScheduledRegularAllocation,
@@ -11,7 +11,7 @@ import {
     teacherNamesMatch,
     getDocenteShortLabel,
     calculateTeacherTotalCH
-} from './allocation_helpers.js?v=202611071134';
+} from './allocation_helpers.js?v=202611071144';
 import {
     normalizeTurnoOfertaKey,
     formatTurnoOfertaLabel,
@@ -21,18 +21,18 @@ import {
     buildHorariosForUI,
     getShiftChangeMeta,
     getCalendarShiftBadgeHTML
-} from './turno_helpers.js?v=202611071134';
+} from './turno_helpers.js?v=202611071144';
 import {
     getDisciplinaCHGlobal,
     getTurmaLabel,
     getTurmaBaseLabel,
     getDisciplinaInfo,
     getPrintAcademicMetaLine
-} from './curso_turma_helpers.js?v=202611071134';
+} from './curso_turma_helpers.js?v=202611071144';
 import {
     getGanttTurnoConfigs,
     resolveTeacherShiftForSlot
-} from './gantt_ui.js?v=202611071134';
+} from './gantt_ui.js?v=202611071144';
 
 // Referencias DOM de nivel de modulo (espelham as de ui.js; modulo deferred, DOM pronto).
 const selViewDocente = document.getElementById('sel-view-docente');
@@ -223,12 +223,12 @@ export function formatConflictDateRange(startDate, endDate) {
     return `${formatDateBR(startDate)} a ${formatDateBR(endDate)}`;
 }
 
-// Situacao dos conflitos, junto das outras informacoes do topo (sem conflito,
-// so este selo; com conflito, ele fica vermelho e a tabela de conflitos aparece).
+// Conflitos so aparecem quando existem: selo vermelho no topo (e a tabela de
+// conflitos logo abaixo). Sem conflito, nada.
 function conflictPillHtml(total) {
     return total > 0
         ? `<div style="background:#fdecea; color:#a61b1b; border:1px solid #f5c2c0; border-radius:999px; padding:8px 14px; font-weight:800;">⚠️ Conflitos de horário: ${total}</div>`
-        : '<div style="background:#ecfdf3; color:#1e7e34; border:1px solid #b7ebc6; border-radius:999px; padding:8px 14px; font-weight:700;">✓ Sem conflitos de horário</div>';
+        : '';
 }
 
 export function renderTeacherConflictRows(conflicts = []) {

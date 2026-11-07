@@ -3410,7 +3410,8 @@ body:has(#tab-weekly.active) .top-bar #weekly-instructions-card {
     padding: 4px 10px;
     margin-right: 10px;
     white-space: nowrap;
-    line-height: 1.2;
+    line-height: 1.25;
+    text-align: center;
     cursor: help;
 }
 
