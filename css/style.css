@@ -4404,3 +4404,12 @@ body:has(#tab-weekly.active) .top-bar #weekly-instructions-card {
     color: #c0392b;
     font-size: 0.85em;
 }
+
+/* Codigo, curso e CH da componente escolhida, logo abaixo do campo Disciplina. */
+.disciplina-codigo-dica {
+    margin-top: 4px;
+    font-size: 0.82em;
+    font-weight: 600;
+    color: #fde68a;
+}
+.disciplina-codigo-dica:empty { display: none; }

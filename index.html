@@ -10,7 +10,7 @@
         // Vai para o aviso antes de carregar o programa. A agenda publica nao passa por aqui.
         if (/\.github\.io$/i.test(location.hostname)) location.replace('mudou.html');
     </script>
-    <link rel="stylesheet" href="css/style.css?v=202611071451">
+    <link rel="stylesheet" href="css/style.css?v=202611071509">
 
     <style>
         :root {
@@ -670,6 +670,7 @@
                         <input type="text" id="inp-disciplina" list="list-disciplinas"
                             placeholder="Busque a disciplina...">
                     </div>
+                    <div id="disciplina-codigo-dica" class="disciplina-codigo-dica" aria-live="polite"></div>
                     <datalist id="list-disciplinas"></datalist>
                     <datalist id="list-cores-vibrantes">
                         <option value="#FFADAD"></option>
@@ -1446,7 +1447,7 @@
         </main>
     </div>
 
-    <script type="module" src="js/main.js?v=202611071451"></script>
+    <script type="module" src="js/main.js?v=202611071509"></script>
 </body>
 
 </html>

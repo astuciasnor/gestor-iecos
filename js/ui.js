@@ -1,32 +1,32 @@
-import { store } from './store.js?v=202611071451';
-import { getTurnoLetter, mapSlotToTurno } from './turns.js?v=202611071451';
-import { normalizePeriodo as normalizePeriodoLetivoCode } from './plan_storage.js?v=202611071451';
-import { getCalendarEvents } from './calendar.js?v=202611071451';
-import { isDateOverlap } from './utils.js?v=202611071451';
-import { weeklyState } from './weekly_state.js?v=202611071451';
-import { findPendentesCobertas, isPendenteJaAlocada } from './pendentes.mjs?v=202611071451';
-import { classifySwap } from './troca_ordem.mjs?v=202611071451';
-import { buildCanonicalOfferProjection } from './execution_engine.js?v=202611071451';
+import { store } from './store.js?v=202611071509';
+import { getTurnoLetter, mapSlotToTurno } from './turns.js?v=202611071509';
+import { normalizePeriodo as normalizePeriodoLetivoCode } from './plan_storage.js?v=202611071509';
+import { getCalendarEvents } from './calendar.js?v=202611071509';
+import { isDateOverlap } from './utils.js?v=202611071509';
+import { weeklyState } from './weekly_state.js?v=202611071509';
+import { findPendentesCobertas, isPendenteJaAlocada } from './pendentes.mjs?v=202611071509';
+import { classifySwap } from './troca_ordem.mjs?v=202611071509';
+import { buildCanonicalOfferProjection } from './execution_engine.js?v=202611071509';
 import {
     buildSigaaMetadataPayload,
     validateSigaaMetadataPayload,
     getSigaaCode,
     buildScopedSigaaAllocationFromOfferFaixa
-} from './sigaa_metadata.js?v=202611071451';
-import { parseBackupDataFile, extractImportPlanMeta } from './serialization.js?v=202611071451';
+} from './sigaa_metadata.js?v=202611071509';
+import { parseBackupDataFile, extractImportPlanMeta } from './serialization.js?v=202611071509';
 import {
     showToastWarning,
     showPersistentStatusMessage,
     copyTextToClipboard,
     flashButtonCopyState,
     setupCopyActionButtons
-} from './ui_feedback.js?v=202611071451';
+} from './ui_feedback.js?v=202611071509';
 import {
     normalizeHexColor,
     adjustHexColor,
     hexToRgba,
     vividHexColor
-} from './color_utils.js?v=202611071451';
+} from './color_utils.js?v=202611071509';
 import {
     isFaixaAllocation,
     isPriorityRegularAllocation,
@@ -35,7 +35,7 @@ import {
     normalizeTeacherNameForMatch,
     getDocenteShortLabel,
     getAllocationTeachersForConflict
-} from './allocation_helpers.js?v=202611071451';
+} from './allocation_helpers.js?v=202611071509';
 import {
     VINCULOS_DOCENTE_NOVO,
     OUTRA_UNIDADE,
@@ -44,9 +44,9 @@ import {
     findSimilarNames,
     problemaNoNome,
     limparEspacos
-} from './docente_nomes.mjs?v=202611071451';
-import { getSessionEmail, getPerfil, fetchAllocationsForPlans } from './sync_remoto.js?v=202611071451';
-import { resolveBackendMode } from './backend_config.js?v=202611071451';
+} from './docente_nomes.mjs?v=202611071509';
+import { getSessionEmail, getPerfil, fetchAllocationsForPlans } from './sync_remoto.js?v=202611071509';
+import { resolveBackendMode } from './backend_config.js?v=202611071509';
 import {
     normalizeConflictSlotLabel,
     getAvailableTurnoOfertaOptions,
@@ -55,7 +55,7 @@ import {
     isTurnoDividerSlot,
     buildHorariosForUI,
     getShiftChangeMeta
-} from './turno_helpers.js?v=202611071451';
+} from './turno_helpers.js?v=202611071509';
 import {
     getDisciplinaCHGlobal,
     derivarBloco,
@@ -64,7 +64,7 @@ import {
     getTurmaBaseLabel,
     getDisciplinaInfo,
     getPrintAcademicMetaLine
-} from './curso_turma_helpers.js?v=202611071451';
+} from './curso_turma_helpers.js?v=202611071509';
 import {
     renderMonthlyCalendar,
     renderTeacherCalendar,
@@ -72,11 +72,11 @@ import {
     clearTeacherRangeCache,
     setTeacherPeriod,
     getTeacherPeriod
-} from './calendarios_ui.js?v=202611071451';
+} from './calendarios_ui.js?v=202611071509';
 import {
     refreshTeacherConflictsUI,
     setCrossPlanLoader
-} from './conflitos_ui.js?v=202611071451';
+} from './conflitos_ui.js?v=202611071509';
 import {
     shouldIgnoreTurmaEventForCandidate,
     normalizeDrawnSlotsByDay,
@@ -90,7 +90,7 @@ import {
     resolveEditableFaixasFromStoredExecution,
     alignFaixasToExecutionEnd,
     buildFinalAdjustmentFaixaSuggestion
-} from './faixa_utils.js?v=202611071451';
+} from './faixa_utils.js?v=202611071509';
 import {
     timeToMinutes,
     shiftISODate,
@@ -104,14 +104,14 @@ import {
     isDateInsideRange,
     formatDateBRShortYear,
     formatDateBR
-} from './date_utils_ui.js?v=202611071451';
+} from './date_utils_ui.js?v=202611071509';
 import {
     initializeWeeklyScheduleForTurma,
     reconcileTurmaSelectionAfterPLChange,
     resetWeeklyViewOnTurmaChange,
     resolveActiveAcademicPeriod,
     slotLabelsOverlap
-} from './academic_rules.mjs?v=202611071451';
+} from './academic_rules.mjs?v=202611071509';
 
 const gridContainer = document.getElementById('weekly-grid');
 const selCurso = document.getElementById('sel-curso');
@@ -4624,6 +4624,7 @@ export function initUI() {
     enforceCanonicalFaixaMode();
 
     if (inputConfig.disciplina) {
+        inputConfig.disciplina.addEventListener('input', atualizarDicaCodigoDisciplina);
         inputConfig.disciplina.addEventListener('input', () => {
             const discNome = normalizeDisciplinaInputValue(inputConfig.disciplina.value || '');
             const isEditingSameDisc = weeklyState.editingDisciplinaDraft && discNome === weeklyState.editingDisciplinaDraft;
@@ -4719,6 +4720,7 @@ export function initUI() {
 
                 if (!confirmou) {
                     inputConfig.disciplina.value = '';
+                    atualizarDicaCodigoDisciplina();
                     containerSub.classList.add('hidden');
                     inpSub.value = '';
                     return;
@@ -5071,6 +5073,7 @@ function finalizeWeeklyEditorAfterSave() {
     // sem disciplina, resolveInlineEditableFaixaIndex retorna null e a grade nao
     // reentra no modo de desenho -> a componente salva e exibida como alocada.
     if (inputConfig.disciplina) inputConfig.disciplina.value = '';
+    atualizarDicaCodigoDisciplina();
     const containerSub = document.getElementById('container-sub-turma');
     const inpSub = document.getElementById('inp-sub-turma');
     if (containerSub) containerSub.classList.add('hidden');
@@ -5164,10 +5167,27 @@ function updateDisciplinaDatalist() {
     comps.forEach((c) => {
         const opt = document.createElement('option');
         opt.value = `${c.componente} (${c.ch ?? 0}h)`;
+        // O codigo aparece ao lado do nome na lista (o mesmo nome existe em
+        // outros cursos com outro codigo).
+        opt.label = c.codigo ? `${c.codigo} · ${c.sigla}` : c.sigla;
         opt.setAttribute('data-ch', c.ch ?? 0);
         opt.setAttribute('data-abrev', c.abreviacao || c.componente);
         listDisciplinas.appendChild(opt);
     });
+    atualizarDicaCodigoDisciplina();
+}
+
+// Linha abaixo do campo Disciplina: codigo, curso e CH da componente escolhida.
+function atualizarDicaCodigoDisciplina() {
+    const dica = document.getElementById('disciplina-codigo-dica');
+    if (!dica) return;
+    const nome = normalizeDisciplinaInputValue(inputConfig.disciplina?.value || '');
+    const comp = nome && store.selectedCurso
+        ? (store.rawData?.componentes || []).find((c) => c.componente === nome && c.sigla === store.selectedCurso)
+        : null;
+    if (!comp) { dica.textContent = ''; return; }
+    const curso = (store.rawData?.cursos || []).find((c) => c.sigla === comp.sigla)?.curso || comp.sigla;
+    dica.textContent = `Código ${comp.codigo || '-'} · ${curso} · ${comp.ch ?? 0}h`;
 }
 
 // Nomes de docentes conhecidos: os da planilha (dados_app.json) mais os ja usados
@@ -6117,6 +6137,7 @@ function prepareEditorForReplacement(original) {
     }
     if (inputConfig.disciplina) {
         inputConfig.disciplina.value = '';
+        atualizarDicaCodigoDisciplina();
         inputConfig.disciplina.dispatchEvent(new Event('input'));
         setTimeout(() => inputConfig.disciplina?.focus(), 300);
     }
@@ -6135,6 +6156,7 @@ function applyReplacementDisciplina(discNome) {
     if (jaAlocada) {
         showToastWarning(`"${discNome}" ja tem horarios nesta turma. Para substituir, escolha uma componente ainda nao alocada.`, 'error', 4200);
         inputConfig.disciplina.value = '';
+        atualizarDicaCodigoDisciplina();
         weeklyState.lastDisciplinaInputNormalized = '';
         return false;
     }
@@ -6173,6 +6195,7 @@ function loadAllocationIntoEditor(allocation, idsToRemove = [], options = {}) {
 
     if (inputConfig.disciplina) {
         inputConfig.disciplina.value = `${a.disciplina} (${info.ch}h)`;
+        atualizarDicaCodigoDisciplina();
         inputConfig.disciplina.dispatchEvent(new Event('input'));
     }
     if (inputConfig.cor && a.cor) {
