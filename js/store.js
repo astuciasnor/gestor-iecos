@@ -8,11 +8,11 @@ import {
   readJsonStorage,
   upsertPlanIndexEntry,
   writeJsonStorage
-} from './plan_storage.js?v=202611071509';
-import { generateUUID } from './utils.js?v=202611071509';
-import { buildQuadroConversionMap, convertAllocationQuadro } from './quadro_horario.mjs?v=202611071509';
+} from './plan_storage.js?v=202611071518';
+import { generateUUID } from './utils.js?v=202611071518';
+import { buildQuadroConversionMap, convertAllocationQuadro } from './quadro_horario.mjs?v=202611071518';
 
-import { normalizeTurnoKey, getHorariosByTurno } from './turns.js?v=202611071509';
+import { normalizeTurnoKey, getHorariosByTurno } from './turns.js?v=202611071518';
 
 export function normalizeLoadedAllocation(alloc) {
   if (!alloc || typeof alloc !== 'object') return alloc;
@@ -457,14 +457,18 @@ class Store {
   }
 
   // ===== Cor (NOVA FONTE: componentes.cor) =====
-  getDisciplinaColor(nomeComponente) {
+  // sigla: curso da turma (o mesmo nome tem cor diferente em cada curso);
+  // sem ela, o curso aberto na barra lateral.
+  getDisciplinaColor(nomeComponente, sigla = '') {
     if (!this.rawData) return '#e0e0e0';
 
     const normalizedReq = String(nomeComponente || '').trim().toUpperCase();
     const comps = this.rawData.componentes || [];
-    
-    // 1. Tenta achar no JSON pelo nome exato
-    const c = comps.find((x) => String(x.componente || '').trim().toUpperCase() === normalizedReq);
+    const curso = String(sigla || this.selectedCurso || '').trim();
+    const mesmoNome = (x) => String(x.componente || '').trim().toUpperCase() === normalizedReq;
+
+    // 1. Tenta achar no JSON pelo nome exato, primeiro no curso
+    const c = (curso && comps.find((x) => mesmoNome(x) && x.sigla === curso)) || comps.find(mesmoNome);
     if (c && c.cor) return c.cor;
 
     // 2. Fallback: Paleta de 20 Cores Vibrantes (determinístico por nome)

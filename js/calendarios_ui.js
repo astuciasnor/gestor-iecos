@@ -1,10 +1,10 @@
-import { store } from './store.js?v=202611071509';
-import { getCalendarEvents } from './calendar.js?v=202611071509';
-import { buildTeacherExecutionSnapshot, buildCanonicalOfferProjection } from './execution_engine.js?v=202611071509';
-import { detectTeacherConflicts } from './conflicts.js?v=202611071509';
-import { getHorariosByTurno, normalizeTurnoKey, getTurnoLetter, mapSlotToTurno } from './turns.js?v=202611071509';
-import { vividHexColor } from './color_utils.js?v=202611071509';
-import { formatDateBR, timeToMinutes, shortDayName } from './date_utils_ui.js?v=202611071509';
+import { store } from './store.js?v=202611071518';
+import { getCalendarEvents } from './calendar.js?v=202611071518';
+import { buildTeacherExecutionSnapshot, buildCanonicalOfferProjection } from './execution_engine.js?v=202611071518';
+import { detectTeacherConflicts } from './conflicts.js?v=202611071518';
+import { getHorariosByTurno, normalizeTurnoKey, getTurnoLetter, mapSlotToTurno } from './turns.js?v=202611071518';
+import { vividHexColor } from './color_utils.js?v=202611071518';
+import { formatDateBR, timeToMinutes, shortDayName } from './date_utils_ui.js?v=202611071518';
 import {
     isFaixaAllocation,
     isScheduledRegularAllocation,
@@ -12,7 +12,7 @@ import {
     teacherNamesMatch,
     getDocenteShortLabel,
     calculateTeacherTotalCH
-} from './allocation_helpers.js?v=202611071509';
+} from './allocation_helpers.js?v=202611071518';
 import {
     normalizeTurnoOfertaKey,
     formatTurnoOfertaLabel,
@@ -22,18 +22,19 @@ import {
     buildHorariosForUI,
     getShiftChangeMeta,
     getCalendarShiftBadgeHTML
-} from './turno_helpers.js?v=202611071509';
+} from './turno_helpers.js?v=202611071518';
 import {
     getDisciplinaCHGlobal,
     getTurmaLabel,
     getTurmaBaseLabel,
     getDisciplinaInfo,
+    getCursoSiglaDaTurma,
     getPrintAcademicMetaLine
-} from './curso_turma_helpers.js?v=202611071509';
+} from './curso_turma_helpers.js?v=202611071518';
 import {
     getGanttTurnoConfigs,
     resolveTeacherShiftForSlot
-} from './gantt_ui.js?v=202611071509';
+} from './gantt_ui.js?v=202611071518';
 
 // Referencias DOM de nivel de modulo (espelham as de ui.js; modulo deferred, DOM pronto).
 const selViewDocente = document.getElementById('sel-view-docente');
@@ -711,7 +712,7 @@ export function buildCalendarTurmaResumeTable(turmaId, start, end) {
             disciplinasMap.set(disciplina, {
                 disciplina,
                 codigo: String(info?.codigo || baseAlloc?.componenteCode || '').trim(),
-                cor: baseAlloc?.cor || store.getDisciplinaColor(disciplina) || '#f39c12',
+                cor: baseAlloc?.cor || store.getDisciplinaColor(disciplina, getCursoSiglaDaTurma(turmaId)) || '#f39c12',
                 totalCH,
                 allocatedCH: null,
                 rows: []
@@ -735,7 +736,7 @@ export function buildCalendarTurmaResumeTable(turmaId, start, end) {
                 disciplinasMap.set(disciplina, {
                     disciplina,
                     codigo: String(info?.codigo || alloc?.componenteCode || '').trim(),
-                    cor: alloc?.cor || store.getDisciplinaColor(disciplina) || '#f39c12',
+                    cor: alloc?.cor || store.getDisciplinaColor(disciplina, getCursoSiglaDaTurma(turmaId)) || '#f39c12',
                     totalCH,
                     allocatedCH: null,
                     rows: []
@@ -1091,7 +1092,7 @@ function collectDocenteResumeComponents(docenteName, start, end) {
         components.push({
             disciplina,
             codigo: String(info?.codigo || baseAlloc?.componenteCode || '').trim(),
-            cor: baseAlloc?.cor || store.getDisciplinaColor(disciplina) || '#f39c12',
+            cor: baseAlloc?.cor || store.getDisciplinaColor(disciplina, getCursoSiglaDaTurma(turmaId)) || '#f39c12',
             turmaLabel: getTurmaLabel(turmaId, offerGroup?.subGrupo || baseAlloc?.subGrupo),
             curricularCH,
             compartilhada,
