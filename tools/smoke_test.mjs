@@ -292,7 +292,7 @@ async function run() {
 
     await check('Menu Agenda Publica (agenda publica em tela larga)', async () => {
       await evaluate("document.querySelector('.tab-btn[data-tab=\"publica\"]').click()");
-      assert(await waitFor("(document.getElementById('agenda-publica-frame')?.getAttribute('src') || '').includes('agenda_publica.html')", 3000), 'menu sem a agenda publica');
+      assert(await waitFor("(document.getElementById('agenda-publica-frame')?.getAttribute('src') || '').includes('source=public')", 3000), 'menu sem a agenda publicada (source=public)');
       const ok = await waitFor(`(() => {
         const d = document.getElementById('agenda-publica-frame').contentDocument;
         return d && d.readyState === 'complete' && d.getElementById('inp-docente-publico') && /Agenda/.test(d.body.innerText);
