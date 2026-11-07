@@ -11,9 +11,10 @@ import fs from 'node:fs';
 import http from 'node:http';
 import os from 'node:os';
 import path from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { ROOT, scanReferences, findProblems } from './bump_version.mjs';
 
-const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+export const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 // ---------------------------------------------------------------- servidor local
 const MIME = {
@@ -22,7 +23,7 @@ const MIME = {
   '.svg': 'image/svg+xml', '.ico': 'image/x-icon', '.webp': 'image/webp'
 };
 
-function startServer() {
+export function startServer() {
   const server = http.createServer((req, res) => {
     const urlPath = decodeURIComponent(new URL(req.url, 'http://x').pathname);
     if (urlPath === '/favicon.ico') { res.writeHead(204); res.end(); return; }
@@ -37,7 +38,7 @@ function startServer() {
 }
 
 // ---------------------------------------------------------------- navegador
-function findBrowser() {
+export function findBrowser() {
   const local = process.env.LOCALAPPDATA || '';
   const candidates = [
     process.env.CHROME_PATH,
@@ -52,7 +53,7 @@ function findBrowser() {
   return candidates.find((p) => p && fs.existsSync(p));
 }
 
-async function openBrowser(browserPath, profileDir) {
+export async function openBrowser(browserPath, profileDir) {
   const proc = spawn(browserPath, [
     '--headless=new', '--disable-gpu', '--no-first-run', '--no-default-browser-check',
     '--remote-debugging-port=0', `--user-data-dir=${profileDir}`, 'about:blank'
@@ -74,7 +75,7 @@ async function openBrowser(browserPath, profileDir) {
   return { proc, ws };
 }
 
-function cdp(ws, errors) {
+export function cdp(ws, errors) {
   let seq = 0;
   const pending = new Map();
   const send = (method, params = {}) => {
@@ -114,7 +115,7 @@ function cdp(ws, errors) {
 }
 
 // ---------------------------------------------------------------- dados
-function loadPublishedData() {
+export function loadPublishedData() {
   const data = JSON.parse(fs.readFileSync(path.join(ROOT, 'alocacoes_publicas.json'), 'utf8'));
   const pubs = (data.publications || []).filter((p) => p?.plan?.key && Array.isArray(p.allocations));
   if (!pubs.length) throw new Error('alocacoes_publicas.json sem publicacoes');
@@ -129,7 +130,7 @@ function loadPublishedData() {
   return { pubs, main, teacher };
 }
 
-function seedScript({ pubs, main }) {
+export function seedScript({ pubs, main }) {
   const settings = { periodo: main.plan.periodo, termStart: main.plan.termStart, termEnd: main.plan.termEnd };
   const plans = pubs.map((p) => `localStorage.setItem(${JSON.stringify(`academic_plan_v1::${p.plan.key}`)}, ${JSON.stringify(JSON.stringify(p.allocations))});`).join('\n');
   return `sessionStorage.setItem('auth', 'true');
@@ -321,6 +322,10 @@ async function run() {
   return results.every((r) => r.ok);
 }
 
-const ok = await run().catch((err) => { console.log(`FALHA ${err.message}`); return false; });
-console.log(ok ? '\nTudo certo.' : '\nHa falhas: veja as linhas FALHA acima.');
-process.exit(ok ? 0 : 1);
+// So roda o roteiro quando chamado direto (npm run smoke); outros scripts
+// (ex.: tools/prints_instrucoes.mjs) importam as funcoes acima.
+if (import.meta.url === pathToFileURL(process.argv[1]).href) {
+  const ok = await run().catch((err) => { console.log(`FALHA ${err.message}`); return false; });
+  console.log(ok ? '\nTudo certo.' : '\nHa falhas: veja as linhas FALHA acima.');
+  process.exit(ok ? 0 : 1);
+}

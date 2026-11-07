@@ -92,3 +92,64 @@ export function vividHexColor(hexColor, fallback = '#f39c12') {
     const toHex = (v) => Math.max(0, Math.min(255, Math.round(v))).toString(16).padStart(2, '0');
     return `#${toHex(out.r)}${toHex(out.g)}${toHex(out.b)}`;
 }
+
+// ---------------------------------------------------------------------------
+// Tons suaves (redesenho da aba Alocar Componentes)
+// O banco continua guardando UM hex por componente. Na hora de desenhar, cada
+// cor vira tres tons: fundo suave, borda (barra) forte e texto escuro.
+// ---------------------------------------------------------------------------
+
+// Paleta curada: [nome, fundo, borda forte, texto]
+export const PALETA_CORES = [
+    ['Vermelho', '#FEE2E2', '#DC2626', '#7F1D1D'],
+    ['Laranja', '#FFEDD5', '#EA580C', '#7C2D12'],
+    ['Âmbar', '#FEF3C7', '#D97706', '#78350F'],
+    ['Amarelo', '#FEF9C3', '#CA8A04', '#713F12'],
+    ['Lima', '#ECFCCB', '#65A30D', '#365314'],
+    ['Verde', '#DCFCE7', '#16A34A', '#14532D'],
+    ['Esmeralda', '#D1FAE5', '#059669', '#064E3B'],
+    ['Turquesa', '#CCFBF1', '#0D9488', '#134E4A'],
+    ['Ciano', '#CFFAFE', '#0891B2', '#164E63'],
+    ['Céu', '#E0F2FE', '#0284C7', '#0C4A6E'],
+    ['Azul', '#DBEAFE', '#2563EB', '#1E3A8A'],
+    ['Anil', '#E0E7FF', '#4F46E5', '#312E81'],
+    ['Violeta', '#EDE9FE', '#7C3AED', '#4C1D95'],
+    ['Magenta', '#FAE8FF', '#C026D3', '#701A75'],
+    ['Rosa', '#FCE7F3', '#DB2777', '#831843']
+];
+
+// Busca rapida pela cor forte (chave em maiusculas)
+const PALETA_SUAVE = Object.fromEntries(PALETA_CORES.map(([, fundo, borda, texto]) => [borda, { fundo, borda, texto }]));
+
+// Matiz (0-360) e saturacao (0-100) de "#RGB" ou "#RRGGBB"
+export function matizESaturacao(hex) {
+    const { r, g, b } = hexToRgb(hex);
+    const hsl = rgbToHsl(r, g, b);
+    return { matiz: Math.round(hsl.h * 360) % 360, sat: Math.round(hsl.s * 100) };
+}
+
+// Devolve { fundo, borda, texto } para qualquer cor salva: as da paleta usam os
+// tons curados; as demais (pasteis antigos, cores livres) sao derivadas pela matiz.
+export function tonsDaCor(hex) {
+    const valido = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(String(hex || '').trim());
+    const base = valido ? normalizeHexColor(hex) : '#64748b';
+    const chave = base.toUpperCase();
+    if (PALETA_SUAVE[chave]) return { ...PALETA_SUAVE[chave] };
+    const { matiz, sat } = matizESaturacao(base);
+    // Cinzas continuam cinzas; cores vivas tem a saturacao limitada para nao "gritar"
+    const s = sat < 10 ? sat : Math.min(Math.max(sat, 45), 85);
+    return {
+        fundo: `hsl(${matiz} ${Math.min(s, 85)}% 93%)`,
+        borda: `hsl(${matiz} ${Math.min(s, 75)}% 40%)`,
+        texto: `hsl(${matiz} ${Math.min(s, 70)}% 20%)`
+    };
+}
+
+// Aplica os tons como variaveis CSS no elemento (o CSS usa --bloco-*)
+export function aplicarTonsBloco(el, hex) {
+    if (!el) return;
+    const t = tonsDaCor(hex);
+    el.style.setProperty('--bloco-fundo', t.fundo);
+    el.style.setProperty('--bloco-borda', t.borda);
+    el.style.setProperty('--bloco-texto', t.texto);
+}

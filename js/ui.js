@@ -1,34 +1,37 @@
-import { store } from './store.js?v=202611071733';
-import { getTurnoLetter, mapSlotToTurno } from './turns.js?v=202611071733';
-import { normalizePeriodo as normalizePeriodoLetivoCode } from './plan_storage.js?v=202611071733';
-import { getCalendarEvents } from './calendar.js?v=202611071733';
-import { isDateOverlap } from './utils.js?v=202611071733';
-import { weeklyState } from './weekly_state.js?v=202611071733';
-import { findPendentesCobertas, isPendenteJaAlocada } from './pendentes.mjs?v=202611071733';
-import { classifySwap } from './troca_ordem.mjs?v=202611071733';
-import { closeFaixaEnds, isPauseEnd, listFaixaPauses } from './pausa_faixas.mjs?v=202611071733';
-import { abrirMiniCalendario, fecharMiniCalendario, miniCalendarioAberto } from './mini_calendario.mjs?v=202611071733';
-import { buildCanonicalOfferProjection } from './execution_engine.js?v=202611071733';
+import { store } from './store.js?v=202611072022';
+import { getTurnoLetter, mapSlotToTurno } from './turns.js?v=202611072022';
+import { normalizePeriodo as normalizePeriodoLetivoCode } from './plan_storage.js?v=202611072022';
+import { getCalendarEvents } from './calendar.js?v=202611072022';
+import { isDateOverlap } from './utils.js?v=202611072022';
+import { weeklyState } from './weekly_state.js?v=202611072022';
+import { findPendentesCobertas, isPendenteJaAlocada } from './pendentes.mjs?v=202611072022';
+import { classifySwap } from './troca_ordem.mjs?v=202611072022';
+import { closeFaixaEnds, isPauseEnd, listFaixaPauses } from './pausa_faixas.mjs?v=202611072022';
+import { abrirMiniCalendario, fecharMiniCalendario, miniCalendarioAberto } from './mini_calendario.mjs?v=202611072022';
+import { buildCanonicalOfferProjection } from './execution_engine.js?v=202611072022';
 import {
     buildSigaaMetadataPayload,
     validateSigaaMetadataPayload,
     getSigaaCode,
     buildScopedSigaaAllocationFromOfferFaixa
-} from './sigaa_metadata.js?v=202611071733';
-import { parseBackupDataFile, extractImportPlanMeta } from './serialization.js?v=202611071733';
+} from './sigaa_metadata.js?v=202611072022';
+import { parseBackupDataFile, extractImportPlanMeta } from './serialization.js?v=202611072022';
 import {
     showToastWarning,
     showPersistentStatusMessage,
     copyTextToClipboard,
     flashButtonCopyState,
     setupCopyActionButtons
-} from './ui_feedback.js?v=202611071733';
+} from './ui_feedback.js?v=202611072022';
 import {
     normalizeHexColor,
     adjustHexColor,
     hexToRgba,
-    vividHexColor
-} from './color_utils.js?v=202611071733';
+    vividHexColor,
+    tonsDaCor,
+    aplicarTonsBloco,
+    PALETA_CORES
+} from './color_utils.js?v=202611072022';
 import {
     isFaixaAllocation,
     isPriorityRegularAllocation,
@@ -37,7 +40,8 @@ import {
     normalizeTeacherNameForMatch,
     getDocenteShortLabel,
     getAllocationTeachersForConflict
-} from './allocation_helpers.js?v=202611071733';
+} from './allocation_helpers.js?v=202611072022';
+import { setupSeletorCor } from './seletor_cor.js?v=202611072022';
 import {
     VINCULOS_DOCENTE_NOVO,
     OUTRA_UNIDADE,
@@ -46,9 +50,9 @@ import {
     findSimilarNames,
     problemaNoNome,
     limparEspacos
-} from './docente_nomes.mjs?v=202611071733';
-import { getSessionEmail, getPerfil, fetchAllocationsForPlans } from './sync_remoto.js?v=202611071733';
-import { resolveBackendMode } from './backend_config.js?v=202611071733';
+} from './docente_nomes.mjs?v=202611072022';
+import { getSessionEmail, getPerfil, fetchAllocationsForPlans } from './sync_remoto.js?v=202611072022';
+import { resolveBackendMode } from './backend_config.js?v=202611072022';
 import {
     normalizeConflictSlotLabel,
     getAvailableTurnoOfertaOptions,
@@ -57,7 +61,7 @@ import {
     isTurnoDividerSlot,
     buildHorariosForUI,
     getShiftChangeMeta
-} from './turno_helpers.js?v=202611071733';
+} from './turno_helpers.js?v=202611072022';
 import {
     getDisciplinaCHGlobal,
     derivarBloco,
@@ -67,7 +71,7 @@ import {
     getDisciplinaInfo,
     getCursoSiglaDaTurma,
     getPrintAcademicMetaLine
-} from './curso_turma_helpers.js?v=202611071733';
+} from './curso_turma_helpers.js?v=202611072022';
 import {
     renderMonthlyCalendar,
     renderTeacherCalendar,
@@ -75,11 +79,11 @@ import {
     clearTeacherRangeCache,
     setTeacherPeriod,
     getTeacherPeriod
-} from './calendarios_ui.js?v=202611071733';
+} from './calendarios_ui.js?v=202611072022';
 import {
     refreshTeacherConflictsUI,
     setCrossPlanLoader
-} from './conflitos_ui.js?v=202611071733';
+} from './conflitos_ui.js?v=202611072022';
 import {
     shouldIgnoreTurmaEventForCandidate,
     normalizeDrawnSlotsByDay,
@@ -93,7 +97,7 @@ import {
     resolveEditableFaixasFromStoredExecution,
     alignFaixasToExecutionEnd,
     buildFinalAdjustmentFaixaSuggestion
-} from './faixa_utils.js?v=202611071733';
+} from './faixa_utils.js?v=202611072022';
 import {
     timeToMinutes,
     shiftISODate,
@@ -107,14 +111,14 @@ import {
     isDateInsideRange,
     formatDateBRShortYear,
     formatDateBR
-} from './date_utils_ui.js?v=202611071733';
+} from './date_utils_ui.js?v=202611072022';
 import {
     initializeWeeklyScheduleForTurma,
     reconcileTurmaSelectionAfterPLChange,
     resetWeeklyViewOnTurmaChange,
     resolveActiveAcademicPeriod,
     slotLabelsOverlap
-} from './academic_rules.mjs?v=202611071733';
+} from './academic_rules.mjs?v=202611072022';
 
 const gridContainer = document.getElementById('weekly-grid');
 const selCurso = document.getElementById('sel-curso');
@@ -508,21 +512,11 @@ function applyWeeklyGridRowHeightScale() {
         const styleId = 'weekly-grid-rowheight-style';
         let styleEl = document.getElementById(styleId);
 
-        const horariosCount = buildHorariosForUI().length;
-        const rowCount = Math.max(2, horariosCount + 1);
-
-        const viewportH = window.innerHeight || document.documentElement.clientHeight || 900;
-        const rect = gridContainer.getBoundingClientRect();
-        const reserveBottom = 22;
-        const available = Math.max(220, viewportH - rect.top - reserveBottom);
-
+        // Redesenho: altura fixa (51px; 42px em tela estreita; 20% menor que o 1o desenho) para os blocos nunca
+        // cortarem o nome e o docente. Antes a altura encolhia para caber na tela.
         const isCompactScreen = window.innerWidth < 900;
-        const minH = isCompactScreen ? 32 : 38;
-        const maxH = isCompactScreen ? 46 : 58;
-        const ideal = Math.round(available / rowCount);
-        const uniformH = Math.max(minH, Math.min(maxH, ideal));
-
-        const intervaloH = Math.max(isCompactScreen ? 15 : 16, Math.round(uniformH * 0.42));
+        const uniformH = isCompactScreen ? 42 : 51;
+        const intervaloH = 24;
 
         if (!styleEl) {
             styleEl = document.createElement('style');
@@ -834,6 +828,13 @@ function updateWeeklyFaixaHoursDisplay(previewData = null) {
     const targetCH = parseInt(preview?.targetCH, 10) || 0;
     const targetEl = document.getElementById('weekly-faixa-target-ch');
     if (targetEl) targetEl.textContent = targetCH > 0 ? String(targetCH) : '-';
+    // Redesenho: barra fina Total/Meta no cartao "Meta CH" (so exibicao)
+    const barraEl = document.getElementById('cd-progresso-barra');
+    if (barraEl) {
+        const pct = targetCH > 0 ? Math.min(100, Math.round((total / targetCH) * 100)) : 0;
+        barraEl.style.width = `${pct}%`;
+        barraEl.classList.toggle('is-acima', targetCH > 0 && total > targetCH);
+    }
     const remainingWrapEl = document.getElementById('weekly-faixa-remaining-wrap');
     const remainingEl = document.getElementById('weekly-faixa-remaining-ch');
     if (remainingWrapEl && remainingEl) {
@@ -1520,6 +1521,13 @@ function buildFaixaSummaryText(faixaIndex, count, previewData = null) {
     return `${count} slots | ${formatDateBR(start)} a ${endTxt} | ${ch}h`;
 }
 
+// Cor que vai para o seletor: as da paleta nova ficam exatas (o realce antigo as
+// deslocaria para fora da paleta); as demais seguem o realce de sempre.
+function corParaSeletor(cor) {
+    const hex = normalizeHexColor(cor, '').toUpperCase();
+    return PALETA_CORES.some((p) => p[2] === hex) ? hex.toLowerCase() : vividHexColor(cor);
+}
+
 function getDrawingBaseColor() {
     const disciplina = (inputConfig.disciplina?.value ?? '').replace(/\s*\(\s*\d+\s*h\s*\)\s*$/i, '').trim();
     const fallbackColor = normalizeHexColor(disciplina ? store.getDisciplinaColor(disciplina) : '#f39c12');
@@ -1565,11 +1573,13 @@ function updateWeeklyFaixasTitleDisciplina() {
 }
 
 function getDrawingSelectedStyles() {
-    const base = vividHexColor(getDrawingBaseColor());
+    // Redesenho: fundo suave, contorno tracejado e barra de 4px na cor forte.
+    const t = tonsDaCor(getDrawingBaseColor());
     return {
-        background: base,
-        border: `2px dashed ${adjustHexColor(base, -45)}`,
-        color: '#fff',
+        background: t.fundo,
+        border: `1.5px dashed ${t.borda}`,
+        boxShadow: `inset 4px 0 0 ${t.borda}`,
+        color: t.texto,
         fontWeight: 'bold'
     };
 }
@@ -1609,6 +1619,7 @@ function setDrawingCellSelection(cell, selected, styles) {
         cell.style.border = styles.border;
         cell.style.color = styles.color;
         cell.style.fontWeight = styles.fontWeight;
+        cell.style.boxShadow = styles.boxShadow || '';
     } else {
         cell.classList.remove('selected-slot');
         if (cell.dataset.canEdit === '1') cell.classList.add('slot-free-draw');
@@ -1616,6 +1627,7 @@ function setDrawingCellSelection(cell, selected, styles) {
         cell.style.border = '';
         cell.style.color = '';
         cell.style.fontWeight = '';
+        cell.style.boxShadow = '';
     }
 }
 
@@ -2156,7 +2168,7 @@ function getLastPlannedComponentForCurrentTurma() {
     return best;
 }
 
-// Ultima sugestao calculada {date, slot, gapBefore, exhausted, anchor} — usada
+// Ultima sugestao calculada {date, slot, exhausted, anchor} — usada
 // pela nota de contexto e pelo destaque do slot sugerido na Grade Semanal.
 let lastStartSuggestion = null;
 
@@ -2174,13 +2186,11 @@ let lastStartSuggestion = null;
 //  - ultima NAO INTENSIVA: ocupa poucos slots por semana -> o primeiro encaixe
 //    livre a partir do primeiro dia de aula dela (INCLUSIVE) e encontrado ali.
 // Fallbacks: nada livre da ancora ate o fim do periodo -> re-varre desde o
-// inicio do semestre; ainda nada -> exhausted:true (avisar). Se existir encaixe
-// livre ANTES da ancora (gap deixado por remocao), vai em gapBefore para o
-// sistema apenas AVISAR, sem posicionar la.
+// inicio do semestre; ainda nada -> exhausted:true (avisar).
 function resolveSmartComponentStartSuggestion() {
     const termStart = String(store.settings.termStart || inpTermStart?.value || calStart?.value || '').trim();
     const termEnd = String(store.settings.termEnd || inpTermEnd?.value || calEnd?.value || termStart).trim();
-    const empty = { date: termStart, slot: '', gapBefore: null, exhausted: false, anchor: termStart };
+    const empty = { date: termStart, slot: '', exhausted: false, anchor: termStart };
     if (!termStart || !termEnd) return empty;
 
     const targetSlots = getComponentStartCandidateSlots();
@@ -2222,15 +2232,12 @@ function resolveSmartComponentStartSuggestion() {
         primary = { date: termStart, slot: '' };
     }
 
-    const gapBefore = (!exhausted && anchor > termStart && primary.date >= anchor)
-        ? scan(termStart, shiftISODate(anchor, -1))
-        : null;
-
-    return { ...primary, gapBefore, exhausted, anchor };
+    return { ...primary, exhausted, anchor };
 }
 
-// Feedback nao bloqueante da sugestao: gap anterior existente (so avisa, nao
-// posiciona) e esgotamento do periodo letivo.
+// Feedback nao bloqueante da sugestao: so o esgotamento do periodo letivo.
+// (O aviso de "horario livre antes" foi retirado em 07/11/2026: o usuario
+// aprende a ver os espacos vazios nas semanas.)
 function notifyStartSuggestionFeedback(suggestion = lastStartSuggestion) {
     if (!suggestion) return;
     if (suggestion.exhausted) {
@@ -2239,60 +2246,7 @@ function notifyStartSuggestionFeedback(suggestion = lastStartSuggestion) {
             'warning',
             6200
         );
-        return;
     }
-    // O aviso de "gap livre antes da ultima componente" NAO e mais um toast
-    // repetitivo: virou uma nota INLINE discreta (updateGapAdvisory), com botoes
-    // "Ciente" (dispensa aquele gap) e "Nao avisar mais" (silencia de vez).
-    updateGapAdvisory();
-}
-
-// --- Aviso INLINE de "dia livre antes" (gapBefore) ---------------------------
-// Substitui o toast repetitivo por uma nota discreta e dispensavel.
-const GAP_ADVISORY_MUTE_KEY = 'weekly_gap_advisory_muted';
-let gapAdvisoryDismissedDate = '';
-
-function isGapAdvisoryMuted() {
-    try {
-        return localStorage.getItem(GAP_ADVISORY_MUTE_KEY) === '1';
-    } catch (e) {
-        return false;
-    }
-}
-
-// "Ciente": esconde a nota so para ESTE gap; um gap em outra data volta a avisar.
-function dismissGapAdvisory() {
-    gapAdvisoryDismissedDate = lastStartSuggestion?.gapBefore?.date || '';
-    updateGapAdvisory();
-}
-
-function muteGapAdvisory() {
-    try {
-        localStorage.setItem(GAP_ADVISORY_MUTE_KEY, '1');
-    } catch (e) { /* noop */ }
-    updateGapAdvisory();
-}
-
-// Mostra/esconde a nota inline conforme a sugestao atual tem um gap antes, o
-// usuario ainda nao dispensou ESSE gap e nao silenciou de vez.
-function updateGapAdvisory() {
-    const el = document.getElementById('weekly-gap-advisory');
-    if (!el) return;
-    const gap = lastStartSuggestion?.gapBefore;
-    const shouldShow = !!(gap && gap.date)
-        && !isGapAdvisoryMuted()
-        && gapAdvisoryDismissedDate !== gap.date
-        && !weeklyBlockMessage;
-    if (!shouldShow) {
-        el.classList.add('hidden');
-        return;
-    }
-    const txt = document.getElementById('weekly-gap-advisory-text');
-    if (txt) {
-        const slotTxt = gap.slot ? ` (aula das ${gap.slot})` : '';
-        txt.textContent = `Existe um horario livre antes, em ${formatDateBR(gap.date)}${slotTxt}. Mantive a sugestao em sequencia — se preferir esse dia, e so definir a data.`;
-    }
-    el.classList.remove('hidden');
 }
 
 function getPreferredStartDateForCurrentTurma(options = {}) {
@@ -2991,7 +2945,10 @@ function enforceCanonicalFaixaMode() {
 
     const btnAddOferta = document.getElementById('btn-add-oferta');
     if (btnAddOferta) {
-        btnAddOferta.innerHTML = '<span class="btn-label-two-line"><span>Salvar</span><span>Componente</span></span>';
+        // So troca o rotulo, para nao apagar o icone de disquete do redesenho
+        const rotulo = btnAddOferta.querySelector('.btn-label-two-line');
+        if (rotulo) rotulo.innerHTML = '<span>Salvar</span> <span>Componente</span>';
+        else btnAddOferta.innerHTML = '<span class="btn-label-two-line"><span>Salvar</span> <span>Componente</span></span>';
     }
 
     applyFaixaDateAutofill({ forceSingleBounds: true });
@@ -3143,8 +3100,6 @@ function setupFaixaControls() {
     setupFaixaQuickActions();
     document.getElementById('btn-faixa-auto-undo')?.addEventListener('click', undoFaixaAutoCreation);
     document.getElementById('btn-faixa-auto-fix')?.addEventListener('click', mergeFaixaAutoCreationIntoPrevious);
-    document.getElementById('btn-gap-ack')?.addEventListener('click', dismissGapAdvisory);
-    document.getElementById('btn-gap-mute')?.addEventListener('click', muteGapAdvisory);
     for (let i = 1; i <= 3; i++) {
         const iniEl = document.getElementById(`inp-data-inicio-f${i}`);
         const fimEl = document.getElementById(`inp-data-fim-f${i}`);
@@ -3585,6 +3540,7 @@ function updateWeeklyNavigatorLabel() {
     }
 
     labelEl.textContent = `Semana ${formatDateBR(weekStart)} a ${formatDateBR(weekEnd)}${suffix}`;
+    labelEl.title = labelEl.textContent;   // o CSS limita a 2 linhas; o texto inteiro fica no mouse
     updateWeeklyFaixaNavButtons();
     updateWeeklyContextNote();
 }
@@ -3627,8 +3583,14 @@ function updateWeeklyContextNote() {
     const titleEl = bar.querySelector('.weekly-status-title');
     const hintEl = bar.querySelector('.weekly-status-hint');
     if (iconEl) iconEl.textContent = status.icon;
-    if (titleEl) titleEl.textContent = status.title;
-    if (hintEl) hintEl.textContent = status.hint;
+    if (titleEl) {
+        titleEl.textContent = status.title;
+        titleEl.title = status.title;   // texto inteiro no mouse (o CSS corta com "..." em uma linha)
+    }
+    if (hintEl) {
+        hintEl.textContent = status.hint;
+        hintEl.title = status.hint;
+    }
 
     // Chip do "encaixe sugerido" (transparencia do deslocamento automatico).
     const chipEl = document.getElementById('weekly-status-chip');
@@ -3645,9 +3607,6 @@ function updateWeeklyContextNote() {
     // Primeiro uso guiado: destaca no Guia Rapido o passo correspondente ao
     // estado atual ("voce esta aqui"), conectando a instrucao ao momento.
     highlightGuideStep(status.step);
-
-    // Nota inline discreta do "dia livre antes" (gapBefore), se aplicavel.
-    updateGapAdvisory();
 }
 
 // Monta o HTML do chip de encaixe sugerido: 📍 data · horario · Nº horario [em paralelo].
@@ -3775,8 +3734,9 @@ function computeWeeklyStatus() {
             tone: isEditing ? 'editing' : 'action',
             icon: isEditing ? '\u270F\uFE0F' : '\u{1F58A}\uFE0F', step: 5,
             title: `${isEditing ? 'Editando' : 'Desenhando'} ${discUpper} \u2014 Faixa 1`,
+            // Com o chip de encaixe (data \u00B7 horario) nao ha dica: o chip ja diz onde comecar.
             hint: chip
-                ? 'Encaixe automatico para poupar cliques. Nao e a semana ideal? Ajuste a data de inicio ou navegue com \u25C0 Semana / Semana \u25B6.'
+                ? ''
                 : 'Clique/arraste nos horarios vagos e clique em "Salvar Componente". Faixas 2 e 3 sao opcionais, para mudancas de horario no periodo.',
             chip
         };
@@ -4695,6 +4655,7 @@ export function initUI() {
     setupCompactFaixaDateFields();
     setupFaixaControls();
     setupWeeklyInstructionsToggle();
+    setupSeletorCor();
     setupWeeklyWeekNavigator();
     setWeeklyViewByDate(store.settings.termStart || calStart?.value || '', { followFaixa: false, render: false });
     if (selCurso) selCurso.addEventListener('change', onCursoChange);
@@ -4770,7 +4731,7 @@ export function initUI() {
                 
                 // Aplica a cor automática (da paleta de 20 cores ou do JSON), com realce de croma
                 if (inputConfig.cor) {
-                    inputConfig.cor.value = vividHexColor(store.getDisciplinaColor(discNome));
+                    inputConfig.cor.value = corParaSeletor(store.getDisciplinaColor(discNome));
                 }
             }
             weeklyState.lastDisciplinaInputNormalized = discNome;
@@ -5643,11 +5604,11 @@ function renderWeeklyGrid() {
     const horariosUI = buildHorariosForUI();
     const diasSemana = [
         { id: 1, nome: 'Segunda' },
-        { id: 2, nome: 'Terca' },
+        { id: 2, nome: 'Terça' },
         { id: 3, nome: 'Quarta' },
         { id: 4, nome: 'Quinta' },
         { id: 5, nome: 'Sexta' },
-        { id: 6, nome: 'Sabado' }
+        { id: 6, nome: 'Sábado' }
     ];
     let isDrawing = !!drawingFaixaIndex;
     if (!isDrawing) {
@@ -6150,6 +6111,15 @@ function createCell(classNames, text) {
     return div;
 }
 
+// Texto do aria-label do botao Remover: "segunda, 14:00 - 14:50".
+const NOMES_DIAS_GRADE = ['', 'segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado'];
+function rotuloCelulaGrade(cell, dayOfWeek) {
+    return `${NOMES_DIAS_GRADE[dayOfWeek] || ''}, ${cell?.dataset?.horario || ''}`;
+}
+function escapeAttrGrade(texto) {
+    return String(texto || '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+}
+
 function renderSlotContent(cell, allocs, dayOfWeek = 0) {
     cell.innerHTML = '';
     const container = document.createElement('div');
@@ -6161,7 +6131,8 @@ function renderSlotContent(cell, allocs, dayOfWeek = 0) {
         const docenteNome = getDocenteShortLabel(alloc.docente) || '';
 
         card.className = 'mini-card';
-        card.style.backgroundColor = vividHexColor(alloc.cor);
+        // Redesenho: tons suaves via variaveis CSS (--bloco-fundo/-borda/-texto)
+        aplicarTonsBloco(card, alloc.cor);
         card.style.cursor = 'pointer';
         if (isPriorityRegularAllocation(alloc)) {
             card.style.border = '2px dashed #000';
@@ -6182,7 +6153,7 @@ function renderSlotContent(cell, allocs, dayOfWeek = 0) {
                 <span class="card-comp">${info.abrev}${getShiftChangeMeta(alloc, alloc.horario, dayOfWeek).badgeHTML || badgeHTML}</span>
                 ${docenteNome ? `<span class="card-docente">${docenteNome}</span>` : ''}
             </div>
-            <span class="remove-btn" title="Remover">×</span>
+            <button type="button" class="remove-btn" title="Remover" aria-label="Remover ${escapeAttrGrade(alloc.disciplina)} de ${escapeAttrGrade(rotuloCelulaGrade(cell, dayOfWeek))}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg></button>
         `;
 
         card.title = `${alloc.disciplina}${docenteNome ? ` - ${docenteNome}` : ''}\nDuplo clique para editar esta alocacao.`;
@@ -6265,7 +6236,7 @@ function applyReplacementDisciplina(discNome) {
         String(a.turmaId) === String(store.selectedTurma) && a.disciplina === discNome && isPendingAllocation(a)
     );
     weeklyState.editingImportadoDraft = !!pendente?.importado;
-    if (inputConfig.cor) inputConfig.cor.value = vividHexColor(store.getDisciplinaColor(discNome));
+    if (inputConfig.cor) inputConfig.cor.value = corParaSeletor(store.getDisciplinaColor(discNome));
 
     const containerSub = document.getElementById('container-sub-turma');
     const inpSub = document.getElementById('inp-sub-turma');
@@ -6298,7 +6269,7 @@ function loadAllocationIntoEditor(allocation, idsToRemove = [], options = {}) {
         inputConfig.disciplina.dispatchEvent(new Event('input'));
     }
     if (inputConfig.cor && a.cor) {
-        const vividCor = vividHexColor(a.cor);
+        const vividCor = corParaSeletor(a.cor);
         inputConfig.cor.value = vividCor;
         setTimeout(() => { inputConfig.cor.value = vividCor; }, 50);
     }

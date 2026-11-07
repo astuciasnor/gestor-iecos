@@ -1,26 +1,26 @@
-import { store } from './store.js?v=202611071733';
-import { buildTeacherExecutionSnapshot, buildCanonicalOfferProjection } from './execution_engine.js?v=202611071733';
-import { filterExportableAllocations } from './academic_rules.mjs?v=202611071733';
-import { normalizeHexColor, hexToRgba } from './color_utils.js?v=202611071733';
-import { formatDateBR, timeToMinutes } from './date_utils_ui.js?v=202611071733';
+import { store } from './store.js?v=202611072022';
+import { buildTeacherExecutionSnapshot, buildCanonicalOfferProjection } from './execution_engine.js?v=202611072022';
+import { filterExportableAllocations } from './academic_rules.mjs?v=202611072022';
+import { normalizeHexColor, hexToRgba } from './color_utils.js?v=202611072022';
+import { formatDateBR, timeToMinutes } from './date_utils_ui.js?v=202611072022';
 import {
     teacherNamesMatch,
     allocationHasTeacherMatch,
     getDocenteShortLabel,
     calculateTeacherTotalCH
-} from './allocation_helpers.js?v=202611071733';
+} from './allocation_helpers.js?v=202611072022';
 import {
     normalizeConflictSlotLabel,
     normalizeTurnoOfertaKey,
     formatTurnoOfertaLabel,
     getAvailableTurnoOfertaOptions,
     getGanttTurnoCode
-} from './turno_helpers.js?v=202611071733';
+} from './turno_helpers.js?v=202611072022';
 import {
     getDisciplinaCHGlobal,
     getTurmaLabel,
     getDisciplinaInfo
-} from './curso_turma_helpers.js?v=202611071733';
+} from './curso_turma_helpers.js?v=202611072022';
 
 // Referencias DOM de nivel de modulo (espelham as de ui.js). O modulo e carregado
 // como script deferred (via ui.js <- main.js), entao o DOM ja esta pronto aqui.
