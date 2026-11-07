@@ -1,32 +1,32 @@
-import { store } from './store.js?v=202611071045';
-import { getTurnoLetter, mapSlotToTurno } from './turns.js?v=202611071045';
-import { normalizePeriodo as normalizePeriodoLetivoCode } from './plan_storage.js?v=202611071045';
-import { getCalendarEvents } from './calendar.js?v=202611071045';
-import { isDateOverlap } from './utils.js?v=202611071045';
-import { weeklyState } from './weekly_state.js?v=202611071045';
-import { findPendentesCobertas, isPendenteJaAlocada } from './pendentes.mjs?v=202611071045';
-import { classifySwap } from './troca_ordem.mjs?v=202611071045';
-import { buildCanonicalOfferProjection } from './execution_engine.js?v=202611071045';
+import { store } from './store.js?v=202611071134';
+import { getTurnoLetter, mapSlotToTurno } from './turns.js?v=202611071134';
+import { normalizePeriodo as normalizePeriodoLetivoCode } from './plan_storage.js?v=202611071134';
+import { getCalendarEvents } from './calendar.js?v=202611071134';
+import { isDateOverlap } from './utils.js?v=202611071134';
+import { weeklyState } from './weekly_state.js?v=202611071134';
+import { findPendentesCobertas, isPendenteJaAlocada } from './pendentes.mjs?v=202611071134';
+import { classifySwap } from './troca_ordem.mjs?v=202611071134';
+import { buildCanonicalOfferProjection } from './execution_engine.js?v=202611071134';
 import {
     buildSigaaMetadataPayload,
     validateSigaaMetadataPayload,
     getSigaaCode,
     buildScopedSigaaAllocationFromOfferFaixa
-} from './sigaa_metadata.js?v=202611071045';
-import { parseBackupDataFile, extractImportPlanMeta } from './serialization.js?v=202611071045';
+} from './sigaa_metadata.js?v=202611071134';
+import { parseBackupDataFile, extractImportPlanMeta } from './serialization.js?v=202611071134';
 import {
     showToastWarning,
     showPersistentStatusMessage,
     copyTextToClipboard,
     flashButtonCopyState,
     setupCopyActionButtons
-} from './ui_feedback.js?v=202611071045';
+} from './ui_feedback.js?v=202611071134';
 import {
     normalizeHexColor,
     adjustHexColor,
     hexToRgba,
     vividHexColor
-} from './color_utils.js?v=202611071045';
+} from './color_utils.js?v=202611071134';
 import {
     isFaixaAllocation,
     isPriorityRegularAllocation,
@@ -35,7 +35,7 @@ import {
     normalizeTeacherNameForMatch,
     getDocenteShortLabel,
     getAllocationTeachersForConflict
-} from './allocation_helpers.js?v=202611071045';
+} from './allocation_helpers.js?v=202611071134';
 import {
     VINCULOS_DOCENTE_NOVO,
     OUTRA_UNIDADE,
@@ -44,9 +44,9 @@ import {
     findSimilarNames,
     problemaNoNome,
     limparEspacos
-} from './docente_nomes.mjs?v=202611071045';
-import { getSessionEmail, getPerfil, fetchAllocationsForPlans } from './sync_remoto.js?v=202611071045';
-import { resolveBackendMode } from './backend_config.js?v=202611071045';
+} from './docente_nomes.mjs?v=202611071134';
+import { getSessionEmail, getPerfil, fetchAllocationsForPlans } from './sync_remoto.js?v=202611071134';
+import { resolveBackendMode } from './backend_config.js?v=202611071134';
 import {
     normalizeConflictSlotLabel,
     getAvailableTurnoOfertaOptions,
@@ -55,7 +55,7 @@ import {
     isTurnoDividerSlot,
     buildHorariosForUI,
     getShiftChangeMeta
-} from './turno_helpers.js?v=202611071045';
+} from './turno_helpers.js?v=202611071134';
 import {
     getDisciplinaCHGlobal,
     derivarBloco,
@@ -64,19 +64,18 @@ import {
     getTurmaBaseLabel,
     getDisciplinaInfo,
     getPrintAcademicMetaLine
-} from './curso_turma_helpers.js?v=202611071045';
-import {
-    renderGanttChart
-} from './gantt_ui.js?v=202611071045';
+} from './curso_turma_helpers.js?v=202611071134';
 import {
     renderMonthlyCalendar,
     renderTeacherCalendar,
     setTeacherRangeLoader,
-    clearTeacherRangeCache
-} from './calendarios_ui.js?v=202611071045';
+    clearTeacherRangeCache,
+    setTeacherPeriod,
+    getTeacherPeriod
+} from './calendarios_ui.js?v=202611071134';
 import {
     refreshTeacherConflictsUI
-} from './conflitos_ui.js?v=202611071045';
+} from './conflitos_ui.js?v=202611071134';
 import {
     shouldIgnoreTurmaEventForCandidate,
     normalizeDrawnSlotsByDay,
@@ -90,7 +89,7 @@ import {
     resolveEditableFaixasFromStoredExecution,
     alignFaixasToExecutionEnd,
     buildFinalAdjustmentFaixaSuggestion
-} from './faixa_utils.js?v=202611071045';
+} from './faixa_utils.js?v=202611071134';
 import {
     timeToMinutes,
     shiftISODate,
@@ -104,14 +103,14 @@ import {
     isDateInsideRange,
     formatDateBRShortYear,
     formatDateBR
-} from './date_utils_ui.js?v=202611071045';
+} from './date_utils_ui.js?v=202611071134';
 import {
     initializeWeeklyScheduleForTurma,
     reconcileTurmaSelectionAfterPLChange,
     resetWeeklyViewOnTurmaChange,
     resolveActiveAcademicPeriod,
     slotLabelsOverlap
-} from './academic_rules.mjs?v=202611071045';
+} from './academic_rules.mjs?v=202611071134';
 
 const gridContainer = document.getElementById('weekly-grid');
 const selCurso = document.getElementById('sel-curso');
@@ -274,10 +273,10 @@ function applySidebarLayoutFixes() {
     }
 }
 
-// ===== Intervalo com varios PLs no Calendario Docente =====
-// Quando as datas passam do PL aberto (ex.: o ano inteiro), o calendario do
-// docente (calendarios_ui.js) pede aqui os PLs do intervalo: do servidor (modo
-// online) ou do navegador (modo local). Nada e gravado.
+// ===== Outros PLs no Calendario Docente =====
+// Para o ano inteiro ou um PL que nao esta aberto na barra lateral, o
+// calendario do docente (calendarios_ui.js) pede aqui os PLs do intervalo: do
+// servidor (modo online) ou do navegador (modo local). Nada e gravado.
 function getPlansInRange(start, end) {
     const rawPlans = Array.isArray(store.rawData?.periodos_letivos) ? store.rawData.periodos_letivos : [];
     return rawPlans
@@ -310,31 +309,65 @@ async function loadTeacherRangePlans(start, end) {
     return metas.map((meta) => ({ meta, allocations: byKey[meta.key] || [] }));
 }
 
-// "Ano inteiro": so preenche as datas de 1o de janeiro a 31 de dezembro do ano
-// escolhido; o resto e o mesmo caminho das datas digitadas.
+/// Periodo do Calendario Docente: ano + "Ano inteiro" (PL1..PL4 do ano) ou um
+// PL do ano. Sem escolha, mostra o PL aberto na barra lateral.
 function setupTeacherYearControls() {
     setTeacherRangeLoader(loadTeacherRangePlans);
 
     const selAno = document.getElementById('sel-ano-teacher');
     const btnAno = document.getElementById('btn-ano-inteiro-teacher');
+    const boxPLs = document.getElementById('docente-pl-buttons');
     if (!selAno || !btnAno) return;
 
     const rawPlans = Array.isArray(store.rawData?.periodos_letivos) ? store.rawData.periodos_letivos : [];
-    const years = [...new Set(rawPlans
-        .map((item) => String(item?.ano || String(item?.inicio || '').slice(0, 4)))
-        .filter((year) => /^\d{4}$/.test(year)))].sort();
+    const anoDe = (item) => String(item?.ano || String(item?.inicio || '').slice(0, 4));
+    const years = [...new Set(rawPlans.map(anoDe).filter((year) => /^\d{4}$/.test(year)))].sort();
     selAno.innerHTML = years.map((year) => `<option value="${year}">${year}</option>`).join('');
     const activeYear = String(store.settings?.termStart || '').slice(0, 4);
     if (years.includes(activeYear)) selAno.value = activeYear;
 
-    btnAno.addEventListener('click', () => {
+    const mostrar = (periodo) => {
         if (!String(selViewDocente?.value || '').trim()) {
-            showToastWarning('Selecione um professor primeiro para ver o ano inteiro.', 'warning', 2400);
+            showToastWarning('Selecione um professor primeiro.', 'warning', 2400);
             return;
         }
-        if (calStartTeacher) calStartTeacher.value = `${selAno.value}-01-01`;
-        if (calEndTeacher) calEndTeacher.value = `${selAno.value}-12-31`;
-        handleTeacherViewportChange();
+        setTeacherPeriod(periodo);
+        renderActiveSubtab('tab-teacher', 'docente-calendar');
+    };
+
+    // Um botao por PL do ano escolhido (PL1..PL4).
+    const montarBotoesPL = () => {
+        if (!boxPLs) return;
+        boxPLs.innerHTML = '';
+        rawPlans
+            .filter((item) => anoDe(item) === selAno.value && item?.inicio && item?.fim)
+            .sort((a, b) => String(a.inicio).localeCompare(String(b.inicio)))
+            .forEach((item) => {
+                const meta = store.getPlanMetaFromSettings({
+                    periodo: item.periodo_letivo || item.periodo || '',
+                    termStart: item.inicio,
+                    termEnd: item.fim
+                });
+                if (!meta?.key) return;
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'docente-periodo-btn';
+                btn.dataset.planKey = meta.key;
+                btn.textContent = meta.periodo;
+                btn.title = `${selAno.value} - ${meta.periodo}: ${formatDateBR(meta.termStart)} a ${formatDateBR(meta.termEnd)}`;
+                btn.setAttribute('aria-pressed', 'false');
+                btn.addEventListener('click', () => mostrar({ tipo: 'pl', meta }));
+                boxPLs.appendChild(btn);
+            });
+    };
+    montarBotoesPL();
+
+    btnAno.addEventListener('click', () => mostrar({ tipo: 'ano', ano: selAno.value }));
+    selAno.addEventListener('change', () => {
+        montarBotoesPL();
+        // Com o ano inteiro na tela, troca direto para o novo ano.
+        if (getTeacherPeriod()?.tipo === 'ano') mostrar({ tipo: 'ano', ano: selAno.value });
+        else renderActiveSubtab('tab-teacher', 'docente-calendar');
     });
 }
 
@@ -7554,6 +7587,9 @@ function switchTab(tabId) {
     if (tabId === 'teacher') {
         renderActiveSubtab('tab-teacher', 'docente-calendar');
     }
+    if (tabId === 'publica') {
+        renderAgendaPublica();
+    }
     if (tabId === 'list') {
         renderOfertasList();
     }
@@ -7571,33 +7607,21 @@ function renderSubtabContent(subtabId) {
         case 'docente-calendar':
             refreshTeacherConflictsUI();
             break;
-        case 'docente-gantt':
-            renderGanttChart();
-            break;
-        case 'docente-celular':
-            renderCelularDocente();
-            break;
         default:
             break;
     }
 }
 
-// Visao "Celular" do docente: a propria agenda publica numa moldura de celular,
-// ja aberta no professor escolhido (Resumo do ano e calendario de cada mes).
-function renderCelularDocente({ recarregar = false } = {}) {
-    const moldura = document.getElementById('celular-docente-moldura');
-    const frame = document.getElementById('celular-docente-frame');
-    const vazio = document.getElementById('celular-docente-vazio');
-    if (!moldura || !frame || !vazio) return;
-    const nome = String(selViewDocente?.value || '').trim();
-    vazio.hidden = !!nome;
-    moldura.hidden = !nome;
-    if (!nome) return;
-    const url = `agenda_publica.html?docente=${encodeURIComponent(nome)}`;
-    // So recarrega ao trocar de professor (ou a pedido), para nao perder a navegacao.
-    if (recarregar || frame.dataset.url !== url) {
-        frame.dataset.url = url;
-        frame.src = url;
+// Menu Agenda Publica: a propria agenda publica (o que alunos e professores
+// veem), em tela larga. Carrega na primeira vez que o menu e aberto; depois so
+// a pedido (Recarregar), para nao perder o que se navegou nela.
+function renderAgendaPublica({ recarregar = false } = {}) {
+    const frame = document.getElementById('agenda-publica-frame');
+    if (!frame) return;
+    if (!frame.getAttribute('src')) {
+        frame.src = 'agenda_publica.html';
+    } else if (recarregar) {
+        try { frame.contentWindow.location.reload(); } catch (e) { frame.src = 'agenda_publica.html'; }
     }
 }
 
@@ -7626,7 +7650,7 @@ function setupSubtabs() {
     document.querySelectorAll('.subtab-btn').forEach((btn) => {
         btn.addEventListener('click', () => activateSubtab(btn.dataset.subtab));
     });
-    document.getElementById('btn-celular-recarregar')?.addEventListener('click', () => renderCelularDocente({ recarregar: true }));
+    document.getElementById('btn-agenda-publica-recarregar')?.addEventListener('click', () => renderAgendaPublica({ recarregar: true }));
 }
 
 export { renderWeeklyGrid, renderOfertasList, renderMonthlyCalendar, renderTeacherCalendar };

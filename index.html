@@ -10,7 +10,7 @@
         // Vai para o aviso antes de carregar o programa. A agenda publica nao passa por aqui.
         if (/\.github\.io$/i.test(location.hostname)) location.replace('mudou.html');
     </script>
-    <link rel="stylesheet" href="css/style.css?v=202611071045">
+    <link rel="stylesheet" href="css/style.css?v=202611071134">
 
     <style>
         :root {
@@ -774,6 +774,7 @@
                     <button type="button" class="tab-btn tab-btn--oferta" data-tab="list" id="tabbtn-list" role="tab" aria-controls="tab-list" aria-selected="false" tabindex="-1">Lista de Ofertas</button>
                     <button type="button" class="tab-btn" data-tab="monthly" id="tabbtn-monthly" role="tab" aria-controls="tab-monthly" aria-selected="false" tabindex="-1">Calendário da Turma</button>
                     <button type="button" class="tab-btn" data-tab="teacher" id="tabbtn-teacher" role="tab" aria-controls="tab-teacher" aria-selected="false" tabindex="-1">Calendário Docente</button>
+                    <button type="button" class="tab-btn" data-tab="publica" id="tabbtn-publica" role="tab" aria-controls="tab-publica" aria-selected="false" tabindex="-1">Agenda Pública</button>
                     <button type="button" class="tab-btn" data-tab="tutorial" id="tabbtn-tutorial" role="tab" aria-controls="tab-tutorial" aria-selected="false" tabindex="-1" style="color: var(--accent);">❓ Ajuda</button>
                 </nav>
 
@@ -1091,13 +1092,6 @@
 
             <section id="tab-teacher" class="tab-content" role="tabpanel" aria-labelledby="tabbtn-teacher">
                 <div class="docente-filter-layout no-print">
-                    <nav class="docente-view-card" aria-label="Visualização da agenda docente">
-                        <div class="subtab-switch" role="tablist" aria-label="Visualizações do docente">
-                            <button type="button" class="subtab-btn active" data-subtab="docente-calendar" role="tab" aria-selected="true"><span class="docente-view-icon" aria-hidden="true">📅</span> Calendário</button>
-                            <button type="button" class="subtab-btn" data-subtab="docente-gantt" role="tab" aria-selected="false"><span class="docente-view-icon" aria-hidden="true">📊</span> Gantt</button>
-                            <button type="button" class="subtab-btn" data-subtab="docente-celular" role="tab" aria-selected="false" title="Como o professor vê a agenda pública no celular"><span class="docente-view-icon" aria-hidden="true">📱</span> Celular</button>
-                        </div>
-                    </nav>
                     <section class="docente-filter-panel" aria-label="Filtros da agenda docente">
                         <div class="docente-filter-group docente-filter-group--teacher">
                             <label class="docente-filter-label" for="sel-view-docente">Selecione o Docente para Visualizar sua Agenda:</label>
@@ -1113,35 +1107,13 @@
                             <datalist id="list-view-docentes"></datalist>
                             <button id="btn-refresh-teacher" class="docente-icon-btn docente-icon-btn--refresh" type="button" title="Atualizar agenda deste docente" aria-label="Atualizar agenda deste docente">⟳</button>
                         </div>
-                        <div class="docente-filter-group docente-filter-group--period">
-                            <label class="docente-filter-label" for="cal-start-teacher">Especifique um Período de Visualização:</label>
-                            <div class="docente-date-range">
-                                <div class="docente-date-field">
-                                    <input type="date" id="cal-start-teacher" value="2025-10-13" aria-label="Data inicial">
-                                    <button type="button" class="docente-date-picker-btn" data-date-picker-for="cal-start-teacher" title="Selecionar data inicial" aria-label="Selecionar data inicial">▣</button>
-                                </div>
-                                <div class="docente-date-field">
-                                    <input type="date" id="cal-end-teacher" value="2026-02-27" aria-label="Data final">
-                                    <button type="button" class="docente-date-picker-btn" data-date-picker-for="cal-end-teacher" title="Selecionar data final" aria-label="Selecionar data final">▣</button>
-                                </div>
-                            </div>
-                            <div class="docente-period-actions">
-                                <button id="btn-gerar-cal-teacher" type="button" class="docente-update-btn"
-                                    title="Atualizar a agenda do docente no período selecionado."><span aria-hidden="true">⟳</span> Atualizar</button>
-                                <div class="docente-plan-period-row">
-                                    <button id="btn-use-plan-period" type="button" class="docente-plan-period-btn"
-                                        title="Usar as datas de início e fim do período letivo.">Período do PL</button>
-                                    <button id="btn-reset-view-period-teacher" type="button" class="docente-plan-period-refresh"
-                                        title="Recarregar as datas de início e fim do período letivo." aria-label="Recarregar as datas do período letivo">⟳</button>
-                                </div>
-                            </div>
-                        </div>
                         <div class="docente-filter-group docente-filter-group--year">
-                            <label class="docente-filter-label" for="sel-ano-teacher">Ou Veja o Ano Inteiro:</label>
+                            <label class="docente-filter-label" for="sel-ano-teacher">Especifique o Período de Visualização:</label>
                             <div class="docente-year-row">
                                 <select id="sel-ano-teacher" aria-label="Ano"></select>
-                                <button id="btn-ano-inteiro-teacher" type="button" class="docente-update-btn" aria-pressed="false"
+                                <button id="btn-ano-inteiro-teacher" type="button" class="docente-periodo-btn" aria-pressed="false"
                                     title="Mostrar PL1 a PL4 do ano escolhido: a carga horária de cada PL e do ano, e o calendário de janeiro a dezembro.">📆 Ano inteiro</button>
+                                <div id="docente-pl-buttons" class="docente-pl-buttons" role="group" aria-label="Período letivo"></div>
                             </div>
                         </div>
                     </section>
@@ -1149,26 +1121,20 @@
                 <div id="subview-docente-calendar" class="subtab-view active">
                     <div id="teacher-calendar-container"></div>
                 </div>
-                <div id="subview-docente-gantt" class="subtab-view">
-                    <div id="gantt-container-docente" class="gantt-wrapper">
-                        <div style="text-align: center; color: #7f8c8d; margin-top: 50px; font-size: 1.1em;">
-                            Selecione um professor acima para visualizar o cronograma (Gantt).
+            </section>
+
+            <section id="tab-publica" class="tab-content" role="tabpanel" aria-labelledby="tabbtn-publica">
+                <div class="agenda-publica-aba">
+                    <div class="agenda-publica-aviso no-print">
+                        <div>
+                            <strong>É o que os alunos e os professores veem</strong> (no celular ou no computador):
+                            a <b>Agenda Discente</b> por curso, turma e período, e a <b>Agenda Docente</b> de cada professor.
+                            Mostra o que está <b>publicado</b>: as alocações novas aparecem aqui depois do <b>Publicar Online</b>.
                         </div>
+                        <button type="button" id="btn-agenda-publica-recarregar" class="agenda-publica-recarregar" title="Carregar de novo a agenda publicada">⟳ Recarregar</button>
                     </div>
-                </div>
-                <div id="subview-docente-celular" class="subtab-view">
-                    <div class="celular-docente">
-                        <p id="celular-docente-vazio" class="celular-docente-vazio">
-                            Selecione um professor acima para ver a agenda como ele vê no celular.
-                        </p>
-                        <div id="celular-docente-moldura" class="celular-moldura" hidden>
-                            <iframe id="celular-docente-frame" title="Agenda pública no celular"></iframe>
-                        </div>
-                        <p class="celular-docente-nota">
-                            É a agenda pública, como o professor vê: <b>Resumo do ano</b> e calendário de cada mês.
-                            Mostra o que está publicado; alterações aparecem depois do <b>Publicar Online</b>.
-                            <button type="button" id="btn-celular-recarregar" class="celular-docente-recarregar">⟳ Recarregar</button>
-                        </p>
+                    <div class="visao-publica-moldura">
+                        <iframe id="agenda-publica-frame" title="Agenda pública (o que os alunos e professores veem)"></iframe>
                     </div>
                 </div>
             </section>
@@ -1322,7 +1288,7 @@
                                         <span class="wf-audit-flags">&#9989;&#9888;&#65039;</span>
                                     </div>
                                 </div>
-                                <p class="wf-step__caption">Revisar Lista de Ofertas; auditar inconsist&ecirc;ncias nos Calend&aacute;rios e Gantt.</p>
+                                <p class="wf-step__caption">Revisar Lista de Ofertas; auditar inconsist&ecirc;ncias nos Calend&aacute;rios.</p>
                             </article>
                         </div>
                     </section>
@@ -1340,7 +1306,7 @@
                                     indicam ocupação real na semana visível. Navegue entre semanas ou ajuste
                                     início/faixa para visualizar e editar corretamente.</li>
                                 <li style="margin-bottom: 10px;"><strong>Turnos e sábado:</strong> aulas em turno
-                                    diferente do nativo recebem um <b>aviso visual</b> nos calendários, agendas e Gantt.
+                                    diferente do nativo recebem um <b>aviso visual</b> nos calendários e agendas.
                                     Se necessário, mude o turno visível da grade para enxergar esses slots.</li>
                             </ul>
                         </div>
@@ -1396,20 +1362,25 @@
                         </div>
 
                         <div class="tutorial-card" style="background-color: #fdf2f8; border-left-color: #8e44ad;">
-                            <h4 style="font-size:1.05em;">📊 5. Gráfico de Gantt por Docente</h4>
-                            <p style="font-size:0.97em;">O <strong>Gráfico de Gantt</strong> agora usa a mesma base canonica dos calendarios e exibe a carga de cada
-                                professor em ordem cronológica, com leitura por turno e detalhes de barra.</p>
+                            <h4 style="font-size:1.05em;">👩‍🏫 5. Calendário Docente e Agenda Pública</h4>
+                            <p style="font-size:0.97em;">O <strong>Calendário Docente</strong> é a ferramenta de conferência: carga horária,
+                                sobreposições e conflitos do professor, com o que está sendo alocado agora.</p>
                             <ul style="padding-left:20px; font-size:0.95em; line-height:1.8;">
-                                <li><strong>Turma + Código + Abreviação</strong>: ex.
-                                    <code>EP2026 EP05003 LabInfo (30h)</code>
-                                </li>
-                                <li>As linhas respeitam os <strong>turnos reais</strong> da execução, inclusive quando houver mudança excepcional de turno.</li>
-                                <li>Quando a disciplina é <strong>subdividida em sub-turmas</strong>, aparece o prefixo:
-                                    <code>[T01]</code> ou <code>[T02]</code> antes do nome.
-                                </li>
-                                <li>Quando a disciplina é <strong>compartilhada entre docentes</strong>, a fatia do
-                                    outro professor mostra o nome e CH dele.</li>
+                                <li><strong>Período:</strong> escolha o ano e clique em <b>Ano inteiro</b> (PL1 a PL4) ou em
+                                    <b>PL1</b>, <b>PL2</b>, <b>PL3</b> ou <b>PL4</b>. Sem escolha, aparece o PL aberto na barra lateral.</li>
+                                <li><strong>Tabela do docente:</strong> começa com o nome do professor (pode ser enviada sozinha a ele)
+                                    e tem uma linha por faixa, com dia, período e <b>horário</b>.</li>
+                                <li><strong>CH docente:</strong> <code>60</code> quando ele dá a componente toda;
+                                    <code>30/90</code> quando a divide com outros (parte dele / CH da componente).</li>
+                                <li><strong>CH alocada:</strong> horas já colocadas no calendário para ele —
+                                    <span style="color:#15803d; font-weight:700;">verde</span> quando batem com a CH docente,
+                                    <span style="color:#c0392b; font-weight:700;">vermelha</span> quando não.</li>
+                                <li><strong>Conflitos:</strong> o selo no topo fica verde sem conflito; com conflito, fica vermelho
+                                    e a tabela de conflitos aparece logo abaixo.</li>
                             </ul>
+                            <p style="font-size:0.97em;">O menu <strong>Agenda Pública</strong> mostra o que os alunos e os professores
+                                veem (Agenda Discente e Agenda Docente), em tela larga. É o que está <b>publicado</b>: as alocações
+                                novas aparecem lá depois do <b>Publicar Online</b>.</p>
                         </div>
 
                         <div class="tutorial-card" style="background-color: #e8f8f5; border-left-color: #1abc9c;">
@@ -1467,7 +1438,7 @@
                                     para verificar choques globais.
                                 </li>
                                 <li style="margin-bottom:8px;">📅 <strong>Botões Refresh:</strong><br>Nas abas de
-                                    Calendário (Turma/Professor) e Gráfico Gantt, use os botões azuis <b>🔄
+                                    Calendário (Turma/Professor), use os botões azuis <b>🔄
                                         Atualizar</b> sempre que fizer uma mudança, para renderizar as novidades
                                     imediatamente.</li>
                                 <li>🌐 <strong>Publicação:</strong><br>O botão verde <b>"Publicar Online"</b> (só o administrador)
@@ -1523,7 +1494,7 @@
         </main>
     </div>
 
-    <script type="module" src="js/main.js?v=202611071045"></script>
+    <script type="module" src="js/main.js?v=202611071134"></script>
 </body>
 
 </html>

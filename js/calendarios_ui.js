@@ -1,9 +1,9 @@
-import { store } from './store.js?v=202611071045';
-import { getCalendarEvents } from './calendar.js?v=202611071045';
-import { buildTeacherExecutionSnapshot, buildCanonicalOfferProjection } from './execution_engine.js?v=202611071045';
-import { getHorariosByTurno, normalizeTurnoKey, getTurnoLetter, mapSlotToTurno } from './turns.js?v=202611071045';
-import { vividHexColor } from './color_utils.js?v=202611071045';
-import { formatDateBR, timeToMinutes, shortDayName } from './date_utils_ui.js?v=202611071045';
+import { store } from './store.js?v=202611071134';
+import { getCalendarEvents } from './calendar.js?v=202611071134';
+import { buildTeacherExecutionSnapshot, buildCanonicalOfferProjection } from './execution_engine.js?v=202611071134';
+import { getHorariosByTurno, normalizeTurnoKey, getTurnoLetter, mapSlotToTurno } from './turns.js?v=202611071134';
+import { vividHexColor } from './color_utils.js?v=202611071134';
+import { formatDateBR, timeToMinutes, shortDayName } from './date_utils_ui.js?v=202611071134';
 import {
     isFaixaAllocation,
     isScheduledRegularAllocation,
@@ -11,7 +11,7 @@ import {
     teacherNamesMatch,
     getDocenteShortLabel,
     calculateTeacherTotalCH
-} from './allocation_helpers.js?v=202611071045';
+} from './allocation_helpers.js?v=202611071134';
 import {
     normalizeTurnoOfertaKey,
     formatTurnoOfertaLabel,
@@ -21,18 +21,18 @@ import {
     buildHorariosForUI,
     getShiftChangeMeta,
     getCalendarShiftBadgeHTML
-} from './turno_helpers.js?v=202611071045';
+} from './turno_helpers.js?v=202611071134';
 import {
     getDisciplinaCHGlobal,
     getTurmaLabel,
     getTurmaBaseLabel,
     getDisciplinaInfo,
     getPrintAcademicMetaLine
-} from './curso_turma_helpers.js?v=202611071045';
+} from './curso_turma_helpers.js?v=202611071134';
 import {
     getGanttTurnoConfigs,
     resolveTeacherShiftForSlot
-} from './gantt_ui.js?v=202611071045';
+} from './gantt_ui.js?v=202611071134';
 
 // Referencias DOM de nivel de modulo (espelham as de ui.js; modulo deferred, DOM pronto).
 const selViewDocente = document.getElementById('sel-view-docente');
@@ -287,21 +287,23 @@ export function renderTeacherCalendar() {
     const docente = selViewDocente.value;
     if (!docente) return (container.innerHTML = '<p>Selecione um professor.</p>');
 
-    const start = calStart ? calStart.value : '2025-01-01';
-    let end = calEnd ? calEnd.value : '2025-12-31';
+    // Periodo escolhido nos botoes do docente (Ano inteiro, PL1..PL4). Sem
+    // escolha, ou com o PL aberto na barra lateral, e o calendario de sempre.
+    const periodo = resolveTeacherPeriod();
+    updatePeriodButtons();
+    const start = periodo.start || (calStart ? calStart.value : '');
+    let end = periodo.end || (calEnd ? calEnd.value : '');
 
-    // Intervalo que passa do PL aberto (ex.: o ano inteiro): junta todos os PLs
-    // do intervalo. Enquanto os outros PLs chegam do servidor, mostra o PL aberto.
-    const carregandoOutrosPLs = intervalExceedsActivePlan(start, end) && !!teacherRangeLoader;
-    updateYearButton(start, end, carregandoOutrosPLs);
+    // Ano inteiro ou outro PL: junta os PLs pedidos. Enquanto eles chegam do
+    // servidor, mostra o PL aberto.
+    const carregandoOutrosPLs = periodo.multi && !!teacherRangeLoader;
     if (carregandoOutrosPLs) {
-        if (teacherRangeView && teacherRangeView.start === start && teacherRangeView.end === end) {
+        if (teacherRangeView && teacherRangeView.key === periodo.key) {
             renderTeacherRangeCalendar(container, docente, teacherRangeView);
             return;
         }
-        requestTeacherRange(start, end);
+        requestTeacherRange(periodo);
     }
-
     if (end) {
         const dt = new Date(end + 'T12:00:00');
         const lastDay = new Date(dt.getFullYear(), dt.getMonth() + 1, 0);
@@ -335,9 +337,9 @@ export function renderTeacherCalendar() {
                 <span class="print-title-sub">${docenteTitle}</span>
             </div>
             ${carregandoOutrosPLs ? `<div class="no-print" style="background:#fff7e6; color:#7a4b00; border:1px solid #f3d9a4; border-radius:8px; padding:10px 14px; font-weight:700;">${
-                teacherRangeFailed === `${start}|${end}`
-                    ? 'Não foi possível ler os outros períodos letivos do intervalo: aparece só o PL aberto. Clique em ⟳ ao lado do docente para tentar de novo.'
-                    : 'Buscando os outros períodos letivos do intervalo... (por enquanto aparece só o PL aberto)'
+                teacherRangeFailed === periodo.key
+                    ? 'Não foi possível ler os outros períodos letivos do servidor: aparece só o PL aberto na barra lateral. Clique em ⟳ ao lado do docente para tentar de novo.'
+                    : 'Buscando os períodos letivos escolhidos... (por enquanto aparece o PL aberto na barra lateral)'
             }</div>` : ''}
             <div style="display:flex; flex-wrap:wrap; gap:10px; align-items:center;">
                 <div style="background:#eef6f0; color:#1f5d3a; border:1px solid #cfe8d7; border-radius:999px; padding:8px 14px; font-weight:700;">Turnos ativos: ${shiftSummary}</div>
@@ -355,13 +357,15 @@ export function renderTeacherCalendar() {
     });
 }
 
-// ===== Intervalo com varios PLs (ex.: o ano inteiro) =====
-// Quando as datas de visualizacao passam do PL aberto, o calendario do docente
-// junta todos os PLs do intervalo: tabela por PL (com subtotal) e um calendario
-// so. Os PLs que nao estao abertos vem do teacherRangeLoader (ui.js: servidor ou
-// navegador); o PL aberto usa sempre store.allocations, para refletir na hora
-// o que se edita nele. Nada e gravado.
-let teacherRangeView = null;       // { start, end, plans: [{ meta, allocations }] }
+/// ===== Ano inteiro ou outro PL no Calendario Docente =====
+// O periodo do docente e escolhido pelos botoes (ano + "Ano inteiro" ou
+// PL1..PL4) e nao mexe nas datas do Calendario da Turma. Ano inteiro junta
+// PL1..PL4: tabela por PL (com subtotal) e um calendario so. Os PLs que nao
+// estao abertos vem do teacherRangeLoader (ui.js: servidor ou navegador); o PL
+// aberto usa sempre store.allocations, para refletir na hora o que se edita
+// nele. Nada e gravado.
+let teacherPeriod = null;          // null | { tipo: 'ano', ano } | { tipo: 'pl', meta }
+let teacherRangeView = null;       // { key, start, end, only, plans: [{ meta, allocations }] }
 let teacherRangeLoader = null;     // async (start, end) => [{ meta, allocations }]
 let teacherRangeLoading = '';
 let teacherRangeFailed = '';
@@ -370,17 +374,40 @@ export function setTeacherRangeLoader(loader) {
     teacherRangeLoader = typeof loader === 'function' ? loader : null;
 }
 
+export function setTeacherPeriod(period) {
+    teacherPeriod = period && (period.tipo === 'ano' || period.tipo === 'pl') ? period : null;
+}
+
+export function getTeacherPeriod() {
+    return teacherPeriod;
+}
+
 // Botao de atualizar do docente: busca de novo os outros PLs.
 export function clearTeacherRangeCache() {
     teacherRangeView = null;
     teacherRangeFailed = '';
 }
 
-function intervalExceedsActivePlan(start, end) {
-    const termStart = String(store.settings?.termStart || '');
-    const termEnd = String(store.settings?.termEnd || '');
-    if (!start || !end || !termStart || !termEnd || start > end) return false;
-    return start < termStart || end > termEnd;
+function activePlanKey() {
+    return store.activePlanMeta?.key || '';
+}
+
+// { multi, key, start, end, only }: multi = precisa juntar PLs que nao estao abertos.
+function resolveTeacherPeriod() {
+    if (teacherPeriod?.tipo === 'ano') {
+        const ano = String(teacherPeriod.ano);
+        return { multi: true, key: `ano|${ano}`, start: `${ano}-01-01`, end: `${ano}-12-31`, only: '' };
+    }
+    const meta = teacherPeriod?.tipo === 'pl' ? teacherPeriod.meta : null;
+    if (meta?.key && meta.key !== activePlanKey()) {
+        return { multi: true, key: `pl|${meta.key}`, start: meta.termStart, end: meta.termEnd, only: meta.key };
+    }
+    return {
+        multi: false,
+        key: '',
+        start: String(store.settings?.termStart || ''),
+        end: String(store.settings?.termEnd || '')
+    };
 }
 
 function isFullYear(start, end) {
@@ -388,19 +415,25 @@ function isFullYear(start, end) {
     return !!year && start === `${year}-01-01` && end === `${year}-12-31`;
 }
 
-// O botao "Ano inteiro" fica marcado quando o intervalo e um ano completo.
-function updateYearButton(start, end, rangeMode) {
-    const btn = document.getElementById('btn-ano-inteiro-teacher');
-    if (!btn) return;
-    const active = rangeMode && isFullYear(start, end);
-    btn.classList.toggle('is-active', active);
-    btn.setAttribute('aria-pressed', active ? 'true' : 'false');
-    const sel = document.getElementById('sel-ano-teacher');
-    if (active && sel && [...sel.options].some((o) => o.value === start.slice(0, 4))) sel.value = start.slice(0, 4);
+// Marca o botao do periodo exibido: "Ano inteiro" ou o PL (sem escolha, o PL
+// aberto na barra lateral, se for do ano escolhido).
+function updatePeriodButtons() {
+    const anoAtivo = teacherPeriod?.tipo === 'ano';
+    const btnAno = document.getElementById('btn-ano-inteiro-teacher');
+    if (btnAno) {
+        btnAno.classList.toggle('is-active', anoAtivo);
+        btnAno.setAttribute('aria-pressed', anoAtivo ? 'true' : 'false');
+    }
+    const plKey = anoAtivo ? '' : (teacherPeriod?.tipo === 'pl' ? teacherPeriod.meta?.key : activePlanKey());
+    document.querySelectorAll('#docente-pl-buttons [data-plan-key]').forEach((btn) => {
+        const ativo = !!plKey && btn.dataset.planKey === plKey;
+        btn.classList.toggle('is-active', ativo);
+        btn.setAttribute('aria-pressed', ativo ? 'true' : 'false');
+    });
 }
 
-function requestTeacherRange(start, end) {
-    const key = `${start}|${end}`;
+function requestTeacherRange(periodo) {
+    const { key, start, end, only } = periodo;
     if (teacherRangeLoading === key || teacherRangeFailed === key) return;
     teacherRangeLoading = key;
     Promise.resolve()
@@ -408,14 +441,15 @@ function requestTeacherRange(start, end) {
         .then((plans) => {
             if (teacherRangeLoading !== key) return;
             teacherRangeLoading = '';
-            teacherRangeView = { start, end, plans: Array.isArray(plans) ? plans : [] };
-            if (calStart?.value === start && calEnd?.value === end) renderTeacherCalendar();
+            const lista = Array.isArray(plans) ? plans : [];
+            teacherRangeView = { key, start, end, only, plans: only ? lista.filter((p) => p.meta?.key === only) : lista };
+            if (resolveTeacherPeriod().key === key) renderTeacherCalendar();
         })
         .catch((error) => {
             if (teacherRangeLoading === key) teacherRangeLoading = '';
             teacherRangeFailed = key; // nao insiste a cada redesenho; o botao de atualizar tenta de novo
-            console.error('Falha ao ler os periodos letivos do intervalo', error);
-            if (calStart?.value === start && calEnd?.value === end) renderTeacherCalendar();
+            console.error('Falha ao ler os periodos letivos do servidor', error);
+            if (resolveTeacherPeriod().key === key) renderTeacherCalendar();
         });
 }
 
@@ -455,6 +489,7 @@ function renderTeacherRangeCalendar(container, docente, view) {
     const rangeStart = view.start;
     const rangeEnd = view.end;
     const fullYear = isFullYear(rangeStart, rangeEnd);
+    const umPL = !!view.only; // um PL que nao e o aberto na barra lateral
     const year = rangeStart.slice(0, 4);
     // Como no calendario de um PL: o ultimo mes aparece inteiro.
     const endDt = new Date(rangeEnd + 'T12:00:00');
@@ -491,7 +526,8 @@ function renderTeacherRangeCalendar(container, docente, view) {
 
             const planYear = String(meta.termStart || '').slice(0, 4);
             sections.push({
-                titulo: `${planYear} - ${meta.periodo} (${formatPeriodo(meta.termStart, meta.termEnd)})`,
+                titulo: umPL ? '' : `${planYear} - ${meta.periodo} (${formatPeriodo(meta.termStart, meta.termEnd)})`,
+                rotulo: `${planYear} - ${meta.periodo} (${formatPeriodo(meta.termStart, meta.termEnd)})`,
                 periodo: fullYear ? meta.periodo : `${meta.periodo}/${planYear}`,
                 components: collectDocenteResumeComponents(docente, planStart, planEnd)
             });
@@ -503,9 +539,12 @@ function renderTeacherRangeCalendar(container, docente, view) {
     const porPL = sections
         .map((section) => `${section.periodo}: ${formatCH(sumComponentsCH(section.components).alocada) || '0'}h`)
         .join(' · ');
-    const rangeLabel = fullYear ? year : formatPeriodo(rangeStart, rangeEnd);
+    const rangeLabel = umPL ? (sections[0]?.rotulo || '') : (fullYear ? year : formatPeriodo(rangeStart, rangeEnd));
+    const onde = umPL ? 'no PL' : (fullYear ? 'no ano' : 'no intervalo');
     const docenteTitle = totalAno > 0 ? `${docente} - ${rangeLabel} (${formatCH(totalAno)}h)` : `${docente} - ${rangeLabel}`;
-    const headline = fullYear
+    const headline = umPL
+        ? (sections[0]?.rotulo || formatPeriodo(rangeStart, rangeEnd))
+        : fullYear
         ? `Ano ${year} inteiro (${sections.map((s) => s.periodo).join(', ') || 'nenhum PL'})`
         : `De ${formatPeriodo(rangeStart, rangeEnd)} (${sections.map((s) => s.periodo).join(', ') || 'nenhum PL'})`;
     const shiftSummary = shiftKeys.size > 0
@@ -521,7 +560,7 @@ function renderTeacherRangeCalendar(container, docente, view) {
             </div>
             <div style="display:flex; flex-wrap:wrap; gap:10px; align-items:center;">
                 <div style="background:#e3eef8; color:#0f4f7d; border:1px solid #c5d8e8; border-radius:999px; padding:8px 14px; font-weight:800;">${escapeHtml(headline)}</div>
-                <div style="background:#fff7e6; color:#7a4b00; border:1px solid #f3d9a4; border-radius:999px; padding:8px 14px; font-weight:800;">CH alocada ${fullYear ? 'no ano' : 'no intervalo'}: ${formatCH(totalAno) || '0'}h <span style="font-weight:600;">(${escapeHtml(porPL || 'nenhum PL')})</span></div>
+                <div style="background:#fff7e6; color:#7a4b00; border:1px solid #f3d9a4; border-radius:999px; padding:8px 14px; font-weight:800;">CH alocada ${onde}: ${formatCH(totalAno) || '0'}h${umPL ? '' : ` <span style="font-weight:600;">(${escapeHtml(porPL || 'nenhum PL')})</span>`}</div>
                 <div style="background:#eef6f0; color:#1f5d3a; border:1px solid #cfe8d7; border-radius:999px; padding:8px 14px; font-weight:700;">Turnos ativos: ${shiftSummary}</div>
                 ${conflictPillHtml(conflictRows.length)}
             </div>
@@ -534,12 +573,12 @@ function renderTeacherRangeCalendar(container, docente, view) {
     const title = `<span class="print-title-main">Vistoria de Conflitos Horarios</span><br><span class="print-title-sub">${escapeHtml(docenteTitle)}</span>`;
     const cabecalho = {
         docente,
-        subtitulo: `${headline} · CH alocada ${fullYear ? 'no ano' : 'no intervalo'}: ${formatCH(totalAno) || '0'}h`
+        subtitulo: `${headline} · CH alocada ${onde}: ${formatCH(totalAno) || '0'}h`
     };
     generateCalendarGrid(calendarContainer, null, docente, rangeStart, gridEnd, title, {
         slotsToRenderOverride: visibleSlots,
         eventsByDate,
-        resumeTableHtml: buildDocenteResumeTableHtml(sections, fullYear ? 'Total do ano' : 'Total do intervalo', cabecalho),
+        resumeTableHtml: buildDocenteResumeTableHtml(sections, umPL ? 'Total' : (fullYear ? 'Total do ano' : 'Total do intervalo'), cabecalho),
         termEndLimit: gridEnd
     });
 }

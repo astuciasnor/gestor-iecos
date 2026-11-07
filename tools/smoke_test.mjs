@@ -1,7 +1,7 @@
 // Teste de fumaca: abre o app num Chrome/Edge invisivel, com os dados publicados
 // (alocacoes_publicas.json), passa pelas telas principais e avisa se algo quebrou.
 // Pega o que os testes de unidade nao pegam: tela em branco, erro no console,
-// Gantt vazio, modulo carregado em dobro, etc.
+// modulo carregado em dobro, etc.
 //
 // Uso (na raiz do projeto):   npm run smoke
 // Navegador: acha Chrome ou Edge sozinho; para outro, defina CHROME_PATH.
@@ -272,30 +272,35 @@ async function run() {
       await evaluate("document.querySelector('.tab-btn[data-tab=\"teacher\"]').click()");
     });
 
-    await check('Gantt do docente', async () => {
+    await check('Calendario do docente: Ano inteiro e PL1..PL4', async () => {
       await evaluate(`(() => {
         const i = document.getElementById('sel-view-docente'); i.value = ${JSON.stringify(data.teacher)};
         i.dispatchEvent(new Event('input', { bubbles: true })); i.dispatchEvent(new Event('change', { bubbles: true }));
-        document.querySelector('.subtab-btn[data-subtab="docente-gantt"]').click();
+        document.getElementById('btn-ano-inteiro-teacher').click();
       })()`);
-      // Cabecalho com o nome do professor e ao menos uma barra ("60h (TURMA)").
-      const ok = await waitFor(`(() => {
-        const t = (document.getElementById('gantt-container-docente')?.innerText || '').toUpperCase();
-        return t.includes(${JSON.stringify(data.teacher.toUpperCase())}) && /\\d+H\\s*\\(/.test(t);
-      })()`, 8000);
-      const texto = await evaluate("(document.getElementById('gantt-container-docente')?.innerText || '').slice(0, 120).replace(/\\s+/g, ' ')");
-      assert(ok, `Gantt sem as componentes do professor: "${texto}"`);
+      const box = "document.getElementById('teacher-calendar-container')";
+      const anoOk = await waitFor(`/Ano \\d{4} inteiro/.test(${box}.innerText) && /Docente:/.test(${box}.innerText) && ${box}.querySelectorAll('.calendar-month').length === 12`, 8000);
+      const visto = await evaluate(`${box}.querySelectorAll('.calendar-month').length + ' meses | ' + ${box}.innerText.slice(0, 160).split(String.fromCharCode(10)).join(' / ')`);
+      assert(anoOk, `ano inteiro sem o selo do ano, o nome do docente ou os 12 meses: ${visto}`);
+      const pls = await evaluate("[...document.querySelectorAll('#docente-pl-buttons [data-plan-key]')].map((b) => b.textContent).join(',')");
+      assert(pls.split(',').length >= 1, 'sem botoes de PL');
+      await evaluate("document.querySelector('#docente-pl-buttons [data-plan-key]').click()");
+      const plOk = await waitFor("document.querySelector('#docente-pl-buttons .is-active') && !document.getElementById('btn-ano-inteiro-teacher').classList.contains('is-active')", 5000);
+      assert(plOk, 'o botao do PL nao ficou marcado');
+      return `PLs: ${pls}`;
     });
 
-    await check('Celular (agenda publica na moldura)', async () => {
-      await evaluate("document.querySelector('.subtab-btn[data-subtab=\"docente-celular\"]').click()");
-      assert(await waitFor("(document.getElementById('celular-docente-frame')?.getAttribute('src') || '').includes('docente=')", 3000), 'moldura sem professor');
+    await check('Menu Agenda Publica (agenda publica em tela larga)', async () => {
+      await evaluate("document.querySelector('.tab-btn[data-tab=\"publica\"]').click()");
+      assert(await waitFor("(document.getElementById('agenda-publica-frame')?.getAttribute('src') || '').includes('agenda_publica.html')", 3000), 'menu sem a agenda publica');
       const ok = await waitFor(`(() => {
-        const d = document.getElementById('celular-docente-frame').contentDocument;
-        return d && d.getElementById('inp-docente-publico')?.value && d.querySelectorAll('.pub-result-badge').length > 0;
+        const d = document.getElementById('agenda-publica-frame').contentDocument;
+        return d && d.readyState === 'complete' && d.getElementById('inp-docente-publico') && /Agenda/.test(d.body.innerText);
       })()`, 10000);
-      assert(ok, 'a agenda publica nao mostrou o resumo do professor');
-      return await evaluate("[...document.getElementById('celular-docente-frame').contentDocument.querySelectorAll('.pub-result-badge')].map(b => b.textContent.trim()).join(' / ')");
+      assert(ok, 'a agenda publica nao abriu no menu');
+      const largura = await evaluate("document.getElementById('agenda-publica-frame').getBoundingClientRect().width");
+      assert(largura > 600, `agenda publica estreita demais: ${largura}px`);
+      return `largura ${Math.round(largura)}px`;
     });
   } finally {
     const falhou = results.some((r) => !r.ok);
