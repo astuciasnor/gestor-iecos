@@ -1244,6 +1244,27 @@ body:has(#tab-weekly.active) .top-bar #weekly-instructions-card {
     width: 58px;
 }
 
+/* Pausa entre faixas: dias sem aula da componente (Fim digitado antes da faixa seguinte). */
+.weekly-faixas-table .faixa-pausa-row td {
+    background-color: #eceff3;
+    background-image: repeating-linear-gradient(
+        135deg,
+        rgba(120, 144, 156, 0.18) 0,
+        rgba(120, 144, 156, 0.18) 6px,
+        transparent 6px,
+        transparent 12px
+    );
+    color: #455a64;
+    font-weight: 600;
+    font-size: 0.85em;
+    text-align: center;
+    padding: 3px 8px;
+}
+
+.weekly-faixas-table .faixa-pausa-texto::before {
+    content: '\23F8\FE0E  ';
+}
+
 .weekly-faixas-table .col-faixa-date-start,
 .weekly-faixas-table .col-faixa-date-end {
     width: 140px;

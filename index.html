@@ -10,7 +10,7 @@
         // Vai para o aviso antes de carregar o programa. A agenda publica nao passa por aqui.
         if (/\.github\.io$/i.test(location.hostname)) location.replace('mudou.html');
     </script>
-    <link rel="stylesheet" href="css/style.css?v=202611071518">
+    <link rel="stylesheet" href="css/style.css?v=202611071733">
 
     <style>
         :root {
@@ -899,6 +899,7 @@
                             <p class="weekly-faixas-help no-print">
                                 <span class="wfh-item"><span class="wfh-badge wfh-badge--f1">Faixa&nbsp;1</span> hor&aacute;rio inicial &mdash; escolha a <b>data no calend&aacute;rio</b> abaixo.</span>
                                 <span class="wfh-item"><span class="wfh-badge wfh-badge--fx">Faixas&nbsp;2&nbsp;e&nbsp;3</span> <i>(opcionais)</i> nascem sozinhas: v&aacute; &agrave; <b>semana em que o hor&aacute;rio muda</b> e redesenhe na grade. Dali em diante as faixas recome&ccedil;am.</span>
+                                <span class="wfh-item"><span class="wfh-badge wfh-badge--fx">Pausa</span> para parar e voltar depois: digite o <b>Fim</b> da faixa e o <b>In&iacute;cio</b> da faixa seguinte no dia da volta.</span>
                             </p>
                             <div class="weekly-faixas-main">
                                 <table class="weekly-faixas-table">
@@ -942,6 +943,9 @@
                                             <td id="faixa-padrao-f1" class="faixa-padrao-cell"></td>
                                             <td id="faixa-ch-f1" class="faixa-ch-cell">0</td>
                                         </tr>
+                                        <tr id="faixa-pausa-1" class="faixa-pausa-row hidden">
+                                            <td colspan="5"><span class="faixa-pausa-texto"></span></td>
+                                        </tr>
                                         <tr id="faixa-2" class="faixa-item">
                                             <td class="faixa-num">
                                                 <span class="faixa-num-value">2</span>
@@ -964,6 +968,9 @@
                                             </td>
                                             <td id="faixa-padrao-f2" class="faixa-padrao-cell"></td>
                                             <td id="faixa-ch-f2" class="faixa-ch-cell">0</td>
+                                        </tr>
+                                        <tr id="faixa-pausa-2" class="faixa-pausa-row hidden">
+                                            <td colspan="5"><span class="faixa-pausa-texto"></span></td>
                                         </tr>
                                         <tr id="faixa-3" class="faixa-item">
                                             <td class="faixa-num">
@@ -1447,7 +1454,7 @@
         </main>
     </div>
 
-    <script type="module" src="js/main.js?v=202611071518"></script>
+    <script type="module" src="js/main.js?v=202611071733"></script>
 </body>
 
 </html>

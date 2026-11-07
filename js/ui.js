@@ -1,32 +1,33 @@
-import { store } from './store.js?v=202611071518';
-import { getTurnoLetter, mapSlotToTurno } from './turns.js?v=202611071518';
-import { normalizePeriodo as normalizePeriodoLetivoCode } from './plan_storage.js?v=202611071518';
-import { getCalendarEvents } from './calendar.js?v=202611071518';
-import { isDateOverlap } from './utils.js?v=202611071518';
-import { weeklyState } from './weekly_state.js?v=202611071518';
-import { findPendentesCobertas, isPendenteJaAlocada } from './pendentes.mjs?v=202611071518';
-import { classifySwap } from './troca_ordem.mjs?v=202611071518';
-import { buildCanonicalOfferProjection } from './execution_engine.js?v=202611071518';
+import { store } from './store.js?v=202611071733';
+import { getTurnoLetter, mapSlotToTurno } from './turns.js?v=202611071733';
+import { normalizePeriodo as normalizePeriodoLetivoCode } from './plan_storage.js?v=202611071733';
+import { getCalendarEvents } from './calendar.js?v=202611071733';
+import { isDateOverlap } from './utils.js?v=202611071733';
+import { weeklyState } from './weekly_state.js?v=202611071733';
+import { findPendentesCobertas, isPendenteJaAlocada } from './pendentes.mjs?v=202611071733';
+import { classifySwap } from './troca_ordem.mjs?v=202611071733';
+import { closeFaixaEnds, isPauseEnd, listFaixaPauses } from './pausa_faixas.mjs?v=202611071733';
+import { buildCanonicalOfferProjection } from './execution_engine.js?v=202611071733';
 import {
     buildSigaaMetadataPayload,
     validateSigaaMetadataPayload,
     getSigaaCode,
     buildScopedSigaaAllocationFromOfferFaixa
-} from './sigaa_metadata.js?v=202611071518';
-import { parseBackupDataFile, extractImportPlanMeta } from './serialization.js?v=202611071518';
+} from './sigaa_metadata.js?v=202611071733';
+import { parseBackupDataFile, extractImportPlanMeta } from './serialization.js?v=202611071733';
 import {
     showToastWarning,
     showPersistentStatusMessage,
     copyTextToClipboard,
     flashButtonCopyState,
     setupCopyActionButtons
-} from './ui_feedback.js?v=202611071518';
+} from './ui_feedback.js?v=202611071733';
 import {
     normalizeHexColor,
     adjustHexColor,
     hexToRgba,
     vividHexColor
-} from './color_utils.js?v=202611071518';
+} from './color_utils.js?v=202611071733';
 import {
     isFaixaAllocation,
     isPriorityRegularAllocation,
@@ -35,7 +36,7 @@ import {
     normalizeTeacherNameForMatch,
     getDocenteShortLabel,
     getAllocationTeachersForConflict
-} from './allocation_helpers.js?v=202611071518';
+} from './allocation_helpers.js?v=202611071733';
 import {
     VINCULOS_DOCENTE_NOVO,
     OUTRA_UNIDADE,
@@ -44,9 +45,9 @@ import {
     findSimilarNames,
     problemaNoNome,
     limparEspacos
-} from './docente_nomes.mjs?v=202611071518';
-import { getSessionEmail, getPerfil, fetchAllocationsForPlans } from './sync_remoto.js?v=202611071518';
-import { resolveBackendMode } from './backend_config.js?v=202611071518';
+} from './docente_nomes.mjs?v=202611071733';
+import { getSessionEmail, getPerfil, fetchAllocationsForPlans } from './sync_remoto.js?v=202611071733';
+import { resolveBackendMode } from './backend_config.js?v=202611071733';
 import {
     normalizeConflictSlotLabel,
     getAvailableTurnoOfertaOptions,
@@ -55,7 +56,7 @@ import {
     isTurnoDividerSlot,
     buildHorariosForUI,
     getShiftChangeMeta
-} from './turno_helpers.js?v=202611071518';
+} from './turno_helpers.js?v=202611071733';
 import {
     getDisciplinaCHGlobal,
     derivarBloco,
@@ -65,7 +66,7 @@ import {
     getDisciplinaInfo,
     getCursoSiglaDaTurma,
     getPrintAcademicMetaLine
-} from './curso_turma_helpers.js?v=202611071518';
+} from './curso_turma_helpers.js?v=202611071733';
 import {
     renderMonthlyCalendar,
     renderTeacherCalendar,
@@ -73,11 +74,11 @@ import {
     clearTeacherRangeCache,
     setTeacherPeriod,
     getTeacherPeriod
-} from './calendarios_ui.js?v=202611071518';
+} from './calendarios_ui.js?v=202611071733';
 import {
     refreshTeacherConflictsUI,
     setCrossPlanLoader
-} from './conflitos_ui.js?v=202611071518';
+} from './conflitos_ui.js?v=202611071733';
 import {
     shouldIgnoreTurmaEventForCandidate,
     normalizeDrawnSlotsByDay,
@@ -91,7 +92,7 @@ import {
     resolveEditableFaixasFromStoredExecution,
     alignFaixasToExecutionEnd,
     buildFinalAdjustmentFaixaSuggestion
-} from './faixa_utils.js?v=202611071518';
+} from './faixa_utils.js?v=202611071733';
 import {
     timeToMinutes,
     shiftISODate,
@@ -105,14 +106,14 @@ import {
     isDateInsideRange,
     formatDateBRShortYear,
     formatDateBR
-} from './date_utils_ui.js?v=202611071518';
+} from './date_utils_ui.js?v=202611071733';
 import {
     initializeWeeklyScheduleForTurma,
     reconcileTurmaSelectionAfterPLChange,
     resetWeeklyViewOnTurmaChange,
     resolveActiveAcademicPeriod,
     slotLabelsOverlap
-} from './academic_rules.mjs?v=202611071518';
+} from './academic_rules.mjs?v=202611071733';
 
 const gridContainer = document.getElementById('weekly-grid');
 const selCurso = document.getElementById('sel-curso');
@@ -821,6 +822,7 @@ function updateWeeklyFaixaHoursDisplay(previewData = null) {
     );
     let total = preview?.execution ? (parseInt(preview.execution.totalHours, 10) || 0) : 0;
     for (let i = 1; i <= 3; i++) updateFaixaPadraoCell(i);
+    renderFaixaPauseRows();
     for (let i = 1; i <= 3; i++) {
         const ch = summaryHoursByFaixa.has(i) ? summaryHoursByFaixa.get(i) : calcFaixaCH(i);
         const chEl = document.getElementById(`faixa-ch-f${i}`);
@@ -1267,11 +1269,12 @@ function weekdayOccursBetween(dia, startISO, endExclusiveISO) {
 }
 
 function captureFaixasDraft() {
-    const draft = { patterns: {}, ini: {}, fim: {} };
+    const draft = { patterns: {}, ini: {}, fim: {}, pausa: {} };
     for (let i = 1; i <= 3; i++) {
         draft.patterns[i] = normalizeFaixaPattern(faixasPatterns[i]);
         draft.ini[i] = document.getElementById(`inp-data-inicio-f${i}`)?.value || '';
         draft.fim[i] = document.getElementById(`inp-data-fim-f${i}`)?.value || '';
+        draft.pausa[i] = isFaixaFimMarcadoComoPausa(i);
     }
     return draft;
 }
@@ -1282,6 +1285,7 @@ function restoreFaixasDraft(draft) {
         const fimEl = document.getElementById(`inp-data-fim-f${i}`);
         if (iniEl) iniEl.value = draft.ini[i] || '';
         if (fimEl) fimEl.value = draft.fim[i] || '';
+        setFaixaFimPausaMark(i, !!draft.pausa?.[i]);
         faixasPatterns[i] = normalizeFaixaPattern(draft.patterns[i]);
     }
 }
@@ -1759,6 +1763,7 @@ function collapseFaixasForNewComponent(options = {}) {
         const el = document.getElementById(id);
         if (el) el.value = '';
     });
+    for (let i = 1; i <= 3; i++) setFaixaFimPausaMark(i, false);
 
     faixasPatterns[1] = [];
     faixasPatterns[2] = [];
@@ -1788,6 +1793,7 @@ function clearFaixaState(faixaNum, options = {}) {
     const fimEl = document.getElementById(`inp-data-fim-f${faixaNum}`);
     if (iniEl) iniEl.value = '';
     if (fimEl) fimEl.value = '';
+    setFaixaFimPausaMark(faixaNum, false);
 
     faixasPatterns[faixaNum] = [];
     if (pendingFaixaStartPick === faixaNum || (faixaNum === 2 && pendingFaixaStartPick === 3)) {
@@ -1867,6 +1873,7 @@ function executeFaixaQuickAction(faixaNum) {
                 const el = document.getElementById(id);
                 if (el) el.value = '';
             });
+        for (let i = 1; i <= 3; i++) setFaixaFimPausaMark(i, false);
 
         faixasPatterns[1] = [];
         faixasPatterns[2] = [];
@@ -1974,6 +1981,7 @@ function applyFaixasConfigToSidebar(faixasConfig = []) {
         }
         setFaixaStatus(i, getFaixaSlotsAndDays(i).pattern.length);
     }
+    markStoredFaixaPauses(sorted);
 
     applyFaixaDateAutofill();
 }
@@ -2880,6 +2888,67 @@ function setupCompactFaixaDateFields() {
     });
 }
 
+// --- Pausa entre faixas -------------------------------------------------------
+// O coordenador digita um Fim que para a faixa antes da seguinte: os dias entre
+// os dois ficam sem aula. A marca data-pausa separa o Fim DIGITADO do Fim que o
+// Cardume preenche sozinho (vespera da faixa seguinte); sem ela, uma data velha
+// viraria pausa sem ninguem pedir.
+function isFaixaFimMarcadoComoPausa(faixaNum) {
+    return document.getElementById(`inp-data-fim-f${faixaNum}`)?.dataset.pausa === '1';
+}
+
+function setFaixaFimPausaMark(faixaNum, on) {
+    const fimEl = document.getElementById(`inp-data-fim-f${faixaNum}`);
+    if (!fimEl) return;
+    if (on) fimEl.dataset.pausa = '1';
+    else delete fimEl.dataset.pausa;
+}
+
+function isFaixaEmPausa(faixaNum) {
+    if (faixaNum < 1 || faixaNum > 2 || !isFaixaFimMarcadoComoPausa(faixaNum)) return false;
+    const valor = (id) => String(document.getElementById(id)?.value || '').trim();
+    return isPauseEnd(
+        valor(`inp-data-inicio-f${faixaNum}`),
+        valor(`inp-data-fim-f${faixaNum}`),
+        valor(`inp-data-inicio-f${faixaNum + 1}`)
+    );
+}
+
+// Pausas que a tabela de faixas mostra agora: [{ aposFaixa, inicio, fim }].
+function getFaixaPausesFromUI() {
+    const faixas = [];
+    for (let i = 1; i <= 3; i++) {
+        const inicio = String(document.getElementById(`inp-data-inicio-f${i}`)?.value || '').trim();
+        if (!inicio) break;
+        const fim = isFaixaEmPausa(i) ? String(document.getElementById(`inp-data-fim-f${i}`)?.value || '').trim() : '';
+        faixas.push({ inicio, fim });
+    }
+    return listFaixaPauses(faixas);
+}
+
+// Pausa em que cai a data (ou null): usada pela grade para explicar a celula.
+function getFaixaPauseForDate(dateStr) {
+    if (!dateStr) return null;
+    return getFaixaPausesFromUI().find((p) => dateStr >= p.inicio && dateStr <= p.fim) || null;
+}
+
+// Linha cinza "sem aula" entre as faixas da tabela.
+function renderFaixaPauseRows() {
+    const pausas = getFaixaPausesFromUI();
+    for (let k = 1; k <= 2; k++) {
+        const row = document.getElementById(`faixa-pausa-${k}`);
+        if (!row) continue;
+        const pausa = pausas.find((p) => p.aposFaixa === k);
+        row.classList.toggle('hidden', !pausa);
+        const txt = row.querySelector('.faixa-pausa-texto');
+        if (txt) {
+            txt.textContent = pausa
+                ? `Pausa: sem aula de ${formatDateBR(pausa.inicio)} a ${formatDateBR(pausa.fim)}`
+                : '';
+        }
+    }
+}
+
 function applyFaixaDateAutofill(options = {}) {
     const { forceSingleBounds = false, preferredStart = '' } = options;
 
@@ -2897,18 +2966,28 @@ function applyFaixaDateAutofill(options = {}) {
     const hasF2 = !!(f2Ini && f2Ini.value);
     const hasF3 = !!(f3Ini && f3Ini.value);
 
+    // O Fim de uma faixa e a vespera da seguinte, exceto quando o coordenador
+    // digitou um Fim mais cedo (pausa): esse fica.
     if (hasF2 && f1Fim) {
         const endF1 = shiftISODate(f2Ini.value, -1);
-        if (endF1) f1Fim.value = endF1;
+        if (endF1 && !isFaixaEmPausa(1)) {
+            f1Fim.value = endF1;
+            setFaixaFimPausaMark(1, false);
+        }
     } else if (forceSingleBounds && f1Fim) {
         f1Fim.value = '';
+        setFaixaFimPausaMark(1, false);
     }
 
     if (hasF3 && f2Fim) {
         const endF2 = shiftISODate(f3Ini.value, -1);
-        if (endF2) f2Fim.value = endF2;
+        if (endF2 && !isFaixaEmPausa(2)) {
+            f2Fim.value = endF2;
+            setFaixaFimPausaMark(2, false);
+        }
     } else if (f2Fim && !hasF2) {
         f2Fim.value = '';
+        setFaixaFimPausaMark(2, false);
     }
 
     if (!hasF3 && f3Fim) f3Fim.value = '';
@@ -3159,6 +3238,10 @@ function setupFaixaControls() {
         if (fimEl) {
             ['change'].forEach((evt) => {
                 fimEl.addEventListener(evt, () => {
+                    // Fim digitado pelo coordenador: se parar antes da faixa
+                    // seguinte, vira pausa (ver isFaixaEmPausa).
+                    setFaixaFimPausaMark(i, !!fimEl.value);
+                    applyFaixaDateAutofill();
                     setFaixaStatus(i, getFaixaSlotsAndDays(i).pattern.length);
                     updateWeeklyFaixaHoursDisplay();
                     if (store.selectedTurma) renderWeeklyGrid();
@@ -3251,6 +3334,7 @@ function hydrateFaixa1FromComponente(allocation) {
     const fim = document.getElementById('inp-data-fim-f1');
     if (ini && allocation.dataInicio) ini.value = allocation.dataInicio;
     if (fim && allocation.dataFim) fim.value = allocation.dataFim;
+    for (let i = 1; i <= 3; i++) setFaixaFimPausaMark(i, false);
 
     setFaixaStatus(1, faixasPatterns[1].length);
     applyFaixaDateAutofill();
@@ -3294,9 +3378,20 @@ function hydrateFaixasFromComponente(allocation, options = {}) {
         faixasPatterns[i] = normalizeFaixaPattern(pattern);
         setFaixaStatus(i, faixasPatterns[i].length);
     });
+    markStoredFaixaPauses(faixas);
 
     applyFaixaDateAutofill();
     return resolved;
+}
+
+// Componente salva com pausa (Fim antes da vespera da faixa seguinte): marca
+// esses Fins para que o preenchimento automatico nao os cole de novo.
+function markStoredFaixaPauses(faixas = []) {
+    for (let i = 1; i <= 3; i++) {
+        const atual = faixas[i - 1];
+        const proxima = faixas[i];
+        setFaixaFimPausaMark(i, !!(atual && proxima && isPauseEnd(atual.inicio, atual.fim, proxima.inicio)));
+    }
 }
 
 function getHolidayLabelMap() {
@@ -3822,11 +3917,19 @@ function collectIntensiveFaixasFromPatternMap(patternsMap = {}, fallbackInicio) 
         faixas.push(normFaixa);
     }
 
+    // Cada faixa termina na vespera da seguinte, salvo o Fim digitado como pausa.
     const sorted = faixas.sort((a, b) => a.inicio.localeCompare(b.inicio));
-    for (let i = 0; i < sorted.length - 1; i++) {
-        sorted[i].fim = addDaysISO(sorted[i + 1].inicio, -1);
-    }
-    return sorted;
+    const pausaPorIndice = {};
+    sorted.forEach((faixa, idx) => {
+        for (let i = 1; i <= 3; i++) {
+            const iniEl = document.getElementById(`inp-data-inicio-f${i}`);
+            if (iniEl?.value === faixa.inicio) {
+                pausaPorIndice[idx] = isFaixaFimMarcadoComoPausa(i);
+                break;
+            }
+        }
+    });
+    return closeFaixaEnds(sorted, pausaPorIndice);
 }
 
 function collectIntensiveFaixasFromUI(fallbackInicio) {
@@ -5995,11 +6098,15 @@ function renderWeeklyGrid() {
                                 cell.classList.add('slot-week-disabled', 'slot-out-of-faixa');
                                 cell.style.pointerEvents = 'auto';
                                 cell.style.cursor = 'not-allowed';
-                                cell.title = 'Slot nao disponivel para esta faixa (fora do intervalo de datas). Ajuste a data da faixa ou navegue para outra semana.';
+                                const pausa = getFaixaPauseForDate(cellDate);
+                                const avisoPausa = pausa
+                                    ? `Pausa: sem aula de ${formatDateBR(pausa.inicio)} a ${formatDateBR(pausa.fim)}. Para mudar, ajuste o Fim da Faixa ${pausa.aposFaixa} ou o Inicio da Faixa ${pausa.aposFaixa + 1}.`
+                                    : '';
+                                cell.title = avisoPausa || 'Slot nao disponivel para esta faixa (fora do intervalo de datas). Ajuste a data da faixa ou navegue para outra semana.';
                                 cell.addEventListener('click', (e) => {
                                     e.preventDefault();
                                     e.stopPropagation();
-                                    showToastWarning('Slot nao disponivel. Ajuste a data da faixa.', 'warning', 2400);
+                                    showToastWarning(avisoPausa || 'Slot nao disponivel. Ajuste a data da faixa.', 'warning', avisoPausa ? 4200 : 2400);
                                 });
                             }
                         }
@@ -6548,6 +6655,23 @@ function handleAddManual() {
         let effDias = diasMarcados;
         let effUsaSabado = usaSabado;
         let effFaixas = faixasConfigAjustadas;
+
+        // Componente com pausa (Fim digitado antes da faixa seguinte): as datas
+        // foram escolhidas de proposito, entao nunca e movida sozinha.
+        const pausasDaComponente = listFaixaPauses(faixasConfigAjustadas);
+        if (intensiveConflict && pausasDaComponente.length > 0) {
+            const quandoChoque = intensiveConflict.date ? ` em ${formatDateBR(intensiveConflict.date)}` : '';
+            setWeeklyBlock(
+                'Choque com outra componente',
+                `"${intensiveConflict.disciplina}" ja ocupa esse horario${quandoChoque}. Como "${disciplina}" tem pausa, o Cardume nao a move sozinho: ajuste as datas das faixas e salve de novo.`
+            );
+            showToastWarning(
+                `Choque com "${intensiveConflict.disciplina}"${quandoChoque}. Ajuste as datas das faixas (a componente tem pausa e nao e movida sozinha).`,
+                'error',
+                6200
+            );
+            return;
+        }
 
         if (intensiveConflict) {
             if (savingIsIntensive) {
