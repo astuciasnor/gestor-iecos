@@ -1,11 +1,13 @@
 // Regras de nomes de docentes, sem tela nem store (testaveis no Node).
-// Usadas pelo aviso de "nome novo" e pela janela "Cadastrar Docente Temporario".
+// Usadas pelo aviso de "nome novo", pela janela "Cadastrar Docente Novo" e pelo painel do administrador.
 
-// So Substituto e Visitante sao cadastrados pelos coordenadores. Efetivo: e-mail
-// para o administrador. Pos-graduando, colaborador ou voluntario: a componente
-// fica no nome do professor responsavel.
-export const VINCULOS_TEMPORARIOS = ['Substituto', 'Visitante'];
+// Vinculos que o coordenador pode cadastrar. Pos-graduando, colaborador ou
+// voluntario nao: a componente fica no nome do professor responsavel.
+export const VINCULOS_DOCENTE_NOVO = ['Substituto', 'Visitante', 'Efetivo'];
 
+// Unidades com subunidades conhecidas. Professor de outra unidade: o coordenador
+// digita unidade e subunidade (ex.: CANAN / FACFIS) e o administrador confere.
+export const OUTRA_UNIDADE = 'OUTRA';
 export const UNIDADES = [
     { sigla: 'IECOS', nome: 'IECOS', subunidades: ['FEPESCA', 'FACIN', 'FBIO'] },
     { sigla: 'CBRAG', nome: 'Campus Bragança', subunidades: ['FACED', 'FAHIST', 'FAMAT', 'FALE', 'FALEST'] }
@@ -75,4 +77,26 @@ export function problemaNoNome(nome) {
     const abreviado = partes.find((p) => /^\p{L}{1,3}\.$/u.test(p) || (/^\p{L}$/u.test(p) && !/^e$/i.test(p)));
     if (abreviado) return `"${abreviado}" parece abreviação. Escreva o nome por extenso.`;
     return '';
+}
+
+// Docentes cadastrados pelos coordenadores que ainda nao estao na planilha
+// (dados_app.json). allocationsByPlan: { chaveDoPeriodo: [alocacoes] }.
+// Um item por nome, com as turmas/componentes onde aparece.
+export function listarDocentesParaConferir(allocationsByPlan = {}, nomesPlanilha = []) {
+    const naPlanilha = new Set(nomesPlanilha.map(normalizeTeacherNameForMatch));
+    const porNome = new Map();
+    Object.values(allocationsByPlan || {}).forEach((alocacoes) => {
+        (Array.isArray(alocacoes) ? alocacoes : []).forEach((alloc) => {
+            (Array.isArray(alloc?.docentesCadastrados) ? alloc.docentesCadastrados : []).forEach((cad) => {
+                const chave = normalizeTeacherNameForMatch(cad?.nome);
+                if (!chave || naPlanilha.has(chave)) return;
+                if (!porNome.has(chave)) porNome.set(chave, { ...cad, usos: [] });
+                const item = porNome.get(chave);
+                if (String(cad.em || '') < String(item.em || '')) Object.assign(item, { ...cad, usos: item.usos });
+                const uso = [alloc.turmaId, alloc.disciplina].filter(Boolean).join(' · ');
+                if (uso && !item.usos.includes(uso)) item.usos.push(uso);
+            });
+        });
+    });
+    return [...porNome.values()].sort((a, b) => String(b.em || '').localeCompare(String(a.em || '')));
 }

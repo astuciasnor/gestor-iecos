@@ -1,8 +1,8 @@
 // Tela de acesso e barra de status da sincronizacao.
 // Modo local: senha unica, como antes. Modos supabase e ufpa: e-mail e senha de
 // cada coordenador, e as alocacoes passam a ser compartilhadas pelo servidor.
-import { resolveBackendMode } from './backend_config.js?v=202611062035';
-import * as remoto from './sync_remoto.js?v=202611062035';
+import { resolveBackendMode } from './backend_config.js?v=202611062115';
+import * as remoto from './sync_remoto.js?v=202611062115';
 
 const LOCAL_PASSWORD = 'ufpa2026';
 
@@ -151,6 +151,30 @@ async function iniciarOnline({ onRemoteChange, showToast }) {
       6000
     )
   });
+
+  if (remoto.getAdminTools()) avisarDocentesNovos(showToast);
+}
+
+// Administrador: ao entrar, avisa se ha docentes novos cadastrados pelos
+// coordenadores esperando conferencia (a lista fica em "Usuarios e backup").
+async function avisarDocentesNovos(showToast) {
+  try {
+    const { buscarDocentesParaConferir } = await import('./admin_ui.js?v=202611062115');
+    const total = (await buscarDocentesParaConferir()).length;
+    marcarDocentesNovos(total);
+    if (total) {
+      showToast(`${total} docente(s) novo(s) para conferir: veja em "Usuários e backup".`, 'warning', 7000);
+    }
+  } catch (error) {
+    console.warn('Nao foi possivel contar os docentes novos', error);
+  }
+}
+
+function marcarDocentesNovos(total) {
+  const botao = el('btn-sync-admin');
+  if (!botao) return;
+  botao.querySelector('.sync-bar-badge')?.remove();
+  if (total) botao.insertAdjacentHTML('beforeend', ` <span class="sync-bar-badge">${total} docente(s) novo(s)</span>`);
 }
 
 const MIN_SENHA = 8;
@@ -256,8 +280,8 @@ function montarBarraStatus(perfil, user, showToast) {
 
   if (admin) {
     el('btn-sync-admin').onclick = async () => {
-      const { abrirAdministracao } = await import('./admin_ui.js?v=202611062035');
-      abrirAdministracao({ tools: admin, meuId: user?.id || '', showToast });
+      const { abrirAdministracao } = await import('./admin_ui.js?v=202611062115');
+      abrirAdministracao({ tools: admin, meuId: user?.id || '', showToast, aoContarDocentes: marcarDocentesNovos });
     };
   }
 

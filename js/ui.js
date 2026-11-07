@@ -1,32 +1,32 @@
-import { store } from './store.js?v=202611062035';
-import { getTurnoLetter, mapSlotToTurno } from './turns.js?v=202611062035';
-import { normalizePeriodo as normalizePeriodoLetivoCode } from './plan_storage.js?v=202611062035';
-import { getCalendarEvents } from './calendar.js?v=202611062035';
-import { isDateOverlap } from './utils.js?v=202611062035';
-import { weeklyState } from './weekly_state.js?v=202611062035';
-import { findPendentesCobertas, isPendenteJaAlocada } from './pendentes.mjs?v=202611062035';
-import { classifySwap } from './troca_ordem.mjs?v=202611062035';
-import { buildCanonicalOfferProjection } from './execution_engine.js?v=202611062035';
+import { store } from './store.js?v=202611062115';
+import { getTurnoLetter, mapSlotToTurno } from './turns.js?v=202611062115';
+import { normalizePeriodo as normalizePeriodoLetivoCode } from './plan_storage.js?v=202611062115';
+import { getCalendarEvents } from './calendar.js?v=202611062115';
+import { isDateOverlap } from './utils.js?v=202611062115';
+import { weeklyState } from './weekly_state.js?v=202611062115';
+import { findPendentesCobertas, isPendenteJaAlocada } from './pendentes.mjs?v=202611062115';
+import { classifySwap } from './troca_ordem.mjs?v=202611062115';
+import { buildCanonicalOfferProjection } from './execution_engine.js?v=202611062115';
 import {
     buildSigaaMetadataPayload,
     validateSigaaMetadataPayload,
     getSigaaCode,
     buildScopedSigaaAllocationFromOfferFaixa
-} from './sigaa_metadata.js?v=202611062035';
-import { parseBackupDataFile, extractImportPlanMeta } from './serialization.js?v=202611062035';
+} from './sigaa_metadata.js?v=202611062115';
+import { parseBackupDataFile, extractImportPlanMeta } from './serialization.js?v=202611062115';
 import {
     showToastWarning,
     showPersistentStatusMessage,
     copyTextToClipboard,
     flashButtonCopyState,
     setupCopyActionButtons
-} from './ui_feedback.js?v=202611062035';
+} from './ui_feedback.js?v=202611062115';
 import {
     normalizeHexColor,
     adjustHexColor,
     hexToRgba,
     vividHexColor
-} from './color_utils.js?v=202611062035';
+} from './color_utils.js?v=202611062115';
 import {
     isFaixaAllocation,
     isPriorityRegularAllocation,
@@ -35,15 +35,17 @@ import {
     normalizeTeacherNameForMatch,
     getDocenteShortLabel,
     getAllocationTeachersForConflict
-} from './allocation_helpers.js?v=202611062035';
+} from './allocation_helpers.js?v=202611062115';
 import {
-    VINCULOS_TEMPORARIOS,
+    VINCULOS_DOCENTE_NOVO,
+    OUTRA_UNIDADE,
     UNIDADES,
     findNewNames,
     findSimilarNames,
     problemaNoNome,
     limparEspacos
-} from './docente_nomes.mjs?v=202611062035';
+} from './docente_nomes.mjs?v=202611062115';
+import { getSessionEmail, getPerfil } from './sync_remoto.js?v=202611062115';
 import {
     normalizeConflictSlotLabel,
     getAvailableTurnoOfertaOptions,
@@ -52,7 +54,7 @@ import {
     isTurnoDividerSlot,
     buildHorariosForUI,
     getShiftChangeMeta
-} from './turno_helpers.js?v=202611062035';
+} from './turno_helpers.js?v=202611062115';
 import {
     getDisciplinaCHGlobal,
     derivarBloco,
@@ -61,17 +63,17 @@ import {
     getTurmaBaseLabel,
     getDisciplinaInfo,
     getPrintAcademicMetaLine
-} from './curso_turma_helpers.js?v=202611062035';
+} from './curso_turma_helpers.js?v=202611062115';
 import {
     renderGanttChart
-} from './gantt_ui.js?v=202611062035';
+} from './gantt_ui.js?v=202611062115';
 import {
     renderMonthlyCalendar,
     renderTeacherCalendar
-} from './calendarios_ui.js?v=202611062035';
+} from './calendarios_ui.js?v=202611062115';
 import {
     refreshTeacherConflictsUI
-} from './conflitos_ui.js?v=202611062035';
+} from './conflitos_ui.js?v=202611062115';
 import {
     shouldIgnoreTurmaEventForCandidate,
     normalizeDrawnSlotsByDay,
@@ -85,7 +87,7 @@ import {
     resolveEditableFaixasFromStoredExecution,
     alignFaixasToExecutionEnd,
     buildFinalAdjustmentFaixaSuggestion
-} from './faixa_utils.js?v=202611062035';
+} from './faixa_utils.js?v=202611062115';
 import {
     timeToMinutes,
     shiftISODate,
@@ -99,14 +101,14 @@ import {
     isDateInsideRange,
     formatDateBRShortYear,
     formatDateBR
-} from './date_utils_ui.js?v=202611062035';
+} from './date_utils_ui.js?v=202611062115';
 import {
     initializeWeeklyScheduleForTurma,
     reconcileTurmaSelectionAfterPLChange,
     resetWeeklyViewOnTurmaChange,
     resolveActiveAcademicPeriod,
     slotLabelsOverlap
-} from './academic_rules.mjs?v=202611062035';
+} from './academic_rules.mjs?v=202611062115';
 
 const gridContainer = document.getElementById('weekly-grid');
 const selCurso = document.getElementById('sel-curso');
@@ -5123,11 +5125,11 @@ function getKnownDocenteNames() {
     );
 }
 
-// ---- Docente novo: aviso embaixo do campo + "Cadastrar Docente Temporario" ----
-// Nome fora da lista so e salvo depois de cadastrado na janela (Substituto ou
-// Visitante, com unidade e subunidade). O cadastro vai junto na alocacao, no
-// campo docentesCadastrados; o historico do servidor guarda quem salvou.
-const cadastrosDocentes = new Map(); // nome normalizado -> { nome, vinculo, unidade, subunidade, em }
+// ---- Docente novo: aviso embaixo do campo + "Cadastrar Docente Novo" ----
+// Nome fora da lista so e salvo depois de cadastrado na janela (vinculo, unidade
+// e subunidade). O cadastro vai junto na alocacao, no campo docentesCadastrados,
+// e aparece no painel do administrador ate o nome entrar na planilha.
+const cadastrosDocentes = new Map(); // nome normalizado -> { nome, vinculo, unidade, subunidade, outraUnidade, por, porNome, em }
 let avisoDocenteNomes = [];
 
 function getNomesDocenteDigitados() {
@@ -5195,7 +5197,7 @@ function refreshAvisoDocenteNovo(modo = 'ocultar') {
         if (problema) {
             return `<div class="aviso-docente-nome"><span><b>${esc(nome)}</b>: ${esc(problema)}</span></div>`;
         }
-        return `<div class="aviso-docente-nome"><b>${esc(nome)}</b><button type="button" class="btn-cadastrar-docente" data-nome="${esc(nome)}">Cadastrar Docente Temporário…</button></div>`;
+        return `<div class="aviso-docente-nome"><b>${esc(nome)}</b><button type="button" class="btn-cadastrar-docente" data-nome="${esc(nome)}">Cadastrar Docente Novo…</button></div>`;
     }).join('');
     const pendentes = avisoDocenteNomes.some((nome) => !getCadastroDocente(nome));
     aviso.innerHTML = (pendentes
@@ -5234,7 +5236,7 @@ function abrirCadastroDocente(nome) {
     overlay.className = 'troca-modal no-print';
     overlay.innerHTML = `
         <div class="troca-caixa cad-docente" role="dialog" aria-modal="true" aria-labelledby="cad-docente-titulo">
-            <h3 id="cad-docente-titulo">Cadastrar Docente Temporário</h3>
+            <h3 id="cad-docente-titulo">Cadastrar Docente Novo</h3>
             <p class="troca-sub">Nome digitado no campo Docente: <b>${esc(nome)}</b></p>
             ${parecidos.length ? `
             <div class="cad-parecido">
@@ -5244,7 +5246,7 @@ function abrirCadastroDocente(nome) {
             <div class="cad-campo">
                 <span class="cad-rotulo">Vínculo</span>
                 <div class="cad-opcoes">
-                    ${VINCULOS_TEMPORARIOS.map((v) => `<label><input type="radio" name="cad-vinculo" value="${v}"> ${v}</label>`).join('')}
+                    ${VINCULOS_DOCENTE_NOVO.map((v) => `<label><input type="radio" name="cad-vinculo" value="${v}"> ${v}</label>`).join('')}
                 </div>
             </div>
             <div class="cad-linha">
@@ -5252,10 +5254,19 @@ function abrirCadastroDocente(nome) {
                     <select id="cad-unidade">
                         <option value="">Escolha…</option>
                         ${UNIDADES.map((u) => `<option value="${u.sigla}">${esc(u.nome)}</option>`).join('')}
+                        <option value="${OUTRA_UNIDADE}">Outra unidade da UFPA</option>
                     </select>
                 </label>
-                <label class="cad-campo"><span class="cad-rotulo">Subunidade (faculdade)</span>
+                <label class="cad-campo" id="cad-sub-lista"><span class="cad-rotulo">Subunidade (faculdade)</span>
                     <select id="cad-subunidade" disabled><option value="">Escolha a unidade</option></select>
+                </label>
+            </div>
+            <div class="cad-linha hidden" id="cad-outra">
+                <label class="cad-campo"><span class="cad-rotulo">Qual unidade</span>
+                    <input type="text" id="cad-outra-unidade" maxlength="60" placeholder="Ex.: Campus Ananindeua (CANAN)">
+                </label>
+                <label class="cad-campo"><span class="cad-rotulo">Qual subunidade</span>
+                    <input type="text" id="cad-outra-subunidade" maxlength="60" placeholder="Ex.: FACFIS">
                 </label>
             </div>
             <label class="cad-campo"><span class="cad-rotulo">Nome completo, igual ao SIGAA (digite de novo)</span>
@@ -5267,7 +5278,7 @@ function abrirCadastroDocente(nome) {
                 <span>Conferi: o docente está cadastrado no SIGAA com este nome, completo e sem abreviações. Sem o SIGAA ele não consegue lançar os conceitos.</span>
             </label>
             <p class="troca-nota">
-                <b>Professor efetivo</b> não é cadastrado aqui: envie e-mail para evaldomartins@ufpa.br com o nome completo, a Unidade e a Subunidade.<br>
+                O administrador do Cardume vai conferir este cadastro.<br>
                 <b>Pós-graduando, colaborador ou voluntário:</b> deixe a componente no nome do professor responsável.
             </p>
             <div class="troca-acoes">
@@ -5290,10 +5301,12 @@ function abrirCadastroDocente(nome) {
             }
         }
         el('#cad-erro').textContent = erro;
-        const ok = !!(vinculo && el('#cad-unidade').value && el('#cad-subunidade').value
-            && redigitado && !erro && el('#cad-conferi').checked);
+        const outra = el('#cad-unidade').value === OUTRA_UNIDADE;
+        const unidade = outra ? limparEspacos(el('#cad-outra-unidade').value) : el('#cad-unidade').value;
+        const subunidade = outra ? limparEspacos(el('#cad-outra-subunidade').value) : el('#cad-subunidade').value;
+        const ok = !!(vinculo && unidade && subunidade && redigitado && !erro && el('#cad-conferi').checked);
         el('.cad-ok').disabled = !ok;
-        return ok ? { vinculo, redigitado } : null;
+        return ok ? { vinculo, redigitado, unidade, subunidade, outra } : null;
     };
 
     el('#cad-unidade').addEventListener('change', () => {
@@ -5303,6 +5316,10 @@ function abrirCadastroDocente(nome) {
             ? `<option value="">Escolha…</option>${unidade.subunidades.map((s) => `<option value="${s}">${s}</option>`).join('')}`
             : '<option value="">Escolha a unidade</option>';
         sub.disabled = !unidade;
+        const outra = el('#cad-unidade').value === OUTRA_UNIDADE;
+        el('#cad-sub-lista').classList.toggle('hidden', outra);
+        el('#cad-outra').classList.toggle('hidden', !outra);
+        if (outra) el('#cad-outra-unidade').focus();
     });
     overlay.addEventListener('input', validar);
     overlay.addEventListener('change', validar);
@@ -5327,9 +5344,12 @@ function abrirCadastroDocente(nome) {
         cadastrosDocentes.set(normalizeTeacherNameForMatch(dados.redigitado), {
             nome: dados.redigitado,
             vinculo: dados.vinculo,
-            unidade: el('#cad-unidade').value,
-            subunidade: el('#cad-subunidade').value,
-            em: new Date().toISOString().slice(0, 10)
+            unidade: dados.unidade,
+            subunidade: dados.subunidade,
+            ...(dados.outra ? { outraUnidade: true } : {}),
+            por: getSessionEmail(),
+            porNome: getPerfil()?.nome || '',
+            em: new Date().toLocaleDateString('sv') // AAAA-MM-DD no fuso do computador
         });
         // Mesmas letras, mas com acento ou maiuscula diferente: vale o redigitado.
         if (dados.redigitado !== limparEspacos(nome)) trocarNomeDocenteDigitado(nome, dados.redigitado);
@@ -6259,7 +6279,7 @@ function handleAddManual() {
         refreshAvisoDocenteNovo('mostrar');
         setWeeklyBlock(
             'Docente novo sem cadastro',
-            `${semCadastro.join(', ')}: use o botão "Cadastrar Docente Temporário…" abaixo do campo Docente(s), ou escolha um nome da lista.`
+            `${semCadastro.join(', ')}: use o botão "Cadastrar Docente Novo…" abaixo do campo Docente(s), ou escolha um nome da lista.`
         );
         showToastWarning(`Docente novo sem cadastro: ${semCadastro.join(', ')}. Cadastre (botão abaixo do campo) ou escolha um nome da lista.`, 'warning', 4800);
         return;

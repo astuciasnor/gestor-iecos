@@ -1,7 +1,10 @@
 // Janela "Usuarios e backup" do administrador (so no servidor da UFPA).
 // Cadastra, edita e exclui acessos, gera senha provisoria e baixa a copia do
 // banco. Quem garante que so o administrador faz isso e a API (api/index.php).
-import { store } from './store.js?v=202611062035';
+// Mostra tambem os docentes novos cadastrados pelos coordenadores para conferir.
+import { store } from './store.js?v=202611062115';
+import { fetchAllocationsForPlans } from './sync_remoto.js?v=202611062115';
+import { listarDocentesParaConferir } from './docente_nomes.mjs?v=202611062115';
 
 let ctx = null;      // { tools, meuId, showToast }
 let usuarios = [];
@@ -38,6 +41,8 @@ function montarJanela() {
         <button type="button" class="admin-btn admin-btn-primario" id="admin-novo">+ Novo usuário</button>
         <button type="button" class="admin-btn" id="admin-backup">⬇ Baixar backup</button>
       </div>
+
+      <div class="admin-docentes" id="admin-docentes"></div>
 
       <div class="admin-senha" id="admin-senha" hidden>
         <div id="admin-senha-texto"></div>
@@ -95,6 +100,7 @@ function montarJanela() {
 }
 
 async function carregar() {
+  carregarDocentes();
   el('admin-lista').textContent = 'Carregando...';
   try {
     usuarios = await ctx.tools.listarUsuarios();
@@ -102,6 +108,72 @@ async function carregar() {
   } catch (error) {
     el('admin-lista').textContent = `Não foi possível carregar os usuários: ${error?.message || error}`;
   }
+}
+
+// ---- Docentes novos para conferir ----
+// Periodos em curso ou futuros (os mesmos da publicacao) e o periodo aberto.
+// fetchAllocationsForPlans usa o que ja esta na tela para o periodo aberto, sem
+// atrapalhar a sincronizacao.
+function chavesDosPeriodos() {
+  const hoje = new Date().toLocaleDateString('sv');
+  const chaves = new Set([store.getActivePlanMeta()?.key].filter(Boolean));
+  (Array.isArray(store.rawData?.periodos_letivos) ? store.rawData.periodos_letivos : []).forEach((p) => {
+    if (!p?.fim || p.fim < hoje) return;
+    const meta = store.getPlanMetaFromSettings({
+      periodo: p.periodo_letivo || p.periodo || '',
+      termStart: p.inicio || '',
+      termEnd: p.fim || ''
+    });
+    if (meta?.key) chaves.add(meta.key);
+  });
+  return [...chaves];
+}
+
+export async function buscarDocentesParaConferir() {
+  const porPeriodo = await fetchAllocationsForPlans(chavesDosPeriodos());
+  const nomesPlanilha = (Array.isArray(store.rawData?.docentes) ? store.rawData.docentes : []).map((d) => d?.docente);
+  return listarDocentesParaConferir(porPeriodo, nomesPlanilha);
+}
+
+async function carregarDocentes() {
+  const caixa = el('admin-docentes');
+  caixa.innerHTML = '<h4>Docentes novos para conferir</h4><div class="admin-ajuda">Carregando...</div>';
+  try {
+    const itens = await buscarDocentesParaConferir();
+    caixa.innerHTML = desenharDocentes(itens);
+    ctx?.aoContarDocentes?.(itens.length);
+  } catch (error) {
+    caixa.innerHTML = `<h4>Docentes novos para conferir</h4><div class="admin-ajuda">Não foi possível carregar: ${esc(error?.message || error)}</div>`;
+  }
+}
+
+function desenharDocentes(itens) {
+  if (!itens.length) {
+    return '<h4>Docentes novos para conferir</h4><div class="admin-ajuda">Nenhum docente novo para conferir.</div>';
+  }
+  const linhas = itens.map((d) => `
+      <tr>
+        <td><strong>${esc(d.nome)}</strong></td>
+        <td>${esc(d.vinculo || '—')}</td>
+        <td>${esc([d.unidade, d.subunidade].filter(Boolean).join(' / ') || '—')}${d.outraUnidade ? ' <span class="admin-pendente">(outra unidade)</span>' : ''}</td>
+        <td>${d.usos.map(esc).join('<br>')}</td>
+        <td>${esc(d.porNome || '')}${d.por ? `<br><span class="admin-eu">${esc(d.por)}</span>` : ''}</td>
+        <td>${esc(formatarDia(d.em))}</td>
+      </tr>`).join('');
+  return `
+    <h4>Docentes novos para conferir (${itens.length})</h4>
+    <table class="admin-tabela">
+      <thead><tr><th>Nome</th><th>Vínculo</th><th>Unidade / Subunidade</th><th>Onde</th><th>Cadastrado por</th><th>Em</th></tr></thead>
+      <tbody>${linhas}</tbody>
+    </table>
+    <div class="admin-ajuda">Para conferir: ponha o nome certo na <strong>planilha_base.xlsx</strong> (docentes), com unidade e subunidade.
+      Se o coordenador escreveu errado, ponha a grafia dele em <strong>nomes_anteriores</strong>: o Cardume troca nas alocações.
+      Gere o dados_app.json e envie; o nome sai desta lista.</div>`;
+}
+
+function formatarDia(iso) {
+  const [a, m, d] = String(iso || '').split('-');
+  return a && m && d ? `${d}/${m}/${a}` : '—';
 }
 
 function desenharLista() {

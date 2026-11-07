@@ -4227,6 +4227,33 @@ body:has(#tab-weekly.active) .top-bar #weekly-instructions-card {
     background: rgba(255, 255, 255, 0.22);
 }
 
+.sync-bar-badge {
+    display: inline-block;
+    margin-left: 4px;
+    padding: 0 7px;
+    border-radius: 10px;
+    background: #ffd166;
+    color: #3d2c00;
+    font-weight: 600;
+}
+
+/* Painel do administrador: docentes novos para conferir */
+.admin-docentes {
+    margin-bottom: 14px;
+    padding: 10px 12px;
+    border: 1px solid #f3d27a;
+    border-radius: 6px;
+    background: #fffaf0;
+}
+
+.admin-docentes h4 {
+    margin: 0 0 8px;
+}
+
+.admin-docentes .admin-tabela {
+    margin-bottom: 6px;
+}
+
 /* Janela "Usuarios e backup" */
 .admin-modal {
     position: fixed;

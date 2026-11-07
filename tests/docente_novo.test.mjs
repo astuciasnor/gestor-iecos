@@ -6,7 +6,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import { detectTeacherConflicts } from '../js/conflicts.js';
-import { findNewNames, findSimilarNames, problemaNoNome, UNIDADES, VINCULOS_TEMPORARIOS } from '../js/docente_nomes.mjs';
+import { findNewNames, findSimilarNames, problemaNoNome, UNIDADES, VINCULOS_DOCENTE_NOVO, listarDocentesParaConferir } from '../js/docente_nomes.mjs';
 
 // store.js le o localStorage ao carregar; no Node ele nao existe.
 globalThis.localStorage ??= { getItem: () => null, setItem: () => {}, removeItem: () => {} };
@@ -68,9 +68,28 @@ test('abreviacao, titulo ou nome sem sobrenome nao passam', () => {
   assert.match(problemaNoNome('Dra Maria Souza'), /título/);
 });
 
-test('so Substituto e Visitante; subunidades por unidade', () => {
-  assert.deepEqual(VINCULOS_TEMPORARIOS, ['Substituto', 'Visitante']);
+test('vinculos e subunidades por unidade', () => {
+  assert.deepEqual(VINCULOS_DOCENTE_NOVO, ['Substituto', 'Visitante', 'Efetivo']);
   const porSigla = Object.fromEntries(UNIDADES.map((u) => [u.sigla, u.subunidades]));
   assert.deepEqual(porSigla.IECOS, ['FEPESCA', 'FACIN', 'FBIO']);
   assert.deepEqual(porSigla.CBRAG, ['FACED', 'FAHIST', 'FAMAT', 'FALE', 'FALEST']);
+});
+
+test('painel do administrador: so cadastros fora da planilha, um por nome', () => {
+  const cad = (nome, em, extra = {}) => ({ nome, vinculo: 'Efetivo', unidade: 'CANAN', subunidade: 'FACFIS', outraUnidade: true, por: 'coord@ufpa.br', em, ...extra });
+  const porPeriodo = {
+    PL1: [
+      { turmaId: 'EP2025', disciplina: 'ECOLOGIA', docentesCadastrados: [cad('Chico Buarque de Holanda', '2026-11-06')] },
+      { turmaId: 'EP2026', disciplina: 'BIOLOGIA', docentesCadastrados: [cad('Chico Buarque de Holanda', '2026-11-05')] },
+      { turmaId: 'MT2026', disciplina: 'CALCULO', docentesCadastrados: [cad('Evaldo Martins da Silva', '2026-11-01')] },
+      { turmaId: 'MT2026', disciplina: 'ALGEBRA', docente: 'Sem cadastro' }
+    ],
+    PL2: [{ turmaId: 'EP2025', disciplina: 'ECOLOGIA', docentesCadastrados: [cad('chico buarque de holanda', '2026-11-07')] }]
+  };
+  const itens = listarDocentesParaConferir(porPeriodo, LISTA);
+  assert.equal(itens.length, 1);
+  assert.equal(itens[0].nome, 'Chico Buarque de Holanda');
+  assert.equal(itens[0].em, '2026-11-05');
+  assert.deepEqual(itens[0].usos, ['EP2025 · ECOLOGIA', 'EP2026 · BIOLOGIA']);
+  assert.equal(itens[0].outraUnidade, true);
 });
