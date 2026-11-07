@@ -4199,8 +4199,9 @@ body:has(#tab-weekly.active) .top-bar #weekly-instructions-card {
 }
 
 /* Menu Agenda Publica: a agenda publica (o que alunos e professores veem) num
-   "celular grande": aparelho com ~60% da largura e a tela um pouco reduzida
-   (cabe mais coisa sem rolar); o aviso e o Recarregar ficam ao lado. */
+   "celular grande", em pe: aparelho estreito e da altura da tela, com a tela um
+   pouco reduzida (cabe mais coisa sem rolar); o aviso e o Recarregar ao lado. */
+#tab-publica { padding-top: 12px; padding-bottom: 12px; }
 .agenda-publica-aba {
     --agenda-escala: 0.85;
     display: flex;
@@ -4211,9 +4212,9 @@ body:has(#tab-weekly.active) .top-bar #weekly-instructions-card {
 
 .agenda-publica-aparelho {
     position: relative;
-    flex: 0 0 60%;
-    max-width: 920px;
-    height: calc(100vh - 150px);
+    flex: 0 0 auto;
+    width: clamp(420px, 40%, 600px);
+    height: calc(100vh - 96px);
     min-height: 560px;
     box-sizing: border-box;
     padding: 18px 14px;
