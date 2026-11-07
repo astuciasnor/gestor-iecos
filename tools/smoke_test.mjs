@@ -299,7 +299,7 @@ async function run() {
       })()`, 10000);
       assert(ok, 'a agenda publica nao abriu no menu');
       const largura = await evaluate("document.getElementById('agenda-publica-frame').getBoundingClientRect().width");
-      assert(largura > 600, `agenda publica estreita demais: ${largura}px`);
+      assert(largura > 400, `agenda publica estreita demais: ${largura}px`);
       return `largura ${Math.round(largura)}px`;
     });
   } finally {

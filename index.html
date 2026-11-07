@@ -10,7 +10,7 @@
         // Vai para o aviso antes de carregar o programa. A agenda publica nao passa por aqui.
         if (/\.github\.io$/i.test(location.hostname)) location.replace('mudou.html');
     </script>
-    <link rel="stylesheet" href="css/style.css?v=202611071144">
+    <link rel="stylesheet" href="css/style.css?v=202611071147">
 
     <style>
         :root {
@@ -1125,17 +1125,21 @@
 
             <section id="tab-publica" class="tab-content" role="tabpanel" aria-labelledby="tabbtn-publica">
                 <div class="agenda-publica-aba">
-                    <div class="agenda-publica-aviso no-print">
-                        <div>
+                    <div class="agenda-publica-aparelho">
+                        <div class="agenda-publica-tela">
+                            <iframe id="agenda-publica-frame" title="Agenda pública (o que os alunos e professores veem)"></iframe>
+                        </div>
+                    </div>
+                    <aside class="agenda-publica-lateral no-print">
+                        <p class="agenda-publica-aviso">
                             <strong>É o que os alunos e os professores veem</strong> (no celular ou no computador):
                             a <b>Agenda Discente</b> por curso, turma e período, e a <b>Agenda Docente</b> de cada professor.
+                        </p>
+                        <p class="agenda-publica-aviso agenda-publica-aviso--publicado">
                             Mostra o que está <b>publicado</b>: as alocações novas aparecem aqui depois do <b>Publicar Online</b>.
-                        </div>
+                        </p>
                         <button type="button" id="btn-agenda-publica-recarregar" class="agenda-publica-recarregar" title="Carregar de novo a agenda publicada">⟳ Recarregar</button>
-                    </div>
-                    <div class="visao-publica-moldura">
-                        <iframe id="agenda-publica-frame" title="Agenda pública (o que os alunos e professores veem)"></iframe>
-                    </div>
+                    </aside>
                 </div>
             </section>
 
@@ -1494,7 +1498,7 @@
         </main>
     </div>
 
-    <script type="module" src="js/main.js?v=202611071144"></script>
+    <script type="module" src="js/main.js?v=202611071147"></script>
 </body>
 
 </html>
