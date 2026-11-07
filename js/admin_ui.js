@@ -2,17 +2,18 @@
 // Cadastra, edita e exclui acessos, gera senha provisoria e baixa a copia do
 // banco. Quem garante que so o administrador faz isso e a API (api/index.php).
 // Mostra tambem os docentes novos cadastrados pelos coordenadores para conferir.
-import { store } from './store.js?v=202611062134';
-import { fetchAllocationsForPlans, salvarAlocacoesRevisadas, getSessionEmail, getPerfil } from './sync_remoto.js?v=202611062134';
+import { store } from './store.js?v=202611062147';
+import { fetchAllocationsForPlans, salvarAlocacoesRevisadas, getSessionEmail, getPerfil } from './sync_remoto.js?v=202611062147';
 import {
   listarDocentesParaConferir,
   aplicarRevisaoDocente,
+  removerDocenteDaAlocacao,
   problemaNoNome,
   limparEspacos,
   normalizeTeacherNameForMatch,
   VINCULOS_DOCENTE_NOVO,
   UNIDADES
-} from './docente_nomes.mjs?v=202611062134';
+} from './docente_nomes.mjs?v=202611062147';
 
 let ctx = null;      // { tools, meuId, showToast, aoContarDocentes }
 let usuarios = [];
@@ -171,7 +172,10 @@ function desenharDocentes(itens) {
         <td>${d.usos.map(esc).join('<br>')}</td>
         <td>${esc(d.porNome || '')}${d.por ? `<br><span class="admin-eu">${esc(d.por)}</span>` : ''}</td>
         <td>${esc(formatarDia(d.em))}</td>
-        <td><button type="button" class="admin-btn admin-btn-mini" data-acao="revisar-docente" data-idx="${idx}">Revisar</button></td>
+        <td class="admin-botoes-linha">
+          <button type="button" class="admin-btn admin-btn-mini" data-acao="revisar-docente" data-idx="${idx}">Revisar</button>
+          <button type="button" class="admin-btn admin-btn-mini admin-btn-perigo" data-acao="remover-docente" data-idx="${idx}">Remover</button>
+        </td>
       </tr>`).join('');
   return `
     <h4>Docentes novos para conferir (${itens.length})</h4>
@@ -180,8 +184,10 @@ function desenharDocentes(itens) {
       <tbody>${linhas}</tbody>
     </table>
     ${formularioRevisao()}
-    <div class="admin-ajuda">Revisar: corrija o nome, a unidade e a subunidade (pode usar as siglas). A correção vale
-      em todas as alocações do docente nos períodos em curso e futuros, e o cadastro sai desta lista.</div>`;
+    <div class="admin-ajuda">Revisar: corrija o nome, a unidade e a subunidade (pode usar as siglas). Se for um professor
+      que já existe, digite o nome dele como está na lista. A correção vale em todas as alocações do docente nos
+      períodos em curso e futuros, e o cadastro sai desta lista.<br>
+      Remover: para cadastro indevido. As componentes ficam; o docente vira "A definir" e o coordenador escolhe outro.</div>`;
 }
 
 function opcoesDatalist(valores) {
@@ -220,6 +226,11 @@ function aoClicarNosDocentes(event) {
   if (botao.dataset.acao === 'cancelar-revisao') {
     docenteEmRevisao = null;
     el('admin-revisao').hidden = true;
+    return;
+  }
+  if (botao.dataset.acao === 'remover-docente') {
+    const alvo = docentesItens[Number(botao.dataset.idx)];
+    if (alvo) removerCadastroDocente(alvo, botao);
     return;
   }
   if (botao.dataset.acao !== 'revisar-docente') return;
@@ -502,4 +513,35 @@ function esc(value) {
   return String(value ?? '').replace(/[&<>"']/g, (ch) => ({
     '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
   }[ch]));
+}
+
+// Cadastro indevido: as componentes ficam, o docente vira "A definir" em todas
+// as alocacoes dos periodos em curso e futuros, e o nome some das sugestoes.
+async function removerCadastroDocente(d, botao) {
+  await executar(botao, async () => {
+    // Le de novo do servidor: a lista na tela pode estar desatualizada.
+    const porPeriodo = await fetchAllocationsForPlans(chavesDosPeriodos());
+    const mudancas = Object.entries(porPeriodo).map(([chave, alocacoes]) => [
+      chave,
+      (alocacoes || []).map((a) => removerDocenteDaAlocacao(a, d.nome)).filter(Boolean)
+    ]);
+    const alteradas = mudancas.flatMap(([, lista]) => lista);
+    const onde = alteradas
+      .map((a) => [a.turmaId, a.disciplina].filter(Boolean).join(' · '))
+      .filter((v, i, todos) => v && todos.indexOf(v) === i);
+    const mensagem = `Remover o cadastro de "${d.nome}"?\n\n`
+      + (onde.length
+        ? `${alteradas.length} alocação(ões) ficam com docente "A definir":\n${onde.slice(0, 12).map((v) => `• ${v}`).join('\n')}${onde.length > 12 ? `\n• e mais ${onde.length - 12}` : ''}`
+        : 'O nome não aparece em nenhuma alocação dos períodos em curso e futuros.')
+      + '\n\nAs componentes não são apagadas: o coordenador escolhe o docente depois, pelo Editar.';
+    if (!confirm(mensagem)) return;
+    for (const [chave, lista] of mudancas) {
+      await salvarAlocacoesRevisadas(chave, lista);
+    }
+    if (docenteEmRevisao && normalizeTeacherNameForMatch(docenteEmRevisao.nome) === normalizeTeacherNameForMatch(d.nome)) {
+      docenteEmRevisao = null;
+    }
+    ctx.showToast(`Cadastro de ${d.nome} removido: ${alteradas.length} alocação(ões) com docente "A definir".`, 'success', 5000);
+    await carregarDocentes();
+  });
 }

@@ -6,7 +6,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import { detectTeacherConflicts } from '../js/conflicts.js';
-import { findNewNames, findSimilarNames, problemaNoNome, UNIDADES, VINCULOS_DOCENTE_NOVO, listarDocentesParaConferir, aplicarRevisaoDocente } from '../js/docente_nomes.mjs';
+import { findNewNames, findSimilarNames, problemaNoNome, UNIDADES, VINCULOS_DOCENTE_NOVO, listarDocentesParaConferir, aplicarRevisaoDocente, removerDocenteDaAlocacao } from '../js/docente_nomes.mjs';
 
 // store.js le o localStorage ao carregar; no Node ele nao existe.
 globalThis.localStorage ??= { getItem: () => null, setItem: () => {}, removeItem: () => {} };
@@ -116,4 +116,23 @@ test('revisao do administrador troca o nome e mantem quem cadastrou', () => {
 
   assert.equal(aplicarRevisaoDocente({ id: 'a3', docente: 'Outra Pessoa' }, 'Chico Buarque', revisao), null);
   assert.deepEqual(listarDocentesParaConferir({ PL1: [r1] }, []), [], 'revisado sai da lista');
+});
+
+test('remover cadastro indevido: componente fica, docente vira "A definir"', () => {
+  const cad = { nome: 'Fulano Indevido', vinculo: 'Substituto', unidade: 'IECOS', subunidade: 'FEPESCA', por: 'c@ufpa.br', em: '2026-11-06' };
+  const unico = { id: 'a1', turmaId: 'EP2025', disciplina: 'ECOLOGIA', docente: 'Fulano Indevido', ch: 60, faixas: [{ inicio: '2027-03-15' }], docentesCadastrados: [cad] };
+  const r1 = removerDocenteDaAlocacao(unico, 'fulano indevido');
+  assert.equal(r1.docente, 'A definir');
+  assert.equal(r1.docentesCadastrados, undefined);
+  assert.deepEqual(r1.faixas, unico.faixas);
+  assert.equal(r1.ch, 60);
+
+  const outro = { nome: 'Chico Buarque', vinculo: 'Efetivo' };
+  const varios = { id: 'a2', docente: 'Evaldo / Fulano (Múltiplos)', docentes: [{ nome: 'Evaldo Martins da Silva', ch: 30 }, { nome: 'Fulano Indevido', ch: 30 }], docentesCadastrados: [cad, outro] };
+  const r2 = removerDocenteDaAlocacao(varios, 'Fulano Indevido');
+  assert.deepEqual(r2.docentes, [{ nome: 'Evaldo Martins da Silva', ch: 30 }, { nome: 'A definir', ch: 30 }]);
+  assert.equal(r2.docente, 'Evaldo / A definir (Múltiplos)');
+  assert.deepEqual(r2.docentesCadastrados, [outro]);
+
+  assert.equal(removerDocenteDaAlocacao({ id: 'a3', docente: 'Outra Pessoa' }, 'Fulano Indevido'), null);
 });

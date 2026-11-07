@@ -101,6 +101,18 @@ export function listarDocentesParaConferir(allocationsByPlan = {}, nomesPlanilha
     return [...porNome.values()].sort((a, b) => String(b.em || '').localeCompare(String(a.em || '')));
 }
 
+const ROTULO_MULTIPLOS = /\(m[uú]ltiplos\)/i;
+export const A_DEFINIR = 'A definir';
+
+// Mesmo rotulo que o formulario monta para varios docentes ("Evaldo / Chico (Múltiplos)").
+function rotuloMultiplos(docentes) {
+    const nomes = docentes.map((d) => {
+        const nome = String(d?.nome || '');
+        return /^a definir$/i.test(nome) ? A_DEFINIR : nome.split(' ')[0];
+    });
+    return `${nomes.join(' / ')} (Múltiplos)`;
+}
+
 // Revisao do administrador: troca o nome antigo pelo revisado (docente unico,
 // lista de docentes e rotulo "(Multiplos)") e atualiza o cadastro, mantendo quem
 // cadastrou. Devolve uma copia alterada da alocacao, ou null se nada mudou.
@@ -123,9 +135,8 @@ export function aplicarRevisaoDocente(alloc, nomeAntigo, revisao) {
                 mudouLista = true;
             }
         });
-        // Mesmo rotulo que o formulario monta para varios docentes.
-        if (mudouLista && /\(m[uú]ltiplos\)/i.test(String(copia.docente || ''))) {
-            copia.docente = `${copia.docentes.map((d) => String(d?.nome || '').split(' ')[0]).join(' / ')} (Múltiplos)`;
+        if (mudouLista && ROTULO_MULTIPLOS.test(String(copia.docente || ''))) {
+            copia.docente = rotuloMultiplos(copia.docentes);
         }
         mudou = mudou || mudouLista;
     }
@@ -146,6 +157,43 @@ export function aplicarRevisaoDocente(alloc, nomeAntigo, revisao) {
                 revisado: { por: revisao.por || '', porNome: revisao.porNome || '', em: revisao.em || '' }
             };
         });
+    }
+    return mudou ? copia : null;
+}
+
+// Remocao de cadastro indevido pelo administrador: a componente fica (datas,
+// horarios, faixas e carga de cada docente), so o nome vira "A definir" e o
+// cadastro sai. Devolve uma copia alterada da alocacao, ou null se nada mudou.
+export function removerDocenteDaAlocacao(alloc, nome) {
+    const chave = normalizeTeacherNameForMatch(nome);
+    if (!alloc || !chave) return null;
+    const copia = structuredClone(alloc);
+    let mudou = false;
+
+    if (normalizeTeacherNameForMatch(copia.docente) === chave) {
+        copia.docente = A_DEFINIR;
+        mudou = true;
+    }
+    if (Array.isArray(copia.docentes)) {
+        let mudouLista = false;
+        copia.docentes.forEach((d) => {
+            if (d && normalizeTeacherNameForMatch(d.nome) === chave) {
+                d.nome = A_DEFINIR;
+                mudouLista = true;
+            }
+        });
+        if (mudouLista && ROTULO_MULTIPLOS.test(String(copia.docente || ''))) {
+            copia.docente = rotuloMultiplos(copia.docentes);
+        }
+        mudou = mudou || mudouLista;
+    }
+    if (Array.isArray(copia.docentesCadastrados)) {
+        const resto = copia.docentesCadastrados.filter((cad) => normalizeTeacherNameForMatch(cad?.nome) !== chave);
+        if (resto.length !== copia.docentesCadastrados.length) {
+            mudou = true;
+            if (resto.length) copia.docentesCadastrados = resto;
+            else delete copia.docentesCadastrados;
+        }
     }
     return mudou ? copia : null;
 }
