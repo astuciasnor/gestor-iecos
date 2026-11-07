@@ -1,32 +1,32 @@
-import { store } from './store.js?v=202611062147';
-import { getTurnoLetter, mapSlotToTurno } from './turns.js?v=202611062147';
-import { normalizePeriodo as normalizePeriodoLetivoCode } from './plan_storage.js?v=202611062147';
-import { getCalendarEvents } from './calendar.js?v=202611062147';
-import { isDateOverlap } from './utils.js?v=202611062147';
-import { weeklyState } from './weekly_state.js?v=202611062147';
-import { findPendentesCobertas, isPendenteJaAlocada } from './pendentes.mjs?v=202611062147';
-import { classifySwap } from './troca_ordem.mjs?v=202611062147';
-import { buildCanonicalOfferProjection } from './execution_engine.js?v=202611062147';
+import { store } from './store.js?v=202611070855';
+import { getTurnoLetter, mapSlotToTurno } from './turns.js?v=202611070855';
+import { normalizePeriodo as normalizePeriodoLetivoCode } from './plan_storage.js?v=202611070855';
+import { getCalendarEvents } from './calendar.js?v=202611070855';
+import { isDateOverlap } from './utils.js?v=202611070855';
+import { weeklyState } from './weekly_state.js?v=202611070855';
+import { findPendentesCobertas, isPendenteJaAlocada } from './pendentes.mjs?v=202611070855';
+import { classifySwap } from './troca_ordem.mjs?v=202611070855';
+import { buildCanonicalOfferProjection } from './execution_engine.js?v=202611070855';
 import {
     buildSigaaMetadataPayload,
     validateSigaaMetadataPayload,
     getSigaaCode,
     buildScopedSigaaAllocationFromOfferFaixa
-} from './sigaa_metadata.js?v=202611062147';
-import { parseBackupDataFile, extractImportPlanMeta } from './serialization.js?v=202611062147';
+} from './sigaa_metadata.js?v=202611070855';
+import { parseBackupDataFile, extractImportPlanMeta } from './serialization.js?v=202611070855';
 import {
     showToastWarning,
     showPersistentStatusMessage,
     copyTextToClipboard,
     flashButtonCopyState,
     setupCopyActionButtons
-} from './ui_feedback.js?v=202611062147';
+} from './ui_feedback.js?v=202611070855';
 import {
     normalizeHexColor,
     adjustHexColor,
     hexToRgba,
     vividHexColor
-} from './color_utils.js?v=202611062147';
+} from './color_utils.js?v=202611070855';
 import {
     isFaixaAllocation,
     isPriorityRegularAllocation,
@@ -35,7 +35,7 @@ import {
     normalizeTeacherNameForMatch,
     getDocenteShortLabel,
     getAllocationTeachersForConflict
-} from './allocation_helpers.js?v=202611062147';
+} from './allocation_helpers.js?v=202611070855';
 import {
     VINCULOS_DOCENTE_NOVO,
     OUTRA_UNIDADE,
@@ -44,8 +44,9 @@ import {
     findSimilarNames,
     problemaNoNome,
     limparEspacos
-} from './docente_nomes.mjs?v=202611062147';
-import { getSessionEmail, getPerfil } from './sync_remoto.js?v=202611062147';
+} from './docente_nomes.mjs?v=202611070855';
+import { getSessionEmail, getPerfil, fetchAllocationsForPlans } from './sync_remoto.js?v=202611070855';
+import { resolveBackendMode } from './backend_config.js?v=202611070855';
 import {
     normalizeConflictSlotLabel,
     getAvailableTurnoOfertaOptions,
@@ -54,7 +55,7 @@ import {
     isTurnoDividerSlot,
     buildHorariosForUI,
     getShiftChangeMeta
-} from './turno_helpers.js?v=202611062147';
+} from './turno_helpers.js?v=202611070855';
 import {
     getDisciplinaCHGlobal,
     derivarBloco,
@@ -63,17 +64,19 @@ import {
     getTurmaBaseLabel,
     getDisciplinaInfo,
     getPrintAcademicMetaLine
-} from './curso_turma_helpers.js?v=202611062147';
+} from './curso_turma_helpers.js?v=202611070855';
 import {
     renderGanttChart
-} from './gantt_ui.js?v=202611062147';
+} from './gantt_ui.js?v=202611070855';
 import {
     renderMonthlyCalendar,
-    renderTeacherCalendar
-} from './calendarios_ui.js?v=202611062147';
+    renderTeacherCalendar,
+    setTeacherRangeLoader,
+    clearTeacherRangeCache
+} from './calendarios_ui.js?v=202611070855';
 import {
     refreshTeacherConflictsUI
-} from './conflitos_ui.js?v=202611062147';
+} from './conflitos_ui.js?v=202611070855';
 import {
     shouldIgnoreTurmaEventForCandidate,
     normalizeDrawnSlotsByDay,
@@ -87,7 +90,7 @@ import {
     resolveEditableFaixasFromStoredExecution,
     alignFaixasToExecutionEnd,
     buildFinalAdjustmentFaixaSuggestion
-} from './faixa_utils.js?v=202611062147';
+} from './faixa_utils.js?v=202611070855';
 import {
     timeToMinutes,
     shiftISODate,
@@ -101,14 +104,14 @@ import {
     isDateInsideRange,
     formatDateBRShortYear,
     formatDateBR
-} from './date_utils_ui.js?v=202611062147';
+} from './date_utils_ui.js?v=202611070855';
 import {
     initializeWeeklyScheduleForTurma,
     reconcileTurmaSelectionAfterPLChange,
     resetWeeklyViewOnTurmaChange,
     resolveActiveAcademicPeriod,
     slotLabelsOverlap
-} from './academic_rules.mjs?v=202611062147';
+} from './academic_rules.mjs?v=202611070855';
 
 const gridContainer = document.getElementById('weekly-grid');
 const selCurso = document.getElementById('sel-curso');
@@ -271,6 +274,70 @@ function applySidebarLayoutFixes() {
     }
 }
 
+// ===== Intervalo com varios PLs no Calendario Docente =====
+// Quando as datas passam do PL aberto (ex.: o ano inteiro), o calendario do
+// docente (calendarios_ui.js) pede aqui os PLs do intervalo: do servidor (modo
+// online) ou do navegador (modo local). Nada e gravado.
+function getPlansInRange(start, end) {
+    const rawPlans = Array.isArray(store.rawData?.periodos_letivos) ? store.rawData.periodos_letivos : [];
+    return rawPlans
+        .filter((item) => item?.inicio && item?.fim && item.inicio <= end && item.fim >= start)
+        .map((item) => store.getPlanMetaFromSettings({
+            periodo: item?.periodo_letivo || item?.periodo || '',
+            termStart: item?.inicio || '',
+            termEnd: item?.fim || ''
+        }))
+        .filter((meta) => meta?.key)
+        .sort((a, b) => String(a.termStart).localeCompare(String(b.termStart)));
+}
+
+async function loadTeacherRangePlans(start, end) {
+    const metas = getPlansInRange(start, end);
+    const activeKey = store.getActivePlanMeta()?.key || '';
+    let byKey = {};
+    try {
+        if (resolveBackendMode() !== 'local') {
+            byKey = await fetchAllocationsForPlans(metas.map((meta) => meta.key));
+        } else {
+            metas.forEach((meta) => {
+                byKey[meta.key] = meta.key === activeKey ? store.allocations : store.readPlanAllocations(meta);
+            });
+        }
+    } catch (error) {
+        showToastWarning(`Nao foi possivel ler os periodos letivos do servidor: ${error?.message || error}`, 'error', 6000);
+        throw error;
+    }
+    return metas.map((meta) => ({ meta, allocations: byKey[meta.key] || [] }));
+}
+
+// "Ano inteiro": so preenche as datas de 1o de janeiro a 31 de dezembro do ano
+// escolhido; o resto e o mesmo caminho das datas digitadas.
+function setupTeacherYearControls() {
+    setTeacherRangeLoader(loadTeacherRangePlans);
+
+    const selAno = document.getElementById('sel-ano-teacher');
+    const btnAno = document.getElementById('btn-ano-inteiro-teacher');
+    if (!selAno || !btnAno) return;
+
+    const rawPlans = Array.isArray(store.rawData?.periodos_letivos) ? store.rawData.periodos_letivos : [];
+    const years = [...new Set(rawPlans
+        .map((item) => String(item?.ano || String(item?.inicio || '').slice(0, 4)))
+        .filter((year) => /^\d{4}$/.test(year)))].sort();
+    selAno.innerHTML = years.map((year) => `<option value="${year}">${year}</option>`).join('');
+    const activeYear = String(store.settings?.termStart || '').slice(0, 4);
+    if (years.includes(activeYear)) selAno.value = activeYear;
+
+    btnAno.addEventListener('click', () => {
+        if (!String(selViewDocente?.value || '').trim()) {
+            showToastWarning('Selecione um professor primeiro para ver o ano inteiro.', 'warning', 2400);
+            return;
+        }
+        if (calStartTeacher) calStartTeacher.value = `${selAno.value}-01-01`;
+        if (calEndTeacher) calEndTeacher.value = `${selAno.value}-12-31`;
+        handleTeacherViewportChange();
+    });
+}
+
 function setupTeacherFilterControls() {
     const btnRefresh = document.getElementById('btn-refresh-teacher');
     const btnClear = document.getElementById('btn-clear-view-docente');
@@ -294,8 +361,12 @@ function setupTeacherFilterControls() {
             showToastWarning('Selecione um professor primeiro para atualizar a agenda.', 'warning', 2200);
             return;
         }
+        // Intervalo com varios PLs: busca de novo os outros PLs (podem ter mudado no servidor).
+        clearTeacherRangeCache();
         renderActiveSubtab('tab-teacher', 'docente-calendar');
     });
+
+    setupTeacherYearControls();
 
     btnClear?.addEventListener('click', () => {
         if (!selViewDocente) return;

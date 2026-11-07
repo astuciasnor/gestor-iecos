@@ -10,7 +10,7 @@
         // Vai para o aviso antes de carregar o programa. A agenda publica nao passa por aqui.
         if (/\.github\.io$/i.test(location.hostname)) location.replace('mudou.html');
     </script>
-    <link rel="stylesheet" href="css/style.css?v=202611062147">
+    <link rel="stylesheet" href="css/style.css?v=202611070855">
 
     <style>
         :root {
@@ -1136,6 +1136,14 @@
                                 </div>
                             </div>
                         </div>
+                        <div class="docente-filter-group docente-filter-group--year">
+                            <label class="docente-filter-label" for="sel-ano-teacher">Ou Veja o Ano Inteiro:</label>
+                            <div class="docente-year-row">
+                                <select id="sel-ano-teacher" aria-label="Ano"></select>
+                                <button id="btn-ano-inteiro-teacher" type="button" class="docente-update-btn" aria-pressed="false"
+                                    title="Mostrar PL1 a PL4 do ano escolhido: a carga horária de cada PL e do ano, e o calendário de janeiro a dezembro.">📆 Ano inteiro</button>
+                            </div>
+                        </div>
                     </section>
                 </div>
                 <div id="subview-docente-calendar" class="subtab-view active">
@@ -1515,7 +1523,7 @@
         </main>
     </div>
 
-    <script type="module" src="js/main.js?v=202611062147"></script>
+    <script type="module" src="js/main.js?v=202611070855"></script>
 </body>
 
 </html>

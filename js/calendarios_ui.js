@@ -1,9 +1,9 @@
-import { store } from './store.js?v=202611062147';
-import { getCalendarEvents } from './calendar.js?v=202611062147';
-import { buildTeacherExecutionSnapshot, buildCanonicalOfferProjection } from './execution_engine.js?v=202611062147';
-import { getHorariosByTurno, normalizeTurnoKey, getTurnoLetter, mapSlotToTurno } from './turns.js?v=202611062147';
-import { vividHexColor } from './color_utils.js?v=202611062147';
-import { formatDateBR, timeToMinutes, shortDayName } from './date_utils_ui.js?v=202611062147';
+import { store } from './store.js?v=202611070855';
+import { getCalendarEvents } from './calendar.js?v=202611070855';
+import { buildTeacherExecutionSnapshot, buildCanonicalOfferProjection } from './execution_engine.js?v=202611070855';
+import { getHorariosByTurno, normalizeTurnoKey, getTurnoLetter, mapSlotToTurno } from './turns.js?v=202611070855';
+import { vividHexColor } from './color_utils.js?v=202611070855';
+import { formatDateBR, timeToMinutes, shortDayName } from './date_utils_ui.js?v=202611070855';
 import {
     isFaixaAllocation,
     isScheduledRegularAllocation,
@@ -11,7 +11,7 @@ import {
     teacherNamesMatch,
     getDocenteShortLabel,
     calculateTeacherTotalCH
-} from './allocation_helpers.js?v=202611062147';
+} from './allocation_helpers.js?v=202611070855';
 import {
     normalizeTurnoOfertaKey,
     formatTurnoOfertaLabel,
@@ -21,18 +21,18 @@ import {
     buildHorariosForUI,
     getShiftChangeMeta,
     getCalendarShiftBadgeHTML
-} from './turno_helpers.js?v=202611062147';
+} from './turno_helpers.js?v=202611070855';
 import {
     getDisciplinaCHGlobal,
     getTurmaLabel,
     getTurmaBaseLabel,
     getDisciplinaInfo,
     getPrintAcademicMetaLine
-} from './curso_turma_helpers.js?v=202611062147';
+} from './curso_turma_helpers.js?v=202611070855';
 import {
     getGanttTurnoConfigs,
     resolveTeacherShiftForSlot
-} from './gantt_ui.js?v=202611062147';
+} from './gantt_ui.js?v=202611070855';
 
 // Referencias DOM de nivel de modulo (espelham as de ui.js; modulo deferred, DOM pronto).
 const selViewDocente = document.getElementById('sel-view-docente');
@@ -118,6 +118,33 @@ export function getSlotsForTeacherShifts(activeShiftKeys = []) {
     return [...slotMap.values()]
         .filter((slot) => slot && slot.trim().length > 0)
         .sort((a, b) => timeToMinutes(a) - timeToMinutes(b));
+}
+
+// Linhas de horario do calendario do docente. O quadro de horarios depende do
+// curso (regime); sem isto ele vinha do curso escolhido na barra lateral (ou do
+// regime padrao, sem curso escolhido) e as aulas de outro quadro sumiam da grade.
+// Usa os cursos das turmas em que o docente da aula.
+export function getTeacherSlotsForEvents(activeShiftKeys = [], eventsByDate = {}) {
+    const cursoPorTurma = new Map((store.rawData?.turmas || []).map((t) => [String(t.turma_id), String(t.sigla || '')]));
+    const cursos = new Set();
+    Object.values(eventsByDate || {}).forEach((events) => (Array.isArray(events) ? events : []).forEach((event) => {
+        if (!event || event.type === 'holiday') return;
+        const curso = cursoPorTurma.get(String(event.turmaId || ''));
+        if (curso) cursos.add(curso);
+    }));
+    if (!cursos.size) return getSlotsForTeacherShifts(activeShiftKeys);
+
+    const savedCurso = store.selectedCurso;
+    const slots = new Set();
+    try {
+        cursos.forEach((curso) => {
+            store.selectedCurso = curso;
+            getSlotsForTeacherShifts(activeShiftKeys).forEach((slot) => slots.add(slot));
+        });
+    } finally {
+        store.selectedCurso = savedCurso;
+    }
+    return [...slots].sort((a, b) => timeToMinutes(a) - timeToMinutes(b));
 }
 
 export function buildTurmaCalendarSlots(eventsByDate = {}, turmaId = '') {
@@ -261,6 +288,18 @@ export function renderTeacherCalendar() {
     const start = calStart ? calStart.value : '2025-01-01';
     let end = calEnd ? calEnd.value : '2025-12-31';
 
+    // Intervalo que passa do PL aberto (ex.: o ano inteiro): junta todos os PLs
+    // do intervalo. Enquanto os outros PLs chegam do servidor, mostra o PL aberto.
+    const carregandoOutrosPLs = intervalExceedsActivePlan(start, end) && !!teacherRangeLoader;
+    updateYearButton(start, end, carregandoOutrosPLs);
+    if (carregandoOutrosPLs) {
+        if (teacherRangeView && teacherRangeView.start === start && teacherRangeView.end === end) {
+            renderTeacherRangeCalendar(container, docente, teacherRangeView);
+            return;
+        }
+        requestTeacherRange(start, end);
+    }
+
     if (end) {
         const dt = new Date(end + 'T12:00:00');
         const lastDay = new Date(dt.getFullYear(), dt.getMonth() + 1, 0);
@@ -280,7 +319,7 @@ export function renderTeacherCalendar() {
     const activeShiftData = teacherSnapshot.activeShiftData;
     const activeShiftKeys = activeShiftData.map((shift) => shift.normalized).filter(Boolean);
     const conflictRows = teacherSnapshot.conflictRows;
-    const visibleSlots = getSlotsForTeacherShifts(activeShiftKeys);
+    const visibleSlots = getTeacherSlotsForEvents(activeShiftKeys, eventsByDate);
     const totalCH = calculateTeacherTotalCH(docente);
     const docenteTitle = totalCH > 0 ? `${docente} (${totalCH}h)` : docente;
     const shiftSummary = activeShiftData.length > 0
@@ -293,6 +332,11 @@ export function renderTeacherCalendar() {
                 <span class="print-title-main">Vistoria de Conflitos Horarios</span><br>
                 <span class="print-title-sub">${docenteTitle}</span>
             </div>
+            ${carregandoOutrosPLs ? `<div class="no-print" style="background:#fff7e6; color:#7a4b00; border:1px solid #f3d9a4; border-radius:8px; padding:10px 14px; font-weight:700;">${
+                teacherRangeFailed === `${start}|${end}`
+                    ? 'Não foi possível ler os outros períodos letivos do intervalo: aparece só o PL aberto. Clique em ⟳ ao lado do docente para tentar de novo.'
+                    : 'Buscando os outros períodos letivos do intervalo... (por enquanto aparece só o PL aberto)'
+            }</div>` : ''}
             <div style="display:flex; flex-wrap:wrap; gap:10px; align-items:center;">
                 <div style="background:#eef6f0; color:#1f5d3a; border:1px solid #cfe8d7; border-radius:999px; padding:8px 14px; font-weight:700;">Turnos ativos: ${shiftSummary}</div>
                 <div style="background:#f4f6f8; color:#2c3e50; border:1px solid #dfe6e9; border-radius:999px; padding:8px 14px; font-weight:700;">Conflitos detectados: ${conflictRows.length}</div>
@@ -306,6 +350,191 @@ export function renderTeacherCalendar() {
     const title = `<span class="print-title-main">Vistoria de Conflitos Horarios</span><br><span class="print-title-sub">${docenteTitle}</span>`;
     generateCalendarGrid(calendarContainer, null, docente, start, end, title, {
         slotsToRenderOverride: visibleSlots
+    });
+}
+
+// ===== Intervalo com varios PLs (ex.: o ano inteiro) =====
+// Quando as datas de visualizacao passam do PL aberto, o calendario do docente
+// junta todos os PLs do intervalo: tabela por PL (com subtotal) e um calendario
+// so. Os PLs que nao estao abertos vem do teacherRangeLoader (ui.js: servidor ou
+// navegador); o PL aberto usa sempre store.allocations, para refletir na hora
+// o que se edita nele. Nada e gravado.
+let teacherRangeView = null;       // { start, end, plans: [{ meta, allocations }] }
+let teacherRangeLoader = null;     // async (start, end) => [{ meta, allocations }]
+let teacherRangeLoading = '';
+let teacherRangeFailed = '';
+
+export function setTeacherRangeLoader(loader) {
+    teacherRangeLoader = typeof loader === 'function' ? loader : null;
+}
+
+// Botao de atualizar do docente: busca de novo os outros PLs.
+export function clearTeacherRangeCache() {
+    teacherRangeView = null;
+    teacherRangeFailed = '';
+}
+
+function intervalExceedsActivePlan(start, end) {
+    const termStart = String(store.settings?.termStart || '');
+    const termEnd = String(store.settings?.termEnd || '');
+    if (!start || !end || !termStart || !termEnd || start > end) return false;
+    return start < termStart || end > termEnd;
+}
+
+function isFullYear(start, end) {
+    const year = String(start || '').slice(0, 4);
+    return !!year && start === `${year}-01-01` && end === `${year}-12-31`;
+}
+
+// O botao "Ano inteiro" fica marcado quando o intervalo e um ano completo.
+function updateYearButton(start, end, rangeMode) {
+    const btn = document.getElementById('btn-ano-inteiro-teacher');
+    if (!btn) return;
+    const active = rangeMode && isFullYear(start, end);
+    btn.classList.toggle('is-active', active);
+    btn.setAttribute('aria-pressed', active ? 'true' : 'false');
+    const sel = document.getElementById('sel-ano-teacher');
+    if (active && sel && [...sel.options].some((o) => o.value === start.slice(0, 4))) sel.value = start.slice(0, 4);
+}
+
+function requestTeacherRange(start, end) {
+    const key = `${start}|${end}`;
+    if (teacherRangeLoading === key || teacherRangeFailed === key) return;
+    teacherRangeLoading = key;
+    Promise.resolve()
+        .then(() => teacherRangeLoader(start, end))
+        .then((plans) => {
+            if (teacherRangeLoading !== key) return;
+            teacherRangeLoading = '';
+            teacherRangeView = { start, end, plans: Array.isArray(plans) ? plans : [] };
+            if (calStart?.value === start && calEnd?.value === end) renderTeacherCalendar();
+        })
+        .catch((error) => {
+            if (teacherRangeLoading === key) teacherRangeLoading = '';
+            teacherRangeFailed = key; // nao insiste a cada redesenho; o botao de atualizar tenta de novo
+            console.error('Falha ao ler os periodos letivos do intervalo', error);
+            if (calStart?.value === start && calEnd?.value === end) renderTeacherCalendar();
+        });
+}
+
+// Roda fn com o store apontando para o periodo letivo meta (mesma troca
+// temporaria usada ao publicar a agenda) e devolve o store como estava.
+function withPlanContext(meta, allocations, fn) {
+    const saved = { settings: store.settings, allocations: store.allocations, activePlanMeta: store.activePlanMeta };
+    try {
+        store.settings = { ...saved.settings, periodo: meta.periodo, termStart: meta.termStart, termEnd: meta.termEnd };
+        store.allocations = allocations;
+        store.activePlanMeta = meta;
+        return fn();
+    } finally {
+        store.settings = saved.settings;
+        store.allocations = saved.allocations;
+        store.activePlanMeta = saved.activePlanMeta;
+    }
+}
+
+// Junta os eventos de cada PL num so mapa por data. Uma componente nunca passa
+// de um PL para outro, entao basta somar as aulas de cada dia (o feriado entra uma vez).
+function mergeEventsByDate(target, source) {
+    Object.entries(source || {}).forEach(([date, events]) => {
+        const list = target[date] || (target[date] = []);
+        (Array.isArray(events) ? events : []).forEach((event) => {
+            if (event?.type === 'holiday') {
+                if (!list.some((e) => e?.type === 'holiday')) list.push(event);
+                return;
+            }
+            list.push(event);
+        });
+    });
+    return target;
+}
+
+function renderTeacherRangeCalendar(container, docente, view) {
+    const rangeStart = view.start;
+    const rangeEnd = view.end;
+    const fullYear = isFullYear(rangeStart, rangeEnd);
+    const year = rangeStart.slice(0, 4);
+    // Como no calendario de um PL: o ultimo mes aparece inteiro.
+    const endDt = new Date(rangeEnd + 'T12:00:00');
+    const gridEnd = new Date(endDt.getFullYear(), endDt.getMonth() + 1, 0).toISOString().split('T')[0];
+    const activeKey = store.activePlanMeta?.key || '';
+    const turnoConfigs = getTeacherCalendarTurnoConfigs();
+
+    const sections = [];
+    const conflictRows = [];
+    const shiftKeys = new Set();
+    const slotSet = new Set();
+    const eventsByDate = {};
+
+    (view.plans || []).forEach(({ meta, allocations }) => {
+        const planAllocations = meta.key === activeKey ? store.allocations : (allocations || []);
+        // Parte do PL que cai no intervalo (o ano inteiro pega o PL todo).
+        const planStart = meta.termStart > rangeStart ? meta.termStart : rangeStart;
+        const planEnd = meta.termEnd < rangeEnd ? meta.termEnd : rangeEnd;
+        withPlanContext(meta, planAllocations, () => {
+            const snapshot = buildTeacherExecutionSnapshot({
+                docenteName: docente,
+                startDate: planStart,
+                endDate: planEnd,
+                resolveShift: (slot) => resolveTeacherShiftForSlot(slot),
+                preferredShiftOrder: turnoConfigs.map((config) => config.value),
+                formatTurmaLabel: (event) => getTurmaLabel(event?.turmaId, event?.subGrupo)
+            });
+            conflictRows.push(...snapshot.conflictRows);
+            const planShiftKeys = snapshot.activeShiftData.map((shift) => shift.normalized).filter(Boolean);
+            planShiftKeys.forEach((key) => shiftKeys.add(key));
+            // O quadro de horarios pode mudar de um PL para outro (regime): cada PL
+            // contribui com as suas linhas de horario.
+            getTeacherSlotsForEvents(planShiftKeys, snapshot.eventsByDate).forEach((slot) => slotSet.add(slot));
+
+            const planYear = String(meta.termStart || '').slice(0, 4);
+            sections.push({
+                titulo: `${planYear} - ${meta.periodo} (${formatPeriodo(meta.termStart, meta.termEnd)})`,
+                periodo: fullYear ? meta.periodo : `${meta.periodo}/${planYear}`,
+                components: collectDocenteResumeComponents(docente, planStart, planEnd)
+            });
+            mergeEventsByDate(eventsByDate, getCalendarEvents(null, rangeStart, gridEnd, docente));
+        });
+    });
+
+    const totalAno = sumComponentsCH(sections.flatMap((section) => section.components)).alocada;
+    const porPL = sections
+        .map((section) => `${section.periodo}: ${formatCH(sumComponentsCH(section.components).alocada) || '0'}h`)
+        .join(' · ');
+    const rangeLabel = fullYear ? year : formatPeriodo(rangeStart, rangeEnd);
+    const docenteTitle = totalAno > 0 ? `${docente} - ${rangeLabel} (${formatCH(totalAno)}h)` : `${docente} - ${rangeLabel}`;
+    const headline = fullYear
+        ? `Ano ${year} inteiro (${sections.map((s) => s.periodo).join(', ') || 'nenhum PL'})`
+        : `De ${formatPeriodo(rangeStart, rangeEnd)} (${sections.map((s) => s.periodo).join(', ') || 'nenhum PL'})`;
+    const shiftSummary = shiftKeys.size > 0
+        ? [...shiftKeys].map((key) => formatTurnoOfertaLabel(key)).join(', ')
+        : 'Sem turnos ativos no intervalo';
+    const visibleSlots = [...slotSet].sort((a, b) => timeToMinutes(a) - timeToMinutes(b));
+
+    container.innerHTML = `
+        <div style="display:flex; flex-direction:column; gap:16px;">
+            <div class="print-only print-header-container">
+                <span class="print-title-main">Vistoria de Conflitos Horarios</span><br>
+                <span class="print-title-sub">${escapeHtml(docenteTitle)}</span>
+            </div>
+            <div style="display:flex; flex-wrap:wrap; gap:10px; align-items:center;">
+                <div style="background:#e3eef8; color:#0f4f7d; border:1px solid #c5d8e8; border-radius:999px; padding:8px 14px; font-weight:800;">${escapeHtml(headline)}</div>
+                <div style="background:#fff7e6; color:#7a4b00; border:1px solid #f3d9a4; border-radius:999px; padding:8px 14px; font-weight:800;">CH alocada ${fullYear ? 'no ano' : 'no intervalo'}: ${formatCH(totalAno) || '0'}h <span style="font-weight:600;">(${escapeHtml(porPL || 'nenhum PL')})</span></div>
+                <div style="background:#eef6f0; color:#1f5d3a; border:1px solid #cfe8d7; border-radius:999px; padding:8px 14px; font-weight:700;">Turnos ativos: ${shiftSummary}</div>
+                <div style="background:#f4f6f8; color:#2c3e50; border:1px solid #dfe6e9; border-radius:999px; padding:8px 14px; font-weight:700;">Conflitos detectados: ${conflictRows.length}</div>
+            </div>
+            ${renderTeacherConflictRows(conflictRows)}
+            <div id="teacher-calendar-inspection-grid"></div>
+        </div>
+    `;
+
+    const calendarContainer = document.getElementById('teacher-calendar-inspection-grid');
+    const title = `<span class="print-title-main">Vistoria de Conflitos Horarios</span><br><span class="print-title-sub">${escapeHtml(docenteTitle)}</span>`;
+    generateCalendarGrid(calendarContainer, null, docente, rangeStart, gridEnd, title, {
+        slotsToRenderOverride: visibleSlots,
+        eventsByDate,
+        resumeTableHtml: buildDocenteResumeTableHtml(sections, fullYear ? 'Total do ano' : 'Total do intervalo'),
+        termEndLimit: gridEnd
     });
 }
 
@@ -601,46 +830,53 @@ export function buildCalendarTurmaResumeTable(turmaId, start, end) {
     return tableHtml;
 }
 
+function toCH(value) {
+    const num = Number.parseFloat(value);
+    return Number.isFinite(num) && num > 0 ? num : 0;
+}
+
+function formatCH(value) {
+    const num = Number.parseFloat(value);
+    if (!Number.isFinite(num) || num <= 0) return '';
+    return Number.isInteger(num)
+        ? String(num)
+        : num.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 1 });
+}
+
+function formatPeriodo(dataInicio, dataFim) {
+    if (!dataInicio || !dataFim) return '-';
+    return `${formatDateBR(dataInicio)} a ${formatDateBR(dataFim)}`;
+}
+
+function escapeHtml(value) {
+    return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
 // Tabela resumo do Calendario Docente (espelha buildCalendarTurmaResumeTable,
 // mas com o docente fixo). Lista cada componente que o professor leciona, em
 // qual turma, com a CH sob sua responsabilidade, a CH efetivamente alocada
 // (horas executadas do professor) e o periodo em que ele atua na componente.
 export function buildCalendarDocenteResumeTable(docenteName, start, end) {
+    const components = collectDocenteResumeComponents(docenteName, start, end);
+    if (!components.length) return null;
+    return buildDocenteResumeTableHtml([{ components }]);
+}
+
+// Componentes do docente no periodo letivo carregado no store.
+function collectDocenteResumeComponents(docenteName, start, end) {
     const docente = String(docenteName || '').trim();
-    if (!docente) return null;
+    if (!docente) return [];
 
     const allocations = store.allocations.filter((a) => (
         (isScheduledRegularAllocation(a) || isFaixaAllocation(a))
         && allocationHasTeacherMatch(a, docente)
     ));
-    if (allocations.length === 0) return null;
-
-    function toCH(value) {
-        const num = Number.parseFloat(value);
-        return Number.isFinite(num) && num > 0 ? num : 0;
-    }
-
-    function formatCH(value) {
-        const num = Number.parseFloat(value);
-        if (!Number.isFinite(num) || num <= 0) return '';
-        return Number.isInteger(num)
-            ? String(num)
-            : num.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 1 });
-    }
-
-    function formatPeriodo(dataInicio, dataFim) {
-        if (!dataInicio || !dataFim) return '-';
-        return `${formatDateBR(dataInicio)} a ${formatDateBR(dataFim)}`;
-    }
-
-    function escapeHtml(value) {
-        return String(value ?? '')
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            .replace(/"/g, '&quot;')
-            .replace(/'/g, '&#39;');
-    }
+    if (allocations.length === 0) return [];
 
     const offerProjection = buildCanonicalOfferProjection({
         allocations,
@@ -729,17 +965,32 @@ export function buildCalendarDocenteResumeTable(docenteName, start, end) {
         });
     });
 
-    if (components.length === 0) return null;
-
     components.sort((a, b) => {
         const startCmp = String(a.sortStart || '').localeCompare(String(b.sortStart || ''));
         if (startCmp !== 0) return startCmp;
         return String(a.disciplina || '').localeCompare(String(b.disciplina || ''), 'pt-BR', { sensitivity: 'base' });
     });
-    components.forEach((comp, idx) => { comp.numero = idx + 1; });
+    return components;
+}
 
-    const totalGeralCH = components.reduce((sum, comp) => sum + toCH(comp.curricularCH), 0);
-    const totalGeralAlocada = components.reduce((sum, comp) => sum + toCH(comp.allocatedDocenteCH), 0);
+function sumComponentsCH(components = []) {
+    return {
+        ch: components.reduce((sum, comp) => sum + toCH(comp.curricularCH), 0),
+        alocada: components.reduce((sum, comp) => sum + toCH(comp.allocatedDocenteCH), 0)
+    };
+}
+
+// sections: [{ titulo?, components }]. Sem titulo (um so periodo) sai a tabela
+// de sempre; com titulo (varios PLs) cada PL ganha um cabecalho e um subtotal,
+// e a ultima linha (totalLabel) soma todos.
+function buildDocenteResumeTableHtml(sections = [], totalLabel = 'Total') {
+    const comTitulos = sections.some((section) => section.titulo);
+    let numero = 0;
+    sections.forEach((section) => section.components.forEach((comp) => { numero += 1; comp.numero = numero; }));
+
+    const totais = sumComponentsCH(sections.flatMap((section) => section.components));
+    const totalGeralCH = totais.ch;
+    const totalGeralAlocada = totais.alocada;
     const totalAlocadaMismatch = Math.abs(totalGeralAlocada - totalGeralCH) > 0.01;
 
     let tableHtml = `
@@ -759,6 +1010,51 @@ export function buildCalendarDocenteResumeTable(docenteName, start, end) {
             <tbody>
     `;
 
+    sections.forEach((section) => {
+        if (comTitulos) {
+            tableHtml += `
+                <tr class="docente-resumo-pl">
+                    <td colspan="8" style="padding: 8px; background: #e3eef8; color: #0f4f7d; font-weight: 800; border-top: 2px solid #2d34c6;">${escapeHtml(section.titulo)}</td>
+                </tr>
+            `;
+            if (!section.components.length) {
+                tableHtml += `
+                <tr style="border-bottom: 1px solid #ddd;">
+                    <td colspan="8" style="padding: 8px; color: #6b7280; font-style: italic;">Nenhuma componente deste docente neste PL.</td>
+                </tr>
+            `;
+            }
+        }
+        tableHtml += buildDocenteResumeRows(section.components);
+        if (comTitulos && section.components.length) {
+            const sub = sumComponentsCH(section.components);
+            tableHtml += `
+                <tr style="background: #f8fafc; border-bottom: 1px solid #c7d2fe;">
+                    <td colspan="2" style="padding: 6px 8px; border-right: 1px solid #ddd; text-align: right; font-weight: 700; color: #1e3a8a;">Subtotal</td>
+                    <td style="padding: 6px 8px; text-align: center; border-right: 1px solid #ddd; font-weight: 700; color: #1e3a8a;">${formatCH(sub.ch)}</td>
+                    <td style="padding: 6px 8px; text-align: center; border-right: 2px solid #2d34c6; font-weight: 700; color: #1e3a8a;">${formatCH(sub.alocada) || '0'}</td>
+                    <td colspan="4" style="padding: 6px 8px;"></td>
+                </tr>
+            `;
+        }
+    });
+
+    tableHtml += `
+                <tr style="background: #f8fafc; border-top: 2px solid #2d34c6; border-bottom: 2px solid #2d34c6;">
+                    <td colspan="2" style="padding: 8px; border-right: 1px solid #ddd; text-align: right; font-weight: 800; color: #1e3a8a;">${escapeHtml(totalLabel)}</td>
+                    <td style="padding: 8px; text-align: center; border-right: 1px solid #ddd; font-weight: 800; color: #1e3a8a;">${formatCH(totalGeralCH)}</td>
+                    <td style="padding: 8px; text-align: center; border-right: 2px solid #2d34c6; font-weight: 800; color: ${totalAlocadaMismatch ? '#c0392b' : '#1e3a8a'};">${formatCH(totalGeralAlocada) || '0'}</td>
+                    <td colspan="4" style="padding: 8px;"></td>
+                </tr>
+            </tbody>
+        </table>
+    `;
+
+    return tableHtml;
+}
+
+function buildDocenteResumeRows(components = []) {
+    let tableHtml = '';
     components.forEach((comp) => {
         const allocatedMismatch = Math.abs(toCH(comp.allocatedDocenteCH) - toCH(comp.curricularCH)) > 0.01;
         const allocatedCellStyle = allocatedMismatch
@@ -781,18 +1077,6 @@ export function buildCalendarDocenteResumeTable(docenteName, start, end) {
             `;
         });
     });
-
-    tableHtml += `
-                <tr style="background: #f8fafc; border-top: 2px solid #2d34c6; border-bottom: 2px solid #2d34c6;">
-                    <td colspan="2" style="padding: 8px; border-right: 1px solid #ddd; text-align: right; font-weight: 800; color: #1e3a8a;">Total</td>
-                    <td style="padding: 8px; text-align: center; border-right: 1px solid #ddd; font-weight: 800; color: #1e3a8a;">${formatCH(totalGeralCH)}</td>
-                    <td style="padding: 8px; text-align: center; border-right: 2px solid #2d34c6; font-weight: 800; color: ${totalAlocadaMismatch ? '#c0392b' : '#1e3a8a'};">${formatCH(totalGeralAlocada) || '0'}</td>
-                    <td colspan="4" style="padding: 8px;"></td>
-                </tr>
-            </tbody>
-        </table>
-    `;
-
     return tableHtml;
 }
 
@@ -804,8 +1088,16 @@ export function generateCalendarGrid(container, turmaId, docenteName, start, end
     header.innerHTML = titleHTML;
     container.appendChild(header);
 
-    // Adiciona tabela resumo de disciplinas para turmas
-    if (turmaId) {
+    // Docente com varios PLs (ex.: ano inteiro): a tabela (por PL) e os eventos ja chegam prontos.
+    if (typeof options.resumeTableHtml === 'string') {
+        if (options.resumeTableHtml) {
+            const tableDiv = document.createElement('div');
+            tableDiv.className = 'calendar-turma-resume-container';
+            tableDiv.innerHTML = options.resumeTableHtml;
+            container.appendChild(tableDiv);
+        }
+    } else if (turmaId) {
+        // Adiciona tabela resumo de disciplinas para turmas
         const resumeTable = buildCalendarTurmaResumeTable(turmaId, start, end);
         if (resumeTable) {
             const tableDiv = document.createElement('div');
@@ -824,7 +1116,10 @@ export function generateCalendarGrid(container, turmaId, docenteName, start, end
         }
     }
 
-    const eventsByDate = getCalendarEvents(turmaId, start, end, docenteName);
+    const eventsByDate = options.eventsByDate || getCalendarEvents(turmaId, start, end, docenteName);
+    // Fim do periodo letivo (dia depois dele fica vermelho). Com varios PLs cada
+    // aula ja esta dentro do seu PL, entao o limite e o fim do intervalo.
+    const termEndLimit = options.termEndLimit !== undefined ? options.termEndLimit : store.settings.termEnd;
     const useNativeShiftMapping = !!options.useNativeShiftMapping;
 
     let slotsToRender = [];
@@ -936,7 +1231,7 @@ export function generateCalendarGrid(container, turmaId, docenteName, start, end
 
             if (dayOfWeek === 0 || dayOfWeek === 6) cell.classList.add('weekend');
 
-            const isOutOfBounds = store.settings.termEnd && dayData.date > store.settings.termEnd;
+            const isOutOfBounds = termEndLimit && dayData.date > termEndLimit;
             if (isOutOfBounds) {
                 cell.style.cssText += 'background-color: #ffebee !important; border-color: #ffcdd2 !important;';
             }

@@ -3095,6 +3095,31 @@ body:has(#tab-weekly.active) .top-bar #weekly-instructions-card {
     font-weight: 800;
 }
 #tab-teacher .docente-plan-period-refresh:hover { color: #14598f; background: #d8ebfa; }
+/* Com o bloco do ano, o painel pode quebrar linha em telas mais estreitas
+   (o rotulo do docente nao encolhe: sem isso ele invadia o do periodo). */
+#tab-teacher .docente-filter-panel { flex-wrap: wrap; row-gap: 12px; }
+#tab-teacher .docente-filter-group--teacher { min-width: 330px; }
+#tab-teacher .docente-filter-group--year {
+    display: grid;
+    grid-template-rows: auto 34px;
+    flex: 0 0 auto;
+    min-width: 0;
+    padding-left: 20px;
+    border-left: 1px solid var(--docente-line);
+}
+#tab-teacher .docente-year-row { display: flex; gap: 8px; }
+#tab-teacher .docente-year-row select {
+    height: 34px;
+    padding: 0 8px;
+    border: 1px solid #dce4e9;
+    border-radius: 6px;
+    color: #29485c;
+    background: var(--docente-field);
+    font: inherit;
+    font-size: 0.79rem;
+}
+#tab-teacher .docente-year-row .docente-update-btn { padding: 0 12px; white-space: nowrap; }
+#tab-teacher #btn-ano-inteiro-teacher.is-active { border-color: #b45309; background: #b45309; }
 #tab-teacher .docente-icon-btn:disabled,
 #tab-teacher .docente-update-btn:disabled,
 #tab-teacher .docente-search-control input:disabled,
@@ -3104,9 +3129,11 @@ body:has(#tab-weekly.active) .top-bar #weekly-instructions-card {
     #tab-teacher .docente-filter-layout { flex-wrap: wrap; }
     #tab-teacher .docente-filter-panel { flex-wrap: wrap; gap: 16px; }
     #tab-teacher .docente-filter-group--teacher,
-    #tab-teacher .docente-filter-group--period { flex: 1 1 100%; }
-    #tab-teacher .docente-filter-group--teacher { padding: 0 0 16px; border: 0; border-bottom: 1px solid var(--docente-line); }
+    #tab-teacher .docente-filter-group--period,
+    #tab-teacher .docente-filter-group--year { flex: 1 1 100%; }
+    #tab-teacher .docente-filter-group--teacher { min-width: 0; padding: 0 0 16px; border: 0; border-bottom: 1px solid var(--docente-line); }
     #tab-teacher .docente-filter-group--period { padding: 0; }
+    #tab-teacher .docente-filter-group--year { padding: 0; border: 0; }
 }
 @media (max-width: 580px) {
     #tab-teacher .docente-view-card { flex: 1 1 100%; }
