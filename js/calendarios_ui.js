@@ -1,9 +1,9 @@
-import { store } from './store.js?v=202611070855';
-import { getCalendarEvents } from './calendar.js?v=202611070855';
-import { buildTeacherExecutionSnapshot, buildCanonicalOfferProjection } from './execution_engine.js?v=202611070855';
-import { getHorariosByTurno, normalizeTurnoKey, getTurnoLetter, mapSlotToTurno } from './turns.js?v=202611070855';
-import { vividHexColor } from './color_utils.js?v=202611070855';
-import { formatDateBR, timeToMinutes, shortDayName } from './date_utils_ui.js?v=202611070855';
+import { store } from './store.js?v=202611071045';
+import { getCalendarEvents } from './calendar.js?v=202611071045';
+import { buildTeacherExecutionSnapshot, buildCanonicalOfferProjection } from './execution_engine.js?v=202611071045';
+import { getHorariosByTurno, normalizeTurnoKey, getTurnoLetter, mapSlotToTurno } from './turns.js?v=202611071045';
+import { vividHexColor } from './color_utils.js?v=202611071045';
+import { formatDateBR, timeToMinutes, shortDayName } from './date_utils_ui.js?v=202611071045';
 import {
     isFaixaAllocation,
     isScheduledRegularAllocation,
@@ -11,7 +11,7 @@ import {
     teacherNamesMatch,
     getDocenteShortLabel,
     calculateTeacherTotalCH
-} from './allocation_helpers.js?v=202611070855';
+} from './allocation_helpers.js?v=202611071045';
 import {
     normalizeTurnoOfertaKey,
     formatTurnoOfertaLabel,
@@ -21,18 +21,18 @@ import {
     buildHorariosForUI,
     getShiftChangeMeta,
     getCalendarShiftBadgeHTML
-} from './turno_helpers.js?v=202611070855';
+} from './turno_helpers.js?v=202611071045';
 import {
     getDisciplinaCHGlobal,
     getTurmaLabel,
     getTurmaBaseLabel,
     getDisciplinaInfo,
     getPrintAcademicMetaLine
-} from './curso_turma_helpers.js?v=202611070855';
+} from './curso_turma_helpers.js?v=202611071045';
 import {
     getGanttTurnoConfigs,
     resolveTeacherShiftForSlot
-} from './gantt_ui.js?v=202611070855';
+} from './gantt_ui.js?v=202611071045';
 
 // Referencias DOM de nivel de modulo (espelham as de ui.js; modulo deferred, DOM pronto).
 const selViewDocente = document.getElementById('sel-view-docente');
@@ -223,14 +223,16 @@ export function formatConflictDateRange(startDate, endDate) {
     return `${formatDateBR(startDate)} a ${formatDateBR(endDate)}`;
 }
 
+// Situacao dos conflitos, junto das outras informacoes do topo (sem conflito,
+// so este selo; com conflito, ele fica vermelho e a tabela de conflitos aparece).
+function conflictPillHtml(total) {
+    return total > 0
+        ? `<div style="background:#fdecea; color:#a61b1b; border:1px solid #f5c2c0; border-radius:999px; padding:8px 14px; font-weight:800;">⚠️ Conflitos de horário: ${total}</div>`
+        : '<div style="background:#ecfdf3; color:#1e7e34; border:1px solid #b7ebc6; border-radius:999px; padding:8px 14px; font-weight:700;">✓ Sem conflitos de horário</div>';
+}
+
 export function renderTeacherConflictRows(conflicts = []) {
-    if (!Array.isArray(conflicts) || conflicts.length === 0) {
-        return `
-            <div style="background:#ecfdf3; border:1px solid #b7ebc6; color:#1e7e34; border-radius:8px; padding:12px 14px; margin-bottom:18px; font-weight:700;">
-                Nenhum conflito horario identificado para o docente no intervalo exibido.
-            </div>
-        `;
-    }
+    if (!Array.isArray(conflicts) || conflicts.length === 0) return '';
 
     const rows = conflicts.map((conflict) => {
         const imported = !!conflict.importado;
@@ -339,7 +341,7 @@ export function renderTeacherCalendar() {
             }</div>` : ''}
             <div style="display:flex; flex-wrap:wrap; gap:10px; align-items:center;">
                 <div style="background:#eef6f0; color:#1f5d3a; border:1px solid #cfe8d7; border-radius:999px; padding:8px 14px; font-weight:700;">Turnos ativos: ${shiftSummary}</div>
-                <div style="background:#f4f6f8; color:#2c3e50; border:1px solid #dfe6e9; border-radius:999px; padding:8px 14px; font-weight:700;">Conflitos detectados: ${conflictRows.length}</div>
+                ${conflictPillHtml(conflictRows.length)}
             </div>
             ${renderTeacherConflictRows(conflictRows)}
             <div id="teacher-calendar-inspection-grid"></div>
@@ -521,7 +523,7 @@ function renderTeacherRangeCalendar(container, docente, view) {
                 <div style="background:#e3eef8; color:#0f4f7d; border:1px solid #c5d8e8; border-radius:999px; padding:8px 14px; font-weight:800;">${escapeHtml(headline)}</div>
                 <div style="background:#fff7e6; color:#7a4b00; border:1px solid #f3d9a4; border-radius:999px; padding:8px 14px; font-weight:800;">CH alocada ${fullYear ? 'no ano' : 'no intervalo'}: ${formatCH(totalAno) || '0'}h <span style="font-weight:600;">(${escapeHtml(porPL || 'nenhum PL')})</span></div>
                 <div style="background:#eef6f0; color:#1f5d3a; border:1px solid #cfe8d7; border-radius:999px; padding:8px 14px; font-weight:700;">Turnos ativos: ${shiftSummary}</div>
-                <div style="background:#f4f6f8; color:#2c3e50; border:1px solid #dfe6e9; border-radius:999px; padding:8px 14px; font-weight:700;">Conflitos detectados: ${conflictRows.length}</div>
+                ${conflictPillHtml(conflictRows.length)}
             </div>
             ${renderTeacherConflictRows(conflictRows)}
             <div id="teacher-calendar-inspection-grid"></div>
@@ -530,10 +532,14 @@ function renderTeacherRangeCalendar(container, docente, view) {
 
     const calendarContainer = document.getElementById('teacher-calendar-inspection-grid');
     const title = `<span class="print-title-main">Vistoria de Conflitos Horarios</span><br><span class="print-title-sub">${escapeHtml(docenteTitle)}</span>`;
+    const cabecalho = {
+        docente,
+        subtitulo: `${headline} · CH alocada ${fullYear ? 'no ano' : 'no intervalo'}: ${formatCH(totalAno) || '0'}h`
+    };
     generateCalendarGrid(calendarContainer, null, docente, rangeStart, gridEnd, title, {
         slotsToRenderOverride: visibleSlots,
         eventsByDate,
-        resumeTableHtml: buildDocenteResumeTableHtml(sections, fullYear ? 'Total do ano' : 'Total do intervalo'),
+        resumeTableHtml: buildDocenteResumeTableHtml(sections, fullYear ? 'Total do ano' : 'Total do intervalo', cabecalho),
         termEndLimit: gridEnd
     });
 }
@@ -864,10 +870,88 @@ function escapeHtml(value) {
 export function buildCalendarDocenteResumeTable(docenteName, start, end) {
     const components = collectDocenteResumeComponents(docenteName, start, end);
     if (!components.length) return null;
-    return buildDocenteResumeTableHtml([{ components }]);
+    const termStart = String(store.settings?.termStart || '');
+    const termEnd = String(store.settings?.termEnd || '');
+    const plano = store.settings?.periodo && termStart
+        ? `${termStart.slice(0, 4)} - ${store.settings.periodo} (${formatPeriodo(termStart, termEnd)})`
+        : formatPeriodo(start, end);
+    const totalAlocado = sumComponentsCH(components).alocada;
+    return buildDocenteResumeTableHtml([{ components }], 'Total', {
+        docente: String(docenteName || '').trim(),
+        subtitulo: `${plano} · CH alocada: ${formatCH(totalAlocado) || '0'}h`
+    });
+}
+
+// Aulas DESTE docente por alocacao, ja como o calendario as calcula (feriados
+// e divisao entre docentes de componente compartilhada aplicados).
+function collectTeacherClassesByAllocation(docente, start, end) {
+    const porAlocacao = new Map();
+    const events = getCalendarEvents(null, start, end, docente);
+    Object.entries(events || {}).forEach(([date, list]) => {
+        (Array.isArray(list) ? list : []).forEach((event) => {
+            if (!event || event.type === 'holiday' || !event.id) return;
+            const horario = String(event.horario || '').trim();
+            if (!horario) return;
+            if (!porAlocacao.has(event.id)) porAlocacao.set(event.id, new Map());
+            porAlocacao.get(event.id).set(`${date}|${horario}`, { date, horario });
+        });
+    });
+    return porAlocacao;
+}
+
+function horarioToMinutes(hhmm) {
+    const match = String(hhmm || '').match(/(\d{1,2}):(\d{2})/);
+    return match ? Number(match[1]) * 60 + Number(match[2]) : NaN;
+}
+
+function minutesToHorario(total) {
+    return `${String(Math.floor(total / 60)).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`;
+}
+
+// "14:00 - 14:50", "14:50 - 15:40" ... -> "14:00–17:40". Intervalos curtos
+// (ate 30 min) ficam no mesmo bloco; manha e tarde no mesmo dia viram dois blocos.
+function blocosDeHorario(horarios = []) {
+    const slots = [...new Set(horarios)]
+        .map((horario) => {
+            const times = String(horario).match(/\d{1,2}:\d{2}/g) || [];
+            const ini = horarioToMinutes(times[0]);
+            const fim = times[1] ? horarioToMinutes(times[1]) : ini + 50;
+            return [ini, fim];
+        })
+        .filter(([ini, fim]) => Number.isFinite(ini) && Number.isFinite(fim))
+        .sort((x, y) => x[0] - y[0]);
+    const blocos = [];
+    slots.forEach(([ini, fim]) => {
+        const ultimo = blocos[blocos.length - 1];
+        if (ultimo && ini <= ultimo[1] + 30) ultimo[1] = Math.max(ultimo[1], fim);
+        else blocos.push([ini, fim]);
+    });
+    return blocos.map(([ini, fim]) => `${minutesToHorario(ini)}–${minutesToHorario(fim)}`).join(' e ');
+}
+
+// Horario das aulas de uma faixa: um so horario quando todos os dias sao
+// iguais; senao, um por grupo de dias (ex.: "Seg, Ter: 14:00–17:40").
+function formatHorarioDasAulas(aulas = []) {
+    const porDia = new Map();
+    aulas.forEach(({ date, horario }) => {
+        const dow = new Date(`${date}T12:00:00`).getDay();
+        if (!porDia.has(dow)) porDia.set(dow, []);
+        porDia.get(dow).push(horario);
+    });
+    const grupos = new Map();
+    [...porDia.keys()].sort((x, y) => x - y).forEach((dow) => {
+        const faixa = blocosDeHorario(porDia.get(dow));
+        if (!faixa) return;
+        if (!grupos.has(faixa)) grupos.set(faixa, []);
+        grupos.get(faixa).push(dow);
+    });
+    if (grupos.size <= 1) return [...grupos.keys()];
+    return [...grupos.entries()].map(([faixa, dias]) => `${dias.map((d) => shortDayName(d)).join(', ')}: ${faixa}`);
 }
 
 // Componentes do docente no periodo letivo carregado no store.
+//   chDocente: parte da CH que cabe ao docente (componente compartilhada) ou a CH toda;
+//   chAlocada: horas que o coordenador ja alocou para ele (aulas no calendario).
 function collectDocenteResumeComponents(docenteName, start, end) {
     const docente = String(docenteName || '').trim();
     if (!docente) return [];
@@ -883,6 +967,7 @@ function collectDocenteResumeComponents(docenteName, start, end) {
         startDate: start,
         endDate: end
     });
+    const aulasPorAlocacao = collectTeacherClassesByAllocation(docente, start, end);
 
     const components = [];
     (offerProjection?.offerGroups || []).forEach((offerGroup) => {
@@ -897,61 +982,64 @@ function collectDocenteResumeComponents(docenteName, start, end) {
         // (nenhuma aula observada) pula para nao listar oferta de outro docente.
         if (segments.length > 0 && !segment) return;
 
-        const declaredDocente = (Array.isArray(offerGroup?.docentes) ? offerGroup.docentes : [])
-            .find((d) => teacherNamesMatch(d?.nome, docente));
+        const docentesOferta = Array.isArray(offerGroup?.docentes) ? offerGroup.docentes : [];
+        const declaredDocente = docentesOferta.find((d) => teacherNamesMatch(d?.nome, docente));
 
         const info = getDisciplinaInfo(disciplina);
         const turmaId = String(offerGroup?.turmaId || baseAlloc?.turmaId || '').trim();
 
-        // CH curricular total da componente (coluna "CH").
+        // CH curricular total da componente.
         const curricularCH = toCH(getDisciplinaCHGlobal(disciplina, turmaId))
             || toCH(info?.ch) || toCH(baseAlloc?.ch);
+        // Parte deste docente: componente compartilhada usa a CH declarada para
+        // ele; docente unico responde pela CH toda.
+        const compartilhada = docentesOferta.length > 1;
+        const chDocente = compartilhada
+            ? (toCH(declaredDocente?.ch) || toCH(segment?.ch))
+            : curricularCH;
 
-        // Parcela da CH atribuida a ESTE docente (coluna "CH alocada"). Quando o
-        // docente e o unico responsavel, assume a CH curricular inteira.
-        const allocatedDocenteCH = toCH(segment?.ch) || toCH(declaredDocente?.ch)
-            || (Array.isArray(offerGroup?.docentes) && offerGroup.docentes.length <= 1
-                ? curricularCH
-                : 0);
+        const aulas = (Array.isArray(offerGroup?.allocationIds) ? offerGroup.allocationIds : [])
+            .flatMap((id) => [...(aulasPorAlocacao.get(id)?.values() || [])])
+            .sort((x, y) => x.date.localeCompare(y.date) || horarioToMinutes(x.horario) - horarioToMinutes(y.horario));
+        const chAlocada = aulas.length;
 
-        // Uma linha por faixa em que o docente ministra aula. Como as alocacoes
-        // ja foram filtradas para este docente, as faixas e as horas executadas
-        // refletem apenas a atuacao dele na componente.
+        // Uma linha por faixa em que o docente tem aula, com o horario dela.
         const faixaRows = [];
-        (Array.isArray(offerGroup?.faixas) ? offerGroup.faixas : [])
-            .filter((faixa) => toCH(faixa?.executedHours) > 0
-                || (Array.isArray(faixa?.activeDates) && faixa.activeDates.length > 0))
-            .forEach((faixa) => {
-                const diaNums = [...new Set(
-                    (Array.isArray(faixa?.dias) ? faixa.dias : [])
-                        .map((d) => Number.parseInt(d, 10))
-                        .filter((n) => Number.isFinite(n) && n >= 1)
-                )].sort((a, b) => a - b);
-                faixaRows.push({
-                    allocatedCH: toCH(faixa?.executedHours),
-                    diasLabel: diaNums.map((n) => shortDayName(n)).join(', '),
-                    dataInicio: String(faixa?.inicio || '').trim(),
-                    dataFim: String(faixa?.fim || faixa?.inicio || '').trim()
-                });
+        (Array.isArray(offerGroup?.faixas) ? offerGroup.faixas : []).forEach((faixa) => {
+            const inicio = String(faixa?.inicio || '').trim();
+            const fim = String(faixa?.fim || faixa?.inicio || '').trim();
+            const aulasFaixa = aulas.filter((aula) => (!inicio || aula.date >= inicio) && (!fim || aula.date <= fim));
+            if (!aulasFaixa.length) return;
+            const diaNums = [...new Set(
+                (Array.isArray(faixa?.dias) ? faixa.dias : [])
+                    .map((d) => Number.parseInt(d, 10))
+                    .filter((n) => Number.isFinite(n) && n >= 1)
+            )].sort((x, y) => x - y);
+            faixaRows.push({
+                diasLabel: diaNums.map((n) => shortDayName(n)).join(', '),
+                dataInicio: inicio,
+                dataFim: fim,
+                horarios: formatHorarioDasAulas(aulasFaixa)
             });
+        });
 
-        // Fallback (sem faixas canonicas executadas): usa o segmento do docente e
-        // os dias derivados da grade horaria da oferta.
+        // Fallback (sem faixas com aula deste docente): usa o segmento do docente
+        // e os dias derivados da grade horaria da oferta.
         if (faixaRows.length === 0) {
             const diaNums = [...new Set(
                 (Array.isArray(offerGroup?.scheduleEntries) ? offerGroup.scheduleEntries : [])
                     .map((entry) => Number.parseInt(entry?.diaSemana, 10))
                     .filter((n) => Number.isFinite(n) && n >= 1)
-            )].sort((a, b) => a - b);
+            )].sort((x, y) => x - y);
             faixaRows.push({
-                allocatedCH: toCH(segment?.hours),
                 diasLabel: diaNums.map((n) => shortDayName(n)).join(', '),
                 dataInicio: String(segment?.start || offerGroup?.start || start || '').trim(),
-                dataFim: String(segment?.end || offerGroup?.end || end || '').trim()
+                dataFim: String(segment?.end || offerGroup?.end || end || '').trim(),
+                horarios: formatHorarioDasAulas(aulas)
             });
         }
 
-        faixaRows.sort((a, b) => String(a.dataInicio || '').localeCompare(String(b.dataInicio || '')));
+        faixaRows.sort((x, y) => String(x.dataInicio || '').localeCompare(String(y.dataInicio || '')));
 
         components.push({
             disciplina,
@@ -959,120 +1047,144 @@ function collectDocenteResumeComponents(docenteName, start, end) {
             cor: baseAlloc?.cor || store.getDisciplinaColor(disciplina) || '#f39c12',
             turmaLabel: getTurmaLabel(turmaId, offerGroup?.subGrupo || baseAlloc?.subGrupo),
             curricularCH,
-            allocatedDocenteCH,
+            compartilhada,
+            chDocente,
+            chAlocada,
             faixaRows,
             sortStart: faixaRows[0]?.dataInicio || String(offerGroup?.start || start || '').trim()
         });
     });
 
-    components.sort((a, b) => {
-        const startCmp = String(a.sortStart || '').localeCompare(String(b.sortStart || ''));
+    components.sort((x, y) => {
+        const startCmp = String(x.sortStart || '').localeCompare(String(y.sortStart || ''));
         if (startCmp !== 0) return startCmp;
-        return String(a.disciplina || '').localeCompare(String(b.disciplina || ''), 'pt-BR', { sensitivity: 'base' });
+        return String(x.disciplina || '').localeCompare(String(y.disciplina || ''), 'pt-BR', { sensitivity: 'base' });
     });
     return components;
 }
 
 function sumComponentsCH(components = []) {
     return {
-        ch: components.reduce((sum, comp) => sum + toCH(comp.curricularCH), 0),
-        alocada: components.reduce((sum, comp) => sum + toCH(comp.allocatedDocenteCH), 0)
+        ch: components.reduce((sum, comp) => sum + toCH(comp.chDocente), 0),
+        alocada: components.reduce((sum, comp) => sum + toCH(comp.chAlocada), 0)
     };
 }
 
-// sections: [{ titulo?, components }]. Sem titulo (um so periodo) sai a tabela
-// de sempre; com titulo (varios PLs) cada PL ganha um cabecalho e um subtotal,
-// e a ultima linha (totalLabel) soma todos.
-function buildDocenteResumeTableHtml(sections = [], totalLabel = 'Total') {
+const COR_CH_OK = '#15803d';
+const COR_CH_FALTA = '#c0392b';
+
+// Verde quando o alocado bate com a parte do docente; vermelho quando nao.
+function corDaAlocada(chDocente, chAlocada) {
+    if (!toCH(chDocente)) return '#1f2937';
+    return Math.abs(toCH(chAlocada) - toCH(chDocente)) > 0.01 ? COR_CH_FALTA : COR_CH_OK;
+}
+
+// CH do docente: "60" quando ele da a componente toda; "30/90" quando divide
+// com outros (parte dele / CH da componente).
+function formatCHDocente(comp) {
+    if (!comp.compartilhada) return formatCH(comp.chDocente) || formatCH(comp.curricularCH) || '-';
+    return `${formatCH(comp.chDocente) || '?'}/${formatCH(comp.curricularCH) || '?'}`;
+}
+
+// sections: [{ titulo?, components }]. Sem titulo (um so periodo) sai uma tabela
+// so; com titulo (varios PLs) cada PL ganha um cabecalho e um subtotal, e a
+// ultima linha (totalLabel) soma todos.
+function buildDocenteResumeTableHtml(sections = [], totalLabel = 'Total', cabecalho = null) {
     const comTitulos = sections.some((section) => section.titulo);
+    const COLS = 9;
     let numero = 0;
     sections.forEach((section) => section.components.forEach((comp) => { numero += 1; comp.numero = numero; }));
 
-    const totais = sumComponentsCH(sections.flatMap((section) => section.components));
-    const totalGeralCH = totais.ch;
-    const totalGeralAlocada = totais.alocada;
-    const totalAlocadaMismatch = Math.abs(totalGeralAlocada - totalGeralCH) > 0.01;
+    // Nome do docente no alto da tabela (dentro dela, como legenda), para a
+    // tabela poder ser enviada sozinha ao professor.
+    const legenda = cabecalho?.docente
+        ? `<caption style="caption-side: top; text-align: left; padding: 6px 0 12px;">
+                <div style="font-size: 17px; font-weight: 800; color: #0f4f7d;">Docente: ${escapeHtml(cabecalho.docente)}</div>
+                ${cabecalho.subtitulo ? `<div style="margin-top: 3px; font-size: 13px; font-weight: 600; color: #4b5563;">${escapeHtml(cabecalho.subtitulo)}</div>` : ''}
+           </caption>`
+        : '';
 
     let tableHtml = `
-        <table class="calendar-turma-resume-table" style="width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 12px;">
+        <table class="calendar-turma-resume-table" style="width: 100%; border-collapse: collapse; margin: 28px 0 20px; font-size: 12px;">
+            ${legenda}
             <thead>
                 <tr style="background: #f5f5f5; border-bottom: 2px solid #333;">
-                    <th style="padding: 8px 8px 16px 8px; text-align: left; border-right: 1px solid #ddd; width: 5%;">#</th>
-                    <th style="padding: 8px 8px 16px 8px; text-align: left; border-right: 2px solid #2d34c6; width: 12%;">Código</th>
-                    <th style="padding: 8px 8px 16px 8px; text-align: center; border-right: 1px solid #ddd; width: 8%; color: #2d34c6;">CH</th>
-                    <th style="padding: 8px 8px 16px 8px; text-align: center; border-right: 2px solid #2d34c6; width: 9%; color: #2d34c6;">CH alocada</th>
-                    <th style="padding: 8px 8px 16px 8px; text-align: left; border-right: 1px solid #ddd; width: 24%;">Disciplina</th>
-                    <th style="padding: 8px 8px 16px 8px; text-align: left; border-right: 1px solid #ddd; width: 13%;">Turma</th>
-                    <th style="padding: 8px 8px 16px 8px; text-align: left; border-right: 1px solid #ddd; width: 10%;">Dia</th>
-                    <th style="padding: 8px 8px 16px 8px; text-align: left; width: 19%;">Período</th>
+                    <th style="padding: 8px 8px 16px 8px; text-align: left; border-right: 1px solid #ddd; width: 4%;">#</th>
+                    <th style="padding: 8px 8px 16px 8px; text-align: left; border-right: 2px solid #2d34c6; width: 9%;">Código</th>
+                    <th style="padding: 8px 8px 16px 8px; text-align: center; border-right: 1px solid #ddd; width: 8%; color: #2d34c6;" title="CH que cabe a este docente. Componente dividida com outros docentes: parte dele / CH da componente.">CH docente</th>
+                    <th style="padding: 8px 8px 16px 8px; text-align: center; border-right: 2px solid #2d34c6; width: 8%; color: #2d34c6;" title="Horas já alocadas para este docente no calendário. Verde: bate com a CH docente. Vermelho: não bate.">CH alocada</th>
+                    <th style="padding: 8px 8px 16px 8px; text-align: left; border-right: 1px solid #ddd; width: 21%;">Disciplina</th>
+                    <th style="padding: 8px 8px 16px 8px; text-align: left; border-right: 1px solid #ddd; width: 11%;">Turma</th>
+                    <th style="padding: 8px 8px 16px 8px; text-align: left; border-right: 1px solid #ddd; width: 11%;">Dia</th>
+                    <th style="padding: 8px 8px 16px 8px; text-align: left; border-right: 1px solid #ddd; width: 15%;">Período</th>
+                    <th style="padding: 8px 8px 16px 8px; text-align: left; width: 13%;">Horário</th>
                 </tr>
             </thead>
             <tbody>
     `;
 
+    const linhaSoma = (rotulo, soma, forte) => {
+        const pad = forte ? '8px' : '6px 8px';
+        const peso = forte ? 800 : 700;
+        const borda = forte ? 'border-top: 2px solid #2d34c6; border-bottom: 2px solid #2d34c6;' : 'border-bottom: 1px solid #c7d2fe;';
+        return `
+                <tr style="background: #f8fafc; ${borda}">
+                    <td colspan="2" style="padding: ${pad}; border-right: 1px solid #ddd; text-align: right; font-weight: ${peso}; color: #1e3a8a;">${escapeHtml(rotulo)}</td>
+                    <td style="padding: ${pad}; text-align: center; border-right: 1px solid #ddd; font-weight: ${peso}; color: #1e3a8a;">${formatCH(soma.ch) || '0'}</td>
+                    <td style="padding: ${pad}; text-align: center; border-right: 2px solid #2d34c6; font-weight: ${peso}; color: ${corDaAlocada(soma.ch, soma.alocada)};">${formatCH(soma.alocada) || '0'}</td>
+                    <td colspan="${COLS - 4}" style="padding: ${pad};"></td>
+                </tr>
+            `;
+    };
+
     sections.forEach((section) => {
         if (comTitulos) {
             tableHtml += `
                 <tr class="docente-resumo-pl">
-                    <td colspan="8" style="padding: 8px; background: #e3eef8; color: #0f4f7d; font-weight: 800; border-top: 2px solid #2d34c6;">${escapeHtml(section.titulo)}</td>
+                    <td colspan="${COLS}" style="padding: 8px; background: #e3eef8; color: #0f4f7d; font-weight: 800; border-top: 2px solid #2d34c6;">${escapeHtml(section.titulo)}</td>
                 </tr>
             `;
             if (!section.components.length) {
                 tableHtml += `
                 <tr style="border-bottom: 1px solid #ddd;">
-                    <td colspan="8" style="padding: 8px; color: #6b7280; font-style: italic;">Nenhuma componente deste docente neste PL.</td>
+                    <td colspan="${COLS}" style="padding: 8px; color: #6b7280; font-style: italic;">Nenhuma componente deste docente neste PL.</td>
                 </tr>
             `;
             }
         }
         tableHtml += buildDocenteResumeRows(section.components);
-        if (comTitulos && section.components.length) {
-            const sub = sumComponentsCH(section.components);
-            tableHtml += `
-                <tr style="background: #f8fafc; border-bottom: 1px solid #c7d2fe;">
-                    <td colspan="2" style="padding: 6px 8px; border-right: 1px solid #ddd; text-align: right; font-weight: 700; color: #1e3a8a;">Subtotal</td>
-                    <td style="padding: 6px 8px; text-align: center; border-right: 1px solid #ddd; font-weight: 700; color: #1e3a8a;">${formatCH(sub.ch)}</td>
-                    <td style="padding: 6px 8px; text-align: center; border-right: 2px solid #2d34c6; font-weight: 700; color: #1e3a8a;">${formatCH(sub.alocada) || '0'}</td>
-                    <td colspan="4" style="padding: 6px 8px;"></td>
-                </tr>
-            `;
-        }
+        if (comTitulos && section.components.length) tableHtml += linhaSoma('Subtotal', sumComponentsCH(section.components), false);
     });
 
+    tableHtml += linhaSoma(totalLabel, sumComponentsCH(sections.flatMap((section) => section.components)), true);
     tableHtml += `
-                <tr style="background: #f8fafc; border-top: 2px solid #2d34c6; border-bottom: 2px solid #2d34c6;">
-                    <td colspan="2" style="padding: 8px; border-right: 1px solid #ddd; text-align: right; font-weight: 800; color: #1e3a8a;">${escapeHtml(totalLabel)}</td>
-                    <td style="padding: 8px; text-align: center; border-right: 1px solid #ddd; font-weight: 800; color: #1e3a8a;">${formatCH(totalGeralCH)}</td>
-                    <td style="padding: 8px; text-align: center; border-right: 2px solid #2d34c6; font-weight: 800; color: ${totalAlocadaMismatch ? '#c0392b' : '#1e3a8a'};">${formatCH(totalGeralAlocada) || '0'}</td>
-                    <td colspan="4" style="padding: 8px;"></td>
-                </tr>
             </tbody>
         </table>
     `;
-
     return tableHtml;
 }
 
+// Uma linha por faixa; numero, codigo, CHs, disciplina e turma so na primeira.
+// Cada componente comeca com uma linha mais forte, para as faixas ficarem juntas.
 function buildDocenteResumeRows(components = []) {
     let tableHtml = '';
     components.forEach((comp) => {
-        const allocatedMismatch = Math.abs(toCH(comp.allocatedDocenteCH) - toCH(comp.curricularCH)) > 0.01;
-        const allocatedCellStyle = allocatedMismatch
-            ? 'color: #c0392b; font-weight: 800;'
-            : 'color: #1f2937; font-weight: 700;';
-
+        const corAlocada = corDaAlocada(comp.chDocente, comp.chAlocada);
         comp.faixaRows.forEach((faixaRow, idx) => {
             const isFirst = idx === 0;
+            const bordaTopo = isFirst ? 'border-top: 2px solid #94a3b8;' : '';
+            const horarios = (faixaRow.horarios || []).map((h) => escapeHtml(h)).join('<br>') || '-';
             tableHtml += `
-                <tr style="border-bottom: 1px solid #ddd; background-color: ${comp.cor}22;">
+                <tr style="${bordaTopo} border-bottom: 1px solid #ddd; background-color: ${comp.cor}22;">
                     <td style="padding: 8px; border-right: 1px solid #ddd; font-weight: bold;">${isFirst ? comp.numero : ''}</td>
                     <td style="padding: 8px; border-right: 2px solid #2d34c6;">${isFirst ? escapeHtml(comp.codigo || '-') : ''}</td>
-                    <td style="padding: 8px; text-align: center; border-right: 1px solid #ddd; font-weight: 700; color: #1f2937;">${formatCH(comp.curricularCH)}</td>
-                    <td style="padding: 8px; text-align: center; border-right: 2px solid #2d34c6; ${allocatedCellStyle}">${isFirst ? (formatCH(comp.allocatedDocenteCH) || '0') : ''}</td>
+                    <td style="padding: 8px; text-align: center; border-right: 1px solid #ddd; font-weight: 700; color: #1f2937; white-space: nowrap;">${isFirst ? escapeHtml(formatCHDocente(comp)) : ''}</td>
+                    <td style="padding: 8px; text-align: center; border-right: 2px solid #2d34c6; font-weight: 800; color: ${corAlocada};">${isFirst ? (formatCH(comp.chAlocada) || '0') : ''}</td>
                     <td style="padding: 8px; border-right: 1px solid #ddd; font-weight: 700; color: #333;">${isFirst ? escapeHtml(comp.disciplina) : ''}</td>
                     <td style="padding: 8px; border-right: 1px solid #ddd; color: #333;">${isFirst ? escapeHtml(comp.turmaLabel || '-') : ''}</td>
                     <td style="padding: 8px; border-right: 1px solid #ddd; color: #333;">${escapeHtml(faixaRow.diasLabel || '-')}</td>
-                    <td style="padding: 8px; color: #4b5563;">${escapeHtml(formatPeriodo(faixaRow.dataInicio, faixaRow.dataFim))}</td>
+                    <td style="padding: 8px; border-right: 1px solid #ddd; color: #4b5563;">${escapeHtml(formatPeriodo(faixaRow.dataInicio, faixaRow.dataFim))}</td>
+                    <td style="padding: 8px; color: #1f2937; font-weight: 600;">${horarios}</td>
                 </tr>
             `;
         });
