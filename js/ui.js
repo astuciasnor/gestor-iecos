@@ -1,32 +1,32 @@
-import { store } from './store.js?v=202611071245';
-import { getTurnoLetter, mapSlotToTurno } from './turns.js?v=202611071245';
-import { normalizePeriodo as normalizePeriodoLetivoCode } from './plan_storage.js?v=202611071245';
-import { getCalendarEvents } from './calendar.js?v=202611071245';
-import { isDateOverlap } from './utils.js?v=202611071245';
-import { weeklyState } from './weekly_state.js?v=202611071245';
-import { findPendentesCobertas, isPendenteJaAlocada } from './pendentes.mjs?v=202611071245';
-import { classifySwap } from './troca_ordem.mjs?v=202611071245';
-import { buildCanonicalOfferProjection } from './execution_engine.js?v=202611071245';
+import { store } from './store.js?v=202611071253';
+import { getTurnoLetter, mapSlotToTurno } from './turns.js?v=202611071253';
+import { normalizePeriodo as normalizePeriodoLetivoCode } from './plan_storage.js?v=202611071253';
+import { getCalendarEvents } from './calendar.js?v=202611071253';
+import { isDateOverlap } from './utils.js?v=202611071253';
+import { weeklyState } from './weekly_state.js?v=202611071253';
+import { findPendentesCobertas, isPendenteJaAlocada } from './pendentes.mjs?v=202611071253';
+import { classifySwap } from './troca_ordem.mjs?v=202611071253';
+import { buildCanonicalOfferProjection } from './execution_engine.js?v=202611071253';
 import {
     buildSigaaMetadataPayload,
     validateSigaaMetadataPayload,
     getSigaaCode,
     buildScopedSigaaAllocationFromOfferFaixa
-} from './sigaa_metadata.js?v=202611071245';
-import { parseBackupDataFile, extractImportPlanMeta } from './serialization.js?v=202611071245';
+} from './sigaa_metadata.js?v=202611071253';
+import { parseBackupDataFile, extractImportPlanMeta } from './serialization.js?v=202611071253';
 import {
     showToastWarning,
     showPersistentStatusMessage,
     copyTextToClipboard,
     flashButtonCopyState,
     setupCopyActionButtons
-} from './ui_feedback.js?v=202611071245';
+} from './ui_feedback.js?v=202611071253';
 import {
     normalizeHexColor,
     adjustHexColor,
     hexToRgba,
     vividHexColor
-} from './color_utils.js?v=202611071245';
+} from './color_utils.js?v=202611071253';
 import {
     isFaixaAllocation,
     isPriorityRegularAllocation,
@@ -35,7 +35,7 @@ import {
     normalizeTeacherNameForMatch,
     getDocenteShortLabel,
     getAllocationTeachersForConflict
-} from './allocation_helpers.js?v=202611071245';
+} from './allocation_helpers.js?v=202611071253';
 import {
     VINCULOS_DOCENTE_NOVO,
     OUTRA_UNIDADE,
@@ -44,9 +44,9 @@ import {
     findSimilarNames,
     problemaNoNome,
     limparEspacos
-} from './docente_nomes.mjs?v=202611071245';
-import { getSessionEmail, getPerfil, fetchAllocationsForPlans } from './sync_remoto.js?v=202611071245';
-import { resolveBackendMode } from './backend_config.js?v=202611071245';
+} from './docente_nomes.mjs?v=202611071253';
+import { getSessionEmail, getPerfil, fetchAllocationsForPlans } from './sync_remoto.js?v=202611071253';
+import { resolveBackendMode } from './backend_config.js?v=202611071253';
 import {
     normalizeConflictSlotLabel,
     getAvailableTurnoOfertaOptions,
@@ -55,7 +55,7 @@ import {
     isTurnoDividerSlot,
     buildHorariosForUI,
     getShiftChangeMeta
-} from './turno_helpers.js?v=202611071245';
+} from './turno_helpers.js?v=202611071253';
 import {
     getDisciplinaCHGlobal,
     derivarBloco,
@@ -64,7 +64,7 @@ import {
     getTurmaBaseLabel,
     getDisciplinaInfo,
     getPrintAcademicMetaLine
-} from './curso_turma_helpers.js?v=202611071245';
+} from './curso_turma_helpers.js?v=202611071253';
 import {
     renderMonthlyCalendar,
     renderTeacherCalendar,
@@ -72,10 +72,10 @@ import {
     clearTeacherRangeCache,
     setTeacherPeriod,
     getTeacherPeriod
-} from './calendarios_ui.js?v=202611071245';
+} from './calendarios_ui.js?v=202611071253';
 import {
     refreshTeacherConflictsUI
-} from './conflitos_ui.js?v=202611071245';
+} from './conflitos_ui.js?v=202611071253';
 import {
     shouldIgnoreTurmaEventForCandidate,
     normalizeDrawnSlotsByDay,
@@ -89,7 +89,7 @@ import {
     resolveEditableFaixasFromStoredExecution,
     alignFaixasToExecutionEnd,
     buildFinalAdjustmentFaixaSuggestion
-} from './faixa_utils.js?v=202611071245';
+} from './faixa_utils.js?v=202611071253';
 import {
     timeToMinutes,
     shiftISODate,
@@ -103,14 +103,14 @@ import {
     isDateInsideRange,
     formatDateBRShortYear,
     formatDateBR
-} from './date_utils_ui.js?v=202611071245';
+} from './date_utils_ui.js?v=202611071253';
 import {
     initializeWeeklyScheduleForTurma,
     reconcileTurmaSelectionAfterPLChange,
     resetWeeklyViewOnTurmaChange,
     resolveActiveAcademicPeriod,
     slotLabelsOverlap
-} from './academic_rules.mjs?v=202611071245';
+} from './academic_rules.mjs?v=202611071253';
 
 const gridContainer = document.getElementById('weekly-grid');
 const selCurso = document.getElementById('sel-curso');
@@ -127,10 +127,6 @@ const activePlanStatus = document.getElementById('active-plan-status');
 
 const calStart = document.getElementById('cal-start');
 const calEnd = document.getElementById('cal-end');
-// Espelho do viewport na aba Calendario Docente (mesma janela de visualizacao,
-// controles duplicados para a direcao ajustar o periodo direto na aba do docente).
-const calStartTeacher = document.getElementById('cal-start-teacher');
-const calEndTeacher = document.getElementById('cal-end-teacher');
 
 const inputConfig = {
     disciplina: document.getElementById('inp-disciplina'),
@@ -309,7 +305,7 @@ async function loadTeacherRangePlans(start, end) {
     return metas.map((meta) => ({ meta, allocations: byKey[meta.key] || [] }));
 }
 
-/// Periodo do Calendario Docente: ano + "Ano inteiro" (PL1..PL4 do ano) ou um
+// Periodo do Calendario Docente: ano + "Ano inteiro" (PL1..PL4 do ano) ou um
 // PL do ano. Sem escolha, mostra o PL aberto na barra lateral.
 function setupTeacherYearControls() {
     setTeacherRangeLoader(loadTeacherRangePlans);
@@ -374,7 +370,6 @@ function setupTeacherYearControls() {
 function setupTeacherFilterControls() {
     const btnRefresh = document.getElementById('btn-refresh-teacher');
     const btnClear = document.getElementById('btn-clear-view-docente');
-    const btnUsePlanPeriod = document.getElementById('btn-use-plan-period');
     const newTeacherHint = document.getElementById('docente-new-hint');
 
     const updateClearButton = () => {
@@ -412,15 +407,6 @@ function setupTeacherFilterControls() {
     selViewDocente?.addEventListener('input', () => {
         updateClearButton();
         updateNewTeacherHint();
-    });
-    btnUsePlanPeriod?.addEventListener('click', resetCalendarViewportToPlan);
-    document.querySelectorAll('[data-date-picker-for]').forEach((button) => {
-        button.addEventListener('click', () => {
-            const input = document.getElementById(button.dataset.datePickerFor);
-            if (!input) return;
-            if (typeof input.showPicker === 'function') input.showPicker();
-            else input.focus();
-        });
     });
     updateClearButton();
     updateNewTeacherHint();
@@ -4279,13 +4265,6 @@ function refreshActiveCalendarView() {
     }
 }
 
-// Mantem os inputs de viewport da aba Docente espelhando os da aba Turma
-// (ambos apontam para a MESMA janela de visualizacao persistida por PL).
-function syncTeacherViewportInputs() {
-    if (calStartTeacher && calStart) calStartTeacher.value = calStart.value || '';
-    if (calEndTeacher && calEnd) calEndTeacher.value = calEnd.value || '';
-}
-
 // Chamado quando o usuario altera as datas de visualizacao (change) ou clica em
 // "Atualizar": valida, persiste por PL e redesenha a visao ativa.
 function handleCalendarViewportChange() {
@@ -4296,17 +4275,7 @@ function handleCalendarViewportChange() {
         return;
     }
     saveCalendarViewport(start, end);
-    syncTeacherViewportInputs();
     refreshActiveCalendarView();
-}
-
-// Versao para os inputs da aba Docente: copia os valores para os inputs
-// canonicos (#cal-start/#cal-end, lidos pelo motor de render) e reaproveita o
-// fluxo padrao de viewport.
-function handleTeacherViewportChange() {
-    if (calStart && calStartTeacher) calStart.value = calStartTeacher.value || '';
-    if (calEnd && calEndTeacher) calEnd.value = calEndTeacher.value || '';
-    handleCalendarViewportChange();
 }
 
 // Volta o viewport ao termo do PL vigente (limpa o override persistido).
@@ -4314,7 +4283,6 @@ function resetCalendarViewportToPlan() {
     clearCalendarViewport();
     if (calStart) calStart.value = store.settings.termStart || '';
     if (calEnd) calEnd.value = store.settings.termEnd || '';
-    syncTeacherViewportInputs();
     refreshActiveCalendarView();
 }
 
@@ -4326,7 +4294,6 @@ function syncPlanInputsFromStore(preferredMeta = null) {
     const viewport = getStoredCalendarViewport((preferredMeta || store.getActivePlanMeta())?.key || '');
     if (calStart) calStart.value = (viewport?.start) || store.settings.termStart || '';
     if (calEnd) calEnd.value = (viewport?.end) || store.settings.termEnd || '';
-    syncTeacherViewportInputs();
     populatePeriodoLetivoOptions(preferredMeta || store.getActivePlanMeta());
     populateTurnoOfertaOptions(store.settings.turnoOferta || 'Tarde');
     if (selPeriodo) {
@@ -4490,12 +4457,6 @@ function initPeriodoLetivoETurno() {
     }
     if (calEnd) {
         calEnd.addEventListener('change', handleCalendarViewportChange);
-    }
-    if (calStartTeacher) {
-        calStartTeacher.addEventListener('change', handleTeacherViewportChange);
-    }
-    if (calEndTeacher) {
-        calEndTeacher.addEventListener('change', handleTeacherViewportChange);
     }
 
     applyPlanContextFromInputs({ options: { resetDraftOnChange: false } });
@@ -4825,12 +4786,6 @@ export function initUI() {
 
     const btnResetViewPeriod = document.getElementById('btn-reset-view-period');
     if (btnResetViewPeriod) btnResetViewPeriod.addEventListener('click', resetCalendarViewportToPlan);
-
-    const btnGerarCalTeacher = document.getElementById('btn-gerar-cal-teacher');
-    if (btnGerarCalTeacher) btnGerarCalTeacher.addEventListener('click', handleTeacherViewportChange);
-
-    const btnResetViewPeriodTeacher = document.getElementById('btn-reset-view-period-teacher');
-    if (btnResetViewPeriodTeacher) btnResetViewPeriodTeacher.addEventListener('click', resetCalendarViewportToPlan);
 
     const btnPrint = document.querySelector('.btn-print');
     if (btnPrint) {

@@ -1,9 +1,10 @@
-import { store } from './store.js?v=202611071245';
-import { getCalendarEvents } from './calendar.js?v=202611071245';
-import { buildTeacherExecutionSnapshot, buildCanonicalOfferProjection } from './execution_engine.js?v=202611071245';
-import { getHorariosByTurno, normalizeTurnoKey, getTurnoLetter, mapSlotToTurno } from './turns.js?v=202611071245';
-import { vividHexColor } from './color_utils.js?v=202611071245';
-import { formatDateBR, timeToMinutes, shortDayName } from './date_utils_ui.js?v=202611071245';
+import { store } from './store.js?v=202611071253';
+import { getCalendarEvents } from './calendar.js?v=202611071253';
+import { buildTeacherExecutionSnapshot, buildCanonicalOfferProjection } from './execution_engine.js?v=202611071253';
+import { detectTeacherConflicts } from './conflicts.js?v=202611071253';
+import { getHorariosByTurno, normalizeTurnoKey, getTurnoLetter, mapSlotToTurno } from './turns.js?v=202611071253';
+import { vividHexColor } from './color_utils.js?v=202611071253';
+import { formatDateBR, timeToMinutes, shortDayName } from './date_utils_ui.js?v=202611071253';
 import {
     isFaixaAllocation,
     isScheduledRegularAllocation,
@@ -11,7 +12,7 @@ import {
     teacherNamesMatch,
     getDocenteShortLabel,
     calculateTeacherTotalCH
-} from './allocation_helpers.js?v=202611071245';
+} from './allocation_helpers.js?v=202611071253';
 import {
     normalizeTurnoOfertaKey,
     formatTurnoOfertaLabel,
@@ -21,18 +22,18 @@ import {
     buildHorariosForUI,
     getShiftChangeMeta,
     getCalendarShiftBadgeHTML
-} from './turno_helpers.js?v=202611071245';
+} from './turno_helpers.js?v=202611071253';
 import {
     getDisciplinaCHGlobal,
     getTurmaLabel,
     getTurmaBaseLabel,
     getDisciplinaInfo,
     getPrintAcademicMetaLine
-} from './curso_turma_helpers.js?v=202611071245';
+} from './curso_turma_helpers.js?v=202611071253';
 import {
     getGanttTurnoConfigs,
     resolveTeacherShiftForSlot
-} from './gantt_ui.js?v=202611071245';
+} from './gantt_ui.js?v=202611071253';
 
 // Referencias DOM de nivel de modulo (espelham as de ui.js; modulo deferred, DOM pronto).
 const selViewDocente = document.getElementById('sel-view-docente');
@@ -517,7 +518,6 @@ function renderTeacherRangeCalendar(container, docente, view) {
                 preferredShiftOrder: turnoConfigs.map((config) => config.value),
                 formatTurmaLabel: (event) => getTurmaLabel(event?.turmaId, event?.subGrupo)
             });
-            conflictRows.push(...snapshot.conflictRows);
             const planShiftKeys = snapshot.activeShiftData.map((shift) => shift.normalized).filter(Boolean);
             planShiftKeys.forEach((key) => shiftKeys.add(key));
             // O quadro de horarios pode mudar de um PL para outro (regime): cada PL
@@ -534,6 +534,14 @@ function renderTeacherRangeCalendar(container, docente, view) {
             mergeEventsByDate(eventsByDate, getCalendarEvents(null, rangeStart, gridEnd, docente));
         });
     });
+
+    // Conflitos no calendario ja juntado: pega os de dentro de cada PL e tambem os
+    // entre PLs que se sobrepoem nas datas (ex.: PL2 ate julho e PL3 desde junho).
+    conflictRows.push(...detectTeacherConflicts({
+        eventsByDate,
+        resolveShift: (slot) => resolveTeacherShiftForSlot(slot),
+        formatTurmaLabel: (event) => getTurmaLabel(event?.turmaId, event?.subGrupo)
+    }));
 
     const totalAno = sumComponentsCH(sections.flatMap((section) => section.components)).alocada;
     const porPL = sections

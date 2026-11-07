@@ -1,5 +1,5 @@
-import { store } from './store.js?v=202611071245';
-import { normalizePeriodo as normalizePeriodoLetivoCode } from './plan_storage.js?v=202611071245';
+import { store } from './store.js?v=202611071253';
+import { normalizePeriodo as normalizePeriodoLetivoCode } from './plan_storage.js?v=202611071253';
 
 export function getDisciplinaCHGlobal(disciplina, turmaId) {
     let sigla = '';
