@@ -81,7 +81,7 @@ export function problemaNoNome(nome) {
 
 // Docentes cadastrados pelos coordenadores que ainda nao estao na planilha
 // (dados_app.json). allocationsByPlan: { chaveDoPeriodo: [alocacoes] }.
-// Um item por nome, com as turmas/componentes onde aparece.
+// Um item por nome, com as turmas/componentes onde aparece. Revisados saem da lista.
 export function listarDocentesParaConferir(allocationsByPlan = {}, nomesPlanilha = []) {
     const naPlanilha = new Set(nomesPlanilha.map(normalizeTeacherNameForMatch));
     const porNome = new Map();
@@ -89,7 +89,7 @@ export function listarDocentesParaConferir(allocationsByPlan = {}, nomesPlanilha
         (Array.isArray(alocacoes) ? alocacoes : []).forEach((alloc) => {
             (Array.isArray(alloc?.docentesCadastrados) ? alloc.docentesCadastrados : []).forEach((cad) => {
                 const chave = normalizeTeacherNameForMatch(cad?.nome);
-                if (!chave || naPlanilha.has(chave)) return;
+                if (!chave || cad.revisado || naPlanilha.has(chave)) return;
                 if (!porNome.has(chave)) porNome.set(chave, { ...cad, usos: [] });
                 const item = porNome.get(chave);
                 if (String(cad.em || '') < String(item.em || '')) Object.assign(item, { ...cad, usos: item.usos });
@@ -99,4 +99,53 @@ export function listarDocentesParaConferir(allocationsByPlan = {}, nomesPlanilha
         });
     });
     return [...porNome.values()].sort((a, b) => String(b.em || '').localeCompare(String(a.em || '')));
+}
+
+// Revisao do administrador: troca o nome antigo pelo revisado (docente unico,
+// lista de docentes e rotulo "(Multiplos)") e atualiza o cadastro, mantendo quem
+// cadastrou. Devolve uma copia alterada da alocacao, ou null se nada mudou.
+// revisao: { nome, vinculo, unidade, subunidade, por, porNome, em }
+export function aplicarRevisaoDocente(alloc, nomeAntigo, revisao) {
+    const chave = normalizeTeacherNameForMatch(nomeAntigo);
+    if (!alloc || !chave) return null;
+    const copia = structuredClone(alloc);
+    let mudou = false;
+
+    if (normalizeTeacherNameForMatch(copia.docente) === chave) {
+        copia.docente = revisao.nome;
+        mudou = true;
+    }
+    if (Array.isArray(copia.docentes)) {
+        let mudouLista = false;
+        copia.docentes.forEach((d) => {
+            if (d && normalizeTeacherNameForMatch(d.nome) === chave) {
+                d.nome = revisao.nome;
+                mudouLista = true;
+            }
+        });
+        // Mesmo rotulo que o formulario monta para varios docentes.
+        if (mudouLista && /\(m[uú]ltiplos\)/i.test(String(copia.docente || ''))) {
+            copia.docente = `${copia.docentes.map((d) => String(d?.nome || '').split(' ')[0]).join(' / ')} (Múltiplos)`;
+        }
+        mudou = mudou || mudouLista;
+    }
+    if (Array.isArray(copia.docentesCadastrados)) {
+        copia.docentesCadastrados = copia.docentesCadastrados.map((cad) => {
+            if (normalizeTeacherNameForMatch(cad?.nome) !== chave) return cad;
+            mudou = true;
+            const { outraUnidade: _digitadaPeloCoordenador, ...resto } = cad;
+            return {
+                ...resto,
+                nome: revisao.nome,
+                vinculo: revisao.vinculo,
+                unidade: revisao.unidade,
+                subunidade: revisao.subunidade,
+                cadastradoComo: cad.cadastradoComo || {
+                    nome: cad.nome, vinculo: cad.vinculo, unidade: cad.unidade, subunidade: cad.subunidade
+                },
+                revisado: { por: revisao.por || '', porNome: revisao.porNome || '', em: revisao.em || '' }
+            };
+        });
+    }
+    return mudou ? copia : null;
 }

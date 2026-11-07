@@ -2,12 +2,22 @@
 // Cadastra, edita e exclui acessos, gera senha provisoria e baixa a copia do
 // banco. Quem garante que so o administrador faz isso e a API (api/index.php).
 // Mostra tambem os docentes novos cadastrados pelos coordenadores para conferir.
-import { store } from './store.js?v=202611062115';
-import { fetchAllocationsForPlans } from './sync_remoto.js?v=202611062115';
-import { listarDocentesParaConferir } from './docente_nomes.mjs?v=202611062115';
+import { store } from './store.js?v=202611062134';
+import { fetchAllocationsForPlans, salvarAlocacoesRevisadas, getSessionEmail, getPerfil } from './sync_remoto.js?v=202611062134';
+import {
+  listarDocentesParaConferir,
+  aplicarRevisaoDocente,
+  problemaNoNome,
+  limparEspacos,
+  normalizeTeacherNameForMatch,
+  VINCULOS_DOCENTE_NOVO,
+  UNIDADES
+} from './docente_nomes.mjs?v=202611062134';
 
-let ctx = null;      // { tools, meuId, showToast }
+let ctx = null;      // { tools, meuId, showToast, aoContarDocentes }
 let usuarios = [];
+let docentesItens = [];  // lista "Docentes novos para conferir" na tela
+let docenteEmRevisao = null;
 
 export function abrirAdministracao(opcoes) {
   ctx = opcoes;
@@ -97,6 +107,8 @@ function montarJanela() {
   el('admin-senha-copiar').onclick = (e) => copiar(el('admin-senha-valor').textContent, e.currentTarget);
   el('admin-msg-copiar').onclick = (e) => copiar(el('admin-senha-msg').value, e.currentTarget);
   el('admin-lista').addEventListener('click', aoClicarNaLista);
+  el('admin-docentes').addEventListener('click', aoClicarNosDocentes);
+  el('admin-docentes').addEventListener('submit', salvarRevisaoDocente);
 }
 
 async function carregar() {
@@ -139,9 +151,9 @@ async function carregarDocentes() {
   const caixa = el('admin-docentes');
   caixa.innerHTML = '<h4>Docentes novos para conferir</h4><div class="admin-ajuda">Carregando...</div>';
   try {
-    const itens = await buscarDocentesParaConferir();
-    caixa.innerHTML = desenharDocentes(itens);
-    ctx?.aoContarDocentes?.(itens.length);
+    docentesItens = await buscarDocentesParaConferir();
+    caixa.innerHTML = desenharDocentes(docentesItens);
+    ctx?.aoContarDocentes?.(docentesItens.length);
   } catch (error) {
     caixa.innerHTML = `<h4>Docentes novos para conferir</h4><div class="admin-ajuda">Não foi possível carregar: ${esc(error?.message || error)}</div>`;
   }
@@ -151,7 +163,7 @@ function desenharDocentes(itens) {
   if (!itens.length) {
     return '<h4>Docentes novos para conferir</h4><div class="admin-ajuda">Nenhum docente novo para conferir.</div>';
   }
-  const linhas = itens.map((d) => `
+  const linhas = itens.map((d, idx) => `
       <tr>
         <td><strong>${esc(d.nome)}</strong></td>
         <td>${esc(d.vinculo || '—')}</td>
@@ -159,16 +171,108 @@ function desenharDocentes(itens) {
         <td>${d.usos.map(esc).join('<br>')}</td>
         <td>${esc(d.porNome || '')}${d.por ? `<br><span class="admin-eu">${esc(d.por)}</span>` : ''}</td>
         <td>${esc(formatarDia(d.em))}</td>
+        <td><button type="button" class="admin-btn admin-btn-mini" data-acao="revisar-docente" data-idx="${idx}">Revisar</button></td>
       </tr>`).join('');
   return `
     <h4>Docentes novos para conferir (${itens.length})</h4>
     <table class="admin-tabela">
-      <thead><tr><th>Nome</th><th>Vínculo</th><th>Unidade / Subunidade</th><th>Onde</th><th>Cadastrado por</th><th>Em</th></tr></thead>
+      <thead><tr><th>Nome</th><th>Vínculo</th><th>Unidade / Subunidade</th><th>Onde</th><th>Cadastrado por</th><th>Em</th><th></th></tr></thead>
       <tbody>${linhas}</tbody>
     </table>
-    <div class="admin-ajuda">Para conferir: ponha o nome certo na <strong>planilha_base.xlsx</strong> (docentes), com unidade e subunidade.
-      Se o coordenador escreveu errado, ponha a grafia dele em <strong>nomes_anteriores</strong>: o Cardume troca nas alocações.
-      Gere o dados_app.json e envie; o nome sai desta lista.</div>`;
+    ${formularioRevisao()}
+    <div class="admin-ajuda">Revisar: corrija o nome, a unidade e a subunidade (pode usar as siglas). A correção vale
+      em todas as alocações do docente nos períodos em curso e futuros, e o cadastro sai desta lista.</div>`;
+}
+
+function opcoesDatalist(valores) {
+  return [...new Set(valores.map((v) => String(v || '').trim()).filter(Boolean))]
+    .sort((a, b) => a.localeCompare(b, 'pt-BR'))
+    .map((v) => `<option value="${esc(v)}"></option>`).join('');
+}
+
+function formularioRevisao() {
+  const planilha = Array.isArray(store.rawData?.docentes) ? store.rawData.docentes : [];
+  const unidades = [...UNIDADES.map((u) => u.sigla), ...planilha.map((d) => d?.unidade)];
+  const subunidades = [...UNIDADES.flatMap((u) => u.subunidades), ...planilha.map((d) => d?.subunidade)];
+  return `
+    <form class="admin-form admin-revisao" id="admin-revisao" hidden>
+      <h4>Revisar cadastro</h4>
+      <div class="admin-ajuda" id="admin-revisao-origem"></div>
+      <div class="admin-form-grade">
+        <label>Nome completo<input type="text" id="admin-r-nome" maxlength="120" required></label>
+        <label>Vínculo<select id="admin-r-vinculo">${VINCULOS_DOCENTE_NOVO.map((v) => `<option value="${v}">${v}</option>`).join('')}</select></label>
+        <label>Unidade<input type="text" id="admin-r-unidade" maxlength="60" list="admin-r-unidades" required></label>
+        <label>Subunidade<input type="text" id="admin-r-subunidade" maxlength="60" list="admin-r-subunidades" required></label>
+      </div>
+      <datalist id="admin-r-unidades">${opcoesDatalist(unidades)}</datalist>
+      <datalist id="admin-r-subunidades">${opcoesDatalist(subunidades)}</datalist>
+      <div class="admin-revisao-erro" id="admin-r-erro"></div>
+      <div class="admin-form-botoes">
+        <button type="submit" class="admin-btn admin-btn-primario" id="admin-r-salvar">Salvar revisão</button>
+        <button type="button" class="admin-btn" data-acao="cancelar-revisao">Cancelar</button>
+      </div>
+    </form>`;
+}
+
+function aoClicarNosDocentes(event) {
+  const botao = event.target.closest('button[data-acao]');
+  if (!botao) return;
+  if (botao.dataset.acao === 'cancelar-revisao') {
+    docenteEmRevisao = null;
+    el('admin-revisao').hidden = true;
+    return;
+  }
+  if (botao.dataset.acao !== 'revisar-docente') return;
+  const d = docentesItens[Number(botao.dataset.idx)];
+  if (!d) return;
+  docenteEmRevisao = d;
+  el('admin-revisao-origem').innerHTML = `Cadastrado por ${esc(d.porNome || d.por || 'coordenador')} em ${esc(formatarDia(d.em))} como:
+    <strong>${esc(d.nome)}</strong> · ${esc(d.vinculo || '—')} · ${esc([d.unidade, d.subunidade].filter(Boolean).join(' / ') || '—')}`;
+  el('admin-r-nome').value = d.nome || '';
+  el('admin-r-vinculo').value = VINCULOS_DOCENTE_NOVO.includes(d.vinculo) ? d.vinculo : VINCULOS_DOCENTE_NOVO[0];
+  el('admin-r-unidade').value = d.unidade || '';
+  el('admin-r-subunidade').value = d.subunidade || '';
+  el('admin-r-erro').textContent = '';
+  el('admin-revisao').hidden = false;
+  el('admin-r-nome').focus();
+}
+
+async function salvarRevisaoDocente(event) {
+  if (event.target.id !== 'admin-revisao') return;
+  event.preventDefault();
+  const d = docenteEmRevisao;
+  if (!d) return;
+  const revisao = {
+    nome: limparEspacos(el('admin-r-nome').value),
+    vinculo: el('admin-r-vinculo').value,
+    unidade: limparEspacos(el('admin-r-unidade').value),
+    subunidade: limparEspacos(el('admin-r-subunidade').value),
+    por: getSessionEmail(),
+    porNome: getPerfil()?.nome || '',
+    em: new Date().toLocaleDateString('sv')
+  };
+  const erro = problemaNoNome(revisao.nome) || (!revisao.unidade || !revisao.subunidade ? 'Preencha a unidade e a subunidade.' : '');
+  el('admin-r-erro').textContent = erro;
+  if (erro) return;
+
+  const naPlanilha = (Array.isArray(store.rawData?.docentes) ? store.rawData.docentes : [])
+    .find((p) => normalizeTeacherNameForMatch(p?.docente) === normalizeTeacherNameForMatch(revisao.nome));
+  if (naPlanilha && normalizeTeacherNameForMatch(revisao.nome) !== normalizeTeacherNameForMatch(d.nome)
+    && !confirm(`"${naPlanilha.docente}" já está na planilha do Cardume. Trocar "${d.nome}" por ele em todas as alocações?`)) return;
+
+  await executar(el('admin-r-salvar'), async () => {
+    // Le de novo do servidor: a lista na tela pode estar desatualizada.
+    const porPeriodo = await fetchAllocationsForPlans(chavesDosPeriodos());
+    let total = 0;
+    for (const [chave, alocacoes] of Object.entries(porPeriodo)) {
+      const alteradas = (alocacoes || []).map((a) => aplicarRevisaoDocente(a, d.nome, revisao)).filter(Boolean);
+      await salvarAlocacoesRevisadas(chave, alteradas);
+      total += alteradas.length;
+    }
+    docenteEmRevisao = null;
+    ctx.showToast(`Revisão salva: ${revisao.nome}, em ${total} alocação(ões).`, 'success', 5000);
+    await carregarDocentes();
+  });
 }
 
 function formatarDia(iso) {

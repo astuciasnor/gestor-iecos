@@ -6,7 +6,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import { detectTeacherConflicts } from '../js/conflicts.js';
-import { findNewNames, findSimilarNames, problemaNoNome, UNIDADES, VINCULOS_DOCENTE_NOVO, listarDocentesParaConferir } from '../js/docente_nomes.mjs';
+import { findNewNames, findSimilarNames, problemaNoNome, UNIDADES, VINCULOS_DOCENTE_NOVO, listarDocentesParaConferir, aplicarRevisaoDocente } from '../js/docente_nomes.mjs';
 
 // store.js le o localStorage ao carregar; no Node ele nao existe.
 globalThis.localStorage ??= { getItem: () => null, setItem: () => {}, removeItem: () => {} };
@@ -92,4 +92,28 @@ test('painel do administrador: so cadastros fora da planilha, um por nome', () =
   assert.equal(itens[0].em, '2026-11-05');
   assert.deepEqual(itens[0].usos, ['EP2025 · ECOLOGIA', 'EP2026 · BIOLOGIA']);
   assert.equal(itens[0].outraUnidade, true);
+});
+
+test('revisao do administrador troca o nome e mantem quem cadastrou', () => {
+  const cadastro = { nome: 'Chico Buarque', vinculo: 'Efetivo', unidade: 'Campus de Ananindeua', subunidade: 'Faculdade de Física', outraUnidade: true, por: 'coord@ufpa.br', porNome: 'Coord EP', em: '2026-11-06' };
+  const revisao = { nome: 'Chico Buarque de Holanda', vinculo: 'Efetivo', unidade: 'CANAN', subunidade: 'FACFIS', por: 'admin@ufpa.br', porNome: 'Admin', em: '2026-11-07' };
+  const unico = { id: 'a1', turmaId: 'EP2025', docente: 'chico  buarque', docentesCadastrados: [cadastro] };
+  const r1 = aplicarRevisaoDocente(unico, 'Chico Buarque', revisao);
+  assert.equal(r1.docente, 'Chico Buarque de Holanda');
+  const cad = r1.docentesCadastrados[0];
+  assert.equal(cad.unidade, 'CANAN');
+  assert.equal(cad.subunidade, 'FACFIS');
+  assert.equal(cad.por, 'coord@ufpa.br');
+  assert.equal(cad.outraUnidade, undefined);
+  assert.equal(cad.cadastradoComo.unidade, 'Campus de Ananindeua');
+  assert.equal(cad.revisado.por, 'admin@ufpa.br');
+  assert.equal(unico.docente, 'chico  buarque', 'a original nao muda');
+
+  const varios = { id: 'a2', docente: 'Evaldo / Chico (Múltiplos)', docentes: [{ nome: 'Evaldo Martins da Silva', ch: 30 }, { nome: 'Chico Buarque', ch: 30 }] };
+  const r2 = aplicarRevisaoDocente(varios, 'Chico Buarque', { ...revisao, nome: 'Francisco Buarque de Holanda' });
+  assert.equal(r2.docentes[1].nome, 'Francisco Buarque de Holanda');
+  assert.equal(r2.docente, 'Evaldo / Francisco (Múltiplos)');
+
+  assert.equal(aplicarRevisaoDocente({ id: 'a3', docente: 'Outra Pessoa' }, 'Chico Buarque', revisao), null);
+  assert.deepEqual(listarDocentesParaConferir({ PL1: [r1] }, []), [], 'revisado sai da lista');
 });

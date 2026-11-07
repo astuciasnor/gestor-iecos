@@ -1,14 +1,14 @@
-import { store } from './store.js?v=202611062115';
-import { getCalendarEvents } from './calendar.js?v=202611062115';
-import { timeToMinutes } from './date_utils_ui.js?v=202611062115';
+import { store } from './store.js?v=202611062134';
+import { getCalendarEvents } from './calendar.js?v=202611062134';
+import { timeToMinutes } from './date_utils_ui.js?v=202611062134';
 import {
     isPendingAllocation,
     getAllocationTeachersForConflict
-} from './allocation_helpers.js?v=202611062115';
-import { normalizeConflictSlotLabel } from './turno_helpers.js?v=202611062115';
-import { slotLabelsOverlap } from './academic_rules.mjs?v=202611062115';
-import { getTurmaLabel } from './curso_turma_helpers.js?v=202611062115';
-import { renderTeacherCalendar } from './calendarios_ui.js?v=202611062115';
+} from './allocation_helpers.js?v=202611062134';
+import { normalizeConflictSlotLabel } from './turno_helpers.js?v=202611062134';
+import { slotLabelsOverlap } from './academic_rules.mjs?v=202611062134';
+import { getTurmaLabel } from './curso_turma_helpers.js?v=202611062134';
+import { renderTeacherCalendar } from './calendarios_ui.js?v=202611062134';
 
 // Ref DOM de nivel de modulo (modulo deferred, DOM pronto).
 const selViewDocente = document.getElementById('sel-view-docente');

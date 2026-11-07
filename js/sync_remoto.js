@@ -3,16 +3,16 @@
 // O navegador continua guardando uma copia (cache) de cada plano; este modulo
 // carrega o plano ativo do servidor, envia as alteracoes do curso do usuario e
 // recebe as alteracoes dos outros cursos (tempo real ou consulta periodica).
-import { store } from './store.js?v=202611062115';
-import { buildTurmaParaCursoMap } from './serialization.js?v=202611062115';
-import { readJsonStorage, writeJsonStorage } from './plan_storage.js?v=202611062115';
-import { resolveBackendMode } from './backend_config.js?v=202611062115';
+import { store } from './store.js?v=202611062134';
+import { buildTurmaParaCursoMap } from './serialization.js?v=202611062134';
+import { readJsonStorage, writeJsonStorage } from './plan_storage.js?v=202611062134';
+import { resolveBackendMode } from './backend_config.js?v=202611062134';
 import {
   computePushPlan,
   reconcileAllocations,
   buildSyncedMap,
   getAllocationCurso
-} from './sync_diff.mjs?v=202611062115';
+} from './sync_diff.mjs?v=202611062134';
 
 const SYNCED_PREFIX = 'cardume_sync_v1::';
 const BACKUP_PREFIX = 'cardume_backup_v1::';
@@ -48,8 +48,8 @@ let onStatus = () => {};
 export async function connect() {
   if (servidor) return;
   servidor = resolveBackendMode() === 'ufpa'
-    ? await import('./remoto_ufpa.js?v=202611062115')
-    : await import('./remoto_supabase.js?v=202611062115');
+    ? await import('./remoto_ufpa.js?v=202611062134')
+    : await import('./remoto_supabase.js?v=202611062134');
   await servidor.connect();
 }
 
@@ -171,6 +171,28 @@ export async function fetchAllocationsForPlans(keys = []) {
     result[key] = key === activeKey && ready ? store.allocations : await servidor.fetchPlan(key);
   }
   return result;
+}
+
+// Administrador (revisao de docente novo): grava alocacoes alteradas de qualquer
+// periodo. Periodo aberto: troca a copia da tela e o envio normal manda ao
+// servidor. Outros periodos: grava direto (quem abrir o periodo recebe a versao nova).
+export async function salvarAlocacoesRevisadas(key, alocacoes = []) {
+  if (!alocacoes.length) return;
+  if (key === activeKey && ready) {
+    alocacoes.forEach((nova) => {
+      const idx = store.allocations.findIndex((a) => a?.id === nova.id);
+      if (idx >= 0) store.allocations[idx] = nova;
+    });
+    store.saveAllocations();
+    onRemoteChange();
+    return;
+  }
+  const rows = alocacoes.map((alloc) => ({
+    id: alloc.id, plano: key, curso: cursoOf(alloc), turma: String(alloc.turmaId || ''), dados: structuredClone(alloc)
+  }));
+  for (let i = 0; i < rows.length; i += WRITE_CHUNK) {
+    await servidor.upsert(rows.slice(i, i + WRITE_CHUNK));
+  }
 }
 
 // So o servidor da UFPA guarda a agenda publica; no Supabase ela continua
