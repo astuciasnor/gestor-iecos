@@ -593,14 +593,14 @@ function marcarAcesso(mysqli $db, string $id): void
 
 // Quem deixa o app aberto de um dia para o outro e segue trabalhando nao abre
 // a pagina de novo: o ultimo acesso tambem anda com o uso (no maximo uma
-// gravacao a cada 10 minutos por pessoa).
+// gravacao a cada 30 minutos por pessoa).
 function marcarAtividade(mysqli $db, array $u): void
 {
     if (!array_key_exists('ultimo_acesso', $u)) return; // coluna ainda nao criada
     // A comparacao fica no banco: o fuso do PHP pode nao ser o do MariaDB.
     try {
         executar($db, 'UPDATE usuarios SET ultimo_acesso = NOW() WHERE id = ?
-                       AND (ultimo_acesso IS NULL OR ultimo_acesso < NOW() - INTERVAL 10 MINUTE)', [$u['id']]);
+                       AND (ultimo_acesso IS NULL OR ultimo_acesso < NOW() - INTERVAL 30 MINUTE)', [$u['id']]);
     } catch (mysqli_sql_exception $e) {
         error_log('[cardume] ultimo_acesso: ' . $e->getMessage());
     }

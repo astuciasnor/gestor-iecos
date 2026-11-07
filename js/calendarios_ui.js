@@ -1,9 +1,9 @@
-import { store } from './store.js?v=202611071233';
-import { getCalendarEvents } from './calendar.js?v=202611071233';
-import { buildTeacherExecutionSnapshot, buildCanonicalOfferProjection } from './execution_engine.js?v=202611071233';
-import { getHorariosByTurno, normalizeTurnoKey, getTurnoLetter, mapSlotToTurno } from './turns.js?v=202611071233';
-import { vividHexColor } from './color_utils.js?v=202611071233';
-import { formatDateBR, timeToMinutes, shortDayName } from './date_utils_ui.js?v=202611071233';
+import { store } from './store.js?v=202611071245';
+import { getCalendarEvents } from './calendar.js?v=202611071245';
+import { buildTeacherExecutionSnapshot, buildCanonicalOfferProjection } from './execution_engine.js?v=202611071245';
+import { getHorariosByTurno, normalizeTurnoKey, getTurnoLetter, mapSlotToTurno } from './turns.js?v=202611071245';
+import { vividHexColor } from './color_utils.js?v=202611071245';
+import { formatDateBR, timeToMinutes, shortDayName } from './date_utils_ui.js?v=202611071245';
 import {
     isFaixaAllocation,
     isScheduledRegularAllocation,
@@ -11,7 +11,7 @@ import {
     teacherNamesMatch,
     getDocenteShortLabel,
     calculateTeacherTotalCH
-} from './allocation_helpers.js?v=202611071233';
+} from './allocation_helpers.js?v=202611071245';
 import {
     normalizeTurnoOfertaKey,
     formatTurnoOfertaLabel,
@@ -21,18 +21,18 @@ import {
     buildHorariosForUI,
     getShiftChangeMeta,
     getCalendarShiftBadgeHTML
-} from './turno_helpers.js?v=202611071233';
+} from './turno_helpers.js?v=202611071245';
 import {
     getDisciplinaCHGlobal,
     getTurmaLabel,
     getTurmaBaseLabel,
     getDisciplinaInfo,
     getPrintAcademicMetaLine
-} from './curso_turma_helpers.js?v=202611071233';
+} from './curso_turma_helpers.js?v=202611071245';
 import {
     getGanttTurnoConfigs,
     resolveTeacherShiftForSlot
-} from './gantt_ui.js?v=202611071233';
+} from './gantt_ui.js?v=202611071245';
 
 // Referencias DOM de nivel de modulo (espelham as de ui.js; modulo deferred, DOM pronto).
 const selViewDocente = document.getElementById('sel-view-docente');
@@ -1138,7 +1138,7 @@ function buildDocenteResumeTableHtml(sections = [], totalLabel = 'Total', cabeca
     // tabela poder ser enviada sozinha ao professor.
     const legenda = cabecalho?.docente
         ? `<caption style="caption-side: top; text-align: left; padding: 0 0 12px;">
-                <div style="padding-bottom: 10px; border-bottom: 2px solid #94a3b8;">
+                <div>
                     <div style="font-size: 17px; font-weight: 800; color: #0f4f7d;">Docente: ${escapeHtml(cabecalho.docente)}</div>
                     ${cabecalho.subtitulo ? `<div style="margin-top: 3px; font-size: 13px; font-weight: 600; color: #4b5563;">${escapeHtml(cabecalho.subtitulo)}</div>` : ''}
                 </div>
@@ -1149,7 +1149,7 @@ function buildDocenteResumeTableHtml(sections = [], totalLabel = 'Total', cabeca
         <table class="calendar-turma-resume-table" style="width: 100%; border-collapse: collapse; margin: 0 0 20px; font-size: 12px;">
             ${legenda}
             <thead>
-                <tr style="background: #f5f5f5; border-bottom: 2px solid #333;">
+                <tr style="background: #f5f5f5; border-top: 2px solid #2d34c6; border-bottom: 2px solid #333;">
                     <th style="padding: 8px 8px 16px 8px; text-align: left; border-right: 1px solid #ddd; width: 4%;">#</th>
                     <th style="padding: 8px 8px 16px 8px; text-align: left; border-right: 2px solid #2d34c6; width: 9%;">Código</th>
                     <th style="padding: 8px 8px 16px 8px; text-align: center; border-right: 1px solid #ddd; width: 8%; color: #2d34c6;" title="CH que cabe a este docente. Componente dividida com outros docentes: parte dele / CH da componente.">CH docente</th>
