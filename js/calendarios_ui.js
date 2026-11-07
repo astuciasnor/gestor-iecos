@@ -1,9 +1,9 @@
-import { store } from './store.js?v=202611071209';
-import { getCalendarEvents } from './calendar.js?v=202611071209';
-import { buildTeacherExecutionSnapshot, buildCanonicalOfferProjection } from './execution_engine.js?v=202611071209';
-import { getHorariosByTurno, normalizeTurnoKey, getTurnoLetter, mapSlotToTurno } from './turns.js?v=202611071209';
-import { vividHexColor } from './color_utils.js?v=202611071209';
-import { formatDateBR, timeToMinutes, shortDayName } from './date_utils_ui.js?v=202611071209';
+import { store } from './store.js?v=202611071233';
+import { getCalendarEvents } from './calendar.js?v=202611071233';
+import { buildTeacherExecutionSnapshot, buildCanonicalOfferProjection } from './execution_engine.js?v=202611071233';
+import { getHorariosByTurno, normalizeTurnoKey, getTurnoLetter, mapSlotToTurno } from './turns.js?v=202611071233';
+import { vividHexColor } from './color_utils.js?v=202611071233';
+import { formatDateBR, timeToMinutes, shortDayName } from './date_utils_ui.js?v=202611071233';
 import {
     isFaixaAllocation,
     isScheduledRegularAllocation,
@@ -11,7 +11,7 @@ import {
     teacherNamesMatch,
     getDocenteShortLabel,
     calculateTeacherTotalCH
-} from './allocation_helpers.js?v=202611071209';
+} from './allocation_helpers.js?v=202611071233';
 import {
     normalizeTurnoOfertaKey,
     formatTurnoOfertaLabel,
@@ -21,18 +21,18 @@ import {
     buildHorariosForUI,
     getShiftChangeMeta,
     getCalendarShiftBadgeHTML
-} from './turno_helpers.js?v=202611071209';
+} from './turno_helpers.js?v=202611071233';
 import {
     getDisciplinaCHGlobal,
     getTurmaLabel,
     getTurmaBaseLabel,
     getDisciplinaInfo,
     getPrintAcademicMetaLine
-} from './curso_turma_helpers.js?v=202611071209';
+} from './curso_turma_helpers.js?v=202611071233';
 import {
     getGanttTurnoConfigs,
     resolveTeacherShiftForSlot
-} from './gantt_ui.js?v=202611071209';
+} from './gantt_ui.js?v=202611071233';
 
 // Referencias DOM de nivel de modulo (espelham as de ui.js; modulo deferred, DOM pronto).
 const selViewDocente = document.getElementById('sel-view-docente');
@@ -341,7 +341,7 @@ export function renderTeacherCalendar() {
                     ? 'Não foi possível ler os outros períodos letivos do servidor: aparece só o PL aberto na barra lateral. Clique em ⟳ ao lado do docente para tentar de novo.'
                     : 'Buscando os períodos letivos escolhidos... (por enquanto aparece o PL aberto na barra lateral)'
             }</div>` : ''}
-            <div style="display:flex; flex-wrap:wrap; gap:10px; align-items:center;">
+            <div style="display:flex; flex-wrap:wrap; gap:10px; align-items:center; border-top:2px solid #94a3b8; padding-top:14px;">
                 <div style="background:#eef6f0; color:#1f5d3a; border:1px solid #cfe8d7; border-radius:999px; padding:8px 14px; font-weight:700;">Turnos ativos: ${shiftSummary}</div>
                 ${conflictPillHtml(conflictRows.length)}
             </div>
@@ -558,7 +558,7 @@ function renderTeacherRangeCalendar(container, docente, view) {
                 <span class="print-title-main">Vistoria de Conflitos Horarios</span><br>
                 <span class="print-title-sub">${escapeHtml(docenteTitle)}</span>
             </div>
-            <div style="display:flex; flex-wrap:wrap; gap:10px; align-items:center;">
+            <div style="display:flex; flex-wrap:wrap; gap:10px; align-items:center; border-top:2px solid #94a3b8; padding-top:14px;">
                 <div style="background:#e3eef8; color:#0f4f7d; border:1px solid #c5d8e8; border-radius:999px; padding:8px 14px; font-weight:800;">${escapeHtml(headline)}</div>
                 <div style="background:#fff7e6; color:#7a4b00; border:1px solid #f3d9a4; border-radius:999px; padding:8px 14px; font-weight:800;">CH alocada ${onde}: ${formatCH(totalAno) || '0'}h${umPL ? '' : ` <span style="font-weight:600;">(${escapeHtml(porPL || 'nenhum PL')})</span>`}</div>
                 <div style="background:#eef6f0; color:#1f5d3a; border:1px solid #cfe8d7; border-radius:999px; padding:8px 14px; font-weight:700;">Turnos ativos: ${shiftSummary}</div>
@@ -1137,14 +1137,16 @@ function buildDocenteResumeTableHtml(sections = [], totalLabel = 'Total', cabeca
     // Nome do docente no alto da tabela (dentro dela, como legenda), para a
     // tabela poder ser enviada sozinha ao professor.
     const legenda = cabecalho?.docente
-        ? `<caption style="caption-side: top; text-align: left; padding: 6px 0 12px;">
-                <div style="font-size: 17px; font-weight: 800; color: #0f4f7d;">Docente: ${escapeHtml(cabecalho.docente)}</div>
-                ${cabecalho.subtitulo ? `<div style="margin-top: 3px; font-size: 13px; font-weight: 600; color: #4b5563;">${escapeHtml(cabecalho.subtitulo)}</div>` : ''}
+        ? `<caption style="caption-side: top; text-align: left; padding: 0 0 12px;">
+                <div style="padding-bottom: 10px; border-bottom: 2px solid #94a3b8;">
+                    <div style="font-size: 17px; font-weight: 800; color: #0f4f7d;">Docente: ${escapeHtml(cabecalho.docente)}</div>
+                    ${cabecalho.subtitulo ? `<div style="margin-top: 3px; font-size: 13px; font-weight: 600; color: #4b5563;">${escapeHtml(cabecalho.subtitulo)}</div>` : ''}
+                </div>
            </caption>`
         : '';
 
     let tableHtml = `
-        <table class="calendar-turma-resume-table" style="width: 100%; border-collapse: collapse; margin: 28px 0 20px; font-size: 12px;">
+        <table class="calendar-turma-resume-table" style="width: 100%; border-collapse: collapse; margin: 0 0 20px; font-size: 12px;">
             ${legenda}
             <thead>
                 <tr style="background: #f5f5f5; border-bottom: 2px solid #333;">
