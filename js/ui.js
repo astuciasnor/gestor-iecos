@@ -1,32 +1,32 @@
-import { store } from './store.js?v=202611071310';
-import { getTurnoLetter, mapSlotToTurno } from './turns.js?v=202611071310';
-import { normalizePeriodo as normalizePeriodoLetivoCode } from './plan_storage.js?v=202611071310';
-import { getCalendarEvents } from './calendar.js?v=202611071310';
-import { isDateOverlap } from './utils.js?v=202611071310';
-import { weeklyState } from './weekly_state.js?v=202611071310';
-import { findPendentesCobertas, isPendenteJaAlocada } from './pendentes.mjs?v=202611071310';
-import { classifySwap } from './troca_ordem.mjs?v=202611071310';
-import { buildCanonicalOfferProjection } from './execution_engine.js?v=202611071310';
+import { store } from './store.js?v=202611071451';
+import { getTurnoLetter, mapSlotToTurno } from './turns.js?v=202611071451';
+import { normalizePeriodo as normalizePeriodoLetivoCode } from './plan_storage.js?v=202611071451';
+import { getCalendarEvents } from './calendar.js?v=202611071451';
+import { isDateOverlap } from './utils.js?v=202611071451';
+import { weeklyState } from './weekly_state.js?v=202611071451';
+import { findPendentesCobertas, isPendenteJaAlocada } from './pendentes.mjs?v=202611071451';
+import { classifySwap } from './troca_ordem.mjs?v=202611071451';
+import { buildCanonicalOfferProjection } from './execution_engine.js?v=202611071451';
 import {
     buildSigaaMetadataPayload,
     validateSigaaMetadataPayload,
     getSigaaCode,
     buildScopedSigaaAllocationFromOfferFaixa
-} from './sigaa_metadata.js?v=202611071310';
-import { parseBackupDataFile, extractImportPlanMeta } from './serialization.js?v=202611071310';
+} from './sigaa_metadata.js?v=202611071451';
+import { parseBackupDataFile, extractImportPlanMeta } from './serialization.js?v=202611071451';
 import {
     showToastWarning,
     showPersistentStatusMessage,
     copyTextToClipboard,
     flashButtonCopyState,
     setupCopyActionButtons
-} from './ui_feedback.js?v=202611071310';
+} from './ui_feedback.js?v=202611071451';
 import {
     normalizeHexColor,
     adjustHexColor,
     hexToRgba,
     vividHexColor
-} from './color_utils.js?v=202611071310';
+} from './color_utils.js?v=202611071451';
 import {
     isFaixaAllocation,
     isPriorityRegularAllocation,
@@ -35,7 +35,7 @@ import {
     normalizeTeacherNameForMatch,
     getDocenteShortLabel,
     getAllocationTeachersForConflict
-} from './allocation_helpers.js?v=202611071310';
+} from './allocation_helpers.js?v=202611071451';
 import {
     VINCULOS_DOCENTE_NOVO,
     OUTRA_UNIDADE,
@@ -44,9 +44,9 @@ import {
     findSimilarNames,
     problemaNoNome,
     limparEspacos
-} from './docente_nomes.mjs?v=202611071310';
-import { getSessionEmail, getPerfil, fetchAllocationsForPlans } from './sync_remoto.js?v=202611071310';
-import { resolveBackendMode } from './backend_config.js?v=202611071310';
+} from './docente_nomes.mjs?v=202611071451';
+import { getSessionEmail, getPerfil, fetchAllocationsForPlans } from './sync_remoto.js?v=202611071451';
+import { resolveBackendMode } from './backend_config.js?v=202611071451';
 import {
     normalizeConflictSlotLabel,
     getAvailableTurnoOfertaOptions,
@@ -55,7 +55,7 @@ import {
     isTurnoDividerSlot,
     buildHorariosForUI,
     getShiftChangeMeta
-} from './turno_helpers.js?v=202611071310';
+} from './turno_helpers.js?v=202611071451';
 import {
     getDisciplinaCHGlobal,
     derivarBloco,
@@ -64,7 +64,7 @@ import {
     getTurmaBaseLabel,
     getDisciplinaInfo,
     getPrintAcademicMetaLine
-} from './curso_turma_helpers.js?v=202611071310';
+} from './curso_turma_helpers.js?v=202611071451';
 import {
     renderMonthlyCalendar,
     renderTeacherCalendar,
@@ -72,11 +72,11 @@ import {
     clearTeacherRangeCache,
     setTeacherPeriod,
     getTeacherPeriod
-} from './calendarios_ui.js?v=202611071310';
+} from './calendarios_ui.js?v=202611071451';
 import {
     refreshTeacherConflictsUI,
     setCrossPlanLoader
-} from './conflitos_ui.js?v=202611071310';
+} from './conflitos_ui.js?v=202611071451';
 import {
     shouldIgnoreTurmaEventForCandidate,
     normalizeDrawnSlotsByDay,
@@ -90,7 +90,7 @@ import {
     resolveEditableFaixasFromStoredExecution,
     alignFaixasToExecutionEnd,
     buildFinalAdjustmentFaixaSuggestion
-} from './faixa_utils.js?v=202611071310';
+} from './faixa_utils.js?v=202611071451';
 import {
     timeToMinutes,
     shiftISODate,
@@ -104,14 +104,14 @@ import {
     isDateInsideRange,
     formatDateBRShortYear,
     formatDateBR
-} from './date_utils_ui.js?v=202611071310';
+} from './date_utils_ui.js?v=202611071451';
 import {
     initializeWeeklyScheduleForTurma,
     reconcileTurmaSelectionAfterPLChange,
     resetWeeklyViewOnTurmaChange,
     resolveActiveAcademicPeriod,
     slotLabelsOverlap
-} from './academic_rules.mjs?v=202611071310';
+} from './academic_rules.mjs?v=202611071451';
 
 const gridContainer = document.getElementById('weekly-grid');
 const selCurso = document.getElementById('sel-curso');
@@ -957,7 +957,7 @@ function getEditingOriginalAllocationIds() {
 function getDisciplinaTargetCHForDrawing() {
     const disciplina = normalizeDisciplinaInputValue(inputConfig.disciplina?.value || '');
     if (!disciplina) return 0;
-    const info = getDisciplinaInfo(disciplina);
+    const info = getDisciplinaInfo(disciplina, store.selectedTurma);
     return parseInt(info?.ch, 10) || 0;
 }
 
@@ -4648,7 +4648,7 @@ export function initUI() {
         inputConfig.disciplina.addEventListener('change', () => {
             const discNome = normalizeDisciplinaInputValue(inputConfig.disciplina.value || '');
             if (weeklyState.replacingFromDisciplina) {
-                const isValidDisc = !!discNome && getDisciplinaInfo(discNome).ch > 0;
+                const isValidDisc = !!discNome && getDisciplinaInfo(discNome, store.selectedTurma).ch > 0;
                 if (isValidDisc && discNome !== weeklyState.editingDisciplinaDraft) {
                     applyReplacementDisciplina(discNome);
                 }
@@ -6037,7 +6037,7 @@ function renderSlotContent(cell, allocs, dayOfWeek = 0) {
     container.className = 'mini-card-container';
 
     allocs.forEach(alloc => {
-        const info = getDisciplinaInfo(alloc.disciplina);
+        const info = getDisciplinaInfo(alloc.disciplina, alloc.turmaId);
         const card = document.createElement('div');
         const docenteNome = getDocenteShortLabel(alloc.docente) || '';
 
@@ -6158,7 +6158,7 @@ function loadAllocationIntoEditor(allocation, idsToRemove = [], options = {}) {
     if (!a) return;
     const { replace = false } = options || {};
 
-    const info = getDisciplinaInfo(a.disciplina);
+    const info = getDisciplinaInfo(a.disciplina, a.turmaId);
     const confirmMsg = replace
         ? `Substituir "${a.disciplina}" por outra componente?\n\nOs horarios e as faixas desta oferta serao mantidos. Escolha a nova componente no campo Componente da barra lateral e salve.\n"${a.disciplina}" volta para a lista de pendentes ao salvar.`
         : 'Carregar para edicao? A aba Alocar Componentes sera aberta e a oferta so sera atualizada quando voce salvar.';
@@ -6380,7 +6380,7 @@ function handleAddManual() {
             return;
         }
 
-        const info = getDisciplinaInfo(disciplina);
+        const info = getDisciplinaInfo(disciplina, store.selectedTurma);
         const ch = info.ch || 0;
         if (ch === 0) {
             showToastWarning(`O componente "${disciplina}" tem CH 0.`, 'error', 3000);
@@ -6820,7 +6820,7 @@ function buildComponentesParaTroca(turmaId) {
                 ids: registros.map((r) => r.id),
                 disciplina: alloc.disciplina,
                 subGrupo: alloc.subGrupo || '',
-                ch: parseInt(alloc.ch, 10) || parseInt(getDisciplinaInfo(alloc.disciplina).ch, 10) || 0,
+                ch: parseInt(alloc.ch, 10) || parseInt(getDisciplinaInfo(alloc.disciplina, alloc.turmaId).ch, 10) || 0,
                 dataInicio: alloc.dataInicio || '',
                 dataFim: alloc.dataFim || alloc.dataInicio || '',
                 registros: registros.length,
@@ -7031,7 +7031,7 @@ function aplicarTrocaDeOrdem(plano) {
 // horaria (foi cortada no fim do periodo ou da faixa). O ajuste e feito pelo Editar.
 
 function getCargaDaOferta(alloc) {
-    return parseInt(alloc?.ch, 10) || parseInt(getDisciplinaInfo(alloc?.disciplina).ch, 10) || 0;
+    return parseInt(alloc?.ch, 10) || parseInt(getDisciplinaInfo(alloc?.disciplina, alloc?.turmaId).ch, 10) || 0;
 }
 
 // Horas que faltam para a carga. Sem execucao calculada, nao acusa nada.
@@ -7088,7 +7088,7 @@ function renderOfertasList() {
     const buildRegularRows = () => {
         return (offerProjection.regularOfferGroups || []).map((group) => {
             const first = group.baseAlloc;
-            const info = getDisciplinaInfo(first.disciplina);
+            const info = getDisciplinaInfo(first.disciplina, first.turmaId);
             const horariosResumo = (Array.isArray(group.scheduleEntries) ? group.scheduleEntries : [])
                 .map((entry) => `${dayLabels[entry.diaSemana] || 'Dia'} ${entry.horario}`)
                 .join(', ');
@@ -7121,7 +7121,7 @@ function renderOfertasList() {
             .sort((a, b) => String(a.start || '').localeCompare(String(b.start || '')))
             .forEach((group) => {
                 const base = group.baseAlloc;
-                const info = getDisciplinaInfo(base.disciplina);
+                const info = getDisciplinaInfo(base.disciplina, base.turmaId);
                 const faixas = getNormalizedIntensiveFaixas(base);
                 const fallbackDias = Array.isArray(base.diasMarcados) && base.diasMarcados.length > 0
                     ? base.diasMarcados
@@ -7246,7 +7246,7 @@ function renderOfertasList() {
             .forEach((group) => {
                 const base = group.baseAlloc || group.allocations?.[0];
                 if (!base) return;
-                const info = getDisciplinaInfo(base.disciplina);
+                const info = getDisciplinaInfo(base.disciplina, base.turmaId);
                 const resolvedFaixas = getOfferFaixas(group);
 
                 resolvedFaixas.forEach((faixa, idx) => {
@@ -7300,7 +7300,7 @@ function renderOfertasList() {
 
     const buildPendenteRows = () => {
         return pendentes.map((a) => {
-            const info = getDisciplinaInfo(a.disciplina);
+            const info = getDisciplinaInfo(a.disciplina, a.turmaId);
             return {
                 rowType: 'pendente',
                 baseAlloc: a,

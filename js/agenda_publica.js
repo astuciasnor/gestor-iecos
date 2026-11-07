@@ -1,9 +1,9 @@
-import { store, normalizeLoadedAllocation } from './store.js?v=202611071310';
-import { getTurnoLetter } from './turns.js?v=202611071310';
-import { getCalendarEvents } from './calendar.js?v=202611071310';
-import { resolveActiveAcademicPeriod } from './academic_rules.mjs?v=202611071310';
-import { buildMonthMarkers, summarizeTeacherPeriod } from './resumo_docente.mjs?v=202611071310';
-import { resolveBackendMode, UFPA_API_URL } from './backend_config.js?v=202611071310';
+import { store, normalizeLoadedAllocation } from './store.js?v=202611071451';
+import { getTurnoLetter } from './turns.js?v=202611071451';
+import { getCalendarEvents } from './calendar.js?v=202611071451';
+import { resolveActiveAcademicPeriod } from './academic_rules.mjs?v=202611071451';
+import { buildMonthMarkers, summarizeTeacherPeriod } from './resumo_docente.mjs?v=202611071451';
+import { resolveBackendMode, UFPA_API_URL } from './backend_config.js?v=202611071451';
 
 const collator = new Intl.Collator('pt-BR', { sensitivity: 'base' });
 const PUBLIC_ASSET_VERSION = '20261028a';
@@ -645,8 +645,13 @@ function buildLookups() {
     state.componentInfoByName = new Map();
     state.turmaById = new Map();
 
+    // O mesmo nome existe em varios cursos (codigo e CH diferentes): guarda por
+    // curso + nome e, so pelo nome, o primeiro (para turma sem curso conhecido).
     (store.rawData?.componentes || []).forEach((item) => {
-        state.componentInfoByName.set(normalizeText(item?.componente), item);
+        const nome = normalizeText(item?.componente);
+        const sigla = String(item?.sigla || '').trim();
+        if (sigla) state.componentInfoByName.set(`${sigla}|${nome}`, item);
+        if (!state.componentInfoByName.has(nome)) state.componentInfoByName.set(nome, item);
     });
 
     (store.rawData?.turmas || []).forEach((item) => {
@@ -1813,7 +1818,7 @@ function buildMiniChipMarkup(event, dateObj, mode, dailyEvents = []) {
     const turnoLabel = getEventTurnoLabel(event, dateStr);
     const chipLabel = mode === 'docente'
         ? buildTeacherChipLabel(event)
-        : getDisciplinaShortLabel(event?.disciplina || titulo, titulo);
+        : getDisciplinaShortLabel(event?.disciplina || titulo, titulo, event?.turmaId);
     const wrapClass = chipLabel.length > 16 ? ' wrap' : '';
     const shiftMeta = getPublicShiftChangeMeta(event, dateStr);
     const badgeMarkup = buildPublicShiftBadgeMarkup(shiftMeta, true);
@@ -1846,14 +1851,20 @@ function buildMiniChipMarkup(event, dateObj, mode, dailyEvents = []) {
 }
 
 function buildTeacherChipLabel(event) {
-    const shortLabel = getDisciplinaShortLabel(event?.disciplina, event?.title || event?.disciplina || '');
+    const shortLabel = getDisciplinaShortLabel(event?.disciplina, event?.title || event?.disciplina || '', event?.turmaId);
     const turma = getTurmaLabel(event?.turmaId, event?.subGrupo);
     return turma ? `${shortLabel} - ${turma}` : shortLabel;
 }
 
-function getDisciplinaShortLabel(componentName, fallbackTitle) {
-    const normalized = normalizeText(componentName);
-    const info = state.componentInfoByName.get(normalized);
+function getComponentInfo(componentName, turmaId) {
+    const nome = normalizeText(componentName);
+    const sigla = String(state.turmaById.get(String(turmaId || '').trim())?.sigla || '').trim();
+    return (sigla && state.componentInfoByName.get(`${sigla}|${nome}`))
+        || state.componentInfoByName.get(nome) || null;
+}
+
+function getDisciplinaShortLabel(componentName, fallbackTitle, turmaId = '') {
+    const info = getComponentInfo(componentName, turmaId);
     const raw = String(info?.abreviacao || fallbackTitle || componentName || '').trim();
     if (!raw) return 'Componente';
     if (raw.length <= 16) return raw;
@@ -2570,7 +2581,7 @@ function buildMonthlyCalendarHTML({ calendarData, year, month }) {
         uniqueDiscs.slice(0, 2).forEach(({ discKey, representative: ev }) => {
             const cor = String(ev.cor || '#355344').trim();
             const hora = formatChipStartTime(getEventHorario(ev, dateStr));
-            const sigla = getDisciplinaShortLabel(ev.disciplina, ev.title || ev.disciplina || '').slice(0, 10);
+            const sigla = getDisciplinaShortLabel(ev.disciplina, ev.title || ev.disciplina || '', ev.turmaId).slice(0, 10);
             const shiftMeta = getPublicShiftChangeMeta(ev, dateStr);
             const shiftBadgeMarkup = buildPublicShiftBadgeMarkup(shiftMeta, true);
             grid += `<div class="mcd-event" style="background:${escapeHtmlAttr(cor)}" data-date="${dateStr}" data-disc-key="${escapeHtmlAttr(discKey)}" tabindex="0" role="button">`;
@@ -2609,7 +2620,7 @@ function buildDayLensMarkup(events, dateStr, filterKey = null) {
         const key = `${normalizeText(ev.disciplina || ev.title || '')}|${ev.turmaId || ''}|${ev.subGrupo || ''}`;
         if (filterKey && key !== filterKey) return;
         if (!groups.has(key)) {
-            const comp = store.rawData?.componentes?.find(c => c.componente === ev.disciplina);
+            const comp = getComponentInfo(ev.disciplina, ev.turmaId);
             const totalCh = comp?.ch || 0;
             groups.set(key, {
                 title: ev.title || ev.disciplina || 'Componente',

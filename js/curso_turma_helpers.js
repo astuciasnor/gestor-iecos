@@ -1,18 +1,31 @@
-import { store } from './store.js?v=202611071310';
-import { normalizePeriodo as normalizePeriodoLetivoCode } from './plan_storage.js?v=202611071310';
+import { store } from './store.js?v=202611071451';
+import { normalizePeriodo as normalizePeriodoLetivoCode } from './plan_storage.js?v=202611071451';
+
+// Curso (sigla) de uma turma: pelo cadastro de turmas, ou pelas letras do
+// inicio do id (CN2027 -> CN) quando a turma nao esta no cadastro.
+export function getCursoSiglaDaTurma(turmaId) {
+    const id = String(turmaId || '').trim();
+    if (!id) return '';
+    const t = (store.rawData?.turmas || []).find((x) => String(x.turma_id) === id);
+    if (t?.sigla) return String(t.sigla);
+    const prefixo = id.match(/^[A-Za-z]+/)?.[0]?.toUpperCase() || '';
+    return (store.rawData?.cursos || []).some((c) => c.sigla === prefixo) ? prefixo : '';
+}
+
+// O mesmo nome existe em varios cursos com codigo e CH diferentes (ex.:
+// DIDATICA APLICADA A FORMACAO DOCENTE: CB = CBBR005 60h, CN = CNBR004 45h).
+// Procura no curso da turma; sem turma, no curso aberto na barra lateral.
+export function findComponente(nomeComponente, turmaId = '') {
+    const comps = store.rawData?.componentes;
+    if (!Array.isArray(comps) || !nomeComponente) return null;
+    const sigla = getCursoSiglaDaTurma(turmaId) || store.selectedCurso || '';
+    return (sigla && comps.find((x) => x.componente === nomeComponente && x.sigla === sigla)) ||
+        comps.find((x) => x.componente === nomeComponente) || null;
+}
 
 export function getDisciplinaCHGlobal(disciplina, turmaId) {
-    let sigla = '';
-    if (store.rawData?.turmas) {
-        const t = store.rawData.turmas.find(x => String(x.turma_id) === String(turmaId));
-        if (t) sigla = t.sigla;
-    }
-    if (store.rawData?.componentes) {
-        const comp = store.rawData.componentes.find(c => c.componente === disciplina && c.sigla === sigla) ||
-            store.rawData.componentes.find(c => c.componente === disciplina);
-        if (comp) return parseInt(comp.ch) || 0;
-    }
-    return 0;
+    const comp = findComponente(disciplina, turmaId);
+    return comp ? (parseInt(comp.ch) || 0) : 0;
 }
 
 /**
@@ -84,10 +97,8 @@ export function getTurmaBaseLabel(turmaId) {
     return base;
 }
 
-export function getDisciplinaInfo(nomeComponente) {
-    if (!store.rawData?.componentes) return { abrev: nomeComponente, ch: 0, codigo: '' };
-    const c = store.rawData.componentes.find((x) => x.componente === nomeComponente && x.sigla === store.selectedCurso) ||
-        store.rawData.componentes.find((x) => x.componente === nomeComponente);
+export function getDisciplinaInfo(nomeComponente, turmaId = '') {
+    const c = findComponente(nomeComponente, turmaId);
     if (c) return { abrev: c.abreviacao || c.componente, ch: c.ch || 0, codigo: c.codigo || '' };
     return { abrev: nomeComponente, ch: 0, codigo: '' };
 }

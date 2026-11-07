@@ -1,10 +1,10 @@
-import { store } from './store.js?v=202611071310';
-import { getCalendarEvents } from './calendar.js?v=202611071310';
-import { buildTeacherExecutionSnapshot, buildCanonicalOfferProjection } from './execution_engine.js?v=202611071310';
-import { detectTeacherConflicts } from './conflicts.js?v=202611071310';
-import { getHorariosByTurno, normalizeTurnoKey, getTurnoLetter, mapSlotToTurno } from './turns.js?v=202611071310';
-import { vividHexColor } from './color_utils.js?v=202611071310';
-import { formatDateBR, timeToMinutes, shortDayName } from './date_utils_ui.js?v=202611071310';
+import { store } from './store.js?v=202611071451';
+import { getCalendarEvents } from './calendar.js?v=202611071451';
+import { buildTeacherExecutionSnapshot, buildCanonicalOfferProjection } from './execution_engine.js?v=202611071451';
+import { detectTeacherConflicts } from './conflicts.js?v=202611071451';
+import { getHorariosByTurno, normalizeTurnoKey, getTurnoLetter, mapSlotToTurno } from './turns.js?v=202611071451';
+import { vividHexColor } from './color_utils.js?v=202611071451';
+import { formatDateBR, timeToMinutes, shortDayName } from './date_utils_ui.js?v=202611071451';
 import {
     isFaixaAllocation,
     isScheduledRegularAllocation,
@@ -12,7 +12,7 @@ import {
     teacherNamesMatch,
     getDocenteShortLabel,
     calculateTeacherTotalCH
-} from './allocation_helpers.js?v=202611071310';
+} from './allocation_helpers.js?v=202611071451';
 import {
     normalizeTurnoOfertaKey,
     formatTurnoOfertaLabel,
@@ -22,18 +22,18 @@ import {
     buildHorariosForUI,
     getShiftChangeMeta,
     getCalendarShiftBadgeHTML
-} from './turno_helpers.js?v=202611071310';
+} from './turno_helpers.js?v=202611071451';
 import {
     getDisciplinaCHGlobal,
     getTurmaLabel,
     getTurmaBaseLabel,
     getDisciplinaInfo,
     getPrintAcademicMetaLine
-} from './curso_turma_helpers.js?v=202611071310';
+} from './curso_turma_helpers.js?v=202611071451';
 import {
     getGanttTurnoConfigs,
     resolveTeacherShiftForSlot
-} from './gantt_ui.js?v=202611071310';
+} from './gantt_ui.js?v=202611071451';
 
 // Referencias DOM de nivel de modulo (espelham as de ui.js; modulo deferred, DOM pronto).
 const selViewDocente = document.getElementById('sel-view-docente');
@@ -706,7 +706,7 @@ export function buildCalendarTurmaResumeTable(turmaId, start, end) {
         if (!disciplina) return;
 
         if (!disciplinasMap.has(disciplina)) {
-            const info = getDisciplinaInfo(disciplina);
+            const info = getDisciplinaInfo(disciplina, turmaId);
             const totalCH = toCH(getDisciplinaCHGlobal(disciplina, turmaId)) || toCH(info?.ch) || toCH(baseAlloc?.ch);
             disciplinasMap.set(disciplina, {
                 disciplina,
@@ -730,7 +730,7 @@ export function buildCalendarTurmaResumeTable(turmaId, start, end) {
             if (!disciplina) return;
 
             if (!disciplinasMap.has(disciplina)) {
-                const info = getDisciplinaInfo(disciplina);
+                const info = getDisciplinaInfo(disciplina, turmaId);
                 const totalCH = toCH(getDisciplinaCHGlobal(disciplina, turmaId)) || toCH(info?.ch);
                 disciplinasMap.set(disciplina, {
                     disciplina,
@@ -1032,8 +1032,8 @@ function collectDocenteResumeComponents(docenteName, start, end) {
         const docentesOferta = Array.isArray(offerGroup?.docentes) ? offerGroup.docentes : [];
         const declaredDocente = docentesOferta.find((d) => teacherNamesMatch(d?.nome, docente));
 
-        const info = getDisciplinaInfo(disciplina);
         const turmaId = String(offerGroup?.turmaId || baseAlloc?.turmaId || '').trim();
+        const info = getDisciplinaInfo(disciplina, turmaId);
 
         // CH curricular total da componente.
         const curricularCH = toCH(getDisciplinaCHGlobal(disciplina, turmaId))
@@ -1478,11 +1478,11 @@ export function generateCalendarGrid(container, turmaId, docenteName, start, end
                                     uniqueEventsInSlot.forEach((e) => (e.conflictPartners || []).forEach((p) => {
                                         if (!conflictEntries.some((c) => c.turmaId === p.turmaId && c.disciplina === p.disciplina)) conflictEntries.push(p);
                                     }));
-                                    const conflictNames = conflictEntries.map((e) => `${getDisciplinaInfo(e.disciplina).abrev} - ${e.turmaId}`).join(' <b style="color:#fff">x</b> ');
+                                    const conflictNames = conflictEntries.map((e) => `${getDisciplinaInfo(e.disciplina, e.turmaId).abrev} - ${e.turmaId}`).join(' <b style="color:#fff">x</b> ');
                                     content = `<span title="Choque: ${conflictNames.replace(/<[^>]+>/g, '')}">⚠️ ${conflictNames}</span>`;
                                 } else {
                                     const event = uniqueEventsInSlot[0];
-                                    const info = getDisciplinaInfo(event.disciplina);
+                                    const info = getDisciplinaInfo(event.disciplina, event.turmaId);
                                     const shiftBadgeDisplay = getCalendarShiftBadgeHTML(
                                         event,
                                         slotTime,
@@ -1495,7 +1495,7 @@ export function generateCalendarGrid(container, turmaId, docenteName, start, end
                             } else {
                                 const event = uniqueEventsInSlot[0];
                                 if (event) {
-                                    const info = getDisciplinaInfo(event.disciplina);
+                                    const info = getDisciplinaInfo(event.disciplina, event.turmaId);
                                     const docenteFirst = getDocenteShortLabel(event.docente) || '';
                                     const docenteLabel = (docenteFirst && !/^a$/i.test(docenteFirst)) ? docenteFirst.toUpperCase() : '';
                                     const eBadgeDisplay = getCalendarShiftBadgeHTML(
@@ -1557,7 +1557,7 @@ export function generateCalendarGrid(container, turmaId, docenteName, start, end
                     });
                 } else {
                     dayData.events.forEach((ev) => {
-                        const info = getDisciplinaInfo(ev.disciplina);
+                        const info = getDisciplinaInfo(ev.disciplina, ev.turmaId);
                         let style = `background:${vividHexColor(ev.cor || '#bdc3c7')}`;
                         let displayLabel = docenteName ? `${info.abrev} - ${ev.turmaId}` : info.abrev;
 

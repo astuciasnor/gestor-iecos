@@ -1,10 +1,10 @@
-import { buildSigaaExportPayload, filterExportableAllocations } from './academic_rules.mjs?v=202611071310';
-import { buildCanonicalOfferProjection } from './execution_engine.js?v=202611071310';
-import { store } from './store.js?v=202611071310';
-import { timeToMinutes } from './date_utils_ui.js?v=202611071310';
-import { isFaixaAllocation, isScheduledRegularAllocation } from './allocation_helpers.js?v=202611071310';
-import { cleanHorarioLabel, getGanttTurnoCode } from './turno_helpers.js?v=202611071310';
-import { computeIntensiveExecution } from './faixa_utils.js?v=202611071310';
+import { buildSigaaExportPayload, filterExportableAllocations } from './academic_rules.mjs?v=202611071451';
+import { buildCanonicalOfferProjection } from './execution_engine.js?v=202611071451';
+import { store } from './store.js?v=202611071451';
+import { timeToMinutes } from './date_utils_ui.js?v=202611071451';
+import { isFaixaAllocation, isScheduledRegularAllocation } from './allocation_helpers.js?v=202611071451';
+import { cleanHorarioLabel, getGanttTurnoCode } from './turno_helpers.js?v=202611071451';
+import { computeIntensiveExecution } from './faixa_utils.js?v=202611071451';
 
 // Codigo de horario SIGAA (ex.: 246T12) de uma oferta. Saiu do ui.js em 05/11/2026.
 
@@ -205,7 +205,7 @@ export function buildSigaaOferta(offerGroup, planContext, contextMap) {
     const base = offerGroup?.baseAlloc || allocs[0];
     if (!base) return null;
 
-    const info = getDisciplinaInfo(base.disciplina);
+    const info = getDisciplinaInfo(base.disciplina, base.turmaId);
     const faixas = getCanonicalOfferFaixas(offerGroup, planContext).map((faixa) => {
         const scoped = buildScopedSigaaAllocationFromOfferFaixa(offerGroup, faixa, planContext);
 
