@@ -7,6 +7,7 @@ import { weeklyState } from './weekly_state.js?v=202611071733';
 import { findPendentesCobertas, isPendenteJaAlocada } from './pendentes.mjs?v=202611071733';
 import { classifySwap } from './troca_ordem.mjs?v=202611071733';
 import { closeFaixaEnds, isPauseEnd, listFaixaPauses } from './pausa_faixas.mjs?v=202611071733';
+import { abrirMiniCalendario, fecharMiniCalendario, miniCalendarioAberto } from './mini_calendario.mjs?v=202611071733';
 import { buildCanonicalOfferProjection } from './execution_engine.js?v=202611071733';
 import {
     buildSigaaMetadataPayload,
@@ -768,15 +769,12 @@ function updateFaixaPadraoCell(faixaIndex) {
     document.getElementById(`faixa-${faixaIndex}`)?.classList.toggle('faixa-item--livre', livre);
     cell.innerHTML = '';
     cell.title = grupos.map((g) => (g.hora ? `${g.texto} (${g.hora})` : g.texto)).join(' · ');
-    if (livre) {
+    if (livre || grupos.length === 0) {
         const vazio = document.createElement('span');
         vazio.className = 'fp-livre';
-        vazio.textContent = 'livre';
-        const dica = document.createElement('span');
-        dica.className = 'fp-livre-dica';
-        dica.textContent = ' · redesenhe numa semana posterior';
-        vazio.appendChild(dica);
+        vazio.textContent = livre ? 'Disponível para alocação' : 'Horário semanal a definir';
         cell.appendChild(vazio);
+        if (livre) cell.title = 'Faixa ainda nao usada: nasce ao redesenhar numa semana posterior.';
         return;
     }
     grupos.forEach(({ texto, hora }, i) => {
@@ -826,7 +824,7 @@ function updateWeeklyFaixaHoursDisplay(previewData = null) {
     for (let i = 1; i <= 3; i++) {
         const ch = summaryHoursByFaixa.has(i) ? summaryHoursByFaixa.get(i) : calcFaixaCH(i);
         const chEl = document.getElementById(`faixa-ch-f${i}`);
-        if (chEl) chEl.textContent = String(ch);
+        if (chEl) chEl.textContent = `${ch} h`;
         if (!preview?.execution) total += ch;
     }
     const totalEl = document.getElementById('weekly-faixa-total-ch');
@@ -2730,7 +2728,7 @@ function refreshCompactFaixaDateDisplay(input) {
     const display = document.querySelector(`[data-date-display-for="${input.id}"]`);
     if (!display) return;
     const hasValue = !!String(input.value || '').trim();
-    display.textContent = formatCompactFaixaDate(input.value);
+    display.textContent = hasValue ? formatCompactFaixaDate(input.value) : 'A definir';
     display.classList.toggle('is-placeholder', !hasValue);
 }
 
@@ -2767,53 +2765,46 @@ function resolveCompactFaixaPickerAnchor(input) {
     return '';
 }
 
-function primeCompactFaixaDatePickerAnchor(input) {
-    if (!input?.id) return;
-    if (!input.id.startsWith('inp-data-inicio-f')) return;
-
-    const currentValue = String(input.value || '').trim();
-    if (currentValue) return;
-
-    const anchorValue = resolveCompactFaixaPickerAnchor(input);
-    if (!anchorValue) return;
-
-    input.dataset.restorePickerValue = currentValue;
-    input.dataset.pickerAnchorValue = anchorValue;
-    input.value = anchorValue;
-    refreshCompactFaixaDateDisplay(input);
+// Mes em que o mini calendario abre: a propria data; senao a ancora da faixa
+// (inicio do periodo / da faixa anterior); para o Fim, o Inicio da mesma faixa.
+function resolveFaixaDateCalendarStart(input) {
+    const valor = String(input?.value || '').trim();
+    if (valor) return valor;
+    const ancora = resolveCompactFaixaPickerAnchor(input);
+    if (ancora) return ancora;
+    const termStart = String(store.settings.termStart || inpTermStart?.value || calStart?.value || '').trim();
+    const idx = String(input?.id || '').slice(-1);
+    return String(document.getElementById(`inp-data-inicio-f${idx}`)?.value || termStart || '').trim();
 }
 
-function restoreCompactFaixaDatePickerValueIfNeeded(input) {
-    if (!input?.id) return;
+let miniCalendarioInput = null;
 
-    const restoreValue = input.dataset.restorePickerValue;
-    const anchorValue = input.dataset.pickerAnchorValue;
-    if (restoreValue === undefined && anchorValue === undefined) return;
-
-    const currentValue = String(input.value || '').trim();
-    const keepAnchorForFaixa1 = input.id === 'inp-data-inicio-f1';
-    if (!keepAnchorForFaixa1 && anchorValue && currentValue === anchorValue) {
-        input.value = restoreValue || '';
-        refreshCompactFaixaDateDisplay(input);
-    }
-
-    delete input.dataset.restorePickerValue;
-    delete input.dataset.pickerAnchorValue;
+function setFaixaDateFromCalendar(input, iso) {
+    input.value = iso;
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    input.dispatchEvent(new Event('change', { bubbles: true }));
 }
 
 function openCompactFaixaDatePicker(input) {
     if (!input) return;
-    primeCompactFaixaDatePickerAnchor(input);
-    input.focus({ preventScroll: true });
-    if (typeof input.showPicker === 'function') {
-        try {
-            input.showPicker();
-            return;
-        } catch (_) {
-            // Fallback abaixo para navegadores sem suporte total.
-        }
+    if (miniCalendarioAberto() && miniCalendarioInput === input) {
+        fecharMiniCalendario();
+        return;
     }
-    input.click();
+    const termStart = String(store.settings.termStart || inpTermStart?.value || calStart?.value || '').trim();
+    const termEnd = String(store.settings.termEnd || inpTermEnd?.value || calEnd?.value || '').trim();
+    miniCalendarioInput = input;
+    abrirMiniCalendario({
+        ancoraEl: input.closest('.faixa-date-compact') || input,
+        valor: String(input.value || '').trim(),
+        mesInicial: resolveFaixaDateCalendarStart(input),
+        minimo: termStart,
+        maximo: termEnd,
+        feriados: getHolidayLabelMap(),
+        aoEscolher: (iso) => setFaixaDateFromCalendar(input, iso),
+        aoLimpar: () => setFaixaDateFromCalendar(input, ''),
+        aoFechar: () => { miniCalendarioInput = null; }
+    });
 }
 
 function setupCompactFaixaDateFields() {
@@ -2837,23 +2828,16 @@ function setupCompactFaixaDateFields() {
             ['input', 'change'].forEach((evt) => {
                 input.addEventListener(evt, () => {
                     refreshCompactFaixaDateDisplay(input);
-                    if (evt === 'change') {
-                        delete input.dataset.restorePickerValue;
-                        delete input.dataset.pickerAnchorValue;
-                    }
                 });
             });
-            input.addEventListener('pointerdown', () => {
-                primeCompactFaixaDatePickerAnchor(input);
-            });
+            // Teclado: Enter, espaco ou seta para baixo abrem o mini calendario.
             input.addEventListener('keydown', (event) => {
                 if (event.key === 'Enter' || event.key === ' ' || event.key === 'ArrowDown') {
-                    primeCompactFaixaDatePickerAnchor(input);
+                    event.preventDefault();
+                    openCompactFaixaDatePicker(input);
                 }
             });
-            input.addEventListener('blur', () => {
-                restoreCompactFaixaDatePickerValueIfNeeded(input);
-            });
+            input.addEventListener('click', (event) => event.preventDefault());
         }
     });
 
@@ -2868,14 +2852,8 @@ function setupCompactFaixaDateFields() {
         });
     });
 
-    document.querySelectorAll('.faixa-date-display').forEach((display) => {
-        if (display.dataset.bound === '1') return;
-        display.dataset.bound = '1';
-        display.addEventListener('click', () => {
-            const input = document.getElementById(display.dataset.dateDisplayFor || '');
-            openCompactFaixaDatePicker(input);
-        });
-    });
+    // O clique no texto da data sobe ate a caixa (.faixa-date-compact), que abre
+    // o mini calendario; um segundo ouvinte aqui o abriria e fecharia de uma vez.
 
     document.querySelectorAll('.faixa-date-compact').forEach((wrapper) => {
         if (wrapper.dataset.bound === '1') return;
@@ -2943,7 +2921,7 @@ function renderFaixaPauseRows() {
         const txt = row.querySelector('.faixa-pausa-texto');
         if (txt) {
             txt.textContent = pausa
-                ? `Pausa: sem aula de ${formatDateBR(pausa.inicio)} a ${formatDateBR(pausa.fim)}`
+                ? `${formatDateBR(pausa.inicio)} a ${formatDateBR(pausa.fim)}`
                 : '';
         }
     }
@@ -3249,6 +3227,19 @@ function setupFaixaControls() {
             });
         }
     }
+
+    // (i) de cada faixa: o texto de ajuda tambem aparece ao clicar (toque no celular).
+    document.querySelectorAll('#faixas-lista .faixa-info').forEach((info) => {
+        if (info.dataset.bound === '1') return;
+        info.dataset.bound = '1';
+        const mostrar = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            showToastWarning(info.title, 'success', 6500);
+        };
+        info.addEventListener('click', mostrar);
+        info.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') mostrar(e); });
+    });
 
     for (let i = 2; i <= 3; i++) {
         const faixaNumValue = document.querySelector(`#faixa-${i} .faixa-num .faixa-num-value`);
