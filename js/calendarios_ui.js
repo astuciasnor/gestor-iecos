@@ -1,10 +1,10 @@
-import { store } from './store.js?v=202611071253';
-import { getCalendarEvents } from './calendar.js?v=202611071253';
-import { buildTeacherExecutionSnapshot, buildCanonicalOfferProjection } from './execution_engine.js?v=202611071253';
-import { detectTeacherConflicts } from './conflicts.js?v=202611071253';
-import { getHorariosByTurno, normalizeTurnoKey, getTurnoLetter, mapSlotToTurno } from './turns.js?v=202611071253';
-import { vividHexColor } from './color_utils.js?v=202611071253';
-import { formatDateBR, timeToMinutes, shortDayName } from './date_utils_ui.js?v=202611071253';
+import { store } from './store.js?v=202611071310';
+import { getCalendarEvents } from './calendar.js?v=202611071310';
+import { buildTeacherExecutionSnapshot, buildCanonicalOfferProjection } from './execution_engine.js?v=202611071310';
+import { detectTeacherConflicts } from './conflicts.js?v=202611071310';
+import { getHorariosByTurno, normalizeTurnoKey, getTurnoLetter, mapSlotToTurno } from './turns.js?v=202611071310';
+import { vividHexColor } from './color_utils.js?v=202611071310';
+import { formatDateBR, timeToMinutes, shortDayName } from './date_utils_ui.js?v=202611071310';
 import {
     isFaixaAllocation,
     isScheduledRegularAllocation,
@@ -12,7 +12,7 @@ import {
     teacherNamesMatch,
     getDocenteShortLabel,
     calculateTeacherTotalCH
-} from './allocation_helpers.js?v=202611071253';
+} from './allocation_helpers.js?v=202611071310';
 import {
     normalizeTurnoOfertaKey,
     formatTurnoOfertaLabel,
@@ -22,18 +22,18 @@ import {
     buildHorariosForUI,
     getShiftChangeMeta,
     getCalendarShiftBadgeHTML
-} from './turno_helpers.js?v=202611071253';
+} from './turno_helpers.js?v=202611071310';
 import {
     getDisciplinaCHGlobal,
     getTurmaLabel,
     getTurmaBaseLabel,
     getDisciplinaInfo,
     getPrintAcademicMetaLine
-} from './curso_turma_helpers.js?v=202611071253';
+} from './curso_turma_helpers.js?v=202611071310';
 import {
     getGanttTurnoConfigs,
     resolveTeacherShiftForSlot
-} from './gantt_ui.js?v=202611071253';
+} from './gantt_ui.js?v=202611071310';
 
 // Referencias DOM de nivel de modulo (espelham as de ui.js; modulo deferred, DOM pronto).
 const selViewDocente = document.getElementById('sel-view-docente');
@@ -456,7 +456,7 @@ function requestTeacherRange(periodo) {
 
 // Roda fn com o store apontando para o periodo letivo meta (mesma troca
 // temporaria usada ao publicar a agenda) e devolve o store como estava.
-function withPlanContext(meta, allocations, fn) {
+export function withPlanContext(meta, allocations, fn) {
     const saved = { settings: store.settings, allocations: store.allocations, activePlanMeta: store.activePlanMeta };
     try {
         store.settings = { ...saved.settings, periodo: meta.periodo, termStart: meta.termStart, termEnd: meta.termEnd };

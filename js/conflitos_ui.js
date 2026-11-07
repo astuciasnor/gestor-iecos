@@ -1,14 +1,15 @@
-import { store } from './store.js?v=202611071253';
-import { getCalendarEvents } from './calendar.js?v=202611071253';
-import { timeToMinutes } from './date_utils_ui.js?v=202611071253';
+import { store } from './store.js?v=202611071310';
+import { getCalendarEvents } from './calendar.js?v=202611071310';
+import { timeToMinutes } from './date_utils_ui.js?v=202611071310';
 import {
     isPendingAllocation,
-    getAllocationTeachersForConflict
-} from './allocation_helpers.js?v=202611071253';
-import { normalizeConflictSlotLabel } from './turno_helpers.js?v=202611071253';
-import { slotLabelsOverlap } from './academic_rules.mjs?v=202611071253';
-import { getTurmaLabel } from './curso_turma_helpers.js?v=202611071253';
-import { renderTeacherCalendar } from './calendarios_ui.js?v=202611071253';
+    getAllocationTeachersForConflict,
+    normalizeTeacherNameForMatch
+} from './allocation_helpers.js?v=202611071310';
+import { normalizeConflictSlotLabel } from './turno_helpers.js?v=202611071310';
+import { slotLabelsOverlap } from './academic_rules.mjs?v=202611071310';
+import { getTurmaLabel } from './curso_turma_helpers.js?v=202611071310';
+import { renderTeacherCalendar, withPlanContext } from './calendarios_ui.js?v=202611071310';
 
 // Ref DOM de nivel de modulo (modulo deferred, DOM pronto).
 const selViewDocente = document.getElementById('sel-view-docente');
@@ -142,6 +143,138 @@ export function detectGlobalTeacherConflictsStable() {
     return conflictMap;
 }
 
+// ===== Choques com outro periodo letivo =====
+// Os PLs se sobrepoem nas datas (ex.: o PL3 comeca antes do fim do PL2). O
+// alerta global olha tambem as alocacoes desses PLs: so os professores que
+// aparecem nos dois e so na janela de datas em comum. Os outros PLs vem do
+// crossPlanLoader (ui.js: servidor ou navegador), guardados por 2 minutos.
+const CROSS_PLAN_TTL_MS = 2 * 60 * 1000;
+let crossPlanLoader = null;       // async (termStart, termEnd) => [{ meta, allocations }] sem o PL aberto
+let crossPlan = { key: '', loadedAt: 0, plans: [] };
+let crossPlanLoading = '';
+
+export function setCrossPlanLoader(loader) {
+    crossPlanLoader = typeof loader === 'function' ? loader : null;
+}
+
+// PLs que se sobrepoem ao aberto, ja carregados (ou [] enquanto chegam). Quando
+// faltam ou estao velhos, pede de novo e redesenha o alerta ao chegar.
+function getOverlappingPlans() {
+    const meta = store.activePlanMeta;
+    if (!meta?.key || !meta.termStart || !meta.termEnd || !crossPlanLoader) return [];
+    const fresh = crossPlan.key === meta.key && Date.now() - crossPlan.loadedAt < CROSS_PLAN_TTL_MS;
+    if (!fresh && crossPlanLoading !== meta.key) {
+        const key = meta.key;
+        crossPlanLoading = key;
+        Promise.resolve()
+            .then(() => crossPlanLoader(meta.termStart, meta.termEnd))
+            .then((plans) => {
+                crossPlan = {
+                    key,
+                    loadedAt: Date.now(),
+                    plans: (Array.isArray(plans) ? plans : []).filter((p) => p?.meta?.key && p.meta.key !== key)
+                };
+            })
+            .catch((error) => {
+                // Sem servidor agora: tenta de novo depois do prazo, sem aviso na tela.
+                console.warn('Alerta global: nao foi possivel ler os outros periodos letivos', error);
+                crossPlan = { key, loadedAt: Date.now(), plans: crossPlan.key === key ? crossPlan.plans : [] };
+            })
+            .finally(() => {
+                if (crossPlanLoading === key) crossPlanLoading = '';
+                if (store.activePlanMeta?.key === key) updateGlobalConflictsUI();
+            });
+    }
+    return crossPlan.key === meta.key ? crossPlan.plans : [];
+}
+
+function planLabel(meta) {
+    return `${meta?.periodo || ''}/${String(meta?.termStart || '').slice(0, 4)}`;
+}
+
+// { nomeDoProfessor: [{ dia, horario, dataInicio, discA, discB, entrePLs }] }
+function detectCrossPlanConflicts() {
+    const result = new Map();
+    const ativo = store.activePlanMeta;
+    const plans = getOverlappingPlans();
+    if (!ativo?.key || !plans.length) return result;
+
+    const doAtivo = (store.allocations || []).filter((alloc) => alloc && !isPendingAllocation(alloc));
+    const professoresAtivo = new Map();
+    doAtivo.forEach((alloc) => getAllocationTeachersForConflict(alloc)
+        .forEach((nome) => professoresAtivo.set(normalizeTeacherNameForMatch(nome), nome)));
+    if (!professoresAtivo.size) return result;
+
+    const diasNomes = ['', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab'];
+    const rotuloAtivo = planLabel(ativo);
+
+    plans.forEach(({ meta, allocations }) => {
+        const inicio = ativo.termStart > meta.termStart ? ativo.termStart : meta.termStart;
+        const fim = ativo.termEnd < meta.termEnd ? ativo.termEnd : meta.termEnd;
+        if (!inicio || !fim || inicio > fim) return;
+
+        const doOutro = (allocations || []).filter((alloc) => alloc && !isPendingAllocation(alloc));
+        const comuns = new Map();
+        doOutro.forEach((alloc) => getAllocationTeachersForConflict(alloc).forEach((nome) => {
+            const chave = normalizeTeacherNameForMatch(nome);
+            if (professoresAtivo.has(chave)) comuns.set(chave, professoresAtivo.get(chave));
+        }));
+        if (!comuns.size) return;
+        const rotuloOutro = planLabel(meta);
+
+        comuns.forEach((professor) => {
+            const eventosAtivo = getCalendarEvents(null, inicio, fim, professor);
+            // O rotulo da turma (bloco) depende do PL: calcula dentro do contexto dele.
+            const eventosOutro = withPlanContext(meta, doOutro, () => {
+                const eventos = getCalendarEvents(null, inicio, fim, professor);
+                Object.values(eventos || {}).forEach((lista) => (lista || []).forEach((ev) => {
+                    if (ev && ev.type !== 'holiday') ev.rotuloTurma = getTurmaLabel(ev.turmaId, ev.subGrupo);
+                }));
+                return eventos;
+            });
+            const pares = new Map();
+
+            Object.entries(eventosAtivo || {}).forEach(([data, listaA]) => {
+                const listaB = eventosOutro?.[data] || [];
+                if (!listaB.length) return;
+                (listaA || []).forEach((a) => {
+                    const slotA = a && a.type !== 'holiday' ? normalizeConflictSlotLabel(a.horario || '') : '';
+                    if (!slotA) return;
+                    listaB.forEach((b) => {
+                        const slotB = b && b.type !== 'holiday' ? normalizeConflictSlotLabel(b.horario || '') : '';
+                        if (!slotB || !slotLabelsOverlap(slotA, slotB)) return;
+                        const discA = `${getTurmaLabel(a.turmaId, a.subGrupo)} - ${a.disciplina} (${rotuloAtivo})`;
+                        const discB = `${b.rotuloTurma || getTurmaLabel(b.turmaId, b.subGrupo)} - ${b.disciplina} (${rotuloOutro})`;
+                        const chave = `${discA}|||${discB}`;
+                        if (!pares.has(chave)) pares.set(chave, { discA, discB, firstDate: data, dias: new Set(), slots: new Set() });
+                        const par = pares.get(chave);
+                        if (data < par.firstDate) par.firstDate = data;
+                        const dow = new Date(`${data}T12:00:00`).getDay();
+                        if (dow >= 1 && dow <= 6) par.dias.add(dow);
+                        par.slots.add(slotA);
+                    });
+                });
+            });
+
+            if (!pares.size) return;
+            const detalhes = [...pares.values()].map((par) => {
+                const slots = [...par.slots].sort((x, y) => timeToMinutes(x) - timeToMinutes(y));
+                const dias = [...par.dias].sort((x, y) => x - y).map((d) => diasNomes[d]);
+                return {
+                    dia: dias.length <= 3 ? dias.join(', ') : `${dias.slice(0, 3).join(', ')}...`,
+                    horario: slots.length <= 3 ? slots.join(', ') : `${slots.slice(0, 3).join(', ')}...`,
+                    dataInicio: par.firstDate,
+                    discA: par.discA,
+                    discB: par.discB,
+                    entrePLs: true
+                };
+            });
+            result.set(professor, [...(result.get(professor) || []), ...detalhes]);
+        });
+    });
+    return result;
+}
+
 export function updateGlobalConflictsUI() {
     const tabTeacher = document.getElementById('tab-teacher');
     if (!tabTeacher) return;
@@ -154,21 +287,34 @@ export function updateGlobalConflictsUI() {
     }
 
     const conflictMap = detectGlobalTeacherConflictsStable();
+    // Junta os choques com outro PL (mesmo professor, mesmo bloco no alerta).
+    detectCrossPlanConflicts().forEach((detalhes, professor) => {
+        const chave = normalizeTeacherNameForMatch(professor);
+        const nome = [...conflictMap.keys()].find((k) => normalizeTeacherNameForMatch(k) === chave) || professor;
+        conflictMap.set(nome, [...(conflictMap.get(nome) || []), ...detalhes]);
+    });
+    let temEntrePLs = false;
 
     if (conflictMap.size > 0) {
         const tdStyle = 'padding: 5px 10px; border: 1px solid rgba(255,255,255,0.3); font-size: 0.85em; white-space: nowrap;';
+        // Nomes de componente sao longos: quebram linha em vez de sair da caixa.
+        const tdCompStyle = 'padding: 5px 10px; border: 1px solid rgba(255,255,255,0.3); font-size: 0.85em; white-space: normal; min-width: 180px;';
         const thStyle = 'padding: 5px 10px; border: 1px solid rgba(255,255,255,0.4); font-size: 0.8em; text-align:left; background: rgba(0,0,0,0.2); white-space: nowrap;';
 
         let blocksHtml = '';
         conflictMap.forEach((details, teacher) => {
             const rows = details.map(d => {
                 const dataBR = d.dataInicio ? d.dataInicio.split('-').reverse().join('/') : '—';
+                if (d.entrePLs) temEntrePLs = true;
+                const selo = d.entrePLs
+                    ? ' <span style="display:inline-block; margin-left:6px; padding:0 7px; border-radius:8px; background:#fff; color:#c0392b; font-size:0.78em; font-weight:800;">outro PL</span>'
+                    : '';
                 return `<tr>
                     <td style="${tdStyle}">${d.dia}</td>
                     <td style="${tdStyle}">${d.horario}</td>
                     <td style="${tdStyle}">${dataBR}</td>
-                    <td style="${tdStyle}">${d.discA}</td>
-                    <td style="${tdStyle}">${d.discB}</td>
+                    <td style="${tdCompStyle}">${d.discA}</td>
+                    <td style="${tdCompStyle}">${d.discB}${selo}</td>
                 </tr>`;
             }).join('');
 
@@ -196,6 +342,7 @@ export function updateGlobalConflictsUI() {
                 <p style="margin: 0 0 4px 0; font-size: 0.92em;">Professor(es) alocado(s) em mais de uma disciplina no mesmo horário:</p>
                 ${blocksHtml}
                 <p style="margin: 12px 0 0 0; font-size: 0.8em; opacity: 0.85;"><i>Selecione o professor abaixo para visualizar a grade (o slot estará destacado em vermelho escuro).</i></p>
+                ${temEntrePLs ? '<p style="margin: 4px 0 0 0; font-size: 0.8em; opacity: 0.95;"><i><b>Outro PL</b>: choque com um período letivo que se sobrepõe a este nas datas. Para ver os dois juntos, escolha o professor e clique em <b>Ano inteiro</b>.</i></p>' : ''}
             </div>
         `;
         warningDiv.style.display = 'block';

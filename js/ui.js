@@ -1,32 +1,32 @@
-import { store } from './store.js?v=202611071253';
-import { getTurnoLetter, mapSlotToTurno } from './turns.js?v=202611071253';
-import { normalizePeriodo as normalizePeriodoLetivoCode } from './plan_storage.js?v=202611071253';
-import { getCalendarEvents } from './calendar.js?v=202611071253';
-import { isDateOverlap } from './utils.js?v=202611071253';
-import { weeklyState } from './weekly_state.js?v=202611071253';
-import { findPendentesCobertas, isPendenteJaAlocada } from './pendentes.mjs?v=202611071253';
-import { classifySwap } from './troca_ordem.mjs?v=202611071253';
-import { buildCanonicalOfferProjection } from './execution_engine.js?v=202611071253';
+import { store } from './store.js?v=202611071310';
+import { getTurnoLetter, mapSlotToTurno } from './turns.js?v=202611071310';
+import { normalizePeriodo as normalizePeriodoLetivoCode } from './plan_storage.js?v=202611071310';
+import { getCalendarEvents } from './calendar.js?v=202611071310';
+import { isDateOverlap } from './utils.js?v=202611071310';
+import { weeklyState } from './weekly_state.js?v=202611071310';
+import { findPendentesCobertas, isPendenteJaAlocada } from './pendentes.mjs?v=202611071310';
+import { classifySwap } from './troca_ordem.mjs?v=202611071310';
+import { buildCanonicalOfferProjection } from './execution_engine.js?v=202611071310';
 import {
     buildSigaaMetadataPayload,
     validateSigaaMetadataPayload,
     getSigaaCode,
     buildScopedSigaaAllocationFromOfferFaixa
-} from './sigaa_metadata.js?v=202611071253';
-import { parseBackupDataFile, extractImportPlanMeta } from './serialization.js?v=202611071253';
+} from './sigaa_metadata.js?v=202611071310';
+import { parseBackupDataFile, extractImportPlanMeta } from './serialization.js?v=202611071310';
 import {
     showToastWarning,
     showPersistentStatusMessage,
     copyTextToClipboard,
     flashButtonCopyState,
     setupCopyActionButtons
-} from './ui_feedback.js?v=202611071253';
+} from './ui_feedback.js?v=202611071310';
 import {
     normalizeHexColor,
     adjustHexColor,
     hexToRgba,
     vividHexColor
-} from './color_utils.js?v=202611071253';
+} from './color_utils.js?v=202611071310';
 import {
     isFaixaAllocation,
     isPriorityRegularAllocation,
@@ -35,7 +35,7 @@ import {
     normalizeTeacherNameForMatch,
     getDocenteShortLabel,
     getAllocationTeachersForConflict
-} from './allocation_helpers.js?v=202611071253';
+} from './allocation_helpers.js?v=202611071310';
 import {
     VINCULOS_DOCENTE_NOVO,
     OUTRA_UNIDADE,
@@ -44,9 +44,9 @@ import {
     findSimilarNames,
     problemaNoNome,
     limparEspacos
-} from './docente_nomes.mjs?v=202611071253';
-import { getSessionEmail, getPerfil, fetchAllocationsForPlans } from './sync_remoto.js?v=202611071253';
-import { resolveBackendMode } from './backend_config.js?v=202611071253';
+} from './docente_nomes.mjs?v=202611071310';
+import { getSessionEmail, getPerfil, fetchAllocationsForPlans } from './sync_remoto.js?v=202611071310';
+import { resolveBackendMode } from './backend_config.js?v=202611071310';
 import {
     normalizeConflictSlotLabel,
     getAvailableTurnoOfertaOptions,
@@ -55,7 +55,7 @@ import {
     isTurnoDividerSlot,
     buildHorariosForUI,
     getShiftChangeMeta
-} from './turno_helpers.js?v=202611071253';
+} from './turno_helpers.js?v=202611071310';
 import {
     getDisciplinaCHGlobal,
     derivarBloco,
@@ -64,7 +64,7 @@ import {
     getTurmaBaseLabel,
     getDisciplinaInfo,
     getPrintAcademicMetaLine
-} from './curso_turma_helpers.js?v=202611071253';
+} from './curso_turma_helpers.js?v=202611071310';
 import {
     renderMonthlyCalendar,
     renderTeacherCalendar,
@@ -72,10 +72,11 @@ import {
     clearTeacherRangeCache,
     setTeacherPeriod,
     getTeacherPeriod
-} from './calendarios_ui.js?v=202611071253';
+} from './calendarios_ui.js?v=202611071310';
 import {
-    refreshTeacherConflictsUI
-} from './conflitos_ui.js?v=202611071253';
+    refreshTeacherConflictsUI,
+    setCrossPlanLoader
+} from './conflitos_ui.js?v=202611071310';
 import {
     shouldIgnoreTurmaEventForCandidate,
     normalizeDrawnSlotsByDay,
@@ -89,7 +90,7 @@ import {
     resolveEditableFaixasFromStoredExecution,
     alignFaixasToExecutionEnd,
     buildFinalAdjustmentFaixaSuggestion
-} from './faixa_utils.js?v=202611071253';
+} from './faixa_utils.js?v=202611071310';
 import {
     timeToMinutes,
     shiftISODate,
@@ -103,14 +104,14 @@ import {
     isDateInsideRange,
     formatDateBRShortYear,
     formatDateBR
-} from './date_utils_ui.js?v=202611071253';
+} from './date_utils_ui.js?v=202611071310';
 import {
     initializeWeeklyScheduleForTurma,
     reconcileTurmaSelectionAfterPLChange,
     resetWeeklyViewOnTurmaChange,
     resolveActiveAcademicPeriod,
     slotLabelsOverlap
-} from './academic_rules.mjs?v=202611071253';
+} from './academic_rules.mjs?v=202611071310';
 
 const gridContainer = document.getElementById('weekly-grid');
 const selCurso = document.getElementById('sel-curso');
@@ -286,29 +287,41 @@ function getPlansInRange(start, end) {
         .sort((a, b) => String(a.termStart).localeCompare(String(b.termStart)));
 }
 
-async function loadTeacherRangePlans(start, end) {
-    const metas = getPlansInRange(start, end);
+// semAtivo: deixa de fora o PL aberto (o alerta global ja usa store.allocations).
+async function lerPlanosDoIntervalo(start, end, { semAtivo = false } = {}) {
     const activeKey = store.getActivePlanMeta()?.key || '';
+    const metas = getPlansInRange(start, end).filter((meta) => !(semAtivo && meta.key === activeKey));
     let byKey = {};
+    if (resolveBackendMode() !== 'local') {
+        byKey = await fetchAllocationsForPlans(metas.map((meta) => meta.key));
+    } else {
+        metas.forEach((meta) => {
+            byKey[meta.key] = meta.key === activeKey ? store.allocations : store.readPlanAllocations(meta);
+        });
+    }
+    return metas.map((meta) => ({ meta, allocations: byKey[meta.key] || [] }));
+}
+
+async function loadTeacherRangePlans(start, end) {
     try {
-        if (resolveBackendMode() !== 'local') {
-            byKey = await fetchAllocationsForPlans(metas.map((meta) => meta.key));
-        } else {
-            metas.forEach((meta) => {
-                byKey[meta.key] = meta.key === activeKey ? store.allocations : store.readPlanAllocations(meta);
-            });
-        }
+        return await lerPlanosDoIntervalo(start, end);
     } catch (error) {
         showToastWarning(`Nao foi possivel ler os periodos letivos do servidor: ${error?.message || error}`, 'error', 6000);
         throw error;
     }
-    return metas.map((meta) => ({ meta, allocations: byKey[meta.key] || [] }));
+}
+
+// Alerta global: os PLs que se sobrepoem ao aberto, lidos em segundo plano (sem
+// aviso de erro na tela; o alerta tenta de novo depois).
+function loadOverlappingPlans(start, end) {
+    return lerPlanosDoIntervalo(start, end, { semAtivo: true });
 }
 
 // Periodo do Calendario Docente: ano + "Ano inteiro" (PL1..PL4 do ano) ou um
 // PL do ano. Sem escolha, mostra o PL aberto na barra lateral.
 function setupTeacherYearControls() {
     setTeacherRangeLoader(loadTeacherRangePlans);
+    setCrossPlanLoader(loadOverlappingPlans);
 
     const selAno = document.getElementById('sel-ano-teacher');
     const btnAno = document.getElementById('btn-ano-inteiro-teacher');
