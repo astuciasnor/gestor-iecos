@@ -42,7 +42,13 @@ test('segunda oferta vira T02 (a primeira conta como T01)', () => {
 test('terceira oferta segue a numeracao, mesmo com formatos antigos', () => {
   assert.equal(proximaSubturma(['BL1_T01', 'BL1_T02']).codigo, 'T03');
   assert.equal(proximaSubturma([null, 'T2']).codigo, 'T03');
-  assert.equal(proximaSubturma(['T01', 'T05']).codigo, 'T06');
+  assert.equal(proximaSubturma(['T01', 'T02', 'T03']).codigo, 'T04');
+});
+
+test('usa a vaga livre: sobrou so a T02, a nova e a T01', () => {
+  assert.equal(proximaSubturma(['T02']).codigo, 'T01');
+  assert.equal(proximaSubturma(['T2']).codigo, 'T01');
+  assert.equal(proximaSubturma(['T01', 'T03']).codigo, 'T02');
 });
 
 test('T01 no mesmo formato da subturma salva', () => {

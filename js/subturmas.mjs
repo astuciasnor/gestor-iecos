@@ -22,13 +22,15 @@ export function codigoDaSubturma(numero) {
 }
 
 // Proxima subturma, dados os sub-grupos das ofertas que ja existem dessa
-// componente na turma. A oferta sem subturma conta como T01 (sera renomeada).
+// componente na turma: o MENOR numero livre. A oferta sem subturma conta como
+// T01 (sera renomeada). Se a T01 foi apagada e sobrou a T02, a nova e a T01.
 // Devolve null quando ainda nao ha nenhuma oferta (primeira insercao normal).
 export function proximaSubturma(subGruposExistentes = []) {
   const lista = Array.isArray(subGruposExistentes) ? subGruposExistentes : [];
   if (lista.length === 0) return null;
-  const maior = lista.reduce((max, sg) => Math.max(max, numeroDaSubturma(sg) || 1), 1);
-  const numero = maior + 1;
+  const usados = new Set(lista.map((sg) => numeroDaSubturma(sg) || 1));
+  let numero = 1;
+  while (usados.has(numero)) numero++;
   const codigo = codigoDaSubturma(numero);
   return { numero, rotulo: codigo, codigo };
 }
