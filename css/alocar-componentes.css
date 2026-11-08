@@ -38,10 +38,11 @@
 }
 
 /* ==========================================================================
-   Parte 1: cartao "Proximo passo" com o botao de Instrucoes a direita
+   Parte 1: cartao "Proximo passo e avisos" (largura toda; o botao de
+   Instrucoes saiu em 08/11/2026 - o passo a passo fica na Ajuda)
    ========================================================================== */
 
-/* Cartao branco baixo: indicador a esquerda, botao a direita */
+/* Cartao branco baixo */
 #tab-weekly .cd-contexto {
     display: flex;
     flex-wrap: wrap;
@@ -128,48 +129,6 @@
 #tab-weekly .cd-contexto .tone-blocked .cd-contexto-icone { background: #FEE2E2; color: var(--cd-perigo); }
 #tab-weekly .cd-contexto .tone-blocked .weekly-status-title { color: var(--cd-perigo); }
 #tab-weekly .cd-contexto .tone-blocked .weekly-status-hint { color: #7F1D1D; }
-
-/* Botao "Instrucoes de preenchimento": cheio, verde-azulado, 44px de altura */
-#tab-weekly .cd-contexto .weekly-instructions-popover .weekly-instructions-toggle {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    min-height: 40px;
-    padding: 0 16px;
-    border: none;
-    border-radius: var(--cd-raio-botao);
-    background: var(--cd-primaria);
-    color: #FFFFFF;
-    box-shadow: 0 2px 0 var(--cd-primaria-escura), 0 6px 16px rgba(15, 118, 110, .25);
-    cursor: pointer;
-    filter: none;
-}
-#tab-weekly .cd-contexto .weekly-instructions-popover .weekly-instructions-toggle:hover {
-    background: var(--cd-primaria-escura);
-}
-#tab-weekly .cd-contexto .weekly-instructions-popover .weekly-instructions-toggle:focus-visible {
-    outline: 3px solid var(--cd-foco);
-    outline-offset: 2px;
-}
-#tab-weekly .cd-contexto .weekly-instructions-popover .weekly-instructions-toggle h3 {
-    margin: 0;
-    font-family: var(--cd-fonte);
-    font-size: 15px;
-    font-weight: 700;
-    color: #FFFFFF;
-}
-#tab-weekly .cd-contexto .weekly-instructions-icon { flex-shrink: 0; }
-
-/* Seta: para baixo fechado, para cima aberto */
-#tab-weekly .cd-contexto .weekly-instructions-chevron {
-    flex-shrink: 0;
-    color: #FFFFFF;
-    transform: rotate(180deg);
-    transition: transform .2s;
-}
-#tab-weekly .cd-contexto .weekly-instructions-card.is-collapsed .weekly-instructions-chevron {
-    transform: rotate(0deg);
-}
 
 /* ==========================================================================
    Parte 2a: cartao "Datas e CH das faixas da componente"
@@ -850,12 +809,11 @@
 }
 
 /* ==========================================================================
-   "Proximo passo" e "Instrucoes" em DOIS cartoes, nas mesmas colunas dos
-   cartoes de baixo (faixas | semana), para as bordas ficarem alinhadas.
+   "Proximo passo e avisos": um cartao so, na largura toda da aba.
    ========================================================================== */
 #tab-weekly .cd-contexto {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-columns: minmax(0, 1fr);
     align-items: stretch;
     gap: 16px;
     padding: 0;
@@ -864,15 +822,7 @@
     border-radius: 0;
     box-shadow: none;
 }
-/* Mesmas larguras de coluna de .weekly-faixas-stack */
-@media (min-width: 1281px) {
-    #tab-weekly .cd-contexto { grid-template-columns: minmax(0, 1fr) minmax(270px, 300px); }
-}
-@media (min-width: 1600px) {
-    #tab-weekly .cd-contexto { grid-template-columns: minmax(0, 1fr) minmax(300px, 360px); }
-}
-
-/* Cartao da esquerda: o indicador "Proximo passo" */
+/* O indicador "Proximo passo e avisos" */
 #tab-weekly .cd-contexto .weekly-status-bar {
     min-width: 0;
     padding: 4px 8px 4px 11px;
@@ -887,108 +837,6 @@
     border-color: var(--cd-perigo-borda);
 }
 
-/* Cartao da direita: so o botao de Instrucoes, ocupando a largura do cartao */
-#tab-weekly .cd-contexto #weekly-instructions-card {
-    display: flex;
-    align-items: center;
-    padding: 6px 8px;
-    background: var(--cd-superficie);
-    border: 1px solid var(--cd-borda);
-    border-radius: 14px;
-    box-shadow: var(--cd-sombra);
-    box-sizing: border-box;
-}
-#tab-weekly .cd-contexto .weekly-instructions-popover .weekly-instructions-toggle {
-    width: 100%;
-    justify-content: center;
-}
-/* Texto do botao numa linha so (em notebook a coluna tem ~300px) */
-#tab-weekly .cd-contexto .weekly-instructions-popover .weekly-instructions-toggle { gap: 8px; padding: 0 12px; }
-#tab-weekly .cd-contexto .weekly-instructions-popover .weekly-instructions-toggle h3 { font-size: 14px; white-space: nowrap; }
-
-/* ==========================================================================
-   Menu "Instrucoes de preenchimento" aberto: mais largo e mais baixo
-   (4 passos por linha), titulo compacto e fundo escurecido atras dele.
-   ========================================================================== */
-
-/* Fundo escurecido atras do menu. Fica no <body>: um clique nele conta como
-   "clique fora" e fecha o menu (regra que ja existe no JS). */
-body:has(#tab-weekly.active #weekly-instructions-card:not(.is-collapsed))::after {
-    content: "";
-    position: fixed;
-    inset: 0;
-    z-index: 59;
-    background: rgba(15, 23, 42, .45);
-}
-/* O botao continua visivel e clicavel por cima do fundo escuro */
-#tab-weekly .cd-contexto #weekly-instructions-card:not(.is-collapsed) {
-    position: relative;
-    z-index: 61;
-}
-
-/* Painel: mais largo (o JS ancora pela direita do botao), fundo claro e sombra forte */
-#tab-weekly .weekly-instructions-popover .weekly-instructions-body {
-    width: min(1320px, calc(100vw - 48px));
-    max-height: calc(100vh - 120px);
-    background: #F8FAFC;
-    border: 1px solid #BFE3DC;
-    border-radius: 14px;
-    box-shadow: 0 24px 60px rgba(15, 23, 42, .40), 0 2px 8px rgba(15, 23, 42, .15);
-    z-index: 60;
-}
-
-/* Titulo compacto (antes ~76px de altura) */
-#tab-weekly .weekly-instructions-popover .wi-header {
-    gap: 10px;
-    padding: 8px 18px;
-    border-radius: 13px 13px 0 0;
-}
-#tab-weekly .weekly-instructions-popover .wi-header-icon {
-    width: 30px;
-    height: 30px;
-    border-radius: 8px;
-    font-size: 1.05rem;
-}
-#tab-weekly .weekly-instructions-popover .wi-title { font-size: 16px; }
-#tab-weekly .weekly-instructions-popover .wi-subtitle { margin-top: 0; font-size: 12px; }
-
-/* Passos: 4 por linha (1-4 em cima, 5-8 embaixo), cartoes mais baixos */
-#tab-weekly .weekly-instructions-popover .wi-steps {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    grid-template-rows: none;
-    grid-auto-flow: row;
-    gap: 10px;
-    padding: 14px 14px 4px;
-}
-#tab-weekly .weekly-instructions-popover .wi-step {
-    gap: 10px;
-    padding: 9px 11px;
-    border-radius: 10px;
-    line-height: 1.4;
-}
-#tab-weekly .weekly-instructions-popover .wi-step:hover { transform: none; }
-#tab-weekly .weekly-instructions-popover .wi-step-num {
-    width: 26px;
-    height: 26px;
-    font-size: 13px;
-    box-shadow: 0 0 0 3px color-mix(in srgb, var(--wi-cor) 16%, transparent);
-}
-#tab-weekly .weekly-instructions-popover .wi-step-text { font-size: 13px; line-height: 1.4; }
-#tab-weekly .weekly-instructions-popover .wi-step-title { font-size: 14px; margin-bottom: 1px; }
-#tab-weekly .weekly-instructions-popover .wi-note {
-    margin: 8px 14px 14px;
-    padding: 8px 12px;
-    font-size: 13px;
-    line-height: 1.4;
-}
-
-/* Telas menores: 2 passos por linha */
-@media (max-width: 1100px) {
-    #tab-weekly .weekly-instructions-popover .wi-steps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-}
-@media (max-width: 760px) {
-    #tab-weekly .weekly-instructions-popover .wi-steps { grid-template-columns: 1fr; }
-}
 
 /* ==========================================================================
    Seletor de cor da barra lateral: 15 tons suaves (salva-se a cor forte)
@@ -1063,27 +911,6 @@ body:has(#tab-weekly.active #weekly-instructions-card:not(.is-collapsed))::after
     cursor: pointer;
 }
 .cd-cor-outro:hover { background: #F1F5F9; }
-
-/* ==========================================================================
-   Prints embaixo de cada passo do menu de instrucoes
-   (imagens geradas por tools/prints_instrucoes.mjs, em img/instrucoes/)
-   ========================================================================== */
-#tab-weekly .weekly-instructions-popover .wi-prints {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: flex-start;
-    gap: 6px;
-    margin-top: 6px;
-}
-#tab-weekly .weekly-instructions-popover .wi-print {
-    display: block;
-    /* largura vem do HTML (40% do arquivo, max. 90px de altura); a altura segue a proporcao */
-    height: auto;
-    max-width: 100%;
-    border: 1px solid var(--cd-borda);
-    border-radius: 8px;
-    box-shadow: 0 1px 3px rgba(15, 23, 42, .12);
-}
 
 /* ==========================================================================
    Coluna dos totais mais estreita; o espaco vai para "Horario semanal"
@@ -1332,3 +1159,26 @@ body:has(#tab-weekly.active #weekly-instructions-card:not(.is-collapsed))::after
     white-space: nowrap;
 }
 #tab-weekly .cd-contexto #weekly-faixa-auto-note .wga-btn--muted { color: #92400E; }
+
+/* Convite para a Ajuda dentro do cartao (so no primeiro aviso) */
+#tab-weekly .cd-contexto .weekly-status-acao {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    flex-shrink: 0;
+    margin-left: auto;
+    padding: 6px 14px;
+    border: none;
+    border-radius: var(--cd-raio-botao);
+    background: var(--cd-primaria);
+    color: #FFFFFF;
+    font-family: var(--cd-fonte);
+    font-size: 14px;
+    font-weight: 700;
+    white-space: nowrap;
+    box-shadow: 0 2px 0 var(--cd-primaria-escura);
+    cursor: pointer;
+}
+#tab-weekly .cd-contexto .weekly-status-acao:hover { background: var(--cd-primaria-escura); }
+#tab-weekly .cd-contexto .weekly-status-acao:focus-visible { outline: 3px solid var(--cd-foco); outline-offset: 2px; }
+#tab-weekly .cd-contexto .weekly-status-acao.hidden { display: none; }

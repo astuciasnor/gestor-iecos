@@ -1,29 +1,29 @@
-import { store } from './store.js?v=202611081024';
-import { getTurnoLetter, mapSlotToTurno } from './turns.js?v=202611081024';
-import { normalizePeriodo as normalizePeriodoLetivoCode } from './plan_storage.js?v=202611081024';
-import { getCalendarEvents } from './calendar.js?v=202611081024';
-import { isDateOverlap } from './utils.js?v=202611081024';
-import { weeklyState } from './weekly_state.js?v=202611081024';
-import { findPendentesCobertas, isPendenteJaAlocada } from './pendentes.mjs?v=202611081024';
-import { classifySwap } from './troca_ordem.mjs?v=202611081024';
-import { closeFaixaEnds, isPauseEnd, listFaixaPauses } from './pausa_faixas.mjs?v=202611081024';
-import { numeroDaSubturma, isTurmaInteira, proximaSubturma, codigoT01Como } from './subturmas.mjs?v=202611081024';
-import { abrirMiniCalendario, fecharMiniCalendario, miniCalendarioAberto } from './mini_calendario.mjs?v=202611081024';
-import { buildCanonicalOfferProjection } from './execution_engine.js?v=202611081024';
+import { store } from './store.js?v=202611081045';
+import { getTurnoLetter, mapSlotToTurno } from './turns.js?v=202611081045';
+import { normalizePeriodo as normalizePeriodoLetivoCode } from './plan_storage.js?v=202611081045';
+import { getCalendarEvents } from './calendar.js?v=202611081045';
+import { isDateOverlap } from './utils.js?v=202611081045';
+import { weeklyState } from './weekly_state.js?v=202611081045';
+import { findPendentesCobertas, isPendenteJaAlocada } from './pendentes.mjs?v=202611081045';
+import { classifySwap } from './troca_ordem.mjs?v=202611081045';
+import { closeFaixaEnds, isPauseEnd, listFaixaPauses } from './pausa_faixas.mjs?v=202611081045';
+import { numeroDaSubturma, isTurmaInteira, proximaSubturma, codigoT01Como } from './subturmas.mjs?v=202611081045';
+import { abrirMiniCalendario, fecharMiniCalendario, miniCalendarioAberto } from './mini_calendario.mjs?v=202611081045';
+import { buildCanonicalOfferProjection } from './execution_engine.js?v=202611081045';
 import {
     buildSigaaMetadataPayload,
     validateSigaaMetadataPayload,
     getSigaaCode,
     buildScopedSigaaAllocationFromOfferFaixa
-} from './sigaa_metadata.js?v=202611081024';
-import { parseBackupDataFile, extractImportPlanMeta } from './serialization.js?v=202611081024';
+} from './sigaa_metadata.js?v=202611081045';
+import { parseBackupDataFile, extractImportPlanMeta } from './serialization.js?v=202611081045';
 import {
     showToastWarning,
     showPersistentStatusMessage,
     copyTextToClipboard,
     flashButtonCopyState,
     setupCopyActionButtons
-} from './ui_feedback.js?v=202611081024';
+} from './ui_feedback.js?v=202611081045';
 import {
     normalizeHexColor,
     adjustHexColor,
@@ -32,7 +32,7 @@ import {
     tonsDaCor,
     aplicarTonsBloco,
     PALETA_CORES
-} from './color_utils.js?v=202611081024';
+} from './color_utils.js?v=202611081045';
 import {
     isFaixaAllocation,
     isPriorityRegularAllocation,
@@ -41,8 +41,8 @@ import {
     normalizeTeacherNameForMatch,
     getDocenteShortLabel,
     getAllocationTeachersForConflict
-} from './allocation_helpers.js?v=202611081024';
-import { setupSeletorCor } from './seletor_cor.js?v=202611081024';
+} from './allocation_helpers.js?v=202611081045';
+import { setupSeletorCor } from './seletor_cor.js?v=202611081045';
 import {
     VINCULOS_DOCENTE_NOVO,
     OUTRA_UNIDADE,
@@ -51,9 +51,9 @@ import {
     findSimilarNames,
     problemaNoNome,
     limparEspacos
-} from './docente_nomes.mjs?v=202611081024';
-import { getSessionEmail, getPerfil, fetchAllocationsForPlans } from './sync_remoto.js?v=202611081024';
-import { resolveBackendMode } from './backend_config.js?v=202611081024';
+} from './docente_nomes.mjs?v=202611081045';
+import { getSessionEmail, getPerfil, fetchAllocationsForPlans } from './sync_remoto.js?v=202611081045';
+import { resolveBackendMode } from './backend_config.js?v=202611081045';
 import {
     normalizeConflictSlotLabel,
     getAvailableTurnoOfertaOptions,
@@ -62,7 +62,7 @@ import {
     isTurnoDividerSlot,
     buildHorariosForUI,
     getShiftChangeMeta
-} from './turno_helpers.js?v=202611081024';
+} from './turno_helpers.js?v=202611081045';
 import {
     getDisciplinaCHGlobal,
     derivarBloco,
@@ -72,7 +72,7 @@ import {
     getDisciplinaInfo,
     getCursoSiglaDaTurma,
     getPrintAcademicMetaLine
-} from './curso_turma_helpers.js?v=202611081024';
+} from './curso_turma_helpers.js?v=202611081045';
 import {
     renderMonthlyCalendar,
     renderTeacherCalendar,
@@ -80,11 +80,11 @@ import {
     clearTeacherRangeCache,
     setTeacherPeriod,
     getTeacherPeriod
-} from './calendarios_ui.js?v=202611081024';
+} from './calendarios_ui.js?v=202611081045';
 import {
     refreshTeacherConflictsUI,
     setCrossPlanLoader
-} from './conflitos_ui.js?v=202611081024';
+} from './conflitos_ui.js?v=202611081045';
 import {
     shouldIgnoreTurmaEventForCandidate,
     normalizeDrawnSlotsByDay,
@@ -98,7 +98,7 @@ import {
     resolveEditableFaixasFromStoredExecution,
     alignFaixasToExecutionEnd,
     buildFinalAdjustmentFaixaSuggestion
-} from './faixa_utils.js?v=202611081024';
+} from './faixa_utils.js?v=202611081045';
 import {
     timeToMinutes,
     shiftISODate,
@@ -112,14 +112,14 @@ import {
     isDateInsideRange,
     formatDateBRShortYear,
     formatDateBR
-} from './date_utils_ui.js?v=202611081024';
+} from './date_utils_ui.js?v=202611081045';
 import {
     initializeWeeklyScheduleForTurma,
     reconcileTurmaSelectionAfterPLChange,
     resetWeeklyViewOnTurmaChange,
     resolveActiveAcademicPeriod,
     slotLabelsOverlap
-} from './academic_rules.mjs?v=202611081024';
+} from './academic_rules.mjs?v=202611081045';
 
 const gridContainer = document.getElementById('weekly-grid');
 const selCurso = document.getElementById('sel-curso');
@@ -3044,69 +3044,6 @@ function resolveInlineEditableFaixaIndex() {
     return null;
 }
 
-function setupWeeklyInstructionsToggle() {
-    const card = document.getElementById('weekly-instructions-card');
-    const toggle = document.getElementById('weekly-instructions-toggle');
-    if (!card || !toggle) return;
-
-    const STORAGE_KEY = 'weekly_instructions_collapsed';
-    const body = document.getElementById('weekly-instructions-body');
-
-    const positionBody = () => {
-        if (!body) return;
-        const r = toggle.getBoundingClientRect();
-        body.style.top = `${Math.round(r.bottom + 8)}px`;
-        body.style.right = `${Math.round(window.innerWidth - r.right)}px`;
-        body.style.left = 'auto';
-    };
-
-    const applyState = (collapsed) => {
-        card.classList.toggle('is-collapsed', collapsed);
-        toggle.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
-        if (!collapsed) positionBody();
-    };
-
-    let collapsed = true;
-    try {
-        const stored = localStorage.getItem(STORAGE_KEY);
-        collapsed = stored === null ? true : stored === '1';
-    } catch (_) {
-        collapsed = true;
-    }
-    applyState(collapsed);
-
-    toggle.addEventListener('click', () => {
-        const nextCollapsed = !card.classList.contains('is-collapsed');
-        applyState(nextCollapsed);
-        try {
-            localStorage.setItem(STORAGE_KEY, nextCollapsed ? '1' : '0');
-        } catch (_) {
-            /* persistencia opcional */
-        }
-    });
-
-    // Popover: fecha ao clicar fora ou pressionar Esc (sem alterar a preferencia salva)
-    document.addEventListener('click', (event) => {
-        if (card.classList.contains('is-collapsed')) return;
-        if (card.contains(event.target)) return;
-        applyState(true);
-    });
-
-    document.addEventListener('keydown', (event) => {
-        if (event.key !== 'Escape') return;
-        if (card.classList.contains('is-collapsed')) return;
-        applyState(true);
-        toggle.focus();
-    });
-
-    window.addEventListener('resize', () => {
-        if (!card.classList.contains('is-collapsed')) positionBody();
-    });
-    window.addEventListener('scroll', () => {
-        if (!card.classList.contains('is-collapsed')) positionBody();
-    }, true);
-}
-
 function setupFaixaControls() {
     setupFaixaQuickActions();
     document.getElementById('btn-faixa-auto-undo')?.addEventListener('click', undoFaixaAutoCreation);
@@ -3615,9 +3552,20 @@ function updateWeeklyContextNote() {
         }
     }
 
-    // Primeiro uso guiado: destaca no Guia Rapido o passo correspondente ao
-    // estado atual ("voce esta aqui"), conectando a instrucao ao momento.
-    highlightGuideStep(status.step);
+    // Convite para a Ajuda (so quando o aviso pede: primeiro passo).
+    const acaoEl = document.getElementById('weekly-status-acao');
+    if (acaoEl) acaoEl.classList.toggle('hidden', !status.ajuda);
+}
+
+// Botao "Abrir Ajuda > Alocacao" do cartao: abre a aba Ajuda no tema Alocacao.
+function setupWeeklyStatusAjuda() {
+    const btn = document.getElementById('weekly-status-acao');
+    if (!btn || btn.dataset.ligado) return;
+    btn.dataset.ligado = '1';
+    btn.addEventListener('click', () => {
+        switchTab('tutorial');
+        document.querySelector(`#tab-tutorial .aj-tema[data-aj-tema="${btn.dataset.ajAbrir || 'alocacao'}"]`)?.click();
+    });
 }
 
 // Monta o HTML do chip de encaixe sugerido: 📍 data · horario · Nº horario [em paralelo].
@@ -3668,15 +3616,6 @@ function buildSuggestionChip(iniDate, isEditing) {
     };
 }
 
-// Destaca UM passo (1..7) do Guia Rapido do cabecalho como "passo atual".
-// step 0/undefined = nenhum destaque. Casa por indice (Nesimo li = passo N).
-function highlightGuideStep(step) {
-    const steps = document.querySelectorAll('#weekly-instructions-body .wi-step');
-    steps.forEach((el, i) => {
-        el.classList.toggle('wi-step--current', (i + 1) === Number(step));
-    });
-}
-
 // Deriva, a partir do estado atual da Alocacao de Componentes, uma unica
 // mensagem de "onde estou / proximo passo". Consolida o que antes ficava
 // espalhado (nota de contexto, badge de reedicao). Ordem = prioridade.
@@ -3695,9 +3634,9 @@ function computeWeeklyStatus() {
 
     if (!store.selectedTurma) {
         return {
-            tone: 'info', icon: '\u{1F3AF}', step: 2,
-            title: 'Comece selecionando curso e turma',
-            hint: 'Na barra lateral, escolha o curso do IECOS e uma turma valida.'
+            tone: 'info', icon: '\u{1F3AF}', step: 2, ajuda: true,
+            title: 'Primeira vez alocando? O passo a passo está na Ajuda',
+            hint: 'Em Ajuda › Alocação você vê como começar. Para alocar, escolha na barra lateral a unidade, o curso e a turma.'
         };
     }
 
@@ -4664,7 +4603,7 @@ function updateImportBlocoButtonState() {
 export function initUI() {
     setupCompactFaixaDateFields();
     setupFaixaControls();
-    setupWeeklyInstructionsToggle();
+    setupWeeklyStatusAjuda();
     setupSeletorCor();
     setupWeeklyWeekNavigator();
     setWeeklyViewByDate(store.settings.termStart || calStart?.value || '', { followFaixa: false, render: false });
@@ -5695,7 +5634,7 @@ function renderWeeklyGrid() {
         gridContainer.innerHTML = `
             <div style="grid-column: 1/-1; padding: 22px; background:#bdc3c7; border-radius: 6px;">
                 <ul style="margin:0; padding-left: 20px; color:#2c3e50; font-size: 1.05rem; line-height: 1.55; text-align:left; width:100%; display:block; margin-left:0;">
-                    <li>Selecione um curso do IECOS</li>
+                    <li>Escolha a unidade (IECOS ou CBRAG) e o curso</li>
                     <li>Selecione uma turma v&aacute;lida desse curso</li>
                     <li>Informe o Per&iacute;odo letivo, incluindo:
                         <ul style="margin:6px 0 0 0; padding-left:22px; list-style:disc;">

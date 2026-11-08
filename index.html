@@ -10,13 +10,13 @@
         // Vai para o aviso antes de carregar o programa. A agenda publica nao passa por aqui.
         if (/\.github\.io$/i.test(location.hostname)) location.replace('mudou.html');
     </script>
-    <link rel="stylesheet" href="css/style.css?v=202611081024">
+    <link rel="stylesheet" href="css/style.css?v=202611081045">
     <!-- Redesenho da aba Alocar Componentes (por partes); carrega depois do style.css -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
-    <link rel="stylesheet" href="css/alocar-componentes.css?v=202611081024">
-    <link rel="stylesheet" href="css/ajuda.css?v=202611081024">
+    <link rel="stylesheet" href="css/alocar-componentes.css?v=202611081045">
+    <link rel="stylesheet" href="css/ajuda.css?v=202611081045">
 
     <style>
         :root {
@@ -777,8 +777,9 @@
             <section id="tab-weekly" class="tab-content active" role="tabpanel" aria-labelledby="tabbtn-weekly">
                 <!-- Indicador unico de estado/proximo passo (sempre visivel). Populado
                      por updateWeeklyContextNote() em js/ui.js a partir do estado atual. -->
-                <!-- Cartao "Proximo passo" (redesenho, parte 1): indicador de estado a esquerda e
-                     botao de Instrucoes a direita. IDs e classes mantidos para o JS. -->
+                <!-- Cartao "Proximo passo e avisos", na largura toda (o botao de Instrucoes saiu
+                     em 08/11/2026: o passo a passo fica na Ajuda > Alocacao). IDs e classes
+                     mantidos para o JS. -->
                 <section class="cd-contexto no-print" aria-label="Pr&oacute;ximo passo e avisos">
                     <div id="weekly-status-bar" class="weekly-status-bar tone-info no-print" role="status" aria-live="polite">
                         <span class="weekly-status-icon" aria-hidden="true">&#127919;</span>
@@ -786,10 +787,15 @@
                         <span class="cd-contexto-icone" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg></span>
                         <div class="weekly-status-text">
                             <span class="cd-rotulo">Pr&oacute;ximo passo e avisos</span>
-                            <span class="weekly-status-title">Comece selecionando curso e turma</span>
-                            <span class="weekly-status-hint">Na barra lateral, escolha o curso do IECOS e uma turma v&aacute;lida.</span>
+                            <span class="weekly-status-title">Primeira vez alocando? O passo a passo está na Ajuda</span>
+                            <span class="weekly-status-hint">Em Ajuda › Alocação você vê como começar. Para alocar, escolha na barra lateral a unidade, o curso e a turma.</span>
                         </div>
                         <span id="weekly-status-chip" class="weekly-status-chip hidden" aria-hidden="true"></span>
+                        <!-- Convite para a Ajuda (so no primeiro aviso, antes de escolher a turma) -->
+                        <button type="button" id="weekly-status-acao" class="weekly-status-acao hidden" data-aj-abrir="alocacao">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><path d="M12 17h.01"></path></svg>
+                            Abrir Ajuda › Alocação
+                        </button>
                         <!-- Faixa criada pelo desenho: aparece DENTRO do cartao (por cima do texto) ate
                              salvar ou desfazer; assim nao empurra a tela. -->
                         <div id="weekly-faixa-auto-note" class="weekly-gap-advisory weekly-faixa-auto-note hidden no-print" role="status">
@@ -803,60 +809,6 @@
                         <!-- Avisos rapidos (showToastWarning) aparecem aqui na aba Alocar, por cima do
                              texto do cartao, em vez de flutuar no meio da tela (js/ui_feedback.js). -->
                         <div id="cd-aviso" class="cd-aviso hidden" role="alert"></div>
-                    </div>
-                    <div class="weekly-instructions-popover weekly-instructions-card is-collapsed" id="weekly-instructions-card">
-                        <button type="button" id="weekly-instructions-toggle" class="weekly-instructions-toggle" aria-expanded="false" aria-controls="weekly-instructions-body" aria-haspopup="dialog">
-                            <svg class="weekly-instructions-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4"></path><path d="M12 8h.01"></path></svg>
-                            <h3>Instru&ccedil;&otilde;es de preenchimento</h3>
-                            <svg class="weekly-instructions-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg>
-                        </button>
-                        <div id="weekly-instructions-body" class="weekly-instructions-body" role="dialog" aria-label="Instru&ccedil;&otilde;es de preenchimento">
-                            <div class="wi-header">
-                                <span class="wi-header-icon" aria-hidden="true">&#129517;</span>
-                                <div>
-                                    <h4 class="wi-title">Como preencher a aba Alocar Componentes</h4>
-                                    <p class="wi-subtitle">Siga os passos na ordem. O passo em que você está fica destacado.</p>
-                                </div>
-                            </div>
-                            <ol class="wi-steps">
-                                <li class="wi-step wi-step--first">
-                                    <span class="wi-step-num">1</span>
-                                    <div class="wi-step-text"><strong class="wi-step-title">Período letivo</strong>Escolha o período do ano na barra lateral (ex.: <em>2027 - PL2</em>). Ele define o calendário de todo o planejamento.<span class="wi-prints"><img class="wi-print" src="img/instrucoes/passo-1.png" width="254" height="61" alt="Campo Período na barra lateral" loading="lazy"></span></div>
-                                </li>
-                                <li class="wi-step">
-                                    <span class="wi-step-num">2</span>
-                                    <div class="wi-step-text"><strong class="wi-step-title">Curso e turma</strong>Selecione o <strong>curso</strong> e a <strong>turma</strong> do IECOS.<span class="wi-prints"><img class="wi-print" src="img/instrucoes/passo-2.png" width="143" height="90" alt="Campos Curso, Turma e Turno na barra lateral" loading="lazy"></span></div>
-                                </li>
-                                <li class="wi-step">
-                                    <span class="wi-step-num">3</span>
-                                    <div class="wi-step-text"><strong class="wi-step-title">Componente</strong>Escolha a <strong>componente curricular</strong>, uma a uma ou <strong>por bloco</strong>. No bloco, use a aba <strong>Lista de Ofertas</strong> para editar e indicar o(s) <strong>docente(s)</strong>.<span class="wi-prints"><img class="wi-print" src="img/instrucoes/passo-3.png" width="254" height="60" alt="Campo Disciplina na barra lateral, com o círculo da cor" loading="lazy"></span></div>
-                                </li>
-                                <li class="wi-step">
-                                    <span class="wi-step-num">4</span>
-                                    <div class="wi-step-text"><strong class="wi-step-title">Início da Faixa 1</strong>Clique na data de <strong>Início</strong> da tabela de faixas. O calendário mostra os meses do período: um clique troca o mês.<span class="wi-prints"><img class="wi-print" src="img/instrucoes/passo-4.png" width="276" height="83" alt="Data de Início da Faixa 1 na tabela de faixas" loading="lazy"></span></div>
-                                </li>
-                                <li class="wi-step">
-                                    <span class="wi-step-num">5</span>
-                                    <div class="wi-step-text"><strong class="wi-step-title">Desenhe o horário</strong>Na <strong>grade semanal</strong>, clique ou arraste sobre as aulas. A tabela mostra a CH de cada faixa e o <strong>Total</strong>.<span class="wi-prints"><img class="wi-print" src="img/instrucoes/passo-5.png" width="323" height="90" alt="Horários desenhados na grade semanal" loading="lazy"></span></div>
-                                </li>
-                                <li class="wi-step">
-                                    <span class="wi-step-num">6</span>
-                                    <div class="wi-step-text"><strong class="wi-step-title">O horário mudou? Faixas 2 e 3</strong>Vá à <strong>semana em que o horário muda</strong> e redesenhe na grade: a nova faixa nasce sozinha naquele dia. Ou clique em <strong>Faixa&nbsp;2</strong> e depois no dia da grade.<span class="wi-prints"><img class="wi-print" src="img/instrucoes/passo-6.png" width="275" height="72" alt="Botões de semana e de faixa" loading="lazy"></span></div>
-                                </li>
-                                <li class="wi-step">
-                                    <span class="wi-step-num">7</span>
-                                    <div class="wi-step-text"><strong class="wi-step-title">Pausa: parar e voltar depois</strong>Digite o <strong>Fim</strong> da faixa no último dia de aula e o <strong>Início</strong> da faixa seguinte no dia da volta. A linha cinza mostra os dias sem aula, que podem receber outra componente.<span class="wi-prints"><img class="wi-print" src="img/instrucoes/passo-7.png" width="323" height="90" alt="Faixa 1, a linha de pausa e a Faixa 2" loading="lazy"></span></div>
-                                </li>
-                                <li class="wi-step">
-                                    <span class="wi-step-num">8</span>
-                                    <div class="wi-step-text"><strong class="wi-step-title">Salvar</strong>Confira se o <strong>Total CH</strong> bateu com a <strong>Meta</strong> e clique em <strong>Salvar Componente</strong>. Se houver choque com outra componente, o Cardume avisa antes de gravar.<span class="wi-prints"><img class="wi-print" src="img/instrucoes/passo-8.png" width="92" height="90" alt="Cartões Total CH e Meta CH" loading="lazy"><img class="wi-print" src="img/instrucoes/passo-8-salvar.png" width="275" height="42" alt="Botão Salvar Componente" loading="lazy"></span></div>
-                                </li>
-                            </ol>
-                            <div class="wi-note">
-                                <span class="wi-note-icon" aria-hidden="true">&#128161;</span>
-                                <div><strong>O que é uma faixa?</strong> É o horário semanal válido num intervalo de datas. A nova faixa substitui a anterior a partir do seu Início; entre o Fim de uma e o Início da outra pode haver uma pausa. O <strong>ⓘ</strong> ao lado de cada faixa explica o que fazer.</div>
-                            </div>
-                        </div>
                     </div>
                 </section>
                 <div class="weekly-top-layout">
@@ -1482,7 +1434,7 @@
         </main>
     </div>
 
-    <script type="module" src="js/main.js?v=202611081024"></script>
+    <script type="module" src="js/main.js?v=202611081045"></script>
 </body>
 
 </html>

@@ -1,5 +1,5 @@
-// Gera os prints que aparecem embaixo de cada passo do menu "Instrucoes de
-// preenchimento" (aba Alocar Componentes). Abre o app num Chrome/Edge invisivel
+// Gera os prints dos 8 passos da Ajuda > Alocacao (o antigo menu "Instrucoes de
+// preenchimento" da aba Alocar Componentes saiu em 08/11/2026). Abre o app num Chrome/Edge invisivel
 // com os dados publicados (como o teste de fumaca), monta cada situacao e
 // recorta so a parte da tela daquele passo.
 //

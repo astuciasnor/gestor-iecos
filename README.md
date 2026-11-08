@@ -45,7 +45,8 @@ O guia de uso para os coordenadores fica dentro do app, na aba **Ajuda**
   desenha-se num turno, troca-se o Turno e desenha-se no outro.
 - **Turma extra**: a mesma componente de novo na mesma turma e PL vira
   subturma (T01, T02...) com um OK; regras em `js/subturmas.mjs`.
-- Cartao **Proximo passo e avisos** no topo da aba: diz o que falta e mostra os avisos.
+- Cartao **Proximo passo e avisos** no topo da aba (largura toda): diz o que
+  falta, mostra os avisos e, no comeco, convida para a Ajuda > Alocacao.
 
 **Revisao**
 - **Lista de Ofertas**: editar, excluir, **Trocar** duas componentes de lugar,
@@ -176,7 +177,7 @@ Abas esperadas: `docentes`, `componentes`, `turmas`, `cursos`, `horarios`,
 npm test                              # todas as suites de tests/ (Node 22+)
 npm run smoke                         # abre o app num Chrome/Edge invisivel e passa pelas abas
 node tools/teste_pausa_intercalada.mjs  # pausa + outra componente no meio, de ponta a ponta
-node tools/prints_instrucoes.mjs      # refaz os prints de img/instrucoes (menu e Ajuda)
+node tools/prints_instrucoes.mjs      # refaz os prints de img/instrucoes (Ajuda > Alocacao)
 ```
 
 **Versao dos arquivos (cache):** todos os `.js`/`.css` sao chamados com o mesmo
