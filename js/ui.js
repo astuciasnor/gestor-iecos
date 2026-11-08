@@ -1,28 +1,28 @@
-import { store } from './store.js?v=202611072307';
-import { getTurnoLetter, mapSlotToTurno } from './turns.js?v=202611072307';
-import { normalizePeriodo as normalizePeriodoLetivoCode } from './plan_storage.js?v=202611072307';
-import { getCalendarEvents } from './calendar.js?v=202611072307';
-import { isDateOverlap } from './utils.js?v=202611072307';
-import { weeklyState } from './weekly_state.js?v=202611072307';
-import { findPendentesCobertas, isPendenteJaAlocada } from './pendentes.mjs?v=202611072307';
-import { classifySwap } from './troca_ordem.mjs?v=202611072307';
-import { closeFaixaEnds, isPauseEnd, listFaixaPauses } from './pausa_faixas.mjs?v=202611072307';
-import { abrirMiniCalendario, fecharMiniCalendario, miniCalendarioAberto } from './mini_calendario.mjs?v=202611072307';
-import { buildCanonicalOfferProjection } from './execution_engine.js?v=202611072307';
+import { store } from './store.js?v=202611072324';
+import { getTurnoLetter, mapSlotToTurno } from './turns.js?v=202611072324';
+import { normalizePeriodo as normalizePeriodoLetivoCode } from './plan_storage.js?v=202611072324';
+import { getCalendarEvents } from './calendar.js?v=202611072324';
+import { isDateOverlap } from './utils.js?v=202611072324';
+import { weeklyState } from './weekly_state.js?v=202611072324';
+import { findPendentesCobertas, isPendenteJaAlocada } from './pendentes.mjs?v=202611072324';
+import { classifySwap } from './troca_ordem.mjs?v=202611072324';
+import { closeFaixaEnds, isPauseEnd, listFaixaPauses } from './pausa_faixas.mjs?v=202611072324';
+import { abrirMiniCalendario, fecharMiniCalendario, miniCalendarioAberto } from './mini_calendario.mjs?v=202611072324';
+import { buildCanonicalOfferProjection } from './execution_engine.js?v=202611072324';
 import {
     buildSigaaMetadataPayload,
     validateSigaaMetadataPayload,
     getSigaaCode,
     buildScopedSigaaAllocationFromOfferFaixa
-} from './sigaa_metadata.js?v=202611072307';
-import { parseBackupDataFile, extractImportPlanMeta } from './serialization.js?v=202611072307';
+} from './sigaa_metadata.js?v=202611072324';
+import { parseBackupDataFile, extractImportPlanMeta } from './serialization.js?v=202611072324';
 import {
     showToastWarning,
     showPersistentStatusMessage,
     copyTextToClipboard,
     flashButtonCopyState,
     setupCopyActionButtons
-} from './ui_feedback.js?v=202611072307';
+} from './ui_feedback.js?v=202611072324';
 import {
     normalizeHexColor,
     adjustHexColor,
@@ -31,7 +31,7 @@ import {
     tonsDaCor,
     aplicarTonsBloco,
     PALETA_CORES
-} from './color_utils.js?v=202611072307';
+} from './color_utils.js?v=202611072324';
 import {
     isFaixaAllocation,
     isPriorityRegularAllocation,
@@ -40,8 +40,8 @@ import {
     normalizeTeacherNameForMatch,
     getDocenteShortLabel,
     getAllocationTeachersForConflict
-} from './allocation_helpers.js?v=202611072307';
-import { setupSeletorCor } from './seletor_cor.js?v=202611072307';
+} from './allocation_helpers.js?v=202611072324';
+import { setupSeletorCor } from './seletor_cor.js?v=202611072324';
 import {
     VINCULOS_DOCENTE_NOVO,
     OUTRA_UNIDADE,
@@ -50,9 +50,9 @@ import {
     findSimilarNames,
     problemaNoNome,
     limparEspacos
-} from './docente_nomes.mjs?v=202611072307';
-import { getSessionEmail, getPerfil, fetchAllocationsForPlans } from './sync_remoto.js?v=202611072307';
-import { resolveBackendMode } from './backend_config.js?v=202611072307';
+} from './docente_nomes.mjs?v=202611072324';
+import { getSessionEmail, getPerfil, fetchAllocationsForPlans } from './sync_remoto.js?v=202611072324';
+import { resolveBackendMode } from './backend_config.js?v=202611072324';
 import {
     normalizeConflictSlotLabel,
     getAvailableTurnoOfertaOptions,
@@ -61,7 +61,7 @@ import {
     isTurnoDividerSlot,
     buildHorariosForUI,
     getShiftChangeMeta
-} from './turno_helpers.js?v=202611072307';
+} from './turno_helpers.js?v=202611072324';
 import {
     getDisciplinaCHGlobal,
     derivarBloco,
@@ -71,7 +71,7 @@ import {
     getDisciplinaInfo,
     getCursoSiglaDaTurma,
     getPrintAcademicMetaLine
-} from './curso_turma_helpers.js?v=202611072307';
+} from './curso_turma_helpers.js?v=202611072324';
 import {
     renderMonthlyCalendar,
     renderTeacherCalendar,
@@ -79,11 +79,11 @@ import {
     clearTeacherRangeCache,
     setTeacherPeriod,
     getTeacherPeriod
-} from './calendarios_ui.js?v=202611072307';
+} from './calendarios_ui.js?v=202611072324';
 import {
     refreshTeacherConflictsUI,
     setCrossPlanLoader
-} from './conflitos_ui.js?v=202611072307';
+} from './conflitos_ui.js?v=202611072324';
 import {
     shouldIgnoreTurmaEventForCandidate,
     normalizeDrawnSlotsByDay,
@@ -97,7 +97,7 @@ import {
     resolveEditableFaixasFromStoredExecution,
     alignFaixasToExecutionEnd,
     buildFinalAdjustmentFaixaSuggestion
-} from './faixa_utils.js?v=202611072307';
+} from './faixa_utils.js?v=202611072324';
 import {
     timeToMinutes,
     shiftISODate,
@@ -111,14 +111,14 @@ import {
     isDateInsideRange,
     formatDateBRShortYear,
     formatDateBR
-} from './date_utils_ui.js?v=202611072307';
+} from './date_utils_ui.js?v=202611072324';
 import {
     initializeWeeklyScheduleForTurma,
     reconcileTurmaSelectionAfterPLChange,
     resetWeeklyViewOnTurmaChange,
     resolveActiveAcademicPeriod,
     slotLabelsOverlap
-} from './academic_rules.mjs?v=202611072307';
+} from './academic_rules.mjs?v=202611072324';
 
 const gridContainer = document.getElementById('weekly-grid');
 const selCurso = document.getElementById('sel-curso');
