@@ -153,9 +153,3 @@ export function aplicarTonsBloco(el, hex) {
     el.style.setProperty('--bloco-borda', t.borda);
     el.style.setProperty('--bloco-texto', t.texto);
 }
-
-// Os mesmos tons em texto, para HTML montado em string: style="${estiloTonsBloco(cor)}"
-export function estiloTonsBloco(hex) {
-    const t = tonsDaCor(hex);
-    return `--bloco-fundo:${t.fundo}; --bloco-borda:${t.borda}; --bloco-texto:${t.texto};`;
-}

@@ -2,8 +2,8 @@
 // Cadastra, edita e exclui acessos, gera senha provisoria e baixa a copia do
 // banco. Quem garante que so o administrador faz isso e a API (api/index.php).
 // Mostra tambem os docentes novos cadastrados pelos coordenadores para conferir.
-import { store } from './store.js?v=202611072358';
-import { fetchAllocationsForPlans, salvarAlocacoesRevisadas, getSessionEmail, getPerfil } from './sync_remoto.js?v=202611072358';
+import { store } from './store.js?v=202611080841';
+import { fetchAllocationsForPlans, salvarAlocacoesRevisadas, getSessionEmail, getPerfil } from './sync_remoto.js?v=202611080841';
 import {
   listarDocentesParaConferir,
   aplicarRevisaoDocente,
@@ -13,7 +13,7 @@ import {
   normalizeTeacherNameForMatch,
   VINCULOS_DOCENTE_NOVO,
   UNIDADES
-} from './docente_nomes.mjs?v=202611072358';
+} from './docente_nomes.mjs?v=202611080841';
 
 let ctx = null;      // { tools, meuId, showToast, aoContarDocentes }
 let usuarios = [];

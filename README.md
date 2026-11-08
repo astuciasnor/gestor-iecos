@@ -38,7 +38,8 @@ O guia de uso para os coordenadores fica dentro do app, na aba **Ajuda**
   Componente com pausa nunca e empurrada sozinha (choque bloqueia o salvar).
 - Feriados na grade (coluna listrada com o nome), sabado no turno da manha,
   aviso de turno diferente, varios docentes com CH parcial, cadastro de
-  docente novo, cores escolhidas numa paleta e mostradas em tom suave.
+  docente novo, cores escolhidas numa paleta (tom suave na grade semanal;
+  cor forte nos calendarios e na agenda publica).
 - Cartao **Proximo passo** no topo da aba: diz o que falta e mostra os avisos.
 
 **Revisao**
@@ -191,4 +192,4 @@ node tools/prints_instrucoes.mjs      # refaz os prints de img/instrucoes (menu 
 | `js/admin_ui.js`, `js/acesso_ui.js` | login, barra de sincronizacao, Usuarios e backup |
 | `js/ajuda_ui.js`, `css/ajuda.css` | aba Ajuda |
 | `css/style.css`, `css/alocar-componentes.css` | estilos gerais e da aba Alocar |
-| `js/color_utils.js`, `js/seletor_cor.js` | paleta e tons suaves das componentes |
+| `js/color_utils.js`, `js/seletor_cor.js` | paleta das componentes e tons suaves da grade semanal |

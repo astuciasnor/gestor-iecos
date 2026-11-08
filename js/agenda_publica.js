@@ -1,10 +1,9 @@
-import { store, normalizeLoadedAllocation } from './store.js?v=202611072358';
-import { getTurnoLetter } from './turns.js?v=202611072358';
-import { getCalendarEvents } from './calendar.js?v=202611072358';
-import { resolveActiveAcademicPeriod } from './academic_rules.mjs?v=202611072358';
-import { buildMonthMarkers, summarizeTeacherPeriod } from './resumo_docente.mjs?v=202611072358';
-import { resolveBackendMode, UFPA_API_URL } from './backend_config.js?v=202611072358';
-import { tonsDaCor, estiloTonsBloco } from './color_utils.js?v=202611072358';
+import { store, normalizeLoadedAllocation } from './store.js?v=202611080841';
+import { getTurnoLetter } from './turns.js?v=202611080841';
+import { getCalendarEvents } from './calendar.js?v=202611080841';
+import { resolveActiveAcademicPeriod } from './academic_rules.mjs?v=202611080841';
+import { buildMonthMarkers, summarizeTeacherPeriod } from './resumo_docente.mjs?v=202611080841';
+import { resolveBackendMode, UFPA_API_URL } from './backend_config.js?v=202611080841';
 
 const collator = new Intl.Collator('pt-BR', { sensitivity: 'base' });
 const PUBLIC_ASSET_VERSION = '20261028a';
@@ -1575,7 +1574,7 @@ function buildResumoComponenteMarkup(comp, periodo) {
     const firstWeek = comp.weekly.findIndex((w) => w.dias > 0);
 
     return `
-        <article class="resumo-comp" style="--comp-cor:${escapeHtmlAttr(tonsDaCor(comp.cor || '#cfe4d6').borda)}">
+        <article class="resumo-comp" style="--comp-cor:${escapeHtmlAttr(comp.cor || '#cfe4d6')}">
             <div class="resumo-comp-head">
                 <strong class="resumo-comp-nome">${escapeHtml(comp.disciplina)}</strong>
                 <span class="resumo-comp-turma">${escapeHtml(turma)}</span>
@@ -1829,7 +1828,7 @@ function buildMiniChipMarkup(event, dateObj, mode, dailyEvents = []) {
             class="mini-chip"
             role="button"
             tabindex="0"
-            style="${escapeHtmlAttr(estiloTonsBloco(cor))}"
+            style="background-color:${escapeHtmlAttr(cor)}"
             data-titulo="${escapeHtmlAttr(titulo)}"
             data-docente="${escapeHtmlAttr(docente)}"
             data-turma="${escapeHtmlAttr(turma)}"
@@ -2241,7 +2240,7 @@ function buildSlotLensMarkup(chip) {
     };
 
     return `
-        <div class="slot-lens-card" style="--lens-accent:${escapeHtmlAttr(tonsDaCor(cor).borda)}">
+        <div class="slot-lens-card" style="--lens-accent:${escapeHtmlAttr(cor)}">
             <div class="slot-lens-arrow"></div>
             <div class="slot-lens-stem"></div>
             <div class="slot-lens-head">
@@ -2585,7 +2584,7 @@ function buildMonthlyCalendarHTML({ calendarData, year, month }) {
             const sigla = getDisciplinaShortLabel(ev.disciplina, ev.title || ev.disciplina || '', ev.turmaId).slice(0, 10);
             const shiftMeta = getPublicShiftChangeMeta(ev, dateStr);
             const shiftBadgeMarkup = buildPublicShiftBadgeMarkup(shiftMeta, true);
-            grid += `<div class="mcd-event" style="${escapeHtmlAttr(estiloTonsBloco(cor))}" data-date="${dateStr}" data-disc-key="${escapeHtmlAttr(discKey)}" tabindex="0" role="button">`;
+            grid += `<div class="mcd-event" style="background:${escapeHtmlAttr(cor)}" data-date="${dateStr}" data-disc-key="${escapeHtmlAttr(discKey)}" tabindex="0" role="button">`;
             grid += `<span class="mcd-event-hora">${escapeHtml(hora)}</span>`;
             grid += `<span class="mcd-event-sigla">${escapeHtml(sigla)}</span>`;
             if (shiftBadgeMarkup) grid += `<span class="mcd-event-shift">${shiftBadgeMarkup}</span>`;
@@ -2666,7 +2665,7 @@ function buildDayLensMarkup(events, dateStr, filterKey = null) {
 
     groupList.forEach(g => {
         const turma = getTurmaLabel(g.turmaId, g.subGrupo);
-        html += `<div class="day-lens-group" style="--dlg-cor:${escapeHtmlAttr(tonsDaCor(g.cor).borda)}">`;
+        html += `<div class="day-lens-group" style="--dlg-cor:${escapeHtmlAttr(g.cor)}">`;
         html += `<div class="dlg-title">${escapeHtml(g.title)}${g.ch > 0 ? `<span class="dlg-ch">${g.ch}h</span>` : ''}</div>`;
         html += `<div class="dlg-row"><span class="dlg-label">Turma</span><span class="dlg-val">${escapeHtml(turma)}</span></div>`;
         if (g.faixa || g.turno) {

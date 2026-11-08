@@ -12,7 +12,7 @@
             location.replace('https://cardume.iecos.ufpa.br/agenda_publica.html' + location.search + location.hash);
         }
     </script>
-    <link rel="stylesheet" href="css/style.css?v=202611072358">
+    <link rel="stylesheet" href="css/style.css?v=202611080841">
     <style>
         :root {
             --pub-bg: #eef3ef;
@@ -228,11 +228,6 @@
         .mini-chip:focus-visible {
             outline: none;
             box-shadow: 0 0 0 4px rgba(0, 78, 40, 0.14);
-        }
-
-        /* Chip com foco mantem a barra da componente */
-        .mini-chip:focus-visible {
-            box-shadow: inset 4px 0 0 var(--bloco-borda, #64748B), 0 0 0 4px rgba(0, 78, 40, 0.22);
         }
 
         .pub-tab.active {
@@ -555,17 +550,14 @@
             flex: 1;
         }
 
-        /* Componente em tom suave, igual a Grade Semanal do app: fundo claro,
-           texto escuro e barra forte a esquerda (cores em --bloco-*). */
         .mini-chip {
-            background: var(--bloco-fundo, #F1F5F9);
-            color: var(--bloco-texto, #0F172A);
+            color: #111111;
             border-radius: 10px;
             min-height: 66px;
-            padding: 8px 3px 8px 7px;
+            padding: 8px 3px;
             text-align: center;
             cursor: pointer;
-            box-shadow: inset 4px 0 0 var(--bloco-borda, #64748B);
+            box-shadow: 0 4px 10px rgba(15, 23, 42, 0.16);
             transition: transform 0.12s ease, box-shadow 0.12s ease;
             display: flex;
             flex-direction: column;
@@ -574,7 +566,7 @@
 
         .mini-chip:hover {
             transform: translateY(-1px);
-            box-shadow: inset 4px 0 0 var(--bloco-borda, #64748B), 0 4px 10px rgba(15, 23, 42, 0.14);
+            box-shadow: 0 8px 16px rgba(15, 23, 42, 0.18);
         }
 
         .chip-hora {
@@ -1008,8 +1000,8 @@
             .mini-chip {
                 border-radius: 6px;
                 min-height: 51px;
-                padding: 4px 1px 4px 4px;
-                box-shadow: inset 3px 0 0 var(--bloco-borda, #64748B);
+                padding: 4px 1px;
+                box-shadow: 0 3px 8px rgba(15, 23, 42, 0.14);
             }
 
             .chip-hora {
@@ -1090,7 +1082,7 @@
                 border-radius: 5px;
                 min-height: 44px;
                 padding: 3px 1px;
-                box-shadow: inset 3px 0 0 var(--bloco-borda, #64748B);
+                box-shadow: 0 2px 6px rgba(15, 23, 42, 0.12);
             }
 
             .chip-hora {
@@ -1197,13 +1189,10 @@
             display: flex; align-items: center; justify-content: center;
         }
         .mcd-num { font-size: 0.8rem; font-weight: 900; color: #3a5445; line-height: 1; align-self: flex-start; }
-        /* Mesmo tom suave dos chips (cores em --bloco-*) */
         .mcd-event {
             border-radius: 5px;
-            padding: 3px 5px 3px 8px;
-            background: var(--bloco-fundo, #F1F5F9);
-            color: var(--bloco-texto, #0F172A);
-            box-shadow: inset 4px 0 0 var(--bloco-borda, #64748B);
+            padding: 3px 5px;
+            color: #111;
             display: flex;
             flex-direction: column;
             line-height: 1.1;
@@ -1211,7 +1200,7 @@
             cursor: pointer;
             transition: filter 0.12s ease, transform 0.1s ease;
         }
-        .mcd-event:hover { filter: brightness(0.95); transform: scale(1.03); }
+        .mcd-event:hover { filter: brightness(0.88); transform: scale(1.03); }
         .mcd-event:focus-visible { outline: 2px solid rgba(0,0,0,0.35); outline-offset: 1px; }
         .mcd-event-hora { font-size: 0.6rem; font-weight: 700; opacity: 0.75; white-space: nowrap; }
         .mcd-event-sigla { font-size: 0.68rem; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -1382,14 +1371,6 @@
             .day-lens {
                 display: none !important;
             }
-
-            /* Tons suaves das componentes tambem saem no papel */
-            .mini-chip,
-            .mcd-event,
-            .resumo-semana.is-on {
-                -webkit-print-color-adjust: exact;
-                print-color-adjust: exact;
-            }
         }
     </style>
 </head>
@@ -1493,7 +1474,7 @@
     <div id="slot-lens" class="slot-lens" hidden></div>
     <div id="day-lens" class="day-lens" hidden></div>
 
-    <script type="module" src="js/agenda_publica.js?v=202611072358"></script>
+    <script type="module" src="js/agenda_publica.js?v=202611080841"></script>
 </body>
 
 </html>

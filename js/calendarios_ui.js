@@ -1,10 +1,10 @@
-import { store } from './store.js?v=202611072358';
-import { getCalendarEvents } from './calendar.js?v=202611072358';
-import { buildTeacherExecutionSnapshot, buildCanonicalOfferProjection } from './execution_engine.js?v=202611072358';
-import { detectTeacherConflicts } from './conflicts.js?v=202611072358';
-import { getHorariosByTurno, normalizeTurnoKey, getTurnoLetter, mapSlotToTurno } from './turns.js?v=202611072358';
-import { tonsDaCor, estiloTonsBloco } from './color_utils.js?v=202611072358';
-import { formatDateBR, timeToMinutes, shortDayName } from './date_utils_ui.js?v=202611072358';
+import { store } from './store.js?v=202611080841';
+import { getCalendarEvents } from './calendar.js?v=202611080841';
+import { buildTeacherExecutionSnapshot, buildCanonicalOfferProjection } from './execution_engine.js?v=202611080841';
+import { detectTeacherConflicts } from './conflicts.js?v=202611080841';
+import { getHorariosByTurno, normalizeTurnoKey, getTurnoLetter, mapSlotToTurno } from './turns.js?v=202611080841';
+import { vividHexColor } from './color_utils.js?v=202611080841';
+import { formatDateBR, timeToMinutes, shortDayName } from './date_utils_ui.js?v=202611080841';
 import {
     isFaixaAllocation,
     isScheduledRegularAllocation,
@@ -12,7 +12,7 @@ import {
     teacherNamesMatch,
     getDocenteShortLabel,
     calculateTeacherTotalCH
-} from './allocation_helpers.js?v=202611072358';
+} from './allocation_helpers.js?v=202611080841';
 import {
     normalizeTurnoOfertaKey,
     formatTurnoOfertaLabel,
@@ -22,7 +22,7 @@ import {
     buildHorariosForUI,
     getShiftChangeMeta,
     getCalendarShiftBadgeHTML
-} from './turno_helpers.js?v=202611072358';
+} from './turno_helpers.js?v=202611080841';
 import {
     getDisciplinaCHGlobal,
     getTurmaLabel,
@@ -30,11 +30,11 @@ import {
     getDisciplinaInfo,
     getCursoSiglaDaTurma,
     getPrintAcademicMetaLine
-} from './curso_turma_helpers.js?v=202611072358';
+} from './curso_turma_helpers.js?v=202611080841';
 import {
     getGanttTurnoConfigs,
     resolveTeacherShiftForSlot
-} from './turnos_docente.js?v=202611072358';
+} from './turnos_docente.js?v=202611080841';
 
 // Referencias DOM de nivel de modulo (espelham as de ui.js; modulo deferred, DOM pronto).
 const selViewDocente = document.getElementById('sel-view-docente');
@@ -853,14 +853,12 @@ export function buildCalendarTurmaResumeTable(turmaId, start, end) {
             ? ` title="Alocado ${formatCH(disc.allocatedCH) || '0'}h para CH de ${formatCH(disc.totalCH) || '0'}h"`
             : '';
 
-        // Fundo suave e barra forte a esquerda (mesmo padrao da Grade Semanal)
-        const tons = tonsDaCor(disc.cor);
         safeRows.forEach((row, idx) => {
             const isFirst = idx === 0;
             const horasDisplay = row.horas === null || row.horas === undefined ? '' : (formatCH(row.horas) || '0');
             tableHtml += `
-                <tr style="border-bottom: 1px solid #ddd; background-color: ${tons.fundo};">
-                    <td style="padding: 8px; border-right: 1px solid #ddd; font-weight: bold; box-shadow: inset 4px 0 0 ${tons.borda};">${isFirst ? disc.numero : ''}</td>
+                <tr style="border-bottom: 1px solid #ddd; background-color: ${disc.cor}22;">
+                    <td style="padding: 8px; border-right: 1px solid #ddd; font-weight: bold;">${isFirst ? disc.numero : ''}</td>
                     <td style="padding: 8px; border-right: 2px solid #2d34c6;">${isFirst ? escapeHtml(disc.codigo || '-') : ''}</td>
                     <td style="padding: 8px; text-align: center; border-right: 1px solid #ddd; font-weight: 700; color: #1f2937;">${isFirst ? formatCH(disc.totalCH) : ''}</td>
                     <td style="padding: 8px; text-align: center; border-right: 2px solid #2d34c6; ${allocatedCellStyle}"${allocatedTitle}>${horasDisplay}</td>
@@ -1222,15 +1220,13 @@ function buildDocenteResumeRows(components = []) {
     let tableHtml = '';
     components.forEach((comp) => {
         const corAlocada = corDaAlocada(comp.chDocente, comp.chAlocada);
-        // Fundo suave e barra forte a esquerda (mesmo padrao da Grade Semanal)
-        const tons = tonsDaCor(comp.cor);
         comp.faixaRows.forEach((faixaRow, idx) => {
             const isFirst = idx === 0;
             const bordaTopo = isFirst ? 'border-top: 2px solid #94a3b8;' : '';
             const horarios = (faixaRow.horarios || []).map((h) => escapeHtml(h)).join('<br>') || '-';
             tableHtml += `
-                <tr style="${bordaTopo} border-bottom: 1px solid #ddd; background-color: ${tons.fundo};">
-                    <td style="padding: 8px; border-right: 1px solid #ddd; font-weight: bold; box-shadow: inset 4px 0 0 ${tons.borda};">${isFirst ? comp.numero : ''}</td>
+                <tr style="${bordaTopo} border-bottom: 1px solid #ddd; background-color: ${comp.cor}22;">
+                    <td style="padding: 8px; border-right: 1px solid #ddd; font-weight: bold;">${isFirst ? comp.numero : ''}</td>
                     <td style="padding: 8px; border-right: 2px solid #2d34c6;">${isFirst ? escapeHtml(comp.codigo || '-') : ''}</td>
                     <td style="padding: 8px; text-align: center; border-right: 1px solid #ddd; font-weight: 700; color: #1f2937; white-space: nowrap;">${isFirst ? escapeHtml(formatCHDocente(comp)) : ''}</td>
                     <td style="padding: 8px; text-align: center; border-right: 2px solid #2d34c6; font-weight: 800; color: ${corAlocada};">${isFirst ? (formatCH(comp.chAlocada) || '0') : ''}</td>
@@ -1468,7 +1464,6 @@ export function generateCalendarGrid(container, turmaId, docenteName, start, end
 
                         let content = '';
                         let style = '';
-                        let usaTons = false; // componente em tom suave (classe comp-tons)
 
                         if (isIntervalo) {
                             content = '<span style="color:#7f8c8d; font-style:italic; font-size:0.85em;">Intervalo</span>';
@@ -1496,8 +1491,7 @@ export function generateCalendarGrid(container, turmaId, docenteName, start, end
                                         dayData.date
                                     );
                                     content = `${info.abrev}${shiftBadgeDisplay} - ${event.turmaId}`;
-                                    style = estiloTonsBloco(event.cor || '#bdc3c7');
-                                    usaTons = true;
+                                    style = `background:${vividHexColor(event.cor || '#bdc3c7')}; color:black;`;
                                 }
                             } else {
                                 const event = uniqueEventsInSlot[0];
@@ -1514,8 +1508,7 @@ export function generateCalendarGrid(container, turmaId, docenteName, start, end
                                     content = docenteLabel
                                         ? `<div>${info.abrev}${eBadgeDisplay} <span style="font-size:0.82em; font-weight:600; opacity:0.92;">- ${docenteLabel}</span></div>`
                                         : `${info.abrev}${eBadgeDisplay}`;
-                                    style = estiloTonsBloco(event.cor || '#bdc3c7');
-                                    usaTons = true;
+                                    style = `background:${vividHexColor(event.cor || '#bdc3c7')}; color:black;`;
                                 } else {
                                     content = '&nbsp;';
                                     style = 'background: #ecf0f1;';
@@ -1524,7 +1517,6 @@ export function generateCalendarGrid(container, turmaId, docenteName, start, end
 
                             if (isOutOfBounds) {
                                 style = 'background: #c0392b !important; color: white !important; font-weight: bold; border: 1px solid #900 !important;';
-                                usaTons = false;
                                 if (!content.includes('⚠️')) {
                                     content = `⚠️ ${content}`;
                                 }
@@ -1538,7 +1530,6 @@ export function generateCalendarGrid(container, turmaId, docenteName, start, end
                         const hasOverriding = uniqueEventsInSlot.some(e => (e.isIntensive || e.isPriority) && !docenteName);
 
                         let className = 'cal-slot-content';
-                        if (usaTons) className += ' comp-tons';
                         if (hasOverriding) className += ' overriding-event';
 
                         let tooltip = '';
@@ -1568,17 +1559,15 @@ export function generateCalendarGrid(container, turmaId, docenteName, start, end
                 } else {
                     dayData.events.forEach((ev) => {
                         const info = getDisciplinaInfo(ev.disciplina, ev.turmaId);
-                        let style = estiloTonsBloco(ev.cor || '#bdc3c7');
-                        let chipClass = 'event-chip comp-tons';
+                        let style = `background:${vividHexColor(ev.cor || '#bdc3c7')}`;
                         let displayLabel = docenteName ? `${info.abrev} - ${ev.turmaId}` : info.abrev;
 
                         if (isOutOfBounds) {
                             style = `background: #c0392b !important; color: white !important; font-weight: bold; border: 1px solid #900 !important;`;
-                            chipClass = 'event-chip';
                             displayLabel = `⚠️ ${displayLabel}`;
                         }
 
-                        html += `<div class="${chipClass}" style="${style}" title="${isOutOfBounds ? 'FORA DO SEMESTRE!' : ''}">${displayLabel}</div>`;
+                        html += `<div class="event-chip" style="${style}" title="${isOutOfBounds ? 'FORA DO SEMESTRE!' : ''}">${displayLabel}</div>`;
                     });
                 }
             }

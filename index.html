@@ -10,13 +10,13 @@
         // Vai para o aviso antes de carregar o programa. A agenda publica nao passa por aqui.
         if (/\.github\.io$/i.test(location.hostname)) location.replace('mudou.html');
     </script>
-    <link rel="stylesheet" href="css/style.css?v=202611072358">
+    <link rel="stylesheet" href="css/style.css?v=202611080841">
     <!-- Redesenho da aba Alocar Componentes (por partes); carrega depois do style.css -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
-    <link rel="stylesheet" href="css/alocar-componentes.css?v=202611072358">
-    <link rel="stylesheet" href="css/ajuda.css?v=202611072358">
+    <link rel="stylesheet" href="css/alocar-componentes.css?v=202611080841">
+    <link rel="stylesheet" href="css/ajuda.css?v=202611080841">
 
     <style>
         :root {
@@ -771,13 +771,13 @@
                      por updateWeeklyContextNote() em js/ui.js a partir do estado atual. -->
                 <!-- Cartao "Proximo passo" (redesenho, parte 1): indicador de estado a esquerda e
                      botao de Instrucoes a direita. IDs e classes mantidos para o JS. -->
-                <section class="cd-contexto no-print" aria-label="Pr&oacute;ximo passo">
+                <section class="cd-contexto no-print" aria-label="Pr&oacute;ximo passo e avisos">
                     <div id="weekly-status-bar" class="weekly-status-bar tone-info no-print" role="status" aria-live="polite">
                         <span class="weekly-status-icon" aria-hidden="true">&#127919;</span>
                         <!-- Icone de livro (o emoji acima continua sendo trocado pelo JS, mas fica oculto no CSS) -->
                         <span class="cd-contexto-icone" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg></span>
                         <div class="weekly-status-text">
-                            <span class="cd-rotulo">Pr&oacute;ximo passo</span>
+                            <span class="cd-rotulo">Pr&oacute;ximo passo e avisos</span>
                             <span class="weekly-status-title">Comece selecionando curso e turma</span>
                             <span class="weekly-status-hint">Na barra lateral, escolha o curso do IECOS e uma turma v&aacute;lida.</span>
                         </div>
@@ -1234,7 +1234,7 @@
 
                     <!-- ===== 2. ALOCACAO ===== -->
                     <div class="aj-painel" id="aj-alocacao" data-aj-painel="alocacao" role="tabpanel" aria-labelledby="aj-tab-alocacao" hidden>
-                        <p class="aj-lead">Na aba <b>Alocar Componentes</b>, siga os passos na ordem. O cartão <b>Próximo passo</b>, no topo da aba, diz sempre o que falta e mostra os avisos.</p>
+                        <p class="aj-lead">Na aba <b>Alocar Componentes</b>, siga os passos na ordem. O cartão <b>Próximo passo e avisos</b>, no topo da aba, diz sempre o que falta e mostra os avisos e as orientações.</p>
 
                         <ol class="aj-roteiro">
                             <li><span class="aj-num">1</span><div><b>Período letivo</b>Escolha o PL na barra lateral. Ele define o calendário de todo o planejamento.<img class="aj-print" src="img/instrucoes/passo-1.png" width="254" height="61" alt="Campo Período na barra lateral" loading="lazy"></div></li>
@@ -1296,7 +1296,7 @@
                             <article class="aj-cartao">
                                 <h3><span aria-hidden="true">🎨</span> Cor e laboratório</h3>
                                 <ul class="aj-lista">
-                                    <li>Clique no <b>círculo colorido</b> ao lado da disciplina e escolha na paleta. Evite duas cores parecidas na mesma turma.</li>
+                                    <li>Clique no <b>círculo colorido</b> ao lado da disciplina e escolha na paleta. A grade semanal mostra o tom suave; calendários e agenda, a cor forte. Evite duas cores parecidas na mesma turma.</li>
                                     <li>Laboratório em dois grupos: escolha a mesma disciplina de novo, confirme e use o sub-grupo <code>BL1_T01</code> e <code>BL1_T02</code>.</li>
                                     <li>Errou? O botão <b>Desfazer</b> volta a última inserção.</li>
                                 </ul>
@@ -1324,7 +1324,7 @@
                                 <ul class="aj-lista">
                                     <li>Mostra o período mês a mês, com a tabela de CH alocada de cada componente.</li>
                                     <li>Mude as datas para ver outro intervalo e clique em <b>Atualizar</b>. <b>↺ Período do PL</b> volta ao PL aberto.</li>
-                                    <li>Cada componente aparece no seu tom suave, com uma barra forte à esquerda.</li>
+                                    <li>Cada componente aparece na sua cor, a mesma da agenda pública.</li>
                                 </ul>
                             </article>
 
@@ -1463,7 +1463,7 @@
         </main>
     </div>
 
-    <script type="module" src="js/main.js?v=202611072358"></script>
+    <script type="module" src="js/main.js?v=202611080841"></script>
 </body>
 
 </html>
