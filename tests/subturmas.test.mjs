@@ -25,24 +25,24 @@ test('turma inteira: vazio ou so o bloco', () => {
   assert.equal(isTurmaInteira('T02'), false);
 });
 
-test('codigo com e sem bloco', () => {
-  assert.equal(codigoDaSubturma(2, 'BL1'), 'BL1_T02');
-  assert.equal(codigoDaSubturma(3, ''), 'T03');
+test('codigo e so T + dois digitos', () => {
+  assert.equal(codigoDaSubturma(2), 'T02');
+  assert.equal(codigoDaSubturma(12), 'T12');
 });
 
 test('primeira oferta: nao ha subturma', () => {
-  assert.equal(proximaSubturma([], 'BL1'), null);
+  assert.equal(proximaSubturma([]), null);
 });
 
 test('segunda oferta vira T02 (a primeira conta como T01)', () => {
-  assert.deepEqual(proximaSubturma([null], 'BL1'), { numero: 2, rotulo: 'T02', codigo: 'BL1_T02' });
-  assert.deepEqual(proximaSubturma(['BL1'], ''), { numero: 2, rotulo: 'T02', codigo: 'T02' });
+  assert.deepEqual(proximaSubturma([null]), { numero: 2, rotulo: 'T02', codigo: 'T02' });
+  assert.deepEqual(proximaSubturma(['BL1']), { numero: 2, rotulo: 'T02', codigo: 'T02' });
 });
 
 test('terceira oferta segue a numeracao, mesmo com formatos antigos', () => {
-  assert.equal(proximaSubturma(['BL1_T01', 'BL1_T02'], 'BL1').codigo, 'BL1_T03');
-  assert.equal(proximaSubturma([null, 'T2'], '').codigo, 'T03');
-  assert.equal(proximaSubturma(['T01', 'T05'], '').codigo, 'T06');
+  assert.equal(proximaSubturma(['BL1_T01', 'BL1_T02']).codigo, 'T03');
+  assert.equal(proximaSubturma([null, 'T2']).codigo, 'T03');
+  assert.equal(proximaSubturma(['T01', 'T05']).codigo, 'T06');
 });
 
 test('T01 no mesmo formato da subturma salva', () => {

@@ -1,29 +1,29 @@
-import { store } from './store.js?v=202611080851';
-import { getTurnoLetter, mapSlotToTurno } from './turns.js?v=202611080851';
-import { normalizePeriodo as normalizePeriodoLetivoCode } from './plan_storage.js?v=202611080851';
-import { getCalendarEvents } from './calendar.js?v=202611080851';
-import { isDateOverlap } from './utils.js?v=202611080851';
-import { weeklyState } from './weekly_state.js?v=202611080851';
-import { findPendentesCobertas, isPendenteJaAlocada } from './pendentes.mjs?v=202611080851';
-import { classifySwap } from './troca_ordem.mjs?v=202611080851';
-import { closeFaixaEnds, isPauseEnd, listFaixaPauses } from './pausa_faixas.mjs?v=202611080851';
-import { numeroDaSubturma, isTurmaInteira, proximaSubturma, codigoT01Como } from './subturmas.mjs?v=202611080851';
-import { abrirMiniCalendario, fecharMiniCalendario, miniCalendarioAberto } from './mini_calendario.mjs?v=202611080851';
-import { buildCanonicalOfferProjection } from './execution_engine.js?v=202611080851';
+import { store } from './store.js?v=202611080901';
+import { getTurnoLetter, mapSlotToTurno } from './turns.js?v=202611080901';
+import { normalizePeriodo as normalizePeriodoLetivoCode } from './plan_storage.js?v=202611080901';
+import { getCalendarEvents } from './calendar.js?v=202611080901';
+import { isDateOverlap } from './utils.js?v=202611080901';
+import { weeklyState } from './weekly_state.js?v=202611080901';
+import { findPendentesCobertas, isPendenteJaAlocada } from './pendentes.mjs?v=202611080901';
+import { classifySwap } from './troca_ordem.mjs?v=202611080901';
+import { closeFaixaEnds, isPauseEnd, listFaixaPauses } from './pausa_faixas.mjs?v=202611080901';
+import { numeroDaSubturma, isTurmaInteira, proximaSubturma, codigoT01Como } from './subturmas.mjs?v=202611080901';
+import { abrirMiniCalendario, fecharMiniCalendario, miniCalendarioAberto } from './mini_calendario.mjs?v=202611080901';
+import { buildCanonicalOfferProjection } from './execution_engine.js?v=202611080901';
 import {
     buildSigaaMetadataPayload,
     validateSigaaMetadataPayload,
     getSigaaCode,
     buildScopedSigaaAllocationFromOfferFaixa
-} from './sigaa_metadata.js?v=202611080851';
-import { parseBackupDataFile, extractImportPlanMeta } from './serialization.js?v=202611080851';
+} from './sigaa_metadata.js?v=202611080901';
+import { parseBackupDataFile, extractImportPlanMeta } from './serialization.js?v=202611080901';
 import {
     showToastWarning,
     showPersistentStatusMessage,
     copyTextToClipboard,
     flashButtonCopyState,
     setupCopyActionButtons
-} from './ui_feedback.js?v=202611080851';
+} from './ui_feedback.js?v=202611080901';
 import {
     normalizeHexColor,
     adjustHexColor,
@@ -32,7 +32,7 @@ import {
     tonsDaCor,
     aplicarTonsBloco,
     PALETA_CORES
-} from './color_utils.js?v=202611080851';
+} from './color_utils.js?v=202611080901';
 import {
     isFaixaAllocation,
     isPriorityRegularAllocation,
@@ -41,8 +41,8 @@ import {
     normalizeTeacherNameForMatch,
     getDocenteShortLabel,
     getAllocationTeachersForConflict
-} from './allocation_helpers.js?v=202611080851';
-import { setupSeletorCor } from './seletor_cor.js?v=202611080851';
+} from './allocation_helpers.js?v=202611080901';
+import { setupSeletorCor } from './seletor_cor.js?v=202611080901';
 import {
     VINCULOS_DOCENTE_NOVO,
     OUTRA_UNIDADE,
@@ -51,9 +51,9 @@ import {
     findSimilarNames,
     problemaNoNome,
     limparEspacos
-} from './docente_nomes.mjs?v=202611080851';
-import { getSessionEmail, getPerfil, fetchAllocationsForPlans } from './sync_remoto.js?v=202611080851';
-import { resolveBackendMode } from './backend_config.js?v=202611080851';
+} from './docente_nomes.mjs?v=202611080901';
+import { getSessionEmail, getPerfil, fetchAllocationsForPlans } from './sync_remoto.js?v=202611080901';
+import { resolveBackendMode } from './backend_config.js?v=202611080901';
 import {
     normalizeConflictSlotLabel,
     getAvailableTurnoOfertaOptions,
@@ -62,7 +62,7 @@ import {
     isTurnoDividerSlot,
     buildHorariosForUI,
     getShiftChangeMeta
-} from './turno_helpers.js?v=202611080851';
+} from './turno_helpers.js?v=202611080901';
 import {
     getDisciplinaCHGlobal,
     derivarBloco,
@@ -72,7 +72,7 @@ import {
     getDisciplinaInfo,
     getCursoSiglaDaTurma,
     getPrintAcademicMetaLine
-} from './curso_turma_helpers.js?v=202611080851';
+} from './curso_turma_helpers.js?v=202611080901';
 import {
     renderMonthlyCalendar,
     renderTeacherCalendar,
@@ -80,11 +80,11 @@ import {
     clearTeacherRangeCache,
     setTeacherPeriod,
     getTeacherPeriod
-} from './calendarios_ui.js?v=202611080851';
+} from './calendarios_ui.js?v=202611080901';
 import {
     refreshTeacherConflictsUI,
     setCrossPlanLoader
-} from './conflitos_ui.js?v=202611080851';
+} from './conflitos_ui.js?v=202611080901';
 import {
     shouldIgnoreTurmaEventForCandidate,
     normalizeDrawnSlotsByDay,
@@ -98,7 +98,7 @@ import {
     resolveEditableFaixasFromStoredExecution,
     alignFaixasToExecutionEnd,
     buildFinalAdjustmentFaixaSuggestion
-} from './faixa_utils.js?v=202611080851';
+} from './faixa_utils.js?v=202611080901';
 import {
     timeToMinutes,
     shiftISODate,
@@ -112,14 +112,14 @@ import {
     isDateInsideRange,
     formatDateBRShortYear,
     formatDateBR
-} from './date_utils_ui.js?v=202611080851';
+} from './date_utils_ui.js?v=202611080901';
 import {
     initializeWeeklyScheduleForTurma,
     reconcileTurmaSelectionAfterPLChange,
     resetWeeklyViewOnTurmaChange,
     resolveActiveAcademicPeriod,
     slotLabelsOverlap
-} from './academic_rules.mjs?v=202611080851';
+} from './academic_rules.mjs?v=202611080901';
 
 const gridContainer = document.getElementById('weekly-grid');
 const selCurso = document.getElementById('sel-curso');
@@ -4779,8 +4779,7 @@ export function initUI() {
                 a.disciplina === discNome &&
                 !isPendingAllocation(a)
             );
-            const bloco = derivarBloco(store.selectedTurma, store.settings.periodo, store.settings.termStart);
-            const proxima = proximaSubturma(existing.map((a) => a.subGrupo), bloco);
+            const proxima = proximaSubturma(existing.map((a) => a.subGrupo));
 
             if (proxima) {
                 const confirmou = confirm(
@@ -6849,7 +6848,12 @@ function handleAddManual() {
             // foi rastreado explicitamente da linha editada, nao exigimos igualdade de
             // subGrupo para pendentes (senao ela nunca sairia da lista). Para faixas
             // mantemos a checagem para nao remover outra componente por engano.
-            if (!isPendingOriginal && String(al.subGrupo || '') !== String(subGrupo || '')) return;
+            // Subturma: vale o NUMERO, nao a escrita ("T2" e "T02" sao a mesma; a
+            // oferta sem subturma conta como T01). Assim da para corrigir o nome
+            // da subturma no Editar sem duplicar a oferta.
+            const mesmaSubturma = String(al.subGrupo || '') === String(subGrupo || '')
+                || (numeroDaSubturma(al.subGrupo) ?? 1) === (numeroDaSubturma(subGrupo) ?? 1);
+            if (!isPendingOriginal && !mesmaSubturma) return;
             idsToRemove.push(id);
         });
 

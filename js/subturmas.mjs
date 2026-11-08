@@ -1,8 +1,8 @@
 // Subturmas (turma extra) de uma componente: a mesma componente alocada mais de
 // uma vez na mesma turma e no mesmo PL (ex.: laboratorio em dois grupos).
 // Numeracao automatica: a primeira oferta vira T01, a segunda T02, e assim por
-// diante. Com bloco no PL o codigo leva o bloco: "BL1_T02" (rotulo da turma
-// "EP2026_BL1_T02"); sem bloco (PL1/PL3), so "T02".
+// diante. O codigo e so "T02" (sem o bloco), como o usuario pediu em 08/11/2026;
+// codigos antigos como "BL1_T02" ou "T2" continuam lidos pelo numero.
 // Funcoes puras (sem DOM nem store), testadas em tests/subturmas.test.mjs.
 
 // Numero da subturma no codigo ("BL1_T02" -> 2, "T2" -> 2) ou null.
@@ -17,24 +17,24 @@ export function isTurmaInteira(subGrupo) {
   return !sg || /^BL\d+$/i.test(sg);
 }
 
-export function codigoDaSubturma(numero, bloco = '') {
-  const t = `T${String(numero).padStart(2, '0')}`;
-  const bl = String(bloco || '').trim();
-  return bl ? `${bl}_${t}` : t;
+export function codigoDaSubturma(numero) {
+  return `T${String(numero).padStart(2, '0')}`;
 }
 
 // Proxima subturma, dados os sub-grupos das ofertas que ja existem dessa
 // componente na turma. A oferta sem subturma conta como T01 (sera renomeada).
 // Devolve null quando ainda nao ha nenhuma oferta (primeira insercao normal).
-export function proximaSubturma(subGruposExistentes = [], bloco = '') {
+export function proximaSubturma(subGruposExistentes = []) {
   const lista = Array.isArray(subGruposExistentes) ? subGruposExistentes : [];
   if (lista.length === 0) return null;
   const maior = lista.reduce((max, sg) => Math.max(max, numeroDaSubturma(sg) || 1), 1);
   const numero = maior + 1;
-  return { numero, rotulo: `T${String(numero).padStart(2, '0')}`, codigo: codigoDaSubturma(numero, bloco) };
+  const codigo = codigoDaSubturma(numero);
+  return { numero, rotulo: codigo, codigo };
 }
 
-// Codigo T01 no mesmo formato da subturma salva ("BL1_T02" -> "BL1_T01", "T02" -> "T01").
+// Codigo da T01 quando a subturma salva e "BL1_T02" (formato antigo) ou "T02":
+// mantem o prefixo antigo, se houver, para as duas ficarem no mesmo formato.
 export function codigoT01Como(subGrupoSalvo) {
   const sg = String(subGrupoSalvo || '').trim();
   const prefixo = sg.replace(/T0*\d+$/i, '');
