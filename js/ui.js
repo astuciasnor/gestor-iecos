@@ -1,29 +1,29 @@
-import { store } from './store.js?v=202611080929';
-import { getTurnoLetter, mapSlotToTurno } from './turns.js?v=202611080929';
-import { normalizePeriodo as normalizePeriodoLetivoCode } from './plan_storage.js?v=202611080929';
-import { getCalendarEvents } from './calendar.js?v=202611080929';
-import { isDateOverlap } from './utils.js?v=202611080929';
-import { weeklyState } from './weekly_state.js?v=202611080929';
-import { findPendentesCobertas, isPendenteJaAlocada } from './pendentes.mjs?v=202611080929';
-import { classifySwap } from './troca_ordem.mjs?v=202611080929';
-import { closeFaixaEnds, isPauseEnd, listFaixaPauses } from './pausa_faixas.mjs?v=202611080929';
-import { numeroDaSubturma, isTurmaInteira, proximaSubturma, codigoT01Como } from './subturmas.mjs?v=202611080929';
-import { abrirMiniCalendario, fecharMiniCalendario, miniCalendarioAberto } from './mini_calendario.mjs?v=202611080929';
-import { buildCanonicalOfferProjection } from './execution_engine.js?v=202611080929';
+import { store } from './store.js?v=202611080955';
+import { getTurnoLetter, mapSlotToTurno } from './turns.js?v=202611080955';
+import { normalizePeriodo as normalizePeriodoLetivoCode } from './plan_storage.js?v=202611080955';
+import { getCalendarEvents } from './calendar.js?v=202611080955';
+import { isDateOverlap } from './utils.js?v=202611080955';
+import { weeklyState } from './weekly_state.js?v=202611080955';
+import { findPendentesCobertas, isPendenteJaAlocada } from './pendentes.mjs?v=202611080955';
+import { classifySwap } from './troca_ordem.mjs?v=202611080955';
+import { closeFaixaEnds, isPauseEnd, listFaixaPauses } from './pausa_faixas.mjs?v=202611080955';
+import { numeroDaSubturma, isTurmaInteira, proximaSubturma, codigoT01Como } from './subturmas.mjs?v=202611080955';
+import { abrirMiniCalendario, fecharMiniCalendario, miniCalendarioAberto } from './mini_calendario.mjs?v=202611080955';
+import { buildCanonicalOfferProjection } from './execution_engine.js?v=202611080955';
 import {
     buildSigaaMetadataPayload,
     validateSigaaMetadataPayload,
     getSigaaCode,
     buildScopedSigaaAllocationFromOfferFaixa
-} from './sigaa_metadata.js?v=202611080929';
-import { parseBackupDataFile, extractImportPlanMeta } from './serialization.js?v=202611080929';
+} from './sigaa_metadata.js?v=202611080955';
+import { parseBackupDataFile, extractImportPlanMeta } from './serialization.js?v=202611080955';
 import {
     showToastWarning,
     showPersistentStatusMessage,
     copyTextToClipboard,
     flashButtonCopyState,
     setupCopyActionButtons
-} from './ui_feedback.js?v=202611080929';
+} from './ui_feedback.js?v=202611080955';
 import {
     normalizeHexColor,
     adjustHexColor,
@@ -32,7 +32,7 @@ import {
     tonsDaCor,
     aplicarTonsBloco,
     PALETA_CORES
-} from './color_utils.js?v=202611080929';
+} from './color_utils.js?v=202611080955';
 import {
     isFaixaAllocation,
     isPriorityRegularAllocation,
@@ -41,8 +41,8 @@ import {
     normalizeTeacherNameForMatch,
     getDocenteShortLabel,
     getAllocationTeachersForConflict
-} from './allocation_helpers.js?v=202611080929';
-import { setupSeletorCor } from './seletor_cor.js?v=202611080929';
+} from './allocation_helpers.js?v=202611080955';
+import { setupSeletorCor } from './seletor_cor.js?v=202611080955';
 import {
     VINCULOS_DOCENTE_NOVO,
     OUTRA_UNIDADE,
@@ -51,9 +51,9 @@ import {
     findSimilarNames,
     problemaNoNome,
     limparEspacos
-} from './docente_nomes.mjs?v=202611080929';
-import { getSessionEmail, getPerfil, fetchAllocationsForPlans } from './sync_remoto.js?v=202611080929';
-import { resolveBackendMode } from './backend_config.js?v=202611080929';
+} from './docente_nomes.mjs?v=202611080955';
+import { getSessionEmail, getPerfil, fetchAllocationsForPlans } from './sync_remoto.js?v=202611080955';
+import { resolveBackendMode } from './backend_config.js?v=202611080955';
 import {
     normalizeConflictSlotLabel,
     getAvailableTurnoOfertaOptions,
@@ -62,7 +62,7 @@ import {
     isTurnoDividerSlot,
     buildHorariosForUI,
     getShiftChangeMeta
-} from './turno_helpers.js?v=202611080929';
+} from './turno_helpers.js?v=202611080955';
 import {
     getDisciplinaCHGlobal,
     derivarBloco,
@@ -72,7 +72,7 @@ import {
     getDisciplinaInfo,
     getCursoSiglaDaTurma,
     getPrintAcademicMetaLine
-} from './curso_turma_helpers.js?v=202611080929';
+} from './curso_turma_helpers.js?v=202611080955';
 import {
     renderMonthlyCalendar,
     renderTeacherCalendar,
@@ -80,11 +80,11 @@ import {
     clearTeacherRangeCache,
     setTeacherPeriod,
     getTeacherPeriod
-} from './calendarios_ui.js?v=202611080929';
+} from './calendarios_ui.js?v=202611080955';
 import {
     refreshTeacherConflictsUI,
     setCrossPlanLoader
-} from './conflitos_ui.js?v=202611080929';
+} from './conflitos_ui.js?v=202611080955';
 import {
     shouldIgnoreTurmaEventForCandidate,
     normalizeDrawnSlotsByDay,
@@ -98,7 +98,7 @@ import {
     resolveEditableFaixasFromStoredExecution,
     alignFaixasToExecutionEnd,
     buildFinalAdjustmentFaixaSuggestion
-} from './faixa_utils.js?v=202611080929';
+} from './faixa_utils.js?v=202611080955';
 import {
     timeToMinutes,
     shiftISODate,
@@ -112,14 +112,14 @@ import {
     isDateInsideRange,
     formatDateBRShortYear,
     formatDateBR
-} from './date_utils_ui.js?v=202611080929';
+} from './date_utils_ui.js?v=202611080955';
 import {
     initializeWeeklyScheduleForTurma,
     reconcileTurmaSelectionAfterPLChange,
     resetWeeklyViewOnTurmaChange,
     resolveActiveAcademicPeriod,
     slotLabelsOverlap
-} from './academic_rules.mjs?v=202611080929';
+} from './academic_rules.mjs?v=202611080955';
 
 const gridContainer = document.getElementById('weekly-grid');
 const selCurso = document.getElementById('sel-curso');
@@ -6441,6 +6441,21 @@ function loadAllocationIntoEditor(allocation, idsToRemove = [], options = {}) {
 // (handleImportBloco) nao passam por aqui, entao nao geram snapshot.
 let lastAllocationUndoSnapshot = null;
 
+// Subturma do salvar: so fica quando a componente tem OUTRA oferta na turma
+// (fora as que estao sendo editadas). Sozinha, volta a valer para a turma toda:
+// "BL1_T02" -> "BL1", "T02" -> "".
+function resolverSubturmaAoSalvar(disciplina, subGrupoDigitado) {
+    if (!numeroDaSubturma(subGrupoDigitado)) return subGrupoDigitado;
+    const emEdicao = new Set((weeklyState.editingOriginalAllocationIds || []).map(String));
+    const outras = store.allocations.filter((a) =>
+        String(a.turmaId) === String(store.selectedTurma) &&
+        a.disciplina === disciplina &&
+        !isPendingAllocation(a) &&
+        !emEdicao.has(String(a.id))
+    );
+    return outras.length > 0 ? subGrupoDigitado : subGrupoDigitado.replace(/_?T0*\d+$/i, '');
+}
+
 function snapshotAllocationsForUndo() {
     try {
         return JSON.parse(JSON.stringify(store.allocations || []));
@@ -6524,7 +6539,11 @@ function handleAddManual() {
     const tipo = 'faixas';
     const inicioFaixa1 = document.getElementById('inp-data-inicio-f1')?.value ?? '';
     const inicio = inicioFaixa1;
-    const subGrupo = (document.getElementById('inp-sub-turma')?.value ?? '').trim();
+    // Subturma so existe quando ha outra oferta da mesma componente na turma.
+    // Sozinha (ex.: "BL1_T02" que o aviso antigo punha ao alocar a pendente do
+    // bloco), a oferta volta a ser da turma toda ao salvar.
+    const subGrupoDigitado = (document.getElementById('inp-sub-turma')?.value ?? '').trim();
+    const subGrupo = resolverSubturmaAoSalvar(disciplina, subGrupoDigitado);
 
     if (!disciplina) {
         showToastWarning('Preencha o componente.', 'warning', 2200);
@@ -6858,8 +6877,11 @@ function handleAddManual() {
             // Subturma: vale o NUMERO, nao a escrita ("T2" e "T02" sao a mesma; a
             // oferta sem subturma conta como T01). Assim da para corrigir o nome
             // da subturma no Editar sem duplicar a oferta.
-            const mesmaSubturma = String(al.subGrupo || '') === String(subGrupo || '')
-                || (numeroDaSubturma(al.subGrupo) ?? 1) === (numeroDaSubturma(subGrupo) ?? 1);
+            // Vale tambem o sub-grupo DIGITADO (antes da regra da subturma sozinha).
+            const numAl = numeroDaSubturma(al.subGrupo) ?? 1;
+            const mesmaSubturma = [subGrupo, subGrupoDigitado].some((sg) =>
+                String(al.subGrupo || '') === String(sg || '') || numAl === (numeroDaSubturma(sg) ?? 1)
+            );
             if (!isPendingOriginal && !mesmaSubturma) return;
             idsToRemove.push(id);
         });

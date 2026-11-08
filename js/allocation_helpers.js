@@ -1,6 +1,6 @@
-import { store } from './store.js?v=202611080929';
-import { getDisciplinaCHGlobal } from './curso_turma_helpers.js?v=202611080929';
-import { normalizeTeacherNameForMatch } from './docente_nomes.mjs?v=202611080929';
+import { store } from './store.js?v=202611080955';
+import { getDisciplinaCHGlobal } from './curso_turma_helpers.js?v=202611080955';
+import { normalizeTeacherNameForMatch } from './docente_nomes.mjs?v=202611080955';
 
 export function getAllocationModo(alloc) {
     return String(alloc?.modo || '').trim().toLowerCase();
