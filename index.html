@@ -10,12 +10,13 @@
         // Vai para o aviso antes de carregar o programa. A agenda publica nao passa por aqui.
         if (/\.github\.io$/i.test(location.hostname)) location.replace('mudou.html');
     </script>
-    <link rel="stylesheet" href="css/style.css?v=202611072324">
+    <link rel="stylesheet" href="css/style.css?v=202611072358">
     <!-- Redesenho da aba Alocar Componentes (por partes); carrega depois do style.css -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
-    <link rel="stylesheet" href="css/alocar-componentes.css?v=202611072324">
+    <link rel="stylesheet" href="css/alocar-componentes.css?v=202611072358">
+    <link rel="stylesheet" href="css/ajuda.css?v=202611072358">
 
     <style>
         :root {
@@ -174,30 +175,6 @@
             .publish-clear-row .btn-danger {
                 width: 100%;
             }
-        }
-
-        /* Estilos adicionais para a nova aba de Ajuda */
-        .tutorial-card {
-            background: #fff;
-            border-left: 5px solid var(--primary);
-            padding: 15px;
-            margin-bottom: 15px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-            border-radius: 4px;
-        }
-
-        .tutorial-card h4 {
-            margin-top: 0;
-            color: #2c3e50;
-        }
-
-        .badge-tip {
-            background: #fff3cd;
-            color: #856404;
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-size: 0.85em;
-            font-weight: bold;
         }
 
         /* Estilos para Empilhamento na Grade Semanal */
@@ -744,10 +721,6 @@
                         style="display:block; color:#a8e6cf; margin-top:4px; font-size:0.82em;"></small>
                 </div>
 
-                <small class="hidden" style="display:block; color:#bdc3c7; margin-top:8px; font-size:0.82em; line-height:1.45;">
-                    A definição de faixas, datas e marcação de slots agora acontece exclusivamente na aba
-                    <b>Alocar Componentes</b>.
-                </small>
             </div>
 
             <h3 class="sidebar-section-title">GERENCIANDO ARQUIVOS</h3>
@@ -1182,261 +1155,315 @@
             </section>
 
             <section id="tab-tutorial" class="tab-content" role="tabpanel" aria-labelledby="tabbtn-tutorial">
-                <div class="help-layout">
-
-                    <h2 class="help-fullwidth-title" style="border-bottom: 2px solid #2c3e50; padding-bottom: 10px; color: var(--primary);">🎓
-                        Guia Rápido & Dicas</h2>
-
-                    <div class="help-quick-guide help-quick-guide--full">
-                        <div class="wi-header">
-                            <span class="wi-header-icon" aria-hidden="true">&#129517;</span>
-                            <div>
-                                <h4 class="wi-title">Como preencher a aba Alocar Componentes</h4>
-                                <p class="wi-subtitle">Siga os passos na ordem. O passo em que você está fica destacado.</p>
-                            </div>
+                <!-- Aba Ajuda: um tema por vez (botoes em cima). Troca de tema em js/ajuda_ui.js;
+                     visual em css/ajuda.css. Cada tema tem a sua cor (--aj-cor). -->
+                <div class="aj">
+                    <header class="aj-topo">
+                        <div>
+                            <h2 class="aj-titulo">Ajuda do Cardume</h2>
+                            <p class="aj-sub">Escolha um tema. Cada um vai direto ao ponto, com o que se usa no dia a dia.</p>
                         </div>
-                        <ol class="wi-steps">
-                            <li class="wi-step wi-step--first">
-                                <span class="wi-step-num">1</span>
-                                <div class="wi-step-text"><strong class="wi-step-title">Período letivo</strong>Escolha o período do ano na barra lateral (ex.: <em>2027 - PL2</em>). Ele define o calendário de todo o planejamento.</div>
-                            </li>
-                            <li class="wi-step">
-                                <span class="wi-step-num">2</span>
-                                <div class="wi-step-text"><strong class="wi-step-title">Curso e turma</strong>Selecione o <strong>curso</strong> e a <strong>turma</strong> do IECOS.</div>
-                            </li>
-                            <li class="wi-step">
-                                <span class="wi-step-num">3</span>
-                                <div class="wi-step-text"><strong class="wi-step-title">Componente</strong>Escolha a <strong>componente curricular</strong>, uma a uma ou <strong>por bloco</strong>. No bloco, use a aba <strong>Lista de Ofertas</strong> para editar e indicar o(s) <strong>docente(s)</strong>.</div>
-                            </li>
-                            <li class="wi-step">
-                                <span class="wi-step-num">4</span>
-                                <div class="wi-step-text"><strong class="wi-step-title">Início da Faixa 1</strong>Clique na data de <strong>Início</strong> da tabela de faixas. O calendário mostra os meses do período: um clique troca o mês.</div>
-                            </li>
-                            <li class="wi-step">
-                                <span class="wi-step-num">5</span>
-                                <div class="wi-step-text"><strong class="wi-step-title">Desenhe o horário</strong>Na <strong>grade semanal</strong>, clique ou arraste sobre as aulas. A tabela mostra a CH de cada faixa e o <strong>Total</strong>.</div>
-                            </li>
-                            <li class="wi-step">
-                                <span class="wi-step-num">6</span>
-                                <div class="wi-step-text"><strong class="wi-step-title">O horário mudou? Faixas 2 e 3</strong>Vá à <strong>semana em que o horário muda</strong> e redesenhe na grade: a nova faixa nasce sozinha naquele dia. Ou clique em <strong>Faixa&nbsp;2</strong> e depois no dia da grade.</div>
-                            </li>
-                            <li class="wi-step">
-                                <span class="wi-step-num">7</span>
-                                <div class="wi-step-text"><strong class="wi-step-title">Pausa: parar e voltar depois</strong>Digite o <strong>Fim</strong> da faixa no último dia de aula e o <strong>Início</strong> da faixa seguinte no dia da volta. A linha cinza mostra os dias sem aula, que podem receber outra componente.</div>
-                            </li>
-                            <li class="wi-step">
-                                <span class="wi-step-num">8</span>
-                                <div class="wi-step-text"><strong class="wi-step-title">Salvar</strong>Confira se o <strong>Total CH</strong> bateu com a <strong>Meta</strong> e clique em <strong>Salvar Componente</strong>. Se houver choque com outra componente, o Cardume avisa antes de gravar.</div>
-                            </li>
+                        <span class="aj-data">Atualizada em 07/11/2026</span>
+                    </header>
+
+                    <nav class="aj-temas" role="tablist" aria-label="Temas da ajuda">
+                        <button type="button" class="aj-tema is-ativo" role="tab" id="aj-tab-comecar" data-aj-tema="comecar" aria-controls="aj-comecar" aria-selected="true">
+                            <span class="aj-tema-icone" aria-hidden="true">🚀</span><span class="aj-tema-txt"><b>Começar</b><small>barra e abas</small></span>
+                        </button>
+                        <button type="button" class="aj-tema" role="tab" id="aj-tab-alocacao" data-aj-tema="alocacao" aria-controls="aj-alocacao" aria-selected="false" tabindex="-1">
+                            <span class="aj-tema-icone" aria-hidden="true">🧩</span><span class="aj-tema-txt"><b>Alocação</b><small>faixas e pausa</small></span>
+                        </button>
+                        <button type="button" class="aj-tema" role="tab" id="aj-tab-revisao" data-aj-tema="revisao" aria-controls="aj-revisao" aria-selected="false" tabindex="-1">
+                            <span class="aj-tema-icone" aria-hidden="true">🔍</span><span class="aj-tema-txt"><b>Revisão</b><small>lista e choques</small></span>
+                        </button>
+                        <button type="button" class="aj-tema" role="tab" id="aj-tab-docentes" data-aj-tema="docentes" aria-controls="aj-docentes" aria-selected="false" tabindex="-1">
+                            <span class="aj-tema-icone" aria-hidden="true">👩‍🏫</span><span class="aj-tema-txt"><b>Docentes</b><small>CH do ano</small></span>
+                        </button>
+                        <button type="button" class="aj-tema" role="tab" id="aj-tab-publicacao" data-aj-tema="publicacao" aria-controls="aj-publicacao" aria-selected="false" tabindex="-1">
+                            <span class="aj-tema-icone" aria-hidden="true">🌐</span><span class="aj-tema-txt"><b>Publicação</b><small>agenda online</small></span>
+                        </button>
+                        <button type="button" class="aj-tema" role="tab" id="aj-tab-arquivos" data-aj-tema="arquivos" aria-controls="aj-arquivos" aria-selected="false" tabindex="-1">
+                            <span class="aj-tema-icone" aria-hidden="true">💾</span><span class="aj-tema-txt"><b>Arquivos</b><small>backup e PDF</small></span>
+                        </button>
+                    </nav>
+
+                    <!-- ===== 1. COMECAR ===== -->
+                    <div class="aj-painel is-ativo" id="aj-comecar" data-aj-painel="comecar" role="tabpanel" aria-labelledby="aj-tab-comecar">
+                        <p class="aj-lead">O Cardume monta a oferta de cada turma, confere os choques de horário e de professor e publica a agenda que os alunos e os docentes consultam no celular.</p>
+
+                        <div class="aj-grade">
+                            <article class="aj-cartao">
+                                <h3><span aria-hidden="true">🧭</span> Barra lateral, de cima para baixo</h3>
+                                <ol class="aj-passos">
+                                    <li><b>Período letivo</b>: escolha o PL (ex.: <em>2027 - PL2</em>). As datas de início e fim vêm sozinhas.</li>
+                                    <li><b>Curso</b> e <b>Turma</b>: o nome da turma já mostra o bloco do período (ex.: <code>EP2026_BL1</code>).</li>
+                                    <li><b>Turno</b> da grade: Manhã, Tarde ou Noite.</li>
+                                    <li><b>Oferta de disciplina</b>: importe o bloco inteiro ou escolha uma componente por vez.</li>
+                                    <li><b>Arquivos</b>: exportar, importar e publicar.</li>
+                                </ol>
+                            </article>
+
+                            <article class="aj-cartao">
+                                <h3><span aria-hidden="true">🗂️</span> Para que serve cada aba</h3>
+                                <ul class="aj-abas">
+                                    <li><span class="aj-chip">Alocar Componentes</span> desenhar o horário de cada componente</li>
+                                    <li><span class="aj-chip">Lista de Ofertas</span> revisar, editar, excluir e trocar</li>
+                                    <li><span class="aj-chip">Calendário da Turma</span> o período mês a mês, com a CH</li>
+                                    <li><span class="aj-chip">Calendário Docente</span> carga horária e choques de cada professor</li>
+                                    <li><span class="aj-chip">Agenda Pública</span> o que alunos e professores veem</li>
+                                </ul>
+                            </article>
+
+                            <article class="aj-cartao">
+                                <h3><span aria-hidden="true">🔐</span> Acesso e trabalho em equipe</h3>
+                                <ul class="aj-lista">
+                                    <li>Cada coordenador entra com o <b>seu e-mail e senha</b>. O botão <b>Senha</b>, no topo da barra lateral, troca a senha.</li>
+                                    <li>Você <b>altera as turmas do seu curso</b> e <b>vê as de todos</b>. Turma de outro curso abre em modo leitura, com aviso.</li>
+                                    <li>O selo <b>Sincronizado</b> mostra que tudo foi salvo no servidor. O que os colegas mudam aparece em poucos segundos.</li>
+                                </ul>
+                            </article>
+
+                            <article class="aj-cartao aj-cartao--destaque">
+                                <h3><span aria-hidden="true">🛠️</span> Precisa de algo novo?</h3>
+                                <p>Componentes de PPC novo, feriados, períodos letivos e correções de cadastro ficam com o administrador do sistema:</p>
+                                <p class="aj-contato">👨‍💻 Prof. Evaldo Silva</p>
+                                <p class="aj-nota">Professor que não está na lista você mesmo cadastra: veja <button type="button" class="aj-ir" data-aj-ir="alocacao">Alocação › Docentes</button>.</p>
+                            </article>
+                        </div>
+                    </div>
+
+                    <!-- ===== 2. ALOCACAO ===== -->
+                    <div class="aj-painel" id="aj-alocacao" data-aj-painel="alocacao" role="tabpanel" aria-labelledby="aj-tab-alocacao" hidden>
+                        <p class="aj-lead">Na aba <b>Alocar Componentes</b>, siga os passos na ordem. O cartão <b>Próximo passo</b>, no topo da aba, diz sempre o que falta e mostra os avisos.</p>
+
+                        <ol class="aj-roteiro">
+                            <li><span class="aj-num">1</span><div><b>Período letivo</b>Escolha o PL na barra lateral. Ele define o calendário de todo o planejamento.<img class="aj-print" src="img/instrucoes/passo-1.png" width="254" height="61" alt="Campo Período na barra lateral" loading="lazy"></div></li>
+                            <li><span class="aj-num">2</span><div><b>Curso e turma</b>Selecione o curso e a turma.<img class="aj-print" src="img/instrucoes/passo-2.png" width="143" height="90" alt="Campos Curso, Turma e Turno" loading="lazy"></div></li>
+                            <li><span class="aj-num">3</span><div><b>Componente</b>Busque pelo nome. A lista mostra o <b>código · curso</b> e, embaixo do campo, aparecem código, curso e CH.<img class="aj-print" src="img/instrucoes/passo-3.png" width="254" height="60" alt="Campo Disciplina com o círculo da cor" loading="lazy"></div></li>
+                            <li><span class="aj-num">4</span><div><b>Início da Faixa 1</b>Clique na data de Início da tabela de faixas e escolha o dia no calendário.<img class="aj-print" src="img/instrucoes/passo-4.png" width="276" height="83" alt="Data de Início da Faixa 1" loading="lazy"></div></li>
+                            <li><span class="aj-num">5</span><div><b>Desenhe o horário</b>Clique ou arraste sobre as aulas na grade semanal. A tabela mostra a CH de cada faixa.<img class="aj-print" src="img/instrucoes/passo-5.png" width="323" height="90" alt="Horários desenhados na grade" loading="lazy"></div></li>
+                            <li><span class="aj-num">6</span><div><b>O horário mudou?</b>Vá à semana da mudança e redesenhe: a <b>Faixa 2</b> nasce sozinha naquele dia.<img class="aj-print" src="img/instrucoes/passo-6.png" width="275" height="72" alt="Botões de semana e de faixa" loading="lazy"></div></li>
+                            <li><span class="aj-num">7</span><div><b>Pausa</b>Digite o Fim da faixa no último dia de aula e o Início da seguinte no dia da volta.<img class="aj-print" src="img/instrucoes/passo-7.png" width="323" height="90" alt="Faixa 1, linha de pausa e Faixa 2" loading="lazy"></div></li>
+                            <li><span class="aj-num">8</span><div><b>Salvar</b>Confira se o <b>Total CH</b> bateu com a <b>Meta</b> e clique em <b>Salvar Componente</b>.<img class="aj-print" src="img/instrucoes/passo-8-salvar.png" width="275" height="42" alt="Botão Salvar Componente" loading="lazy"></div></li>
                         </ol>
-                        <div class="wi-note">
-                            <span class="wi-note-icon" aria-hidden="true">&#128161;</span>
-                            <div><strong>O que é uma faixa?</strong> É o horário semanal válido num intervalo de datas. A nova faixa substitui a anterior a partir do seu Início; entre o Fim de uma e o Início da outra pode haver uma pausa. O <strong>ⓘ</strong> ao lado de cada faixa explica o que fazer.</div>
+
+                        <div class="aj-grade">
+                            <article class="aj-cartao">
+                                <h3><span aria-hidden="true">📐</span> Faixas</h3>
+                                <ul class="aj-lista">
+                                    <li>Faixa é o <b>horário semanal válido num intervalo de datas</b>. Cada componente tem até 3.</li>
+                                    <li>A nova faixa substitui a anterior a partir do seu Início. O Fim da anterior se ajusta sozinho.</li>
+                                    <li>Ao criar uma faixa sozinho, o Cardume avisa (<em>“Criei a Faixa 2”</em>) e oferece <b>Desfazer</b>.</li>
+                                    <li>O <b>i</b> ao lado de cada faixa explica o que fazer. <b>↺</b> zera a Faixa 1; <b>✕</b> remove a Faixa 2 ou 3.</li>
+                                </ul>
+                            </article>
+
+                            <article class="aj-cartao aj-cartao--novo">
+                                <h3><span aria-hidden="true">⏸️</span> Pausa e intercalação <span class="aj-selo">novo</span></h3>
+                                <ul class="aj-lista">
+                                    <li>Fim digitado antes do Início da faixa seguinte vira <b>pausa</b>: a linha cinza mostra <em>“Pausa: sem aula de X a Y”</em>.</li>
+                                    <li>Os dias da pausa ficam <b>livres para outra componente</b>. Assim duas componentes se revezam na mesma turma.</li>
+                                    <li>A componente com pausa <b>nunca é empurrada sozinha</b>: se chocar com outra, o Cardume avisa e você ajusta as datas.</li>
+                                </ul>
+                            </article>
+
+                            <article class="aj-cartao">
+                                <h3><span aria-hidden="true">📅</span> Sábado e feriados</h3>
+                                <ul class="aj-lista">
+                                    <li><b>Feriado</b>: a coluna do dia fica listrada, com um cartão rosa e o nome do feriado. Nesse dia não há aula.</li>
+                                    <li><b>Sábado</b>: com <b>“Sábado no turno da manhã”</b> ligado, as aulas de sábado são salvas no turno da manhã.</li>
+                                    <li>Aula fora do turno da turma ganha o aviso <b>Atenção Turno</b> nos calendários e na agenda.</li>
+                                </ul>
+                            </article>
+
+                            <article class="aj-cartao">
+                                <h3><span aria-hidden="true">👥</span> Docentes</h3>
+                                <ul class="aj-lista">
+                                    <li>Mais de um professor? Marque <b>Múltiplos?</b> e dê a cada um a sua parte da CH.</li>
+                                    <li>Nome que não está na lista: aparece o aviso e o botão <b>Cadastrar Docente Novo…</b>. Use o nome completo, igual ao SIGAA, sem abreviar.</li>
+                                    <li>O administrador confere os nomes novos depois.</li>
+                                </ul>
+                            </article>
+
+                            <article class="aj-cartao">
+                                <h3><span aria-hidden="true">📦</span> Bloco inteiro</h3>
+                                <ul class="aj-lista">
+                                    <li><b>Importar Componentes do Bloco</b> traz todas as componentes do bloco como <b>pendentes</b>.</li>
+                                    <li>Complete cada uma na <b>Lista de Ofertas</b> › <b>Editar</b>: docente, datas e horário.</li>
+                                </ul>
+                            </article>
+
+                            <article class="aj-cartao">
+                                <h3><span aria-hidden="true">🎨</span> Cor e laboratório</h3>
+                                <ul class="aj-lista">
+                                    <li>Clique no <b>círculo colorido</b> ao lado da disciplina e escolha na paleta. Evite duas cores parecidas na mesma turma.</li>
+                                    <li>Laboratório em dois grupos: escolha a mesma disciplina de novo, confirme e use o sub-grupo <code>BL1_T01</code> e <code>BL1_T02</code>.</li>
+                                    <li>Errou? O botão <b>Desfazer</b> volta a última inserção.</li>
+                                </ul>
+                            </article>
                         </div>
                     </div>
 
-                    <div class="help-main">
-                        <div class="tutorial-card">
-                            <h4>🎨 Detalhes do preenchimento</h4>
-                            <ul style="padding-left: 20px; line-height: 1.6; list-style-type: none;">
-                                <li style="margin-bottom: 10px;"><strong>Cor da disciplina:</strong> clique na
-                                    <b>bolinha colorida</b> para definir a cor de fundo usada nos calendários e na grade.
-                                </li>
-                                <li style="margin-bottom: 10px;"><strong>Múltiplos docentes:</strong> marque
-                                    <b>"Múltiplos?"</b> e adicione cada professor com sua <b>Carga Horária</b> parcial.</li>
-                                <li style="margin-bottom: 10px;"><strong>Leitura da grade:</strong> slots bloqueados
-                                    indicam ocupação real na semana visível. Navegue entre semanas ou ajuste
-                                    início/faixa para visualizar e editar corretamente.</li>
-                                <li style="margin-bottom: 10px;"><strong>Turnos e sábado:</strong> aulas em turno
-                                    diferente do nativo recebem um <b>aviso visual</b> nos calendários e agendas.
-                                    Se necessário, mude o turno visível da grade para enxergar esses slots.</li>
-                            </ul>
+                    <!-- ===== 3. REVISAO ===== -->
+                    <div class="aj-painel" id="aj-revisao" data-aj-painel="revisao" role="tabpanel" aria-labelledby="aj-tab-revisao" hidden>
+                        <p class="aj-lead">Antes de pedir a publicação, confira a turma na <b>Lista de Ofertas</b> e no <b>Calendário da Turma</b>.</p>
+
+                        <div class="aj-grade">
+                            <article class="aj-cartao">
+                                <h3><span aria-hidden="true">📋</span> Lista de Ofertas</h3>
+                                <ul class="aj-lista">
+                                    <li>As componentes aparecem em ordem, com as faixas uma embaixo da outra.</li>
+                                    <li><b>Editar</b> abre a componente na aba Alocar; <b>Excluir</b> apaga a oferta.</li>
+                                    <li><b>Trocar</b> troca duas componentes de lugar. Com a mesma CH, em qualquer posição; com CH diferente, só quando estão em sequência. Choque barra a troca, e ela pode ser desfeita.</li>
+                                    <li>O selo <span class="aj-tag aj-tag--alerta">faltam Xh</span> marca a oferta com menos aulas que a CH. Ajuste em <b>Editar</b>.</li>
+                                </ul>
+                            </article>
+
+                            <article class="aj-cartao">
+                                <h3><span aria-hidden="true">🗓️</span> Calendário da Turma</h3>
+                                <ul class="aj-lista">
+                                    <li>Mostra o período mês a mês, com a tabela de CH alocada de cada componente.</li>
+                                    <li>Mude as datas para ver outro intervalo e clique em <b>Atualizar</b>. <b>↺ Período do PL</b> volta ao PL aberto.</li>
+                                    <li>Cada componente aparece no seu tom suave, com uma barra forte à esquerda.</li>
+                                </ul>
+                            </article>
+
+                            <article class="aj-cartao aj-cartao--alerta">
+                                <h3><span aria-hidden="true">⚠️</span> Choques de horário</h3>
+                                <ul class="aj-lista">
+                                    <li>Só há choque quando coincidem <b>as datas</b>, <b>o dia da semana</b> e <b>o horário</b>.</li>
+                                    <li><b>Na turma</b>: o Cardume avisa ao salvar, antes de gravar.</li>
+                                    <li><b>De professor</b>: o alerta vermelho no topo lista quem está em dois lugares ao mesmo tempo, inclusive com <span class="aj-tag">outro PL</span> que corre nas mesmas datas.</li>
+                                    <li>Para resolver, mude a data ou o horário de uma das ofertas.</li>
+                                </ul>
+                            </article>
+
+                            <article class="aj-cartao">
+                                <h3><span aria-hidden="true">🏷️</span> Nome da turma por bloco</h3>
+                                <ul class="aj-lista">
+                                    <li><b>PL2</b>: blocos ímpares (<code>BL1</code>, <code>BL3</code>…). <b>PL4</b>: blocos pares (<code>BL2</code>, <code>BL4</code>…).</li>
+                                    <li><b>PL1</b> e <b>PL3</b> (períodos curtos): a turma aparece sem bloco.</li>
+                                </ul>
+                            </article>
                         </div>
-
-                        <h3 style="margin-top:25px; font-size:1.15em;">⚡ Regras Inteligentes e Auditoria</h3>
-
-                        <div class="tutorial-card" style="background-color: #f0fff4; border-left-color: #27ae60;">
-                            <h4 style="font-size:1.05em;">🧩 1. Lista de Ofertas como painel de revisão</h4>
-                            <p style="font-size:0.97em;">Antes de publicar, use a <strong>Lista de Ofertas</strong> como
-                                painel principal de revisão: as componentes aparecem em ordem alfabética, com as faixas
-                                agrupadas em sequência. É também onde você edita ofertas importadas por bloco.</p>
-                            <p
-                                style="font-size:0.92em; margin-top:8px; background:#d4edda; padding:8px; border-radius:6px;">
-                                💡 <strong>Dica:</strong> conflitos e mudanças de turno se resolvem por ajuste explícito
-                                de <strong>data</strong> e <strong>horário</strong> da oferta.
-                            </p>
-                        </div>
-
-                        <div class="tutorial-card" style="background-color: #fff8e1; border-left-color: #f39c12;">
-                            <h4 style="font-size:1.05em;">🧭 2. Regra Canônica de Conflito</h4>
-                            <p style="font-size:0.97em;">A validação usa um critério único: só existe conflito quando
-                                coincidem <strong>período</strong>, <strong>dia</strong> e <strong>slot</strong>. Não há
-                                estado especial de componente no calendário atual.</p>
-                            <p style="font-size:0.92em; background:#fff3cd; padding:8px; border-radius:6px;">
-                                📣 Em caso de choque, ajuste data e/ou horário da oferta para manter a grade coerente.
-                            </p>
-                        </div>
-
-                        <div class="tutorial-card" style="background-color: #f8f9fa; border-left-color: #e74c3c;">
-                            <h4 style="font-size:1.05em;">🔍 3. Auditoria Global de Conflitos de Professor</h4>
-                            <p style="font-size:0.97em;">O sistema protege a agenda dos professores contra falhas
-                                humanas. Ao importar a grade de outro diretor, vá na aba <strong>Visão do
-                                    Professor</strong>. Um <strong>alerta vermelho</strong> aparecerá automaticamente
-                                caso algum professor esteja alocado em dois lugares ao mesmo tempo.</p>
-                            <p style="font-size:0.92em; background:#fdecea; padding:8px; border-radius:6px;">
-                                ⚠️ Quando uma aula ocorrer em turno diferente do turno nativo da turma, os calendarios e agendas mostram um aviso visual de turno.
-                            </p>
-                        </div>
-
-                        <div class="tutorial-card" style="background-color: #f0f4ff; border-left-color: #3498db;">
-                            <h4 style="font-size:1.05em;">📤 4. Exportação por Escopo</h4>
-                            <p style="font-size:0.97em;">Ao clicar em <strong>Exportar</strong>, o sistema pergunta qual
-                                escopo você deseja:</p>
-                            <ul style="padding-left:20px; font-size:0.95em; line-height:1.8;">
-                                <li>✅ <strong>[OK]</strong> → Exporta somente as turmas do <strong>curso atual</strong>
-                                    (ex: EP). Ideal para o diretor de cada curso.</li>
-                                <li>🌐 <strong>[Cancelar]</strong> → Exporta <strong>todos os cursos</strong> do IECOS.
-                                    Ideal para a coordenação geral.</li>
-                            </ul>
-                            <p style="font-size:0.92em; background:#dbe9ff; padding:8px; border-radius:6px;">
-                                📁 O nome do arquivo gerado reflete o escopo: <code>backup_iecos_EP_PL1_2026-01-05_2026-03-06_2026-03-21_10-30.json</code>.
-                            </p>
-                        </div>
-
-                        <div class="tutorial-card" style="background-color: #fdf2f8; border-left-color: #8e44ad;">
-                            <h4 style="font-size:1.05em;">👩‍🏫 5. Calendário Docente e Agenda Pública</h4>
-                            <p style="font-size:0.97em;">O <strong>Calendário Docente</strong> é a ferramenta de conferência: carga horária,
-                                sobreposições e conflitos do professor, com o que está sendo alocado agora.</p>
-                            <ul style="padding-left:20px; font-size:0.95em; line-height:1.8;">
-                                <li><strong>Período:</strong> escolha o ano e clique em <b>Ano inteiro</b> (PL1 a PL4) ou em
-                                    <b>PL1</b>, <b>PL2</b>, <b>PL3</b> ou <b>PL4</b>. Sem escolha, aparece o PL aberto na barra lateral.</li>
-                                <li><strong>Tabela do docente:</strong> começa com o nome do professor (pode ser enviada sozinha a ele)
-                                    e tem uma linha por faixa, com dia, período e <b>horário</b>.</li>
-                                <li><strong>CH docente:</strong> <code>60</code> quando ele dá a componente toda;
-                                    <code>30/90</code> quando a divide com outros (parte dele / CH da componente).</li>
-                                <li><strong>CH alocada:</strong> horas já colocadas no calendário para ele —
-                                    <span style="color:#15803d; font-weight:700;">verde</span> quando batem com a CH docente,
-                                    <span style="color:#c0392b; font-weight:700;">vermelha</span> quando não.</li>
-                                <li><strong>Conflitos:</strong> só aparecem quando existem — um selo vermelho no topo, com a
-                                    tabela de conflitos logo abaixo.</li>
-                            </ul>
-                            <p style="font-size:0.97em;">O menu <strong>Agenda Pública</strong> mostra o que os alunos e os professores
-                                veem (Agenda Discente e Agenda Docente), em tela larga. É o que está <b>publicado</b>: as alocações
-                                novas aparecem lá depois do <b>Publicar Online</b>.</p>
-                        </div>
-
-                        <div class="tutorial-card" style="background-color: #e8f8f5; border-left-color: #1abc9c;">
-                            <h4 style="font-size:1.05em;">🏷️ 6. Identificação Automática de Turmas por Bloco</h4>
-                            <p style="font-size:0.97em;">A caixa de seleção de turmas exibe automaticamente o
-                                <strong>Bloco Curricular</strong> com base no <strong>Período Letivo</strong>
-                                selecionado:
-                            </p>
-                            <ul style="padding-left:20px; font-size:0.95em; line-height:1.8;">
-                                <li><strong>PL2 → Blocos Ímpares</strong> (BL1, BL3, BL5...)</li>
-                                <li><strong>PL4 → Blocos Pares</strong> (BL2, BL4, BL6...)</li>
-                                <li>PL1 e PL3 → turma exibida sem bloco (períodos curtos)</li>
-                            </ul>
-                            <p style="font-size:0.92em; background:#d1f2eb; padding:8px; border-radius:6px;">
-                                📌 Exemplo: <code>EP2026</code> no <strong>PL2</strong> de 2026 aparece como
-                                <strong>EP2026_BL1</strong>. A turma <code>EP2025</code> no mesmo período aparece como
-                                <strong>EP2025_BL3</strong>.
-                            </p>
-                        </div>
-
-                        <div class="tutorial-card" style="background-color: #fef9e7; border-left-color: #f1c40f;">
-                            <h4 style="font-size:1.05em;">👥 7. Sub-turmas para Laboratórios</h4>
-                            <p style="font-size:0.97em;">Quando uma disciplina (ex: laboratório) precisar ser ministrada
-                                em dois grupos separados:</p>
-                            <ol style="padding-left:20px; font-size:0.95em; line-height:1.8;">
-                                <li>Selecione a disciplina no formulário. O sistema detecta a duplicata e <strong>exibe
-                                        um aviso de confirmação</strong>.</li>
-                                <li>Confirme e preencha o campo <strong>"Identificador do Sub-grupo"</strong> com:
-                                    <code>BL1_T01</code> (grupo 1) ou <code>BL1_T02</code> (grupo 2).
-                                </li>
-                                <li>O rótulo final na grade será <code>EP2026_BL1_T01</code> e
-                                    <code>EP2026_BL1_T02</code>.
-                                </li>
-                            </ol>
-                            <p style="font-size:0.92em; background:#fef3cd; padding:8px; border-radius:6px;">
-                                💡 Ao usar <em>Importar Componentes em Bloco</em>, o identificador <code>BL1</code> já é
-                                atribuído automaticamente a todas as disciplinas importadas.
-                            </p>
-                        </div>
-
                     </div>
 
-                    <aside class="help-side">
-                        <div class="help-card help-card-tip"
-                            style="background: #e1f5fe; border: 1px solid #b3e5fc; padding:15px; border-radius:8px; margin-bottom:15px;">
-                            <h4 style="margin-top:0; color:#0277bd;">🛠️ Ferramentas Úteis</h4>
-                            <ul style="padding-left: 20px; font-size: 0.9em;">
-                                <li style="margin-bottom:8px;">❌ <strong>Errou algo?</strong><br>Vá na aba "Lista de
-                                    Ofertas" e clique no botão de "Editar" ou "Excluir".</li>
-                                <li style="margin-bottom:8px;">💾 <strong>Salvar Backup:</strong><br>Use o botão
-                                    <b>Exportar (JSON)</b> para salvar sua grade no computador de forma segura.
-                                </li>
-                                <li style="margin-bottom:8px;">🔄 <strong>Restaurar e Mesclar:</strong><br>Use o botão
-                                    <b>Importar (JSON)</b> para carregar o arquivo de outro curso e juntá-lo à sua grade
-                                    para verificar choques globais.
-                                </li>
-                                <li style="margin-bottom:8px;">📅 <strong>Botões Refresh:</strong><br>Nas abas de
-                                    Calendário (Turma/Professor), use os botões azuis <b>🔄
-                                        Atualizar</b> sempre que fizer uma mudança, para renderizar as novidades
-                                    imediatamente.</li>
-                                <li>🌐 <strong>Publicação:</strong><br>O botão verde <b>"Publicar Online"</b> (só o administrador)
-                                    atualiza a agenda dos alunos (veja <b>Publicar a agenda pública</b>, abaixo).</li>
-                            </ul>
-                        </div>
+                    <!-- ===== 4. DOCENTES ===== -->
+                    <div class="aj-painel" id="aj-docentes" data-aj-painel="docentes" role="tabpanel" aria-labelledby="aj-tab-docentes" hidden>
+                        <p class="aj-lead">O <b>Calendário Docente</b> confere a carga horária e os choques de um professor, com tudo o que está sendo alocado agora.</p>
 
-                        <div class="help-card help-card-tip"
-                            style="background: #fff3cd; border: 1px solid #ffeeba; padding:15px; border-radius:8px;">
-                            <h4 style="margin-top:0; color:#856404;">🔧 Atualização de Dados (PPC)</h4>
-                            <p style="font-size: 0.9em; margin-bottom:0;">Para inserir novos professores, novas
-                                disciplinas de PPC ou calendários de feriados, fale com o administrador de
-                                infraestrutura do sistema:</p>
-                            <p style="font-weight: bold; color: #2c3e50; margin-top: 5px;">👨‍💻 Prof. Evaldo Silva</p>
-                        </div>
+                        <div class="aj-grade">
+                            <article class="aj-cartao">
+                                <h3><span aria-hidden="true">📆</span> Escolha o período</h3>
+                                <ul class="aj-lista">
+                                    <li>Busque o professor pelo nome.</li>
+                                    <li>Escolha o ano e clique em <b>Ano inteiro</b> (PL1 a PL4, de janeiro a dezembro) ou num dos botões <b>PL1</b> a <b>PL4</b>.</li>
+                                    <li>Sem escolha, aparece o PL aberto na barra lateral.</li>
+                                </ul>
+                            </article>
 
-                        <div class="help-card help-card-tip"
-                            style="background: #dfe7df; border: 1px solid #a8d3a8; padding:18px; border-radius:10px; margin-top:15px;">
-                            <h4 style="margin-top:0; margin-bottom:14px; color:#1e7e34; font-size:1.18em;">Publicar a agenda pública</h4>
-                            <ol style="padding-left:24px; font-size:0.98em; line-height:1.7; margin:0; color:#34495e;">
-                                <li style="margin-bottom:6px;">Quando um período estiver pronto, o coordenador avisa o administrador.</li>
-                                <li style="margin-bottom:6px;">O administrador clica em <strong>Publicar Online</strong> e confirma.</li>
-                                <li style="margin-bottom:10px;">Em menos de 1 minuto os alunos já veem a agenda nova:</li>
-                            </ol>
-                            <div
-                                style="background:#eef3ee; border:1px solid #b8d1b8; color:#173f35; border-radius:10px; padding:12px 14px; margin:0 0 14px 24px; font-family:Consolas, 'Courier New', monospace; font-size:0.9em; line-height:1.55; word-break:break-all;">
-                                https://cardume.iecos.ufpa.br/agenda_publica.html
-                            </div>
-                            <div style="display:flex; align-items:center; gap:10px; margin:0 0 14px 24px; flex-wrap:wrap;">
-                                <button type="button"
-                                    data-copy-text="https://cardume.iecos.ufpa.br/agenda_publica.html"
-                                    data-copy-feedback-target="agenda-publica-feedback"
-                                    data-copy-success-label="URL copiada"
-                                    style="background:#2b9140; color:#fff; border:none; border-radius:7px; padding:8px 14px; font-weight:bold; cursor:pointer;">
-                                    Copiar URL da Agenda Pública
-                                </button>
-                                <span id="agenda-publica-feedback"
-                                    style="font-size:0.85em; color:#2f6f3e; min-height:1.2em;">&nbsp;</span>
-                            </div>
-                            <p style="font-size:0.88em; line-height:1.55; margin:0 0 0 24px; color:#46604f;">
-                                O QR code da agenda (<code>img/qrcode_agenda_publica.png</code>) aponta para este endereço.
-                            </p>
-                        </div>
+                            <article class="aj-cartao">
+                                <h3><span aria-hidden="true">📊</span> A tabela do docente</h3>
+                                <ul class="aj-lista">
+                                    <li>Começa com o nome do professor: pode ser impressa e enviada a ele.</li>
+                                    <li>Uma linha por faixa, com o dia, as datas e o <b>horário</b>. No ano inteiro, um subtotal por PL e o total do ano.</li>
+                                    <li><b>CH docente</b>: <code>60</code> quando ele dá a componente toda; <code>30/90</code> quando divide (parte dele / CH da componente).</li>
+                                    <li><b>CH alocada</b>: <span class="aj-ok">verde</span> quando bate com a CH docente, <span class="aj-ruim">vermelha</span> quando não.</li>
+                                </ul>
+                            </article>
 
-                        <div style="margin-top: 20px; font-size: 0.8em; color: #999; text-align: center;">
-                            <p>Nota Tecnica: Os dados base operam via pipeline Python. Se a publicacao parecer antiga
-                                no navegador ou no celular, faca um recarregamento forcado antes de concluir que o JSON
-                                nao atualizou.</p>
+                            <article class="aj-cartao aj-cartao--alerta">
+                                <h3><span aria-hidden="true">🚨</span> Conflitos do professor</h3>
+                                <ul class="aj-lista">
+                                    <li>Só aparecem quando existem: um selo vermelho no topo e a tabela de conflitos logo abaixo.</li>
+                                    <li>No <b>Ano inteiro</b> entram também os choques entre PLs diferentes (ex.: PL2 e PL3 no mesmo mês).</li>
+                                </ul>
+                            </article>
                         </div>
-                    </aside>
+                    </div>
+
+                    <!-- ===== 5. PUBLICACAO ===== -->
+                    <div class="aj-painel" id="aj-publicacao" data-aj-painel="publicacao" role="tabpanel" aria-labelledby="aj-tab-publicacao" hidden>
+                        <p class="aj-lead">A agenda dos alunos e dos professores só muda quando o administrador clica em <b>Publicar Online</b>. Até lá, as alocações novas ficam só no Cardume.</p>
+
+                        <div class="aj-grade">
+                            <article class="aj-cartao">
+                                <h3><span aria-hidden="true">🚦</span> Como publicar</h3>
+                                <ol class="aj-passos">
+                                    <li>Quando a turma ou o período estiver pronto, o coordenador avisa o administrador.</li>
+                                    <li>O administrador clica em <b>Publicar Online</b> e confirma.</li>
+                                    <li>Em menos de 1 minuto a agenda nova está no ar.</li>
+                                </ol>
+                                <p class="aj-nota">Entram o período em curso e até 4 períodos futuros que tenham alocações.</p>
+                            </article>
+
+                            <article class="aj-cartao">
+                                <h3><span aria-hidden="true">📱</span> Menu Agenda Pública</h3>
+                                <ul class="aj-lista">
+                                    <li>Mostra a agenda <b>como está publicada</b>, num celular grande: a <b>Agenda Discente</b> (curso, turma, período) e a <b>Agenda Docente</b> (cada professor e o resumo do ano).</li>
+                                    <li>Acabou de publicar? Clique em <b>⟳ Recarregar</b>.</li>
+                                    <li>No celular, se a agenda parecer antiga, recarregue a página.</li>
+                                </ul>
+                            </article>
+
+                            <article class="aj-cartao aj-cartao--destaque">
+                                <h3><span aria-hidden="true">🔗</span> Endereço da agenda</h3>
+                                <p class="aj-url">https://cardume.iecos.ufpa.br/agenda_publica.html</p>
+                                <div class="aj-copiar">
+                                    <button type="button" class="aj-btn"
+                                        data-copy-text="https://cardume.iecos.ufpa.br/agenda_publica.html"
+                                        data-copy-feedback-target="agenda-publica-feedback"
+                                        data-copy-success-label="URL copiada">Copiar o endereço</button>
+                                    <span id="agenda-publica-feedback" class="aj-copiar-ok">&nbsp;</span>
+                                </div>
+                                <p class="aj-nota">O QR code da agenda (<code>img/qrcode_agenda_publica.png</code>) leva a este endereço.</p>
+                            </article>
+                        </div>
+                    </div>
+
+                    <!-- ===== 6. ARQUIVOS ===== -->
+                    <div class="aj-painel" id="aj-arquivos" data-aj-painel="arquivos" role="tabpanel" aria-labelledby="aj-tab-arquivos" hidden>
+                        <p class="aj-lead">As alocações ficam no servidor da UFPA, com cópia de segurança feita pelo administrador. Os arquivos abaixo servem para guardar uma cópia sua, levar dados ao SIGAA e imprimir.</p>
+
+                        <div class="aj-grade">
+                            <article class="aj-cartao">
+                                <h3><span aria-hidden="true">📤</span> Exportar (JSON)</h3>
+                                <ul class="aj-lista">
+                                    <li>Salva no computador uma cópia do período letivo aberto.</li>
+                                    <li>Escolha <b>Todos os cursos da unidade</b> ou <b>Um curso</b> (EP, CB ou CN).</li>
+                                </ul>
+                            </article>
+
+                            <article class="aj-cartao">
+                                <h3><span aria-hidden="true">📥</span> Importar (JSON)</h3>
+                                <ul class="aj-lista">
+                                    <li><b>Mesclar</b> soma o arquivo à grade atual.</li>
+                                    <li><b>Substituir tudo</b> troca a grade pelo arquivo. Use com cuidado.</li>
+                                </ul>
+                            </article>
+
+                            <article class="aj-cartao">
+                                <h3><span aria-hidden="true">🏛️</span> SIGAA</h3>
+                                <ul class="aj-lista">
+                                    <li>Na <b>Lista de Ofertas</b>, o botão <b>Exportar Metadados SIGAA (JSON)</b> gera os dados do período aberto para o cadastro no SIGAA.</li>
+                                </ul>
+                            </article>
+
+                            <article class="aj-cartao">
+                                <h3><span aria-hidden="true">🖨️</span> Imprimir e PDF</h3>
+                                <ul class="aj-lista">
+                                    <li>O botão <b>Imprimir</b> (no topo) imprime a aba aberta.</li>
+                                    <li>Para PDF em paisagem, escolha a impressora <b>“Salvar como PDF”</b>. A <em>Microsoft Print to PDF</em> sai em retrato.</li>
+                                </ul>
+                            </article>
+                        </div>
+                    </div>
                 </div>
             </section>
         </main>
     </div>
 
-    <script type="module" src="js/main.js?v=202611072324"></script>
+    <script type="module" src="js/main.js?v=202611072358"></script>
 </body>
 
 </html>

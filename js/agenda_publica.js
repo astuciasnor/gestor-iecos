@@ -1,10 +1,10 @@
-import { store, normalizeLoadedAllocation } from './store.js?v=202611072324';
-import { getTurnoLetter } from './turns.js?v=202611072324';
-import { getCalendarEvents } from './calendar.js?v=202611072324';
-import { resolveActiveAcademicPeriod } from './academic_rules.mjs?v=202611072324';
-import { buildMonthMarkers, summarizeTeacherPeriod } from './resumo_docente.mjs?v=202611072324';
-import { resolveBackendMode, UFPA_API_URL } from './backend_config.js?v=202611072324';
-import { tonsDaCor, estiloTonsBloco } from './color_utils.js?v=202611072324';
+import { store, normalizeLoadedAllocation } from './store.js?v=202611072358';
+import { getTurnoLetter } from './turns.js?v=202611072358';
+import { getCalendarEvents } from './calendar.js?v=202611072358';
+import { resolveActiveAcademicPeriod } from './academic_rules.mjs?v=202611072358';
+import { buildMonthMarkers, summarizeTeacherPeriod } from './resumo_docente.mjs?v=202611072358';
+import { resolveBackendMode, UFPA_API_URL } from './backend_config.js?v=202611072358';
+import { tonsDaCor, estiloTonsBloco } from './color_utils.js?v=202611072358';
 
 const collator = new Intl.Collator('pt-BR', { sensitivity: 'base' });
 const PUBLIC_ASSET_VERSION = '20261028a';

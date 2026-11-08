@@ -1,0 +1,412 @@
+/* =====================================================================
+   Aba Ajuda: um tema por vez (Começar, Alocação, Revisão, Docentes,
+   Publicação, Arquivos). Troca de tema em js/ajuda_ui.js.
+   Cada tema tem a sua cor: --aj-cor (forte) e --aj-suave (fundo).
+   ===================================================================== */
+
+.aj {
+    --aj-cor: #1e8449;
+    --aj-suave: #eaf6ee;
+    --aj-texto: #1f2d3a;
+    --aj-texto-2: #4b5b6b;
+    --aj-borda: #e2e8ee;
+    font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    color: var(--aj-texto);
+    max-width: 1280px;
+    margin: 0 auto;
+}
+
+/* Cor de cada tema (botao e painel) */
+[data-aj-tema="comecar"],    [data-aj-painel="comecar"]    { --aj-cor: #1e8449; --aj-suave: #eaf6ee; }
+[data-aj-tema="alocacao"],   [data-aj-painel="alocacao"]   { --aj-cor: #2f6fb0; --aj-suave: #eaf2fb; }
+[data-aj-tema="revisao"],    [data-aj-painel="revisao"]    { --aj-cor: #7d3c98; --aj-suave: #f4ecf8; }
+[data-aj-tema="docentes"],   [data-aj-painel="docentes"]   { --aj-cor: #c0661a; --aj-suave: #fdf1e6; }
+[data-aj-tema="publicacao"], [data-aj-painel="publicacao"] { --aj-cor: #138d75; --aj-suave: #e6f6f2; }
+[data-aj-tema="arquivos"],   [data-aj-painel="arquivos"]   { --aj-cor: #4a5d73; --aj-suave: #eef2f6; }
+
+/* ---- Topo ---- */
+.aj-topo {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    padding-bottom: 12px;
+    margin-bottom: 14px;
+    border-bottom: 2px solid #dfe7e2;
+}
+.aj-titulo {
+    margin: 0;
+    font-size: 1.55rem;
+    font-weight: 800;
+    color: var(--primary, #004e28);
+    letter-spacing: -0.01em;
+}
+.aj-sub {
+    margin: 4px 0 0;
+    color: var(--aj-texto-2);
+    font-size: 0.98rem;
+}
+.aj-data {
+    font-size: 0.8rem;
+    color: #6b7c8c;
+    background: #f1f4f6;
+    border: 1px solid var(--aj-borda);
+    border-radius: 999px;
+    padding: 3px 10px;
+}
+
+/* ---- Botoes dos temas ---- */
+.aj-temas {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 8px;
+    margin-bottom: 18px;
+}
+.aj-tema {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    padding: 9px 10px;
+    background: #fff;
+    border: 1px solid var(--aj-borda);
+    border-bottom: 3px solid var(--aj-borda);
+    border-radius: 12px;
+    color: var(--aj-texto);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, transform 0.15s;
+}
+.aj-tema:hover {
+    background: var(--aj-suave);
+    transform: translateY(-1px);
+}
+.aj-tema:focus-visible {
+    outline: 3px solid var(--aj-cor);
+    outline-offset: 2px;
+}
+.aj-tema.is-ativo {
+    background: var(--aj-suave);
+    border-color: var(--aj-cor);
+    border-bottom-color: var(--aj-cor);
+    box-shadow: 0 3px 10px rgba(15, 35, 52, 0.08);
+}
+.aj-tema-icone {
+    flex-shrink: 0;
+    width: 32px;
+    height: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    background: var(--aj-suave);
+    font-size: 1.25rem;
+}
+.aj-tema.is-ativo .aj-tema-icone { background: #fff; }
+.aj-tema-txt {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    line-height: 1.2;
+}
+.aj-tema-txt b {
+    font-size: 0.98rem;
+    color: var(--aj-cor);
+}
+.aj-tema-txt small {
+    font-size: 0.76rem;
+    color: #6b7c8c;
+}
+
+/* ---- Painel do tema ---- */
+.aj-painel[hidden] { display: none; }
+.aj-painel {
+    animation: aj-entra 0.18s ease-out;
+}
+@keyframes aj-entra {
+    from { opacity: 0; transform: translateY(4px); }
+    to   { opacity: 1; transform: none; }
+}
+.aj-lead {
+    margin: 0 0 16px;
+    padding: 12px 16px;
+    background: var(--aj-suave);
+    border-left: 5px solid var(--aj-cor);
+    border-radius: 10px;
+    font-size: 1.02rem;
+    line-height: 1.5;
+}
+
+.aj-grade {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+    align-items: start;
+}
+
+.aj-cartao {
+    background: #fff;
+    border: 1px solid var(--aj-borda);
+    border-top: 4px solid var(--aj-cor);
+    border-radius: 12px;
+    padding: 14px 16px 12px;
+    box-shadow: 0 2px 8px rgba(15, 35, 52, 0.05);
+    line-height: 1.5;
+    font-size: 0.95rem;
+}
+.aj-cartao h3 {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 10px;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--aj-texto);
+}
+.aj-cartao p { margin: 0 0 8px; }
+.aj-cartao--destaque { background: var(--aj-suave); }
+.aj-cartao--novo { border-top-color: #e0a200; background: #fffbea; }
+.aj-cartao--alerta { border-top-color: #c0392b; }
+.aj-cartao--alerta .aj-lista > li::before { background: #c0392b; }
+
+.aj-selo {
+    margin-left: auto;
+    padding: 1px 8px;
+    border-radius: 999px;
+    background: #e0a200;
+    color: #3a2600;
+    font-size: 0.7rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+/* Marcadores coloridos */
+.aj-lista {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+.aj-lista > li {
+    position: relative;
+    padding-left: 18px;
+    margin-bottom: 7px;
+}
+.aj-lista > li::before {
+    content: '';
+    position: absolute;
+    left: 2px;
+    top: 0.55em;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--aj-cor);
+}
+
+/* Passos numerados */
+.aj-passos {
+    list-style: none;
+    counter-reset: aj-passo;
+    margin: 0;
+    padding: 0;
+}
+.aj-passos > li {
+    counter-increment: aj-passo;
+    position: relative;
+    padding-left: 32px;
+    margin-bottom: 8px;
+    min-height: 24px;
+}
+.aj-passos > li::before {
+    content: counter(aj-passo);
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 22px;
+    height: 22px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: var(--aj-cor);
+    color: #fff;
+    font-size: 0.78rem;
+    font-weight: 800;
+}
+
+/* Mapa das abas */
+.aj-abas {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+}
+.aj-abas li {
+    display: grid;
+    grid-template-columns: 172px 1fr;
+    align-items: baseline;
+    gap: 8px;
+    color: var(--aj-texto-2);
+}
+.aj-abas .aj-chip { justify-self: start; }
+.aj-chip {
+    flex-shrink: 0;
+    padding: 2px 9px;
+    border-radius: 7px;
+    background: var(--aj-suave);
+    color: var(--aj-cor);
+    font-weight: 700;
+    font-size: 0.85rem;
+}
+
+/* Etiquetas pequenas e cores de texto */
+.aj-tag {
+    display: inline-block;
+    padding: 0 7px;
+    border-radius: 999px;
+    background: #eef2f6;
+    color: #4a5d73;
+    font-size: 0.8rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+.aj-tag--alerta { background: #fdecea; color: #b03a2e; }
+.aj-ok { color: #15803d; font-weight: 700; }
+.aj-ruim { color: #c0392b; font-weight: 700; }
+.aj-nota {
+    font-size: 0.86rem;
+    color: #5f6f7f;
+}
+.aj-contato {
+    font-weight: 700;
+    color: #2c3e50;
+}
+.aj code {
+    background: #f1f4f6;
+    border-radius: 4px;
+    padding: 0 4px;
+    font-size: 0.88em;
+}
+
+/* Link interno para outro tema */
+.aj-ir {
+    padding: 0;
+    border: none;
+    background: none;
+    color: var(--aj-cor);
+    font: inherit;
+    font-weight: 700;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+/* ---- Roteiro de 8 passos (tema Alocacao) ---- */
+.aj-roteiro {
+    list-style: none;
+    margin: 0 0 16px;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 10px;
+}
+.aj-roteiro > li {
+    display: flex;
+    gap: 10px;
+    padding: 11px 12px;
+    background: #fff;
+    border: 1px solid var(--aj-borda);
+    border-left: 4px solid var(--aj-cor);
+    border-radius: 10px;
+    font-size: 0.9rem;
+    line-height: 1.4;
+    color: var(--aj-texto-2);
+}
+.aj-roteiro > li > div > b:first-child {
+    display: block;
+    margin-bottom: 2px;
+    color: var(--aj-texto);
+    font-size: 0.95rem;
+}
+.aj-num {
+    flex-shrink: 0;
+    width: 26px;
+    height: 26px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: var(--aj-cor);
+    color: #fff;
+    font-weight: 800;
+    font-size: 0.85rem;
+}
+.aj-roteiro > li:first-child { border-left-color: #e0a200; background: #fffbea; }
+.aj-roteiro > li:first-child .aj-num { background: #e0a200; color: #3a2600; }
+.aj-print {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    margin-top: 8px;
+    border: 1px solid var(--aj-borda);
+    border-radius: 6px;
+    box-shadow: 0 1px 4px rgba(15, 35, 52, 0.08);
+}
+
+/* ---- Endereco da agenda ---- */
+.aj-url {
+    padding: 9px 12px;
+    background: #fff;
+    border: 1px dashed var(--aj-cor);
+    border-radius: 8px;
+    font-family: Consolas, 'Courier New', monospace;
+    font-size: 0.88rem;
+    word-break: break-all;
+}
+.aj-copiar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 8px;
+}
+.aj-btn {
+    padding: 8px 14px;
+    border: none;
+    border-radius: 8px;
+    background: var(--aj-cor);
+    color: #fff;
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+}
+.aj-btn:hover { filter: brightness(1.08); }
+.aj-copiar-ok {
+    min-height: 1.2em;
+    font-size: 0.85rem;
+    color: var(--aj-cor);
+}
+
+/* ---- Telas menores ---- */
+@media (max-width: 1280px) {
+    .aj-temas { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .aj-roteiro { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 900px) {
+    .aj-grade { grid-template-columns: 1fr; }
+}
+@media (max-width: 700px) {
+    .aj-abas li { grid-template-columns: 1fr; gap: 2px; }
+    .aj-temas { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .aj-roteiro { grid-template-columns: 1fr; }
+    .aj-grade { grid-template-columns: 1fr; }
+}
+
+/* Na impressao sai so o tema aberto, sem os botoes */
+@media print {
+    .aj-temas { display: none !important; }
+    .aj-cartao, .aj-roteiro > li { break-inside: avoid; box-shadow: none; }
+}

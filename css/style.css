@@ -962,177 +962,6 @@ body:has(#tab-weekly.active) .top-bar #weekly-instructions-card {
     }
 }
 
-/* Guia Rapido na aba Ajuda: reaproveita o visual dos passos da Grade Semanal,
-   sem o posicionamento de popover. */
-.help-fullwidth-title {
-    grid-column: 1 / -1;
-    margin: 0;
-}
-
-.help-quick-guide {
-    margin: 6px 0 26px;
-    padding: 20px 22px 22px;
-    background: #f3fbf6;
-    border: 1px solid #cfe9da;
-    border-top: 5px solid #2e8b62;
-    border-radius: 14px;
-    box-shadow: 0 6px 18px rgba(16, 50, 36, 0.10);
-}
-
-/* Variante full-width: ocupa toda a largura da coluna de ajuda e
-   distribui os passos em colunas para caber sem rolar. */
-.help-quick-guide--full {
-    grid-column: 1 / -1;
-    margin: 0 0 8px;
-}
-
-/* Duas colunas lidas de cima para baixo: 1-4 na esquerda, 5-8 na direita. */
-.help-quick-guide--full .wi-steps {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    grid-template-rows: repeat(4, auto);
-    grid-auto-flow: column;
-    gap: 10px 18px;
-}
-
-@media (max-width: 800px) {
-    .help-quick-guide--full .wi-steps {
-        grid-template-columns: 1fr;
-        grid-template-rows: none;
-        grid-auto-flow: row;
-    }
-}
-
-.help-quick-guide .wi-header {
-    display: flex;
-    align-items: flex-start;
-    gap: 12px;
-    padding-bottom: 12px;
-    margin-bottom: 14px;
-    border-bottom: 2px dashed #b7dcc7;
-}
-
-.help-quick-guide .wi-header-icon {
-    font-size: 1.9rem;
-    line-height: 1;
-    flex-shrink: 0;
-}
-
-.help-quick-guide .wi-title {
-    margin: 0;
-    font-size: 1.3rem;
-    font-weight: 800;
-    color: #0f3526;
-    letter-spacing: 0.2px;
-}
-
-.help-quick-guide .wi-subtitle {
-    margin: 3px 0 0;
-    font-size: 0.98rem;
-    color: #3f6b58;
-}
-
-.help-quick-guide .wi-steps {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
-.help-quick-guide .wi-step {
-    display: flex;
-    align-items: flex-start;
-    gap: 12px;
-    background: #ffffff;
-    border: 1px solid #d3e7dc;
-    border-left: 5px solid #2e8b62;
-    border-radius: 10px;
-    padding: 11px 14px;
-    box-shadow: 0 2px 6px rgba(16, 50, 36, 0.08);
-}
-
-.help-quick-guide .wi-step--first {
-    background: linear-gradient(120deg, #fff7df 0%, #fdeec0 100%);
-    border-color: #e7c766;
-    border-left-color: #e0a200;
-}
-
-.help-quick-guide .wi-step-num {
-    flex-shrink: 0;
-    width: 30px;
-    height: 30px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-    background: #2e8b62;
-    color: #fff;
-    font-size: 1.05rem;
-    font-weight: 800;
-    box-shadow: 0 2px 5px rgba(16, 50, 36, 0.25);
-}
-
-.help-quick-guide .wi-step--first .wi-step-num {
-    background: #e0a200;
-    color: #3a2600;
-}
-
-.help-quick-guide .wi-step:nth-child(2) { border-left-color: #2f80c9; }
-.help-quick-guide .wi-step:nth-child(2) .wi-step-num { background: #2f80c9; }
-.help-quick-guide .wi-step:nth-child(3) { border-left-color: #8e44ad; }
-.help-quick-guide .wi-step:nth-child(3) .wi-step-num { background: #8e44ad; }
-.help-quick-guide .wi-step:nth-child(4) { border-left-color: #16a085; }
-.help-quick-guide .wi-step:nth-child(4) .wi-step-num { background: #16a085; }
-.help-quick-guide .wi-step:nth-child(5) { border-left-color: #d35400; }
-.help-quick-guide .wi-step:nth-child(5) .wi-step-num { background: #d35400; }
-.help-quick-guide .wi-step:nth-child(6) { border-left-color: #c0392b; }
-.help-quick-guide .wi-step:nth-child(6) .wi-step-num { background: #c0392b; }
-.help-quick-guide .wi-step:nth-child(7) { border-left-color: #6d4c41; }
-.help-quick-guide .wi-step:nth-child(7) .wi-step-num { background: #6d4c41; }
-.help-quick-guide .wi-step:nth-child(8) { border-left-color: #1e7a4c; }
-.help-quick-guide .wi-step:nth-child(8) .wi-step-num { background: #1e7a4c; }
-
-.help-quick-guide .wi-step-text {
-    font-size: 1.03rem;
-    line-height: 1.4;
-    color: #1c4334;
-}
-
-.help-quick-guide .wi-step-emoji {
-    font-size: 1.15rem;
-    margin-right: 4px;
-}
-
-.help-quick-guide .wi-step-text strong {
-    color: #0f3526;
-}
-
-.help-quick-guide .wi-note {
-    display: flex;
-    align-items: flex-start;
-    gap: 11px;
-    margin-top: 14px;
-    padding: 12px 14px;
-    background: linear-gradient(120deg, #e7f0ff 0%, #d9e8ff 100%);
-    border: 1px solid #b6cef2;
-    border-radius: 10px;
-    font-size: 1.0rem;
-    line-height: 1.4;
-    color: #1b3b66;
-}
-
-.help-quick-guide .wi-note-icon {
-    font-size: 1.4rem;
-    line-height: 1;
-    flex-shrink: 0;
-}
-
-.help-quick-guide .wi-note strong {
-    color: #12305a;
-}
-
 .offer-mode-section {
     margin-bottom: 20px;
 }
@@ -1584,9 +1413,6 @@ body:has(#tab-weekly.active) .top-bar #weekly-instructions-card {
     color: #2c3e50;
     text-align: left;
 }
-.weekly-faixas-table .faixa-padrao-cell .fp-grupo { white-space: nowrap; }
-.weekly-faixas-table .faixa-padrao-cell .fp-sep { color: #93a0af; margin: 0 4px; }
-.weekly-faixas-table .faixa-padrao-cell .fp-hora { color: #7f8c9b; font-weight: 500; }
 .weekly-faixas-table .faixa-padrao-cell .fp-livre { color: #5b6b7b; font-weight: 500; }
 /* Sem largura para o horario de relogio: fica so o numero das aulas. */
 @container (max-width: 900px) {
@@ -2273,33 +2099,6 @@ body:has(#tab-weekly.active) .top-bar #weekly-instructions-card {
 
 .timetable .slot.slot-holiday-column:hover {
     background: #edf0f4;
-}
-
-.weekly-holiday-column-marker {
-    position: absolute;
-    top: 8px;
-    left: 50%;
-    transform: translateX(-50%);
-    padding: 3px 8px;
-    border-radius: 6px;
-    background: rgba(255, 255, 255, 0.7);
-    color: #7f8c8d;
-    pointer-events: none;
-    text-align: center;
-    white-space: nowrap;
-}
-
-.weekly-holiday-column-day {
-    display: none;
-}
-
-.weekly-holiday-column-name {
-    display: inline-block;
-    font-size: 0.92rem;
-    font-weight: 700;
-    font-style: italic;
-    text-decoration: none;
-    letter-spacing: 0.02em;
 }
 
 .timetable {
@@ -3408,47 +3207,6 @@ body:has(#tab-weekly.active) .top-bar #weekly-instructions-card {
     .event-chip.comp-tons { padding-left: 7px !important; }
 }
 
-.help-layout{
-  display: grid;
-  grid-template-columns: 1fr 360px;
-  gap: 28px;
-  align-items: start;
-  width: 100%;
-}
-
-.help-main{ line-height: 1.6; }
-
-.help-side{
-  position: sticky;
-  top: 90px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.help-card{
-  background: #fff;
-  border-radius: 10px;
-  padding: 14px 16px;
-  box-shadow: 0 2px 10px rgba(0,0,0,.08);
-  line-height: 1.4;
-}
-
-.help-card-tip{
-  border-left: 6px solid #1abc9c;
-  background: #e8f6f3;
-}
-
-.help-card-warn{
-  border-left: 6px solid #f39c12;
-  background: #fff3cd;
-}
-
-.help-card-dev{
-  border-left: 6px solid var(--primary);
-  background: #eef6f0;
-}
-
 .export-scope-modal {
     position: fixed;
     inset: 0;
@@ -3608,11 +3366,6 @@ body:has(#tab-weekly.active) .top-bar #weekly-instructions-card {
     color: #3b4d5f;
     font-weight: 700;
     cursor: pointer;
-}
-
-@media (max-width: 980px){
-  .help-layout{ grid-template-columns: 1fr; }
-  .help-side{ position: static; }
 }
 
 @media (max-width: 640px) {
@@ -4622,15 +4375,3 @@ body:has(#tab-weekly.active) .top-bar #weekly-instructions-card {
     background: #3a3f47;
     outline: none;
 }
-
-/* Guia da aba Ajuda: titulo do passo e cor do passo 8 (mesmo texto da janela de instrucoes). */
-.help-quick-guide .wi-step-title {
-    display: block;
-    margin-bottom: 2px;
-    font-weight: 800;
-    color: #12372a;
-}
-.help-quick-guide .wi-step:nth-child(7) { border-left-color: #607d8b; }
-.help-quick-guide .wi-step:nth-child(7) .wi-step-num { background: #607d8b; }
-.help-quick-guide .wi-step:nth-child(8) { border-left-color: #1e8449; }
-.help-quick-guide .wi-step:nth-child(8) .wi-step-num { background: #1e8449; }
