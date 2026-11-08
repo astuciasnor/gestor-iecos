@@ -18,7 +18,7 @@ O principio atual do produto e:
 
 > **toda oferta deve ser tratada como oferta por faixas**
 
-Isso vale para Grade Semanal, Lista de Ofertas, calendario, Gantt, agendas publicas, exportacoes e SIGAA.
+Isso vale para Grade Semanal, Lista de Ofertas, calendarios, agendas publicas, exportacoes e SIGAA.
 
 ---
 
@@ -113,7 +113,8 @@ Interface:
 - `main.js`: bootstrap, importacao/exportacao e publicacao.
 - `ui.js`: fluxo principal (Alocar Componentes, Lista de Ofertas, exportacoes). Ainda e o maior arquivo; ver `docs/plano_refatoracao.md`.
 - `calendar.js`, `calendarios_ui.js`: calendarios da turma e do docente.
-- `gantt_ui.js`: Gantt do docente.
+- `turnos_docente.js`: em que turno cai cada aula do calendario do docente (sobrou do antigo Gantt, removido em 07/11/2026).
+- `ajuda_ui.js` (+ `css/ajuda.css`): aba Ajuda, um tema por vez.
 - `conflitos_ui.js`: painel de conflitos globais de docentes.
 - `ui_feedback.js`: toasts, mensagens e botoes de copiar.
 - `agenda_publica.js`: runtime da agenda publica (multi-PL, consulta docente/discente).
@@ -249,8 +250,8 @@ A Lista de Ofertas tem funcao administrativa e de revisao. O comportamento esper
 ### 5.5. Calendario e visoes
 
 - **Calendario da Turma**: leitura do cronograma final da turma, com avisos de mudanca de turno quando houver aula excepcional fora do turno nativo.
-- **Visao do Professor / Calendario Docente**: leitura e auditoria de ocupacao docente com a mesma base canonica e badges de turno.
-- **Gantt do docente**: leitura temporal do semestre por docente, com turnos reais e os mesmos recortes usados nos calendarios.
+- **Calendario Docente**: ano inteiro (PL1 a PL4) ou um PL, tabela de CH do professor e conflitos (inclusive entre PLs), com a mesma base canonica e badges de turno.
+- **Menu Agenda Publica**: a agenda publicada num iframe com moldura de celular (`agenda_publica.html?source=public`).
 - **Agenda publica**: `agenda_publica.html` e a agenda unica em producao, em arquivo unico multi-PL com seletor de plano; a agenda discente legada foi removida em 07/2026.
 
 Essas telas devem consumir a mesma base canonica de execucao.
@@ -420,7 +421,7 @@ Cobertura atual mais importante:
 - `troca_ordem`: quando duas componentes podem trocar de lugar (mesma carga, sequencia, sub-turma, faixas).
 - `versoes`: todos os `.js`/`.css` chamados com a mesma versao `?v=` (corrija com `npm run versao`).
 
-Teste de fumaca no navegador (`tools/smoke_test.mjs`): abre o app num Chrome/Edge invisivel com os dados de `alocacoes_publicas.json` e confere abas, Lista de Ofertas + Trocar, busca de docentes (so nomes individuais), Gantt e Celular; qualquer erro no console reprova. Leva uns 25 s. Outro navegador: `CHROME_PATH`.
+Teste de fumaca no navegador (`tools/smoke_test.mjs`): abre o app num Chrome/Edge invisivel com os dados de `alocacoes_publicas.json` e confere abas, Lista de Ofertas + Trocar, busca de docentes (so nomes individuais), docente novo, Calendario Docente (Ano inteiro e PL1..PL4) e menu Agenda Publica; qualquer erro no console reprova. Leva uns 25 s. Outro navegador: `CHROME_PATH`.
 
 ```bash
 npm run smoke

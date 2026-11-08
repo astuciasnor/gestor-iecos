@@ -37,6 +37,28 @@ no navegador).
   estrutura atual; `package.json` so para `npm test`.
 - `.htaccess` na raiz para o servidor da UFPA.
 
+## Limpeza de 07/11/2026 (depois da pausa, do redesenho do Alocar e das cores suaves)
+
+- Revisao do codigo do dia (pausa entre faixas, avisos no cartao Proximo passo,
+  cartao de feriado, tons suaves nos calendarios e na agenda): sem falhas;
+  `npm test` (119), `npm run smoke` e `tools/teste_pausa_intercalada.mjs` verdes.
+- Aba Ajuda refeita por temas (`js/ajuda_ui.js`, `css/ajuda.css`); o CSS antigo
+  dela saiu do `style.css` e do `<style>` do `index.html`.
+- CSS morto removido: marcador de feriado antigo (`weekly-holiday-column-*`) e
+  `fp-sep`/`fp-grupo`/`fp-hora` da tabela de faixas.
+- `applySidebarLayoutFixes` (ui.js) varria a pagina inteira procurando os
+  titulos "Oferta de disciplina" e "Gerenciando arquivos" e punha uma linha
+  tambem em textos da Ajuda; agora so olha a barra lateral.
+- Import sem uso (`formatTurnoOfertaLabel` no `gantt_ui.js`) e aviso escondido
+  e obsoleto da barra lateral removidos.
+
+Pendente (pequeno, sem pressa):
+- [ ] `css/alocar-componentes.css`: 11 seletores repetidos (regras acrescentadas
+      por partes no redesenho). Juntar so com comparacao dos estilos calculados
+      antes/depois (a ordem das regras importa).
+- [ ] `applySidebarLayoutFixes`: trocar os ajustes por texto por classes no
+      `index.html` + CSS.
+
 ## Fase 1 - Migracao para o servidor da UFPA (quando a VPN sair)
 
 - [x] Compactacao do JSON no `.htaccess` (05/11/2026): a agenda da API ia com
@@ -48,9 +70,9 @@ no navegador).
 - [ ] Rodar de novo `mysql/schema.sql` no phpMyAdmin (ganhou `sessoes` e `login_tentativas`).
 - [ ] Conferir no navegador (F12 > Rede) se `academic_rules.mjs` chega como
       `text/javascript` e se o site abre sem erro 500 (se der, apagar o `.htaccess`).
-- [ ] Copiar usuarios e alocacoes do Supabase, virar `DEFAULT_BACKEND_MODE` para `'ufpa'`.
-- [ ] Endereco antigo (GitHub Pages) com aviso "o Cardume mudou de endereco".
-- [ ] Depois do corte: "Publicar Online" enviando a agenda publica pela API (caminho C).
+- [x] Copiar usuarios e alocacoes do Supabase, virar `DEFAULT_BACKEND_MODE` para `'ufpa'` (virada em 05/11/2026).
+- [x] Endereco antigo (GitHub Pages) com aviso "o Cardume mudou de endereco" (`mudou.html`).
+- [x] Depois do corte: "Publicar Online" enviando a agenda publica pela API (caminho C).
 - [ ] Depois do corte, opcional: tirar os sufixos `??v=` dos imports (o
       `.htaccess` ja garante arquivo novo), o que acaba com o passo 4 da validacao.
 

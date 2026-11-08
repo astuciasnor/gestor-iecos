@@ -2,308 +2,193 @@
 
 ![Logo do Projeto](img/logo_cardume.png)
 
-Sistema web para montagem, revisao, auditoria e publicacao de grades academicas do IECOS/UFPA. O app roda no navegador, usa `localStorage` como persistencia local por plano letivo e hoje opera com o motor canonico por faixas ja consolidado na `main`.
+Sistema web para montar, revisar e publicar a oferta de componentes das turmas
+do IECOS/UFPA (Campus Braganca). Os coordenadores alocam cada componente por
+datas e horarios, o Cardume confere os choques de turma e de professor, e o
+administrador publica a agenda que alunos e docentes consultam no celular.
 
-Links publicos:
-- App principal: `https://cardume.iecos.ufpa.br/` (servidor da UFPA, desde 05/11/2026)
-- Agenda publica: `https://cardume.iecos.ufpa.br/agenda_publica.html`
-- Endereco antigo (GitHub Pages): o app mostra o aviso de mudanca (`mudou.html`)
+Desde 05/11/2026 o app roda no servidor da UFPA (PHP + MariaDB), com os dados
+compartilhados entre as coordenacoes.
+
+| | Endereco |
+|---|---|
+| App | `https://cardume.iecos.ufpa.br/` |
+| Agenda publica | `https://cardume.iecos.ufpa.br/agenda_publica.html` |
+| Endereco antigo (GitHub Pages) | mostra o aviso de mudanca (`mudou.html`) |
 
 Documentacao tecnica:
-- [`docs/manual_desenvolvedor.md`](docs/manual_desenvolvedor.md)
-- [`docs/plano_banco_dados_e_cadastro.md`](docs/plano_banco_dados_e_cadastro.md)
-- [`docs/plano_refatoracao.md`](docs/plano_refatoracao.md) (estado do codigo e proximos passos)
+[`docs/manual_desenvolvedor.md`](docs/manual_desenvolvedor.md) ·
+[`docs/plano_refatoracao.md`](docs/plano_refatoracao.md) ·
+[`docs/plano_banco_dados_e_cadastro.md`](docs/plano_banco_dados_e_cadastro.md)
+
+O guia de uso para os coordenadores fica dentro do app, na aba **Ajuda**
+(temas Comecar, Alocacao, Revisao, Docentes, Publicacao e Arquivos).
 
 ---
 
-## Funcionalidades principais
+## Funcionalidades
 
-- **Periodos letivos oficiais:** o seletor lateral consome `periodos_letivos` do `dados_app.json` e preenche automaticamente inicio e fim do plano ativo.
-- **Persistencia por plano letivo:** cada combinacao `periodo + inicio + fim` fica isolada no navegador.
-- **Aba Alocar Componentes como centro operacional:** e o unico lugar para desenhar slots e definir regimes de funcionamento.
-- **Motor canonico por faixas:** toda oferta e tratada por datas, slots e execucao real, sem depender da UX legada por tipo.
-- **Datas das faixas como referencia oficial:** a `Faixa 1` nasce por sugestao automatica, mas a edicao oficial da data e feita pelos mini calendarios das faixas.
-- **Turnos e sabado integrados ao motor:** mudancas de turno, sabado de manha e avisos `Atenção Turno` sao refletidos na aba Alocar Componentes, calendarios, agendas e Gantt.
-- **Gantt por docente:** leitura temporal do semestre, com turnos reais e a mesma base de execucao usada nos calendarios.
-- **Agenda publica:** `agenda_publica.html` e a pagina oficial de publicacao das grades. Na consulta docente, o **Resumo do ano** mostra todos os periodos publicados (em curso e futuros), com as componentes do professor e as semanas de aula; clicar numa semana abre o calendario dela.
-- **Exportacao, SIGAA e publicacao online:** backup, exportacao institucional e `alocacoes_publicas.json` partem do plano ativo.
-- **Testes automatizados:** `npm test` roda as suites de `tests/` (motor canonico, faixas, conflitos de horario, quadros, estado da grade e sincronizacao).
+**Alocar Componentes** (centro do trabalho)
+- Escolha de periodo letivo, curso, turma e turno na barra lateral; componente
+  buscada pelo nome, com `codigo · curso` e a CH do curso da turma.
+- Ate 3 **faixas** por componente (horario semanal num intervalo de datas). A
+  faixa nova nasce sozinha ao redesenhar numa semana posterior, com **Desfazer**.
+- **Pausa e intercalacao**: um Fim digitado antes do Inicio da faixa seguinte
+  deixa os dias do meio sem aula, livres para outra componente da turma.
+  Componente com pausa nunca e empurrada sozinha (choque bloqueia o salvar).
+- Feriados na grade (coluna listrada com o nome), sabado no turno da manha,
+  aviso de turno diferente, varios docentes com CH parcial, cadastro de
+  docente novo, cores escolhidas numa paleta e mostradas em tom suave.
+- Cartao **Proximo passo** no topo da aba: diz o que falta e mostra os avisos.
 
----
+**Revisao**
+- **Lista de Ofertas**: editar, excluir, **Trocar** duas componentes de lugar,
+  selo **faltam Xh**, exportacao de metadados SIGAA.
+- **Calendario da Turma**: mes a mes, com a tabela de CH alocada.
+- **Choques**: na turma (ao salvar) e de professor (alerta global, inclusive
+  com outro PL que corre nas mesmas datas).
 
-## Fluxo de uso
+**Docentes**
+- **Calendario Docente**: ano inteiro (PL1 a PL4) ou um PL; tabela com o nome
+  do professor, horario de cada faixa, CH docente (`30/90` quando dividida),
+  CH alocada (verde/vermelha) e conflitos, inclusive entre PLs.
 
-### 1. Configuracao inicial
-
-1. Abra o sistema no navegador.
-2. Selecione o **Periodo Letivo** oficial na lateral. O app preenche automaticamente as datas de inicio e fim.
-3. Escolha o **Turno**, depois o **Curso** e a **Turma**.
-
-### 2. Montagem da grade
-
-1. Selecione a componente, a cor e o(s) docente(s) na lateral.
-2. Va para a aba **Alocar Componentes**.
-3. Defina o inicio da `Faixa 1` pelo mini calendario da tabela de faixas.
-4. Desenhe os slots diretamente na grade.
-5. Se o regime mudar ao longo do periodo, crie a `Faixa 2` ou `Faixa 3` e desenhe explicitamente o novo padrao.
-6. Clique em **Salvar Componente**.
-
-Observacoes importantes:
-- o clique na grade desenha horarios, mas nao deve empurrar a data oficial da `Faixa 1`;
-- a data inicial sugerida para uma nova componente pode vir do primeiro dia livre apos a ultima alocacao valida da turma;
-- se a sugestao nao servir, ajuste a data diretamente no calendario da faixa.
-
-### 3. Revisao e auditoria
-
-- Use a aba **Lista de Ofertas** para revisar, editar ou excluir ofertas.
-- Na aba **Calendario Docente**, a visao **📱 Celular** mostra a agenda publica numa moldura de celular, ja no professor escolhido (Resumo do ano e calendario de cada mes), como ele ve no celular. Mostra o que esta publicado (no Live Server, o rascunho deste computador).
-- **Trocar** (na Lista de Ofertas) troca duas componentes da turma de lugar: com a mesma carga horaria, em qualquer posicao; com cargas diferentes, so quando estao em sequencia. A troca e barrada se houver choque na turma ou de professor, e pode ser desfeita com **Desfazer**.
-- O selo **"faltam Xh"** na Lista de Ofertas marca a oferta com menos aulas que a carga horaria (cortada no fim do periodo ou da faixa). Ajuste pelo **Editar** (datas, horarios ou sabados) ou leve a componente para outro periodo.
-- Use **Calendario da Turma**, **Calendario Docente** e **Grafico Gantt** para leitura e auditoria.
-- Quando aparecer o aviso de turno, ele indica que aquela aula ocorre excepcionalmente em um turno diferente do turno nativo da turma.
-
-### 4. Publicacao e exportacoes
-
-- **Exportar JSON:** gera backup do plano letivo ativo.
-- **Importar JSON:** restaura ou mescla dados no contexto do plano selecionado.
-- **Exportar Metadados SIGAA:** gera o payload institucional do plano ativo.
-- **Publicar Online:** prepara o arquivo publico para as agendas.
+**Publicacao e administracao**
+- **Publicar Online** (so o administrador): grava a agenda no servidor; entram
+  o periodo em curso e ate 4 futuros com alocacoes.
+- Menu **Agenda Publica**: a agenda publicada num celular grande, dentro do app.
+- **Usuarios e backup** (administrador): acessos, senha provisoria, docentes
+  novos para conferir e copia `.sql` do banco.
 
 ---
 
 ## Modelo canonico
 
-### Faixa
+**Faixa** = regime de funcionamento num intervalo de datas.
 
-Faixa significa:
+- a faixa nova substitui a anterior a partir do seu Inicio; o Fim da anterior
+  vira a vespera, **exceto** quando o Fim foi digitado antes disso (pausa);
+- os horarios de cada faixa so existem se forem desenhados;
+- CH, conflitos, calendarios, agenda e exportacoes partem da execucao real
+  gerada pelas faixas (`js/execution_engine.js`, `js/faixa_utils.js`);
+- a pausa nao muda o formato salvo: e so a data sem faixa vigente
+  (`js/pausa_faixas.mjs`, testada em `tests/pausa_faixas.test.mjs`).
 
-> **regime de funcionamento em um intervalo de datas**
-
-Regras operacionais:
-
-- a nova faixa substitui a faixa anterior a partir de sua data de inicio;
-- o fim da faixa anterior e ajustado automaticamente;
-- os slots da nova faixa so existem se forem desenhados pelo usuario;
-- o calculo de CH, conflitos, calendario, Gantt e exportacoes parte da execucao real gerada por essas faixas.
-
-### Conflitos
-
-Um conflito real existe somente quando houver, ao mesmo tempo:
-
-1. sobreposicao de periodo;
-2. sobreposicao de dia da semana;
-3. sobreposicao de slot.
-
-Formula:
+**Conflito** so existe quando ha, ao mesmo tempo, sobreposicao de periodo, de
+dia da semana e de horario:
 
 `conflito = overlap(periodo) AND overlap(dia) AND overlap(slot)`
+
+Uma componente nunca atravessa PLs (comeca e termina dentro do seu PL).
+
+---
+
+## Servidor da UFPA (modo `ufpa`, o padrao)
+
+- Hospedagem CTIC: `cardume.iecos.ufpa.br` (PHP 8.2 + MariaDB 11.8). FTP e
+  painel so com a VPN da UFPA; o phpMyAdmin abre sem VPN.
+- Banco: `mysql/schema.sql`. API: `api/index.php`. A senha do banco fica em
+  `api/config.php` (copiar de `api/config.exemplo.php`; fora do Git e bloqueado
+  pelo `api/.htaccess`).
+- Login, permissao por curso (cada coordenador altera so as turmas do seu
+  curso; o admin altera todas; todos veem tudo), historico e ultimo acesso sao
+  feitos pela API. Sem tempo real: o navegador consulta as mudancas a cada 5 s
+  (30 s com a aba em segundo plano).
+- `.htaccess` da raiz: tipo correto para os `.mjs`, cache sempre conferido,
+  JSON compactado e pastas de trabalho (`tools/`, `mysql/`, `docs/`...) fora do
+  ar. Se o site der erro 500 depois de envia-lo, apague esse arquivo.
+- Firewall do servidor (ModSecurity): recusa envios maiores que 128 KB e corpos
+  `application/json` com 1000 campos ou mais. Por isso `js/remoto_ufpa.js` manda
+  o JSON como `text/plain`, divide o salvar em envios de ate 100 KB e manda a
+  agenda em pedacos (`publicar_parte`).
+- Agenda publica: **Publicar Online** grava em `agenda_publicada` (ficam as 30
+  ultimas; desfazer = apagar a ultima linha) e `agenda_publica.html` le de
+  `api/?acao=agenda`.
+
+### Atualizar o site
+
+```bash
+npm test && npm run smoke          # tudo verde antes de enviar
+python tools/montar_envio_ufpa.py  # monta ../cardume_envio_ufpa
+```
+
+No FileZilla (com a VPN), enviar o conteudo de `../cardume_envio_ufpa` para a
+raiz `/`. A pasta nunca leva o `api/config.php`, que nao pode ser sobrescrito.
+
+### Teste local igual ao servidor (Docker)
+
+`tools/servidor_local/docker-compose.yml` (instrucoes no proprio arquivo);
+abrir `http://localhost:8080/?backend=ufpa`. O banco local vem de um backup:
+os dados podem estar atrasados em relacao ao site.
+
+### Modos antigos
+
+- `local` (`?backend=local`): dados so no `localStorage` do navegador, senha
+  unica. Usado pelos testes automaticos.
+- `supabase`: banco usado ate 05/11/2026, hoje so leitura. Codigo em
+  `js/remoto_supabase.js` e `supabase/schema.sql`; a copia para o servidor da
+  UFPA foi feita com `tools/migracao_supabase_ufpa.py`.
+- `tools/publish_online.py` publicava a agenda no GitHub Pages (modos `local`
+  e `supabase`); no modo `ufpa` basta o botao **Publicar Online**.
 
 ---
 
 ## Dados e manutencao
 
-O arquivo `dados_app.json` e gerado a partir de `dados/planilha_base.xlsx` pelo script:
+`dados_app.json` e gerado a partir de `dados/planilha_base.xlsx`:
 
 ```bash
 python tools/convert_data.py
 ```
 
-Abas principais esperadas no Excel:
+Abas esperadas: `docentes`, `componentes`, `turmas`, `cursos`, `horarios`,
+`feriados`, `periodos_letivos`.
 
-- `docentes`
-- `componentes`
-- `turmas`
-- `cursos`
-- `horarios`
-- `feriados`
-- `periodos_letivos`
-
-A aba `periodos_letivos` e a fonte oficial dos periodos institucionais. Exemplo:
-
-| ano | periodo_letivo | inicio | fim |
-|---|---|---|---|
-| 2026 | PL1 | 05/01/2026 | 06/03/2026 |
-| 2026 | PL2 | 23/03/2026 | 23/07/2026 |
-
-Observacoes:
-
-- o app nao depende mais de datas padrao escritas manualmente no `index.html`;
-- o seletor lateral consome os periodos oficiais gerados no JSON;
-- `horarios_por_turno` e a base para a aba Alocar Componentes, calendarios e Gantt.
-- correcao de nome de docente: troque o nome na coluna `docente` e escreva a grafia antiga na coluna `nomes_anteriores` (varias separadas por `;`). Ao carregar ou importar, o app troca a grafia antiga pela nova nas alocacoes, para o mesmo professor nao aparecer com dois nomes (o que esconderia conflitos).
-- `regime_vigencia` (fixado em `tools/convert_data.py`, hoje `2026-08-24`) define a partir de quando cada curso usa o regime de horario proprio; planos que comecam antes seguem o regime padrao. Se houver nova mudanca de regime, revise esse valor.
-- mudanca de quadro de um curso (coluna `regime` da aba `cursos`): ao carregar ou importar, as ofertas salvas no quadro antigo passam ao quadro novo aula por aula (1a aula do turno -> 1a aula, etc.; `js/quadro_horario.mjs`). Aulas sem correspondente no quadro novo ficam como estao e devem ser revistas.
-
-### Abertura de um novo ano letivo (ex.: 2027)
-
-Os planos ficam no `localStorage` do navegador, com chave `periodo + inicio + fim`. Por isso:
-
-1. **Antes** de alterar a planilha, exporte um backup JSON (**Exportar (JSON)**) de cada plano em uso.
-2. Inclua os novos periodos na aba `periodos_letivos` do Excel e rode `python tools/convert_data.py`.
-3. Nao altere as datas de um periodo que ja tem plano salvo: a chave muda e o plano parece "sumir" do seletor (os dados continuam no navegador, sob a chave antiga). Se a data oficial mudar, importe o backup no periodo corrigido.
-4. Teste o seletor e a importacao com uma copia dos dados antes de liberar para as coordenacoes.
+- `periodos_letivos` e a fonte oficial dos periodos (ano, PL, inicio, fim). O
+  seletor lateral e as datas dos planos vem dela.
+- Nao altere as datas de um periodo que ja tem plano salvo: a chave do plano e
+  `periodo + inicio + fim`, e o plano parece "sumir".
+- Correcao de nome de docente: troque na coluna `docente` e ponha a grafia
+  antiga em `nomes_anteriores` (separadas por `;`). Ao carregar, o app troca a
+  grafia antiga pela nova nas alocacoes.
+- `regime_vigencia` (em `tools/convert_data.py`, hoje `2026-08-24`): a partir de
+  quando cada curso usa o seu quadro de horarios.
+- Mudanca de quadro de um curso (coluna `regime` da aba `cursos`): as ofertas
+  salvas passam ao quadro novo aula por aula (`js/quadro_horario.mjs`).
+- O mesmo nome de componente pode existir em varios cursos com codigo e CH
+  diferentes: as buscas usam sempre o curso da turma
+  (`findComponente(nome, turmaId)` em `js/curso_turma_helpers.js`).
 
 ---
 
-## Modo online (banco compartilhado)
-
-Provisorio, ate a hospedagem no servidor do CTIC-UFPA. As alocacoes ficam num
-banco Supabase, cada coordenador entra com e-mail e senha, e as alteracoes de
-um curso aparecem na hora para os outros (conflitos de docente entre cursos
-passam a ser vistos durante a alocacao).
-
-- Ativar neste navegador: abrir o app com `?backend=supabase` (ou `?backend=ufpa`)
-  (voltar ao modo local com `?backend=local`). O padrao fica em
-  `js/backend_config.js` (`DEFAULT_BACKEND_MODE`).
-- Banco: `supabase/schema.sql` (colar no SQL Editor do Supabase e executar).
-- Usuarios: Supabase > Authentication > Users > Add user (e-mail + senha,
-  marcar "Auto Confirm User"). Depois, no SQL Editor:
-
-```sql
-insert into public.perfis (usuario, nome, curso, papel)
-select id, 'Nome do coordenador', 'EP', 'coordenador'   -- ou 'admin'
-from auth.users where email = 'pessoa@ufpa.br'
-on conflict (usuario) do update
-  set nome = excluded.nome, curso = excluded.curso, papel = excluded.papel;
-```
-
-- Cada um altera so as turmas do proprio curso (o admin altera todas); todos
-  veem tudo. Alteracoes em turmas de outro curso sao desfeitas com aviso.
-- Na primeira entrada, se houver ofertas do curso salvas so no navegador, o app
-  pergunta se deve envia-las; uma copia do que havia fica em
-  `cardume_backup_v1::<plano>` no localStorage.
-- O historico de alteracoes fica em `alocacoes_historico` (visivel ao admin).
-- Senhas: o admin cria a conta com uma senha inicial; no primeiro acesso o app
-  pede uma senha nova (marca `senha_definida` nos dados da conta) e o botao
-  "Senha" da barra permite trocar depois. Para quem esqueceu, no SQL Editor:
-
-```sql
-update auth.users
-set encrypted_password = extensions.crypt('SenhaProvisoria123', extensions.gen_salt('bf')),
-    raw_user_meta_data = coalesce(raw_user_meta_data, '{}'::jsonb) - 'senha_definida'
-where email = 'pessoa@ufpa.br';
-```
-
-- Modo leitura: salvar, excluir ou inserir por bloco numa turma de outro curso
-  e barrado antes, com aviso (`store.podeEditarTurma`).
-- Codigo: `js/sync_remoto.js` (servidor), `js/sync_diff.mjs` (regras, testadas
-  em `tests/sync_diff.test.mjs`), `js/acesso_ui.js` (login e status).
-- Codigo de cada servidor: `js/remoto_supabase.js` e `js/remoto_ufpa.js`
-  (mesma interface; `js/sync_remoto.js` escolhe pelo modo).
-
-### Servidor da UFPA (modo `ufpa`)
-
-- Hospedagem CTIC: `cardume.iecos.ufpa.br` (PHP 8.2 + MariaDB 11.8). FTP e
-  painel so com a VPN da UFPA; o phpMyAdmin abre sem VPN.
-- Banco: `mysql/schema.sql` (phpMyAdmin > banco `cardume_iecos` > aba SQL).
-- API: `api/index.php`. A senha do banco fica em `api/config.php` (copiar de
-  `api/config.exemplo.php`; fora do Git e bloqueado pelo `api/.htaccess`).
-- O que no Supabase e feito pelo banco (login, permissao por curso, carimbo,
-  historico) aqui e feito pela API. Sem tempo real: o navegador consulta as
-  mudancas a cada 5 s (30 s com a aba em segundo plano).
-- Senhas vindas do Supabase (bcrypt `$2a$`) funcionam e sao convertidas ao
-  formato do PHP no primeiro login.
-- `.htaccess` da raiz: tipo correto para os `.mjs`, cache sempre conferido
-  (todos pegam a versao nova sem limpar o cache) e pastas de trabalho
-  (`tools/`, `mysql/`, `docs/`...) fora do ar. Se o site der erro 500 depois de
-  envia-lo, apague esse arquivo.
-- Teste local igual ao servidor (Docker): `tools/servidor_local/docker-compose.yml`
-  (instrucoes no proprio arquivo); abrir `http://localhost:8080/?backend=ufpa`.
-- Em enderecos `*.ufpa.br` o modo padrao e `ufpa` (sem precisar de `?backend=`).
-- Atualizar o servidor: `python tools/montar_envio_ufpa.py` monta
-  `../cardume_envio_ufpa` (sem o `api/config.php`, que nunca deve ser
-  sobrescrito no servidor); no FileZilla, enviar tudo para a raiz `/`.
-- Agenda publica no modo `ufpa`: o botao **Publicar Online** (so o
-  administrador) grava a agenda no banco (`POST publicar`, mesmas regras do
-  `publish_online.py`) e `agenda_publica.html` le de `api/?acao=agenda`.
-  Enquanto nada foi publicado no servidor, vale o `alocacoes_publicas.json`
-  enviado com o app. Desfazer: apagar a ultima linha de `agenda_publicada`
-  (ficam as 30 ultimas).
-- Administrador (modo `ufpa`): botao **Usuarios e backup** na barra lateral
-  (`js/admin_ui.js`). Cadastra, edita e exclui acessos, gera senha provisoria
-  (a pessoa cria a sua no primeiro acesso) e baixa um `.sql` com usuarios,
-  alocacoes e agenda publicada, importavel no phpMyAdmin para restaurar (o
-  historico nao entra). Tudo conferido na API (`exigirAdmin`).
-- Firewall do servidor da UFPA (ModSecurity, configuracao recomendada):
-  recusa envios maiores que 128 KB (413) e corpos `application/json` com 1000
-  campos ou mais (400), antes da API. Por isso `js/remoto_ufpa.js` manda o JSON
-  como `text/plain`, divide o salvar em envios de ate 100 KB e manda a agenda
-  em pedacos (`publicar_parte`), montada no fim. O servidor local (Docker) tem
-  o mesmo firewall e os mesmos limites.
-- Copiar os dados do Supabase (pode repetir; substitui as alocacoes e encerra as
-  sessoes): `tools/migracao_supabase_ufpa.py` (consultas e passos no proprio
-  arquivo) gera um `.sql` para a aba Importar do phpMyAdmin. Os CSV trazem os
-  hashes das senhas: pasta fora do repositorio, apagar depois.
-
-## Publicacao online
-
-No servidor da UFPA (modo `ufpa`) basta o botao **Publicar Online**: a agenda
-vai direto para o servidor (ver "Servidor da UFPA"). Os passos abaixo valem
-para o GitHub Pages (modos `local` e `supabase`).
-
-1. No app, clique em **Publicar Online**. O arquivo gerado (pasta Downloads) reune **os periodos letivos em curso e ate 4 futuros que tenham ao menos uma alocacao** neste navegador.
-2. No terminal, na pasta do projeto, rode e responda `s`:
+## Testes e versao dos arquivos
 
 ```bash
-python tools/publish_online.py
+npm test                              # todas as suites de tests/ (Node 22+)
+npm run smoke                         # abre o app num Chrome/Edge invisivel e passa pelas abas
+node tools/teste_pausa_intercalada.mjs  # pausa + outra componente no meio, de ponta a ponta
+node tools/prints_instrucoes.mjs      # refaz os prints de img/instrucoes (menu e Ajuda)
 ```
 
-   O script pega o arquivo mais recente de Downloads, valida, mostra os periodos e a hora do download, grava, faz o commit **so do arquivo publico** (outras alteracoes do projeto ficam de fora) e envia ao GitHub. A agenda atualiza em 1 a 3 minutos.
-
-Outras opcoes: `--check` (so confere, nao grava), `--no-push` (commit sem enviar), `--no-git` (so grava). O antigo `--push` continua aceito.
-
-Arquivos e paginas envolvidos:
-
-- `alocacoes_publicas.json`
-- `agenda_publica.html`
-- `publicacoes/publicacao_config.json`
-- `publicacoes/catalogo_publicacoes.json`
-
-O arquivo publico e unico e guarda varios planos (`publications`). A cada publicacao, o script substitui os periodos enviados, mantem os demais e aplica a janela publicada: **o(s) periodo(s) em curso e ate 4 futuros** (5 planos; 6 quando dois periodos correm ao mesmo tempo). Periodos encerrados saem do arquivo. A agenda publica abre no periodo em curso e oferece a troca entre os periodos publicados.
+**Versao dos arquivos (cache):** todos os `.js`/`.css` sao chamados com o mesmo
+`?v=CARIMBO`. Depois de mudar qualquer arquivo de `js/` ou `css/`, rode
+`npm run versao`. O `npm test` confere se ficou tudo igual.
 
 ---
 
-## Testes
+## Onde fica cada coisa
 
-Todas as suites (Node 22 ou mais novo; o app em si nao usa npm):
-
-```bash
-npm test
-# ou, sem npm:
-node --test "tests/*.test.mjs"
-```
-
-Teste do app aberto no navegador (Chrome ou Edge invisivel, com os dados de `alocacoes_publicas.json`): abre o app, passa pelas abas, Lista de Ofertas e Trocar, busca de docentes, Gantt e Celular, e falha se aparecer erro no console. Rode antes de publicar uma mudanca no codigo:
-
-```bash
-npm run smoke
-```
-
-**Versao dos arquivos (cache do navegador):** todos os `.js`/`.css` do app sao chamados com o mesmo `?v=CARIMBO`. Depois de mudar qualquer arquivo de `js/` ou `css/`, rode:
-
-```bash
-npm run versao        # o mesmo que: node tools/bump_version.mjs
-```
-
-O `npm test` confere se ficou tudo com a mesma versao (`tests/versoes.test.mjs`).
-
-Uso recomendado nas limpezas graduais:
-
-1. rodar a suite automatizada e o `npm run smoke`;
-2. testar `index.html`;
-3. testar `agenda_publica.html`;
-4. so entao remover ou consolidar arquivos de baixo risco.
-
----
-
-## Estado atual
-
-Diretrizes ja consolidadas:
-
-- motor canonico por faixas em producao;
-- mudancas de turno funcionando no app e nas agendas;
-- Gantt do docente validado;
-- agenda publica (consulta docente e discente) funcionando em desktop e celular;
-- publicacao online validada com `publish_online.py`;
-- modo online (Supabase) em uso pelas coordenacoes; copia no servidor da UFPA (cardume.iecos.ufpa.br) instalada e testada, aguardando a decisao da virada;
-- limpezas e remocoes devem continuar em ciclos pequenos, sempre com teste e commit.
+| Arquivo | O que faz |
+|---|---|
+| `index.html` | o app (barra lateral e abas) |
+| `agenda_publica.html`, `js/agenda_publica.js` | a agenda publica |
+| `js/main.js` | partida, exportar/importar, publicar |
+| `js/ui.js` | aba Alocar Componentes e Lista de Ofertas (o maior arquivo; fatiamento em `docs/plano_refatoracao.md`) |
+| `js/calendarios_ui.js`, `js/conflitos_ui.js` | Calendario da Turma/Docente e alerta global de choques |
+| `js/execution_engine.js`, `js/faixa_utils.js`, `js/calendar.js` | motor das faixas e das aulas |
+| `js/pausa_faixas.mjs`, `js/troca_ordem.mjs`, `js/pendentes.mjs` | regras puras, com testes |
+| `js/sync_remoto.js`, `js/remoto_ufpa.js`, `api/index.php` | servidor |
+| `js/admin_ui.js`, `js/acesso_ui.js` | login, barra de sincronizacao, Usuarios e backup |
+| `js/ajuda_ui.js`, `css/ajuda.css` | aba Ajuda |
+| `css/style.css`, `css/alocar-componentes.css` | estilos gerais e da aba Alocar |
+| `js/color_utils.js`, `js/seletor_cor.js` | paleta e tons suaves das componentes |
