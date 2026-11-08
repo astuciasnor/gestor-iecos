@@ -1,29 +1,29 @@
-import { store } from './store.js?v=202611080955';
-import { getTurnoLetter, mapSlotToTurno } from './turns.js?v=202611080955';
-import { normalizePeriodo as normalizePeriodoLetivoCode } from './plan_storage.js?v=202611080955';
-import { getCalendarEvents } from './calendar.js?v=202611080955';
-import { isDateOverlap } from './utils.js?v=202611080955';
-import { weeklyState } from './weekly_state.js?v=202611080955';
-import { findPendentesCobertas, isPendenteJaAlocada } from './pendentes.mjs?v=202611080955';
-import { classifySwap } from './troca_ordem.mjs?v=202611080955';
-import { closeFaixaEnds, isPauseEnd, listFaixaPauses } from './pausa_faixas.mjs?v=202611080955';
-import { numeroDaSubturma, isTurmaInteira, proximaSubturma, codigoT01Como } from './subturmas.mjs?v=202611080955';
-import { abrirMiniCalendario, fecharMiniCalendario, miniCalendarioAberto } from './mini_calendario.mjs?v=202611080955';
-import { buildCanonicalOfferProjection } from './execution_engine.js?v=202611080955';
+import { store } from './store.js?v=202611081024';
+import { getTurnoLetter, mapSlotToTurno } from './turns.js?v=202611081024';
+import { normalizePeriodo as normalizePeriodoLetivoCode } from './plan_storage.js?v=202611081024';
+import { getCalendarEvents } from './calendar.js?v=202611081024';
+import { isDateOverlap } from './utils.js?v=202611081024';
+import { weeklyState } from './weekly_state.js?v=202611081024';
+import { findPendentesCobertas, isPendenteJaAlocada } from './pendentes.mjs?v=202611081024';
+import { classifySwap } from './troca_ordem.mjs?v=202611081024';
+import { closeFaixaEnds, isPauseEnd, listFaixaPauses } from './pausa_faixas.mjs?v=202611081024';
+import { numeroDaSubturma, isTurmaInteira, proximaSubturma, codigoT01Como } from './subturmas.mjs?v=202611081024';
+import { abrirMiniCalendario, fecharMiniCalendario, miniCalendarioAberto } from './mini_calendario.mjs?v=202611081024';
+import { buildCanonicalOfferProjection } from './execution_engine.js?v=202611081024';
 import {
     buildSigaaMetadataPayload,
     validateSigaaMetadataPayload,
     getSigaaCode,
     buildScopedSigaaAllocationFromOfferFaixa
-} from './sigaa_metadata.js?v=202611080955';
-import { parseBackupDataFile, extractImportPlanMeta } from './serialization.js?v=202611080955';
+} from './sigaa_metadata.js?v=202611081024';
+import { parseBackupDataFile, extractImportPlanMeta } from './serialization.js?v=202611081024';
 import {
     showToastWarning,
     showPersistentStatusMessage,
     copyTextToClipboard,
     flashButtonCopyState,
     setupCopyActionButtons
-} from './ui_feedback.js?v=202611080955';
+} from './ui_feedback.js?v=202611081024';
 import {
     normalizeHexColor,
     adjustHexColor,
@@ -32,7 +32,7 @@ import {
     tonsDaCor,
     aplicarTonsBloco,
     PALETA_CORES
-} from './color_utils.js?v=202611080955';
+} from './color_utils.js?v=202611081024';
 import {
     isFaixaAllocation,
     isPriorityRegularAllocation,
@@ -41,8 +41,8 @@ import {
     normalizeTeacherNameForMatch,
     getDocenteShortLabel,
     getAllocationTeachersForConflict
-} from './allocation_helpers.js?v=202611080955';
-import { setupSeletorCor } from './seletor_cor.js?v=202611080955';
+} from './allocation_helpers.js?v=202611081024';
+import { setupSeletorCor } from './seletor_cor.js?v=202611081024';
 import {
     VINCULOS_DOCENTE_NOVO,
     OUTRA_UNIDADE,
@@ -51,9 +51,9 @@ import {
     findSimilarNames,
     problemaNoNome,
     limparEspacos
-} from './docente_nomes.mjs?v=202611080955';
-import { getSessionEmail, getPerfil, fetchAllocationsForPlans } from './sync_remoto.js?v=202611080955';
-import { resolveBackendMode } from './backend_config.js?v=202611080955';
+} from './docente_nomes.mjs?v=202611081024';
+import { getSessionEmail, getPerfil, fetchAllocationsForPlans } from './sync_remoto.js?v=202611081024';
+import { resolveBackendMode } from './backend_config.js?v=202611081024';
 import {
     normalizeConflictSlotLabel,
     getAvailableTurnoOfertaOptions,
@@ -62,7 +62,7 @@ import {
     isTurnoDividerSlot,
     buildHorariosForUI,
     getShiftChangeMeta
-} from './turno_helpers.js?v=202611080955';
+} from './turno_helpers.js?v=202611081024';
 import {
     getDisciplinaCHGlobal,
     derivarBloco,
@@ -72,7 +72,7 @@ import {
     getDisciplinaInfo,
     getCursoSiglaDaTurma,
     getPrintAcademicMetaLine
-} from './curso_turma_helpers.js?v=202611080955';
+} from './curso_turma_helpers.js?v=202611081024';
 import {
     renderMonthlyCalendar,
     renderTeacherCalendar,
@@ -80,11 +80,11 @@ import {
     clearTeacherRangeCache,
     setTeacherPeriod,
     getTeacherPeriod
-} from './calendarios_ui.js?v=202611080955';
+} from './calendarios_ui.js?v=202611081024';
 import {
     refreshTeacherConflictsUI,
     setCrossPlanLoader
-} from './conflitos_ui.js?v=202611080955';
+} from './conflitos_ui.js?v=202611081024';
 import {
     shouldIgnoreTurmaEventForCandidate,
     normalizeDrawnSlotsByDay,
@@ -98,7 +98,7 @@ import {
     resolveEditableFaixasFromStoredExecution,
     alignFaixasToExecutionEnd,
     buildFinalAdjustmentFaixaSuggestion
-} from './faixa_utils.js?v=202611080955';
+} from './faixa_utils.js?v=202611081024';
 import {
     timeToMinutes,
     shiftISODate,
@@ -112,14 +112,14 @@ import {
     isDateInsideRange,
     formatDateBRShortYear,
     formatDateBR
-} from './date_utils_ui.js?v=202611080955';
+} from './date_utils_ui.js?v=202611081024';
 import {
     initializeWeeklyScheduleForTurma,
     reconcileTurmaSelectionAfterPLChange,
     resetWeeklyViewOnTurmaChange,
     resolveActiveAcademicPeriod,
     slotLabelsOverlap
-} from './academic_rules.mjs?v=202611080955';
+} from './academic_rules.mjs?v=202611081024';
 
 const gridContainer = document.getElementById('weekly-grid');
 const selCurso = document.getElementById('sel-curso');
@@ -4961,6 +4961,7 @@ export function initUI() {
         });
     }
 
+    populateUnidades();
     populateCursos();
     populateDocentes();
     renderOfertasList();
@@ -5184,14 +5185,63 @@ function syncCursoTurmaSelectionAfterPlanChange() {
     };
 }
 
-function populateCursos() {
+// ---- Unidade (IECOS, CBRAG...) ----------------------------------------------
+// Cada curso tem a sua unidade (cursos[].unidade no dados_app.json; sem ela,
+// IECOS). A unidade escolhida filtra a lista de cursos. Abre no IECOS, ou na
+// unidade do ultimo curso usado.
+const UNIDADE_PADRAO = 'IECOS';
+function getUnidadeDoCurso(curso) {
+    return String(curso?.unidade || UNIDADE_PADRAO).trim().toUpperCase();
+}
+
+function getUnidadeSelecionada() {
+    return document.getElementById('sel-unidade')?.value || UNIDADE_PADRAO;
+}
+
+function populateUnidades() {
+    const sel = document.getElementById('sel-unidade');
+    if (!sel || !store.rawData) return;
+    const siglas = [...new Set([
+        ...UNIDADES.map((u) => u.sigla),
+        ...(store.rawData.cursos || []).map(getUnidadeDoCurso)
+    ])];
+    sel.innerHTML = siglas.map((sigla) => {
+        const nome = UNIDADES.find((u) => u.sigla === sigla)?.nome || sigla;
+        const rotulo = nome && nome !== sigla ? `${sigla} · ${nome}` : sigla;
+        return `<option value="${sigla}">${rotulo}</option>`;
+    }).join('');
+    const ultimo = (store.rawData.cursos || []).find((c) => c.sigla === store.settings.lastCurso);
+    sel.value = ultimo ? getUnidadeDoCurso(ultimo) : UNIDADE_PADRAO;
+    if (!sel.value) sel.value = siglas[0] || '';
+    if (!sel.dataset.ligado) {
+        sel.dataset.ligado = '1';
+        sel.addEventListener('change', onUnidadeChange);
+    }
+}
+
+function onUnidadeChange() {
+    const cursoAtual = selCurso?.value || '';
+    populateCursos({ manterCurso: false });
+    // O curso aberto e de outra unidade: limpa curso e turma.
+    if (cursoAtual && selCurso && !selCurso.value) onCursoChange();
+}
+
+function populateCursos({ manterCurso = true } = {}) {
     if (!store.rawData || !selCurso) return;
+    const unidade = getUnidadeSelecionada();
+    const cursos = (store.rawData.cursos || []).filter((c) => getUnidadeDoCurso(c) === unidade);
     selCurso.innerHTML = '<option value="">Selecione...</option>';
-    (store.rawData.cursos || []).forEach((c) => {
+    cursos.forEach((c) => {
         selCurso.innerHTML += `<option value="${c.sigla}">${c.curso}</option>`;
     });
-    if (store.settings.lastCurso) {
-        selCurso.value = store.settings.lastCurso;
+    const aviso = document.getElementById('unidade-aviso');
+    if (aviso) {
+        aviso.hidden = cursos.length > 0;
+        aviso.textContent = cursos.length ? '' : `${unidade} ainda não tem cursos no Cardume.`;
+    }
+    const ultimo = store.settings.lastCurso;
+    if (manterCurso && ultimo && cursos.some((c) => c.sigla === ultimo)) {
+        selCurso.value = ultimo;
         onCursoChange();
     }
 }

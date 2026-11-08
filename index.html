@@ -10,13 +10,13 @@
         // Vai para o aviso antes de carregar o programa. A agenda publica nao passa por aqui.
         if (/\.github\.io$/i.test(location.hostname)) location.replace('mudou.html');
     </script>
-    <link rel="stylesheet" href="css/style.css?v=202611080955">
+    <link rel="stylesheet" href="css/style.css?v=202611081024">
     <!-- Redesenho da aba Alocar Componentes (por partes); carrega depois do style.css -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
-    <link rel="stylesheet" href="css/alocar-componentes.css?v=202611080955">
-    <link rel="stylesheet" href="css/ajuda.css?v=202611080955">
+    <link rel="stylesheet" href="css/alocar-componentes.css?v=202611081024">
+    <link rel="stylesheet" href="css/ajuda.css?v=202611081024">
 
     <style>
         :root {
@@ -601,6 +601,14 @@
 
             <h3 class="sidebar-section-title">IDENTIFICA&Ccedil;&Atilde;O DA TURMA</h3>
 
+            <!-- Unidade: filtra os cursos (cursos[].unidade no dados_app.json). Opcoes em
+                 UNIDADES (js/docente_nomes.mjs); abre no IECOS. -->
+            <div class="inline-control unidade-control">
+                <label for="sel-unidade">Unidade:</label>
+                <select id="sel-unidade"></select>
+            </div>
+            <small id="unidade-aviso" class="unidade-aviso" hidden></small>
+
             <div class="form-group" style="margin-top: 0;">
                 <label for="sel-curso">Curso</label>
                 <select id="sel-curso">
@@ -1163,7 +1171,7 @@
                             <h2 class="aj-titulo">Ajuda do Cardume</h2>
                             <p class="aj-sub">Escolha um tema. Cada um vai direto ao ponto, com o que se usa no dia a dia.</p>
                         </div>
-                        <span class="aj-data">Atualizada em 07/11/2026</span>
+                        <span class="aj-data">Atualizada em 08/11/2026</span>
                     </header>
 
                     <nav class="aj-temas" role="tablist" aria-label="Temas da ajuda">
@@ -1196,8 +1204,9 @@
                                 <h3><span aria-hidden="true">🧭</span> Barra lateral, de cima para baixo</h3>
                                 <ol class="aj-passos">
                                     <li><b>Período letivo</b>: escolha o PL (ex.: <em>2027 - PL2</em>). As datas de início e fim vêm sozinhas.</li>
+                                    <li><b>Unidade</b>: já vem no <b>IECOS</b>. A outra opção é o <b>CBRAG</b> (Campus Bragança), com o curso de Matemática.</li>
                                     <li><b>Curso</b> e <b>Turma</b>: o nome da turma já mostra o bloco do período (ex.: <code>EP2026_BL1</code>).</li>
-                                    <li><b>Turno</b> da grade: Manhã, Tarde ou Noite.</li>
+                                    <li><b>Turno</b> da grade: Manhã, Tarde ou Noite. Em casos especiais e nos <b>estágios</b>, uma componente pode usar <b>dois turnos</b>: veja <button type="button" class="aj-ir" data-aj-ir="alocacao">Alocação › Turnos</button>.</li>
                                     <li><b>Oferta de disciplina</b>: importe o bloco inteiro ou escolha uma componente por vez.</li>
                                     <li><b>Arquivos</b>: exportar, importar e publicar.</li>
                                 </ol>
@@ -1228,6 +1237,15 @@
                                 <p>Componentes de PPC novo, feriados, períodos letivos e correções de cadastro ficam com o administrador do sistema:</p>
                                 <p class="aj-contato">👨‍💻 Prof. Evaldo Silva</p>
                                 <p class="aj-nota">Professor que não está na lista você mesmo cadastra: veja <button type="button" class="aj-ir" data-aj-ir="alocacao">Alocação › Docentes</button>.</p>
+                            </article>
+
+                            <article class="aj-cartao">
+                                <h3><span aria-hidden="true">🏛️</span> Unidades</h3>
+                                <ul class="aj-lista">
+                                    <li>O Cardume nasceu no <b>IECOS</b> (Engenharia de Pesca, Ciências Biológicas e Ciências Naturais) e abre sempre nele.</li>
+                                    <li>O <b>CBRAG</b> (Campus Bragança) já aparece no campo <b>Unidade</b>, hoje com Matemática.</li>
+                                    <li>Quando o Cardume crescer para outras unidades, cada uma entra nessa lista com as suas faculdades e cursos. Escolher a unidade mostra só os cursos dela.</li>
+                                </ul>
                             </article>
                         </div>
                     </div>
@@ -1268,8 +1286,9 @@
                             </article>
 
                             <article class="aj-cartao">
-                                <h3><span aria-hidden="true">📅</span> Sábado e feriados</h3>
+                                <h3><span aria-hidden="true">📅</span> Turnos, sábado e feriados</h3>
                                 <ul class="aj-lista">
+                                    <li><b>Dois turnos</b> (casos especiais e estágios): desenhe as aulas num turno, troque o <b>Turno</b> na barra lateral e desenhe no outro. O que já foi desenhado fica guardado, e a componente é salva com os dois.</li>
                                     <li><b>Feriado</b>: a coluna do dia fica listrada, com um cartão rosa e o nome do feriado. Nesse dia não há aula.</li>
                                     <li><b>Sábado</b>: com <b>“Sábado no turno da manhã”</b> ligado, as aulas de sábado são salvas no turno da manhã.</li>
                                     <li>Aula fora do turno da turma ganha o aviso <b>Atenção Turno</b> nos calendários e na agenda.</li>
@@ -1463,7 +1482,7 @@
         </main>
     </div>
 
-    <script type="module" src="js/main.js?v=202611080955"></script>
+    <script type="module" src="js/main.js?v=202611081024"></script>
 </body>
 
 </html>

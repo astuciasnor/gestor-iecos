@@ -19,7 +19,8 @@ turmas:
   | periodos (opcional; "impares" = so PL1/PL3, padrao "pares")
 
 cursos:
-  sigla | curso
+  sigla | curso | regime (opcional) | unidade (opcional; IECOS, CBRAG...;
+  sem a coluna: IECOS, e MT no CBRAG - ver UNIDADE_PADRAO)
 
 horarios:
   turno | ordem | faixa
@@ -50,6 +51,11 @@ from typing import Any, Dict, List
 import openpyxl
 from openpyxl.utils.datetime import from_excel
 
+
+
+# Unidade de cada curso quando a aba cursos nao tem a coluna "unidade".
+# Matematica (FAMAT) e do Campus Braganca (CBRAG); os demais, do IECOS.
+UNIDADE_PADRAO = {"MT": "CBRAG"}
 
 def norm_key(value: Any) -> str:
     if value is None:
@@ -212,6 +218,10 @@ def build_json_from_excel(xlsx_path: Path) -> Dict[str, Any]:
             "sigla": to_str(row.get("sigla")),
             "curso": to_str(row.get("curso")),
             "regime": to_int(row.get("regime")) or 1,
+            # Unidade do curso (coluna opcional "unidade" da aba cursos).
+            # Sem a coluna: IECOS, exceto os cursos de UNIDADE_PADRAO.
+            "unidade": (to_str(row.get("unidade")).upper()
+                        or UNIDADE_PADRAO.get(to_str(row.get("sigla")).upper(), "IECOS")),
         }
         for row in raw["cursos"]
     ]

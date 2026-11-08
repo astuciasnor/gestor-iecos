@@ -29,7 +29,8 @@ O guia de uso para os coordenadores fica dentro do app, na aba **Ajuda**
 ## Funcionalidades
 
 **Alocar Componentes** (centro do trabalho)
-- Escolha de periodo letivo, curso, turma e turno na barra lateral; componente
+- Escolha de periodo letivo, unidade (IECOS por padrao; CBRAG com Matematica),
+  curso, turma e turno na barra lateral; componente
   buscada pelo nome, com `codigo · curso` e a CH do curso da turma.
 - Ate 3 **faixas** por componente (horario semanal num intervalo de datas). A
   faixa nova nasce sozinha ao redesenhar numa semana posterior, com **Desfazer**.
@@ -40,7 +41,11 @@ O guia de uso para os coordenadores fica dentro do app, na aba **Ajuda**
   aviso de turno diferente, varios docentes com CH parcial, cadastro de
   docente novo, cores escolhidas numa paleta (tom suave na grade semanal;
   cor forte nos calendarios e na agenda publica).
-- Cartao **Proximo passo** no topo da aba: diz o que falta e mostra os avisos.
+- Uma componente pode ter aulas em dois turnos (casos especiais, estagios):
+  desenha-se num turno, troca-se o Turno e desenha-se no outro.
+- **Turma extra**: a mesma componente de novo na mesma turma e PL vira
+  subturma (T01, T02...) com um OK; regras em `js/subturmas.mjs`.
+- Cartao **Proximo passo e avisos** no topo da aba: diz o que falta e mostra os avisos.
 
 **Revisao**
 - **Lista de Ofertas**: editar, excluir, **Trocar** duas componentes de lugar,
@@ -145,6 +150,9 @@ python tools/convert_data.py
 Abas esperadas: `docentes`, `componentes`, `turmas`, `cursos`, `horarios`,
 `feriados`, `periodos_letivos`.
 
+- `cursos` pode ter a coluna opcional `unidade` (IECOS, CBRAG...). Sem ela,
+  vale IECOS, e MT fica no CBRAG (`UNIDADE_PADRAO` em `tools/convert_data.py`).
+  O campo Unidade da barra lateral mostra so os cursos da unidade escolhida.
 - `periodos_letivos` e a fonte oficial dos periodos (ano, PL, inicio, fim). O
   seletor lateral e as datas dos planos vem dela.
 - Nao altere as datas de um periodo que ja tem plano salvo: a chave do plano e

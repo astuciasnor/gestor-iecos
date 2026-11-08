@@ -517,22 +517,26 @@
     {
       "sigla": "EP",
       "curso": "Engenharia de Pesca",
-      "regime": 2
+      "regime": 2,
+      "unidade": "IECOS"
     },
     {
       "sigla": "CB",
       "curso": "Ciências Biológicas",
-      "regime": 2
+      "regime": 2,
+      "unidade": "IECOS"
     },
     {
       "sigla": "CN",
       "curso": "Ciências Naturais",
-      "regime": 2
+      "regime": 2,
+      "unidade": "IECOS"
     },
     {
       "sigla": "MT",
       "curso": "Matemática",
-      "regime": 2
+      "regime": 2,
+      "unidade": "CBRAG"
     }
   ],
   "componentes": [
