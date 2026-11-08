@@ -1,7 +1,7 @@
 import { store } from './store.js?v=202611072307';
 import { buildTeacherExecutionSnapshot, buildCanonicalOfferProjection } from './execution_engine.js?v=202611072307';
 import { filterExportableAllocations } from './academic_rules.mjs?v=202611072307';
-import { normalizeHexColor, hexToRgba } from './color_utils.js?v=202611072307';
+import { tonsDaCor } from './color_utils.js?v=202611072307';
 import { formatDateBR, timeToMinutes } from './date_utils_ui.js?v=202611072307';
 import {
     teacherNamesMatch,
@@ -456,8 +456,9 @@ export function renderGanttTurnoLane({ turnoConfig, dayItems, docenteName, dayCo
         const turmaNome = getTurmaLabel(item.turmaId, item.subGrupo);
         const baseLabel = store.rawData?.turmas?.find((entry) => String(entry.turma_id) === String(item.turmaId))?.turma_label || item.turmaId;
         const isOutOfBounds = store.settings.termEnd && item.dataFim > store.settings.termEnd;
-        const baseColor = normalizeHexColor(item.cor || '#3498db');
-        const boxBorder = isOutOfBounds ? 'border: 2px solid #900;' : `border: 1px solid ${baseColor};`;
+        // Tom suave da componente (fundo claro, texto escuro, barra forte a esquerda)
+        const tons = tonsDaCor(item.cor || '#3498db');
+        const boxBorder = isOutOfBounds ? 'border: 2px solid #900;' : `border: 1px solid ${tons.borda}; border-left: 4px solid ${tons.borda};`;
         const barHeight = 40;
         const timeRangeStr = getShiftTimeRangeStr(item.timeRanges, turnoConfig.value, ganttTurnoConfigs);
         const timeRangeMeta = getShiftTimeRangeMeta(item.timeRanges, turnoConfig.value, ganttTurnoConfigs);
@@ -477,10 +478,10 @@ export function renderGanttTurnoLane({ turnoConfig, dayItems, docenteName, dayCo
             .replace(/[^a-z0-9_-]+/gi, '-');
         const defaultInsideLabelHtml = `
             <div style="position:absolute; inset:0; pointer-events:none; z-index:5;">
-                <div class="gantt-bar-label-2l" style="position:absolute; top:1px; left:${insideLabelInsetPx}px; right:${insideLabelInsetPx}px; min-width:0; overflow:hidden; text-align:center; font-size:0.58em; line-height:1.08; font-weight:800; color:#0f172a; text-shadow:0 1px 0 rgba(255,255,255,0.35); white-space:normal; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; line-clamp:2; word-break:break-word; overflow-wrap:anywhere;">
+                <div class="gantt-bar-label-2l" style="position:absolute; top:1px; left:${insideLabelInsetPx}px; right:${insideLabelInsetPx}px; min-width:0; overflow:hidden; text-align:center; font-size:0.58em; line-height:1.08; font-weight:800; color:${tons.texto}; text-shadow:0 1px 0 rgba(255,255,255,0.35); white-space:normal; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; line-clamp:2; word-break:break-word; overflow-wrap:anywhere;">
                     ${compactLabel}
                 </div>
-                ${compactTurmaLabel ? `<div style="position:absolute; bottom:1px; left:${insideLabelInsetPx}px; right:${insideLabelInsetPx}px; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; text-align:center; font-size:0.52em; line-height:1.05; font-weight:700; opacity:0.92; color:#0f172a; text-shadow:0 1px 0 rgba(255,255,255,0.35);">(${compactTurmaLabel})</div>` : ''}
+                ${compactTurmaLabel ? `<div style="position:absolute; bottom:1px; left:${insideLabelInsetPx}px; right:${insideLabelInsetPx}px; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; text-align:center; font-size:0.52em; line-height:1.05; font-weight:700; opacity:0.92; color:${tons.texto}; text-shadow:0 1px 0 rgba(255,255,255,0.35);">(${compactTurmaLabel})</div>` : ''}
             </div>
         `;
 
@@ -537,9 +538,9 @@ export function renderGanttTurnoLane({ turnoConfig, dayItems, docenteName, dayCo
                 ? Math.max(0.8, Math.min(100 - innerLeftPct, (segWidthPct / widthPct) * 100))
                 : 100;
             const segmentFill = isTarget
-                ? `linear-gradient(90deg, ${hexToRgba(baseColor, 0.92)}, ${baseColor})`
+                ? tons.fundo
                 : 'linear-gradient(180deg, rgba(255,255,255,0.98), rgba(248,250,252,0.94))';
-            const borderStyle = isTarget ? 'none' : `1px solid ${hexToRgba(baseColor, 0.55)}`;
+            const borderStyle = isTarget ? 'none' : `1px solid ${tons.borda}`;
             const zIndex = isTarget ? '2' : '1';
 
             if (isTarget && !targetSegmentFound) {
@@ -613,7 +614,7 @@ export function renderGanttTurnoLane({ turnoConfig, dayItems, docenteName, dayCo
         barsHtml += `
                     <div class="gantt-bar"
                          ${barDetailAttrs}
-                         style="left: ${leftPct}%; width: ${widthPct}%; top: ${currentTop}px; height: ${barHeight}px; padding: 0; display: flex; flex-direction: row; background:${sharedTargetSegment ? 'linear-gradient(180deg, rgba(255,255,255,0.98), rgba(248,250,252,0.94))' : `linear-gradient(90deg, ${hexToRgba(baseColor, 0.92)}, ${baseColor})`}; ${boxBorder} border-radius:6px; box-shadow:0 1px 3px rgba(15,23,42,0.12); overflow:hidden; cursor: ${barCursor}; z-index:3;"
+                         style="left: ${leftPct}%; width: ${widthPct}%; top: ${currentTop}px; height: ${barHeight}px; padding: 0; display: flex; flex-direction: row; background:${sharedTargetSegment ? 'linear-gradient(180deg, rgba(255,255,255,0.98), rgba(248,250,252,0.94))' : tons.fundo}; ${boxBorder} border-radius:6px; box-shadow:0 1px 3px rgba(15,23,42,0.12); overflow:hidden; cursor: ${barCursor}; z-index:3;"
                          aria-label="${item.disciplina} | CH docente: ${item.chProf || item.chTotal || 0}h | Turma: ${turmaNome} | Turno: ${turnoConfig.label}${timeRangeStr} | Regime: ${item.regimeLabel} | Periodo efetivo: ${formatDateBR(item.dataInicio)} a ${formatDateBR(item.dataFim)} | Aulas no dia: ${item.slotCount}">
                         ${segmentsHtml}
                         ${insideLabelHtml}

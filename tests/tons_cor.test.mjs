@@ -1,7 +1,7 @@
 // Testes dos tons suaves usados para pintar os blocos da grade (redesenho).
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { tonsDaCor, PALETA_CORES, matizESaturacao } from '../js/color_utils.js';
+import { tonsDaCor, PALETA_CORES, matizESaturacao, estiloTonsBloco } from '../js/color_utils.js';
 
 test('cores da paleta devolvem os tres tons curados', () => {
   assert.deepEqual(tonsDaCor('#16A34A'), { fundo: '#DCFCE7', borda: '#16A34A', texto: '#14532D' });
@@ -28,6 +28,12 @@ test('cinza continua cinza e cor invalida nao quebra', () => {
   assert.ok(tonsDaCor('').fundo.startsWith('hsl('));
   assert.ok(tonsDaCor('abc-nada').borda.startsWith('hsl('));
   assert.ok(tonsDaCor('#abc').texto.startsWith('hsl('));
+});
+
+test('estilo em texto traz as tres variaveis do bloco', () => {
+  assert.equal(estiloTonsBloco('#16A34A'), '--bloco-fundo:#DCFCE7; --bloco-borda:#16A34A; --bloco-texto:#14532D;');
+  // cor vazia ou invalida nao quebra o HTML
+  assert.match(estiloTonsBloco(''), /^--bloco-fundo:hsl\(.+; --bloco-borda:hsl\(.+; --bloco-texto:hsl\(.+;$/);
 });
 
 test('matiz e saturacao basicas', () => {

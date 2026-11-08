@@ -3127,8 +3127,18 @@ body:has(#tab-weekly.active) .top-bar #weekly-instructions-card {
     align-items: center;
 }
 
+/* Componente em tom suave, igual a Grade Semanal: fundo claro, texto escuro e
+   barra forte a esquerda. As cores vem de --bloco-* (estiloTonsBloco). */
+.comp-tons {
+    background: var(--bloco-fundo, #F1F5F9);
+    color: var(--bloco-texto, #0F172A);
+    box-shadow: inset 4px 0 0 var(--bloco-borda, #64748B);
+}
+.cal-slot-content.comp-tons { padding-left: 8px; }
+.event-chip.comp-tons { padding-left: 8px; border-radius: 4px; }
+
 .overriding-event {
-    border: 2px dashed #000000 !important; 
+    border: 2px dashed #000000 !important;
     font-weight: 800 !important;
 }
 
@@ -3393,6 +3403,9 @@ body:has(#tab-weekly.active) .top-bar #weekly-instructions-card {
         -webkit-print-color-adjust: exact !important;
         print-color-adjust: exact !important;
     }
+    /* Texto nao encosta na barra forte da componente */
+    .cal-slot-content.comp-tons,
+    .event-chip.comp-tons { padding-left: 7px !important; }
 }
 
 .help-layout{
