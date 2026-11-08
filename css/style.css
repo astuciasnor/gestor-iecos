@@ -4362,3 +4362,19 @@ body:has(#tab-weekly.active) .top-bar #weekly-instructions-card {
     background: #3a3f47;
     outline: none;
 }
+
+/* Lista de Ofertas: selo da subturma (turma extra) ao lado do nome */
+.subturma-selo {
+    display: inline-block;
+    margin-left: 6px;
+    padding: 0 7px;
+    border-radius: 999px;
+    background: #e8f0fe;
+    color: #1d4ed8;
+    border: 1px solid #bfd3fb;
+    font-size: 0.78em;
+    font-weight: 800;
+    letter-spacing: 0.03em;
+    vertical-align: 1px;
+    white-space: nowrap;
+}

@@ -1,28 +1,29 @@
-import { store } from './store.js?v=202611080841';
-import { getTurnoLetter, mapSlotToTurno } from './turns.js?v=202611080841';
-import { normalizePeriodo as normalizePeriodoLetivoCode } from './plan_storage.js?v=202611080841';
-import { getCalendarEvents } from './calendar.js?v=202611080841';
-import { isDateOverlap } from './utils.js?v=202611080841';
-import { weeklyState } from './weekly_state.js?v=202611080841';
-import { findPendentesCobertas, isPendenteJaAlocada } from './pendentes.mjs?v=202611080841';
-import { classifySwap } from './troca_ordem.mjs?v=202611080841';
-import { closeFaixaEnds, isPauseEnd, listFaixaPauses } from './pausa_faixas.mjs?v=202611080841';
-import { abrirMiniCalendario, fecharMiniCalendario, miniCalendarioAberto } from './mini_calendario.mjs?v=202611080841';
-import { buildCanonicalOfferProjection } from './execution_engine.js?v=202611080841';
+import { store } from './store.js?v=202611080851';
+import { getTurnoLetter, mapSlotToTurno } from './turns.js?v=202611080851';
+import { normalizePeriodo as normalizePeriodoLetivoCode } from './plan_storage.js?v=202611080851';
+import { getCalendarEvents } from './calendar.js?v=202611080851';
+import { isDateOverlap } from './utils.js?v=202611080851';
+import { weeklyState } from './weekly_state.js?v=202611080851';
+import { findPendentesCobertas, isPendenteJaAlocada } from './pendentes.mjs?v=202611080851';
+import { classifySwap } from './troca_ordem.mjs?v=202611080851';
+import { closeFaixaEnds, isPauseEnd, listFaixaPauses } from './pausa_faixas.mjs?v=202611080851';
+import { numeroDaSubturma, isTurmaInteira, proximaSubturma, codigoT01Como } from './subturmas.mjs?v=202611080851';
+import { abrirMiniCalendario, fecharMiniCalendario, miniCalendarioAberto } from './mini_calendario.mjs?v=202611080851';
+import { buildCanonicalOfferProjection } from './execution_engine.js?v=202611080851';
 import {
     buildSigaaMetadataPayload,
     validateSigaaMetadataPayload,
     getSigaaCode,
     buildScopedSigaaAllocationFromOfferFaixa
-} from './sigaa_metadata.js?v=202611080841';
-import { parseBackupDataFile, extractImportPlanMeta } from './serialization.js?v=202611080841';
+} from './sigaa_metadata.js?v=202611080851';
+import { parseBackupDataFile, extractImportPlanMeta } from './serialization.js?v=202611080851';
 import {
     showToastWarning,
     showPersistentStatusMessage,
     copyTextToClipboard,
     flashButtonCopyState,
     setupCopyActionButtons
-} from './ui_feedback.js?v=202611080841';
+} from './ui_feedback.js?v=202611080851';
 import {
     normalizeHexColor,
     adjustHexColor,
@@ -31,7 +32,7 @@ import {
     tonsDaCor,
     aplicarTonsBloco,
     PALETA_CORES
-} from './color_utils.js?v=202611080841';
+} from './color_utils.js?v=202611080851';
 import {
     isFaixaAllocation,
     isPriorityRegularAllocation,
@@ -40,8 +41,8 @@ import {
     normalizeTeacherNameForMatch,
     getDocenteShortLabel,
     getAllocationTeachersForConflict
-} from './allocation_helpers.js?v=202611080841';
-import { setupSeletorCor } from './seletor_cor.js?v=202611080841';
+} from './allocation_helpers.js?v=202611080851';
+import { setupSeletorCor } from './seletor_cor.js?v=202611080851';
 import {
     VINCULOS_DOCENTE_NOVO,
     OUTRA_UNIDADE,
@@ -50,9 +51,9 @@ import {
     findSimilarNames,
     problemaNoNome,
     limparEspacos
-} from './docente_nomes.mjs?v=202611080841';
-import { getSessionEmail, getPerfil, fetchAllocationsForPlans } from './sync_remoto.js?v=202611080841';
-import { resolveBackendMode } from './backend_config.js?v=202611080841';
+} from './docente_nomes.mjs?v=202611080851';
+import { getSessionEmail, getPerfil, fetchAllocationsForPlans } from './sync_remoto.js?v=202611080851';
+import { resolveBackendMode } from './backend_config.js?v=202611080851';
 import {
     normalizeConflictSlotLabel,
     getAvailableTurnoOfertaOptions,
@@ -61,7 +62,7 @@ import {
     isTurnoDividerSlot,
     buildHorariosForUI,
     getShiftChangeMeta
-} from './turno_helpers.js?v=202611080841';
+} from './turno_helpers.js?v=202611080851';
 import {
     getDisciplinaCHGlobal,
     derivarBloco,
@@ -71,7 +72,7 @@ import {
     getDisciplinaInfo,
     getCursoSiglaDaTurma,
     getPrintAcademicMetaLine
-} from './curso_turma_helpers.js?v=202611080841';
+} from './curso_turma_helpers.js?v=202611080851';
 import {
     renderMonthlyCalendar,
     renderTeacherCalendar,
@@ -79,11 +80,11 @@ import {
     clearTeacherRangeCache,
     setTeacherPeriod,
     getTeacherPeriod
-} from './calendarios_ui.js?v=202611080841';
+} from './calendarios_ui.js?v=202611080851';
 import {
     refreshTeacherConflictsUI,
     setCrossPlanLoader
-} from './conflitos_ui.js?v=202611080841';
+} from './conflitos_ui.js?v=202611080851';
 import {
     shouldIgnoreTurmaEventForCandidate,
     normalizeDrawnSlotsByDay,
@@ -97,7 +98,7 @@ import {
     resolveEditableFaixasFromStoredExecution,
     alignFaixasToExecutionEnd,
     buildFinalAdjustmentFaixaSuggestion
-} from './faixa_utils.js?v=202611080841';
+} from './faixa_utils.js?v=202611080851';
 import {
     timeToMinutes,
     shiftISODate,
@@ -111,14 +112,14 @@ import {
     isDateInsideRange,
     formatDateBRShortYear,
     formatDateBR
-} from './date_utils_ui.js?v=202611080841';
+} from './date_utils_ui.js?v=202611080851';
 import {
     initializeWeeklyScheduleForTurma,
     reconcileTurmaSelectionAfterPLChange,
     resetWeeklyViewOnTurmaChange,
     resolveActiveAcademicPeriod,
     slotLabelsOverlap
-} from './academic_rules.mjs?v=202611080841';
+} from './academic_rules.mjs?v=202611080851';
 
 const gridContainer = document.getElementById('weekly-grid');
 const selCurso = document.getElementById('sel-curso');
@@ -4767,41 +4768,39 @@ export function initUI() {
                 return;
             }
 
-            // Conta quantas vezes a disciplina já existe na turma atual
-            const existing = store.allocations.filter(a =>
-                String(a.turmaId) === String(store.selectedTurma) && a.disciplina === discNome
-            );
+            // Editando esta mesma componente: o sub-grupo veio da oferta (loadAllocationIntoEditor).
+            if (isEditingSameDisc) return;
 
-            if (existing.length > 0) {
-                const turmaNome = getTurmaLabel(store.selectedTurma);
+            // Turma extra: a componente ja tem horarios nesta turma e neste PL
+            // (store.allocations e so o PL aberto). Pendente do bloco nao conta:
+            // escolher a componente pendente e aloca-la, nao criar outra turma.
+            const existing = store.allocations.filter(a =>
+                String(a.turmaId) === String(store.selectedTurma) &&
+                a.disciplina === discNome &&
+                !isPendingAllocation(a)
+            );
+            const bloco = derivarBloco(store.selectedTurma, store.settings.periodo, store.settings.termStart);
+            const proxima = proximaSubturma(existing.map((a) => a.subGrupo), bloco);
+
+            if (proxima) {
                 const confirmou = confirm(
-                    `⚠️ Atenção!\n\n` +
-                    `Você está criando uma SEGUNDA alocação de:\n` +
-                    `📚 "${discNome}"\n` +
-                    `👥 para a turma ${turmaNome}\n\n` +
-                    `Isso indica que a turma será SUBDIVIDIDA em grupos (ex: laboratório).\n\n` +
-                    `Deseja continuar e definir o sub-grupo?`
+                    `Você está tentando inserir o mesmo componente para a mesma turma no mesmo PL.\n\n` +
+                    `"${discNome}" · ${getTurmaLabel(store.selectedTurma)}\n\n` +
+                    `Tem certeza que deseja fazer isso? Ela será a subturma ${proxima.rotulo}.` +
+                    (existing.some((a) => isTurmaInteira(a.subGrupo)) ? `\n(A oferta que já existe passa a ser a T01 quando você salvar.)` : '')
                 );
 
                 if (!confirmou) {
                     inputConfig.disciplina.value = '';
                     atualizarDicaCodigoDisciplina();
+                    weeklyState.lastDisciplinaInputNormalized = '';
                     containerSub.classList.add('hidden');
                     inpSub.value = '';
                     return;
                 }
 
-                // Sugere próximo sub-grupo: se já existe BL1_T01, sugere BL1_T02; senão deixa vazio
-                const ultimoSub = existing[existing.length - 1]?.subGrupo || '';
-                const matchT = ultimoSub.match(/^(.+_T)(\d+)$/);
-                if (matchT) {
-                    inpSub.value = `${matchT[1]}${String(parseInt(matchT[2]) + 1).padStart(2, '0')}`;
-                } else if (ultimoSub) {
-                    inpSub.value = ultimoSub + '_T02';
-                } else {
-                    inpSub.value = '';
-                    inpSub.placeholder = 'Ex: BL1 ou BL1_T01';
-                }
+                // Numeracao automatica; o campo continua editavel para casos especiais.
+                inpSub.value = proxima.codigo;
                 containerSub.classList.remove('hidden');
             } else {
                 containerSub.classList.add('hidden');
@@ -6321,6 +6320,19 @@ function loadAllocationIntoEditor(allocation, idsToRemove = [], options = {}) {
     }
     enforceCanonicalFaixaMode();
 
+    // Sub-grupo da oferta editada (ex.: subturma T02). Sem isso o salvar gravava
+    // uma oferta nova sem sub-grupo e deixava a original. A pendente do bloco
+    // continua com o campo vazio (ver o comentario em handleAddManual).
+    {
+        const containerSub = document.getElementById('container-sub-turma');
+        const inpSub = document.getElementById('inp-sub-turma');
+        const sub = isFaixaAllocation(a) ? String(a.subGrupo || '').trim() : '';
+        if (inpSub) inpSub.value = sub;
+        if (containerSub) containerSub.classList.toggle('hidden', !sub || isTurmaInteira(sub));
+        const preview = document.getElementById('preview-sub-turma');
+        if (preview) preview.textContent = sub && !isTurmaInteira(sub) ? `→ Rótulo: ${getTurmaLabel(a.turmaId, sub)}` : '';
+    }
+
     // isReEdit: true = oferta já tinha faixas salvas (re-edição); false = pendente (1ª vez)
     const isReEdit = isFaixaAllocation(a);
 
@@ -6898,6 +6910,20 @@ function handleAddManual() {
         });
         docentesCadastrados.forEach((c) => cadastrosDocentes.delete(normalizeTeacherNameForMatch(c.nome)));
 
+        // Turma extra: salvou a subturma T02 (ou mais)? A oferta da mesma
+        // componente que ainda vale para a turma toda passa a ser a T01.
+        let renomeadasT01 = 0;
+        if ((numeroDaSubturma(subGrupo) || 0) >= 2) {
+            const codigoT01 = codigoT01Como(subGrupo);
+            store.allocations = store.allocations.map((a) => {
+                if (String(a.turmaId) !== String(store.selectedTurma)) return a;
+                if (a.disciplina !== disciplina || !isFaixaAllocation(a) || !isTurmaInteira(a.subGrupo)) return a;
+                renomeadasT01++;
+                return { ...a, subGrupo: codigoT01 };
+            });
+            if (renomeadasT01) store.saveAllocations();
+        }
+
         if (effInicio && store.selectedTurma) {
             store.setTurmaLastStart(store.selectedTurma, effInicio);
         }
@@ -6927,6 +6953,8 @@ function handleAddManual() {
 
         if (nonBlockingDistributionNotice) {
             showToastWarning(nonBlockingDistributionNotice, nonBlockingDistributionNoticeType, 6200);
+        } else if (renomeadasT01) {
+            showToastWarning(`Subturma ${getTurmaLabel(store.selectedTurma, subGrupo)} salva. A primeira oferta de "${escapeTrocaHtml(disciplina)}" passou a ser a ${getTurmaLabel(store.selectedTurma, codigoT01Como(subGrupo))}.`, 'success', 6000);
         }
 
         if (execution.wasTruncatedByCH && execution.truncationType === 'partial-day') {
@@ -7523,8 +7551,13 @@ function renderOfertasList() {
             <button class="btn-danger btn-delete-row" style="padding:4px 8px; margin:0; font-size:0.85em; border-radius:3px; cursor:pointer;" title="Excluir">Excluir</button>
         `;
 
+        // Selo da subturma (turma extra): T01, T02... ao lado do nome
+        const numSub = row.rowType === 'pendente' ? null : numeroDaSubturma(row.baseAlloc?.subGrupo);
+        const seloSub = numSub
+            ? ` <span class="subturma-selo" title="Subturma ${escapeTrocaHtml(getTurmaLabel(row.baseAlloc.turmaId, row.baseAlloc.subGrupo))}">T${String(numSub).padStart(2, '0')}</span>`
+            : '';
         tr.innerHTML = `
-            <td>${row.disciplina}</td>
+            <td>${row.disciplina}${seloSub}</td>
             <td style="text-align:center; font-family:monospace; font-weight:bold;">${row.codigo || '-'}</td>
             <td>${row.docente || '-'}</td>
             <td>${row.horarioTxt}</td>

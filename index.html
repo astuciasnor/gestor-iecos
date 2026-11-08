@@ -10,13 +10,13 @@
         // Vai para o aviso antes de carregar o programa. A agenda publica nao passa por aqui.
         if (/\.github\.io$/i.test(location.hostname)) location.replace('mudou.html');
     </script>
-    <link rel="stylesheet" href="css/style.css?v=202611080841">
+    <link rel="stylesheet" href="css/style.css?v=202611080851">
     <!-- Redesenho da aba Alocar Componentes (por partes); carrega depois do style.css -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
-    <link rel="stylesheet" href="css/alocar-componentes.css?v=202611080841">
-    <link rel="stylesheet" href="css/ajuda.css?v=202611080841">
+    <link rel="stylesheet" href="css/alocar-componentes.css?v=202611080851">
+    <link rel="stylesheet" href="css/ajuda.css?v=202611080851">
 
     <style>
         :root {
@@ -709,10 +709,10 @@
                 <!-- Campo de Sub-grupo: aparece automaticamente quando a mesma disciplina já existe na turma -->
                 <div id="container-sub-turma" class="form-group hidden">
                     <label for="inp-sub-turma" style="color: #feffcc;">
-                        🔢 Identificador do Sub-grupo
+                        🔢 Subturma (turma extra)
                         <small
                             style="font-weight:normal; display:block; color:#bdc3c7; font-size:0.78em; margin-top:2px;">
-                            Use <b>BL1</b> para bloco curricular ou <b>BL1_T01</b> para sub-turma (laboratório, etc.)
+                            Preenchido sozinho na turma extra (T01, T02...). Mude só se precisar.
                         </small>
                     </label>
                     <input type="text" id="inp-sub-turma" maxlength="10" placeholder="Ex: BL1 ou BL1_T01"
@@ -1294,10 +1294,10 @@
                             </article>
 
                             <article class="aj-cartao">
-                                <h3><span aria-hidden="true">🎨</span> Cor e laboratório</h3>
+                                <h3><span aria-hidden="true">🎨</span> Cor e turma extra</h3>
                                 <ul class="aj-lista">
                                     <li>Clique no <b>círculo colorido</b> ao lado da disciplina e escolha na paleta. A grade semanal mostra o tom suave; calendários e agenda, a cor forte. Evite duas cores parecidas na mesma turma.</li>
-                                    <li>Laboratório em dois grupos: escolha a mesma disciplina de novo, confirme e use o sub-grupo <code>BL1_T01</code> e <code>BL1_T02</code>.</li>
+                                    <li><b>Turma extra</b> (ex.: laboratório em dois grupos): escolha a mesma componente de novo e confirme. O Cardume numera sozinho: a primeira oferta vira <b>T01</b>, a nova <b>T02</b>. Na Lista de Ofertas aparece o selo <span class="aj-tag">T02</span>.</li>
                                     <li>Errou? O botão <b>Desfazer</b> volta a última inserção.</li>
                                 </ul>
                             </article>
@@ -1463,7 +1463,7 @@
         </main>
     </div>
 
-    <script type="module" src="js/main.js?v=202611080841"></script>
+    <script type="module" src="js/main.js?v=202611080851"></script>
 </body>
 
 </html>
