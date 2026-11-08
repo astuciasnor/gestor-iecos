@@ -1,29 +1,29 @@
-import { store } from './store.js?v=202611080914';
-import { getTurnoLetter, mapSlotToTurno } from './turns.js?v=202611080914';
-import { normalizePeriodo as normalizePeriodoLetivoCode } from './plan_storage.js?v=202611080914';
-import { getCalendarEvents } from './calendar.js?v=202611080914';
-import { isDateOverlap } from './utils.js?v=202611080914';
-import { weeklyState } from './weekly_state.js?v=202611080914';
-import { findPendentesCobertas, isPendenteJaAlocada } from './pendentes.mjs?v=202611080914';
-import { classifySwap } from './troca_ordem.mjs?v=202611080914';
-import { closeFaixaEnds, isPauseEnd, listFaixaPauses } from './pausa_faixas.mjs?v=202611080914';
-import { numeroDaSubturma, isTurmaInteira, proximaSubturma, codigoT01Como } from './subturmas.mjs?v=202611080914';
-import { abrirMiniCalendario, fecharMiniCalendario, miniCalendarioAberto } from './mini_calendario.mjs?v=202611080914';
-import { buildCanonicalOfferProjection } from './execution_engine.js?v=202611080914';
+import { store } from './store.js?v=202611080929';
+import { getTurnoLetter, mapSlotToTurno } from './turns.js?v=202611080929';
+import { normalizePeriodo as normalizePeriodoLetivoCode } from './plan_storage.js?v=202611080929';
+import { getCalendarEvents } from './calendar.js?v=202611080929';
+import { isDateOverlap } from './utils.js?v=202611080929';
+import { weeklyState } from './weekly_state.js?v=202611080929';
+import { findPendentesCobertas, isPendenteJaAlocada } from './pendentes.mjs?v=202611080929';
+import { classifySwap } from './troca_ordem.mjs?v=202611080929';
+import { closeFaixaEnds, isPauseEnd, listFaixaPauses } from './pausa_faixas.mjs?v=202611080929';
+import { numeroDaSubturma, isTurmaInteira, proximaSubturma, codigoT01Como } from './subturmas.mjs?v=202611080929';
+import { abrirMiniCalendario, fecharMiniCalendario, miniCalendarioAberto } from './mini_calendario.mjs?v=202611080929';
+import { buildCanonicalOfferProjection } from './execution_engine.js?v=202611080929';
 import {
     buildSigaaMetadataPayload,
     validateSigaaMetadataPayload,
     getSigaaCode,
     buildScopedSigaaAllocationFromOfferFaixa
-} from './sigaa_metadata.js?v=202611080914';
-import { parseBackupDataFile, extractImportPlanMeta } from './serialization.js?v=202611080914';
+} from './sigaa_metadata.js?v=202611080929';
+import { parseBackupDataFile, extractImportPlanMeta } from './serialization.js?v=202611080929';
 import {
     showToastWarning,
     showPersistentStatusMessage,
     copyTextToClipboard,
     flashButtonCopyState,
     setupCopyActionButtons
-} from './ui_feedback.js?v=202611080914';
+} from './ui_feedback.js?v=202611080929';
 import {
     normalizeHexColor,
     adjustHexColor,
@@ -32,7 +32,7 @@ import {
     tonsDaCor,
     aplicarTonsBloco,
     PALETA_CORES
-} from './color_utils.js?v=202611080914';
+} from './color_utils.js?v=202611080929';
 import {
     isFaixaAllocation,
     isPriorityRegularAllocation,
@@ -41,8 +41,8 @@ import {
     normalizeTeacherNameForMatch,
     getDocenteShortLabel,
     getAllocationTeachersForConflict
-} from './allocation_helpers.js?v=202611080914';
-import { setupSeletorCor } from './seletor_cor.js?v=202611080914';
+} from './allocation_helpers.js?v=202611080929';
+import { setupSeletorCor } from './seletor_cor.js?v=202611080929';
 import {
     VINCULOS_DOCENTE_NOVO,
     OUTRA_UNIDADE,
@@ -51,9 +51,9 @@ import {
     findSimilarNames,
     problemaNoNome,
     limparEspacos
-} from './docente_nomes.mjs?v=202611080914';
-import { getSessionEmail, getPerfil, fetchAllocationsForPlans } from './sync_remoto.js?v=202611080914';
-import { resolveBackendMode } from './backend_config.js?v=202611080914';
+} from './docente_nomes.mjs?v=202611080929';
+import { getSessionEmail, getPerfil, fetchAllocationsForPlans } from './sync_remoto.js?v=202611080929';
+import { resolveBackendMode } from './backend_config.js?v=202611080929';
 import {
     normalizeConflictSlotLabel,
     getAvailableTurnoOfertaOptions,
@@ -62,7 +62,7 @@ import {
     isTurnoDividerSlot,
     buildHorariosForUI,
     getShiftChangeMeta
-} from './turno_helpers.js?v=202611080914';
+} from './turno_helpers.js?v=202611080929';
 import {
     getDisciplinaCHGlobal,
     derivarBloco,
@@ -72,7 +72,7 @@ import {
     getDisciplinaInfo,
     getCursoSiglaDaTurma,
     getPrintAcademicMetaLine
-} from './curso_turma_helpers.js?v=202611080914';
+} from './curso_turma_helpers.js?v=202611080929';
 import {
     renderMonthlyCalendar,
     renderTeacherCalendar,
@@ -80,11 +80,11 @@ import {
     clearTeacherRangeCache,
     setTeacherPeriod,
     getTeacherPeriod
-} from './calendarios_ui.js?v=202611080914';
+} from './calendarios_ui.js?v=202611080929';
 import {
     refreshTeacherConflictsUI,
     setCrossPlanLoader
-} from './conflitos_ui.js?v=202611080914';
+} from './conflitos_ui.js?v=202611080929';
 import {
     shouldIgnoreTurmaEventForCandidate,
     normalizeDrawnSlotsByDay,
@@ -98,7 +98,7 @@ import {
     resolveEditableFaixasFromStoredExecution,
     alignFaixasToExecutionEnd,
     buildFinalAdjustmentFaixaSuggestion
-} from './faixa_utils.js?v=202611080914';
+} from './faixa_utils.js?v=202611080929';
 import {
     timeToMinutes,
     shiftISODate,
@@ -112,14 +112,14 @@ import {
     isDateInsideRange,
     formatDateBRShortYear,
     formatDateBR
-} from './date_utils_ui.js?v=202611080914';
+} from './date_utils_ui.js?v=202611080929';
 import {
     initializeWeeklyScheduleForTurma,
     reconcileTurmaSelectionAfterPLChange,
     resetWeeklyViewOnTurmaChange,
     resolveActiveAcademicPeriod,
     slotLabelsOverlap
-} from './academic_rules.mjs?v=202611080914';
+} from './academic_rules.mjs?v=202611080929';
 
 const gridContainer = document.getElementById('weekly-grid');
 const selCurso = document.getElementById('sel-curso');
@@ -4798,9 +4798,10 @@ export function initUI() {
                     return;
                 }
 
-                // Numeracao automatica; o campo continua editavel para casos especiais.
+                // Automatico: o OK da mensagem ja cria a subturma. O campo fica
+                // escondido (so guarda o valor); a subturma aparece embaixo do nome.
                 inpSub.value = proxima.codigo;
-                containerSub.classList.remove('hidden');
+                containerSub.classList.add('hidden');
                 atualizarDicaCodigoDisciplina();
             } else {
                 containerSub.classList.add('hidden');
@@ -6332,7 +6333,7 @@ function loadAllocationIntoEditor(allocation, idsToRemove = [], options = {}) {
         const inpSub = document.getElementById('inp-sub-turma');
         const sub = isFaixaAllocation(a) ? String(a.subGrupo || '').trim() : '';
         if (inpSub) inpSub.value = sub;
-        if (containerSub) containerSub.classList.toggle('hidden', !sub || isTurmaInteira(sub));
+        if (containerSub) containerSub.classList.add('hidden');   // so guarda o valor; aparece embaixo do nome
         const preview = document.getElementById('preview-sub-turma');
         if (preview) preview.textContent = sub && !isTurmaInteira(sub) ? `→ Rótulo: ${getTurmaLabel(a.turmaId, sub)}` : '';
         atualizarDicaCodigoDisciplina();
