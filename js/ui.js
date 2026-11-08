@@ -1,28 +1,28 @@
-import { store } from './store.js?v=202611072022';
-import { getTurnoLetter, mapSlotToTurno } from './turns.js?v=202611072022';
-import { normalizePeriodo as normalizePeriodoLetivoCode } from './plan_storage.js?v=202611072022';
-import { getCalendarEvents } from './calendar.js?v=202611072022';
-import { isDateOverlap } from './utils.js?v=202611072022';
-import { weeklyState } from './weekly_state.js?v=202611072022';
-import { findPendentesCobertas, isPendenteJaAlocada } from './pendentes.mjs?v=202611072022';
-import { classifySwap } from './troca_ordem.mjs?v=202611072022';
-import { closeFaixaEnds, isPauseEnd, listFaixaPauses } from './pausa_faixas.mjs?v=202611072022';
-import { abrirMiniCalendario, fecharMiniCalendario, miniCalendarioAberto } from './mini_calendario.mjs?v=202611072022';
-import { buildCanonicalOfferProjection } from './execution_engine.js?v=202611072022';
+import { store } from './store.js?v=202611072307';
+import { getTurnoLetter, mapSlotToTurno } from './turns.js?v=202611072307';
+import { normalizePeriodo as normalizePeriodoLetivoCode } from './plan_storage.js?v=202611072307';
+import { getCalendarEvents } from './calendar.js?v=202611072307';
+import { isDateOverlap } from './utils.js?v=202611072307';
+import { weeklyState } from './weekly_state.js?v=202611072307';
+import { findPendentesCobertas, isPendenteJaAlocada } from './pendentes.mjs?v=202611072307';
+import { classifySwap } from './troca_ordem.mjs?v=202611072307';
+import { closeFaixaEnds, isPauseEnd, listFaixaPauses } from './pausa_faixas.mjs?v=202611072307';
+import { abrirMiniCalendario, fecharMiniCalendario, miniCalendarioAberto } from './mini_calendario.mjs?v=202611072307';
+import { buildCanonicalOfferProjection } from './execution_engine.js?v=202611072307';
 import {
     buildSigaaMetadataPayload,
     validateSigaaMetadataPayload,
     getSigaaCode,
     buildScopedSigaaAllocationFromOfferFaixa
-} from './sigaa_metadata.js?v=202611072022';
-import { parseBackupDataFile, extractImportPlanMeta } from './serialization.js?v=202611072022';
+} from './sigaa_metadata.js?v=202611072307';
+import { parseBackupDataFile, extractImportPlanMeta } from './serialization.js?v=202611072307';
 import {
     showToastWarning,
     showPersistentStatusMessage,
     copyTextToClipboard,
     flashButtonCopyState,
     setupCopyActionButtons
-} from './ui_feedback.js?v=202611072022';
+} from './ui_feedback.js?v=202611072307';
 import {
     normalizeHexColor,
     adjustHexColor,
@@ -31,7 +31,7 @@ import {
     tonsDaCor,
     aplicarTonsBloco,
     PALETA_CORES
-} from './color_utils.js?v=202611072022';
+} from './color_utils.js?v=202611072307';
 import {
     isFaixaAllocation,
     isPriorityRegularAllocation,
@@ -40,8 +40,8 @@ import {
     normalizeTeacherNameForMatch,
     getDocenteShortLabel,
     getAllocationTeachersForConflict
-} from './allocation_helpers.js?v=202611072022';
-import { setupSeletorCor } from './seletor_cor.js?v=202611072022';
+} from './allocation_helpers.js?v=202611072307';
+import { setupSeletorCor } from './seletor_cor.js?v=202611072307';
 import {
     VINCULOS_DOCENTE_NOVO,
     OUTRA_UNIDADE,
@@ -50,9 +50,9 @@ import {
     findSimilarNames,
     problemaNoNome,
     limparEspacos
-} from './docente_nomes.mjs?v=202611072022';
-import { getSessionEmail, getPerfil, fetchAllocationsForPlans } from './sync_remoto.js?v=202611072022';
-import { resolveBackendMode } from './backend_config.js?v=202611072022';
+} from './docente_nomes.mjs?v=202611072307';
+import { getSessionEmail, getPerfil, fetchAllocationsForPlans } from './sync_remoto.js?v=202611072307';
+import { resolveBackendMode } from './backend_config.js?v=202611072307';
 import {
     normalizeConflictSlotLabel,
     getAvailableTurnoOfertaOptions,
@@ -61,7 +61,7 @@ import {
     isTurnoDividerSlot,
     buildHorariosForUI,
     getShiftChangeMeta
-} from './turno_helpers.js?v=202611072022';
+} from './turno_helpers.js?v=202611072307';
 import {
     getDisciplinaCHGlobal,
     derivarBloco,
@@ -71,7 +71,7 @@ import {
     getDisciplinaInfo,
     getCursoSiglaDaTurma,
     getPrintAcademicMetaLine
-} from './curso_turma_helpers.js?v=202611072022';
+} from './curso_turma_helpers.js?v=202611072307';
 import {
     renderMonthlyCalendar,
     renderTeacherCalendar,
@@ -79,11 +79,11 @@ import {
     clearTeacherRangeCache,
     setTeacherPeriod,
     getTeacherPeriod
-} from './calendarios_ui.js?v=202611072022';
+} from './calendarios_ui.js?v=202611072307';
 import {
     refreshTeacherConflictsUI,
     setCrossPlanLoader
-} from './conflitos_ui.js?v=202611072022';
+} from './conflitos_ui.js?v=202611072307';
 import {
     shouldIgnoreTurmaEventForCandidate,
     normalizeDrawnSlotsByDay,
@@ -97,7 +97,7 @@ import {
     resolveEditableFaixasFromStoredExecution,
     alignFaixasToExecutionEnd,
     buildFinalAdjustmentFaixaSuggestion
-} from './faixa_utils.js?v=202611072022';
+} from './faixa_utils.js?v=202611072307';
 import {
     timeToMinutes,
     shiftISODate,
@@ -111,14 +111,14 @@ import {
     isDateInsideRange,
     formatDateBRShortYear,
     formatDateBR
-} from './date_utils_ui.js?v=202611072022';
+} from './date_utils_ui.js?v=202611072307';
 import {
     initializeWeeklyScheduleForTurma,
     reconcileTurmaSelectionAfterPLChange,
     resetWeeklyViewOnTurmaChange,
     resolveActiveAcademicPeriod,
     slotLabelsOverlap
-} from './academic_rules.mjs?v=202611072022';
+} from './academic_rules.mjs?v=202611072307';
 
 const gridContainer = document.getElementById('weekly-grid');
 const selCurso = document.getElementById('sel-curso');
@@ -751,7 +751,7 @@ function buildFaixaPadraoGrupos(patternInput) {
             trechos.push(i - 1 > ini ? `${nomes[dias[ini]]}-${nomes[dias[i - 1]]}` : nomes[dias[ini]]);
             ini = i;
         }
-        return { texto: `${trechos.join('/')} ${aulas}`, hora: horaPorGrupo.get(aulas) || '' };
+        return { texto: `${trechos.join('/')} ${aulas}`, dias: trechos.join('/'), aulas, hora: horaPorGrupo.get(aulas) || '' };
     });
 }
 
@@ -762,34 +762,42 @@ function updateFaixaPadraoCell(faixaIndex) {
     const livre = faixaIndex > 1 && !document.getElementById(`inp-data-inicio-f${faixaIndex}`)?.value;
     document.getElementById(`faixa-${faixaIndex}`)?.classList.toggle('faixa-item--livre', livre);
     cell.innerHTML = '';
-    cell.title = grupos.map((g) => (g.hora ? `${g.texto} (${g.hora})` : g.texto)).join(' · ');
     if (livre || grupos.length === 0) {
         const vazio = document.createElement('span');
         vazio.className = 'fp-livre';
         vazio.textContent = livre ? 'Disponível para alocação' : 'Horário semanal a definir';
         cell.appendChild(vazio);
-        if (livre) cell.title = 'Faixa ainda nao usada: nasce ao redesenhar numa semana posterior.';
+        cell.title = livre ? 'Faixa ainda nao usada: nasce ao redesenhar numa semana posterior.' : '';
         return;
     }
-    grupos.forEach(({ texto, hora }, i) => {
-        if (i > 0) {
-            const sep = document.createElement('span');
-            sep.className = 'fp-sep';
-            sep.textContent = '·';
-            cell.appendChild(sep);
-            cell.appendChild(document.createTextNode(' '));
-        }
-        const grupo = document.createElement('span');
-        grupo.className = 'fp-grupo';
-        grupo.textContent = texto;
-        if (hora) {
-            const relogio = document.createElement('span');
-            relogio.className = 'fp-hora';
-            relogio.textContent = ` (${hora})`;
-            grupo.appendChild(relogio);
-        }
-        cell.appendChild(grupo);
+
+    // Um grupo de dias por linha, com o horario de inicio e fim:
+    //   "Seg-Qua/Sex: 14h00 – 16h30"  (forma curta "14h–16h30" em cartao estreito, via CSS)
+    // Aulas nao seguidas (sem horario continuo) mostram as aulas: "Seg/Qua: 1ª, 3ª".
+    // Cabem 2 linhas na altura fixa da linha; do 3o grupo em diante seguem na 2a
+    // linha separados por ";" e o texto inteiro fica no mouse (title).
+    const horaLonga = (hora) => hora.replace(/:/g, 'h').replace('–', ' – ');
+    const horaCurta = (hora) => hora.replace(/:00/g, 'h').replace(/:/g, 'h');
+    const textoGrupo = (g, curta) => `${g.dias}: ${g.hora ? (curta ? horaCurta(g.hora) : horaLonga(g.hora)) : g.aulas}`;
+    cell.title = grupos.map((g) => textoGrupo(g, false)).join('\n');
+
+    const linhas = [grupos.slice(0, 1), grupos.slice(1)].filter((l) => l.length);
+    const caixa = document.createElement('div');
+    caixa.className = 'fp-linhas';
+    linhas.forEach((grupoDaLinha) => {
+        const linha = document.createElement('span');
+        linha.className = 'fp-linha';
+        const longa = document.createElement('span');
+        longa.className = 'fp-forma-longa';
+        longa.textContent = grupoDaLinha.map((g) => textoGrupo(g, false)).join('; ');
+        const curta = document.createElement('span');
+        curta.className = 'fp-forma-curta';
+        curta.textContent = grupoDaLinha.map((g) => textoGrupo(g, true)).join('; ');
+        linha.appendChild(longa);
+        linha.appendChild(curta);
+        caixa.appendChild(linha);
     });
+    cell.appendChild(caixa);
 }
 
 function setFaixaStatus(faixaIndex, count) {
@@ -5653,6 +5661,7 @@ function renderWeeklyGrid() {
         `;
         updateWeeklyNavigatorLabel();
         updateWeeklySavePatternButton();
+        atualizarFeriadosDaGrade();   // sem grade: tira cartoes de feriado antigos
         return;
     }
 
@@ -5663,7 +5672,6 @@ function renderWeeklyGrid() {
     const weekStartISO = resolveWeeklyViewWeekStart();
     const weekDates = getWeeklyWeekDates(weekStartISO);
     updateWeeklyNavigatorLabel();
-    const firstClassSlot = horariosUI.find((h) => !h.toUpperCase().includes('INTERVALO')) || '';
 
     const weeklySnapshotStart = store.settings.termStart || calStart?.value || weekDates[0] || weekStartISO;
     const weeklySnapshotEnd = weekDates[weekDates.length - 1] || weekStartISO;
@@ -5924,6 +5932,7 @@ function renderWeeklyGrid() {
                 if (isHolidayColumn) {
                     cell.classList.add('slot-holiday-column');
                     cell.title = `Feriado: ${holidayLabelForColumn}`;
+                    cell.dataset.feriado = holidayLabelForColumn;   // nome usado pelo cartao do feriado
                 }
 
                 const allocsRaw = getWeeklySlotEvents(cellDate, horarioStr, i);
@@ -5933,23 +5942,6 @@ function renderWeeklyGrid() {
                     : [];
 
                 if (allocs.length > 0 && showContextWhileDrawing) renderSlotContent(cell, allocs, i);
-
-                if (isHolidayColumn && horarioStr === firstClassSlot) {
-                    const holidayMarker = document.createElement('div');
-                    holidayMarker.className = 'weekly-holiday-column-marker';
-
-                    const holidayDay = document.createElement('span');
-                    holidayDay.className = 'weekly-holiday-column-day';
-                    holidayDay.textContent = String(parseInt((cellDate || '').slice(8, 10), 10) || '');
-
-                    const holidayName = document.createElement('span');
-                    holidayName.className = 'weekly-holiday-column-name';
-                    holidayName.textContent = holidayLabelForColumn;
-
-                    holidayMarker.appendChild(holidayDay);
-                    holidayMarker.appendChild(holidayName);
-                    cell.appendChild(holidayMarker);
-                }
 
                 if (isDrawing) {
                     const cellFaixaIndex = getFaixaIndexForDate(cellDate);
@@ -6074,6 +6066,61 @@ function renderWeeklyGrid() {
     applyWeeklyGridRowHeightScale();
     updateWeeklySavePatternButton();
     playWeeklyShiftAnimation();
+    atualizarFeriadosDaGrade();
+}
+
+// Feriado na grade: uma camada por cima da coluna inteira do dia (listras
+// cinza-azuladas + cartao rosa com o nome do feriado e "Feriado · sem aula").
+// So aparencia: a camada deixa os cliques passarem (pointer-events: none) e as
+// celulas de feriado continuam sem aula como antes. Reposiciona quando a grade
+// muda de tamanho (altura das linhas, janela).
+let observadorFeriados = null;
+function atualizarFeriadosDaGrade() {
+    const palco = document.getElementById('weekly-grid-stage');
+    if (!palco || !gridContainer) return;
+    palco.querySelectorAll('.cd-feriado').forEach((el) => el.remove());
+
+    if (!observadorFeriados && typeof ResizeObserver === 'function') {
+        observadorFeriados = new ResizeObserver(() => atualizarFeriadosDaGrade());
+        observadorFeriados.observe(gridContainer);
+    }
+
+    const celulas = [...gridContainer.querySelectorAll('.slot.slot-holiday-column[data-date]')];
+    const datas = [...new Set(celulas.map((c) => c.dataset.date))];
+    if (datas.length === 0) return;
+
+    const base = palco.getBoundingClientRect();
+    datas.forEach((data) => {
+        const doDia = celulas.filter((c) => c.dataset.date === data);
+        const rects = doDia.map((c) => c.getBoundingClientRect());
+        const topo = Math.min(...rects.map((r) => r.top));
+        const fundo = Math.max(...rects.map((r) => r.bottom));
+        const esq = Math.min(...rects.map((r) => r.left));
+        const dir = Math.max(...rects.map((r) => r.right));
+        if (!(dir > esq && fundo > topo)) return;
+
+        const camada = document.createElement('div');
+        camada.className = 'cd-feriado';
+        camada.setAttribute('role', 'note');
+        camada.style.left = `${esq - base.left + palco.scrollLeft}px`;
+        camada.style.top = `${topo - base.top + palco.scrollTop}px`;
+        camada.style.width = `${dir - esq}px`;
+        camada.style.height = `${fundo - topo}px`;
+
+        const cartao = document.createElement('div');
+        cartao.className = 'cd-feriado-cartao';
+        cartao.innerHTML = '<span class="cd-feriado-icone" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"></rect><path d="M16 2v4"></path><path d="M8 2v4"></path><path d="M3 10h18"></path><path d="m14 14-4 4"></path><path d="m10 14 4 4"></path></svg></span>';
+        const nome = document.createElement('strong');
+        nome.className = 'cd-feriado-nome';
+        nome.textContent = doDia[0].dataset.feriado || 'Feriado';
+        const sub = document.createElement('span');
+        sub.className = 'cd-feriado-sub';
+        sub.textContent = 'Feriado · sem aula';
+        cartao.appendChild(nome);
+        cartao.appendChild(sub);
+        camada.appendChild(cartao);
+        palco.appendChild(camada);
+    });
 }
 
 // Destaca na Grade Semanal a celula {data, slot} sugerida como encaixe da nova

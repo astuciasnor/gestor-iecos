@@ -1,5 +1,35 @@
+// Na aba Alocar Componentes os avisos aparecem DENTRO do cartao "Proximo passo"
+// (#cd-aviso), por cima do texto dele, em duas linhas e em negrito, em vez de
+// flutuar no meio da tela. Nas outras abas continua o balao do topo.
+let avisoCartaoTimer = 0;
+function avisoNoCartao() {
+    const el = document.getElementById('cd-aviso');
+    if (!el || !document.getElementById('tab-weekly')?.classList.contains('active')) return null;
+    return el;
+}
+function mostrarAvisoNoCartao(el, html, type, duracao, comOk) {
+    clearTimeout(avisoCartaoTimer);
+    const tom = type === 'success' ? 'sucesso' : (type === 'warning' ? 'atencao' : 'erro');
+    el.className = `cd-aviso cd-aviso--${tom}`;
+    el.innerHTML = `<span class="cd-aviso-texto">${html}</span>${comOk ? '<button type="button" class="cd-aviso-ok">OK</button>' : ''}`;
+    const texto = el.querySelector('.cd-aviso-texto');
+    if (texto) texto.title = texto.textContent;   // texto inteiro no mouse (o CSS corta em 2 linhas)
+    const fechar = () => {
+        clearTimeout(avisoCartaoTimer);
+        el.classList.add('hidden');
+        el.innerHTML = '';
+    };
+    el.onclick = fechar;   // clicar no aviso fecha antes do tempo
+    if (!comOk) avisoCartaoTimer = setTimeout(fechar, duracao);
+}
+
 // ATUALIZAÇÃO: Suporte a tempo customizado de tela para o balão
 export function showToastWarning(message, type = 'error', customDuration = null) {
+    const noCartao = avisoNoCartao();
+    if (noCartao) {
+        mostrarAvisoNoCartao(noCartao, message, type, customDuration || (type === 'success' ? 4500 : 7000), false);
+        return;
+    }
     const fb = document.getElementById('feedback-msg');
     if (!fb) return;
 
@@ -26,6 +56,11 @@ export function showToastWarning(message, type = 'error', customDuration = null)
 }
 
 export function showPersistentStatusMessage(message, type = 'success') {
+    const noCartao = avisoNoCartao();
+    if (noCartao) {
+        mostrarAvisoNoCartao(noCartao, message, type, 0, true);   // fica ate clicar em OK
+        return;
+    }
     const fb = document.getElementById('feedback-msg');
     if (!fb) return;
 

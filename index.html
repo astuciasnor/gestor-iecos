@@ -10,12 +10,12 @@
         // Vai para o aviso antes de carregar o programa. A agenda publica nao passa por aqui.
         if (/\.github\.io$/i.test(location.hostname)) location.replace('mudou.html');
     </script>
-    <link rel="stylesheet" href="css/style.css?v=202611072022">
+    <link rel="stylesheet" href="css/style.css?v=202611072307">
     <!-- Redesenho da aba Alocar Componentes (por partes); carrega depois do style.css -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
-    <link rel="stylesheet" href="css/alocar-componentes.css?v=202611072022">
+    <link rel="stylesheet" href="css/alocar-componentes.css?v=202611072307">
 
     <style>
         :root {
@@ -809,6 +809,19 @@
                             <span class="weekly-status-hint">Na barra lateral, escolha o curso do IECOS e uma turma v&aacute;lida.</span>
                         </div>
                         <span id="weekly-status-chip" class="weekly-status-chip hidden" aria-hidden="true"></span>
+                        <!-- Faixa criada pelo desenho: aparece DENTRO do cartao (por cima do texto) ate
+                             salvar ou desfazer; assim nao empurra a tela. -->
+                        <div id="weekly-faixa-auto-note" class="weekly-gap-advisory weekly-faixa-auto-note hidden no-print" role="status">
+                            <span class="wga-icon" aria-hidden="true">&#128197;</span>
+                            <span class="wga-text" id="weekly-faixa-auto-note-text"></span>
+                            <span class="wga-actions">
+                                <button type="button" id="btn-faixa-auto-undo" class="wga-btn">Desfazer</button>
+                                <button type="button" id="btn-faixa-auto-fix" class="wga-btn wga-btn--muted"></button>
+                            </span>
+                        </div>
+                        <!-- Avisos rapidos (showToastWarning) aparecem aqui na aba Alocar, por cima do
+                             texto do cartao, em vez de flutuar no meio da tela (js/ui_feedback.js). -->
+                        <div id="cd-aviso" class="cd-aviso hidden" role="alert"></div>
                     </div>
                     <div class="weekly-instructions-popover weekly-instructions-card is-collapsed" id="weekly-instructions-card">
                         <button type="button" id="weekly-instructions-toggle" class="weekly-instructions-toggle" aria-expanded="false" aria-controls="weekly-instructions-body" aria-haspopup="dialog">
@@ -865,16 +878,6 @@
                         </div>
                     </div>
                 </section>
-                <!-- Faixa criada pelo desenho: aparece uma vez quando a faixa nasce e fica
-                     ate salvar ou desfazer. -->
-                <div id="weekly-faixa-auto-note" class="weekly-gap-advisory weekly-faixa-auto-note hidden no-print" role="status">
-                    <span class="wga-icon" aria-hidden="true">&#128197;</span>
-                    <span class="wga-text" id="weekly-faixa-auto-note-text"></span>
-                    <span class="wga-actions">
-                        <button type="button" id="btn-faixa-auto-undo" class="wga-btn">Desfazer</button>
-                        <button type="button" id="btn-faixa-auto-fix" class="wga-btn wga-btn--muted"></button>
-                    </span>
-                </div>
                 <div class="weekly-top-layout">
                     <div class="weekly-faixas-stack">
                         <div id="container-faixas-componente" class="weekly-faixas-panel no-print">
@@ -1433,7 +1436,7 @@
         </main>
     </div>
 
-    <script type="module" src="js/main.js?v=202611072022"></script>
+    <script type="module" src="js/main.js?v=202611072307"></script>
 </body>
 
 </html>
