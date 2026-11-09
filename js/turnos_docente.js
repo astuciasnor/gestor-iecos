@@ -1,13 +1,13 @@
 // Turnos (Manha, Tarde, Noite) do quadro de horarios ativo, para o calendario
 // do docente saber em que turno cai cada aula. Sobrou do antigo Gantt do
 // docente (gantt_ui.js), que saiu do app junto com a sub-aba Gantt em 07/11/2026.
-import { store } from './store.js?v=202611091619';
-import { timeToMinutes } from './date_utils_ui.js?v=202611091619';
+import { store } from './store.js?v=202611091904';
+import { timeToMinutes } from './date_utils_ui.js?v=202611091904';
 import {
     normalizeConflictSlotLabel,
     getAvailableTurnoOfertaOptions,
     getGanttTurnoCode
-} from './turno_helpers.js?v=202611091619';
+} from './turno_helpers.js?v=202611091904';
 
 export function resolveTeacherShiftForSlot(slot) {
     const config = resolveGanttTurnoForSlot(slot, getGanttTurnoConfigs());

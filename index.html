@@ -10,13 +10,13 @@
         // Vai para o aviso antes de carregar o programa. A agenda publica nao passa por aqui.
         if (/\.github\.io$/i.test(location.hostname)) location.replace('mudou.html');
     </script>
-    <link rel="stylesheet" href="css/style.css?v=202611091619">
+    <link rel="stylesheet" href="css/style.css?v=202611091904">
     <!-- Redesenho da aba Alocar Componentes (por partes); carrega depois do style.css -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
-    <link rel="stylesheet" href="css/alocar-componentes.css?v=202611091619">
-    <link rel="stylesheet" href="css/ajuda.css?v=202611091619">
+    <link rel="stylesheet" href="css/alocar-componentes.css?v=202611091904">
+    <link rel="stylesheet" href="css/ajuda.css?v=202611091904">
 
     <style>
         :root {
@@ -1206,10 +1206,10 @@
                             <li><span class="aj-num">1</span><div><b>Período letivo</b>Escolha o PL na barra lateral. Ele define o calendário de todo o planejamento.<img class="aj-print" src="img/instrucoes/passo-1.png" width="222" height="53" alt="Campo Período na barra lateral" loading="lazy"></div></li>
                             <li><span class="aj-num">2</span><div><b>Curso e turma</b>Selecione o curso e a turma.<img class="aj-print" src="img/instrucoes/passo-2.png" width="222" height="161" alt="Campos Curso, Turma e Turno" loading="lazy"></div></li>
                             <li><span class="aj-num">3</span><div><b>Componente</b>Busque pelo nome. A lista mostra o <b>código · curso</b> e, embaixo do campo, aparecem código, curso e CH. Logo abaixo, escolha o docente.<img class="aj-print" src="img/instrucoes/passo-3.png" width="222" height="117" alt="Campo Disciplina com o círculo da cor, o código e a CH embaixo, e o campo Docente" loading="lazy"></div></li>
-                            <li><span class="aj-num">4</span><div><b>Início da Faixa 1</b>O Cardume sugere uma data. Para começar em outro dia, basta clicar no primeiro horário na grade: o início vai para aquele dia (desmarque tudo para voltar à sugestão). Também dá para escolher a data de Início na tabela de faixas.<img class="aj-print" src="img/instrucoes/passo-4.png" width="180" height="73" alt="Data de Início da Faixa 1" loading="lazy"></div></li>
+                            <li><span class="aj-num">4</span><div><b>Início da Faixa 1</b>O Cardume sugere uma data. Para começar em outro dia, basta clicar no primeiro horário na grade, mesmo numa semana antes da sugestão: o início vai para aquele dia. Na mesma semana vale o dia mais cedo marcado. Desmarque tudo para voltar à sugestão. Também dá para escolher a data de Início na tabela de faixas.<img class="aj-print" src="img/instrucoes/passo-4.png" width="180" height="73" alt="Data de Início da Faixa 1" loading="lazy"></div></li>
                             <li><span class="aj-num">5</span><div><b>Desenhe o horário</b>Clique ou arraste sobre as aulas na grade semanal. A tabela mostra a CH de cada faixa.<img class="aj-print" src="img/instrucoes/passo-5.png" width="420" height="117" alt="Horários desenhados na grade" loading="lazy"></div></li>
                             <li><span class="aj-num">6</span><div><b>O horário mudou?</b>Vá à semana da mudança (setas ‹ › no topo da grade ou ← → do teclado) e redesenhe: a <b>Faixa 2</b> nasce sozinha naquele dia.<img class="aj-print" src="img/instrucoes/passo-6.png" width="195" height="113" alt="Semana em edição e botões de faixa" loading="lazy"></div></li>
-                            <li><span class="aj-num">7</span><div><b>Pausa</b>Digite o Fim da faixa no último dia de aula e o Início da seguinte no dia da volta.<img class="aj-print" src="img/instrucoes/passo-7.png" width="262" height="106" alt="Faixa 1, linha de pausa e Faixa 2" loading="lazy"></div></li>
+                            <li><span class="aj-num">7</span><div><b>Pausa</b>Para retomar, clique no número da faixa seguinte (ex.: <b>Faixa 2</b>) e depois no primeiro horário do dia da volta. Depois digite o Fim da faixa anterior no último dia de aula: aparece a linha da pausa.<img class="aj-print" src="img/instrucoes/passo-7.png" width="262" height="106" alt="Faixa 1, linha de pausa e Faixa 2" loading="lazy"></div></li>
                             <li><span class="aj-num">8</span><div><b>Salvar</b>Confira se o <b>Total CH</b> bateu com a <b>Meta</b> e clique em <b>Salvar Componente</b>.<img class="aj-print" src="img/instrucoes/passo-8-salvar.png" width="195" height="36" alt="Botão Salvar Componente" loading="lazy"></div></li>
                         </ol>
 
@@ -1230,6 +1230,7 @@
                                     <li>Fim digitado antes do Início da faixa seguinte vira <b>pausa</b>: a linha cinza mostra <em>“Pausa: sem aula de X a Y”</em>.</li>
                                     <li>Os dias da pausa ficam <b>livres para outra componente</b>. Assim duas componentes se revezam na mesma turma.</li>
                                     <li>A componente com pausa <b>nunca é empurrada sozinha</b>: se chocar com outra, o Cardume avisa e você ajusta as datas.</li>
+                                    <li><b>Dica:</b> cada componente aceita até 2 pausas. Se precisar de mais buracos, ou se estiver caçando dias soltos para encaixá-la, mude a ordem das componentes (<b>Lista de Ofertas › Trocar</b>). O planejamento fica mais fácil de ler para você e para os professores.</li>
                                 </ul>
                             </article>
 
@@ -1430,7 +1431,7 @@
         </main>
     </div>
 
-    <script type="module" src="js/main.js?v=202611091619"></script>
+    <script type="module" src="js/main.js?v=202611091904"></script>
 </body>
 
 </html>
