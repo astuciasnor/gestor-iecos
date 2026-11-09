@@ -1,5 +1,5 @@
-import { store } from './store.js?v=202611091300';
-import { normalizeTurnoKey, getTurnoLetter, mapSlotToTurno } from './turns.js?v=202611091300';
+import { store } from './store.js?v=202611091619';
+import { normalizeTurnoKey, getTurnoLetter, mapSlotToTurno, turnoDaTurmaInclui } from './turns.js?v=202611091619';
 
 export function normalizeConflictSlotLabel(value) {
     return String(value || '')
@@ -168,7 +168,7 @@ export function getShiftChangeMeta(allocLike = {}, slotLabel = '', dayOfWeek = 0
     const isShiftChange = !!(
         nativeTurnoNorm
         && currentTurnoNorm
-        && nativeTurnoNorm !== currentTurnoNorm
+        && !turnoDaTurmaInclui(nativeTurnoValue, currentTurnoNorm)
     );
     let mappedSlot = slotLabel;
     if (isShiftChange && slotLabel) {
@@ -235,8 +235,7 @@ export function getCalendarShiftBadgeHTML(allocLike = {}, slotLabel = '', dayOfW
     // Só é mudança de turno se o turno da aula de sábado difere do turno nativo da turma.
     // Turmas cujo turno padrão já é o mesmo (ex.: turma de Manhã com sábado de manhã) não recebem badge.
     const fallbackTurnoNorm = getTurnoNormalizedFromLetter(fallbackLetter);
-    const nativeTurnoNorm = normalizeTurnoOfertaKey(getNativeTurnoValueForAllocation(allocLike));
-    if (fallbackTurnoNorm && nativeTurnoNorm && fallbackTurnoNorm === nativeTurnoNorm) return '';
+    if (turnoDaTurmaInclui(getNativeTurnoValueForAllocation(allocLike), fallbackTurnoNorm)) return '';
 
     return `<span style="display:inline-block; font-size:0.65em; background:#e67e22; color:#fff; padding:1px 4px; border-radius:3px; margin-left:2px; font-weight:bold;" title="Mudou de turno: aula no turno ${fallbackLabel}">&#9888; ${fallbackLabel}</span>`;
 }

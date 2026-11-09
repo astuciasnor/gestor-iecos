@@ -16,6 +16,16 @@ export function normalizeTurnoKey(value) {
   return normalized;
 }
 
+// A turma ja tem aula nesse turno? turnoNorm: 'manha', 'tarde' ou 'noite'.
+// Turmas de dois turnos (ex.: Manha+Tarde, em Cameta) e Integral contam todos os
+// seus turnos como proprios: aula neles nao e mudanca de turno.
+export function turnoDaTurmaInclui(turnoDaTurma, turnoNorm) {
+  const nativo = normalizeTurnoKey(turnoDaTurma);
+  if (!nativo || !turnoNorm) return false;
+  if (nativo === 'integral') return true;
+  return nativo === turnoNorm || nativo.split('_').includes(turnoNorm);
+}
+
 export function getHorariosByTurno(turno, hp) {
   if (!hp || typeof hp !== 'object') return [];
   const normalizedTurno = normalizeTurnoKey(turno);

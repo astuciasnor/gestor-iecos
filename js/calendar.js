@@ -1,7 +1,7 @@
-import { store } from './store.js?v=202611091300';
-import { getDaysArray, toLocalDateString } from './utils.js?v=202611091300';
-import { mapSlotToTurno, normalizeTurnoKey } from './turns.js?v=202611091300';
-import { slotLabelsOverlap } from './academic_rules.mjs?v=202611091300';
+import { store } from './store.js?v=202611091619';
+import { getDaysArray, toLocalDateString } from './utils.js?v=202611091619';
+import { mapSlotToTurno, turnoDaTurmaInclui } from './turns.js?v=202611091619';
+import { slotLabelsOverlap } from './academic_rules.mjs?v=202611091619';
 
 function normalizeKeyPart(value) {
   return String(value || '').trim().toUpperCase();
@@ -82,7 +82,9 @@ function applyExceptionalSaturdayShift(allocation = {}, dayOfWeek = 0, slots = [
   if (!allocation?.sabadoManha || dayOfWeek !== 6 || normalizedSlots.length === 0) return normalizedSlots;
 
   const nativeTurno = getNativeTurnoValueForAllocation(allocation);
-  if (normalizeTurnoKey(nativeTurno) === 'manha') return normalizedSlots;
+  // Turma que ja tem aula de manha (Manha, Manha+Tarde, Integral): o sabado fica
+  // no horario desenhado.
+  if (turnoDaTurmaInclui(nativeTurno, 'manha')) return normalizedSlots;
 
   return normalizeSlotList(
     normalizedSlots.map((slot) => mapSlotToTurno(
