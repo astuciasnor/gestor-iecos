@@ -1,29 +1,29 @@
-import { store } from './store.js?v=202611081045';
-import { getTurnoLetter, mapSlotToTurno } from './turns.js?v=202611081045';
-import { normalizePeriodo as normalizePeriodoLetivoCode } from './plan_storage.js?v=202611081045';
-import { getCalendarEvents } from './calendar.js?v=202611081045';
-import { isDateOverlap } from './utils.js?v=202611081045';
-import { weeklyState } from './weekly_state.js?v=202611081045';
-import { findPendentesCobertas, isPendenteJaAlocada } from './pendentes.mjs?v=202611081045';
-import { classifySwap } from './troca_ordem.mjs?v=202611081045';
-import { closeFaixaEnds, isPauseEnd, listFaixaPauses } from './pausa_faixas.mjs?v=202611081045';
-import { numeroDaSubturma, isTurmaInteira, proximaSubturma, codigoT01Como } from './subturmas.mjs?v=202611081045';
-import { abrirMiniCalendario, fecharMiniCalendario, miniCalendarioAberto } from './mini_calendario.mjs?v=202611081045';
-import { buildCanonicalOfferProjection } from './execution_engine.js?v=202611081045';
+import { store } from './store.js?v=202611091300';
+import { getTurnoLetter, mapSlotToTurno } from './turns.js?v=202611091300';
+import { normalizePeriodo as normalizePeriodoLetivoCode } from './plan_storage.js?v=202611091300';
+import { getCalendarEvents } from './calendar.js?v=202611091300';
+import { isDateOverlap } from './utils.js?v=202611091300';
+import { weeklyState } from './weekly_state.js?v=202611091300';
+import { findPendentesCobertas, isPendenteJaAlocada } from './pendentes.mjs?v=202611091300';
+import { classifySwap } from './troca_ordem.mjs?v=202611091300';
+import { closeFaixaEnds, isPauseEnd, listFaixaPauses } from './pausa_faixas.mjs?v=202611091300';
+import { numeroDaSubturma, isTurmaInteira, proximaSubturma, codigoT01Como } from './subturmas.mjs?v=202611091300';
+import { abrirMiniCalendario, fecharMiniCalendario, miniCalendarioAberto } from './mini_calendario.mjs?v=202611091300';
+import { buildCanonicalOfferProjection } from './execution_engine.js?v=202611091300';
 import {
     buildSigaaMetadataPayload,
     validateSigaaMetadataPayload,
     getSigaaCode,
     buildScopedSigaaAllocationFromOfferFaixa
-} from './sigaa_metadata.js?v=202611081045';
-import { parseBackupDataFile, extractImportPlanMeta } from './serialization.js?v=202611081045';
+} from './sigaa_metadata.js?v=202611091300';
+import { parseBackupDataFile, extractImportPlanMeta } from './serialization.js?v=202611091300';
 import {
     showToastWarning,
     showPersistentStatusMessage,
     copyTextToClipboard,
     flashButtonCopyState,
     setupCopyActionButtons
-} from './ui_feedback.js?v=202611081045';
+} from './ui_feedback.js?v=202611091300';
 import {
     normalizeHexColor,
     adjustHexColor,
@@ -32,7 +32,7 @@ import {
     tonsDaCor,
     aplicarTonsBloco,
     PALETA_CORES
-} from './color_utils.js?v=202611081045';
+} from './color_utils.js?v=202611091300';
 import {
     isFaixaAllocation,
     isPriorityRegularAllocation,
@@ -41,8 +41,8 @@ import {
     normalizeTeacherNameForMatch,
     getDocenteShortLabel,
     getAllocationTeachersForConflict
-} from './allocation_helpers.js?v=202611081045';
-import { setupSeletorCor } from './seletor_cor.js?v=202611081045';
+} from './allocation_helpers.js?v=202611091300';
+import { setupSeletorCor } from './seletor_cor.js?v=202611091300';
 import {
     VINCULOS_DOCENTE_NOVO,
     OUTRA_UNIDADE,
@@ -51,9 +51,9 @@ import {
     findSimilarNames,
     problemaNoNome,
     limparEspacos
-} from './docente_nomes.mjs?v=202611081045';
-import { getSessionEmail, getPerfil, fetchAllocationsForPlans } from './sync_remoto.js?v=202611081045';
-import { resolveBackendMode } from './backend_config.js?v=202611081045';
+} from './docente_nomes.mjs?v=202611091300';
+import { getSessionEmail, getPerfil, fetchAllocationsForPlans } from './sync_remoto.js?v=202611091300';
+import { resolveBackendMode } from './backend_config.js?v=202611091300';
 import {
     normalizeConflictSlotLabel,
     getAvailableTurnoOfertaOptions,
@@ -61,8 +61,9 @@ import {
     cleanHorarioLabel,
     isTurnoDividerSlot,
     buildHorariosForUI,
-    getShiftChangeMeta
-} from './turno_helpers.js?v=202611081045';
+    getShiftChangeMeta,
+    getNativeTurnoValueForAllocation
+} from './turno_helpers.js?v=202611091300';
 import {
     getDisciplinaCHGlobal,
     derivarBloco,
@@ -72,7 +73,7 @@ import {
     getDisciplinaInfo,
     getCursoSiglaDaTurma,
     getPrintAcademicMetaLine
-} from './curso_turma_helpers.js?v=202611081045';
+} from './curso_turma_helpers.js?v=202611091300';
 import {
     renderMonthlyCalendar,
     renderTeacherCalendar,
@@ -80,11 +81,11 @@ import {
     clearTeacherRangeCache,
     setTeacherPeriod,
     getTeacherPeriod
-} from './calendarios_ui.js?v=202611081045';
+} from './calendarios_ui.js?v=202611091300';
 import {
     refreshTeacherConflictsUI,
     setCrossPlanLoader
-} from './conflitos_ui.js?v=202611081045';
+} from './conflitos_ui.js?v=202611091300';
 import {
     shouldIgnoreTurmaEventForCandidate,
     normalizeDrawnSlotsByDay,
@@ -98,7 +99,7 @@ import {
     resolveEditableFaixasFromStoredExecution,
     alignFaixasToExecutionEnd,
     buildFinalAdjustmentFaixaSuggestion
-} from './faixa_utils.js?v=202611081045';
+} from './faixa_utils.js?v=202611091300';
 import {
     timeToMinutes,
     shiftISODate,
@@ -112,14 +113,14 @@ import {
     isDateInsideRange,
     formatDateBRShortYear,
     formatDateBR
-} from './date_utils_ui.js?v=202611081045';
+} from './date_utils_ui.js?v=202611091300';
 import {
     initializeWeeklyScheduleForTurma,
     reconcileTurmaSelectionAfterPLChange,
     resetWeeklyViewOnTurmaChange,
     resolveActiveAcademicPeriod,
     slotLabelsOverlap
-} from './academic_rules.mjs?v=202611081045';
+} from './academic_rules.mjs?v=202611091300';
 
 const gridContainer = document.getElementById('weekly-grid');
 const selCurso = document.getElementById('sel-curso');
@@ -165,8 +166,15 @@ function resetEditingComponentState() {
     weeklyState.resetEditing();
     clearWeeklyBlock();
     hideFaixaAutoNote();
+    sabadoManhaEscolha = false;   // componente nova: sabado no turno da turma ate perguntar
 }
 
+// true = aulas de sabado da componente em edicao vao para a manha (ver perguntarTurnoDoSabado).
+let sabadoManhaEscolha = false;
+// Desfazer de um nivel (ver commitAllocationUndoSnapshot): estado antes do ultimo
+// salvamento e a foto das alocacoes logo depois dele.
+let lastAllocationUndoSnapshot = null;
+let allocationsAposSalvar = '';
 let componentStartSelectionMode = 'auto';
 // Faixa em modo de DESENHO (1|2|3) ou null. Antes era window.isDrawingFaixa
 // (global exposto). Agora e modulo-privado — nada externo o le/escreve (blindado).
@@ -758,10 +766,30 @@ function buildFaixaPadraoGrupos(patternInput) {
     });
 }
 
+// Grupos da coluna Horario semanal. Com "Sabado -> manha", o sabado aparece
+// separado e ja no horario da manha (como vai ser salvo), marcado com manha: true.
+function gruposDoHorarioSemanal(faixaIndex) {
+    const padrao = normalizeFaixaPattern(faixasPatterns[faixaIndex]);
+    const sabadoVaiManha = sabadoManhaEscolha && padrao.some((p) => p.dia === 6 && !ehAulaDaManha(p.slot));
+    if (!sabadoVaiManha) return buildFaixaPadraoGrupos(padrao);
+    const sabado = sabadoNaManha(padrao.filter((p) => p.dia === 6).map((p) => p.slot), { turmaId: store.selectedTurma });
+    // As aulas da manha nao seguem a numeracao da tarde: o texto usa direto o
+    // inicio da primeira aula e o fim da ultima.
+    const horas = sabado
+        .sort((a, b) => timeToMinutes(a) - timeToMinutes(b))
+        .map((slot) => String(slot).match(/\d{1,2}:\d{2}/g) || []);
+    const inicio = horas[0]?.[0];
+    const fim = horas[horas.length - 1]?.slice(-1)[0];
+    return [
+        ...buildFaixaPadraoGrupos(padrao.filter((p) => p.dia !== 6)),
+        { dias: 'Sáb', aulas: '', hora: inicio && fim ? `${inicio}–${fim}` : '', manha: true }
+    ];
+}
+
 function updateFaixaPadraoCell(faixaIndex) {
     const cell = document.getElementById(`faixa-padrao-f${faixaIndex}`);
     if (!cell) return;
-    const grupos = buildFaixaPadraoGrupos(faixasPatterns[faixaIndex]);
+    const grupos = gruposDoHorarioSemanal(faixaIndex);
     const livre = faixaIndex > 1 && !document.getElementById(`inp-data-inicio-f${faixaIndex}`)?.value;
     document.getElementById(`faixa-${faixaIndex}`)?.classList.toggle('faixa-item--livre', livre);
     cell.innerHTML = '';
@@ -782,7 +810,7 @@ function updateFaixaPadraoCell(faixaIndex) {
     const horaLonga = (hora) => hora.replace(/:/g, 'h').replace('–', ' – ');
     const horaCurta = (hora) => hora.replace(/:00/g, 'h').replace(/:/g, 'h');
     const textoGrupo = (g, curta) => `${g.dias}: ${g.hora ? (curta ? horaCurta(g.hora) : horaLonga(g.hora)) : g.aulas}`;
-    cell.title = grupos.map((g) => textoGrupo(g, false)).join('\n');
+    cell.title = grupos.map((g) => textoGrupo(g, false) + (g.manha ? ' (pela manhã)' : '')).join('\n');
 
     const linhas = [grupos.slice(0, 1), grupos.slice(1)].filter((l) => l.length);
     const caixa = document.createElement('div');
@@ -798,6 +826,14 @@ function updateFaixaPadraoCell(faixaIndex) {
         curta.textContent = grupoDaLinha.map((g) => textoGrupo(g, true)).join('; ');
         linha.appendChild(longa);
         linha.appendChild(curta);
+        if (grupoDaLinha.some((g) => g.manha)) {
+            // Mesmo aviso dos cartoes da grade: o sabado vai para a manha
+            const aviso = document.createElement('span');
+            aviso.className = 'fp-sab-manha';
+            aviso.textContent = '⚠ Manhã';
+            aviso.title = 'As aulas de sábado desta componente vão para o turno da manhã.';
+            linha.appendChild(aviso);
+        }
         caixa.appendChild(linha);
     });
     cell.appendChild(caixa);
@@ -1492,6 +1528,96 @@ function mergeFaixaAutoCreationIntoPrevious() {
     renderWeeklyGrid();
 }
 
+// Sabado: ao marcar o PRIMEIRO horario de sabado da componente (turma da tarde
+// ou da noite), abre a janela do Cardume com dois botoes: "Passar para a manha"
+// ou "Manter a tarde/noite" (Esc ou clicar fora = manter). A resposta vale para
+// todos os sabados da componente. Cada horario de sabado desenhado mostra o
+// aviso "Manha" (quando vai para a manha) e um botao pequeno de troca que abre
+// a janela de novo (ver marcarSabadoManhaNaCelula).
+// (sabadoManhaEscolha fica declarada no topo, junto do estado de edicao.)
+
+function ehAulaDaManha(slot) {
+    return getTurnoLetter(String(slot || '')) === 'M';
+}
+
+// "tarde" ou "noite": o turno da turma em que o sabado foi desenhado.
+function turnoDaAulaPorExtenso(slot) {
+    return getTurnoLetter(String(slot || '')) === 'N' ? 'noite' : 'tarde';
+}
+
+// Horarios de sabado no horario equivalente da manha (como saem no SIGAA e nos
+// calendarios). Aulas que ja sao da manha ficam como estao.
+function sabadoNaManha(slots, turmaLike) {
+    const nativo = getNativeTurnoValueForAllocation(turmaLike);
+    const quadro = store.getActiveHorariosPorTurno();
+    return slots.map((slot) => (ehAulaDaManha(slot) ? slot : mapSlotToTurno(slot, nativo, 'Manha', quadro)));
+}
+
+function componenteTemSabado() {
+    return [1, 2, 3].some((i) => normalizeFaixaPattern(faixasPatterns[i]).some((p) => p.dia === 6));
+}
+
+// Um horario de sabado desenhado fora da manha (o que pede a escolha); null = nenhum.
+function sabadoForaDaManhaDesenhado() {
+    for (let i = 1; i <= 3; i++) {
+        const fora = normalizeFaixaPattern(faixasPatterns[i]).find((p) => p.dia === 6 && !ehAulaDaManha(p.slot));
+        if (fora) return fora.slot;
+    }
+    return null;
+}
+
+function fecharEscolhaSabado() {
+    document.getElementById('sabado-modal')?.remove();
+    document.removeEventListener('keydown', onEscolhaSabadoKeydown);
+}
+
+function onEscolhaSabadoKeydown(e) {
+    if (e.key === 'Escape') fecharEscolhaSabado();   // Esc = fica como esta
+}
+
+function abrirEscolhaSabado() {
+    fecharEscolhaSabado();
+    const slotFora = sabadoForaDaManhaDesenhado();
+    if (!slotFora) return;
+    const esc = escapeTrocaHtml;
+    const disc = (getWeeklyFaixasTitleDisciplinaAtiva() || 'esta componente').toLocaleUpperCase('pt-BR');
+    const turno = turnoDaAulaPorExtenso(slotFora);
+    const overlay = document.createElement('div');
+    overlay.id = 'sabado-modal';
+    overlay.className = 'troca-modal no-print';
+    overlay.innerHTML = `
+        <div class="troca-caixa sab-caixa" role="dialog" aria-modal="true" aria-labelledby="sab-titulo">
+            <h3 id="sab-titulo">Aula no sábado</h3>
+            <p class="troca-sub">Normalmente não há aula no sábado. Onde ficam as aulas de sábado de <b>${esc(disc)}</b>?</p>
+            <div class="sab-botoes">
+                <button type="button" class="sab-opcao sab-opcao--manha" data-manha="1">Passar para a manhã</button>
+                <button type="button" class="sab-opcao" data-manha="0">Manter à ${turno}</button>
+            </div>
+            <p class="troca-nota">Vale para todos os sábados desta componente. Para mudar depois, clique no botão pequeno dentro do horário de sábado, na grade.</p>
+        </div>`;
+    overlay.addEventListener('click', (e) => {
+        const botao = e.target.closest('.sab-opcao');
+        if (botao) {
+            sabadoManhaEscolha = botao.dataset.manha === '1';
+            fecharEscolhaSabado();
+            updateWeeklyFaixaHoursDisplay();   // coluna Horario semanal mostra o sabado no turno escolhido
+            renderWeeklyGrid();   // aviso e botao de troca nas celulas de sabado
+            return;
+        }
+        if (e.target === overlay) fecharEscolhaSabado();   // clicar fora = fica como esta
+    });
+    document.body.appendChild(overlay);
+    document.addEventListener('keydown', onEscolhaSabadoKeydown);
+    overlay.querySelector(`.sab-opcao[data-manha="${sabadoManhaEscolha ? '1' : '0'}"]`)?.focus();
+}
+
+function perguntarTurnoDoSabado(slot) {
+    sabadoManhaEscolha = false;
+    if (ehAulaDaManha(slot)) return;   // turma da manha: nada a perguntar
+    endDrawingDrag();   // o mouse e solto com a janela aberta
+    abrirEscolhaSabado();
+}
+
 function tryApplyDrawingSelection(cell, shouldSelect, styles) {
     if (!cell) return false;
     const select = !!shouldSelect;
@@ -1503,19 +1629,29 @@ function tryApplyDrawingSelection(cell, shouldSelect, styles) {
     const faixaIndex = getFaixaIndexForDate(cellDate);
     if (Number.isNaN(dia) || !slot || !faixaIndex) return false;
 
+    const primeiroSabado = select && dia === 6 && !componenteTemSabado();
+
     if (faixaIndex === 1 && !document.getElementById('inp-data-inicio-f1')?.value) {
         syncFaixaStartFromGridClick(1, cellDate, []);
     }
 
     const result = applyDrawnCellChange({ faixaIndex, date: cellDate, dia, slot, select });
     if (!result.applied) return false;
+    if (Array.isArray(lastAllocationUndoSnapshot)) clearAllocationUndoSnapshot();   // outra alteracao
+    const sabadoSumiu = !select && dia === 6 && !componenteTemSabado();   // redesenha a grade sem o sabado
 
     setDrawingFaixaFollowingCell(result.faixa);
-    if (result.structural) {
-        refreshFaixasAfterStructureChange();
+    if (result.structural || sabadoSumiu) {
+        if (result.structural) refreshFaixasAfterStructureChange();
         renderWeeklyGrid();
     } else {
         setDrawingCellSelection(cell, select, styles);
+    }
+    if (primeiroSabado) {
+        // A pergunta encerra o arrasto (o mouse e solto com a janela aberta):
+        // registra a marcacao agora, senao a tabela das faixas fica sem o sabado.
+        persistActiveDrawingSelection();   // tambem atualiza a coluna Horario semanal
+        perguntarTurnoDoSabado(slot);
     }
     return true;
 }
@@ -1618,6 +1754,38 @@ function updateDrawingViewToggleButton() {
     }
 }
 
+// Celula de sabado desenhada (turma da tarde/noite): mostra o aviso "Manha"
+// (mesmo dos cartoes salvos, porque a linha da grade ainda e a da tarde) e um
+// botao pequeno "Sabado -> manha/tarde" que abre a janela para trocar.
+function marcarSabadoManhaNaCelula(cell) {
+    cell.querySelector('.cd-celula-sab')?.remove();
+    const slot = String(cell.dataset.horario || '');
+    const relevante = cell.classList.contains('selected-slot')
+        && String(cell.dataset.dia) === '6'
+        && !ehAulaDaManha(slot);
+    if (!relevante) return;
+    const turnoTurma = turnoDaAulaPorExtenso(slot);
+    const caixa = document.createElement('span');
+    caixa.className = 'cd-celula-sab';
+    if (sabadoManhaEscolha) {
+        const aviso = document.createElement('span');
+        aviso.className = 'cd-celula-manha';
+        aviso.textContent = '⚠ Manhã';
+        aviso.title = 'Aula de sábado salva no turno da manhã';
+        caixa.appendChild(aviso);
+    }
+    const trocar = document.createElement('button');
+    trocar.type = 'button';
+    trocar.className = 'cd-celula-sab-trocar';
+    trocar.textContent = sabadoManhaEscolha ? 'Sábado → manhã' : `Sábado → ${turnoTurma}`;
+    trocar.title = 'Clique para trocar o turno das aulas de sábado desta componente';
+    // Nao deixa o clique chegar na celula (senao desmarcaria o horario)
+    trocar.addEventListener('mousedown', (e) => { e.stopPropagation(); e.preventDefault(); });
+    trocar.addEventListener('click', (e) => { e.stopPropagation(); abrirEscolhaSabado(); });
+    caixa.appendChild(trocar);
+    cell.appendChild(caixa);
+}
+
 function setDrawingCellSelection(cell, selected, styles) {
     if (!cell) return;
     if (selected) {
@@ -1640,6 +1808,7 @@ function setDrawingCellSelection(cell, selected, styles) {
         cell.style.fontWeight = '';
         cell.style.boxShadow = '';
     }
+    marcarSabadoManhaNaCelula(cell);
 }
 
 function endDrawingDrag() {
@@ -3498,9 +3667,11 @@ function updateWeeklyNavigatorLabel() {
 // corrigir e tentar de novo — NAO some como um toast. Limpa em: nova tentativa
 // de salvar (inicio de handleAddManual), reset de edicao (sucesso/turma/plano)
 // e nova selecao de disciplina.
+// tone 'choque' (choque de horario ou de professor): mesmo comportamento, mas o
+// cartao fica laranja, como os avisos de atencao.
 let weeklyBlockMessage = null;
-function setWeeklyBlock(title, hint) {
-    weeklyBlockMessage = { title, hint };
+function setWeeklyBlock(title, hint, tone = 'blocked') {
+    weeklyBlockMessage = { title, hint, tone };
     updateWeeklyContextNote();
 }
 function clearWeeklyBlock() {
@@ -3524,7 +3695,7 @@ function updateWeeklyContextNote() {
 
     const status = computeWeeklyStatus();
 
-    bar.classList.remove('tone-info', 'tone-action', 'tone-editing', 'tone-pending', 'tone-blocked');
+    bar.classList.remove('tone-info', 'tone-action', 'tone-editing', 'tone-pending', 'tone-blocked', 'tone-choque');
     bar.classList.add(`tone-${status.tone}`);
 
     const iconEl = bar.querySelector('.weekly-status-icon');
@@ -3622,8 +3793,9 @@ function buildSuggestionChip(iniDate, isEditing) {
 function computeWeeklyStatus() {
     // BLOQUEIO tem prioridade maxima: fica ate o usuario corrigir e re-tentar.
     if (weeklyBlockMessage) {
+        const choque = weeklyBlockMessage.tone === 'choque';
         return {
-            tone: 'blocked', icon: '\u26D4', step: 0,
+            tone: choque ? 'choque' : 'blocked', icon: choque ? '\u26A0\uFE0F' : '\u26D4', step: 0,
             title: weeklyBlockMessage.title,
             hint: weeklyBlockMessage.hint
         };
@@ -3711,17 +3883,25 @@ function setupWeeklyWeekNavigator() {
     }
     window.__weeklyNavigatorBound = true;
 
-    const btnPrev = document.getElementById('btn-week-prev');
-    const btnNext = document.getElementById('btn-week-next');
     const btnFaixaPrev = document.getElementById('btn-faixa-prev');
     const btnFaixaNext = document.getElementById('btn-faixa-next');
     const btnSave = document.getElementById('btn-week-save-pattern');
 
-    if (btnPrev) {
-        btnPrev.addEventListener('click', () => {
-            moveWeeklyViewWeek(-1);
-        });
-    }
+    // Semana anterior/proxima pelas setas <- e -> do teclado (as setas da grade
+    // sao criadas em renderWeeklyGrid). So na aba Alocar, fora de campos de texto,
+    // das abas (que usam as setas) e de janelas abertas.
+    document.addEventListener('keydown', (e) => {
+        if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+        if (e.defaultPrevented || e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
+        if (!document.getElementById('tab-weekly')?.classList.contains('active')) return;
+        if (!document.getElementById('btn-week-prev')) return;   // grade sem turma
+        const alvo = e.target;
+        if (alvo?.closest?.('input, textarea, select, [contenteditable="true"], [role="tablist"], [role="slider"], dialog')) return;
+        if (document.querySelector('dialog[open], .troca-modal')) return;
+        e.preventDefault();
+        moveWeeklyViewWeek(e.key === 'ArrowLeft' ? -1 : 1);
+    });
+
     if (btnFaixaPrev) {
         btnFaixaPrev.addEventListener('click', () => {
             navigateWeeklyFaixa(-1);
@@ -3730,11 +3910,6 @@ function setupWeeklyWeekNavigator() {
     if (btnFaixaNext) {
         btnFaixaNext.addEventListener('click', () => {
             navigateWeeklyFaixa(1);
-        });
-    }
-    if (btnNext) {
-        btnNext.addEventListener('click', () => {
-            moveWeeklyViewWeek(1);
         });
     }
     if (btnSave) {
@@ -5598,6 +5773,7 @@ function onTurmaChange() {
 
 function renderWeeklyGrid() {
     if (!gridContainer) return;
+    updateUndoAllocationButtonUI();
 
     updateWeeklyFaixasTitleDisciplina();
     gridContainer.innerHTML = '';
@@ -5838,7 +6014,24 @@ function renderWeeklyGrid() {
         return [];
     };
 
-    gridContainer.appendChild(createCell('header top-header', ''));
+    // Setas da semana: < no canto superior esquerdo, > ao lado de SABADO.
+    const criarSetaSemana = (direcao) => {
+        const anterior = direcao < 0;
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.id = anterior ? 'btn-week-prev' : 'btn-week-next';
+        btn.className = `cd-semana-seta ${anterior ? 'cd-semana-seta--ant' : 'cd-semana-seta--prox'} no-print`;
+        const rotulo = anterior ? 'Semana anterior' : 'Próxima semana';
+        btn.title = `${rotulo} (tecla ${anterior ? '←' : '→'})`;
+        btn.setAttribute('aria-label', rotulo);
+        btn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${anterior ? 'm15 18-6-6 6-6' : 'm9 18 6-6-6-6'}"></path></svg>`;
+        btn.addEventListener('click', () => moveWeeklyViewWeek(direcao));
+        return btn;
+    };
+
+    const cantoSuperior = createCell('header top-header', '');
+    cantoSuperior.appendChild(criarSetaSemana(-1));
+    gridContainer.appendChild(cantoSuperior);
     diasSemana.forEach((dia, idx) => {
         const dateStr = weekDates[idx] || '';
         const holidayLabel = dateStr ? (feriadosMap.get(dateStr) || '') : '';
@@ -5868,6 +6061,7 @@ function renderWeeklyGrid() {
             h.classList.add('week-day-holiday');
             h.title = `Feriado: ${holidayLabel}`;
         }
+        if (idx === diasSemana.length - 1) h.appendChild(criarSetaSemana(1));
 
         gridContainer.appendChild(h);
     });
@@ -6328,6 +6522,9 @@ function loadAllocationIntoEditor(allocation, idsToRemove = [], options = {}) {
         atualizarDicaCodigoDisciplina();
     }
 
+    // Sabado pela manha volta como a oferta foi salva (sem perguntar de novo).
+    sabadoManhaEscolha = isFaixaAllocation(a) && !!a.sabadoManha;
+
     // isReEdit: true = oferta já tinha faixas salvas (re-edição); false = pendente (1ª vez)
     const isReEdit = isFaixaAllocation(a);
 
@@ -6428,7 +6625,7 @@ function loadAllocationIntoEditor(allocation, idsToRemove = [], options = {}) {
 // de cada save bem-sucedido (insercao individual, edicao de pendente ou de
 // ofertada). Undo de um nivel: restaura o estado anterior. Importacoes em lote
 // (handleImportBloco) nao passam por aqui, entao nao geram snapshot.
-let lastAllocationUndoSnapshot = null;
+// (lastAllocationUndoSnapshot e allocationsAposSalvar ficam declaradas no topo.)
 
 // Subturma do salvar: so fica quando a componente tem OUTRA oferta na turma
 // (fora as que estao sendo editadas). Sozinha, volta a valer para a turma toda:
@@ -6453,22 +6650,45 @@ function snapshotAllocationsForUndo() {
     }
 }
 
+// O Desfazer so vale LOGO depois de salvar: guarda como as alocacoes ficaram no
+// salvamento; qualquer outra alteracao (remover, trocar, desenhar na grade...)
+// descarta o desfazer e o botao volta a ficar esmaecido.
+// A foto "depois de salvar" e tirada ao fim do salvamento (setTimeout 0), porque
+// o proprio salvamento ainda ajusta as datas das intensivas logo depois do commit.
+function assinaturaAlocacoes() {
+    try { return JSON.stringify(store.allocations || []); } catch (err) { return ''; }
+}
+
 function commitAllocationUndoSnapshot(snapshot) {
     lastAllocationUndoSnapshot = Array.isArray(snapshot) ? snapshot : null;
+    allocationsAposSalvar = null;   // pendente ate o fim do salvamento
     updateUndoAllocationButtonUI();
+    const desteSalvamento = lastAllocationUndoSnapshot;
+    if (desteSalvamento) {
+        setTimeout(() => {
+            if (lastAllocationUndoSnapshot === desteSalvamento) allocationsAposSalvar = assinaturaAlocacoes();
+        }, 0);
+    }
 }
 
 function clearAllocationUndoSnapshot() {
     lastAllocationUndoSnapshot = null;
+    allocationsAposSalvar = '';
     updateUndoAllocationButtonUI();
 }
 
 function updateUndoAllocationButtonUI() {
     const btn = document.getElementById('btn-undo-alloc');
+    if (Array.isArray(lastAllocationUndoSnapshot) && typeof allocationsAposSalvar === 'string' && assinaturaAlocacoes() !== allocationsAposSalvar) {
+        lastAllocationUndoSnapshot = null;   // houve outra alteracao depois do salvamento
+        allocationsAposSalvar = '';
+    }
     if (!btn) return;
     const hasSnapshot = Array.isArray(lastAllocationUndoSnapshot);
-    btn.classList.toggle('hidden', !hasSnapshot);
     btn.disabled = !hasSnapshot;
+    btn.title = hasSnapshot
+        ? 'Desfazer o salvamento que acabou de ser feito'
+        : 'Desfazer fica disponível logo depois de salvar uma componente';
 }
 
 function handleUndoLastAllocation() {
@@ -6587,8 +6807,7 @@ function handleAddManual() {
             diasMarcados = [...new Set(faixasConfig.flatMap((f) => f.dias || []))].sort((a, b) => a - b);
             if (diasMarcados.length === 0) diasMarcados = [1, 2, 3, 4, 5];
 
-            const sabadoManhaCheckbox = document.getElementById('chk-sabado-manha');
-            const sabadoManha = sabadoManhaCheckbox ? sabadoManhaCheckbox.checked : false;
+            const sabadoManha = diasMarcados.includes(6) && sabadoManhaEscolha;
 
             previewIntensive = {
                 turmaId: store.selectedTurma,
@@ -6658,8 +6877,7 @@ function handleAddManual() {
         const slotsIntensiva = execution.unionSlots || [];
         diasMarcados = execution.unionDias || diasMarcados;
         const usaSabado = diasMarcados.includes(6);
-        const sabadoManhaCheckbox = document.getElementById('chk-sabado-manha');
-        const sabadoManha = sabadoManhaCheckbox ? sabadoManhaCheckbox.checked : false;
+        const sabadoManha = usaSabado && sabadoManhaEscolha;
 
         const candidateIntensiveForConflict = {
             ...previewIntensive,
@@ -6697,11 +6915,12 @@ function handleAddManual() {
             const quandoChoque = intensiveConflict.date ? ` em ${formatDateBR(intensiveConflict.date)}` : '';
             setWeeklyBlock(
                 'Choque com outra componente',
-                `"${intensiveConflict.disciplina}" ja ocupa esse horario${quandoChoque}. Como "${disciplina}" tem pausa, o Cardume nao a move sozinho: ajuste as datas das faixas e salve de novo.`
+                `"${intensiveConflict.disciplina}" ja ocupa esse horario${quandoChoque}. Como "${disciplina}" tem pausa, o Cardume nao a move sozinho: ajuste as datas das faixas e salve de novo.`,
+                'choque'
             );
             showToastWarning(
                 `Choque com "${intensiveConflict.disciplina}"${quandoChoque}. Ajuste as datas das faixas (a componente tem pausa e nao e movida sozinha).`,
-                'error',
+                'warning',
                 6200
             );
             return;
@@ -6754,11 +6973,12 @@ function handleAddManual() {
                 // intercala outras componentes.
                 setWeeklyBlock(
                     'Sobreposicao de horario',
-                    `"${intensiveConflict.disciplina}" ja ocupa esse horario no mesmo periodo. Ajuste a data de inicio desta componente e salve de novo.`
+                    `"${intensiveConflict.disciplina}" ja ocupa esse horario no mesmo periodo. Ajuste a data de inicio desta componente e salve de novo.`,
+                    'choque'
                 );
                 showToastWarning(
                     `Sobreposicao detectada: "${intensiveConflict.disciplina}" ja ocupa esse horario no mesmo periodo. Ajuste a data de inicio desta componente.`,
-                    'error',
+                    'warning',
                     5600
                 );
                 return;
@@ -6804,11 +7024,12 @@ function handleAddManual() {
                 if (!isImportedSave) {
                     setWeeklyBlock(
                         'Sobreposicao de professor',
-                        `${profNomes} ja tem ${confirmedTeacherConflict.event.disciplina} na turma ${turmaNomeConflito} em ${formatDateBR(confirmedTeacherConflict.date)} (${horarioChoque}). Salvamento cancelado — sobreposicao so e permitida via importacao.`
+                        `${profNomes} ja tem ${confirmedTeacherConflict.event.disciplina} na turma ${turmaNomeConflito} em ${formatDateBR(confirmedTeacherConflict.date)} (${horarioChoque}). Salvamento cancelado — sobreposicao so e permitida via importacao.`,
+                        'choque'
                     );
                     showToastWarning(
                         `Sobreposicao de professor detectada: ${profNomes} ja tem ${confirmedTeacherConflict.event.disciplina} na turma ${turmaNomeConflito} em ${formatDateBR(confirmedTeacherConflict.date)} (${horarioChoque}). Salvamento cancelado - sobreposicao so e permitida em disciplinas carregadas via importacao.`,
-                        'error',
+                        'warning',
                         6200
                     );
                     return;
@@ -7411,14 +7632,20 @@ function renderOfertasList() {
     };
 
     const buildCanonicalRows = () => {
-        const buildFaixaHorarioResumo = (faixa) => {
+        // Sabado com "Sabado -> manha": mostra o horario da manha, como sai no SIGAA.
+        const buildFaixaHorarioResumo = (faixa, base) => {
             const drawnSlotsByDay = faixa?.drawnSlotsByDay || {};
             return Object.entries(drawnSlotsByDay)
                 .sort(([left], [right]) => Number(left) - Number(right))
                 .map(([day, slots]) => {
-                    const safeSlots = Array.isArray(slots) ? slots.filter(Boolean) : [];
+                    let safeSlots = Array.isArray(slots) ? slots.filter(Boolean) : [];
                     if (safeSlots.length === 0) return '';
-                    return `${dayLabels[Number(day)] || 'Dia'} ${safeSlots.join(', ')}`;
+                    let sufixo = '';
+                    if (Number(day) === 6 && base?.sabadoManha && !safeSlots.every(ehAulaDaManha)) {
+                        safeSlots = sabadoNaManha(safeSlots, base);
+                        sufixo = ' (manhã)';
+                    }
+                    return `${dayLabels[Number(day)] || 'Dia'} ${safeSlots.join(', ')}${sufixo}`;
                 })
                 .filter(Boolean)
                 .join(', ');
@@ -7466,7 +7693,7 @@ function renderOfertasList() {
                     const sabadoLabel = Array.isArray(faixa?.dias) && faixa.dias.includes(6)
                         ? `<br><span style="color:#e67e22; font-weight:bold; font-size:0.8em;">(Inclui S\u00e1bados)</span>`
                         : '';
-                    const horariosResumo = buildFaixaHorarioResumo(faixa);
+                    const horariosResumo = buildFaixaHorarioResumo(faixa, base);
                     const faixaLabel = resolvedFaixas.length > 1 ? `Faixa ${idx + 1}` : 'Faixa \u00fanica';
                     const detailParts = [faixaLabel];
                     if (horariosResumo) detailParts.push(horariosResumo);

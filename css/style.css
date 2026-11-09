@@ -271,6 +271,31 @@ input[type="date"] { color-scheme: dark; }
     background: rgba(14, 122, 95, 0.08);
 }
 
+/* Ajuda em pilula: separada das abas de trabalho, na ponta direita da barra.
+   Contornada em verde-azulado; aberta, fica cheia. Continua sendo uma aba
+   (role="tab", setas do teclado), so muda a aparencia. */
+.tab-btn[data-tab="tutorial"] {
+    margin-left: auto;
+    align-self: center;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    height: 38px;
+    padding: 0 18px;
+    border: 1.5px solid #0e7a5f;
+    border-radius: 999px;
+    background: #FFFFFF;
+    color: #0e7a5f;
+    font-weight: 700;
+}
+.tab-btn[data-tab="tutorial"]:hover { background: #eef7f3; color: #0b6650; }
+.tab-btn[data-tab="tutorial"].active {
+    border-color: #0e7a5f;
+    background: #0e7a5f;
+    color: #FFFFFF;
+}
+.tab-btn[data-tab="tutorial"]:focus-visible { outline: 3px solid rgba(14, 122, 95, .35); outline-offset: 2px; }
+
 .btn-print { 
     background: var(--primary); 
     color: white; 
@@ -1240,35 +1265,6 @@ body:has(#tab-weekly.active) .top-bar .btn-print { display: none; }
     flex-wrap: nowrap;
 }
 
-/* Toggle "Sabado p/ Manha" da barra de navegacao semanal (estilos migrados de
-   inline para classe). Seletores com 2 classes p/ vencer .btn-week-nav e
-   .btn-label-two-line (que antes eram vencidos pelo estilo inline). */
-.btn-week-nav.weekly-sabado-toggle {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    background: #fff3cd;
-    color: #856404;
-    border: 1px solid #ffeeba;
-    cursor: pointer;
-    padding: 0 4px;
-}
-.weekly-sabado-check {
-    margin: 0;
-    width: 16px;
-    height: 16px;
-    cursor: pointer;
-    flex-shrink: 0;
-}
-.btn-label-two-line.weekly-sabado-label {
-    font-size: 0.75rem;
-    font-weight: bold;
-    white-space: nowrap;
-    line-height: 1.1;
-}
-
 .weekly-week-context-note {
     margin: 6px 0 0 0;
     padding: 6px 10px;
@@ -1552,16 +1548,6 @@ body:has(#tab-weekly.active) .top-bar .btn-print { display: none; }
 
 .btn-week-nav:hover {
     filter: brightness(1.04);
-}
-
-.btn-week-nav.btn-week-shift {
-    background: #00b0df;
-    border-color: #0697be;
-    color: #ffffff;
-}
-
-.btn-week-nav.btn-week-shift:hover {
-    background: #07a3cd;
 }
 
 .btn-week-nav.btn-week-faixa {
@@ -3225,6 +3211,25 @@ body:has(#tab-weekly.active) .top-bar .btn-print { display: none; }
     background: #fff;
     box-shadow: 0 6px 24px rgba(0, 0, 0, 0.35);
 }
+
+/* Janela "Aula no sabado": dois botoes claros, um embaixo do outro */
+.sab-caixa { width: min(440px, 100%); }
+.sab-botoes { display: flex; flex-direction: column; gap: 8px; margin-top: 6px; }
+.sab-opcao {
+    min-height: 44px;
+    padding: 0 16px;
+    border: 1.5px solid #0e7a5f;
+    border-radius: 10px;
+    background: #FFFFFF;
+    color: #0e7a5f;
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+}
+.sab-opcao:hover { background: #eef7f3; }
+.sab-opcao--manha { background: #0e7a5f; color: #FFFFFF; }
+.sab-opcao--manha:hover { background: #0b6650; }
+.sab-opcao:focus-visible { outline: 3px solid rgba(14, 122, 95, .35); outline-offset: 2px; }
 
 .troca-caixa h3 {
     margin: 0 0 6px;

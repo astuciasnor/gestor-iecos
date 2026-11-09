@@ -12,7 +12,7 @@
     --aj-borda: #e2e8ee;
     font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
     color: var(--aj-texto);
-    max-width: 1280px;
+    max-width: 1480px;
     margin: 0 auto;
 }
 
@@ -56,12 +56,26 @@
     padding: 3px 10px;
 }
 
+/* ---- Titulo + botoes dos temas parados no topo (so o conteudo rola) ----
+   A aba (#tab-tutorial) e quem rola e tem 30px de respiro em cima: o bloco
+   cobre esse respiro (margem negativa) e gruda em top: -30px. */
+.aj-fixo {
+    position: sticky;
+    top: -30px;
+    z-index: 5;
+    margin-top: -30px;
+    padding-top: 30px;
+    padding-bottom: 14px;
+    margin-bottom: 4px;
+    background: var(--bg-app, #f4f6f5);
+    box-shadow: 0 1px 0 #dfe7e2;
+}
+
 /* ---- Botoes dos temas ---- */
 .aj-temas {
     display: grid;
     grid-template-columns: repeat(6, minmax(0, 1fr));
     gap: 8px;
-    margin-bottom: 18px;
 }
 .aj-tema {
     display: flex;
@@ -139,11 +153,13 @@
     line-height: 1.5;
 }
 
+/* Os dois cartões de cada fileira com a mesma altura (stretch);
+   cada fileira tem a altura do seu cartão mais alto. */
 .aj-grade {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 14px;
-    align-items: start;
+    align-items: stretch;
 }
 
 .aj-cartao {
@@ -310,7 +326,7 @@
     margin: 0 0 16px;
     padding: 0;
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));   /* 2 colunas: os prints aparecem no tamanho da tela (com 4 ficavam ilegiveis) */
     gap: 10px;
 }
 .aj-roteiro > li {
@@ -408,5 +424,6 @@
 /* Na impressao sai so o tema aberto, sem os botoes */
 @media print {
     .aj-temas { display: none !important; }
+    .aj-fixo { position: static; margin: 0; padding: 0; box-shadow: none; }
     .aj-cartao, .aj-roteiro > li { break-inside: avoid; box-shadow: none; }
 }

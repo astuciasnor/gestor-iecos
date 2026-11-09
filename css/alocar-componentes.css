@@ -140,13 +140,13 @@
     /* stretch: os dois cartoes (faixas e semana) sempre com a mesma altura,
        alinhados embaixo; o painel da semana e compacto para nao esticar o outro */
     #tab-weekly .weekly-faixas-stack {
-        grid-template-columns: minmax(0, 1fr) minmax(270px, 300px);
+        grid-template-columns: minmax(0, 1fr) minmax(222px, 246px);   /* botoes com 80% da largura de antes (era 270-300px) */
         gap: 16px;
         align-items: stretch;
     }
 }
 @media (min-width: 1600px) {
-    #tab-weekly .weekly-faixas-stack { grid-template-columns: minmax(0, 1fr) minmax(300px, 360px); }
+    #tab-weekly .weekly-faixas-stack { grid-template-columns: minmax(0, 1fr) minmax(246px, 294px); }   /* era 300-360px */
 }
 #tab-weekly .weekly-top-layout { margin-bottom: 10px; }   /* 40% menor (era 16px) */
 /* Espaco entre a barra de abas e o cartao "Proximo passo": 40% menor (era 16px) */
@@ -429,17 +429,19 @@
 }
 #tab-weekly .weekly-week-label::after { left: 0; transform: none; }
 
-/* Grade de 6 colunas: navegacao 2 x 2, chave do sabado, divisoria, Desfazer + Salvar */
+/* Botoes em coluna, um abaixo do outro, largura total e mesma altura:
+   Faixa anterior, Proxima faixa, divisoria, Salvar, Desfazer */
 #tab-weekly .weekly-week-actions,
 #tab-weekly .weekly-faixas-stack .weekly-week-actions {
-    grid-template-columns: repeat(6, minmax(0, 1fr));
+    grid-template-columns: minmax(0, 1fr);
     gap: 6px;
 }
 #tab-weekly .btn-week-nav {
-    grid-column: span 3;
+    grid-column: 1 / -1;
+    justify-content: center;
     gap: 6px;
-    height: auto;
-    min-height: 36px;
+    height: 40px;
+    min-height: 40px;
     padding: 0 8px;
     border: 1px solid #CBD5E1;
     border-radius: var(--cd-raio-botao);
@@ -451,9 +453,7 @@
     line-height: 1.2;
     filter: none;
 }
-#tab-weekly .btn-week-nav.btn-week-shift { background: #FFFFFF; border-color: #CBD5E1; color: var(--cd-texto); }
-#tab-weekly .btn-week-nav:hover,
-#tab-weekly .btn-week-nav.btn-week-shift:hover { background: #F1F5F9; }
+#tab-weekly .btn-week-nav:hover { background: #F1F5F9; }
 #tab-weekly .btn-week-nav.btn-week-faixa { border-color: #C7D2FE; color: var(--cd-faixa2-texto); background: #FFFFFF; }
 #tab-weekly .btn-week-nav.btn-week-faixa:hover { background: #F5F8FE; }
 #tab-weekly .btn-week-nav:disabled,
@@ -466,69 +466,24 @@
 }
 #tab-weekly .btn-week-nav:focus-visible { outline: 3px solid var(--cd-foco); outline-offset: 2px; }
 
-/* Sabado no turno da manha: linha com chave liga/desliga (o checkbox real fica por baixo) */
-#tab-weekly .btn-week-nav.weekly-sabado-toggle {
-    grid-column: 1 / -1;
-    justify-content: space-between;
-    gap: 12px;
-    padding: 0 14px;
-    border: none;
-    background: var(--cd-superficie-suave);
-    color: var(--cd-texto-2);
-    cursor: pointer;
-}
-#tab-weekly .btn-label-two-line.weekly-sabado-label {
-    display: block;
-    width: auto;
-    font-size: 13px;
-    font-weight: 600;
-    text-align: left;
-    white-space: normal;
-}
-#tab-weekly .cd-chave { position: relative; display: flex; align-items: center; flex-shrink: 0; }
-#tab-weekly .cd-chave .weekly-sabado-check {
-    position: absolute;
-    inset: 0;
-    width: 44px;
-    height: 26px;
-    margin: 0;
-    opacity: 0;
-    cursor: pointer;
-}
-#tab-weekly .cd-chave-trilho {
-    display: block;
-    width: 44px;
-    height: 26px;
-    border-radius: 13px;
-    background: #CBD5E1;
-    transition: background .2s;
-}
-#tab-weekly .cd-chave-botao {
-    display: block;
-    width: 20px;
-    height: 20px;
-    margin: 3px 0 0 3px;
-    border-radius: 50%;
-    background: #FFFFFF;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, .25);
-    transition: margin .2s;
-}
-#tab-weekly .cd-chave .weekly-sabado-check:checked + .cd-chave-trilho { background: var(--cd-primaria); }
-#tab-weekly .cd-chave .weekly-sabado-check:checked + .cd-chave-trilho .cd-chave-botao { margin-left: 21px; }
-#tab-weekly .cd-chave .weekly-sabado-check:focus-visible + .cd-chave-trilho { outline: 3px solid var(--cd-foco); outline-offset: 2px; }
-
 #tab-weekly .cd-divisoria { grid-column: 1 / -1; height: 1px; background: var(--cd-borda-suave); }
 
-/* Desfazer (contornado, 1/3) e Salvar (cheio, 2/3); sem Desfazer, Salvar ocupa a linha */
+/* Salvar (principal, verde) e Desfazer embaixo. Desfazer fica esmaecido; so se
+   ativa logo depois de salvar (desfaz esse salvamento) e ganha destaque. */
 #tab-weekly .btn-week-nav.btn-week-undo {
-    grid-column: span 2;
-    color: #475569;
-    background: #FFFFFF;
-    border-color: #CBD5E1;
+    color: #92400E;
+    background: #FFFBEB;
+    border-color: #D97706;
+}
+#tab-weekly .btn-week-nav.btn-week-undo:hover { background: #FEF3C7; }
+#tab-weekly .btn-week-nav.btn-week-undo:disabled {
+    background: #F8FAFC;
+    border-color: var(--cd-borda-suave);
+    color: #94A3B8;
+    opacity: .6;
+    cursor: not-allowed;
 }
 #tab-weekly .btn-week-nav.btn-week-save-comp {
-    grid-column: span 4;
-    min-height: 40px;
     border: none;
     background: var(--cd-primaria);
     color: #FFFFFF;
@@ -536,7 +491,6 @@
     font-weight: 700;
 }
 #tab-weekly .btn-week-nav.btn-week-save-comp:hover { background: var(--cd-primaria-escura); }
-#tab-weekly .btn-week-undo.hidden + .btn-week-save-comp { grid-column: 1 / -1; }
 #tab-weekly .btn-week-save-comp .btn-label-two-line { display: inline; width: auto; }
 #tab-weekly .btn-week-save-comp .btn-label-two-line > span { display: inline; }
 
@@ -591,6 +545,39 @@
     color: var(--cd-texto-3);
     text-transform: none;
 }
+
+/* Setas da semana na grade: < no canto esquerdo, > ao lado de SABADO.
+   Absolutas, para nao apertar o nome do dia. Teclado: <- e -> (ver ui.js). */
+#tab-weekly .timetable .header.top-header { position: relative; }
+#tab-weekly .cd-semana-seta {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    border: 1px solid #A7D7C9;
+    border-radius: 50%;
+    background: #FFFFFF;
+    color: var(--cd-primaria);
+    cursor: pointer;
+    box-shadow: 0 1px 2px rgba(15, 76, 71, .12);
+    transition: background .15s, color .15s, border-color .15s, box-shadow .15s;
+}
+#tab-weekly .cd-semana-seta--ant { left: 10px; }
+#tab-weekly .cd-semana-seta--prox { right: 8px; }
+/* Reserva o lugar da seta > para ela nunca cobrir "SABADO" em telas estreitas */
+#tab-weekly .timetable .week-day-header:has(> .cd-semana-seta--prox) { padding-right: 46px; }
+#tab-weekly .cd-semana-seta:hover {
+    background: var(--cd-primaria);
+    border-color: var(--cd-primaria);
+    color: #FFFFFF;
+    box-shadow: 0 2px 6px rgba(15, 76, 71, .25);
+}
+#tab-weekly .cd-semana-seta:focus-visible { outline: 3px solid var(--cd-foco); outline-offset: 2px; }
 
 /* Coluna dos horarios */
 #tab-weekly .timetable .header.time {
@@ -836,6 +823,15 @@
     background: #FEF2F2;
     border-color: var(--cd-perigo-borda);
 }
+/* Choque de horario ou de professor: cartao laranja, como os avisos de atencao */
+#tab-weekly .cd-contexto .weekly-status-bar.tone-choque {
+    background: #FEF3C7;
+    border-color: #F5C26B;
+    box-shadow: inset 4px 0 0 #D97706, var(--cd-sombra);
+}
+#tab-weekly .cd-contexto .tone-choque .cd-contexto-icone { background: #FDE68A; color: #92400E; }
+#tab-weekly .cd-contexto .tone-choque .weekly-status-title { color: #92400E; }
+#tab-weekly .cd-contexto .tone-choque .weekly-status-hint { color: #78350F; }
 
 
 /* ==========================================================================
@@ -1029,7 +1025,7 @@
 #tab-weekly .weekly-faixas-table td { padding-left: 12px; padding-right: 12px; }
 #tab-weekly .weekly-faixas-table .faixa-num { padding-right: 26px; }
 /* A coluna de horarios fica com toda a sobra e nunca empurra a tabela (texto longo termina em "...") */
-#tab-weekly .weekly-faixas-table .faixa-padrao-cell { width: 100%; max-width: 0; }
+#tab-weekly .weekly-faixas-table .faixa-padrao-cell { width: 100%; max-width: 0; text-align: center; }   /* centralizado como as outras colunas */
 #tab-weekly .weekly-faixas-table .fp-linhas { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
 #tab-weekly .weekly-faixas-table .fp-linha {
     display: block;
@@ -1043,6 +1039,58 @@
     font-variant-numeric: tabular-nums;
 }
 #tab-weekly .weekly-faixas-table .fp-forma-curta { display: none; }
+/* Celula de sabado desenhada: aviso "Manha" e o botao pequeno de troca, lado a lado */
+#tab-weekly .timetable .slot .cd-celula-sab {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-wrap: wrap;                 /* coluna estreita: o botao desce para a linha de baixo */
+    align-items: center;
+    align-content: center;
+    justify-content: center;
+    gap: 3px 5px;
+    padding: 2px 6px 2px 10px;
+    pointer-events: none;
+}
+#tab-weekly .timetable .slot .cd-celula-manha {
+    padding: 1px 6px;
+    border-radius: 4px;
+    background: #E67E22;
+    color: #FFFFFF;
+    font-size: 11px;
+    font-weight: 800;
+    line-height: 1.4;
+    white-space: nowrap;
+}
+#tab-weekly .timetable .slot .cd-celula-sab-trocar {
+    pointer-events: auto;
+    padding: 0 6px;
+    border: 1px solid #0e7a5f;
+    border-radius: 999px;
+    background: #FFFFFF;
+    color: #0b6650;
+    font-family: var(--cd-fonte);
+    font-size: 9.5px;
+    font-weight: 700;
+    line-height: 1.4;
+    white-space: nowrap;
+    cursor: pointer;
+}
+#tab-weekly .timetable .slot .cd-celula-sab-trocar:hover { background: #eef7f3; }
+#tab-weekly .timetable .slot .cd-celula-sab-trocar:focus-visible { outline: 2px solid var(--cd-foco); outline-offset: 1px; }
+/* Aviso "Manha" do sabado na coluna Horario semanal (mesmo laranja dos cartoes) */
+#tab-weekly .weekly-faixas-table .fp-sab-manha {
+    display: inline-block;
+    margin-left: 6px;
+    padding: 0 5px;
+    border-radius: 4px;
+    background: #E67E22;
+    color: #FFFFFF;
+    font-size: 10px;
+    font-weight: 800;
+    line-height: 1.5;
+    vertical-align: 1px;
+}
 /* Cartao estreito (notebook): horas na forma curta, "14h–16h30" */
 @container (max-width: 700px) {
     #tab-weekly .weekly-faixas-table .fp-forma-longa { display: none; }

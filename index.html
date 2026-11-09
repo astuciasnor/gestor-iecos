@@ -10,13 +10,13 @@
         // Vai para o aviso antes de carregar o programa. A agenda publica nao passa por aqui.
         if (/\.github\.io$/i.test(location.hostname)) location.replace('mudou.html');
     </script>
-    <link rel="stylesheet" href="css/style.css?v=202611081045">
+    <link rel="stylesheet" href="css/style.css?v=202611091300">
     <!-- Redesenho da aba Alocar Componentes (por partes); carrega depois do style.css -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
-    <link rel="stylesheet" href="css/alocar-componentes.css?v=202611081045">
-    <link rel="stylesheet" href="css/ajuda.css?v=202611081045">
+    <link rel="stylesheet" href="css/alocar-componentes.css?v=202611091300">
+    <link rel="stylesheet" href="css/ajuda.css?v=202611091300">
 
     <style>
         :root {
@@ -765,7 +765,7 @@
                     <button type="button" class="tab-btn" data-tab="monthly" id="tabbtn-monthly" role="tab" aria-controls="tab-monthly" aria-selected="false" tabindex="-1">Calendário da Turma</button>
                     <button type="button" class="tab-btn" data-tab="teacher" id="tabbtn-teacher" role="tab" aria-controls="tab-teacher" aria-selected="false" tabindex="-1">Calendário Docente</button>
                     <button type="button" class="tab-btn" data-tab="publica" id="tabbtn-publica" role="tab" aria-controls="tab-publica" aria-selected="false" tabindex="-1">Agenda Pública</button>
-                    <button type="button" class="tab-btn" data-tab="tutorial" id="tabbtn-tutorial" role="tab" aria-controls="tab-tutorial" aria-selected="false" tabindex="-1" style="color: var(--accent);">❓ Ajuda</button>
+                    <button type="button" class="tab-btn" data-tab="tutorial" id="tabbtn-tutorial" role="tab" aria-controls="tab-tutorial" aria-selected="false" tabindex="-1"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><path d="M12 17h.01"></path></svg>Ajuda</button>
                 </nav>
 
                 <span class="print-hint no-print" title="A 'Microsoft Print to PDF' sai em retrato. Use 'Salvar como PDF' para sair em paisagem automaticamente.">💡 Para PDF em paisagem,<br>use <strong>“Salvar como PDF”</strong></span>
@@ -951,26 +951,19 @@
                             </div>
                         </div>
 
-                        <!-- Painel da semana (redesenho, parte 2): mesmos IDs; Sabado vira chave
-                             liga/desliga com o checkbox real por baixo; Desfazer + Salvar embaixo. -->
+                        <!-- Painel da semana: titulo com a semana e os botoes em coluna (Faixa anterior,
+                             Proxima faixa, Salvar, Desfazer). Semana anterior/proxima virou seta na grade
+                             (#btn-week-prev/#btn-week-next, criadas em renderWeeklyGrid). O sabado nao tem
+                             chave: ao marcar o 1o sabado o Cardume pergunta o turno. -->
                         <div id="weekly-week-nav" class="weekly-week-nav no-print">
                             <span class="cd-rotulo">Semana em edi&ccedil;&atilde;o</span>
                             <div id="weekly-week-label" class="weekly-week-label">Semana n&atilde;o definida</div>
                             <div class="weekly-week-actions">
-                                <button id="btn-week-prev" type="button" class="btn-week-nav btn-week-shift"><svg class="cd-icone" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg>Semana anterior</button>
-                                <button id="btn-week-next" type="button" class="btn-week-nav btn-week-shift">Pr&oacute;xima semana<svg class="cd-icone" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"></path></svg></button>
                                 <button id="btn-faixa-prev" type="button" class="btn-week-nav btn-week-faixa" disabled><svg class="cd-icone" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m11 17-5-5 5-5"></path><path d="m18 17-5-5 5-5"></path></svg>Faixa anterior</button>
                                 <button id="btn-faixa-next" type="button" class="btn-week-nav btn-week-faixa" disabled>Pr&oacute;xima faixa<svg class="cd-icone" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m13 17 5-5-5-5"></path><path d="m6 17 5-5-5-5"></path></svg></button>
-                                <label for="chk-sabado-manha" class="btn-week-nav weekly-sabado-toggle" title="Salvar aulas de sábado atreladas ao equivalente destas faixas no turno da Manhã">
-                                    <span class="btn-label-two-line weekly-sabado-label">S&aacute;bado no turno da manh&atilde;</span>
-                                    <span class="cd-chave">
-                                        <input type="checkbox" id="chk-sabado-manha" checked class="weekly-sabado-check">
-                                        <span class="cd-chave-trilho" aria-hidden="true"><span class="cd-chave-botao"></span></span>
-                                    </span>
-                                </label>
                                 <div class="cd-divisoria" aria-hidden="true"></div>
-                                <button id="btn-undo-alloc" type="button" class="btn-week-nav btn-week-undo hidden" disabled title="Desfazer a última inserção e voltar ao estado anterior das alocações"><svg class="cd-icone" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7v6h6"></path><path d="M21 17a9 9 0 0 0-15-6.7L3 13"></path></svg>Desfazer</button>
                                 <button id="btn-add-oferta" type="button" class="btn-week-nav btn-week-save-comp"><svg class="cd-icone" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><path d="M17 21v-8H7v8"></path><path d="M7 3v5h8"></path></svg><span class="btn-label-two-line"><span>Salvar</span> <span>Componente</span></span></button>
+                                <button id="btn-undo-alloc" type="button" class="btn-week-nav btn-week-undo" disabled title="Desfazer o último salvamento (só logo depois de salvar)"><svg class="cd-icone" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7v6h6"></path><path d="M21 17a9 9 0 0 0-15-6.7L3 13"></path></svg>Desfazer Aloca&ccedil;&atilde;o</button>
                             </div>
                         </div>
                     </div>
@@ -1118,6 +1111,8 @@
                 <!-- Aba Ajuda: um tema por vez (botoes em cima). Troca de tema em js/ajuda_ui.js;
                      visual em css/ajuda.css. Cada tema tem a sua cor (--aj-cor). -->
                 <div class="aj">
+                    <!-- Titulo e botoes dos temas ficam parados no topo; so o conteudo do tema rola -->
+                    <div class="aj-fixo">
                     <header class="aj-topo">
                         <div>
                             <h2 class="aj-titulo">Ajuda do Cardume</h2>
@@ -1146,6 +1141,7 @@
                             <span class="aj-tema-icone" aria-hidden="true">💾</span><span class="aj-tema-txt"><b>Arquivos</b><small>backup e PDF</small></span>
                         </button>
                     </nav>
+                    </div>
 
                     <!-- ===== 1. COMECAR ===== -->
                     <div class="aj-painel is-ativo" id="aj-comecar" data-aj-painel="comecar" role="tabpanel" aria-labelledby="aj-tab-comecar">
@@ -1207,14 +1203,14 @@
                         <p class="aj-lead">Na aba <b>Alocar Componentes</b>, siga os passos na ordem. O cartão <b>Próximo passo e avisos</b>, no topo da aba, diz sempre o que falta e mostra os avisos e as orientações.</p>
 
                         <ol class="aj-roteiro">
-                            <li><span class="aj-num">1</span><div><b>Período letivo</b>Escolha o PL na barra lateral. Ele define o calendário de todo o planejamento.<img class="aj-print" src="img/instrucoes/passo-1.png" width="254" height="61" alt="Campo Período na barra lateral" loading="lazy"></div></li>
-                            <li><span class="aj-num">2</span><div><b>Curso e turma</b>Selecione o curso e a turma.<img class="aj-print" src="img/instrucoes/passo-2.png" width="143" height="90" alt="Campos Curso, Turma e Turno" loading="lazy"></div></li>
-                            <li><span class="aj-num">3</span><div><b>Componente</b>Busque pelo nome. A lista mostra o <b>código · curso</b> e, embaixo do campo, aparecem código, curso e CH.<img class="aj-print" src="img/instrucoes/passo-3.png" width="254" height="60" alt="Campo Disciplina com o círculo da cor" loading="lazy"></div></li>
-                            <li><span class="aj-num">4</span><div><b>Início da Faixa 1</b>Clique na data de Início da tabela de faixas e escolha o dia no calendário.<img class="aj-print" src="img/instrucoes/passo-4.png" width="276" height="83" alt="Data de Início da Faixa 1" loading="lazy"></div></li>
-                            <li><span class="aj-num">5</span><div><b>Desenhe o horário</b>Clique ou arraste sobre as aulas na grade semanal. A tabela mostra a CH de cada faixa.<img class="aj-print" src="img/instrucoes/passo-5.png" width="323" height="90" alt="Horários desenhados na grade" loading="lazy"></div></li>
-                            <li><span class="aj-num">6</span><div><b>O horário mudou?</b>Vá à semana da mudança e redesenhe: a <b>Faixa 2</b> nasce sozinha naquele dia.<img class="aj-print" src="img/instrucoes/passo-6.png" width="275" height="72" alt="Botões de semana e de faixa" loading="lazy"></div></li>
-                            <li><span class="aj-num">7</span><div><b>Pausa</b>Digite o Fim da faixa no último dia de aula e o Início da seguinte no dia da volta.<img class="aj-print" src="img/instrucoes/passo-7.png" width="323" height="90" alt="Faixa 1, linha de pausa e Faixa 2" loading="lazy"></div></li>
-                            <li><span class="aj-num">8</span><div><b>Salvar</b>Confira se o <b>Total CH</b> bateu com a <b>Meta</b> e clique em <b>Salvar Componente</b>.<img class="aj-print" src="img/instrucoes/passo-8-salvar.png" width="275" height="42" alt="Botão Salvar Componente" loading="lazy"></div></li>
+                            <li><span class="aj-num">1</span><div><b>Período letivo</b>Escolha o PL na barra lateral. Ele define o calendário de todo o planejamento.<img class="aj-print" src="img/instrucoes/passo-1.png" width="222" height="53" alt="Campo Período na barra lateral" loading="lazy"></div></li>
+                            <li><span class="aj-num">2</span><div><b>Curso e turma</b>Selecione o curso e a turma.<img class="aj-print" src="img/instrucoes/passo-2.png" width="222" height="161" alt="Campos Curso, Turma e Turno" loading="lazy"></div></li>
+                            <li><span class="aj-num">3</span><div><b>Componente</b>Busque pelo nome. A lista mostra o <b>código · curso</b> e, embaixo do campo, aparecem código, curso e CH. Logo abaixo, escolha o docente.<img class="aj-print" src="img/instrucoes/passo-3.png" width="222" height="117" alt="Campo Disciplina com o círculo da cor, o código e a CH embaixo, e o campo Docente" loading="lazy"></div></li>
+                            <li><span class="aj-num">4</span><div><b>Início da Faixa 1</b>Clique na data de Início da tabela de faixas e escolha o dia no calendário.<img class="aj-print" src="img/instrucoes/passo-4.png" width="180" height="73" alt="Data de Início da Faixa 1" loading="lazy"></div></li>
+                            <li><span class="aj-num">5</span><div><b>Desenhe o horário</b>Clique ou arraste sobre as aulas na grade semanal. A tabela mostra a CH de cada faixa.<img class="aj-print" src="img/instrucoes/passo-5.png" width="420" height="117" alt="Horários desenhados na grade" loading="lazy"></div></li>
+                            <li><span class="aj-num">6</span><div><b>O horário mudou?</b>Vá à semana da mudança (setas ‹ › no topo da grade ou ← → do teclado) e redesenhe: a <b>Faixa 2</b> nasce sozinha naquele dia.<img class="aj-print" src="img/instrucoes/passo-6.png" width="195" height="113" alt="Semana em edição e botões de faixa" loading="lazy"></div></li>
+                            <li><span class="aj-num">7</span><div><b>Pausa</b>Digite o Fim da faixa no último dia de aula e o Início da seguinte no dia da volta.<img class="aj-print" src="img/instrucoes/passo-7.png" width="262" height="106" alt="Faixa 1, linha de pausa e Faixa 2" loading="lazy"></div></li>
+                            <li><span class="aj-num">8</span><div><b>Salvar</b>Confira se o <b>Total CH</b> bateu com a <b>Meta</b> e clique em <b>Salvar Componente</b>.<img class="aj-print" src="img/instrucoes/passo-8-salvar.png" width="195" height="36" alt="Botão Salvar Componente" loading="lazy"></div></li>
                         </ol>
 
                         <div class="aj-grade">
@@ -1242,7 +1238,7 @@
                                 <ul class="aj-lista">
                                     <li><b>Dois turnos</b> (casos especiais e estágios): desenhe as aulas num turno, troque o <b>Turno</b> na barra lateral e desenhe no outro. O que já foi desenhado fica guardado, e a componente é salva com os dois.</li>
                                     <li><b>Feriado</b>: a coluna do dia fica listrada, com um cartão rosa e o nome do feriado. Nesse dia não há aula.</li>
-                                    <li><b>Sábado</b>: com <b>“Sábado no turno da manhã”</b> ligado, as aulas de sábado são salvas no turno da manhã.</li>
+                                    <li><b>Sábado</b>: numa turma da tarde ou da noite, ao marcar o primeiro horário de sábado da componente, o Cardume pergunta: <b>Passar para a manhã</b> ou <b>Manter à tarde</b> (Esc também mantém). Turma da manhã não recebe pergunta. Cada horário de sábado mostra o aviso <b>⚠ Manhã</b> e um botão pequeno (ex.: <b>Sábado → manhã</b>); clique nele para trocar.</li>
                                     <li>Aula fora do turno da turma ganha o aviso <b>Atenção Turno</b> nos calendários e na agenda.</li>
                                 </ul>
                             </article>
@@ -1269,7 +1265,7 @@
                                 <ul class="aj-lista">
                                     <li>Clique no <b>círculo colorido</b> ao lado da disciplina e escolha na paleta. A grade semanal mostra o tom suave; calendários e agenda, a cor forte. Evite duas cores parecidas na mesma turma.</li>
                                     <li><b>Turma extra</b> (ex.: laboratório em dois grupos): escolha a mesma componente de novo e clique em <b>OK</b> na mensagem. O resto é automático: a primeira oferta vira <b>T01</b>, a nova <b>T02</b> (aparece embaixo do nome e no selo <span class="aj-tag">T02</span> da Lista de Ofertas). Cada subturma é uma oferta própria: datas, horário, docente e CH.</li>
-                                    <li>Errou? O botão <b>Desfazer</b> volta a última inserção.</li>
+                                    <li>Errou? Logo depois de salvar, o botão <b>Desfazer Alocação</b> desfaz esse salvamento. Depois de outra alteração, ele fica esmaecido.</li>
                                 </ul>
                             </article>
                         </div>
@@ -1434,7 +1430,7 @@
         </main>
     </div>
 
-    <script type="module" src="js/main.js?v=202611081045"></script>
+    <script type="module" src="js/main.js?v=202611091300"></script>
 </body>
 
 </html>

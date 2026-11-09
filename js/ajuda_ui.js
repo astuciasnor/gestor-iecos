@@ -34,6 +34,9 @@ export function setupAjuda() {
       p.hidden = !ativo;
     });
     if (foco) botao.focus();
+    // O topo da Ajuda fica parado (.aj-fixo): o tema novo comeca do inicio
+    const aba = document.getElementById('tab-tutorial');
+    if (aba) aba.scrollTop = 0;
     salvarTema(escolhido);
   }
 

@@ -6,6 +6,8 @@
 // Uso (na raiz do projeto):   node tools/prints_instrucoes.mjs
 // Rode de novo sempre que a aparencia dessas partes mudar.
 // Saida: img/instrucoes/passo-1.png ... passo-8.png (nada mais e gravado).
+// Na Ajuda (index.html) cada imagem aparece com 70% do tamanho do recorte:
+// ao gerar de novo, ajuste width/height das <img class="aj-print"> se o recorte mudar.
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -16,11 +18,15 @@ const SAIDA = path.join(ROOT, 'img', 'instrucoes');
 const FOLGA = 6; // px de margem em volta de cada recorte
 
 // Retangulo (em px da tela) que cobre todos os seletores, com folga.
+// Antes de medir, rola o primeiro elemento para o meio da tela (ex.: o campo
+// Docente fica abaixo da dobra na barra lateral). O recorte usa coordenadas da
+// pagina, por isso soma a rolagem da janela.
 const uniao = (seletores) => `(() => {
+  document.querySelector(${JSON.stringify(seletores[0])})?.scrollIntoView({ block: 'center', inline: 'nearest' });
   const rs = ${JSON.stringify(seletores)}.map((s) => document.querySelector(s)?.getBoundingClientRect()).filter(Boolean);
   if (!rs.length) return null;
-  const x = Math.min(...rs.map((r) => r.left)) - ${FOLGA}, y = Math.min(...rs.map((r) => r.top)) - ${FOLGA};
-  const w = Math.max(...rs.map((r) => r.right)) + ${FOLGA} - x, h = Math.max(...rs.map((r) => r.bottom)) + ${FOLGA} - y;
+  const x = Math.min(...rs.map((r) => r.left)) - ${FOLGA} + window.scrollX, y = Math.min(...rs.map((r) => r.top)) - ${FOLGA} + window.scrollY;
+  const w = Math.max(...rs.map((r) => r.right)) + ${FOLGA} + window.scrollX - x, h = Math.max(...rs.map((r) => r.bottom)) + ${FOLGA} + window.scrollY - y;
   return { x: Math.max(0, x), y: Math.max(0, y), width: w, height: h };
 })()`;
 
@@ -80,8 +86,8 @@ async function main() {
     await evaluate("document.querySelector('#weekly-grid .mini-card').dispatchEvent(new MouseEvent('dblclick', { bubbles: true }))");
     await sleep(1500);
 
-    // 3: campo da componente, com o circulo da cor
-    await recortar('passo-3', ['label[for="inp-disciplina"]', '#inp-disciplina']);
+    // 3: campo da componente (com o circulo da cor e o codigo/curso/CH embaixo) e o campo Docente
+    await recortar('passo-3', ['label[for="inp-disciplina"]', '#inp-docente']);
     // 4: colunas Faixa e Inicio (cabecalho + Faixa 1): estreito para caber no menu
     await recortar('passo-4', ['.weekly-faixas-table thead th:first-child', '#faixa-1 td:nth-child(2)']);
     // 5: comeco da grade com o horario desenhado (2 dias, 2 aulas)
@@ -102,8 +108,8 @@ async function main() {
     })()`);
     await sleep(1200);
 
-    // 6: botoes de semana e de faixa
-    await recortar('passo-6', ['#btn-week-prev', '#btn-faixa-next']);
+    // 6: semana em edicao e botoes de faixa (semana anterior/proxima viraram setas na grade)
+    await recortar('passo-6', ['#weekly-week-nav .cd-rotulo', '#btn-faixa-next']);
     // 7: Faixa 1, a linha de pausa e a Faixa 2
     const temPausa = await evaluate("!document.getElementById('faixa-pausa-1').classList.contains('hidden')");
     if (!temPausa) console.log('aviso: a linha de pausa nao apareceu; o passo 7 mostra so as faixas');
