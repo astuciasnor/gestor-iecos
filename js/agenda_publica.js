@@ -1,9 +1,9 @@
-import { store, normalizeLoadedAllocation } from './store.js?v=202611101502';
-import { getTurnoLetter } from './turns.js?v=202611101502';
-import { getCalendarEvents } from './calendar.js?v=202611101502';
-import { resolveActiveAcademicPeriod } from './academic_rules.mjs?v=202611101502';
-import { buildMonthMarkers, summarizeTeacherPeriod } from './resumo_docente.mjs?v=202611101502';
-import { resolveBackendMode, UFPA_API_URL } from './backend_config.js?v=202611101502';
+import { store, normalizeLoadedAllocation } from './store.js?v=202611101511';
+import { getTurnoLetter } from './turns.js?v=202611101511';
+import { getCalendarEvents } from './calendar.js?v=202611101511';
+import { resolveActiveAcademicPeriod } from './academic_rules.mjs?v=202611101511';
+import { buildMonthMarkers, summarizeTeacherPeriod } from './resumo_docente.mjs?v=202611101511';
+import { resolveBackendMode, UFPA_API_URL } from './backend_config.js?v=202611101511';
 
 const collator = new Intl.Collator('pt-BR', { sensitivity: 'base' });
 const PUBLIC_ASSET_VERSION = '20261028a';
