@@ -270,8 +270,8 @@ async function aproveitamento(CFG, KEY, h) {
   console.log('      gravado:', gravado);
   confere('A13. gravou Faixa 1 26-27/08 e Faixa 2 na sugestao', gravado.startsWith('[["2027-08-26","2027-08-27"') && gravado.includes(`["${sugestao}"`), true);
 
-  // Edicao: a componente salva so na volta; Editar -> o dia antes avisa o caminho;
-  // Limpar Faixas -> o mesmo aproveitamento; salvar substitui (nao duplica).
+  // Edicao: a componente salva so na volta; Editar -> clique no dia antes + confirmar
+  // = recomeca ali (aproveitamento); numero 2 -> antigo inicio; salvar nao duplica.
   await evaluate("window.confirm = () => true; document.getElementById('btn-undo-alloc').click()"); await sleep(1200);
   await novaComponente();
   await semana('2027-09-13');
@@ -281,21 +281,27 @@ async function aproveitamento(CFG, KEY, h) {
   await sleep(1500);
   await semana('2027-08-23');
   confere('E1. em edicao, dia antes do inicio nao comeca sozinho', await podeClicar(4, '16:50'), false);
-  confere('E2. ... e explica o caminho', /Limpar Faixas/.test(await evaluate(`${celula(4, '16:50')}.title`)), true);
-  await evaluate("window.confirm = () => true; document.getElementById('btn-limpar-faixas').click()"); await sleep(1200);
-  confere('E2b. Limpar Faixas na edicao fica na semana vista', /23\/08\/2027/.test(await evaluate("document.getElementById('weekly-week-label').textContent")), true);
-  confere('E2c. ... e o dia livre ja aceita clique', await podeClicar(4, '16:50'), true);
-  await clicar(4, '16:50');
-  confere('E3. depois de Limpar Faixas: aproveitamento', await f1() + ' a ' + await campo('inp-data-fim-f1'), '2027-08-26 a 2027-08-27');
+  confere('E2. ... e explica o caminho', /recomeçar/.test(await evaluate(`${celula(4, '16:50')}.title`)), true);
+  const recomecar = async (ok) => {
+    await evaluate(`(() => { window.confirm = () => ${ok}; ${celula(4, '16:50')}.dispatchEvent(new MouseEvent('click', { bubbles: true, button: 0 })); })()`);
+    await sleep(1200);
+  };
+  await recomecar(false);
+  confere('E2b. Cancelar na confirmacao nao muda nada', await f1(), '2027-09-13');
+  await recomecar(true);
+  confere('E2c. OK: grade fica na semana vista', /23\/08\/2027/.test(await evaluate("document.getElementById('weekly-week-label').textContent")), true);
+  confere('E3. OK: aproveitamento no dia clicado', await f1() + ' a ' + await campo('inp-data-fim-f1'), '2027-08-26 a 2027-08-27');
+  confere('E3b. horario clicado ja marcado', await evaluate(`${celula(4, '16:50')}.classList.contains('selected-slot')`), true);
   await clicar(4, '17:40'); await clicar(5, '16:50'); await clicar(5, '17:40');
   await evaluate("document.querySelector('#faixa-2 .faixa-num .faixa-num-value').click()"); await sleep(900);
-  confere('E4. numero 2 -> Faixa 2 na sugestao', await campo('inp-data-inicio-f2'), sugestao);
+  confere('E4. numero 2 -> antigo inicio da componente (nao a sugestao)', await campo('inp-data-inicio-f2'), '2027-09-13');
+  confere('E4b. mensagem da volta', /onde a componente estava/.test(await aviso()), true);
   await semana('2027-09-13');
   for (const d of [1, 2, 3, 4, 5]) for (const hh of ['14:00', '14:50', '15:40', '16:50', '17:40']) await clicar(d, hh);
   await evaluate("window.confirm = () => true; document.getElementById('btn-add-oferta').click()"); await sleep(2000);
   const editada = await evaluate(`(() => { const a = JSON.parse(localStorage.getItem(${JSON.stringify(KEY)})); return JSON.stringify(a.filter(x => /MATEM/.test(x.disciplina)).map(m => (m.faixas || []).map(f => [f.inicio, f.fim]))); })()`);
   console.log('      editada:', editada);
-  confere('E5. edicao salva com a pausa, uma componente so', /^\[\[\["2027-08-26","2027-08-27"\],\["2027-09-11"/.test(editada), true);
+  confere('E5. edicao salva com a pausa, uma componente so', /^\[\[\["2027-08-26","2027-08-27"\],\["2027-09-13"/.test(editada), true);
 }
 for (const nome of Object.keys(CENARIOS)) await rodar(nome);
 console.log(falhasTotais ? `${falhasTotais} falha(s)` : 'Tudo certo: o inicio pelo clique funciona.');
