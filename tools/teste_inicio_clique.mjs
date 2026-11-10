@@ -283,7 +283,8 @@ async function aproveitamento(CFG, KEY, h) {
   confere('E1. em edicao, dia antes do inicio nao comeca sozinho', await podeClicar(4, '16:50'), false);
   confere('E2. ... e explica o caminho', /Limpar Faixas/.test(await evaluate(`${celula(4, '16:50')}.title`)), true);
   await evaluate("window.confirm = () => true; document.getElementById('btn-limpar-faixas').click()"); await sleep(1200);
-  await semana('2027-08-23');
+  confere('E2b. Limpar Faixas na edicao fica na semana vista', /23\/08\/2027/.test(await evaluate("document.getElementById('weekly-week-label').textContent")), true);
+  confere('E2c. ... e o dia livre ja aceita clique', await podeClicar(4, '16:50'), true);
   await clicar(4, '16:50');
   confere('E3. depois de Limpar Faixas: aproveitamento', await f1() + ' a ' + await campo('inp-data-fim-f1'), '2027-08-26 a 2027-08-27');
   await clicar(4, '17:40'); await clicar(5, '16:50'); await clicar(5, '17:40');
