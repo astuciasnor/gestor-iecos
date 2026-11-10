@@ -1,29 +1,29 @@
-import { store } from './store.js?v=202611092202';
-import { getTurnoLetter, mapSlotToTurno, turnoDaTurmaInclui } from './turns.js?v=202611092202';
-import { normalizePeriodo as normalizePeriodoLetivoCode } from './plan_storage.js?v=202611092202';
-import { getCalendarEvents } from './calendar.js?v=202611092202';
-import { isDateOverlap } from './utils.js?v=202611092202';
-import { weeklyState } from './weekly_state.js?v=202611092202';
-import { findPendentesCobertas, isPendenteJaAlocada } from './pendentes.mjs?v=202611092202';
-import { classifySwap } from './troca_ordem.mjs?v=202611092202';
-import { closeFaixaEnds, isPauseEnd, listFaixaPauses } from './pausa_faixas.mjs?v=202611092202';
-import { numeroDaSubturma, isTurmaInteira, proximaSubturma, codigoT01Como } from './subturmas.mjs?v=202611092202';
-import { abrirMiniCalendario, fecharMiniCalendario, miniCalendarioAberto } from './mini_calendario.mjs?v=202611092202';
-import { buildCanonicalOfferProjection } from './execution_engine.js?v=202611092202';
+import { store } from './store.js?v=202611101216';
+import { getTurnoLetter, mapSlotToTurno, turnoDaTurmaInclui } from './turns.js?v=202611101216';
+import { normalizePeriodo as normalizePeriodoLetivoCode } from './plan_storage.js?v=202611101216';
+import { getCalendarEvents } from './calendar.js?v=202611101216';
+import { isDateOverlap } from './utils.js?v=202611101216';
+import { weeklyState } from './weekly_state.js?v=202611101216';
+import { findPendentesCobertas, isPendenteJaAlocada } from './pendentes.mjs?v=202611101216';
+import { classifySwap } from './troca_ordem.mjs?v=202611101216';
+import { closeFaixaEnds, isPauseEnd, listFaixaPauses } from './pausa_faixas.mjs?v=202611101216';
+import { numeroDaSubturma, isTurmaInteira, proximaSubturma, codigoT01Como } from './subturmas.mjs?v=202611101216';
+import { abrirMiniCalendario, fecharMiniCalendario, miniCalendarioAberto } from './mini_calendario.mjs?v=202611101216';
+import { buildCanonicalOfferProjection } from './execution_engine.js?v=202611101216';
 import {
     buildSigaaMetadataPayload,
     validateSigaaMetadataPayload,
     getSigaaCode,
     buildScopedSigaaAllocationFromOfferFaixa
-} from './sigaa_metadata.js?v=202611092202';
-import { parseBackupDataFile, extractImportPlanMeta } from './serialization.js?v=202611092202';
+} from './sigaa_metadata.js?v=202611101216';
+import { parseBackupDataFile, extractImportPlanMeta } from './serialization.js?v=202611101216';
 import {
     showToastWarning,
     showPersistentStatusMessage,
     copyTextToClipboard,
     flashButtonCopyState,
     setupCopyActionButtons
-} from './ui_feedback.js?v=202611092202';
+} from './ui_feedback.js?v=202611101216';
 import {
     normalizeHexColor,
     adjustHexColor,
@@ -32,7 +32,7 @@ import {
     tonsDaCor,
     aplicarTonsBloco,
     PALETA_CORES
-} from './color_utils.js?v=202611092202';
+} from './color_utils.js?v=202611101216';
 import {
     isFaixaAllocation,
     isPriorityRegularAllocation,
@@ -41,8 +41,8 @@ import {
     normalizeTeacherNameForMatch,
     getDocenteShortLabel,
     getAllocationTeachersForConflict
-} from './allocation_helpers.js?v=202611092202';
-import { setupSeletorCor } from './seletor_cor.js?v=202611092202';
+} from './allocation_helpers.js?v=202611101216';
+import { setupSeletorCor } from './seletor_cor.js?v=202611101216';
 import {
     VINCULOS_DOCENTE_NOVO,
     OUTRA_UNIDADE,
@@ -51,9 +51,9 @@ import {
     findSimilarNames,
     problemaNoNome,
     limparEspacos
-} from './docente_nomes.mjs?v=202611092202';
-import { getSessionEmail, getPerfil, fetchAllocationsForPlans } from './sync_remoto.js?v=202611092202';
-import { resolveBackendMode } from './backend_config.js?v=202611092202';
+} from './docente_nomes.mjs?v=202611101216';
+import { getSessionEmail, getPerfil, fetchAllocationsForPlans } from './sync_remoto.js?v=202611101216';
+import { resolveBackendMode } from './backend_config.js?v=202611101216';
 import {
     normalizeConflictSlotLabel,
     getAvailableTurnoOfertaOptions,
@@ -63,7 +63,7 @@ import {
     buildHorariosForUI,
     getShiftChangeMeta,
     getNativeTurnoValueForAllocation
-} from './turno_helpers.js?v=202611092202';
+} from './turno_helpers.js?v=202611101216';
 import {
     getDisciplinaCHGlobal,
     derivarBloco,
@@ -73,7 +73,7 @@ import {
     getDisciplinaInfo,
     getCursoSiglaDaTurma,
     getPrintAcademicMetaLine
-} from './curso_turma_helpers.js?v=202611092202';
+} from './curso_turma_helpers.js?v=202611101216';
 import {
     renderMonthlyCalendar,
     renderTeacherCalendar,
@@ -81,11 +81,11 @@ import {
     clearTeacherRangeCache,
     setTeacherPeriod,
     getTeacherPeriod
-} from './calendarios_ui.js?v=202611092202';
+} from './calendarios_ui.js?v=202611101216';
 import {
     refreshTeacherConflictsUI,
     setCrossPlanLoader
-} from './conflitos_ui.js?v=202611092202';
+} from './conflitos_ui.js?v=202611101216';
 import {
     shouldIgnoreTurmaEventForCandidate,
     normalizeDrawnSlotsByDay,
@@ -99,7 +99,7 @@ import {
     resolveEditableFaixasFromStoredExecution,
     alignFaixasToExecutionEnd,
     buildFinalAdjustmentFaixaSuggestion
-} from './faixa_utils.js?v=202611092202';
+} from './faixa_utils.js?v=202611101216';
 import {
     timeToMinutes,
     shiftISODate,
@@ -113,14 +113,14 @@ import {
     isDateInsideRange,
     formatDateBRShortYear,
     formatDateBR
-} from './date_utils_ui.js?v=202611092202';
+} from './date_utils_ui.js?v=202611101216';
 import {
     initializeWeeklyScheduleForTurma,
     reconcileTurmaSelectionAfterPLChange,
     resetWeeklyViewOnTurmaChange,
     resolveActiveAcademicPeriod,
     slotLabelsOverlap
-} from './academic_rules.mjs?v=202611092202';
+} from './academic_rules.mjs?v=202611101216';
 
 const gridContainer = document.getElementById('weekly-grid');
 const selCurso = document.getElementById('sel-curso');
@@ -1267,7 +1267,7 @@ function inicioPodeIrPara(cellDate) {
     if (document.getElementById('inp-data-inicio-f2')?.value) return false;   // faixas ja montadas
     if (!getFaixaStartDateValidation(1, cellDate).isValid) return false;      // fora do periodo letivo
     if (componenteSemHorarios()) return true;                                 // caso 1
-    const inicio = String(document.getElementById('inp-data-inicio-f1')?.value || '').trim();
+    const inicio = valorDoCampo('inp-data-inicio-f1');
     return inicioDefinidoPeloClique && !!inicio && cellDate < inicio         // caso 2
         && getWeekStartISO(cellDate) === getWeekStartISO(inicio);
 }
@@ -1278,21 +1278,26 @@ function inicioPeloClique(cellDate, slot = '') {
     const mudou = aplicarInicioDaFaixa1(cellDate);
 
     const proxima = cellDate < dataSugerida() ? componenteQueVemPelaFrente(cellDate, slot) : null;
-    if (proxima) {
-        const fimEl = document.getElementById('inp-data-fim-f1');
-        if (fimEl) {
-            fimEl.value = shiftISODate(proxima.inicio, -1);
-            setFaixaFimPausaMark(1, true);   // como se o Fim tivesse sido digitado
-            applyFaixaDateAutofill();
-            setFaixaStatus(1, getFaixaSlotsAndDays(1).pattern.length);
-            updateWeeklyFaixaHoursDisplay();
-            showToastWarning(`Aproveitando dias livres: a Faixa 1 vai de ${formatDateBR(cellDate)} a ${formatDateBR(fimEl.value)}, antes de "${proxima.disciplina}". Marque os horários desses dias e depois clique no número da Faixa 2 para retomar.`, 'success', 9000);
-            return true;
-        }
+    if (proxima && fecharFaixa1NaVespera(proxima.inicio)) {
+        showToastWarning(`Aproveitando dias livres: a Faixa 1 vai de ${formatDateBR(cellDate)} a ${formatDateBR(valorDoCampo('inp-data-fim-f1'))}, antes de "${proxima.disciplina}". Marque os horários desses dias e depois clique no número da Faixa 2 para retomar.`, 'success', 9000);
+        return true;
     }
 
     if (!mudou) return false;
     showToastWarning(`Início da Faixa 1 em ${formatDateBR(cellDate)}. Para escolher outro dia, desmarque os horários.`, 'success', 3200);
+    return true;
+}
+
+// Aproveitamento: a Faixa 1 para na vespera do dia dado, como se o Fim tivesse
+// sido digitado (pausa).
+function fecharFaixa1NaVespera(dia) {
+    const fimEl = document.getElementById('inp-data-fim-f1');
+    if (!fimEl) return false;
+    fimEl.value = shiftISODate(dia, -1);
+    setFaixaFimPausaMark(1, true);
+    applyFaixaDateAutofill();
+    setFaixaStatus(1, getFaixaSlotsAndDays(1).pattern.length);
+    updateWeeklyFaixaHoursDisplay();
     return true;
 }
 
@@ -1334,10 +1339,9 @@ function componenteQueVemPelaFrente(cellDate, slot) {
 // pausa): a Faixa 2 comeca direto na data sugerida, o proximo dia livre depois
 // da ultima componente, vazia. Devolve false para seguir o caminho de sempre.
 function retomarAproveitamentoNaSugestao() {
-    const valor = (id) => String(document.getElementById(id)?.value || '').trim();
-    const fimF1 = valor('inp-data-fim-f1');
+    const fimF1 = valorDoCampo('inp-data-fim-f1');
     const volta = dataSugerida();
-    if (!inicioDefinidoPeloClique || !isFaixaFimMarcadoComoPausa(1) || valor('inp-data-inicio-f2')) return false;
+    if (!inicioDefinidoPeloClique || !isFaixaFimMarcadoComoPausa(1) || valorDoCampo('inp-data-inicio-f2')) return false;
     if (!fimF1 || !volta || volta <= fimF1 || !getFaixaStartDateValidation(2, volta).isValid) return false;
 
     if (pendingFaixaStartPick) clearPendingFaixaStartPick();
@@ -1347,6 +1351,16 @@ function retomarAproveitamentoNaSugestao() {
     renderWeeklyGrid();
     showToastWarning(`Pausa sem aula · ${formatDateBR(shiftISODate(fimF1, 1))} a ${formatDateBR(shiftISODate(volta, -1))}. A Faixa 2 começa em ${formatDateBR(volta)}, o próximo dia livre: marque os horários dela.`, 'success', 7500);
     return true;
+}
+
+// Dia livre antes do inicio da Faixa 1 que o clique nao aceita (componente ja
+// desenhada ou em edicao): diz como comecar nele. '' quando nao se aplica.
+function avisoDiaAntesDoInicio(cellDate) {
+    const inicio = valorDoCampo('inp-data-inicio-f1');
+    if (!cellDate || !inicio || cellDate >= inicio) return '';
+    return (weeklyState.editingOriginalAllocationIds || []).length > 0
+        ? 'Dia antes do início da Faixa 1. Para começar aqui, clique em Limpar Faixas e depois neste dia.'
+        : 'Dia antes do início da Faixa 1. Para começar aqui, desmarque os horários marcados e clique neste dia.';
 }
 
 function inicioVoltaParaSugestao() {
@@ -3203,6 +3217,11 @@ function setupCompactFaixaDateFields() {
 // os dois ficam sem aula. A marca data-pausa separa o Fim DIGITADO do Fim que o
 // Cardume preenche sozinho (vespera da faixa seguinte); sem ela, uma data velha
 // viraria pausa sem ninguem pedir.
+// Valor de um campo da tela, sem espacos ('' se o campo nao existe).
+function valorDoCampo(id) {
+    return String(document.getElementById(id)?.value || '').trim();
+}
+
 function isFaixaFimMarcadoComoPausa(faixaNum) {
     return document.getElementById(`inp-data-fim-f${faixaNum}`)?.dataset.pausa === '1';
 }
@@ -3217,9 +3236,8 @@ function setFaixaFimPausaMark(faixaNum, on) {
 // Depois de digitar o Fim de uma faixa: diz o que acontece e como retomar.
 function avisarFimDigitado(faixaNum) {
     if (faixaNum < 1 || faixaNum > 2) return;
-    const valor = (id) => String(document.getElementById(id)?.value || '').trim();
-    const fim = valor(`inp-data-fim-f${faixaNum}`);
-    const proximoInicio = valor(`inp-data-inicio-f${faixaNum + 1}`);
+    const fim = valorDoCampo(`inp-data-fim-f${faixaNum}`);
+    const proximoInicio = valorDoCampo(`inp-data-inicio-f${faixaNum + 1}`);
     if (!fim) return;
     if (isFaixaEmPausa(faixaNum)) {
         showToastWarning(`Pausa sem aula · ${formatDateBR(shiftISODate(fim, 1))} a ${formatDateBR(shiftISODate(proximoInicio, -1))}. A aula volta na Faixa ${faixaNum + 1}, em ${formatDateBR(proximoInicio)}.`, 'success', 6500);
@@ -3230,11 +3248,10 @@ function avisarFimDigitado(faixaNum) {
 
 function isFaixaEmPausa(faixaNum) {
     if (faixaNum < 1 || faixaNum > 2 || !isFaixaFimMarcadoComoPausa(faixaNum)) return false;
-    const valor = (id) => String(document.getElementById(id)?.value || '').trim();
     return isPauseEnd(
-        valor(`inp-data-inicio-f${faixaNum}`),
-        valor(`inp-data-fim-f${faixaNum}`),
-        valor(`inp-data-inicio-f${faixaNum + 1}`)
+        valorDoCampo(`inp-data-inicio-f${faixaNum}`),
+        valorDoCampo(`inp-data-fim-f${faixaNum}`),
+        valorDoCampo(`inp-data-inicio-f${faixaNum + 1}`)
     );
 }
 
@@ -6479,11 +6496,12 @@ function renderWeeklyGrid() {
                                 const avisoPausa = pausa
                                     ? `Pausa: sem aula de ${formatDateBR(pausa.inicio)} a ${formatDateBR(pausa.fim)}. Para mudar, ajuste o Fim da Faixa ${pausa.aposFaixa} ou o Inicio da Faixa ${pausa.aposFaixa + 1}.`
                                     : '';
-                                cell.title = avisoPausa || 'Slot nao disponivel para esta faixa (fora do intervalo de datas). Ajuste a data da faixa ou navegue para outra semana.';
+                                const avisoAntes = !avisoPausa ? avisoDiaAntesDoInicio(cellDate) : '';
+                                cell.title = avisoPausa || avisoAntes || 'Slot nao disponivel para esta faixa (fora do intervalo de datas). Ajuste a data da faixa ou navegue para outra semana.';
                                 cell.addEventListener('click', (e) => {
                                     e.preventDefault();
                                     e.stopPropagation();
-                                    showToastWarning(avisoPausa || 'Slot nao disponivel. Ajuste a data da faixa.', 'warning', avisoPausa ? 4200 : 2400);
+                                    showToastWarning(avisoPausa || avisoAntes || 'Slot nao disponivel. Ajuste a data da faixa.', 'warning', (avisoPausa || avisoAntes) ? 5200 : 2400);
                                 });
                             }
                         }

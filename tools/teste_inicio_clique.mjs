@@ -60,6 +60,7 @@ const CENARIOS = {
   // Clicar 16:50 da quinta: a parceira de 3 aulas nao para a faixa; o Fim e a
   // vespera do sabado da Informatica (sexta 27/08).
   aproveitamento: {
+    fluxo: 'aproveitamento',
     turma: 'EP2027', periodo: /PL4/, termStart: '2027-08-23', termEnd: '2027-12-23', periodoNome: 'PL4',
     sugestao: '2027-09-11',   // sabado livre depois da Informatica (termina sex 10/09)
     allocs: [
@@ -151,7 +152,7 @@ try {
   await novaComponente();
   confere('1. sugestao', await f1(), CFG.sugestao);
 
-  if (CFG.allocs.some((a) => a.id === 'c1')) { await aproveitamento(CFG, KEY, { f1, campo, aviso, pausa, semana, celula, podeClicar, clicar, confere, evaluate }); } else {
+  if (CFG.fluxo === 'aproveitamento') { await aproveitamento(CFG, KEY, { f1, campo, aviso, pausa, semana, celula, podeClicar, clicar, confere, evaluate, novaComponente }); } else {
 
   // 2) Antes da sugestao: o clique vale (aproveitamento); aqui so confere
   await semana(CFG.semanaAntes);
@@ -242,7 +243,7 @@ try {
 // Aproveitamento: clique antes da sugestao -> Faixa 1 ate a vespera da proxima,
 // numero 2 -> Faixa 2 na sugestao, vazia; salvar grava as duas com a pausa.
 async function aproveitamento(CFG, KEY, h) {
-  const { f1, campo, aviso, pausa, semana, celula, podeClicar, clicar, confere, evaluate } = h;
+  const { f1, campo, aviso, pausa, semana, celula, podeClicar, clicar, confere, evaluate, novaComponente } = h;
   const sugestao = await f1();
   console.log('      sugestao:', sugestao);
   await semana('2027-08-23');
@@ -268,6 +269,32 @@ async function aproveitamento(CFG, KEY, h) {
   const gravado = await evaluate(`(() => { const a = JSON.parse(localStorage.getItem(${JSON.stringify(KEY)})); const m = a.find(x => /MATEM/.test(x.disciplina)); return m ? JSON.stringify((m.faixas || []).map(f => [f.inicio, f.fim, f.dias])) : 'nao gravou'; })()`);
   console.log('      gravado:', gravado);
   confere('A13. gravou Faixa 1 26-27/08 e Faixa 2 na sugestao', gravado.startsWith('[["2027-08-26","2027-08-27"') && gravado.includes(`["${sugestao}"`), true);
+
+  // Edicao: a componente salva so na volta; Editar -> o dia antes avisa o caminho;
+  // Limpar Faixas -> o mesmo aproveitamento; salvar substitui (nao duplica).
+  await evaluate("window.confirm = () => true; document.getElementById('btn-undo-alloc').click()"); await sleep(1200);
+  await novaComponente();
+  await semana('2027-09-13');
+  for (const d of [1, 2, 3, 4, 5]) for (const hh of ['14:00', '14:50', '15:40', '16:50', '17:40']) await clicar(d, hh);
+  await evaluate("window.confirm = () => true; document.getElementById('btn-add-oferta').click()"); await sleep(2000);
+  await evaluate(`(() => { const tr = [...document.querySelectorAll('tr')].find(t => /MATEMATICA BASICA/.test(t.textContent) && t.querySelector('.btn-edit-row')); tr.querySelector('.btn-edit-row').click(); })()`);
+  await sleep(1500);
+  await semana('2027-08-23');
+  confere('E1. em edicao, dia antes do inicio nao comeca sozinho', await podeClicar(4, '16:50'), false);
+  confere('E2. ... e explica o caminho', /Limpar Faixas/.test(await evaluate(`${celula(4, '16:50')}.title`)), true);
+  await evaluate("window.confirm = () => true; document.getElementById('btn-limpar-faixas').click()"); await sleep(1200);
+  await semana('2027-08-23');
+  await clicar(4, '16:50');
+  confere('E3. depois de Limpar Faixas: aproveitamento', await f1() + ' a ' + await campo('inp-data-fim-f1'), '2027-08-26 a 2027-08-27');
+  await clicar(4, '17:40'); await clicar(5, '16:50'); await clicar(5, '17:40');
+  await evaluate("document.querySelector('#faixa-2 .faixa-num .faixa-num-value').click()"); await sleep(900);
+  confere('E4. numero 2 -> Faixa 2 na sugestao', await campo('inp-data-inicio-f2'), sugestao);
+  await semana('2027-09-13');
+  for (const d of [1, 2, 3, 4, 5]) for (const hh of ['14:00', '14:50', '15:40', '16:50', '17:40']) await clicar(d, hh);
+  await evaluate("window.confirm = () => true; document.getElementById('btn-add-oferta').click()"); await sleep(2000);
+  const editada = await evaluate(`(() => { const a = JSON.parse(localStorage.getItem(${JSON.stringify(KEY)})); return JSON.stringify(a.filter(x => /MATEM/.test(x.disciplina)).map(m => (m.faixas || []).map(f => [f.inicio, f.fim]))); })()`);
+  console.log('      editada:', editada);
+  confere('E5. edicao salva com a pausa, uma componente so', /^\[\[\["2027-08-26","2027-08-27"\],\["2027-09-11"/.test(editada), true);
 }
 for (const nome of Object.keys(CENARIOS)) await rodar(nome);
 console.log(falhasTotais ? `${falhasTotais} falha(s)` : 'Tudo certo: o inicio pelo clique funciona.');
