@@ -10,13 +10,13 @@
         // Vai para o aviso antes de carregar o programa. A agenda publica nao passa por aqui.
         if (/\.github\.io$/i.test(location.hostname)) location.replace('mudou.html');
     </script>
-    <link rel="stylesheet" href="css/style.css?v=202611101830">
+    <link rel="stylesheet" href="css/style.css?v=202611101841">
     <!-- Redesenho da aba Alocar Componentes (por partes); carrega depois do style.css -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
-    <link rel="stylesheet" href="css/alocar-componentes.css?v=202611101830">
-    <link rel="stylesheet" href="css/ajuda.css?v=202611101830">
+    <link rel="stylesheet" href="css/alocar-componentes.css?v=202611101841">
+    <link rel="stylesheet" href="css/ajuda.css?v=202611101841">
 
     <style>
         :root {
@@ -1209,7 +1209,7 @@
                             <li><span class="aj-num">4</span><div><b>Início da Faixa 1</b>O Cardume sugere uma data depois da última componente. Para começar em outro dia, clique no primeiro horário desse dia na grade. Na mesma semana vale o dia mais cedo marcado; desmarque tudo para voltar à sugestão. Dias livres que ficaram para trás: veja o cartão <b>Aproveitar dias livres</b>, abaixo.<img class="aj-print" src="img/instrucoes/passo-4.png" width="180" height="73" alt="Data de Início da Faixa 1" loading="lazy"></div></li>
                             <li><span class="aj-num">5</span><div><b>Desenhe o horário</b>Clique ou arraste sobre as aulas na grade semanal. A tabela mostra a CH de cada faixa.<img class="aj-print" src="img/instrucoes/passo-5.png" width="420" height="117" alt="Horários desenhados na grade" loading="lazy"></div></li>
                             <li><span class="aj-num">6</span><div><b>O horário mudou?</b>Vá à semana da mudança (setas ‹ › no topo da grade ou ← → do teclado) e redesenhe: a <b>Faixa 2</b> nasce sozinha naquele dia.<img class="aj-print" src="img/instrucoes/passo-6.png" width="195" height="113" alt="Semana em edição e botões de faixa" loading="lazy"></div></li>
-                            <li><span class="aj-num">7</span><div><b>Pausa</b>Digite o <b>Fim</b> da Faixa 1 no último dia de aula. Para retomar, clique no número da <b>Faixa 2</b> e depois no primeiro horário do dia da volta. Aparece a linha cinza da pausa.<img class="aj-print" src="img/instrucoes/passo-7.png" width="262" height="106" alt="Faixa 1, linha de pausa e Faixa 2" loading="lazy"></div></li>
+                            <li><span class="aj-num">7</span><div><b>Parar e voltar depois</b>Quando a componente para uns dias e volta mais à frente, a volta é sempre a <b>Faixa 2</b>: clique no número <b>2</b> da tabela das faixas. Na <b>pausa</b>, você escolhe o dia da volta. No <b>aproveitamento de dias livres</b>, o Cardume já leva a Faixa 2 para o dia certo. Veja os exemplos nos cartões abaixo.<img class="aj-print" src="img/instrucoes/passo-7.png" width="262" height="106" alt="Faixa 1, linha de pausa e Faixa 2" loading="lazy"></div></li>
                             <li><span class="aj-num">8</span><div><b>Salvar</b>Confira se o <b>Total CH</b> bateu com a <b>Meta</b> e clique em <b>Salvar Componente</b>.<img class="aj-print" src="img/instrucoes/passo-8-salvar.png" width="195" height="36" alt="Botão Salvar Componente" loading="lazy"></div></li>
                         </ol>
 
@@ -1225,9 +1225,12 @@
                             </article>
 
                             <article class="aj-cartao aj-cartao--novo">
-                                <h3><span aria-hidden="true">⏸️</span> Pausa e intercalação <span class="aj-selo">novo</span></h3>
+                                <h3><span aria-hidden="true">⏸️</span> Pausa: parar e voltar depois <span class="aj-selo">novo</span></h3>
                                 <ul class="aj-lista">
-                                    <li>Fim digitado antes do Início da faixa seguinte vira <b>pausa</b>: a linha cinza mostra <em>“Pausa: sem aula de X a Y”</em>.</li>
+                                    <li><b>Exemplo:</b> aulas de 01 a 05/03, duas semanas sem aula, volta em 22/03.</li>
+                                    <li><b>1.</b> Marque os horários da primeira parte e digite o <b>Fim</b> da Faixa 1: o último dia de aula (05/03).</li>
+                                    <li><b>2.</b> Clique no número <b>2</b> e depois no primeiro horário do dia da volta (22/03). <b>Você escolhe</b> esse dia.</li>
+                                    <li><b>3.</b> Marque os horários da Faixa 2 e salve. A linha cinza mostra <em>“Pausa · sem aula”</em>.</li>
                                     <li>Os dias da pausa ficam <b>livres para outra componente</b>. Assim duas componentes se revezam na mesma turma.</li>
                                     <li>A componente com pausa <b>nunca é empurrada sozinha</b>: se chocar com outra, o Cardume avisa e você ajusta as datas.</li>
                                     <li><b>Dica:</b> cada componente aceita até 2 pausas. Se precisar de mais buracos, ou se estiver caçando dias soltos para encaixá-la, mude a ordem das componentes (<b>Lista de Ofertas › Trocar</b>). O planejamento fica mais fácil de ler para você e para os professores.</li>
@@ -1237,11 +1240,13 @@
                             <article class="aj-cartao aj-cartao--novo">
                                 <h3><span aria-hidden="true">↩️</span> Aproveitar dias livres <span class="aj-selo">novo</span></h3>
                                 <ul class="aj-lista">
-                                    <li>Sobraram dias livres <b>antes</b> de outra componente? Clique no primeiro horário livre do primeiro desses dias.</li>
-                                    <li>A Faixa 1 vai até a <b>véspera da componente que vem depois</b>. Essa outra componente fica no lugar de uma pausa.</li>
-                                    <li>Marque os horários desses dias e clique no número da <b>Faixa 2</b>. Ela começa sozinha: no <b>próximo dia livre</b> (componente nova) ou <b>onde a componente estava</b> (Editar). Marque os horários dela e salve.</li>
-                                    <li><b>Componente já alocada:</b> em <b>Lista de Ofertas › Editar</b>, vá à semana dos dias livres, clique no primeiro horário e confirme <b>Recomeçar</b>. Os horários marcados são apagados e ela recomeça ali.</li>
-                                    <li>Só dias livres do período letivo aceitam o clique. Se houver choque ao salvar, o Cardume avisa e não move nada.</li>
+                                    <li><b>Exemplo:</b> sobraram 28 e 29/01 livres e, em 30/01, começa outra componente. Dá para usar esses dois dias.</li>
+                                    <li><b>1.</b> Clique no primeiro horário livre de 28/01. O Cardume faz a Faixa 1 de 28 a 29/01 <b>sozinho</b>: a outra componente fica no lugar da pausa.</li>
+                                    <li><b>2.</b> Marque os horários de 28 e 29/01.</li>
+                                    <li><b>3.</b> Clique no número <b>2</b>. O Cardume <b>já leva</b> a Faixa 2 para a volta: o próximo dia livre (componente nova) ou o dia em que a componente começava (Editar).</li>
+                                    <li><b>4.</b> Marque os horários da Faixa 2 e salve.</li>
+                                    <li><b>Componente já salva?</b> Lista de Ofertas › <b>Editar</b>. Vá até a semana dos dias livres, clique no primeiro horário e confirme <b>Recomeçar</b> (os horários marcados são apagados). Depois siga do passo 2.</li>
+                                    <li>Só dias livres do período letivo aceitam o clique.</li>
                                 </ul>
                             </article>
 
@@ -1442,7 +1447,7 @@
         </main>
     </div>
 
-    <script type="module" src="js/main.js?v=202611101830"></script>
+    <script type="module" src="js/main.js?v=202611101841"></script>
 </body>
 
 </html>
