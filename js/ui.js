@@ -1,29 +1,29 @@
-import { store } from './store.js?v=202611101841';
-import { getTurnoLetter, mapSlotToTurno, turnoDaTurmaInclui } from './turns.js?v=202611101841';
-import { normalizePeriodo as normalizePeriodoLetivoCode } from './plan_storage.js?v=202611101841';
-import { getCalendarEvents } from './calendar.js?v=202611101841';
-import { isDateOverlap } from './utils.js?v=202611101841';
-import { weeklyState } from './weekly_state.js?v=202611101841';
-import { findPendentesCobertas, isPendenteJaAlocada } from './pendentes.mjs?v=202611101841';
-import { classifySwap } from './troca_ordem.mjs?v=202611101841';
-import { closeFaixaEnds, isPauseEnd, listFaixaPauses } from './pausa_faixas.mjs?v=202611101841';
-import { numeroDaSubturma, isTurmaInteira, proximaSubturma, codigoT01Como } from './subturmas.mjs?v=202611101841';
-import { abrirMiniCalendario, fecharMiniCalendario, miniCalendarioAberto } from './mini_calendario.mjs?v=202611101841';
-import { buildCanonicalOfferProjection } from './execution_engine.js?v=202611101841';
+import { store } from './store.js?v=202611101941';
+import { getTurnoLetter, mapSlotToTurno, turnoDaTurmaInclui } from './turns.js?v=202611101941';
+import { normalizePeriodo as normalizePeriodoLetivoCode } from './plan_storage.js?v=202611101941';
+import { getCalendarEvents } from './calendar.js?v=202611101941';
+import { isDateOverlap } from './utils.js?v=202611101941';
+import { weeklyState } from './weekly_state.js?v=202611101941';
+import { findPendentesCobertas, isPendenteJaAlocada } from './pendentes.mjs?v=202611101941';
+import { classifySwap } from './troca_ordem.mjs?v=202611101941';
+import { closeFaixaEnds, isPauseEnd, listFaixaPauses } from './pausa_faixas.mjs?v=202611101941';
+import { numeroDaSubturma, isTurmaInteira, proximaSubturma, codigoT01Como } from './subturmas.mjs?v=202611101941';
+import { abrirMiniCalendario, fecharMiniCalendario, miniCalendarioAberto } from './mini_calendario.mjs?v=202611101941';
+import { buildCanonicalOfferProjection } from './execution_engine.js?v=202611101941';
 import {
     buildSigaaMetadataPayload,
     validateSigaaMetadataPayload,
     getSigaaCode,
     buildScopedSigaaAllocationFromOfferFaixa
-} from './sigaa_metadata.js?v=202611101841';
-import { parseBackupDataFile, extractImportPlanMeta } from './serialization.js?v=202611101841';
+} from './sigaa_metadata.js?v=202611101941';
+import { parseBackupDataFile, extractImportPlanMeta } from './serialization.js?v=202611101941';
 import {
     showToastWarning,
     showPersistentStatusMessage,
     copyTextToClipboard,
     flashButtonCopyState,
     setupCopyActionButtons
-} from './ui_feedback.js?v=202611101841';
+} from './ui_feedback.js?v=202611101941';
 import {
     normalizeHexColor,
     adjustHexColor,
@@ -32,7 +32,7 @@ import {
     tonsDaCor,
     aplicarTonsBloco,
     PALETA_CORES
-} from './color_utils.js?v=202611101841';
+} from './color_utils.js?v=202611101941';
 import {
     isFaixaAllocation,
     isPriorityRegularAllocation,
@@ -41,8 +41,8 @@ import {
     normalizeTeacherNameForMatch,
     getDocenteShortLabel,
     getAllocationTeachersForConflict
-} from './allocation_helpers.js?v=202611101841';
-import { setupSeletorCor } from './seletor_cor.js?v=202611101841';
+} from './allocation_helpers.js?v=202611101941';
+import { setupSeletorCor } from './seletor_cor.js?v=202611101941';
 import {
     VINCULOS_DOCENTE_NOVO,
     OUTRA_UNIDADE,
@@ -51,9 +51,9 @@ import {
     findSimilarNames,
     problemaNoNome,
     limparEspacos
-} from './docente_nomes.mjs?v=202611101841';
-import { getSessionEmail, getPerfil, fetchAllocationsForPlans } from './sync_remoto.js?v=202611101841';
-import { resolveBackendMode } from './backend_config.js?v=202611101841';
+} from './docente_nomes.mjs?v=202611101941';
+import { getSessionEmail, getPerfil, fetchAllocationsForPlans } from './sync_remoto.js?v=202611101941';
+import { resolveBackendMode } from './backend_config.js?v=202611101941';
 import {
     normalizeConflictSlotLabel,
     getAvailableTurnoOfertaOptions,
@@ -63,7 +63,7 @@ import {
     buildHorariosForUI,
     getShiftChangeMeta,
     getNativeTurnoValueForAllocation
-} from './turno_helpers.js?v=202611101841';
+} from './turno_helpers.js?v=202611101941';
 import {
     getDisciplinaCHGlobal,
     derivarBloco,
@@ -73,7 +73,7 @@ import {
     getDisciplinaInfo,
     getCursoSiglaDaTurma,
     getPrintAcademicMetaLine
-} from './curso_turma_helpers.js?v=202611101841';
+} from './curso_turma_helpers.js?v=202611101941';
 import {
     renderMonthlyCalendar,
     renderTeacherCalendar,
@@ -81,11 +81,13 @@ import {
     clearTeacherRangeCache,
     setTeacherPeriod,
     getTeacherPeriod
-} from './calendarios_ui.js?v=202611101841';
+} from './calendarios_ui.js?v=202611101941';
 import {
     refreshTeacherConflictsUI,
-    setCrossPlanLoader
-} from './conflitos_ui.js?v=202611101841';
+    setCrossPlanLoader,
+    setResolverDeChoque,
+    acharChoqueComOutroPL
+} from './conflitos_ui.js?v=202611101941';
 import {
     shouldIgnoreTurmaEventForCandidate,
     normalizeDrawnSlotsByDay,
@@ -99,7 +101,7 @@ import {
     resolveEditableFaixasFromStoredExecution,
     alignFaixasToExecutionEnd,
     buildFinalAdjustmentFaixaSuggestion
-} from './faixa_utils.js?v=202611101841';
+} from './faixa_utils.js?v=202611101941';
 import {
     timeToMinutes,
     shiftISODate,
@@ -113,14 +115,14 @@ import {
     isDateInsideRange,
     formatDateBRShortYear,
     formatDateBR
-} from './date_utils_ui.js?v=202611101841';
+} from './date_utils_ui.js?v=202611101941';
 import {
     initializeWeeklyScheduleForTurma,
     reconcileTurmaSelectionAfterPLChange,
     resetWeeklyViewOnTurmaChange,
     resolveActiveAcademicPeriod,
     slotLabelsOverlap
-} from './academic_rules.mjs?v=202611101841';
+} from './academic_rules.mjs?v=202611101941';
 
 const gridContainer = document.getElementById('weekly-grid');
 const selCurso = document.getElementById('sel-curso');
@@ -346,6 +348,7 @@ function loadOverlappingPlans(start, end) {
 function setupTeacherYearControls() {
     setTeacherRangeLoader(loadTeacherRangePlans);
     setCrossPlanLoader(loadOverlappingPlans);
+    setResolverDeChoque(sugerirComoResolverChoque);
 
     const selAno = document.getElementById('sel-ano-teacher');
     const btnAno = document.getElementById('btn-ano-inteiro-teacher');
@@ -2875,10 +2878,12 @@ function findConfirmedTeacherConflictForCandidate(candidateAlloc, teacherNames =
 
         const existingEventsByDate = getCalendarEvents(null, candidateAlloc.dataInicio, candidateAlloc.dataFim, teacherName);
         const existingByDate = new Map();
+        // As aulas da propria turma do candidato ficam com a checagem de turma.
+        const turmaDoCandidato = String(candidateAlloc.turmaId ?? store.selectedTurma);
 
         Object.entries(existingEventsByDate || {}).forEach(([dateStr, events]) => {
             (events || []).forEach((event) => {
-                if (!event || String(event.turmaId) === String(store.selectedTurma)) return;
+                if (!event || String(event.turmaId) === turmaDoCandidato) return;
                 const slot = normalizeConflictSlotLabel(event.horario || '');
                 if (!slot) return;
                 if (!existingByDate.has(dateStr)) existingByDate.set(dateStr, []);
@@ -7328,24 +7333,31 @@ function handleAddManual() {
                 const horarioChoque = horarioOutraAula && horarioOutraAula !== confirmedTeacherConflict.horario
                     ? `${confirmedTeacherConflict.horario} x ${horarioOutraAula}`
                     : confirmedTeacherConflict.horario;
-                if (!isImportedSave) {
-                    setWeeklyBlock(
-                        'Sobreposicao de professor',
-                        `${profNomes} ja tem ${confirmedTeacherConflict.event.disciplina} na turma ${turmaNomeConflito} em ${formatDateBR(confirmedTeacherConflict.date)} (${horarioChoque}). Salvamento cancelado — sobreposicao so e permitida via importacao.`,
-                        'choque'
-                    );
-                    showToastWarning(
-                        `Sobreposicao de professor detectada: ${profNomes} ja tem ${confirmedTeacherConflict.event.disciplina} na turma ${turmaNomeConflito} em ${formatDateBR(confirmedTeacherConflict.date)} (${horarioChoque}). Salvamento cancelado - sobreposicao so e permitida em disciplinas carregadas via importacao.`,
-                        'warning',
-                        6200
-                    );
-                    return;
-                }
-                showToastWarning(
-                    `Sobreposicao de professor permitida (disciplina importada): ${profNomes} em choque na turma ${turmaNomeConflito}. Sera destacada na aba Calendario Docente.`,
-                    'warning',
-                    5200
+                // Salvar e sempre uma decisao do coordenador: o choque barra mesmo
+                // quando a componente veio da "Insercao por Bloco (PPC)" (antes so
+                // avisava, e o choque entrava na grade sem ninguem perceber).
+                const outraDisciplina = confirmedTeacherConflict.event.disciplina;
+                const detalhe = `${profNomes} ja tem ${outraDisciplina} na turma ${turmaNomeConflito} em ${formatDateBR(confirmedTeacherConflict.date)} (${horarioChoque}).`;
+                const sugestao = sugerirInicioSemChoque(candidateForTeacherCheck, teachersToCheck);
+                const outraTurmaId = confirmedTeacherConflict.event.turmaId;
+                const cursoOutra = getCursoSiglaDaTurma(outraTurmaId) || 'outro curso';
+                const comoResolver = [
+                    sugestao
+                        ? `Sugestao: comece "${disciplina}" em ${formatDateBR(sugestao.dataInicio)}, com os horarios da Faixa 1: nao ha choque e termina em ${formatDateBR(sugestao.dataFim)}.`
+                        : `Com estes horarios, nao ha inicio sem choque ate o fim do periodo: mude os dias ou horarios da semana.`,
+                    store.podeEditarTurma(outraTurmaId)
+                        ? `Ou mude "${outraDisciplina}" na turma ${turmaNomeConflito}.`
+                        : `Ou converse com a coordenacao de ${cursoOutra} sobre "${outraDisciplina}".`
+                ].join(' ');
+                setWeeklyBlock(
+                    sugestao
+                        ? `Choque de professor · sugestao: comecar em ${formatDateBR(sugestao.dataInicio)}`
+                        : 'Choque de professor',
+                    `${detalhe} Salvamento cancelado.`,
+                    'choque'
                 );
+                showToastWarning(`Choque de professor: ${detalhe} Salvamento cancelado. ${comoResolver}`, 'warning', 14000);
+                return;
             }
         }
 
@@ -7502,7 +7514,16 @@ function handleAddManual() {
         populateDocentes();
         refreshAvisoDocenteNovo('ocultar');
 
-        if (nonBlockingDistributionNotice) {
+        // O salvar so barra choques do PL aberto. Choque com um PL vizinho (datas
+        // que se sobrepoem) so avisa: o outro PL pode estar com outra coordenacao.
+        const choqueOutroPL = allocAtualizada ? acharChoqueComOutroPL(allocAtualizada) : null;
+        if (choqueOutroPL) {
+            showToastWarning(
+                `Salvo, mas atencao: ${choqueOutroPL.professor} tambem tem ${choqueOutroPL.disciplina} na turma ${choqueOutroPL.turma} do periodo ${choqueOutroPL.plano}, em ${formatDateBR(choqueOutroPL.data)} (${choqueOutroPL.horario}). Ajuste as datas ou converse com quem coordena esse periodo.`,
+                'warning',
+                14000
+            );
+        } else if (nonBlockingDistributionNotice) {
             showToastWarning(nonBlockingDistributionNotice, nonBlockingDistributionNoticeType, 6200);
         } else if (renomeadasT01) {
             showToastWarning(`Subturma ${getTurmaLabel(store.selectedTurma, subGrupo)} salva. A primeira oferta de "${escapeTrocaHtml(disciplina)}" passou a ser a ${getTurmaLabel(store.selectedTurma, codigoT01Como(subGrupo))}.`, 'success', 6000);
@@ -7594,6 +7615,64 @@ function calcularPosicaoAPartirDe(alloc, inicio) {
     };
 }
 
+// Sugestao para o choque de professor no salvar: o primeiro inicio, depois do
+// escolhido, em que a componente cabe inteira no periodo (com os horarios da
+// Faixa 1, como o "Trocar") sem choque de turma nem de professor. As aulas ja
+// alocadas sao lidas uma vez so; cada dia testado recalcula so a propria
+// componente. So olha o PL aberto. Devolve a nova posicao ou null.
+function sugerirInicioSemChoque(candidato, professores = []) {
+    const fimPL = store.settings.termEnd;
+    if (!candidato?.dataInicio || !candidato.turmaId || !fimPL) return null;
+    const horasPrecisas = contarHorasExecutadas(candidato.executionByDate) || parseInt(candidato.ch, 10) || 0;
+    if (!horasPrecisas) return null;
+    const inicioBusca = addDaysISO(candidato.dataInicio, 1);
+    if (!inicioBusca || inicioBusca > fimPL) return null;
+
+    // Mesmas regras do salvar: a turma ignora so a propria componente; o
+    // professor ignora as aulas desta turma (essas a turma ja confere).
+    const turmaOcupada = new Set();
+    Object.entries(getCalendarEvents(String(candidato.turmaId), inicioBusca, fimPL) || {}).forEach(([data, lista]) => {
+        (lista || []).forEach((ev) => {
+            if (shouldIgnoreTurmaEventForCandidate(ev, candidato)) return;
+            const slot = normalizeConflictSlotLabel(ev?.horario || '');
+            if (slot) turmaOcupada.add(`${data}|${slot}`);
+        });
+    });
+    const agendas = professores.map((nome) => {
+        const porData = new Map();
+        Object.entries(getCalendarEvents(null, inicioBusca, fimPL, nome) || {}).forEach(([data, lista]) => {
+            (lista || []).forEach((ev) => {
+                if (!ev || String(ev.turmaId) === String(candidato.turmaId)) return;
+                const slot = normalizeConflictSlotLabel(ev.horario || '');
+                if (!slot) return;
+                if (!porData.has(data)) porData.set(data, []);
+                porData.get(data).push(slot);
+            });
+        });
+        return { nome, porData };
+    });
+
+    let dia = inicioBusca;
+    for (let n = 0; dia && dia <= fimPL && n < 160; n++, dia = addDaysISO(dia, 1)) {
+        const calc = calcularPosicaoAPartirDe(candidato, dia);
+        // Se nao cabe comecando hoje, comecando mais tarde tambem nao cabe.
+        if (!calc || calc.horas < horasPrecisas) return null;
+        // Dia sem aula (domingo, feriado, dia fora do padrao): o dia da 1a aula
+        // ainda sera testado na sua vez.
+        if (calc.posicao.dataInicio !== dia) continue;
+        const nova = { ...candidato, ...calc.posicao };
+        const chocaNaTurma = Object.entries(nova.executionByDate || {}).some(([data, slots]) =>
+            (slots || []).some((s) => turmaOcupada.has(`${data}|${normalizeConflictSlotLabel(s)}`)));
+        if (chocaNaTurma) continue;
+        const chocaProfessor = agendas.some(({ nome, porData }) =>
+            buildIntensiveTeacherConflictEntries(nova, nome).some((aula) =>
+                (porData.get(aula.date) || []).some((slot) => slotLabelsOverlap(slot, aula.horario))));
+        if (chocaProfessor) continue;
+        return calc.posicao;
+    }
+    return null;
+}
+
 // Choque com outra componente da mesma turma. Sub-turmas diferentes podem
 // ter aula em paralelo; as posicoes antigas das duas que trocam sao ignoradas.
 function acharChoqueNaTurma(candidato) {
@@ -7659,11 +7738,87 @@ function planejarTrocaDeOrdem(compA, compB, modo) {
         const prof = findConfirmedTeacherConflictForCandidate(candidato, getAllocationTeachersForConflict(candidato));
         if (prof) {
             const onde = `${prof.teacherName} já tem ${prof.event.disciplina} na turma ${getTurmaLabel(prof.event.turmaId, prof.event.subGrupo)} em ${formatDateBR(prof.date)} (${prof.horario}).`;
-            if (!alloc.importado) return { erro: `Choque de professor: ${onde}` };
-            avisos.push(`Sobreposição de professor permitida (componente importada): ${onde}`);
+            return { erro: `Choque de professor: ${onde}` };
         }
     }
     return { novas, avisos };
+}
+
+// ===== "Como resolver?" (alerta de choque do Calendario Docente) =====
+// So calcula e descreve: nada e alterado aqui. Para cada oferta do choque:
+// - do curso do usuario: ate duas saidas que so dependem dele (adiar o inicio;
+//   trocar a ordem com outra componente da turma), conferidas com as mesmas
+//   regras do salvar e do Trocar;
+// - de outro curso: com quem conversar (e a data que resolveria).
+// Componente com mais de um registro na turma fica de fora do calculo
+// (o coordenador ajusta pelo Editar).
+
+function ofertaUnicaNaTurma(alloc) {
+    if (!alloc || !isFaixaAllocation(alloc)) return false;
+    const disc = normalizeDisciplinaInputValue(alloc.disciplina || '');
+    return store.allocations.filter((a) => String(a.turmaId) === String(alloc.turmaId)
+        && isFaixaAllocation(a)
+        && normalizeDisciplinaInputValue(a.disciplina || '') === disc
+        && String(a.subGrupo || '') === String(alloc.subGrupo || '')).length === 1;
+}
+
+function inicioQueResolve(alloc) {
+    if (!ofertaUnicaNaTurma(alloc)) return null;
+    return sugerirInicioSemChoque(alloc, getAllocationTeachersForConflict(alloc));
+}
+
+// A troca mais proxima no tempo que o Trocar aceitaria (sem choque de turma
+// nem de professor nas novas posicoes). Testa no maximo 8 componentes.
+function trocaQueResolve(alloc) {
+    if (!ofertaUnicaNaTurma(alloc)) return null;
+    const componentes = buildComponentesParaTroca(alloc.turmaId);
+    const atual = componentes.find((c) => c.ids.includes(alloc.id));
+    if (!atual) return null;
+    const feriados = (store.rawData?.feriados || []).map((f) => String(f?.data || f || ''));
+    const distancia = (c) => Math.abs(new Date(`${c.dataInicio}T12:00:00`) - new Date(`${atual.dataInicio}T12:00:00`));
+    const outras = componentes.filter((c) => c !== atual && c.registros === 1).sort((x, y) => distancia(x) - distancia(y)).slice(0, 8);
+    for (const outra of outras) {
+        const regra = classifySwap(atual, outra, { feriados });
+        if (!regra.ok) continue;
+        const plano = planejarTrocaDeOrdem(atual, outra, regra.modo);
+        if (!plano.erro) return outra;
+    }
+    return null;
+}
+
+// Devolve [{ quem: 'voce' | 'outro', texto }].
+function sugerirComoResolverChoque({ ids = [] } = {}) {
+    const ofertas = [...new Set(ids.map(String))]
+        .map((id) => store.allocations.find((a) => String(a?.id) === id))
+        .filter(Boolean)
+        // A que comeca depois primeiro: em geral foi a ultima a entrar na grade.
+        .sort((a, b) => String(b.dataInicio || '').localeCompare(String(a.dataInicio || '')));
+    const nome = (a) => `"${a.disciplina}" (${getTurmaLabel(a.turmaId, a.subGrupo)})`;
+    const linhas = [];
+    let algumaMinha = false;
+
+    ofertas.forEach((alloc) => {
+        if (store.podeEditarTurma(alloc.turmaId)) {
+            algumaMinha = true;
+            const inicio = inicioQueResolve(alloc);
+            if (inicio) {
+                linhas.push({ quem: 'voce', texto: `Comece ${nome(alloc)} em ${formatDateBR(inicio.dataInicio)}, com os horarios da Faixa 1: termina em ${formatDateBR(inicio.dataFim)} sem choque. Faca pelo Editar, na Lista de Ofertas.` });
+            }
+            const troca = trocaQueResolve(alloc);
+            if (troca) {
+                linhas.push({ quem: 'voce', texto: `Troque a ordem de ${nome(alloc)} com "${troca.disciplina}": as duas ficam sem choque. Use o botao Trocar, na Lista de Ofertas.` });
+            }
+        } else {
+            const curso = getCursoSiglaDaTurma(alloc.turmaId) || 'outro curso';
+            const inicio = inicioQueResolve(alloc);
+            linhas.push({ quem: 'outro', texto: `${nome(alloc)} e de ${curso}: converse com essa coordenacao${inicio ? `. Se ela comecar em ${formatDateBR(inicio.dataInicio)}, o choque some` : ''}.` });
+        }
+    });
+
+    if (algumaMinha && !linhas.some((l) => l.quem === 'voce')) {
+        linhas.unshift({ quem: 'voce', texto: 'Nao achei nova data nem troca que resolva sem criar outro choque: mude os dias ou os horarios da semana pelo Editar.' });
+    }
+    return linhas;
 }
 
 function formatPeriodoTroca(inicio, fim) {

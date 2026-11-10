@@ -1,15 +1,16 @@
-import { store } from './store.js?v=202611101841';
-import { getCalendarEvents } from './calendar.js?v=202611101841';
-import { timeToMinutes } from './date_utils_ui.js?v=202611101841';
+import { store } from './store.js?v=202611101941';
+import { getCalendarEvents } from './calendar.js?v=202611101941';
+import { timeToMinutes } from './date_utils_ui.js?v=202611101941';
 import {
     isPendingAllocation,
     getAllocationTeachersForConflict,
     normalizeTeacherNameForMatch
-} from './allocation_helpers.js?v=202611101841';
-import { normalizeConflictSlotLabel } from './turno_helpers.js?v=202611101841';
-import { slotLabelsOverlap } from './academic_rules.mjs?v=202611101841';
-import { getTurmaLabel } from './curso_turma_helpers.js?v=202611101841';
-import { renderTeacherCalendar, withPlanContext } from './calendarios_ui.js?v=202611101841';
+} from './allocation_helpers.js?v=202611101941';
+import { normalizeConflictSlotLabel } from './turno_helpers.js?v=202611101941';
+import { slotLabelsOverlap } from './academic_rules.mjs?v=202611101941';
+import { getTurmaLabel } from './curso_turma_helpers.js?v=202611101941';
+import { renderTeacherCalendar, withPlanContext } from './calendarios_ui.js?v=202611101941';
+import { showToastWarning } from './ui_feedback.js?v=202611101941';
 
 // Ref DOM de nivel de modulo (modulo deferred, DOM pronto).
 const selViewDocente = document.getElementById('sel-view-docente');
@@ -108,11 +109,18 @@ export function detectGlobalTeacherConflictsStable() {
                             discB: orderedLabels[1],
                             firstDate: dateStr,
                             daySet: new Set(),
-                            slotSet: new Set()
+                            slotSet: new Set(),
+                            turmaIds: new Set(),
+                            allocIds: new Set()
                         });
                     }
 
                     const aggregate = pairAggregates.get(pairKey);
+                    aggregate.turmaIds.add(String(eventA?.turmaId || ''));
+                    aggregate.turmaIds.add(String(eventB?.turmaId || ''));
+                    // Os eventos trazem o id da oferta: usado pelo "Como resolver?".
+                    if (eventA?.id) aggregate.allocIds.add(String(eventA.id));
+                    if (eventB?.id) aggregate.allocIds.add(String(eventB.id));
                     if (dateStr < aggregate.firstDate) aggregate.firstDate = dateStr;
                     if (dayOfWeek >= 1 && dayOfWeek <= 6) aggregate.daySet.add(dayOfWeek);
                     aggregate.slotSet.add(items[i].slotKey);
@@ -129,7 +137,9 @@ export function detectGlobalTeacherConflictsStable() {
                 horario: formatSlotSummary(item.slotSet),
                 dataInicio: item.firstDate,
                 discA: item.discA,
-                discB: item.discB
+                discB: item.discB,
+                turmaIds: [...item.turmaIds].filter(Boolean),
+                allocIds: [...item.allocIds]
             }))
             .sort((a, b) => {
                 if (a.dataInicio !== b.dataInicio) return a.dataInicio.localeCompare(b.dataInicio);
@@ -275,6 +285,89 @@ function detectCrossPlanConflicts() {
     return result;
 }
 
+// Choque da componente recem-salva com um PL que se sobrepoe ao aberto nas
+// datas. O salvar so confere o PL aberto; aqui so AVISA (os outros PLs vem do
+// cache de ate 2 minutos e podem estar desatualizados). Devolve o primeiro
+// choque achado ou null.
+export function acharChoqueComOutroPL(alloc) {
+    const ativo = store.activePlanMeta;
+    if (!alloc?.dataInicio || !ativo?.key) return null;
+    const professores = getAllocationTeachersForConflict(alloc);
+    if (!professores.length) return null;
+    const ehEstaOferta = (ev) => String(ev?.turmaId) === String(alloc.turmaId)
+        && String(ev?.disciplina || '') === String(alloc.disciplina || '')
+        && String(ev?.subGrupo || '') === String(alloc.subGrupo || '');
+
+    for (const { meta, allocations } of getOverlappingPlans()) {
+        const inicio = [ativo.termStart, meta.termStart, alloc.dataInicio].sort().pop();
+        const fim = [ativo.termEnd, meta.termEnd, alloc.dataFim || alloc.dataInicio].sort()[0];
+        if (!inicio || !fim || inicio > fim) continue;
+        const doOutro = (allocations || []).filter((a) => a && !isPendingAllocation(a));
+        if (!doOutro.length) continue;
+
+        for (const professor of professores) {
+            const nossas = getCalendarEvents(null, inicio, fim, professor);
+            const deles = withPlanContext(meta, doOutro, () => {
+                const eventos = getCalendarEvents(null, inicio, fim, professor);
+                Object.values(eventos || {}).forEach((lista) => (lista || []).forEach((ev) => {
+                    if (ev && ev.type !== 'holiday') ev.rotuloTurma = getTurmaLabel(ev.turmaId, ev.subGrupo);
+                }));
+                return eventos;
+            });
+            for (const [data, lista] of Object.entries(nossas || {})) {
+                const outras = deles?.[data] || [];
+                if (!outras.length) continue;
+                for (const a of (lista || [])) {
+                    if (!a || a.type === 'holiday' || !ehEstaOferta(a)) continue;
+                    const slotA = normalizeConflictSlotLabel(a.horario || '');
+                    if (!slotA) continue;
+                    const b = outras.find((ev) => ev && ev.type !== 'holiday'
+                        && slotLabelsOverlap(slotA, normalizeConflictSlotLabel(ev.horario || '')));
+                    if (b) {
+                        return { professor, data, horario: slotA, disciplina: b.disciplina, turma: b.rotuloTurma, plano: planLabel(meta) };
+                    }
+                }
+            }
+        }
+    }
+    return null;
+}
+
+// Rede de seguranca: um choque NOVO no PL aberto, venha de onde vier (datas
+// recalculadas, nome de professor unificado, mudanca de outro coordenador,
+// desfazer), e avisado na hora, uma vez. So os choques que tocam turmas que
+// este usuario pode editar. A primeira leitura de cada PL so guarda o que ja
+// existia (nao avisa os choques antigos ao abrir o app).
+let choquesConhecidos = { plano: '', chaves: null };
+
+function avisarChoquesNovos(conflictMap) {
+    const plano = store.activePlanMeta?.key || '';
+    const atuais = new Map();
+    conflictMap.forEach((detalhes, professor) => detalhes.forEach((d) => {
+        if (!(d.turmaIds || []).some((turmaId) => store.podeEditarTurma(turmaId))) return;
+        atuais.set(`${normalizeTeacherNameForMatch(professor)}|${d.discA}|${d.discB}`, { professor, ...d });
+    }));
+
+    if (choquesConhecidos.plano !== plano || !choquesConhecidos.chaves) {
+        // Sem alocacoes ainda (o servidor nao respondeu): espera a grade chegar.
+        if ((store.allocations || []).some((a) => a && !isPendingAllocation(a))) {
+            choquesConhecidos = { plano, chaves: new Set(atuais.keys()) };
+        }
+        return;
+    }
+
+    const novos = [...atuais].filter(([chave]) => !choquesConhecidos.chaves.has(chave)).map(([, d]) => d);
+    choquesConhecidos.chaves = new Set(atuais.keys());
+    if (!novos.length) return;
+
+    const primeiro = novos[0];
+    const dataBR = primeiro.dataInicio ? primeiro.dataInicio.split('-').reverse().join('/') : '';
+    const mensagem = novos.length === 1
+        ? `Novo choque de professor: ${primeiro.professor} tem ${primeiro.discA} e ${primeiro.discB} no mesmo horario (a partir de ${dataBR}). Veja o alerta na aba Calendario Docente.`
+        : `${novos.length} novos choques de professor (${[...new Set(novos.map((d) => d.professor))].join(', ')}). Veja o alerta na aba Calendario Docente.`;
+    showToastWarning(mensagem, 'warning', 12000);
+}
+
 export function updateGlobalConflictsUI() {
     const tabTeacher = document.getElementById('tab-teacher');
     if (!tabTeacher) return;
@@ -287,6 +380,7 @@ export function updateGlobalConflictsUI() {
     }
 
     const conflictMap = detectGlobalTeacherConflictsStable();
+    avisarChoquesNovos(conflictMap);
     // Junta os choques com outro PL (mesmo professor, mesmo bloco no alerta).
     detectCrossPlanConflicts().forEach((detalhes, professor) => {
         const chave = normalizeTeacherNameForMatch(professor);
@@ -294,6 +388,8 @@ export function updateGlobalConflictsUI() {
         conflictMap.set(nome, [...(conflictMap.get(nome) || []), ...detalhes]);
     });
     let temEntrePLs = false;
+    const chavesAtuais = new Set();
+    linhasDoAlerta = [];
 
     if (conflictMap.size > 0) {
         const tdStyle = 'padding: 5px 10px; border: 1px solid rgba(255,255,255,0.3); font-size: 0.85em; white-space: nowrap;';
@@ -309,13 +405,25 @@ export function updateGlobalConflictsUI() {
                 const selo = d.entrePLs
                     ? ' <span style="display:inline-block; margin-left:6px; padding:0 7px; border-radius:8px; background:#fff; color:#c0392b; font-size:0.78em; font-weight:800;">outro PL</span>'
                     : '';
+                // "Como resolver?" so no PL aberto (os outros PLs vem do cache).
+                let celulaResolver = `<td style="${tdStyle}"></td>`;
+                let linhaSugestoes = '';
+                if (!d.entrePLs && resolverDeChoque && d.allocIds?.length) {
+                    const chave = `${normalizeTeacherNameForMatch(teacher)}|${d.discA}|${d.discB}`;
+                    chavesAtuais.add(chave);
+                    const idx = linhasDoAlerta.push({ chave, ids: d.allocIds }) - 1;
+                    const aberto = comoResolverAbertos.has(chave);
+                    celulaResolver = `<td style="${tdStyle}"><button type="button" class="btn-como-resolver" data-idx="${idx}" aria-expanded="${aberto}" style="background:#fff; color:#c0392b; border:none; border-radius:12px; padding:3px 10px; font-weight:700; font-size:0.85em; cursor:pointer;">${aberto ? 'Fechar' : 'Como resolver?'}</button></td>`;
+                    if (aberto) linhaSugestoes = htmlSugestoes(d.allocIds);
+                }
                 return `<tr>
                     <td style="${tdStyle}">${d.dia}</td>
                     <td style="${tdStyle}">${d.horario}</td>
                     <td style="${tdStyle}">${dataBR}</td>
                     <td style="${tdCompStyle}">${d.discA}</td>
                     <td style="${tdCompStyle}">${d.discB}${selo}</td>
-                </tr>`;
+                    ${celulaResolver}
+                </tr>${linhaSugestoes}`;
             }).join('');
 
             blocksHtml += `
@@ -328,6 +436,7 @@ export function updateGlobalConflictsUI() {
                             <th style="${thStyle}">A partir de</th>
                             <th style="${thStyle}">Componente A</th>
                             <th style="${thStyle}">Componente B</th>
+                            <th style="${thStyle}"></th>
                         </tr></thead>
                         <tbody>${rows}</tbody>
                     </table>
@@ -342,6 +451,7 @@ export function updateGlobalConflictsUI() {
                 <p style="margin: 0 0 4px 0; font-size: 0.92em;">Professor(es) alocado(s) em mais de uma disciplina no mesmo horário:</p>
                 ${blocksHtml}
                 <p style="margin: 12px 0 0 0; font-size: 0.8em; opacity: 0.85;"><i>Selecione o professor abaixo para visualizar a grade (o slot estará destacado em vermelho escuro).</i></p>
+                ${linhasDoAlerta.length ? '<p style="margin: 4px 0 0 0; font-size: 0.8em; opacity: 0.95;"><i><b>Como resolver?</b>: mostra o que muda só no seu curso e, quando a outra aula é de outro curso, com quem conversar. Nada é alterado sozinho.</i></p>' : ''}
                 ${temEntrePLs ? '<p style="margin: 4px 0 0 0; font-size: 0.8em; opacity: 0.95;"><i><b>Outro PL</b>: choque com um período letivo que se sobrepõe a este nas datas. Para ver os dois juntos, escolha o professor e clique em <b>Ano inteiro</b>.</i></p>' : ''}
             </div>
         `;
@@ -349,6 +459,51 @@ export function updateGlobalConflictsUI() {
     } else {
         warningDiv.style.display = 'none';
     }
+    // Choque que sumiu nao fica "aberto" para quando voltar.
+    [...comoResolverAbertos].forEach((chave) => { if (!chavesAtuais.has(chave)) comoResolverAbertos.delete(chave); });
+
+    if (!warningDiv.dataset.ouvinteResolver) {
+        warningDiv.dataset.ouvinteResolver = '1';
+        warningDiv.addEventListener('click', (e) => {
+            const botao = e.target.closest('.btn-como-resolver');
+            if (!botao) return;
+            const linha = linhasDoAlerta[Number(botao.dataset.idx)];
+            if (!linha) return;
+            if (comoResolverAbertos.has(linha.chave)) comoResolverAbertos.delete(linha.chave);
+            else comoResolverAbertos.add(linha.chave);
+            updateGlobalConflictsUI();
+        });
+    }
+}
+
+// ===== "Como resolver?" =====
+// O calculo fica no ui.js (usa o motor do salvar e do Trocar); aqui so a tela.
+let resolverDeChoque = null;          // ({ ids }) => [{ quem: 'voce' | 'outro', texto }]
+const comoResolverAbertos = new Set(); // linhas abertas: continuam abertas ao redesenhar
+let linhasDoAlerta = [];
+
+export function setResolverDeChoque(fn) {
+    resolverDeChoque = typeof fn === 'function' ? fn : null;
+}
+
+function escaparHtml(valor) {
+    return String(valor ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+function htmlSugestoes(ids) {
+    let linhas = [];
+    try {
+        linhas = resolverDeChoque({ ids }) || [];
+    } catch (error) {
+        console.warn('Como resolver: falha no calculo', error);
+        linhas = [{ quem: 'voce', texto: 'Nao foi possivel calcular agora. Tente de novo ou ajuste pelo Editar.' }];
+    }
+    if (!linhas.length) linhas = [{ quem: 'outro', texto: 'As duas aulas sao de outro curso: avise a coordenacao responsavel.' }];
+    const rotulo = { voce: 'Depende só de você', outro: 'Depende de outra coordenação' };
+    const itens = linhas.map((l) => `<li style="margin:3px 0;"><b style="color:${l.quem === 'voce' ? '#1e7e34' : '#a04000'};">${rotulo[l.quem] || ''}:</b> ${escaparHtml(l.texto)}</li>`).join('');
+    return `<tr><td colspan="6" style="background:#fff; color:#2d3436; padding:8px 12px; border:1px solid rgba(255,255,255,0.3); font-size:0.85em;">
+        <ul style="margin:0; padding-left:18px;">${itens}</ul>
+    </td></tr>`;
 }
 
 export function refreshTeacherConflictsUI() {

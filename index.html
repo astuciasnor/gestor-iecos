@@ -10,13 +10,13 @@
         // Vai para o aviso antes de carregar o programa. A agenda publica nao passa por aqui.
         if (/\.github\.io$/i.test(location.hostname)) location.replace('mudou.html');
     </script>
-    <link rel="stylesheet" href="css/style.css?v=202611101841">
+    <link rel="stylesheet" href="css/style.css?v=202611101941">
     <!-- Redesenho da aba Alocar Componentes (por partes); carrega depois do style.css -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
-    <link rel="stylesheet" href="css/alocar-componentes.css?v=202611101841">
-    <link rel="stylesheet" href="css/ajuda.css?v=202611101841">
+    <link rel="stylesheet" href="css/alocar-componentes.css?v=202611101941">
+    <link rel="stylesheet" href="css/ajuda.css?v=202611101941">
 
     <style>
         :root {
@@ -1316,9 +1316,10 @@
                                 <h3><span aria-hidden="true">⚠️</span> Choques de horário</h3>
                                 <ul class="aj-lista">
                                     <li>Só há choque quando coincidem <b>as datas</b>, <b>o dia da semana</b> e <b>o horário</b>.</li>
-                                    <li><b>Na turma</b>: o Cardume avisa ao salvar, antes de gravar.</li>
-                                    <li><b>De professor</b>: o alerta vermelho no topo lista quem está em dois lugares ao mesmo tempo, inclusive com <span class="aj-tag">outro PL</span> que corre nas mesmas datas.</li>
-                                    <li>Para resolver, mude a data ou o horário de uma das ofertas.</li>
+                                    <li><b>Ao salvar</b>: choque na turma ou de professor barra o salvamento e sugere um novo dia de início, quando há um que resolva.</li>
+                                    <li><b>Choque que aparece depois</b> (datas recalculadas, mudança de outro coordenador): o Cardume avisa na hora.</li>
+                                    <li><b>De professor</b>: o alerta vermelho no topo do Calendário Docente lista quem está em dois lugares ao mesmo tempo, inclusive com <span class="aj-tag">outro PL</span> que corre nas mesmas datas.</li>
+                                    <li>No alerta, <b>Como resolver?</b> mostra o que depende só de você (novo início ou troca de ordem) e, se a outra aula for de outro curso, com quem conversar. Nada muda sozinho.</li>
                                 </ul>
                             </article>
 
@@ -1361,6 +1362,7 @@
                                 <ul class="aj-lista">
                                     <li>Só aparecem quando existem: um selo vermelho no topo e a tabela de conflitos logo abaixo.</li>
                                     <li>No <b>Ano inteiro</b> entram também os choques entre PLs diferentes (ex.: PL2 e PL3 no mesmo mês).</li>
+                                    <li>Em cada choque do alerta, o botão <b>Como resolver?</b> sugere a saída mais simples.</li>
                                 </ul>
                             </article>
                         </div>
@@ -1447,7 +1449,7 @@
         </main>
     </div>
 
-    <script type="module" src="js/main.js?v=202611101841"></script>
+    <script type="module" src="js/main.js?v=202611101941"></script>
 </body>
 
 </html>

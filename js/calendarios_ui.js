@@ -1,10 +1,10 @@
-import { store } from './store.js?v=202611101841';
-import { getCalendarEvents } from './calendar.js?v=202611101841';
-import { buildTeacherExecutionSnapshot, buildCanonicalOfferProjection } from './execution_engine.js?v=202611101841';
-import { detectTeacherConflicts } from './conflicts.js?v=202611101841';
-import { getHorariosByTurno, normalizeTurnoKey, getTurnoLetter, mapSlotToTurno } from './turns.js?v=202611101841';
-import { vividHexColor } from './color_utils.js?v=202611101841';
-import { formatDateBR, timeToMinutes, shortDayName } from './date_utils_ui.js?v=202611101841';
+import { store } from './store.js?v=202611101941';
+import { getCalendarEvents } from './calendar.js?v=202611101941';
+import { buildTeacherExecutionSnapshot, buildCanonicalOfferProjection } from './execution_engine.js?v=202611101941';
+import { detectTeacherConflicts } from './conflicts.js?v=202611101941';
+import { getHorariosByTurno, normalizeTurnoKey, getTurnoLetter, mapSlotToTurno } from './turns.js?v=202611101941';
+import { vividHexColor } from './color_utils.js?v=202611101941';
+import { formatDateBR, timeToMinutes, shortDayName } from './date_utils_ui.js?v=202611101941';
 import {
     isFaixaAllocation,
     isScheduledRegularAllocation,
@@ -12,7 +12,7 @@ import {
     teacherNamesMatch,
     getDocenteShortLabel,
     calculateTeacherTotalCH
-} from './allocation_helpers.js?v=202611101841';
+} from './allocation_helpers.js?v=202611101941';
 import {
     normalizeTurnoOfertaKey,
     formatTurnoOfertaLabel,
@@ -22,7 +22,7 @@ import {
     buildHorariosForUI,
     getShiftChangeMeta,
     getCalendarShiftBadgeHTML
-} from './turno_helpers.js?v=202611101841';
+} from './turno_helpers.js?v=202611101941';
 import {
     getDisciplinaCHGlobal,
     getTurmaLabel,
@@ -30,11 +30,11 @@ import {
     getDisciplinaInfo,
     getCursoSiglaDaTurma,
     getPrintAcademicMetaLine
-} from './curso_turma_helpers.js?v=202611101841';
+} from './curso_turma_helpers.js?v=202611101941';
 import {
     getGanttTurnoConfigs,
     resolveTeacherShiftForSlot
-} from './turnos_docente.js?v=202611101841';
+} from './turnos_docente.js?v=202611101941';
 
 // Referencias DOM de nivel de modulo (espelham as de ui.js; modulo deferred, DOM pronto).
 const selViewDocente = document.getElementById('sel-view-docente');
@@ -236,34 +236,24 @@ function conflictPillHtml(total) {
 export function renderTeacherConflictRows(conflicts = []) {
     if (!Array.isArray(conflicts) || conflicts.length === 0) return '';
 
+    // Sem o antigo selo "IMPORTADO": o salvar barra o choque de qualquer
+    // componente (inclusive as da Insercao por Bloco), entao o selo ja nao
+    // significava "sobreposicao permitida".
     const rows = conflicts.map((conflict) => {
-        const imported = !!conflict.importado;
-        const rowStyle = imported ? ' style="background:#fff4d6;"' : '';
-        const badge = imported
-            ? ' <span style="display:inline-block; background:#e0a200; color:#3a2a00; font-weight:700; font-size:0.72rem; padding:1px 8px; border-radius:10px; margin-left:6px; vertical-align:middle;">IMPORTADO</span>'
-            : '';
         return `
-        <tr${rowStyle}>
+        <tr>
             <td style="padding:8px 10px; border-bottom:1px solid #dfe6e9;">${formatConflictDateRange(conflict.startDate, conflict.endDate)}</td>
             <td style="padding:8px 10px; border-bottom:1px solid #dfe6e9;">${conflict.shift || '-'}</td>
             <td style="padding:8px 10px; border-bottom:1px solid #dfe6e9;">${conflict.turmas.join(', ') || '-'}</td>
             <td style="padding:8px 10px; border-bottom:1px solid #dfe6e9;">${conflict.componentes.join(', ') || '-'}</td>
-            <td style="padding:8px 10px; border-bottom:1px solid #dfe6e9;">${conflict.description}${badge}</td>
+            <td style="padding:8px 10px; border-bottom:1px solid #dfe6e9;">${conflict.description}</td>
         </tr>
     `;
     }).join('');
 
-    const hasImported = conflicts.some((conflict) => conflict.importado);
-    const importedLegend = hasImported
-        ? `<div style="margin:0 0 10px 0; font-size:0.86rem; color:#7a5b00; background:#fff4d6; border:1px solid #f0d486; border-radius:6px; padding:8px 12px;">
-                <strong>IMPORTADO</strong>: sobreposicao permitida porque a disciplina foi carregada via importacao.
-           </div>`
-        : '';
-
     return `
         <div style="margin-bottom:18px;">
             <h4 style="margin:0 0 10px 0; color:var(--primary); text-transform:uppercase; letter-spacing:0.6px;">Tabela de Conflitos</h4>
-            ${importedLegend}
             <div style="overflow:auto; border:1px solid #dfe6e9; border-radius:8px; background:#fff;">
                 <table style="width:100%; border-collapse:collapse; min-width:760px;">
                     <thead>
