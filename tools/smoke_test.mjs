@@ -183,6 +183,8 @@ async function run() {
 
     await check('app abre', async () => {
       assert(await waitFor("document.querySelectorAll('#sel-curso option').length > 0", 15000), 'seletor de curso vazio');
+      // Espera a lista de periodos de verdade (a fonte do Google pode atrasar a abertura).
+      assert(await waitFor("document.querySelectorAll('#sel-periodo-letivo option').length > 1", 40000), 'periodos nao carregaram');
       await sleep(1000);
     });
 
