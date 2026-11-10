@@ -1021,6 +1021,12 @@
 #tab-weekly .weekly-faixas-table .col-faixa-date-start,
 #tab-weekly .weekly-faixas-table .col-faixa-date-end { width: 112px; }
 #tab-weekly .weekly-faixas-table .col-faixa-ch { width: 58px; }
+/* Inicio e Fim sempre da mesma largura: a tabela e "auto" e encolhia o Fim
+   quando ele mostrava "A definir" (texto mais curto que uma data). */
+#tab-weekly .weekly-faixas-table thead th:nth-child(2),
+#tab-weekly .weekly-faixas-table thead th:nth-child(3),
+#tab-weekly #faixas-lista > .faixa-item > td:nth-child(2),
+#tab-weekly #faixas-lista > .faixa-item > td:nth-child(3) { min-width: 116px; }
 #tab-weekly .weekly-faixas-table th,
 #tab-weekly .weekly-faixas-table td { padding-left: 12px; padding-right: 12px; }
 #tab-weekly .weekly-faixas-table .faixa-num { padding-right: 26px; }
