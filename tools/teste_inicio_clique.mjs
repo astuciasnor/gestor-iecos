@@ -137,8 +137,9 @@ try {
   await send('Emulation.setDeviceMetricsOverride', { width: 1500, height: 1000, deviceScaleFactor: 1, mobile: false });
   await send('Page.addScriptToEvaluateOnNewDocument', { source: seed });
   await send('Page.navigate', { url: `${baseUrl}/index.html?backend=local` });
-  await waitFor("document.querySelectorAll('#sel-curso option').length > 0", 15000);
-  await sleep(1200);
+  // Espera a lista de periodos de verdade (a fonte do Google pode atrasar a abertura).
+  await waitFor("document.querySelectorAll('#sel-periodo-letivo option').length > 1", 40000);
+  await sleep(800);
   await evaluate(`(async () => {
     const wait = (ms) => new Promise(r => setTimeout(r, ms));
     const pick = async (id, pred) => { const s = document.getElementById(id); const o = [...s.options].find(pred); s.value = o.value; s.dispatchEvent(new Event('change', { bubbles: true })); await wait(700); };
