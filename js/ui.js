@@ -1,29 +1,29 @@
-import { store } from './store.js?v=202611102224';
-import { getTurnoLetter, mapSlotToTurno, turnoDaTurmaInclui } from './turns.js?v=202611102224';
-import { normalizePeriodo as normalizePeriodoLetivoCode } from './plan_storage.js?v=202611102224';
-import { getCalendarEvents } from './calendar.js?v=202611102224';
-import { isDateOverlap } from './utils.js?v=202611102224';
-import { weeklyState } from './weekly_state.js?v=202611102224';
-import { findPendentesCobertas, isPendenteJaAlocada } from './pendentes.mjs?v=202611102224';
-import { classifySwap } from './troca_ordem.mjs?v=202611102224';
-import { closeFaixaEnds, isPauseEnd, listFaixaPauses } from './pausa_faixas.mjs?v=202611102224';
-import { numeroDaSubturma, isTurmaInteira, proximaSubturma, codigoT01Como, saoSubturmasDiferentes } from './subturmas.mjs?v=202611102224';
-import { abrirMiniCalendario, fecharMiniCalendario, miniCalendarioAberto } from './mini_calendario.mjs?v=202611102224';
-import { buildCanonicalOfferProjection } from './execution_engine.js?v=202611102224';
+import { store } from './store.js?v=202611102226';
+import { getTurnoLetter, mapSlotToTurno, turnoDaTurmaInclui } from './turns.js?v=202611102226';
+import { normalizePeriodo as normalizePeriodoLetivoCode } from './plan_storage.js?v=202611102226';
+import { getCalendarEvents } from './calendar.js?v=202611102226';
+import { isDateOverlap } from './utils.js?v=202611102226';
+import { weeklyState } from './weekly_state.js?v=202611102226';
+import { findPendentesCobertas, isPendenteJaAlocada } from './pendentes.mjs?v=202611102226';
+import { classifySwap } from './troca_ordem.mjs?v=202611102226';
+import { closeFaixaEnds, isPauseEnd, listFaixaPauses } from './pausa_faixas.mjs?v=202611102226';
+import { numeroDaSubturma, isTurmaInteira, proximaSubturma, codigoT01Como, saoSubturmasDiferentes } from './subturmas.mjs?v=202611102226';
+import { abrirMiniCalendario, fecharMiniCalendario, miniCalendarioAberto } from './mini_calendario.mjs?v=202611102226';
+import { buildCanonicalOfferProjection } from './execution_engine.js?v=202611102226';
 import {
     buildSigaaMetadataPayload,
     validateSigaaMetadataPayload,
     getSigaaCode,
     buildScopedSigaaAllocationFromOfferFaixa
-} from './sigaa_metadata.js?v=202611102224';
-import { parseBackupDataFile, extractImportPlanMeta } from './serialization.js?v=202611102224';
+} from './sigaa_metadata.js?v=202611102226';
+import { parseBackupDataFile, extractImportPlanMeta } from './serialization.js?v=202611102226';
 import {
     showToastWarning,
     showPersistentStatusMessage,
     copyTextToClipboard,
     flashButtonCopyState,
     setupCopyActionButtons
-} from './ui_feedback.js?v=202611102224';
+} from './ui_feedback.js?v=202611102226';
 import {
     normalizeHexColor,
     adjustHexColor,
@@ -32,7 +32,7 @@ import {
     tonsDaCor,
     aplicarTonsBloco,
     PALETA_CORES
-} from './color_utils.js?v=202611102224';
+} from './color_utils.js?v=202611102226';
 import {
     isFaixaAllocation,
     isPriorityRegularAllocation,
@@ -41,8 +41,9 @@ import {
     normalizeTeacherNameForMatch,
     getDocenteShortLabel,
     getAllocationTeachersForConflict
-} from './allocation_helpers.js?v=202611102224';
-import { setupSeletorCor } from './seletor_cor.js?v=202611102224';
+} from './allocation_helpers.js?v=202611102226';
+import { setupSeletorCor } from './seletor_cor.js?v=202611102226';
+import { ligarSugestoesDocente, filtrarDocentes } from './sugestoes_docente.mjs?v=202611102226';
 import {
     VINCULOS_DOCENTE_NOVO,
     OUTRA_UNIDADE,
@@ -51,11 +52,10 @@ import {
     findSimilarNames,
     problemaNoNome,
     limparEspacos,
-    acharNomeConhecido,
-    semAcento
-} from './docente_nomes.mjs?v=202611102224';
-import { getSessionEmail, getPerfil, fetchAllocationsForPlans } from './sync_remoto.js?v=202611102224';
-import { resolveBackendMode } from './backend_config.js?v=202611102224';
+    acharNomeConhecido
+} from './docente_nomes.mjs?v=202611102226';
+import { getSessionEmail, getPerfil, fetchAllocationsForPlans } from './sync_remoto.js?v=202611102226';
+import { resolveBackendMode } from './backend_config.js?v=202611102226';
 import {
     normalizeConflictSlotLabel,
     getAvailableTurnoOfertaOptions,
@@ -65,7 +65,7 @@ import {
     buildHorariosForUI,
     getShiftChangeMeta,
     getNativeTurnoValueForAllocation
-} from './turno_helpers.js?v=202611102224';
+} from './turno_helpers.js?v=202611102226';
 import {
     getDisciplinaCHGlobal,
     derivarBloco,
@@ -75,7 +75,7 @@ import {
     getDisciplinaInfo,
     getCursoSiglaDaTurma,
     getPrintAcademicMetaLine
-} from './curso_turma_helpers.js?v=202611102224';
+} from './curso_turma_helpers.js?v=202611102226';
 import {
     renderMonthlyCalendar,
     renderTeacherCalendar,
@@ -83,13 +83,13 @@ import {
     clearTeacherRangeCache,
     setTeacherPeriod,
     getTeacherPeriod
-} from './calendarios_ui.js?v=202611102224';
+} from './calendarios_ui.js?v=202611102226';
 import {
     refreshTeacherConflictsUI,
     setCrossPlanLoader,
     setResolverDeChoque,
     acharChoqueComOutroPL
-} from './conflitos_ui.js?v=202611102224';
+} from './conflitos_ui.js?v=202611102226';
 import {
     shouldIgnoreTurmaEventForCandidate,
     normalizeDrawnSlotsByDay,
@@ -103,7 +103,7 @@ import {
     resolveEditableFaixasFromStoredExecution,
     alignFaixasToExecutionEnd,
     buildFinalAdjustmentFaixaSuggestion
-} from './faixa_utils.js?v=202611102224';
+} from './faixa_utils.js?v=202611102226';
 import {
     timeToMinutes,
     shiftISODate,
@@ -117,14 +117,14 @@ import {
     isDateInsideRange,
     formatDateBRShortYear,
     formatDateBR
-} from './date_utils_ui.js?v=202611102224';
+} from './date_utils_ui.js?v=202611102226';
 import {
     initializeWeeklyScheduleForTurma,
     reconcileTurmaSelectionAfterPLChange,
     resetWeeklyViewOnTurmaChange,
     resolveActiveAcademicPeriod,
     slotLabelsOverlap
-} from './academic_rules.mjs?v=202611102224';
+} from './academic_rules.mjs?v=202611102226';
 
 const gridContainer = document.getElementById('weekly-grid');
 const selCurso = document.getElementById('sel-curso');
@@ -419,11 +419,9 @@ function setupTeacherFilterControls() {
     };
     const updateNewTeacherHint = () => {
         const typedName = String(selViewDocente?.value || '').trim();
-        const normalizedName = typedName.toLocaleLowerCase('pt-BR');
-        const existingNames = Array.from(document.getElementById('list-view-docentes')?.options || [])
-            .map((option) => String(option.value || '').trim().toLocaleLowerCase('pt-BR'));
-        const hasMatch = normalizedName && existingNames.some((name) => name.includes(normalizedName));
-        if (newTeacherHint) newTeacherHint.hidden = !normalizedName || hasMatch;
+        // Com ou sem acento, como a lista de sugestoes.
+        const hasMatch = typedName && filtrarDocentes(typedName, getKnownDocenteNames(), 1).length > 0;
+        if (newTeacherHint) newTeacherHint.hidden = !typedName || hasMatch;
     };
 
     btnRefresh?.addEventListener('click', () => {
@@ -610,7 +608,7 @@ function addTeacherRow(nome = '', ch = '') {
     div.className = 'teacher-row';
 
     div.innerHTML = `
-        <input type="text" class="inp-multi-name" list="list-docentes" placeholder="Nome" value="${nome}">
+        <input type="text" class="inp-multi-name" placeholder="Nome" autocomplete="off" value="${nome}">
         <input type="number" class="inp-multi-ch" placeholder="CH" min="1" value="${ch}">
         <button type="button" class="btn-remove-row" title="Remover">×</button>
     `;
@@ -6013,6 +6011,12 @@ function coletarCadastrosDocentes(nomes = [], idsAntigos = []) {
 }
 
 function setupAvisoDocenteNovo() {
+    // Sugestoes de docente com ou sem acento nos tres campos (Docente, Multiplos
+    // e a busca do Calendario Docente).
+    ligarSugestoesDocente({
+        seletor: '#inp-docente, .inp-multi-name, #sel-view-docente',
+        getNomes: getKnownDocenteNames
+    });
     inputConfig.docente?.addEventListener('input', () => refreshAvisoDocenteNovo('ocultar'));
     inputConfig.docente?.addEventListener('change', () => {
         ajustarNomeDigitado(inputConfig.docente);
@@ -6039,12 +6043,9 @@ function populateDocentes() {
     if (key === lastDocentesListKey) return;
     lastDocentesListKey = key;
 
-    // Rotulo sem acento quando o nome tem acento: quem digita "Zelia" tambem
-    // ve "Zélia" nas sugestoes (o navegador procura no valor e no rotulo).
-    const opcao = (nome) => {
-        const rotulo = semAcento(nome);
-        return rotulo !== nome ? new Option(rotulo, nome) : new Option(nome, nome);
-    };
+    // As sugestoes na tela sao do Cardume (sugestoes_docente.mjs); estas listas
+    // so guardam os nomes conhecidos.
+    const opcao = (nome) => new Option(nome, nome);
     if (listDocentes) {
         listDocentes.innerHTML = '';
         nomes.forEach((nome) => listDocentes.appendChild(opcao(nome)));

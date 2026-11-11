@@ -10,13 +10,13 @@
         // Vai para o aviso antes de carregar o programa. A agenda publica nao passa por aqui.
         if (/\.github\.io$/i.test(location.hostname)) location.replace('mudou.html');
     </script>
-    <link rel="stylesheet" href="css/style.css?v=202611102224">
+    <link rel="stylesheet" href="css/style.css?v=202611102226">
     <!-- Redesenho da aba Alocar Componentes (por partes); carrega depois do style.css -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
-    <link rel="stylesheet" href="css/alocar-componentes.css?v=202611102224">
-    <link rel="stylesheet" href="css/ajuda.css?v=202611102224">
+    <link rel="stylesheet" href="css/alocar-componentes.css?v=202611102226">
+    <link rel="stylesheet" href="css/ajuda.css?v=202611102226">
 
     <style>
         :root {
@@ -700,7 +700,7 @@
                     </div>
 
                     <div id="container-single-docente">
-                        <input type="text" id="inp-docente" list="list-docentes" placeholder="Busque o docente...">
+                        <input type="text" id="inp-docente" placeholder="Busque o docente..." autocomplete="off">
                     </div>
 
                     <div id="container-multi-docente" class="hidden">
@@ -1037,7 +1037,7 @@
                             <label class="docente-filter-label" for="sel-view-docente">Selecione o Docente para Visualizar sua Agenda:</label>
                             <div class="docente-search-control">
                                 <span class="docente-search-icon" aria-hidden="true">⌕</span>
-                                <input type="text" id="sel-view-docente" list="list-view-docentes"
+                                <input type="text" id="sel-view-docente"
                                     placeholder="Busque o professor..." autocomplete="off">
                                 <button id="btn-clear-view-docente" class="docente-icon-btn" type="button" title="Limpar docente" aria-label="Limpar docente" hidden>×</button>
                                 <div id="docente-new-hint" class="docente-new-hint" role="status" aria-live="polite" hidden>
@@ -1466,7 +1466,7 @@
         </main>
     </div>
 
-    <script type="module" src="js/main.js?v=202611102224"></script>
+    <script type="module" src="js/main.js?v=202611102226"></script>
 </body>
 
 </html>
