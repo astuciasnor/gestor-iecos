@@ -1,8 +1,8 @@
 // Tela de acesso e barra de status da sincronizacao.
 // Modo local: senha unica, como antes. Modos supabase e ufpa: e-mail e senha de
 // cada coordenador, e as alocacoes passam a ser compartilhadas pelo servidor.
-import { resolveBackendMode } from './backend_config.js?v=202611102233';
-import * as remoto from './sync_remoto.js?v=202611102233';
+import { resolveBackendMode } from './backend_config.js?v=202611102252';
+import * as remoto from './sync_remoto.js?v=202611102252';
 
 const LOCAL_PASSWORD = 'ufpa2026';
 
@@ -159,7 +159,7 @@ async function iniciarOnline({ onRemoteChange, showToast }) {
 // coordenadores esperando conferencia (a lista fica em "Usuarios e backup").
 async function avisarDocentesNovos(showToast) {
   try {
-    const { buscarDocentesParaConferir } = await import('./admin_ui.js?v=202611102233');
+    const { buscarDocentesParaConferir } = await import('./admin_ui.js?v=202611102252');
     const total = (await buscarDocentesParaConferir()).length;
     marcarDocentesNovos(total);
     if (total) {
@@ -280,7 +280,7 @@ function montarBarraStatus(perfil, user, showToast) {
 
   if (admin) {
     el('btn-sync-admin').onclick = async () => {
-      const { abrirAdministracao } = await import('./admin_ui.js?v=202611102233');
+      const { abrirAdministracao } = await import('./admin_ui.js?v=202611102252');
       abrirAdministracao({ tools: admin, meuId: user?.id || '', showToast, aoContarDocentes: marcarDocentesNovos });
     };
   }

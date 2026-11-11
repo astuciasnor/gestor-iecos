@@ -1,9 +1,9 @@
-import { store, normalizeLoadedAllocation } from './store.js?v=202611102233';
-import { getTurnoLetter } from './turns.js?v=202611102233';
-import { getCalendarEvents } from './calendar.js?v=202611102233';
-import { resolveActiveAcademicPeriod } from './academic_rules.mjs?v=202611102233';
-import { buildMonthMarkers, summarizeTeacherPeriod } from './resumo_docente.mjs?v=202611102233';
-import { resolveBackendMode, UFPA_API_URL } from './backend_config.js?v=202611102233';
+import { store, normalizeLoadedAllocation } from './store.js?v=202611102252';
+import { getTurnoLetter } from './turns.js?v=202611102252';
+import { getCalendarEvents } from './calendar.js?v=202611102252';
+import { resolveActiveAcademicPeriod } from './academic_rules.mjs?v=202611102252';
+import { buildMonthMarkers, summarizeTeacherPeriod } from './resumo_docente.mjs?v=202611102252';
+import { resolveBackendMode, UFPA_API_URL } from './backend_config.js?v=202611102252';
 
 const collator = new Intl.Collator('pt-BR', { sensitivity: 'base' });
 const PUBLIC_ASSET_VERSION = '20261028a';
@@ -1124,10 +1124,17 @@ function positionSuggestionList() {
         : Math.max(margin, inputRect.top - maxHeight - gap);
 
     els.listaSugestoes.classList.add('is-floating');
-    els.listaSugestoes.style.left = `${Math.round(left)}px`;
-    els.listaSugestoes.style.top = `${Math.round(top)}px`;
     els.listaSugestoes.style.width = `${Math.round(width)}px`;
     els.listaSugestoes.style.maxHeight = `${Math.round(maxHeight)}px`;
+    // position:fixed nem sempre e relativo a tela: um ancestral com
+    // backdrop-filter/transform (ex.: .pub-panel) vira a referencia e a lista
+    // caia ~200px abaixo do campo (e pulava a cada rolagem). Mede a origem
+    // real e compensa.
+    els.listaSugestoes.style.left = '0px';
+    els.listaSugestoes.style.top = '0px';
+    const origem = els.listaSugestoes.getBoundingClientRect();
+    els.listaSugestoes.style.left = `${Math.round(left - origem.left)}px`;
+    els.listaSugestoes.style.top = `${Math.round(top - origem.top)}px`;
 }
 
 function resetSuggestionListLayout() {

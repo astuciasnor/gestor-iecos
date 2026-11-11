@@ -3,7 +3,7 @@
 // "Láz" acha "Lazaro". Mostra uma linha por professor, com o nome da lista.
 // filtrarDocentes e pura (testada em tests/sugestoes_docente.test.mjs); a parte
 // de tela so roda quando ligarSugestoesDocente e chamada.
-import { normalizeTeacherNameForMatch } from './docente_nomes.mjs?v=202611102233';
+import { normalizeTeacherNameForMatch } from './docente_nomes.mjs?v=202611102252';
 
 // Nomes que tem TODAS as partes digitadas, em qualquer ordem ("marcos laz").
 // Primeiro os que comecam pelo que foi digitado, depois os que tem uma palavra
