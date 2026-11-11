@@ -38,8 +38,15 @@ const confere = (rotulo, obtido, esperado) => {
   console.log(`${ok ? 'OK   ' : 'FALHA'} ${rotulo}: ${obtido}${ok ? '' : `  (esperado ${esperado})`}`);
 };
 const celula = (dia, hora) => `[...document.querySelectorAll('#weekly-grid .slot[data-dia="${dia}"]')].find(x => (x.dataset.horario || '').startsWith('${hora}'))`;
+// Clique de mouse de verdade (Input do navegador), com Shift apertado se pedido.
 const clicar = async (dia, hora, shift = false) => {
-  await evaluate(`(() => { const c = ${celula(dia, hora)}; c.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, button: 0, shiftKey: ${shift} })); document.dispatchEvent(new MouseEvent('mouseup', { bubbles: true })); })()`);
+  const pos = JSON.parse(await evaluate(`(() => { const c = ${celula(dia, hora)}; c.scrollIntoView({ block: 'center' }); const r = c.getBoundingClientRect(); return JSON.stringify({ x: r.left + r.width / 2, y: r.top + r.height / 2 }); })()`));
+  const modifiers = shift ? 8 : 0;
+  if (shift) await send('Input.dispatchKeyEvent', { type: 'rawKeyDown', key: 'Shift', code: 'ShiftLeft', windowsVirtualKeyCode: 16, modifiers });
+  await send('Input.dispatchMouseEvent', { type: 'mouseMoved', x: pos.x, y: pos.y, modifiers });
+  await send('Input.dispatchMouseEvent', { type: 'mousePressed', x: pos.x, y: pos.y, button: 'left', clickCount: 1, modifiers });
+  await send('Input.dispatchMouseEvent', { type: 'mouseReleased', x: pos.x, y: pos.y, button: 'left', clickCount: 1, modifiers });
+  if (shift) await send('Input.dispatchKeyEvent', { type: 'keyUp', key: 'Shift', code: 'ShiftLeft', windowsVirtualKeyCode: 16 });
   await sleep(600);
 };
 const marcadas = () => evaluate("[...document.querySelectorAll('#weekly-grid .slot.selected-slot')].map(c => c.dataset.dia + '@' + c.dataset.horario.slice(0, 5)).sort().join(' ')");
