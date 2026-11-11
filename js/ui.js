@@ -1,29 +1,29 @@
-import { store } from './store.js?v=202611102335';
-import { getTurnoLetter, mapSlotToTurno, turnoDaTurmaInclui } from './turns.js?v=202611102335';
-import { normalizePeriodo as normalizePeriodoLetivoCode } from './plan_storage.js?v=202611102335';
-import { getCalendarEvents } from './calendar.js?v=202611102335';
-import { isDateOverlap } from './utils.js?v=202611102335';
-import { weeklyState } from './weekly_state.js?v=202611102335';
-import { findPendentesCobertas, isPendenteJaAlocada } from './pendentes.mjs?v=202611102335';
-import { classifySwap } from './troca_ordem.mjs?v=202611102335';
-import { closeFaixaEnds, isPauseEnd, listFaixaPauses } from './pausa_faixas.mjs?v=202611102335';
-import { numeroDaSubturma, isTurmaInteira, proximaSubturma, codigoT01Como, saoSubturmasDiferentes } from './subturmas.mjs?v=202611102335';
-import { abrirMiniCalendario, fecharMiniCalendario, miniCalendarioAberto } from './mini_calendario.mjs?v=202611102335';
-import { buildCanonicalOfferProjection } from './execution_engine.js?v=202611102335';
+import { store } from './store.js?v=202611102339';
+import { getTurnoLetter, mapSlotToTurno, turnoDaTurmaInclui } from './turns.js?v=202611102339';
+import { normalizePeriodo as normalizePeriodoLetivoCode } from './plan_storage.js?v=202611102339';
+import { getCalendarEvents } from './calendar.js?v=202611102339';
+import { isDateOverlap } from './utils.js?v=202611102339';
+import { weeklyState } from './weekly_state.js?v=202611102339';
+import { findPendentesCobertas, isPendenteJaAlocada } from './pendentes.mjs?v=202611102339';
+import { classifySwap } from './troca_ordem.mjs?v=202611102339';
+import { closeFaixaEnds, isPauseEnd, listFaixaPauses } from './pausa_faixas.mjs?v=202611102339';
+import { numeroDaSubturma, isTurmaInteira, proximaSubturma, codigoT01Como, saoSubturmasDiferentes } from './subturmas.mjs?v=202611102339';
+import { abrirMiniCalendario, fecharMiniCalendario, miniCalendarioAberto } from './mini_calendario.mjs?v=202611102339';
+import { buildCanonicalOfferProjection } from './execution_engine.js?v=202611102339';
 import {
     buildSigaaMetadataPayload,
     validateSigaaMetadataPayload,
     getSigaaCode,
     buildScopedSigaaAllocationFromOfferFaixa
-} from './sigaa_metadata.js?v=202611102335';
-import { parseBackupDataFile, extractImportPlanMeta } from './serialization.js?v=202611102335';
+} from './sigaa_metadata.js?v=202611102339';
+import { parseBackupDataFile, extractImportPlanMeta } from './serialization.js?v=202611102339';
 import {
     showToastWarning,
     showPersistentStatusMessage,
     copyTextToClipboard,
     flashButtonCopyState,
     setupCopyActionButtons
-} from './ui_feedback.js?v=202611102335';
+} from './ui_feedback.js?v=202611102339';
 import {
     normalizeHexColor,
     adjustHexColor,
@@ -32,7 +32,7 @@ import {
     tonsDaCor,
     aplicarTonsBloco,
     PALETA_CORES
-} from './color_utils.js?v=202611102335';
+} from './color_utils.js?v=202611102339';
 import {
     isFaixaAllocation,
     isPriorityRegularAllocation,
@@ -41,9 +41,9 @@ import {
     normalizeTeacherNameForMatch,
     getDocenteShortLabel,
     getAllocationTeachersForConflict
-} from './allocation_helpers.js?v=202611102335';
-import { setupSeletorCor } from './seletor_cor.js?v=202611102335';
-import { ligarSugestoesDocente } from './sugestoes_docente.mjs?v=202611102335';
+} from './allocation_helpers.js?v=202611102339';
+import { setupSeletorCor } from './seletor_cor.js?v=202611102339';
+import { ligarSugestoesDocente } from './sugestoes_docente.mjs?v=202611102339';
 import {
     VINCULOS_DOCENTE_NOVO,
     OUTRA_UNIDADE,
@@ -55,9 +55,9 @@ import {
     acharNomeConhecido,
     filtrarDocentes,
     umNomePorPessoa
-} from './docente_nomes.mjs?v=202611102335';
-import { getSessionEmail, getPerfil, fetchAllocationsForPlans } from './sync_remoto.js?v=202611102335';
-import { resolveBackendMode } from './backend_config.js?v=202611102335';
+} from './docente_nomes.mjs?v=202611102339';
+import { getSessionEmail, getPerfil, fetchAllocationsForPlans } from './sync_remoto.js?v=202611102339';
+import { resolveBackendMode } from './backend_config.js?v=202611102339';
 import {
     normalizeConflictSlotLabel,
     getAvailableTurnoOfertaOptions,
@@ -67,7 +67,7 @@ import {
     buildHorariosForUI,
     getShiftChangeMeta,
     getNativeTurnoValueForAllocation
-} from './turno_helpers.js?v=202611102335';
+} from './turno_helpers.js?v=202611102339';
 import {
     getDisciplinaCHGlobal,
     derivarBloco,
@@ -77,7 +77,7 @@ import {
     getDisciplinaInfo,
     getCursoSiglaDaTurma,
     getPrintAcademicMetaLine
-} from './curso_turma_helpers.js?v=202611102335';
+} from './curso_turma_helpers.js?v=202611102339';
 import {
     renderMonthlyCalendar,
     renderTeacherCalendar,
@@ -85,13 +85,13 @@ import {
     clearTeacherRangeCache,
     setTeacherPeriod,
     getTeacherPeriod
-} from './calendarios_ui.js?v=202611102335';
+} from './calendarios_ui.js?v=202611102339';
 import {
     refreshTeacherConflictsUI,
     setCrossPlanLoader,
     setResolverDeChoque,
     acharChoqueComOutroPL
-} from './conflitos_ui.js?v=202611102335';
+} from './conflitos_ui.js?v=202611102339';
 import {
     shouldIgnoreTurmaEventForCandidate,
     normalizeDrawnSlotsByDay,
@@ -105,7 +105,7 @@ import {
     resolveEditableFaixasFromStoredExecution,
     alignFaixasToExecutionEnd,
     buildFinalAdjustmentFaixaSuggestion
-} from './faixa_utils.js?v=202611102335';
+} from './faixa_utils.js?v=202611102339';
 import {
     timeToMinutes,
     shiftISODate,
@@ -119,14 +119,14 @@ import {
     isDateInsideRange,
     formatDateBRShortYear,
     formatDateBR
-} from './date_utils_ui.js?v=202611102335';
+} from './date_utils_ui.js?v=202611102339';
 import {
     initializeWeeklyScheduleForTurma,
     reconcileTurmaSelectionAfterPLChange,
     resetWeeklyViewOnTurmaChange,
     resolveActiveAcademicPeriod,
     slotLabelsOverlap
-} from './academic_rules.mjs?v=202611102335';
+} from './academic_rules.mjs?v=202611102339';
 
 const gridContainer = document.getElementById('weekly-grid');
 const selCurso = document.getElementById('sel-curso');

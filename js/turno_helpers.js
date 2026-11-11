@@ -1,5 +1,5 @@
-import { store } from './store.js?v=202611102335';
-import { normalizeTurnoKey, getTurnoLetter, mapSlotToTurno, turnoDaTurmaInclui } from './turns.js?v=202611102335';
+import { store } from './store.js?v=202611102339';
+import { normalizeTurnoKey, getTurnoLetter, mapSlotToTurno, turnoDaTurmaInclui } from './turns.js?v=202611102339';
 
 export function normalizeConflictSlotLabel(value) {
     return String(value || '')
