@@ -109,7 +109,7 @@ async function main() {
     await sleep(1200);
 
     // 6: semana em edicao e botoes de faixa (semana anterior/proxima viraram setas na grade)
-    await recortar('passo-6', ['#weekly-week-nav .cd-rotulo', '#btn-faixa-next']);
+    await recortar('passo-6', ['#btn-faixa-prev', '#btn-faixa-next']);
     // 7: Faixa 1, a linha de pausa e a Faixa 2
     const temPausa = await evaluate("!document.getElementById('faixa-pausa-1').classList.contains('hidden')");
     if (!temPausa) console.log('aviso: a linha de pausa nao apareceu; o passo 7 mostra so as faixas');

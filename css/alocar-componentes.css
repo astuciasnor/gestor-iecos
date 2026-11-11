@@ -1236,3 +1236,81 @@
 #tab-weekly .cd-contexto .weekly-status-acao:hover { background: var(--cd-primaria-escura); }
 #tab-weekly .cd-contexto .weekly-status-acao:focus-visible { outline: 3px solid var(--cd-foco); outline-offset: 2px; }
 #tab-weekly .cd-contexto .weekly-status-acao.hidden { display: none; }
+
+/* ==========================================================================
+   Painel lateral sem "Semana em edicao" (10/11/2026): a semana ja aparece nas
+   datas do cabecalho da grade. O painel fica mais estreito, com a mesma altura
+   do cartao das faixas, e os botoes crescem para ocupar a altura.
+   O #weekly-week-label continua no HTML (o JS e os testes leem o texto).
+   ========================================================================== */
+#tab-weekly .weekly-week-nav .cd-rotulo,
+#tab-weekly .weekly-week-nav .weekly-week-label { display: none; }
+
+@media (min-width: 1281px) {
+    #tab-weekly .weekly-faixas-stack { grid-template-columns: minmax(0, 1fr) minmax(188px, 208px); }
+    #tab-weekly .weekly-week-nav,
+    #tab-weekly .weekly-faixas-stack .weekly-week-nav {
+        display: flex;
+        flex-direction: column;
+        padding: 12px;
+    }
+    #tab-weekly .weekly-week-actions,
+    #tab-weekly .weekly-faixas-stack .weekly-week-actions {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+    #tab-weekly .btn-week-nav { flex: 1 1 0; height: auto; min-height: 44px; }
+    #tab-weekly .cd-divisoria { flex: 0 0 1px; margin: 2px 4px; }
+}
+@media (min-width: 1600px) {
+    #tab-weekly .weekly-faixas-stack { grid-template-columns: minmax(0, 1fr) minmax(208px, 232px); }
+}
+
+/* Faixa anterior / Proxima faixa: azul suave das faixas */
+#tab-weekly .btn-week-nav.btn-week-faixa {
+    background: linear-gradient(180deg, #F3F7FF 0%, #E6EEFD 100%);
+    border-color: #C5D4FB;
+    color: var(--cd-faixa2-texto);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .8), 0 1px 2px rgba(30, 64, 175, .06);
+}
+#tab-weekly .btn-week-nav.btn-week-faixa:hover {
+    background: linear-gradient(180deg, #E9F0FF 0%, #DAE5FC 100%);
+    border-color: #A9BFF7;
+}
+
+/* Desfazer: ambar suave (so ativo logo depois de salvar) */
+#tab-weekly .btn-week-nav.btn-week-undo {
+    background: linear-gradient(180deg, #FFF9EC 0%, #FDEFD2 100%);
+    border-color: #F0C878;
+    color: #92400E;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .8), 0 1px 2px rgba(146, 64, 14, .06);
+}
+#tab-weekly .btn-week-nav.btn-week-undo:hover {
+    background: linear-gradient(180deg, #FFF3D9 0%, #FBE5B8 100%);
+}
+
+/* Desativados: um tom leve da propria cor, sem parecer quebrado */
+#tab-weekly .btn-week-nav.btn-week-faixa:disabled {
+    background: #F5F8FE;
+    border-color: #E1E8F8;
+    color: #9AA8C7;
+    box-shadow: none;
+    opacity: 1;
+}
+#tab-weekly .btn-week-nav.btn-week-undo:disabled {
+    background: #FDFBF6;
+    border-color: #F1E8D6;
+    color: #B8A585;
+    box-shadow: none;
+    opacity: 1;
+}
+
+/* Datas do cabecalho da grade em destaque: sao elas que mostram a semana */
+#tab-weekly .week-day-header .week-day-date {
+    font-size: 13px;
+    font-weight: 700;
+    color: #0F4C47;
+}
+#tab-weekly .week-day-header.week-day-holiday .week-day-date { color: #7f8c8d; font-weight: 600; }
