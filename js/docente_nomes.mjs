@@ -23,6 +23,27 @@ export function normalizeTeacherNameForMatch(value) {
         .trim();
 }
 
+// Texto sem acentos, com as maiusculas de sempre ("Zélia" -> "Zelia"). Rotulo
+// das sugestoes: assim quem digita sem acento tambem acha o nome.
+export function semAcento(texto) {
+    return String(texto || '').normalize('NFD').replace(/[̀-ͯ]/g, '');
+}
+
+// Nome da lista para o que foi digitado, ignorando acentos e maiusculas
+// ("zelia maria pimental nunes" -> "Zélia Maria Pimental Nunes"). Com parcial,
+// um pedaco do nome (3+ letras) vale se so um docente o tiver ("fabio").
+// Sem um nome unico, devolve null (o texto fica como foi digitado).
+export function acharNomeConhecido(digitado, conhecidos = [], { parcial = false } = {}) {
+    const chave = normalizeTeacherNameForMatch(digitado);
+    if (!chave) return null;
+    const lista = (Array.isArray(conhecidos) ? conhecidos : []).filter(Boolean);
+    const exato = lista.find((nome) => normalizeTeacherNameForMatch(nome) === chave);
+    if (exato) return exato;
+    if (!parcial || chave.length < 3) return null;
+    const achados = lista.filter((nome) => normalizeTeacherNameForMatch(nome).includes(chave));
+    return achados.length === 1 ? achados[0] : null;
+}
+
 export function limparEspacos(value) {
     return String(value || '').replace(/\s+/g, ' ').trim();
 }

@@ -5,7 +5,8 @@ import {
   isTurmaInteira,
   codigoDaSubturma,
   proximaSubturma,
-  codigoT01Como
+  codigoT01Como,
+  saoSubturmasDiferentes
 } from '../js/subturmas.mjs';
 
 test('numero da subturma em varios formatos', () => {
@@ -55,4 +56,13 @@ test('T01 no mesmo formato da subturma salva', () => {
   assert.equal(codigoT01Como('BL1_T02'), 'BL1_T01');
   assert.equal(codigoT01Como('T02'), 'T01');
   assert.equal(codigoT01Como('T2'), 'T01');
+});
+
+test('subturmas diferentes: so T01 x T02; turma inteira nunca', () => {
+  assert.equal(saoSubturmasDiferentes('T01', 'T02'), true);
+  assert.equal(saoSubturmasDiferentes('BL1_T02', 'T02'), false);
+  assert.equal(saoSubturmasDiferentes('T2', 'T02'), false);
+  assert.equal(saoSubturmasDiferentes('BL9', 'T02'), false);
+  assert.equal(saoSubturmasDiferentes('', 'T01'), false);
+  assert.equal(saoSubturmasDiferentes(null, null), false);
 });

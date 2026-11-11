@@ -1,29 +1,29 @@
-import { store } from './store.js?v=202611102152';
-import { getTurnoLetter, mapSlotToTurno, turnoDaTurmaInclui } from './turns.js?v=202611102152';
-import { normalizePeriodo as normalizePeriodoLetivoCode } from './plan_storage.js?v=202611102152';
-import { getCalendarEvents } from './calendar.js?v=202611102152';
-import { isDateOverlap } from './utils.js?v=202611102152';
-import { weeklyState } from './weekly_state.js?v=202611102152';
-import { findPendentesCobertas, isPendenteJaAlocada } from './pendentes.mjs?v=202611102152';
-import { classifySwap } from './troca_ordem.mjs?v=202611102152';
-import { closeFaixaEnds, isPauseEnd, listFaixaPauses } from './pausa_faixas.mjs?v=202611102152';
-import { numeroDaSubturma, isTurmaInteira, proximaSubturma, codigoT01Como } from './subturmas.mjs?v=202611102152';
-import { abrirMiniCalendario, fecharMiniCalendario, miniCalendarioAberto } from './mini_calendario.mjs?v=202611102152';
-import { buildCanonicalOfferProjection } from './execution_engine.js?v=202611102152';
+import { store } from './store.js?v=202611102207';
+import { getTurnoLetter, mapSlotToTurno, turnoDaTurmaInclui } from './turns.js?v=202611102207';
+import { normalizePeriodo as normalizePeriodoLetivoCode } from './plan_storage.js?v=202611102207';
+import { getCalendarEvents } from './calendar.js?v=202611102207';
+import { isDateOverlap } from './utils.js?v=202611102207';
+import { weeklyState } from './weekly_state.js?v=202611102207';
+import { findPendentesCobertas, isPendenteJaAlocada } from './pendentes.mjs?v=202611102207';
+import { classifySwap } from './troca_ordem.mjs?v=202611102207';
+import { closeFaixaEnds, isPauseEnd, listFaixaPauses } from './pausa_faixas.mjs?v=202611102207';
+import { numeroDaSubturma, isTurmaInteira, proximaSubturma, codigoT01Como, saoSubturmasDiferentes } from './subturmas.mjs?v=202611102207';
+import { abrirMiniCalendario, fecharMiniCalendario, miniCalendarioAberto } from './mini_calendario.mjs?v=202611102207';
+import { buildCanonicalOfferProjection } from './execution_engine.js?v=202611102207';
 import {
     buildSigaaMetadataPayload,
     validateSigaaMetadataPayload,
     getSigaaCode,
     buildScopedSigaaAllocationFromOfferFaixa
-} from './sigaa_metadata.js?v=202611102152';
-import { parseBackupDataFile, extractImportPlanMeta } from './serialization.js?v=202611102152';
+} from './sigaa_metadata.js?v=202611102207';
+import { parseBackupDataFile, extractImportPlanMeta } from './serialization.js?v=202611102207';
 import {
     showToastWarning,
     showPersistentStatusMessage,
     copyTextToClipboard,
     flashButtonCopyState,
     setupCopyActionButtons
-} from './ui_feedback.js?v=202611102152';
+} from './ui_feedback.js?v=202611102207';
 import {
     normalizeHexColor,
     adjustHexColor,
@@ -32,7 +32,7 @@ import {
     tonsDaCor,
     aplicarTonsBloco,
     PALETA_CORES
-} from './color_utils.js?v=202611102152';
+} from './color_utils.js?v=202611102207';
 import {
     isFaixaAllocation,
     isPriorityRegularAllocation,
@@ -41,8 +41,8 @@ import {
     normalizeTeacherNameForMatch,
     getDocenteShortLabel,
     getAllocationTeachersForConflict
-} from './allocation_helpers.js?v=202611102152';
-import { setupSeletorCor } from './seletor_cor.js?v=202611102152';
+} from './allocation_helpers.js?v=202611102207';
+import { setupSeletorCor } from './seletor_cor.js?v=202611102207';
 import {
     VINCULOS_DOCENTE_NOVO,
     OUTRA_UNIDADE,
@@ -50,10 +50,12 @@ import {
     findNewNames,
     findSimilarNames,
     problemaNoNome,
-    limparEspacos
-} from './docente_nomes.mjs?v=202611102152';
-import { getSessionEmail, getPerfil, fetchAllocationsForPlans } from './sync_remoto.js?v=202611102152';
-import { resolveBackendMode } from './backend_config.js?v=202611102152';
+    limparEspacos,
+    acharNomeConhecido,
+    semAcento
+} from './docente_nomes.mjs?v=202611102207';
+import { getSessionEmail, getPerfil, fetchAllocationsForPlans } from './sync_remoto.js?v=202611102207';
+import { resolveBackendMode } from './backend_config.js?v=202611102207';
 import {
     normalizeConflictSlotLabel,
     getAvailableTurnoOfertaOptions,
@@ -63,7 +65,7 @@ import {
     buildHorariosForUI,
     getShiftChangeMeta,
     getNativeTurnoValueForAllocation
-} from './turno_helpers.js?v=202611102152';
+} from './turno_helpers.js?v=202611102207';
 import {
     getDisciplinaCHGlobal,
     derivarBloco,
@@ -73,7 +75,7 @@ import {
     getDisciplinaInfo,
     getCursoSiglaDaTurma,
     getPrintAcademicMetaLine
-} from './curso_turma_helpers.js?v=202611102152';
+} from './curso_turma_helpers.js?v=202611102207';
 import {
     renderMonthlyCalendar,
     renderTeacherCalendar,
@@ -81,13 +83,13 @@ import {
     clearTeacherRangeCache,
     setTeacherPeriod,
     getTeacherPeriod
-} from './calendarios_ui.js?v=202611102152';
+} from './calendarios_ui.js?v=202611102207';
 import {
     refreshTeacherConflictsUI,
     setCrossPlanLoader,
     setResolverDeChoque,
     acharChoqueComOutroPL
-} from './conflitos_ui.js?v=202611102152';
+} from './conflitos_ui.js?v=202611102207';
 import {
     shouldIgnoreTurmaEventForCandidate,
     normalizeDrawnSlotsByDay,
@@ -101,7 +103,7 @@ import {
     resolveEditableFaixasFromStoredExecution,
     alignFaixasToExecutionEnd,
     buildFinalAdjustmentFaixaSuggestion
-} from './faixa_utils.js?v=202611102152';
+} from './faixa_utils.js?v=202611102207';
 import {
     timeToMinutes,
     shiftISODate,
@@ -115,14 +117,14 @@ import {
     isDateInsideRange,
     formatDateBRShortYear,
     formatDateBR
-} from './date_utils_ui.js?v=202611102152';
+} from './date_utils_ui.js?v=202611102207';
 import {
     initializeWeeklyScheduleForTurma,
     reconcileTurmaSelectionAfterPLChange,
     resetWeeklyViewOnTurmaChange,
     resolveActiveAcademicPeriod,
     slotLabelsOverlap
-} from './academic_rules.mjs?v=202611102152';
+} from './academic_rules.mjs?v=202611102207';
 
 const gridContainer = document.getElementById('weekly-grid');
 const selCurso = document.getElementById('sel-curso');
@@ -2878,12 +2880,16 @@ function findConfirmedTeacherConflictForCandidate(candidateAlloc, teacherNames =
 
         const existingEventsByDate = getCalendarEvents(null, candidateAlloc.dataInicio, candidateAlloc.dataFim, teacherName);
         const existingByDate = new Map();
-        // As aulas da propria turma do candidato ficam com a checagem de turma.
+        // As aulas da propria turma do candidato ficam com a checagem de turma,
+        // menos as de OUTRA subturma (T01 x T02): essas podem correr em paralelo
+        // na turma, mas nao com o mesmo professor.
         const turmaDoCandidato = String(candidateAlloc.turmaId ?? store.selectedTurma);
+        const ficaComATurma = (event) => String(event.turmaId) === turmaDoCandidato
+            && !saoSubturmasDiferentes(candidateAlloc.subGrupo, event.subGrupo);
 
         Object.entries(existingEventsByDate || {}).forEach(([dateStr, events]) => {
             (events || []).forEach((event) => {
-                if (!event || String(event.turmaId) === turmaDoCandidato) return;
+                if (!event || ficaComATurma(event)) return;
                 const slot = normalizeConflictSlotLabel(event.horario || '');
                 if (!slot) return;
                 if (!existingByDate.has(dateStr)) existingByDate.set(dateStr, []);
@@ -5274,6 +5280,7 @@ export function initUI() {
 
     if (selViewDocente) {
         selViewDocente.addEventListener('change', () => {
+            ajustarNomeDigitado(selViewDocente, { parcial: true });
             renderActiveSubtab('tab-teacher', 'docente-calendar');
             selViewDocente.blur();
         });
@@ -5742,7 +5749,14 @@ function getKnownDocenteNames() {
         }
     });
 
-    return [...new Set([...nomesRaw, ...nomesAlloc].filter(Boolean))].sort((a, b) =>
+    // Um nome por pessoa, ignorando acentos e maiusculas: vale a grafia da
+    // planilha de docentes; depois, a primeira que aparecer nas alocacoes.
+    const porChave = new Map();
+    [...nomesRaw, ...nomesAlloc].filter(Boolean).forEach((nome) => {
+        const chave = normalizeTeacherNameForMatch(nome);
+        if (chave && !porChave.has(chave)) porChave.set(chave, nome);
+    });
+    return [...porChave.values()].sort((a, b) =>
         a.localeCompare(b, 'pt-BR', { sensitivity: 'base' })
     );
 }
@@ -6000,13 +6014,18 @@ function coletarCadastrosDocentes(nomes = [], idsAntigos = []) {
 
 function setupAvisoDocenteNovo() {
     inputConfig.docente?.addEventListener('input', () => refreshAvisoDocenteNovo('ocultar'));
-    inputConfig.docente?.addEventListener('change', () => refreshAvisoDocenteNovo('mostrar'));
+    inputConfig.docente?.addEventListener('change', () => {
+        ajustarNomeDigitado(inputConfig.docente);
+        refreshAvisoDocenteNovo('mostrar');
+    });
     const lista = document.getElementById('multi-docente-list');
     lista?.addEventListener('input', (e) => {
         if (e.target.matches('.inp-multi-name')) refreshAvisoDocenteNovo('ocultar');
     });
     lista?.addEventListener('change', (e) => {
-        if (e.target.matches('.inp-multi-name')) refreshAvisoDocenteNovo('mostrar');
+        if (!e.target.matches('.inp-multi-name')) return;
+        ajustarNomeDigitado(e.target);
+        refreshAvisoDocenteNovo('mostrar');
     });
     document.getElementById('chk-multi-docente')?.addEventListener('change', () => refreshAvisoDocenteNovo('ocultar'));
 }
@@ -6020,20 +6039,31 @@ function populateDocentes() {
     if (key === lastDocentesListKey) return;
     lastDocentesListKey = key;
 
+    // Rotulo sem acento quando o nome tem acento: quem digita "Zelia" tambem
+    // ve "Zélia" nas sugestoes (o navegador procura no valor e no rotulo).
+    const opcao = (nome) => {
+        const rotulo = semAcento(nome);
+        return rotulo !== nome ? new Option(rotulo, nome) : new Option(nome, nome);
+    };
     if (listDocentes) {
         listDocentes.innerHTML = '';
-        nomes.forEach((nome) => {
-            listDocentes.appendChild(new Option(nome, nome));
-        });
+        nomes.forEach((nome) => listDocentes.appendChild(opcao(nome)));
     }
 
     const listView = document.getElementById('list-view-docentes');
     if (listView) {
         listView.innerHTML = '';
-        nomes.forEach((nome) => {
-            listView.appendChild(new Option(nome, nome));
-        });
+        nomes.forEach((nome) => listView.appendChild(opcao(nome)));
     }
+}
+
+// Troca o texto digitado pelo nome da lista quando so muda acento ou
+// maiuscula ("zelia ..." -> "Zélia ..."): o mesmo professor fica com um nome so.
+// parcial: aceita um pedaco do nome que seja de um docente so (busca).
+function ajustarNomeDigitado(campo, opcoes = {}) {
+    if (!campo || !campo.value.trim()) return;
+    const nome = acharNomeConhecido(campo.value, getKnownDocenteNames(), opcoes);
+    if (nome && nome !== campo.value) campo.value = nome;
 }
 
 function onTurmaChange() {
@@ -7676,12 +7706,10 @@ function sugerirInicioSemChoque(candidato, professores = []) {
 // ter aula em paralelo; as posicoes antigas das duas que trocam sao ignoradas.
 function acharChoqueNaTurma(candidato) {
     const eventos = getCalendarEvents(String(candidato.turmaId), candidato.dataInicio, candidato.dataFim);
-    const sub = String(candidato.subGrupo || '');
     const ocupados = new Map();
     Object.entries(eventos || {}).forEach(([data, lista]) => (lista || []).forEach((ev) => {
         if (shouldIgnoreTurmaEventForCandidate(ev, candidato)) return;
-        const evSub = String(ev?.subGrupo || '');
-        if (sub && evSub && sub !== evSub) return;
+        if (saoSubturmasDiferentes(candidato.subGrupo, ev?.subGrupo)) return;
         const slot = normalizeConflictSlotLabel(ev?.horario || '');
         if (slot && !ocupados.has(`${data}|${slot}`)) ocupados.set(`${data}|${slot}`, ev);
     }));

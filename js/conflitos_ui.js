@@ -1,16 +1,17 @@
-import { store } from './store.js?v=202611102152';
-import { getCalendarEvents } from './calendar.js?v=202611102152';
-import { timeToMinutes } from './date_utils_ui.js?v=202611102152';
+import { store } from './store.js?v=202611102207';
+import { getCalendarEvents } from './calendar.js?v=202611102207';
+import { timeToMinutes } from './date_utils_ui.js?v=202611102207';
 import {
     isPendingAllocation,
     getAllocationTeachersForConflict,
     normalizeTeacherNameForMatch
-} from './allocation_helpers.js?v=202611102152';
-import { normalizeConflictSlotLabel } from './turno_helpers.js?v=202611102152';
-import { slotLabelsOverlap } from './academic_rules.mjs?v=202611102152';
-import { getTurmaLabel } from './curso_turma_helpers.js?v=202611102152';
-import { renderTeacherCalendar, withPlanContext } from './calendarios_ui.js?v=202611102152';
-import { showToastWarning } from './ui_feedback.js?v=202611102152';
+} from './allocation_helpers.js?v=202611102207';
+import { normalizeConflictSlotLabel } from './turno_helpers.js?v=202611102207';
+import { slotLabelsOverlap } from './academic_rules.mjs?v=202611102207';
+import { getTurmaLabel } from './curso_turma_helpers.js?v=202611102207';
+import { renderTeacherCalendar, withPlanContext } from './calendarios_ui.js?v=202611102207';
+import { showToastWarning } from './ui_feedback.js?v=202611102207';
+import { saoSubturmasDiferentes } from './subturmas.mjs?v=202611102207';
 
 // Ref DOM de nivel de modulo (modulo deferred, DOM pronto).
 const selViewDocente = document.getElementById('sel-view-docente');
@@ -21,7 +22,14 @@ export function detectGlobalTeacherConflictsStable() {
     if (allocs.length === 0) return conflictMap;
 
     const diasNomes = ['', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab'];
-    const allTeachers = [...new Set(allocs.flatMap((alloc) => getAllocationTeachersForConflict(alloc)))];
+    // Um nome por professor: "Zelia" e "Zélia" sao a mesma pessoa (o calendario
+    // ja junta as duas grafias; sem isto o choque sairia duas vezes no alerta).
+    const porChave = new Map();
+    allocs.flatMap((alloc) => getAllocationTeachersForConflict(alloc)).forEach((nome) => {
+        const chave = normalizeTeacherNameForMatch(nome);
+        if (chave && !porChave.has(chave)) porChave.set(chave, nome);
+    });
+    const allTeachers = [...porChave.values()];
     if (allTeachers.length === 0) return conflictMap;
 
     const auditStart = allocs.reduce((minDate, alloc) => {
@@ -89,9 +97,13 @@ export function detectGlobalTeacherConflictsStable() {
                     const eventA = items[i].event;
                     const eventB = items[j].event;
 
+                    // A mesma oferta (mesma turma, componente e subturma) nao choca
+                    // consigo. Subturmas diferentes (T01 x T02) com o mesmo professor
+                    // no mesmo horario SAO choque: a CH dele ficaria distorcida.
                     if (
                         String(eventA?.turmaId) === String(eventB?.turmaId) &&
                         String(eventA?.disciplina || '') === String(eventB?.disciplina || '') &&
+                        !saoSubturmasDiferentes(eventA?.subGrupo, eventB?.subGrupo) &&
                         String(eventA?.modo || '') === String(eventB?.modo || '')
                     ) {
                         continue;

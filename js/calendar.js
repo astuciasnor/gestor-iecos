@@ -1,7 +1,8 @@
-import { store } from './store.js?v=202611102152';
-import { getDaysArray, toLocalDateString } from './utils.js?v=202611102152';
-import { mapSlotToTurno, turnoDaTurmaInclui } from './turns.js?v=202611102152';
-import { slotLabelsOverlap } from './academic_rules.mjs?v=202611102152';
+import { store } from './store.js?v=202611102207';
+import { getDaysArray, toLocalDateString } from './utils.js?v=202611102207';
+import { mapSlotToTurno, turnoDaTurmaInclui } from './turns.js?v=202611102207';
+import { slotLabelsOverlap } from './academic_rules.mjs?v=202611102207';
+import { normalizeTeacherNameForMatch } from './docente_nomes.mjs?v=202611102207';
 
 function normalizeKeyPart(value) {
   return String(value || '').trim().toUpperCase();
@@ -152,18 +153,18 @@ function buildOfferKey(allocation) {
   ].join('|');
 }
 
+// Mesmo professor ignorando acentos, maiusculas e espacos ("Zelia" = "Zélia"):
+// uma grafia diferente nao pode esconder aulas do calendario nem um choque.
 function allocationMatchesTeacherFilter(allocation, docenteFilter = '') {
-  const filter = String(docenteFilter || '').trim();
-  if (!filter) return true;
+  const filtro = normalizeTeacherNameForMatch(docenteFilter);
+  if (!filtro) return true;
+  const mesmo = (nome) => normalizeTeacherNameForMatch(nome) === filtro;
 
-  if (typeof allocation?.docente === 'string' && allocation.docente.trim() === filter) return true;
-  if (allocation?.docente?.nome && String(allocation.docente.nome).trim() === filter) return true;
+  if (typeof allocation?.docente === 'string' && mesmo(allocation.docente)) return true;
+  if (allocation?.docente?.nome && mesmo(allocation.docente.nome)) return true;
 
   if (Array.isArray(allocation?.docentes)) {
-    return allocation.docentes.some((docente) => {
-      const nome = docente?.nome || docente;
-      return String(nome || '').trim() === filter;
-    });
+    return allocation.docentes.some((docente) => mesmo(docente?.nome || docente));
   }
 
   return false;

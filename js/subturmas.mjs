@@ -42,3 +42,15 @@ export function codigoT01Como(subGrupoSalvo) {
   const prefixo = sg.replace(/T0*\d+$/i, '');
   return `${prefixo}T01`;
 }
+
+// Duas ofertas da mesma turma estao em subturmas DIFERENTES (T01 x T02)? Elas
+// podem ter aula em paralelo na turma (cada grupo numa sala), mas o mesmo
+// professor nas duas ao mesmo tempo e choque. Turma inteira (vazio ou "BL6")
+// nunca e subturma diferente: ocupa a turma toda.
+export function saoSubturmasDiferentes(subA, subB) {
+  if (isTurmaInteira(subA) || isTurmaInteira(subB)) return false;
+  const na = numeroDaSubturma(subA);
+  const nb = numeroDaSubturma(subB);
+  if (na !== null && nb !== null) return na !== nb;
+  return String(subA).trim().toUpperCase() !== String(subB).trim().toUpperCase();
+}

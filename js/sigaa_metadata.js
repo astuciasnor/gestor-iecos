@@ -1,10 +1,10 @@
-import { buildSigaaExportPayload, filterExportableAllocations } from './academic_rules.mjs?v=202611102152';
-import { buildCanonicalOfferProjection } from './execution_engine.js?v=202611102152';
-import { store } from './store.js?v=202611102152';
-import { timeToMinutes } from './date_utils_ui.js?v=202611102152';
-import { isFaixaAllocation, isScheduledRegularAllocation } from './allocation_helpers.js?v=202611102152';
-import { cleanHorarioLabel, getGanttTurnoCode } from './turno_helpers.js?v=202611102152';
-import { computeIntensiveExecution } from './faixa_utils.js?v=202611102152';
+import { buildSigaaExportPayload, filterExportableAllocations } from './academic_rules.mjs?v=202611102207';
+import { buildCanonicalOfferProjection } from './execution_engine.js?v=202611102207';
+import { store } from './store.js?v=202611102207';
+import { timeToMinutes } from './date_utils_ui.js?v=202611102207';
+import { isFaixaAllocation, isScheduledRegularAllocation } from './allocation_helpers.js?v=202611102207';
+import { cleanHorarioLabel, getGanttTurnoCode } from './turno_helpers.js?v=202611102207';
+import { computeIntensiveExecution } from './faixa_utils.js?v=202611102207';
 
 // Codigo de horario SIGAA (ex.: 246T12) de uma oferta. Saiu do ui.js em 05/11/2026.
 

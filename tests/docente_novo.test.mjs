@@ -6,7 +6,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import { detectTeacherConflicts } from '../js/conflicts.js';
-import { findNewNames, findSimilarNames, problemaNoNome, UNIDADES, VINCULOS_DOCENTE_NOVO, listarDocentesParaConferir, aplicarRevisaoDocente, removerDocenteDaAlocacao } from '../js/docente_nomes.mjs';
+import { acharNomeConhecido, semAcento, findNewNames, findSimilarNames, problemaNoNome, UNIDADES, VINCULOS_DOCENTE_NOVO, listarDocentesParaConferir, aplicarRevisaoDocente, removerDocenteDaAlocacao } from '../js/docente_nomes.mjs';
 
 // store.js le o localStorage ao carregar; no Node ele nao existe.
 globalThis.localStorage ??= { getItem: () => null, setItem: () => {}, removeItem: () => {} };
@@ -135,4 +135,18 @@ test('remover cadastro indevido: componente fica, docente vira "A definir"', () 
   assert.deepEqual(r2.docentesCadastrados, [outro]);
 
   assert.equal(removerDocenteDaAlocacao({ id: 'a3', docente: 'Outra Pessoa' }, 'Fulano Indevido'), null);
+});
+
+test('nome digitado sem acento acha o nome da lista', () => {
+  const lista = ['Zélia Maria Pimental Nunes', 'Fábio Silva', 'Fabiana Costa', 'Ana Garcês'];
+  assert.equal(acharNomeConhecido('zelia maria pimental nunes', lista), 'Zélia Maria Pimental Nunes');
+  assert.equal(acharNomeConhecido('ANA GARCES', lista), 'Ana Garcês');
+  // Pedaco do nome so vale com parcial e se for de um docente so.
+  assert.equal(acharNomeConhecido('zelia', lista), null);
+  assert.equal(acharNomeConhecido('zelia', lista, { parcial: true }), 'Zélia Maria Pimental Nunes');
+  assert.equal(acharNomeConhecido('fab', lista, { parcial: true }), null);
+  assert.equal(acharNomeConhecido('fabio', lista, { parcial: true }), 'Fábio Silva');
+  assert.equal(acharNomeConhecido('an', lista, { parcial: true }), null);
+  assert.equal(acharNomeConhecido('Maria Nova', lista), null);
+  assert.equal(semAcento('Zélia Garcês'), 'Zelia Garces');
 });
