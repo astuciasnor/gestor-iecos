@@ -1,16 +1,16 @@
-import { store } from './store.js?v=202611101941';
-import { getCalendarEvents } from './calendar.js?v=202611101941';
-import { timeToMinutes } from './date_utils_ui.js?v=202611101941';
+import { store } from './store.js?v=202611102152';
+import { getCalendarEvents } from './calendar.js?v=202611102152';
+import { timeToMinutes } from './date_utils_ui.js?v=202611102152';
 import {
     isPendingAllocation,
     getAllocationTeachersForConflict,
     normalizeTeacherNameForMatch
-} from './allocation_helpers.js?v=202611101941';
-import { normalizeConflictSlotLabel } from './turno_helpers.js?v=202611101941';
-import { slotLabelsOverlap } from './academic_rules.mjs?v=202611101941';
-import { getTurmaLabel } from './curso_turma_helpers.js?v=202611101941';
-import { renderTeacherCalendar, withPlanContext } from './calendarios_ui.js?v=202611101941';
-import { showToastWarning } from './ui_feedback.js?v=202611101941';
+} from './allocation_helpers.js?v=202611102152';
+import { normalizeConflictSlotLabel } from './turno_helpers.js?v=202611102152';
+import { slotLabelsOverlap } from './academic_rules.mjs?v=202611102152';
+import { getTurmaLabel } from './curso_turma_helpers.js?v=202611102152';
+import { renderTeacherCalendar, withPlanContext } from './calendarios_ui.js?v=202611102152';
+import { showToastWarning } from './ui_feedback.js?v=202611102152';
 
 // Ref DOM de nivel de modulo (modulo deferred, DOM pronto).
 const selViewDocente = document.getElementById('sel-view-docente');
@@ -338,6 +338,16 @@ export function acharChoqueComOutroPL(alloc) {
 // desfazer), e avisado na hora, uma vez. So os choques que tocam turmas que
 // este usuario pode editar. A primeira leitura de cada PL so guarda o que ja
 // existia (nao avisa os choques antigos ao abrir o app).
+// Mesma chave para o aviso de choque novo e para as linhas abertas do alerta.
+function chaveDoChoque(professor, d) {
+    return `${normalizeTeacherNameForMatch(professor)}|${d.discA}|${d.discB}`;
+}
+
+// Estado do "Como resolver?" (ver setResolverDeChoque, mais abaixo).
+let resolverDeChoque = null;          // ({ ids }) => [{ quem: 'voce' | 'outro', texto }]
+const comoResolverAbertos = new Set(); // linhas abertas: continuam abertas ao redesenhar
+let linhasDoAlerta = [];
+
 let choquesConhecidos = { plano: '', chaves: null };
 
 function avisarChoquesNovos(conflictMap) {
@@ -345,7 +355,7 @@ function avisarChoquesNovos(conflictMap) {
     const atuais = new Map();
     conflictMap.forEach((detalhes, professor) => detalhes.forEach((d) => {
         if (!(d.turmaIds || []).some((turmaId) => store.podeEditarTurma(turmaId))) return;
-        atuais.set(`${normalizeTeacherNameForMatch(professor)}|${d.discA}|${d.discB}`, { professor, ...d });
+        atuais.set(chaveDoChoque(professor, d), { professor, ...d });
     }));
 
     if (choquesConhecidos.plano !== plano || !choquesConhecidos.chaves) {
@@ -363,8 +373,8 @@ function avisarChoquesNovos(conflictMap) {
     const primeiro = novos[0];
     const dataBR = primeiro.dataInicio ? primeiro.dataInicio.split('-').reverse().join('/') : '';
     const mensagem = novos.length === 1
-        ? `Novo choque de professor: ${primeiro.professor} tem ${primeiro.discA} e ${primeiro.discB} no mesmo horario (a partir de ${dataBR}). Veja o alerta na aba Calendario Docente.`
-        : `${novos.length} novos choques de professor (${[...new Set(novos.map((d) => d.professor))].join(', ')}). Veja o alerta na aba Calendario Docente.`;
+        ? `Novo choque de professor: ${primeiro.professor} tem ${primeiro.discA} e ${primeiro.discB} no mesmo horário (a partir de ${dataBR}). Veja o alerta na aba Calendário Docente.`
+        : `${novos.length} novos choques de professor (${[...new Set(novos.map((d) => d.professor))].join(', ')}). Veja o alerta na aba Calendário Docente.`;
     showToastWarning(mensagem, 'warning', 12000);
 }
 
@@ -409,7 +419,7 @@ export function updateGlobalConflictsUI() {
                 let celulaResolver = `<td style="${tdStyle}"></td>`;
                 let linhaSugestoes = '';
                 if (!d.entrePLs && resolverDeChoque && d.allocIds?.length) {
-                    const chave = `${normalizeTeacherNameForMatch(teacher)}|${d.discA}|${d.discB}`;
+                    const chave = chaveDoChoque(teacher, d);
                     chavesAtuais.add(chave);
                     const idx = linhasDoAlerta.push({ chave, ids: d.allocIds }) - 1;
                     const aberto = comoResolverAbertos.has(chave);
@@ -478,9 +488,7 @@ export function updateGlobalConflictsUI() {
 
 // ===== "Como resolver?" =====
 // O calculo fica no ui.js (usa o motor do salvar e do Trocar); aqui so a tela.
-let resolverDeChoque = null;          // ({ ids }) => [{ quem: 'voce' | 'outro', texto }]
-const comoResolverAbertos = new Set(); // linhas abertas: continuam abertas ao redesenhar
-let linhasDoAlerta = [];
+// O estado (linhas abertas etc.) fica junto do alerta, mais acima.
 
 export function setResolverDeChoque(fn) {
     resolverDeChoque = typeof fn === 'function' ? fn : null;
@@ -496,9 +504,8 @@ function htmlSugestoes(ids) {
         linhas = resolverDeChoque({ ids }) || [];
     } catch (error) {
         console.warn('Como resolver: falha no calculo', error);
-        linhas = [{ quem: 'voce', texto: 'Nao foi possivel calcular agora. Tente de novo ou ajuste pelo Editar.' }];
+        linhas = [{ quem: 'voce', texto: 'Não foi possível calcular agora. Tente de novo ou ajuste pelo Editar.' }];
     }
-    if (!linhas.length) linhas = [{ quem: 'outro', texto: 'As duas aulas sao de outro curso: avise a coordenacao responsavel.' }];
     const rotulo = { voce: 'Depende só de você', outro: 'Depende de outra coordenação' };
     const itens = linhas.map((l) => `<li style="margin:3px 0;"><b style="color:${l.quem === 'voce' ? '#1e7e34' : '#a04000'};">${rotulo[l.quem] || ''}:</b> ${escaparHtml(l.texto)}</li>`).join('');
     return `<tr><td colspan="6" style="background:#fff; color:#2d3436; padding:8px 12px; border:1px solid rgba(255,255,255,0.3); font-size:0.85em;">

@@ -1,29 +1,29 @@
-import { store } from './store.js?v=202611101941';
-import { getTurnoLetter, mapSlotToTurno, turnoDaTurmaInclui } from './turns.js?v=202611101941';
-import { normalizePeriodo as normalizePeriodoLetivoCode } from './plan_storage.js?v=202611101941';
-import { getCalendarEvents } from './calendar.js?v=202611101941';
-import { isDateOverlap } from './utils.js?v=202611101941';
-import { weeklyState } from './weekly_state.js?v=202611101941';
-import { findPendentesCobertas, isPendenteJaAlocada } from './pendentes.mjs?v=202611101941';
-import { classifySwap } from './troca_ordem.mjs?v=202611101941';
-import { closeFaixaEnds, isPauseEnd, listFaixaPauses } from './pausa_faixas.mjs?v=202611101941';
-import { numeroDaSubturma, isTurmaInteira, proximaSubturma, codigoT01Como } from './subturmas.mjs?v=202611101941';
-import { abrirMiniCalendario, fecharMiniCalendario, miniCalendarioAberto } from './mini_calendario.mjs?v=202611101941';
-import { buildCanonicalOfferProjection } from './execution_engine.js?v=202611101941';
+import { store } from './store.js?v=202611102152';
+import { getTurnoLetter, mapSlotToTurno, turnoDaTurmaInclui } from './turns.js?v=202611102152';
+import { normalizePeriodo as normalizePeriodoLetivoCode } from './plan_storage.js?v=202611102152';
+import { getCalendarEvents } from './calendar.js?v=202611102152';
+import { isDateOverlap } from './utils.js?v=202611102152';
+import { weeklyState } from './weekly_state.js?v=202611102152';
+import { findPendentesCobertas, isPendenteJaAlocada } from './pendentes.mjs?v=202611102152';
+import { classifySwap } from './troca_ordem.mjs?v=202611102152';
+import { closeFaixaEnds, isPauseEnd, listFaixaPauses } from './pausa_faixas.mjs?v=202611102152';
+import { numeroDaSubturma, isTurmaInteira, proximaSubturma, codigoT01Como } from './subturmas.mjs?v=202611102152';
+import { abrirMiniCalendario, fecharMiniCalendario, miniCalendarioAberto } from './mini_calendario.mjs?v=202611102152';
+import { buildCanonicalOfferProjection } from './execution_engine.js?v=202611102152';
 import {
     buildSigaaMetadataPayload,
     validateSigaaMetadataPayload,
     getSigaaCode,
     buildScopedSigaaAllocationFromOfferFaixa
-} from './sigaa_metadata.js?v=202611101941';
-import { parseBackupDataFile, extractImportPlanMeta } from './serialization.js?v=202611101941';
+} from './sigaa_metadata.js?v=202611102152';
+import { parseBackupDataFile, extractImportPlanMeta } from './serialization.js?v=202611102152';
 import {
     showToastWarning,
     showPersistentStatusMessage,
     copyTextToClipboard,
     flashButtonCopyState,
     setupCopyActionButtons
-} from './ui_feedback.js?v=202611101941';
+} from './ui_feedback.js?v=202611102152';
 import {
     normalizeHexColor,
     adjustHexColor,
@@ -32,7 +32,7 @@ import {
     tonsDaCor,
     aplicarTonsBloco,
     PALETA_CORES
-} from './color_utils.js?v=202611101941';
+} from './color_utils.js?v=202611102152';
 import {
     isFaixaAllocation,
     isPriorityRegularAllocation,
@@ -41,8 +41,8 @@ import {
     normalizeTeacherNameForMatch,
     getDocenteShortLabel,
     getAllocationTeachersForConflict
-} from './allocation_helpers.js?v=202611101941';
-import { setupSeletorCor } from './seletor_cor.js?v=202611101941';
+} from './allocation_helpers.js?v=202611102152';
+import { setupSeletorCor } from './seletor_cor.js?v=202611102152';
 import {
     VINCULOS_DOCENTE_NOVO,
     OUTRA_UNIDADE,
@@ -51,9 +51,9 @@ import {
     findSimilarNames,
     problemaNoNome,
     limparEspacos
-} from './docente_nomes.mjs?v=202611101941';
-import { getSessionEmail, getPerfil, fetchAllocationsForPlans } from './sync_remoto.js?v=202611101941';
-import { resolveBackendMode } from './backend_config.js?v=202611101941';
+} from './docente_nomes.mjs?v=202611102152';
+import { getSessionEmail, getPerfil, fetchAllocationsForPlans } from './sync_remoto.js?v=202611102152';
+import { resolveBackendMode } from './backend_config.js?v=202611102152';
 import {
     normalizeConflictSlotLabel,
     getAvailableTurnoOfertaOptions,
@@ -63,7 +63,7 @@ import {
     buildHorariosForUI,
     getShiftChangeMeta,
     getNativeTurnoValueForAllocation
-} from './turno_helpers.js?v=202611101941';
+} from './turno_helpers.js?v=202611102152';
 import {
     getDisciplinaCHGlobal,
     derivarBloco,
@@ -73,7 +73,7 @@ import {
     getDisciplinaInfo,
     getCursoSiglaDaTurma,
     getPrintAcademicMetaLine
-} from './curso_turma_helpers.js?v=202611101941';
+} from './curso_turma_helpers.js?v=202611102152';
 import {
     renderMonthlyCalendar,
     renderTeacherCalendar,
@@ -81,13 +81,13 @@ import {
     clearTeacherRangeCache,
     setTeacherPeriod,
     getTeacherPeriod
-} from './calendarios_ui.js?v=202611101941';
+} from './calendarios_ui.js?v=202611102152';
 import {
     refreshTeacherConflictsUI,
     setCrossPlanLoader,
     setResolverDeChoque,
     acharChoqueComOutroPL
-} from './conflitos_ui.js?v=202611101941';
+} from './conflitos_ui.js?v=202611102152';
 import {
     shouldIgnoreTurmaEventForCandidate,
     normalizeDrawnSlotsByDay,
@@ -101,7 +101,7 @@ import {
     resolveEditableFaixasFromStoredExecution,
     alignFaixasToExecutionEnd,
     buildFinalAdjustmentFaixaSuggestion
-} from './faixa_utils.js?v=202611101941';
+} from './faixa_utils.js?v=202611102152';
 import {
     timeToMinutes,
     shiftISODate,
@@ -115,14 +115,14 @@ import {
     isDateInsideRange,
     formatDateBRShortYear,
     formatDateBR
-} from './date_utils_ui.js?v=202611101941';
+} from './date_utils_ui.js?v=202611102152';
 import {
     initializeWeeklyScheduleForTurma,
     reconcileTurmaSelectionAfterPLChange,
     resetWeeklyViewOnTurmaChange,
     resolveActiveAcademicPeriod,
     slotLabelsOverlap
-} from './academic_rules.mjs?v=202611101941';
+} from './academic_rules.mjs?v=202611102152';
 
 const gridContainer = document.getElementById('weekly-grid');
 const selCurso = document.getElementById('sel-curso');
@@ -7337,21 +7337,20 @@ function handleAddManual() {
                 // quando a componente veio da "Insercao por Bloco (PPC)" (antes so
                 // avisava, e o choque entrava na grade sem ninguem perceber).
                 const outraDisciplina = confirmedTeacherConflict.event.disciplina;
-                const detalhe = `${profNomes} ja tem ${outraDisciplina} na turma ${turmaNomeConflito} em ${formatDateBR(confirmedTeacherConflict.date)} (${horarioChoque}).`;
+                const detalhe = `${profNomes} já tem ${outraDisciplina} na turma ${turmaNomeConflito} em ${formatDateBR(confirmedTeacherConflict.date)} (${horarioChoque}).`;
                 const sugestao = sugerirInicioSemChoque(candidateForTeacherCheck, teachersToCheck);
                 const outraTurmaId = confirmedTeacherConflict.event.turmaId;
-                const cursoOutra = getCursoSiglaDaTurma(outraTurmaId) || 'outro curso';
                 const comoResolver = [
                     sugestao
-                        ? `Sugestao: comece "${disciplina}" em ${formatDateBR(sugestao.dataInicio)}, com os horarios da Faixa 1: nao ha choque e termina em ${formatDateBR(sugestao.dataFim)}.`
-                        : `Com estes horarios, nao ha inicio sem choque ate o fim do periodo: mude os dias ou horarios da semana.`,
+                        ? `Sugestão: ${fraseComeceEm(`"${disciplina}"`, sugestao)}`
+                        : 'Com estes horários, não há início sem choque até o fim do período: mude os dias ou horários da semana.',
                     store.podeEditarTurma(outraTurmaId)
                         ? `Ou mude "${outraDisciplina}" na turma ${turmaNomeConflito}.`
-                        : `Ou converse com a coordenacao de ${cursoOutra} sobre "${outraDisciplina}".`
+                        : `Ou converse com a coordenação de ${cursoDaTurma(outraTurmaId)} sobre "${outraDisciplina}".`
                 ].join(' ');
                 setWeeklyBlock(
                     sugestao
-                        ? `Choque de professor · sugestao: comecar em ${formatDateBR(sugestao.dataInicio)}`
+                        ? `Choque de professor · sugestão: começar em ${formatDateBR(sugestao.dataInicio)}`
                         : 'Choque de professor',
                     `${detalhe} Salvamento cancelado.`,
                     'choque'
@@ -7519,7 +7518,7 @@ function handleAddManual() {
         const choqueOutroPL = allocAtualizada ? acharChoqueComOutroPL(allocAtualizada) : null;
         if (choqueOutroPL) {
             showToastWarning(
-                `Salvo, mas atencao: ${choqueOutroPL.professor} tambem tem ${choqueOutroPL.disciplina} na turma ${choqueOutroPL.turma} do periodo ${choqueOutroPL.plano}, em ${formatDateBR(choqueOutroPL.data)} (${choqueOutroPL.horario}). Ajuste as datas ou converse com quem coordena esse periodo.`,
+                `Salvo, mas atenção: ${choqueOutroPL.professor} também tem ${choqueOutroPL.disciplina} na turma ${choqueOutroPL.turma} do período ${choqueOutroPL.plano}, em ${formatDateBR(choqueOutroPL.data)} (${choqueOutroPL.horario}). Ajuste as datas ou converse com quem coordena esse periodo.`,
                 'warning',
                 14000
             );
@@ -7786,39 +7785,53 @@ function trocaQueResolve(alloc) {
     return null;
 }
 
-// Devolve [{ quem: 'voce' | 'outro', texto }].
+// Frases comuns ao bloqueio do salvar e ao "Como resolver?".
+function fraseComeceEm(nome, posicao) {
+    return `comece ${nome} em ${formatDateBR(posicao.dataInicio)}, com os horários da Faixa 1: termina em ${formatDateBR(posicao.dataFim)} sem choque.`;
+}
+
+function cursoDaTurma(turmaId) {
+    return getCursoSiglaDaTurma(turmaId) || 'outro curso';
+}
+
+// Devolve [{ quem: 'voce' | 'outro', texto }]; nunca vazio.
 function sugerirComoResolverChoque({ ids = [] } = {}) {
     const ofertas = [...new Set(ids.map(String))]
         .map((id) => store.allocations.find((a) => String(a?.id) === id))
         .filter(Boolean)
         // A que comeca depois primeiro: em geral foi a ultima a entrar na grade.
         .sort((a, b) => String(b.dataInicio || '').localeCompare(String(a.dataInicio || '')));
+    if (!ofertas.length) {
+        return [{ quem: 'voce', texto: 'Estas aulas mudaram desde o último cálculo. Recarregue a página e abra de novo.' }];
+    }
     const nome = (a) => `"${a.disciplina}" (${getTurmaLabel(a.turmaId, a.subGrupo)})`;
     const linhas = [];
     let algumaMinha = false;
 
     ofertas.forEach((alloc) => {
+        const inicio = inicioQueResolve(alloc);
         if (store.podeEditarTurma(alloc.turmaId)) {
             algumaMinha = true;
-            const inicio = inicioQueResolve(alloc);
             if (inicio) {
-                linhas.push({ quem: 'voce', texto: `Comece ${nome(alloc)} em ${formatDateBR(inicio.dataInicio)}, com os horarios da Faixa 1: termina em ${formatDateBR(inicio.dataFim)} sem choque. Faca pelo Editar, na Lista de Ofertas.` });
+                linhas.push({ quem: 'voce', texto: `${capitalizar(fraseComeceEm(nome(alloc), inicio))} Faça pelo Editar, na Lista de Ofertas.` });
             }
             const troca = trocaQueResolve(alloc);
             if (troca) {
-                linhas.push({ quem: 'voce', texto: `Troque a ordem de ${nome(alloc)} com "${troca.disciplina}": as duas ficam sem choque. Use o botao Trocar, na Lista de Ofertas.` });
+                linhas.push({ quem: 'voce', texto: `Troque a ordem de ${nome(alloc)} com "${troca.disciplina}": as duas ficam sem choque. Use o botão Trocar, na Lista de Ofertas.` });
             }
         } else {
-            const curso = getCursoSiglaDaTurma(alloc.turmaId) || 'outro curso';
-            const inicio = inicioQueResolve(alloc);
-            linhas.push({ quem: 'outro', texto: `${nome(alloc)} e de ${curso}: converse com essa coordenacao${inicio ? `. Se ela comecar em ${formatDateBR(inicio.dataInicio)}, o choque some` : ''}.` });
+            linhas.push({ quem: 'outro', texto: `${nome(alloc)} é de ${cursoDaTurma(alloc.turmaId)}: converse com essa coordenação${inicio ? `. Se ela começar em ${formatDateBR(inicio.dataInicio)}, o choque some` : ''}.` });
         }
     });
 
     if (algumaMinha && !linhas.some((l) => l.quem === 'voce')) {
-        linhas.unshift({ quem: 'voce', texto: 'Nao achei nova data nem troca que resolva sem criar outro choque: mude os dias ou os horarios da semana pelo Editar.' });
+        linhas.unshift({ quem: 'voce', texto: 'Não achei nova data nem troca que resolva sem criar outro choque: mude os dias ou os horários da semana pelo Editar.' });
     }
     return linhas;
+}
+
+function capitalizar(texto) {
+    return texto ? texto.charAt(0).toUpperCase() + texto.slice(1) : texto;
 }
 
 function formatPeriodoTroca(inicio, fim) {

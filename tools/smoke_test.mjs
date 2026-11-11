@@ -275,6 +275,21 @@ async function run() {
       await evaluate("document.querySelector('.tab-btn[data-tab=\"teacher\"]').click()");
     });
 
+    // Abre e fecha o "Como resolver?" da primeira linha do alerta (so le: nada muda).
+    await check('Como resolver? no alerta de choque', async () => {
+      const temBotao = await waitFor("!!document.querySelector('.btn-como-resolver')", 5000);
+      if (!temBotao) return 'sem choque com o botao nos dados (nada a testar)';
+      await evaluate("document.querySelector('.btn-como-resolver').click()");
+      const abriu = await waitFor("[...document.querySelectorAll('.btn-como-resolver')].some((b) => b.getAttribute('aria-expanded') === 'true')", 8000);
+      assert(abriu, 'a linha nao abriu');
+      const textos = await evaluate("[...document.querySelectorAll('.btn-como-resolver[aria-expanded=\"true\"]')].map((b) => b.closest('tr').nextElementSibling?.innerText || '').join(' / ')");
+      assert(/Depende/.test(textos), `sem sugestao: ${textos}`);
+      assert(!/Não foi possível calcular/.test(textos), `falha no calculo: ${textos}`);
+      await evaluate("document.querySelector('.btn-como-resolver[aria-expanded=\"true\"]').click()");
+      assert(await waitFor("![...document.querySelectorAll('.btn-como-resolver')].some((b) => b.getAttribute('aria-expanded') === 'true')", 5000), 'Fechar nao fechou');
+      return textos.replace(/\s+/g, ' ').slice(0, 300);
+    });
+
     await check('Calendario do docente: Ano inteiro e PL1..PL4', async () => {
       await evaluate(`(() => {
         const i = document.getElementById('sel-view-docente'); i.value = ${JSON.stringify(data.teacher)};
