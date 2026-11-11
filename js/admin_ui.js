@@ -2,8 +2,8 @@
 // Cadastra, edita e exclui acessos, gera senha provisoria e baixa a copia do
 // banco. Quem garante que so o administrador faz isso e a API (api/index.php).
 // Mostra tambem os docentes novos cadastrados pelos coordenadores para conferir.
-import { store } from './store.js?v=202611111200';
-import { fetchAllocationsForPlans, salvarAlocacoesRevisadas, getSessionEmail, getPerfil } from './sync_remoto.js?v=202611111200';
+import { store } from './store.js?v=202611111512';
+import { fetchAllocationsForPlans, salvarAlocacoesRevisadas, getSessionEmail, getPerfil } from './sync_remoto.js?v=202611111512';
 import {
   listarDocentesParaConferir,
   aplicarRevisaoDocente,
@@ -13,7 +13,7 @@ import {
   normalizeTeacherNameForMatch,
   VINCULOS_DOCENTE_NOVO,
   UNIDADES
-} from './docente_nomes.mjs?v=202611111200';
+} from './docente_nomes.mjs?v=202611111512';
 
 let ctx = null;      // { tools, meuId, showToast, aoContarDocentes }
 let usuarios = [];
@@ -166,7 +166,7 @@ function desenharDocentes(itens) {
   }
   const linhas = itens.map((d, idx) => `
       <tr>
-        <td><strong>${esc(d.nome)}</strong></td>
+        <td><strong>${esc(d.nome)}</strong>${d.vaga ? ' <span class="admin-pendente">(vaga: pessoa ainda não definida)</span>' : ''}</td>
         <td>${esc(d.vinculo || '—')}</td>
         <td>${esc([d.unidade, d.subunidade].filter(Boolean).join(' / ') || '—')}${d.outraUnidade ? ' <span class="admin-pendente">(outra unidade)</span>' : ''}</td>
         <td>${d.usos.map(esc).join('<br>')}</td>

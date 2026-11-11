@@ -128,8 +128,51 @@ export function findSimilarNames(nome, conhecidos = [], max = 3) {
         .slice(0, max);
 }
 
+// ---- Vaga: docente ainda sem nome (substituto a contratar, professor nao contatado) ----
+// O nome da vaga e gerado pela janela de cadastro: "Vaga1 FACIN", "Vaga2 FACIN",
+// numerado por subunidade. A grade mostra a primeira palavra ("Vaga1"); a Agenda
+// Publica, o nome inteiro. A mesma vaga em duas componentes no mesmo horario e choque.
+const REGEX_VAGA = /^vaga(\d{1,2}) ([a-z0-9]+)$/;
+
+export function ehVaga(nome) {
+    return REGEX_VAGA.test(normalizeTeacherNameForMatch(nome));
+}
+
+export function siglaValida(sigla) {
+    return /^[A-Za-z0-9]{2,12}$/.test(String(sigla || '').trim());
+}
+
+export function nomeDaVaga(numero, subunidade) {
+    return `Vaga${numero} ${String(subunidade || '').trim().toUpperCase()}`;
+}
+
+// Menor numero livre para a subunidade, olhando os nomes ja usados.
+export function proximaVaga(subunidade, nomes = []) {
+    const sub = normalizeTeacherNameForMatch(subunidade);
+    const usados = new Set();
+    (Array.isArray(nomes) ? nomes : []).forEach((nome) => {
+        const m = normalizeTeacherNameForMatch(nome).match(REGEX_VAGA);
+        if (m && m[2] === sub) usados.add(Number(m[1]));
+    });
+    let n = 1;
+    while (usados.has(n)) n += 1;
+    return nomeDaVaga(n, subunidade);
+}
+
+// Nome improvisado para quem ainda nao tem nome ("n.n. (substituto)",
+// "Professor Provisorio CN1", "Docente Temporario 1", "a contratar"...).
+// Esses nomes nao passam: o caminho e cadastrar uma vaga.
+const PALAVRAS_DE_VAGA = /\b(vaga\d*|substitut[oa]s?|provisori[oa]s?|temporari[oa]s?|contratar|contratad[oa]|definir|indefinid[oa]|docente|nn|xx+)\b/;
+export function pareceVaga(nome) {
+    if (ehVaga(nome)) return false;
+    const chave = normalizeTeacherNameForMatch(nome);
+    return !!chave && (PALAVRAS_DE_VAGA.test(chave) || /^n n\b/.test(chave));
+}
+
 // Motivo para nao aceitar o nome como esta ('' = parece bom).
 export function problemaNoNome(nome) {
+    if (ehVaga(nome)) return '';
+    if (pareceVaga(nome)) return 'Docente ainda sem nome? Cadastre como vaga (botão "Cadastrar Vaga…").';
     const partes = limparEspacos(nome).split(' ').filter(Boolean);
     if (partes.length < 2) return 'Digite nome e sobrenome.';
     const titulo = partes.find((p) => /^(prof|profa|professor|professora|dr|dra|msc|phd)\.?$/i.test(p));
@@ -204,9 +247,11 @@ export function aplicarRevisaoDocente(alloc, nomeAntigo, revisao) {
         copia.docentesCadastrados = copia.docentesCadastrados.map((cad) => {
             if (normalizeTeacherNameForMatch(cad?.nome) !== chave) return cad;
             mudou = true;
-            const { outraUnidade: _digitadaPeloCoordenador, ...resto } = cad;
+            const { outraUnidade: _digitadaPeloCoordenador, vaga: _eraVaga, ...resto } = cad;
             return {
                 ...resto,
+                // Vaga trocada pelo nome da pessoa deixa de ser vaga.
+                ...(ehVaga(revisao.nome) ? { vaga: true } : {}),
                 nome: revisao.nome,
                 vinculo: revisao.vinculo,
                 unidade: revisao.unidade,

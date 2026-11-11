@@ -272,6 +272,32 @@ async function run() {
         i.value = ''; i.dispatchEvent(new Event('input', { bubbles: true }));
       })()`);
       assert(await evaluate("document.getElementById('aviso-docente-novo').classList.contains('hidden')"), 'aviso nao sumiu ao limpar o campo');
+
+      // Vaga: nome improvisado leva ao "Cadastrar Vaga…", que gera "VagaN FACIN".
+      await evaluate(`(() => {
+        const i = document.getElementById('inp-docente');
+        i.value = 'n.n. (substituto)';
+        i.dispatchEvent(new Event('input', { bubbles: true }));
+        i.dispatchEvent(new Event('change', { bubbles: true }));
+      })()`);
+      assert(await waitFor("!!document.querySelector('#aviso-docente-novo .btn-cadastrar-docente[data-vaga=\"1\"]')", 3000), 'nome improvisado sem o botao Cadastrar Vaga');
+      await evaluate("document.querySelector('.btn-cadastrar-docente[data-vaga=\"1\"]').click()");
+      assert(await waitFor("!!document.querySelector('#cadastro-docente-modal input[name=\"cad-tipo\"][value=\"vaga\"]:checked')", 3000), 'janela nao abriu em Vaga');
+      assert(await evaluate("document.querySelector('#cad-conferi').closest('.cad-conferi').classList.contains('hidden')"), 'caixa Conferi SIGAA aparece na vaga');
+      await evaluate(`(() => {
+        const m = document.getElementById('cadastro-docente-modal');
+        const fire = (el) => el.dispatchEvent(new Event('change', { bubbles: true }));
+        const radio = m.querySelector('input[name="cad-vinculo"][value="Substituto"]'); radio.checked = true; fire(radio);
+        const u = m.querySelector('#cad-unidade'); u.value = 'IECOS'; fire(u);
+        const s = m.querySelector('#cad-subunidade'); s.value = 'FACIN'; fire(s);
+      })()`);
+      assert(/^Vaga\d+ FACIN$/.test(await evaluate("document.getElementById('cad-vaga-preview').textContent")), 'nome da vaga nao foi gerado');
+      await evaluate("document.querySelector('#cadastro-docente-modal .cad-ok').click()");
+      assert(await waitFor("!document.getElementById('cadastro-docente-modal') && /^Vaga\\d+ FACIN$/.test(document.getElementById('inp-docente').value) && !!document.querySelector('#aviso-docente-novo .is-ok')", 3000), 'vaga nao entrou no campo Docente');
+      await evaluate(`(() => {
+        const i = document.getElementById('inp-docente');
+        i.value = ''; i.dispatchEvent(new Event('input', { bubbles: true }));
+      })()`);
       await evaluate("document.querySelector('.tab-btn[data-tab=\"teacher\"]').click()");
     });
 

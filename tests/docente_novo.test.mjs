@@ -6,6 +6,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import { detectTeacherConflicts } from '../js/conflicts.js';
+import { ehVaga, pareceVaga, proximaVaga, siglaValida } from '../js/docente_nomes.mjs';
 import { acharNomeConhecido, findNewNames, findSimilarNames, problemaNoNome, UNIDADES, VINCULOS_DOCENTE_NOVO, listarDocentesParaConferir, aplicarRevisaoDocente, removerDocenteDaAlocacao } from '../js/docente_nomes.mjs';
 
 // store.js le o localStorage ao carregar; no Node ele nao existe.
@@ -148,4 +149,45 @@ test('nome digitado sem acento acha o nome da lista', () => {
   assert.equal(acharNomeConhecido('fabio', lista, { parcial: true }), 'Fábio Silva');
   assert.equal(acharNomeConhecido('an', lista, { parcial: true }), null);
   assert.equal(acharNomeConhecido('Maria Nova', lista), null);
+});
+
+// ---- Vaga: docente ainda sem nome ----
+test('vaga: formato VagaN SIGLA, numerada por subunidade', () => {
+  assert.equal(ehVaga('Vaga1 FACIN'), true);
+  assert.equal(ehVaga('vaga12 fepesca'), true);
+  assert.equal(ehVaga('Vaga FACIN 01'), false);
+  assert.equal(ehVaga('Ana Beatriz Cardoso Lima'), false);
+  assert.equal(proximaVaga('FACIN', []), 'Vaga1 FACIN');
+  assert.equal(proximaVaga('facin', ['Vaga1 FACIN', 'Vaga3 FACIN', 'Vaga1 FEPESCA']), 'Vaga2 FACIN');
+  assert.equal(proximaVaga('FEPESCA', ['Vaga1 FACIN', 'Vaga1 FEPESCA']), 'Vaga2 FEPESCA');
+  assert.equal(siglaValida('FACFIS'), true);
+  assert.equal(siglaValida('Faculdade de Física'), false);
+});
+
+test('vaga: nomes improvisados nao passam, a vaga passa', () => {
+  ['n.n. (substituto)', 'N. N. (substituto)', 'Professor Provisório CN1', 'Docente Temporário CN 1', 'Substituto a contratar', 'vaga', 'Vaga FACIN 01']
+    .forEach((nome) => {
+      assert.equal(pareceVaga(nome), true, nome);
+      assert.match(problemaNoNome(nome), /vaga/i, nome);
+    });
+  assert.equal(problemaNoNome('Vaga1 FACIN'), '');
+  assert.equal(pareceVaga('Thiago Tomé Ferreira'), false);
+  assert.equal(pareceVaga('Maria das Dores Lima'), false);
+});
+
+test('vaga: o mesmo nome em duas turmas e choque; Vaga1 e Vaga11 sao pessoas diferentes', () => {
+  assert.equal(teacherNamesMatch('Vaga1 FACIN', 'vaga1 facin'), true);
+  assert.equal(teacherNamesMatch('Vaga1 FACIN', 'Vaga11 FACIN'), false);
+  assert.equal(teacherNamesMatch('Vaga1 FACIN', 'Vaga1 FEPESCA'), false);
+});
+
+test('vaga: revisao com o nome da pessoa deixa de ser vaga', () => {
+  const cad = { nome: 'Vaga1 FACIN', vaga: true, vinculo: 'Substituto', unidade: 'IECOS', subunidade: 'FACIN', por: 'c@ufpa.br', em: '2026-11-11' };
+  const alloc = { id: 'a1', turmaId: 'EP2027C', docente: 'Vaga1 FACIN', docentesCadastrados: [cad] };
+  const revisao = { nome: 'Joana Pereira Lima', vinculo: 'Substituto', unidade: 'IECOS', subunidade: 'FACIN', por: 'adm@ufpa.br', em: '2026-11-12' };
+  const r = aplicarRevisaoDocente(alloc, 'Vaga1 FACIN', revisao);
+  assert.equal(r.docente, 'Joana Pereira Lima');
+  assert.equal(r.docentesCadastrados[0].vaga, undefined);
+  const mantida = aplicarRevisaoDocente(alloc, 'Vaga1 FACIN', { ...revisao, nome: 'Vaga1 FACIN' });
+  assert.equal(mantida.docentesCadastrados[0].vaga, true);
 });

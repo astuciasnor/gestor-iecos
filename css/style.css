@@ -3449,6 +3449,25 @@ body:has(#tab-weekly.active) .top-bar .btn-print { display: none; }
     font-size: 0.85em;
 }
 
+/* Docente com nome x Vaga (pessoa ainda nao definida) */
+.cad-docente .cad-tipo label {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin-bottom: 6px;
+    font-size: 0.9em;
+    cursor: pointer;
+}
+
+.cad-docente .cad-vaga-nome {
+    margin-bottom: 12px;
+    padding: 8px 10px;
+    border: 1px solid #b7d7c6;
+    border-radius: 5px;
+    background: #eef8f2;
+    font-size: 0.95em;
+}
+
 .cad-docente .cad-conferi {
     display: flex;
     align-items: flex-start;
