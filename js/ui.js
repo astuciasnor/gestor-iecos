@@ -197,6 +197,9 @@ const drawingDragState = {
     shouldSelect: true,
     touchedAnyCell: false
 };
+// Ancora do Shift+clique (como no Excel): a ultima celula clicada na grade.
+// { dia, horario, date, select } ou null. Ver marcarRetangulo.
+let ancoraRetangulo = null;
 
 let chLimitWarningLockUntil = 0;
 let pendingFaixaStartPick = null;
@@ -2023,6 +2026,51 @@ function setDrawingCellSelection(cell, selected, styles) {
     marcarSabadoManhaNaCelula(cell);
 }
 
+// Shift+clique: marca (ou apaga, se a ancora foi apagada) o retangulo entre a
+// ancora e a celula clicada, como no Excel. Pula intervalo, feriado, horario
+// ocupado e dia fora da faixa. Acha cada celula pela posicao, porque uma
+// marcacao pode redesenhar a grade (inicio, sabado, faixa nova). Retorna false
+// se nao ha ancora nesta semana (o clique segue como clique normal).
+function marcarRetangulo(dia, horario, date) {
+    const a = ancoraRetangulo;
+    if (!a || !date || getWeekStartISO(a.date) !== getWeekStartISO(date)) return false;
+
+    const horarios = [...new Set([...gridContainer.querySelectorAll('.slot[data-horario]')].map((c) => c.dataset.horario))];
+    const l1 = horarios.indexOf(a.horario);
+    const l2 = horarios.indexOf(horario);
+    if (l1 < 0 || l2 < 0) return false;
+    const linhas = horarios.slice(Math.min(l1, l2), Math.max(l1, l2) + 1);
+
+    const celulaEm = (d, h) => [...gridContainer.querySelectorAll(`.slot[data-dia="${d}"]`)]
+        .find((c) => c.dataset.horario === h);
+    let mudou = false;
+    for (let d = Math.min(a.dia, dia); d <= Math.max(a.dia, dia); d++) {
+        for (const h of linhas) {
+            const cell = celulaEm(d, h);
+            if (!cell || cell.dataset.canEdit !== '1') continue;
+            if (cell.classList.contains('selected-slot') === a.select) continue;
+            if (!tryApplyDrawingSelection(cell, a.select, getDrawingSelectedStyles())) {
+                if (a.select) { if (mudou) persistActiveDrawingSelection(); return true; }   // CH cheia: para aqui
+                continue;
+            }
+            mudou = true;
+        }
+    }
+    if (mudou) persistActiveDrawingSelection();
+    marcarAncoraNaGrade();
+    return true;
+}
+
+function marcarAncoraNaGrade() {
+    if (!gridContainer) return;
+    gridContainer.querySelectorAll('.slot-ancora').forEach((c) => c.classList.remove('slot-ancora'));
+    const a = ancoraRetangulo;
+    if (!a) return;
+    const cell = [...gridContainer.querySelectorAll(`.slot[data-dia="${a.dia}"]`)]
+        .find((c) => c.dataset.horario === a.horario && c.dataset.date === a.date);
+    cell?.classList.add('slot-ancora');
+}
+
 function endDrawingDrag() {
     const shouldPersist = !!drawingFaixaIndex && drawingDragState.active && drawingDragState.touchedAnyCell;
     drawingDragState.active = false;
@@ -2142,6 +2190,7 @@ function activateDrawingMode(faixaIndex, options = {}) {
 
 function deactivateDrawingMode() {
     endDrawingDrag();
+    ancoraRetangulo = null;
     if (pendingFaixaStartPick) clearPendingFaixaStartPick();
     drawingFaixaIndex = null;
     weeklyViewState.followActiveFaixa = false;
@@ -6503,8 +6552,11 @@ function renderWeeklyGrid() {
                             if (e.button !== 0) return;
                             e.preventDefault();
                             e.stopPropagation();
+                            if (e.shiftKey && marcarRetangulo(i, horarioStr, cellDate)) return;
                             drawingDragState.active = true;
                             drawingDragState.shouldSelect = !cell.classList.contains('selected-slot');
+                            ancoraRetangulo = { dia: i, horario: horarioStr, date: cellDate, select: drawingDragState.shouldSelect };
+                            marcarAncoraNaGrade();
                             drawingDragState.touchedAnyCell = false;
                             if (document.body) document.body.style.userSelect = 'none';
 
@@ -6581,6 +6633,7 @@ function renderWeeklyGrid() {
         }
     });
 
+    if (isDrawing) marcarAncoraNaGrade();
     applyStartSuggestionHighlight();
     applyWeeklyGridRowHeightScale();
     updateWeeklySavePatternButton();

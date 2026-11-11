@@ -636,6 +636,11 @@
 }
 /* Celula sendo desenhada: o JS pinta o tom suave e a barra; aqui so o arredondado */
 #tab-weekly .timetable .slot.selected-slot { border-radius: 10px; }
+/* Ancora do Shift+clique (ultima celula clicada): contorno fino por dentro */
+#tab-weekly .timetable .slot.slot-ancora {
+    outline: 2px solid var(--cd-foco);
+    outline-offset: -3px;
+}
 
 /* Bloco da aula: tom suave, barra forte de 4px, texto escuro, duas linhas */
 #tab-weekly #weekly-grid .mini-card-container { height: 100%; gap: 4px; padding: 0; }
