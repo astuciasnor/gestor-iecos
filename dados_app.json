@@ -1,6 +1,6 @@
 {
   "meta": {
-    "generated_at": "2026-11-03T16:52:09",
+    "generated_at": "2026-11-11T17:53:37",
     "source_file": "planilha_base.xlsx"
   },
   "docentes": [
@@ -2597,8 +2597,8 @@
       "periodo": "VIII",
       "codigo": "CNBR057",
       "cor": "#d4ffca",
-      "componente": "HISTORIA E EMBRIOLOGIA",
-      "abreviacao": "Historia Embrol",
+      "componente": "HISTOLOGIA E EMBRIOLOGIA",
+      "abreviacao": "Histologia Embriol",
       "ch": 45
     },
     {
