@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { filtrarDocentes } from '../js/sugestoes_docente.mjs';
+import { filtrarDocentes, umNomePorPessoa, mesmoDocente } from '../js/docente_nomes.mjs';
 
 const NOMES = [
   'Marcos Lazaro de Souza Albuquerque',
@@ -30,4 +30,11 @@ test('campo vazio mostra todos em ordem alfabetica', () => {
   assert.equal(filtrarDocentes('', NOMES).length, NOMES.length);
   assert.equal(filtrarDocentes('', NOMES)[0], 'Ana Garcês');
   assert.equal(filtrarDocentes('', NOMES, 2).length, 2);
+});
+
+test('um nome por pessoa: vale a primeira grafia', () => {
+  assert.deepEqual(umNomePorPessoa(['Zélia Nunes', 'zelia  nunes', 'Zélia Santos', '']), ['Zélia Nunes', 'Zélia Santos']);
+  assert.equal(mesmoDocente('Zelia Nunes', 'ZÉLIA NUNES'), true);
+  assert.equal(mesmoDocente('Zélia Nunes', 'Zélia Santos'), false);
+  assert.equal(mesmoDocente('', ''), false);
 });

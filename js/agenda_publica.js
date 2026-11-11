@@ -1,9 +1,10 @@
-import { store, normalizeLoadedAllocation } from './store.js?v=202611102252';
-import { getTurnoLetter } from './turns.js?v=202611102252';
-import { getCalendarEvents } from './calendar.js?v=202611102252';
-import { resolveActiveAcademicPeriod } from './academic_rules.mjs?v=202611102252';
-import { buildMonthMarkers, summarizeTeacherPeriod } from './resumo_docente.mjs?v=202611102252';
-import { resolveBackendMode, UFPA_API_URL } from './backend_config.js?v=202611102252';
+import { store, normalizeLoadedAllocation } from './store.js?v=202611102308';
+import { getTurnoLetter } from './turns.js?v=202611102308';
+import { getCalendarEvents } from './calendar.js?v=202611102308';
+import { resolveActiveAcademicPeriod } from './academic_rules.mjs?v=202611102308';
+import { buildMonthMarkers, summarizeTeacherPeriod } from './resumo_docente.mjs?v=202611102308';
+import { resolveBackendMode, UFPA_API_URL } from './backend_config.js?v=202611102308';
+import { filtrarDocentes } from './docente_nomes.mjs?v=202611102308';
 
 const collator = new Intl.Collator('pt-BR', { sensitivity: 'base' });
 const PUBLIC_ASSET_VERSION = '20261028a';
@@ -976,9 +977,11 @@ function renderizarSugestoes(termo, allowAll) {
 
     const rawTerm = String(termo || '').trim();
     const normalizedTerm = normalizeText(rawTerm);
+    // Mesma busca do Cardume (docente_nomes.mjs): partes em qualquer ordem, com
+    // ou sem acento; quem comeca pelo texto vem primeiro.
     const source = allowAll && !normalizedTerm
         ? state.docentesDisponiveis.slice(0, 12)
-        : state.docentesDisponiveis.filter((docente) => normalizeText(docente).includes(normalizedTerm)).slice(0, 12);
+        : filtrarDocentes(rawTerm, state.docentesDisponiveis, 12);
 
     els.listaSugestoes.innerHTML = '';
 

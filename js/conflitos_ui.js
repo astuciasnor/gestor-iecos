@@ -1,17 +1,18 @@
-import { store } from './store.js?v=202611102252';
-import { getCalendarEvents } from './calendar.js?v=202611102252';
-import { timeToMinutes } from './date_utils_ui.js?v=202611102252';
+import { store } from './store.js?v=202611102308';
+import { getCalendarEvents } from './calendar.js?v=202611102308';
+import { timeToMinutes } from './date_utils_ui.js?v=202611102308';
 import {
     isPendingAllocation,
     getAllocationTeachersForConflict,
     normalizeTeacherNameForMatch
-} from './allocation_helpers.js?v=202611102252';
-import { normalizeConflictSlotLabel } from './turno_helpers.js?v=202611102252';
-import { slotLabelsOverlap } from './academic_rules.mjs?v=202611102252';
-import { getTurmaLabel } from './curso_turma_helpers.js?v=202611102252';
-import { renderTeacherCalendar, withPlanContext } from './calendarios_ui.js?v=202611102252';
-import { showToastWarning } from './ui_feedback.js?v=202611102252';
-import { saoSubturmasDiferentes } from './subturmas.mjs?v=202611102252';
+} from './allocation_helpers.js?v=202611102308';
+import { normalizeConflictSlotLabel } from './turno_helpers.js?v=202611102308';
+import { slotLabelsOverlap } from './academic_rules.mjs?v=202611102308';
+import { getTurmaLabel } from './curso_turma_helpers.js?v=202611102308';
+import { renderTeacherCalendar, withPlanContext } from './calendarios_ui.js?v=202611102308';
+import { showToastWarning } from './ui_feedback.js?v=202611102308';
+import { saoSubturmasDiferentes } from './subturmas.mjs?v=202611102308';
+import { umNomePorPessoa } from './docente_nomes.mjs?v=202611102308';
 
 // Ref DOM de nivel de modulo (modulo deferred, DOM pronto).
 const selViewDocente = document.getElementById('sel-view-docente');
@@ -24,12 +25,7 @@ export function detectGlobalTeacherConflictsStable() {
     const diasNomes = ['', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab'];
     // Um nome por professor: "Zelia" e "Zélia" sao a mesma pessoa (o calendario
     // ja junta as duas grafias; sem isto o choque sairia duas vezes no alerta).
-    const porChave = new Map();
-    allocs.flatMap((alloc) => getAllocationTeachersForConflict(alloc)).forEach((nome) => {
-        const chave = normalizeTeacherNameForMatch(nome);
-        if (chave && !porChave.has(chave)) porChave.set(chave, nome);
-    });
-    const allTeachers = [...porChave.values()];
+    const allTeachers = umNomePorPessoa(allocs.flatMap((alloc) => getAllocationTeachersForConflict(alloc)));
     if (allTeachers.length === 0) return conflictMap;
 
     const auditStart = allocs.reduce((minDate, alloc) => {

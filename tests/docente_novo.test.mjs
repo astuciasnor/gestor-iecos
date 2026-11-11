@@ -6,7 +6,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import { detectTeacherConflicts } from '../js/conflicts.js';
-import { acharNomeConhecido, semAcento, findNewNames, findSimilarNames, problemaNoNome, UNIDADES, VINCULOS_DOCENTE_NOVO, listarDocentesParaConferir, aplicarRevisaoDocente, removerDocenteDaAlocacao } from '../js/docente_nomes.mjs';
+import { acharNomeConhecido, findNewNames, findSimilarNames, problemaNoNome, UNIDADES, VINCULOS_DOCENTE_NOVO, listarDocentesParaConferir, aplicarRevisaoDocente, removerDocenteDaAlocacao } from '../js/docente_nomes.mjs';
 
 // store.js le o localStorage ao carregar; no Node ele nao existe.
 globalThis.localStorage ??= { getItem: () => null, setItem: () => {}, removeItem: () => {} };
@@ -148,5 +148,4 @@ test('nome digitado sem acento acha o nome da lista', () => {
   assert.equal(acharNomeConhecido('fabio', lista, { parcial: true }), 'Fábio Silva');
   assert.equal(acharNomeConhecido('an', lista, { parcial: true }), null);
   assert.equal(acharNomeConhecido('Maria Nova', lista), null);
-  assert.equal(semAcento('Zélia Garcês'), 'Zelia Garces');
 });

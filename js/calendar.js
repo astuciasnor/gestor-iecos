@@ -1,8 +1,8 @@
-import { store } from './store.js?v=202611102252';
-import { getDaysArray, toLocalDateString } from './utils.js?v=202611102252';
-import { mapSlotToTurno, turnoDaTurmaInclui } from './turns.js?v=202611102252';
-import { slotLabelsOverlap } from './academic_rules.mjs?v=202611102252';
-import { normalizeTeacherNameForMatch } from './docente_nomes.mjs?v=202611102252';
+import { store } from './store.js?v=202611102308';
+import { getDaysArray, toLocalDateString } from './utils.js?v=202611102308';
+import { mapSlotToTurno, turnoDaTurmaInclui } from './turns.js?v=202611102308';
+import { slotLabelsOverlap } from './academic_rules.mjs?v=202611102308';
+import { mesmoDocente } from './docente_nomes.mjs?v=202611102308';
 
 function normalizeKeyPart(value) {
   return String(value || '').trim().toUpperCase();
@@ -153,20 +153,15 @@ function buildOfferKey(allocation) {
   ].join('|');
 }
 
-// Mesmo professor ignorando acentos, maiusculas e espacos ("Zelia" = "Zélia"):
+// Mesmo professor com ou sem acento ("Zelia" = "Zélia", ver mesmoDocente):
 // uma grafia diferente nao pode esconder aulas do calendario nem um choque.
 function allocationMatchesTeacherFilter(allocation, docenteFilter = '') {
-  const filtro = normalizeTeacherNameForMatch(docenteFilter);
-  if (!filtro) return true;
-  const mesmo = (nome) => normalizeTeacherNameForMatch(nome) === filtro;
-
-  if (typeof allocation?.docente === 'string' && mesmo(allocation.docente)) return true;
-  if (allocation?.docente?.nome && mesmo(allocation.docente.nome)) return true;
-
+  if (!String(docenteFilter || '').trim()) return true;
+  if (typeof allocation?.docente === 'string' && mesmoDocente(allocation.docente, docenteFilter)) return true;
+  if (allocation?.docente?.nome && mesmoDocente(allocation.docente.nome, docenteFilter)) return true;
   if (Array.isArray(allocation?.docentes)) {
-    return allocation.docentes.some((docente) => mesmo(docente?.nome || docente));
+    return allocation.docentes.some((docente) => mesmoDocente(docente?.nome || docente, docenteFilter));
   }
-
   return false;
 }
 

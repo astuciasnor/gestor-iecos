@@ -23,24 +23,63 @@ export function normalizeTeacherNameForMatch(value) {
         .trim();
 }
 
-// Texto sem acentos, com as maiusculas de sempre ("Zélia" -> "Zelia"). Rotulo
-// das sugestoes: assim quem digita sem acento tambem acha o nome.
-export function semAcento(texto) {
-    return String(texto || '').normalize('NFD').replace(/[̀-ͯ]/g, '');
+// ---- Comparar e achar nomes (com ou sem acento) ----
+// Regra unica do Cardume: o mesmo nome ignorando acentos, maiusculas e
+// espacos e a mesma pessoa ("Zelia" = "Zélia"); os sobrenomes distinguem
+// pessoas com o mesmo primeiro nome.
+
+export function mesmoDocente(a, b) {
+    const chave = normalizeTeacherNameForMatch(a);
+    return !!chave && chave === normalizeTeacherNameForMatch(b);
 }
 
-// Nome da lista para o que foi digitado, ignorando acentos e maiusculas
-// ("zelia maria pimental nunes" -> "Zélia Maria Pimental Nunes"). Com parcial,
-// um pedaco do nome (3+ letras) vale se so um docente o tiver ("fabio").
+// Um nome por pessoa, na ordem recebida: vale a primeira grafia que aparecer
+// (quem chama poe a planilha de docentes antes das alocacoes).
+export function umNomePorPessoa(nomes = []) {
+    const porChave = new Map();
+    (Array.isArray(nomes) ? nomes : []).forEach((nome) => {
+        const chave = normalizeTeacherNameForMatch(nome);
+        if (chave && !porChave.has(chave)) porChave.set(chave, nome);
+    });
+    return [...porChave.values()];
+}
+
+// Sugestoes para o que foi digitado: nomes com TODAS as partes digitadas, em
+// qualquer ordem ("marcos laz"), com ou sem acento nos dois sentidos ("Láz"
+// acha "Lazaro"). Primeiro os que comecam pelo texto, depois os que tem uma
+// palavra comecando assim, depois o resto; em cada grupo, ordem alfabetica.
+// Campo vazio: todos, em ordem alfabetica.
+export function filtrarDocentes(digitado, nomes = [], max = 50) {
+    const lista = (Array.isArray(nomes) ? nomes : []).filter(Boolean);
+    const termo = normalizeTeacherNameForMatch(digitado);
+    const ordenar = (a, b) => a.localeCompare(b, 'pt-BR', { sensitivity: 'base' });
+    if (!termo) return lista.slice().sort(ordenar).slice(0, max);
+    const partes = termo.split(' ');
+    const grupo = (chave) => {
+        if (chave.startsWith(termo)) return 0;
+        if (chave.split(' ').some((p) => p.startsWith(partes[0]))) return 1;
+        return 2;
+    };
+    return lista
+        .map((nome) => ({ nome, chave: normalizeTeacherNameForMatch(nome) }))
+        .filter(({ chave }) => partes.every((p) => chave.includes(p)))
+        .sort((a, b) => grupo(a.chave) - grupo(b.chave) || ordenar(a.nome, b.nome))
+        .slice(0, max)
+        .map(({ nome }) => nome);
+}
+
+// Nome da lista para o que foi digitado ("zelia maria pimental nunes" ->
+// "Zélia Maria Pimental Nunes"). Com parcial, vale um pedaco (3+ letras) que
+// so um docente tenha, pela mesma regra das sugestoes ("glaucia").
 // Sem um nome unico, devolve null (o texto fica como foi digitado).
 export function acharNomeConhecido(digitado, conhecidos = [], { parcial = false } = {}) {
     const chave = normalizeTeacherNameForMatch(digitado);
     if (!chave) return null;
     const lista = (Array.isArray(conhecidos) ? conhecidos : []).filter(Boolean);
-    const exato = lista.find((nome) => normalizeTeacherNameForMatch(nome) === chave);
+    const exato = lista.find((nome) => mesmoDocente(nome, chave));
     if (exato) return exato;
     if (!parcial || chave.length < 3) return null;
-    const achados = lista.filter((nome) => normalizeTeacherNameForMatch(nome).includes(chave));
+    const achados = filtrarDocentes(digitado, umNomePorPessoa(lista), 2);
     return achados.length === 1 ? achados[0] : null;
 }
 

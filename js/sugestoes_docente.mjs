@@ -1,31 +1,9 @@
 // Lista de sugestoes de docentes do Cardume (no lugar do <datalist> do navegador).
 // Acha o nome com ou sem acento, nos dois sentidos: "Laz" acha "Lázaro" e
 // "Láz" acha "Lazaro". Mostra uma linha por professor, com o nome da lista.
-// filtrarDocentes e pura (testada em tests/sugestoes_docente.test.mjs); a parte
-// de tela so roda quando ligarSugestoesDocente e chamada.
-import { normalizeTeacherNameForMatch } from './docente_nomes.mjs?v=202611102252';
-
-// Nomes que tem TODAS as partes digitadas, em qualquer ordem ("marcos laz").
-// Primeiro os que comecam pelo que foi digitado, depois os que tem uma palavra
-// comecando assim, depois o resto; em cada grupo, ordem alfabetica.
-export function filtrarDocentes(digitado, nomes = [], max = 50) {
-    const lista = (Array.isArray(nomes) ? nomes : []).filter(Boolean);
-    const termo = normalizeTeacherNameForMatch(digitado);
-    const ordenar = (a, b) => a.localeCompare(b, 'pt-BR', { sensitivity: 'base' });
-    if (!termo) return lista.slice().sort(ordenar).slice(0, max);
-    const partes = termo.split(' ');
-    const grupo = (chave) => {
-        if (chave.startsWith(termo)) return 0;
-        if (chave.split(' ').some((p) => p.startsWith(partes[0]))) return 1;
-        return 2;
-    };
-    return lista
-        .map((nome) => ({ nome, chave: normalizeTeacherNameForMatch(nome) }))
-        .filter(({ chave }) => partes.every((p) => chave.includes(p)))
-        .sort((a, b) => grupo(a.chave) - grupo(b.chave) || ordenar(a.nome, b.nome))
-        .slice(0, max)
-        .map(({ nome }) => nome);
-}
+// A regra de busca (filtrarDocentes) fica em docente_nomes.mjs, com as outras
+// regras de nomes; aqui so a tela.
+import { filtrarDocentes } from './docente_nomes.mjs?v=202611102308';
 
 // Liga a lista a todos os campos que casam com o seletor (inclusive os criados
 // depois, como as linhas de "Multiplos"). Escolher um nome poe o valor no campo

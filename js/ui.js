@@ -1,29 +1,29 @@
-import { store } from './store.js?v=202611102252';
-import { getTurnoLetter, mapSlotToTurno, turnoDaTurmaInclui } from './turns.js?v=202611102252';
-import { normalizePeriodo as normalizePeriodoLetivoCode } from './plan_storage.js?v=202611102252';
-import { getCalendarEvents } from './calendar.js?v=202611102252';
-import { isDateOverlap } from './utils.js?v=202611102252';
-import { weeklyState } from './weekly_state.js?v=202611102252';
-import { findPendentesCobertas, isPendenteJaAlocada } from './pendentes.mjs?v=202611102252';
-import { classifySwap } from './troca_ordem.mjs?v=202611102252';
-import { closeFaixaEnds, isPauseEnd, listFaixaPauses } from './pausa_faixas.mjs?v=202611102252';
-import { numeroDaSubturma, isTurmaInteira, proximaSubturma, codigoT01Como, saoSubturmasDiferentes } from './subturmas.mjs?v=202611102252';
-import { abrirMiniCalendario, fecharMiniCalendario, miniCalendarioAberto } from './mini_calendario.mjs?v=202611102252';
-import { buildCanonicalOfferProjection } from './execution_engine.js?v=202611102252';
+import { store } from './store.js?v=202611102308';
+import { getTurnoLetter, mapSlotToTurno, turnoDaTurmaInclui } from './turns.js?v=202611102308';
+import { normalizePeriodo as normalizePeriodoLetivoCode } from './plan_storage.js?v=202611102308';
+import { getCalendarEvents } from './calendar.js?v=202611102308';
+import { isDateOverlap } from './utils.js?v=202611102308';
+import { weeklyState } from './weekly_state.js?v=202611102308';
+import { findPendentesCobertas, isPendenteJaAlocada } from './pendentes.mjs?v=202611102308';
+import { classifySwap } from './troca_ordem.mjs?v=202611102308';
+import { closeFaixaEnds, isPauseEnd, listFaixaPauses } from './pausa_faixas.mjs?v=202611102308';
+import { numeroDaSubturma, isTurmaInteira, proximaSubturma, codigoT01Como, saoSubturmasDiferentes } from './subturmas.mjs?v=202611102308';
+import { abrirMiniCalendario, fecharMiniCalendario, miniCalendarioAberto } from './mini_calendario.mjs?v=202611102308';
+import { buildCanonicalOfferProjection } from './execution_engine.js?v=202611102308';
 import {
     buildSigaaMetadataPayload,
     validateSigaaMetadataPayload,
     getSigaaCode,
     buildScopedSigaaAllocationFromOfferFaixa
-} from './sigaa_metadata.js?v=202611102252';
-import { parseBackupDataFile, extractImportPlanMeta } from './serialization.js?v=202611102252';
+} from './sigaa_metadata.js?v=202611102308';
+import { parseBackupDataFile, extractImportPlanMeta } from './serialization.js?v=202611102308';
 import {
     showToastWarning,
     showPersistentStatusMessage,
     copyTextToClipboard,
     flashButtonCopyState,
     setupCopyActionButtons
-} from './ui_feedback.js?v=202611102252';
+} from './ui_feedback.js?v=202611102308';
 import {
     normalizeHexColor,
     adjustHexColor,
@@ -32,7 +32,7 @@ import {
     tonsDaCor,
     aplicarTonsBloco,
     PALETA_CORES
-} from './color_utils.js?v=202611102252';
+} from './color_utils.js?v=202611102308';
 import {
     isFaixaAllocation,
     isPriorityRegularAllocation,
@@ -41,9 +41,9 @@ import {
     normalizeTeacherNameForMatch,
     getDocenteShortLabel,
     getAllocationTeachersForConflict
-} from './allocation_helpers.js?v=202611102252';
-import { setupSeletorCor } from './seletor_cor.js?v=202611102252';
-import { ligarSugestoesDocente, filtrarDocentes } from './sugestoes_docente.mjs?v=202611102252';
+} from './allocation_helpers.js?v=202611102308';
+import { setupSeletorCor } from './seletor_cor.js?v=202611102308';
+import { ligarSugestoesDocente } from './sugestoes_docente.mjs?v=202611102308';
 import {
     VINCULOS_DOCENTE_NOVO,
     OUTRA_UNIDADE,
@@ -52,10 +52,12 @@ import {
     findSimilarNames,
     problemaNoNome,
     limparEspacos,
-    acharNomeConhecido
-} from './docente_nomes.mjs?v=202611102252';
-import { getSessionEmail, getPerfil, fetchAllocationsForPlans } from './sync_remoto.js?v=202611102252';
-import { resolveBackendMode } from './backend_config.js?v=202611102252';
+    acharNomeConhecido,
+    filtrarDocentes,
+    umNomePorPessoa
+} from './docente_nomes.mjs?v=202611102308';
+import { getSessionEmail, getPerfil, fetchAllocationsForPlans } from './sync_remoto.js?v=202611102308';
+import { resolveBackendMode } from './backend_config.js?v=202611102308';
 import {
     normalizeConflictSlotLabel,
     getAvailableTurnoOfertaOptions,
@@ -65,7 +67,7 @@ import {
     buildHorariosForUI,
     getShiftChangeMeta,
     getNativeTurnoValueForAllocation
-} from './turno_helpers.js?v=202611102252';
+} from './turno_helpers.js?v=202611102308';
 import {
     getDisciplinaCHGlobal,
     derivarBloco,
@@ -75,7 +77,7 @@ import {
     getDisciplinaInfo,
     getCursoSiglaDaTurma,
     getPrintAcademicMetaLine
-} from './curso_turma_helpers.js?v=202611102252';
+} from './curso_turma_helpers.js?v=202611102308';
 import {
     renderMonthlyCalendar,
     renderTeacherCalendar,
@@ -83,13 +85,13 @@ import {
     clearTeacherRangeCache,
     setTeacherPeriod,
     getTeacherPeriod
-} from './calendarios_ui.js?v=202611102252';
+} from './calendarios_ui.js?v=202611102308';
 import {
     refreshTeacherConflictsUI,
     setCrossPlanLoader,
     setResolverDeChoque,
     acharChoqueComOutroPL
-} from './conflitos_ui.js?v=202611102252';
+} from './conflitos_ui.js?v=202611102308';
 import {
     shouldIgnoreTurmaEventForCandidate,
     normalizeDrawnSlotsByDay,
@@ -103,7 +105,7 @@ import {
     resolveEditableFaixasFromStoredExecution,
     alignFaixasToExecutionEnd,
     buildFinalAdjustmentFaixaSuggestion
-} from './faixa_utils.js?v=202611102252';
+} from './faixa_utils.js?v=202611102308';
 import {
     timeToMinutes,
     shiftISODate,
@@ -117,14 +119,14 @@ import {
     isDateInsideRange,
     formatDateBRShortYear,
     formatDateBR
-} from './date_utils_ui.js?v=202611102252';
+} from './date_utils_ui.js?v=202611102308';
 import {
     initializeWeeklyScheduleForTurma,
     reconcileTurmaSelectionAfterPLChange,
     resetWeeklyViewOnTurmaChange,
     resolveActiveAcademicPeriod,
     slotLabelsOverlap
-} from './academic_rules.mjs?v=202611102252';
+} from './academic_rules.mjs?v=202611102308';
 
 const gridContainer = document.getElementById('weekly-grid');
 const selCurso = document.getElementById('sel-curso');
@@ -5747,14 +5749,9 @@ function getKnownDocenteNames() {
         }
     });
 
-    // Um nome por pessoa, ignorando acentos e maiusculas: vale a grafia da
-    // planilha de docentes; depois, a primeira que aparecer nas alocacoes.
-    const porChave = new Map();
-    [...nomesRaw, ...nomesAlloc].filter(Boolean).forEach((nome) => {
-        const chave = normalizeTeacherNameForMatch(nome);
-        if (chave && !porChave.has(chave)) porChave.set(chave, nome);
-    });
-    return [...porChave.values()].sort((a, b) =>
+    // Um nome por pessoa: vale a grafia da planilha de docentes; depois, a
+    // primeira que aparecer nas alocacoes.
+    return umNomePorPessoa([...nomesRaw, ...nomesAlloc]).sort((a, b) =>
         a.localeCompare(b, 'pt-BR', { sensitivity: 'base' })
     );
 }
