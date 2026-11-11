@@ -1,5 +1,5 @@
-import { store } from './store.js?v=202611111733';
-import { normalizePeriodo as normalizePeriodoLetivoCode } from './plan_storage.js?v=202611111733';
+import { store } from './store.js?v=202611111738';
+import { normalizePeriodo as normalizePeriodoLetivoCode } from './plan_storage.js?v=202611111738';
 
 // Curso (sigla) de uma turma: pelo cadastro de turmas, ou pelas letras do
 // inicio do id (CN2027 -> CN) quando a turma nao esta no cadastro.

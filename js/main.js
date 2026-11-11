@@ -1,16 +1,16 @@
-import { store } from './store.js?v=202611111733';
-import { initUI, exportSigaaMetadataJSON, showToastWarning, refreshAfterRemoteChange } from './ui.js?v=202611111733';
-import { iniciarAcesso, isOnlineMode } from './acesso_ui.js?v=202611111733';
-import { setupAjuda } from './ajuda_ui.js?v=202611111733';
-import { fetchAllocationsForPlans, canPublishToServer, publishAgenda, getPerfil } from './sync_remoto.js?v=202611111733';
-import { filterExportableAllocations } from './academic_rules.mjs?v=202611111733';
+import { store } from './store.js?v=202611111738';
+import { initUI, exportSigaaMetadataJSON, showToastWarning, refreshAfterRemoteChange } from './ui.js?v=202611111738';
+import { iniciarAcesso, isOnlineMode } from './acesso_ui.js?v=202611111738';
+import { setupAjuda } from './ajuda_ui.js?v=202611111738';
+import { fetchAllocationsForPlans, canPublishToServer, publishAgenda, getPerfil } from './sync_remoto.js?v=202611111738';
+import { filterExportableAllocations } from './academic_rules.mjs?v=202611111738';
 import {
   buildPlanScopedPayload,
   buildTurmaParaCursoMap,
   collectAllocationsByCurso,
   buildTodosCursosExportSnapshot,
   buildPublicExportPayload
-} from './serialization.js?v=202611111733';
+} from './serialization.js?v=202611111738';
 
 // Cursos exportaveis: os cadastrados na aba cursos da planilha (dados_app.json).
 function getExportCursosUnidade() {
@@ -434,6 +434,7 @@ function exportarJSONCurso(sigla) {
       if (noServidor) {
         try {
           const resultado = await publishAgenda(publications);
+          window.dispatchEvent(new Event('cardume:agenda-publicada'));
           const link = new URL('agenda_publica.html', window.location.href).href;
           const lista = (resultado?.periodos || [])
             .map((p) => `- ${p.periodo}: ${p.alocacoes} alocação(ões)`)

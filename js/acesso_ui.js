@@ -1,8 +1,8 @@
 // Tela de acesso e barra de status da sincronizacao.
 // Modo local: senha unica, como antes. Modos supabase e ufpa: e-mail e senha de
 // cada coordenador, e as alocacoes passam a ser compartilhadas pelo servidor.
-import { resolveBackendMode } from './backend_config.js?v=202611111733';
-import * as remoto from './sync_remoto.js?v=202611111733';
+import { resolveBackendMode } from './backend_config.js?v=202611111738';
+import * as remoto from './sync_remoto.js?v=202611111738';
 
 const LOCAL_PASSWORD = 'ufpa2026';
 
@@ -152,14 +152,47 @@ async function iniciarOnline({ onRemoteChange, showToast }) {
     )
   });
 
-  if (remoto.getAdminTools()) avisarDocentesNovos(showToast);
+  if (remoto.getAdminTools()) {
+    avisarDocentesNovos(showToast);
+    vigiarPublicacao(remoto.getAdminTools());
+  }
+}
+
+// Administrador: uma linha "publique" na barra quando alguem mudou alocacoes
+// depois da ultima publicacao da agenda. Confere ao entrar, a cada 2 minutos e
+// logo depois do Publicar Online.
+let vigiandoPublicacao = false;
+function vigiarPublicacao(admin) {
+  if (vigiandoPublicacao || typeof admin?.pendentePublicar !== 'function') return;
+  vigiandoPublicacao = true;
+  const conferir = async () => {
+    try {
+      mostrarAvisoPublicar(await admin.pendentePublicar());
+    } catch (error) {
+      console.warn('Nao foi possivel conferir mudancas para publicar', error);
+    }
+  };
+  conferir();
+  setInterval(conferir, 2 * 60 * 1000);
+  window.addEventListener('cardume:agenda-publicada', conferir);
+}
+
+function mostrarAvisoPublicar(resp) {
+  el('sync-aviso-publicar')?.remove();
+  const bar = el('sync-bar');
+  if (!bar || !resp?.mudancas) return;
+  const nomes = (resp.quem || []).map((n) => String(n).trim().split(/\s+/)[0]).filter(Boolean);
+  const quem = nomes.length ? `${nomes.join(', ')} ${nomes.length > 1 ? 'alteraram' : 'alterou'}` : 'Há alterações';
+  bar.insertAdjacentHTML('beforeend', `<div id="sync-aviso-publicar" class="sync-bar-aviso"
+    title="${resp.mudancas} mudança(s) nas alocações desde a última publicação da agenda">
+    ● ${escapeHtml(quem)} depois da última publicação: clique em <b>Publicar Online</b>.</div>`);
 }
 
 // Administrador: ao entrar, avisa se ha docentes novos cadastrados pelos
 // coordenadores esperando conferencia (a lista fica em "Usuarios e backup").
 async function avisarDocentesNovos(showToast) {
   try {
-    const { buscarDocentesParaConferir } = await import('./admin_ui.js?v=202611111733');
+    const { buscarDocentesParaConferir } = await import('./admin_ui.js?v=202611111738');
     const total = (await buscarDocentesParaConferir()).length;
     marcarDocentesNovos(total);
     if (total) {
@@ -280,7 +313,7 @@ function montarBarraStatus(perfil, user, showToast) {
 
   if (admin) {
     el('btn-sync-admin').onclick = async () => {
-      const { abrirAdministracao } = await import('./admin_ui.js?v=202611111733');
+      const { abrirAdministracao } = await import('./admin_ui.js?v=202611111738');
       abrirAdministracao({ tools: admin, meuId: user?.id || '', showToast, aoContarDocentes: marcarDocentesNovos });
     };
   }

@@ -1,7 +1,7 @@
 // Conversa com a API PHP do servidor da UFPA (modo 'ufpa', api/index.php).
 // Mesma interface de remoto_supabase.js. Sem tempo real no servidor: o
 // navegador pergunta as mudancas a cada poucos segundos.
-import { UFPA_API_URL } from './backend_config.js?v=202611111733';
+import { UFPA_API_URL } from './backend_config.js?v=202611111738';
 
 const POLL_MS = 5000;           // aba visivel
 const POLL_HIDDEN_MS = 30000;   // aba em segundo plano
@@ -145,6 +145,11 @@ export async function salvarUsuario(usuario) {
 
 export async function novaSenhaUsuario(id) {
   return chamar('usuario_senha', { corpo: { id } });
+}
+
+// Aviso "publique": { publicado_em, mudancas, quem: [nomes] }.
+export async function pendentePublicar() {
+  return chamar('pendente_publicar');
 }
 
 export async function excluirUsuario(id) {

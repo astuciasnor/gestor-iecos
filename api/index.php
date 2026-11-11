@@ -26,6 +26,7 @@
 //   POST usuario_senha   {id}      nova senha provisoria (a pessoa cria a sua no proximo acesso)
 //   POST usuario_excluir {id}
 //   GET  backup                    copia do banco em .sql (importavel no phpMyAdmin)
+//   GET  pendente_publicar         mudancas nas alocacoes depois da ultima publicacao da agenda
 // Todo POST exige o cabecalho "X-Cardume: 1" (barra envio a partir de outros sites).
 
 declare(strict_types=1);
@@ -92,6 +93,7 @@ $rotas = [
     'POST usuario_senha'   => 'acaoUsuarioSenha',
     'POST usuario_excluir' => 'acaoUsuarioExcluir',
     'GET backup'    => 'acaoBackup',
+    'GET pendente_publicar' => 'acaoPendentePublicar',
 ];
 $metodo = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 $rota = $metodo . ' ' . (string) ($_GET['acao'] ?? '');
@@ -463,6 +465,23 @@ function rotuloPublicacao(object $p): string
 }
 
 // ===== Administracao: usuarios e backup =====
+
+// Aviso "publique a agenda": quantas mudancas nas alocacoes houve depois da
+// ultima publicacao e quem fez (nomes, a mais recente primeiro).
+function acaoPendentePublicar(mysqli $db): void
+{
+    exigirAdmin($db);
+    $ultima = consultarUm($db, 'SELECT MAX(publicado_em) AS em FROM agenda_publicada')['em'] ?? null;
+    $linhas = consultar($db, 'SELECT COALESCE(u.nome, u.email) AS quem, COUNT(*) AS n, MAX(h.em) AS ultima
+                              FROM alocacoes_historico h LEFT JOIN usuarios u ON u.id = h.usuario
+                              WHERE h.em > ?
+                              GROUP BY h.usuario, u.nome, u.email ORDER BY ultima DESC', [$ultima ?? '1970-01-01']);
+    responder(200, [
+        'publicado_em' => $ultima,
+        'mudancas' => array_sum(array_map(fn ($l) => (int) $l['n'], $linhas)),
+        'quem' => array_values(array_filter(array_column($linhas, 'quem'))),
+    ]);
+}
 
 function acaoUsuarios(mysqli $db): void
 {

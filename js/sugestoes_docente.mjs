@@ -3,7 +3,7 @@
 // "Láz" acha "Lazaro". Mostra uma linha por professor, com o nome da lista.
 // A regra de busca (filtrarDocentes) fica em docente_nomes.mjs, com as outras
 // regras de nomes; aqui so a tela.
-import { filtrarDocentes } from './docente_nomes.mjs?v=202611111733';
+import { filtrarDocentes } from './docente_nomes.mjs?v=202611111738';
 
 // Liga a lista a todos os campos que casam com o seletor (inclusive os criados
 // depois, como as linhas de "Multiplos"). Escolher um nome poe o valor no campo

@@ -3615,6 +3615,14 @@ body:has(#tab-weekly.active) .top-bar .btn-print { display: none; }
     background: rgba(255, 255, 255, 0.22);
 }
 
+/* Aviso do administrador: ha mudancas para publicar na agenda */
+.sync-bar-aviso {
+    margin-top: 6px;
+    font-size: 0.8em;
+    line-height: 1.35;
+    color: #ffd166;
+}
+
 .sync-bar-badge {
     display: inline-block;
     margin-left: 4px;
