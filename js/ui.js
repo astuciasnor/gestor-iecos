@@ -1,29 +1,30 @@
-import { store } from './store.js?v=202611110010';
-import { getTurnoLetter, mapSlotToTurno, turnoDaTurmaInclui } from './turns.js?v=202611110010';
-import { normalizePeriodo as normalizePeriodoLetivoCode } from './plan_storage.js?v=202611110010';
-import { getCalendarEvents } from './calendar.js?v=202611110010';
-import { isDateOverlap } from './utils.js?v=202611110010';
-import { weeklyState } from './weekly_state.js?v=202611110010';
-import { findPendentesCobertas, isPendenteJaAlocada } from './pendentes.mjs?v=202611110010';
-import { classifySwap } from './troca_ordem.mjs?v=202611110010';
-import { closeFaixaEnds, isPauseEnd, listFaixaPauses } from './pausa_faixas.mjs?v=202611110010';
-import { numeroDaSubturma, isTurmaInteira, proximaSubturma, codigoT01Como, saoSubturmasDiferentes } from './subturmas.mjs?v=202611110010';
-import { abrirMiniCalendario, fecharMiniCalendario, miniCalendarioAberto } from './mini_calendario.mjs?v=202611110010';
-import { buildCanonicalOfferProjection } from './execution_engine.js?v=202611110010';
+import { store } from './store.js?v=202611111200';
+import { getTurnoLetter, mapSlotToTurno, turnoDaTurmaInclui } from './turns.js?v=202611111200';
+import { normalizePeriodo as normalizePeriodoLetivoCode } from './plan_storage.js?v=202611111200';
+import { getCalendarEvents } from './calendar.js?v=202611111200';
+import { isDateOverlap } from './utils.js?v=202611111200';
+import { weeklyState } from './weekly_state.js?v=202611111200';
+import { findPendentesCobertas, isPendenteJaAlocada } from './pendentes.mjs?v=202611111200';
+import { classifySwap } from './troca_ordem.mjs?v=202611111200';
+import { closeFaixaEnds, isPauseEnd, listFaixaPauses } from './pausa_faixas.mjs?v=202611111200';
+import { numeroDaSubturma, isTurmaInteira, proximaSubturma, codigoT01Como, saoSubturmasDiferentes } from './subturmas.mjs?v=202611111200';
+import { abrirMiniCalendario, fecharMiniCalendario, miniCalendarioAberto } from './mini_calendario.mjs?v=202611111200';
+import { buildCanonicalOfferProjection } from './execution_engine.js?v=202611111200';
 import {
     buildSigaaMetadataPayload,
     validateSigaaMetadataPayload,
     getSigaaCode,
-    buildScopedSigaaAllocationFromOfferFaixa
-} from './sigaa_metadata.js?v=202611110010';
-import { parseBackupDataFile, extractImportPlanMeta } from './serialization.js?v=202611110010';
+    buildScopedSigaaAllocationFromOfferFaixa,
+    buildSigaaHorarioResumo
+} from './sigaa_metadata.js?v=202611111200';
+import { parseBackupDataFile, extractImportPlanMeta } from './serialization.js?v=202611111200';
 import {
     showToastWarning,
     showPersistentStatusMessage,
     copyTextToClipboard,
     flashButtonCopyState,
     setupCopyActionButtons
-} from './ui_feedback.js?v=202611110010';
+} from './ui_feedback.js?v=202611111200';
 import {
     normalizeHexColor,
     adjustHexColor,
@@ -32,7 +33,7 @@ import {
     tonsDaCor,
     aplicarTonsBloco,
     PALETA_CORES
-} from './color_utils.js?v=202611110010';
+} from './color_utils.js?v=202611111200';
 import {
     isFaixaAllocation,
     isPriorityRegularAllocation,
@@ -41,9 +42,9 @@ import {
     normalizeTeacherNameForMatch,
     getDocenteShortLabel,
     getAllocationTeachersForConflict
-} from './allocation_helpers.js?v=202611110010';
-import { setupSeletorCor } from './seletor_cor.js?v=202611110010';
-import { ligarSugestoesDocente } from './sugestoes_docente.mjs?v=202611110010';
+} from './allocation_helpers.js?v=202611111200';
+import { setupSeletorCor } from './seletor_cor.js?v=202611111200';
+import { ligarSugestoesDocente } from './sugestoes_docente.mjs?v=202611111200';
 import {
     VINCULOS_DOCENTE_NOVO,
     OUTRA_UNIDADE,
@@ -55,9 +56,9 @@ import {
     acharNomeConhecido,
     filtrarDocentes,
     umNomePorPessoa
-} from './docente_nomes.mjs?v=202611110010';
-import { getSessionEmail, getPerfil, fetchAllocationsForPlans } from './sync_remoto.js?v=202611110010';
-import { resolveBackendMode } from './backend_config.js?v=202611110010';
+} from './docente_nomes.mjs?v=202611111200';
+import { getSessionEmail, getPerfil, fetchAllocationsForPlans } from './sync_remoto.js?v=202611111200';
+import { resolveBackendMode } from './backend_config.js?v=202611111200';
 import {
     normalizeConflictSlotLabel,
     getAvailableTurnoOfertaOptions,
@@ -67,7 +68,7 @@ import {
     buildHorariosForUI,
     getShiftChangeMeta,
     getNativeTurnoValueForAllocation
-} from './turno_helpers.js?v=202611110010';
+} from './turno_helpers.js?v=202611111200';
 import {
     getDisciplinaCHGlobal,
     derivarBloco,
@@ -77,7 +78,7 @@ import {
     getDisciplinaInfo,
     getCursoSiglaDaTurma,
     getPrintAcademicMetaLine
-} from './curso_turma_helpers.js?v=202611110010';
+} from './curso_turma_helpers.js?v=202611111200';
 import {
     renderMonthlyCalendar,
     renderTeacherCalendar,
@@ -85,13 +86,13 @@ import {
     clearTeacherRangeCache,
     setTeacherPeriod,
     getTeacherPeriod
-} from './calendarios_ui.js?v=202611110010';
+} from './calendarios_ui.js?v=202611111200';
 import {
     refreshTeacherConflictsUI,
     setCrossPlanLoader,
     setResolverDeChoque,
     acharChoqueComOutroPL
-} from './conflitos_ui.js?v=202611110010';
+} from './conflitos_ui.js?v=202611111200';
 import {
     shouldIgnoreTurmaEventForCandidate,
     normalizeDrawnSlotsByDay,
@@ -105,7 +106,7 @@ import {
     resolveEditableFaixasFromStoredExecution,
     alignFaixasToExecutionEnd,
     buildFinalAdjustmentFaixaSuggestion
-} from './faixa_utils.js?v=202611110010';
+} from './faixa_utils.js?v=202611111200';
 import {
     timeToMinutes,
     shiftISODate,
@@ -119,14 +120,14 @@ import {
     isDateInsideRange,
     formatDateBRShortYear,
     formatDateBR
-} from './date_utils_ui.js?v=202611110010';
+} from './date_utils_ui.js?v=202611111200';
 import {
     initializeWeeklyScheduleForTurma,
     reconcileTurmaSelectionAfterPLChange,
     resetWeeklyViewOnTurmaChange,
     resolveActiveAcademicPeriod,
     slotLabelsOverlap
-} from './academic_rules.mjs?v=202611110010';
+} from './academic_rules.mjs?v=202611111200';
 
 const gridContainer = document.getElementById('weekly-grid');
 const selCurso = document.getElementById('sel-curso');
@@ -8260,15 +8261,32 @@ function renderOfertasList() {
                 if (!base) return;
                 const info = getDisciplinaInfo(base.disciplina, base.turmaId);
                 const resolvedFaixas = getOfferFaixas(group);
+                const codigosDasFaixas = resolvedFaixas.map((faixa) => getSigaaCode([
+                    buildScopedSigaaAllocationFromOfferFaixa(group, faixa, {
+                        termStart: semesterStart,
+                        termEnd: semesterEnd
+                    })
+                ]));
+                // O "Copiar" leva sempre o codigo com as datas, no formato do SIGAA:
+                // 26M23456 (18/09/2026 - 21/09/2026). Com varias faixas, "Copiar tudo"
+                // junta todas: 26M23456 (18/09/2026 - 21/09/2026), 23456M56 (22/09/2026 - 06/11/2026)
+                const textosParaCopiar = resolvedFaixas.map((faixa, idx) => (
+                    codigosDasFaixas[idx] && codigosDasFaixas[idx] !== '-'
+                        ? buildSigaaHorarioResumo([{
+                            sigaa: codigosDasFaixas[idx],
+                            inicio: faixa?.inicio || base.dataInicio || semesterStart,
+                            fim: faixa?.fim || base.dataFim || semesterEnd
+                        }], formatDateBR)
+                        : ''
+                ));
+                const sigaaTudo = resolvedFaixas.length > 1 && textosParaCopiar.every(Boolean)
+                    ? textosParaCopiar.join(', ')
+                    : '';
 
                 resolvedFaixas.forEach((faixa, idx) => {
                     const faixaStart = faixa?.inicio || base.dataInicio || semesterStart;
                     const faixaEnd = faixa?.fim || base.dataFim || semesterEnd;
-                    const scoped = buildScopedSigaaAllocationFromOfferFaixa(group, faixa, {
-                        termStart: semesterStart,
-                        termEnd: semesterEnd
-                    });
-                    const sigaaCode = getSigaaCode([scoped]);
+                    const sigaaCode = codigosDasFaixas[idx];
                     const sabadoLabel = Array.isArray(faixa?.dias) && faixa.dias.includes(6)
                         ? `<br><span style="color:#e67e22; font-weight:bold; font-size:0.8em;">(Inclui S\u00e1bados)</span>`
                         : '';
@@ -8293,6 +8311,8 @@ function renderOfertasList() {
                         chMax: base.ch || info.ch,
                         details: `${faixa?.executionDays || 0} ocorr\u00eancias`,
                         sigaaCode,
+                        sigaaCopia: textosParaCopiar[idx],
+                        sigaaTudo: idx === 0 ? sigaaTudo : '',
                         sabadoLabel,
                         faixaIndex: idx + 1
                     });
@@ -8368,8 +8388,11 @@ function renderOfertasList() {
         const btnCopySigaa = row.sigaaCode && row.sigaaCode !== '-'
             ? `<div style="display:flex; align-items:center; justify-content:center; gap:6px;">
                     <span style="font-family:monospace; font-weight:bold; background:#ecf0f1; padding:2px 6px; border-radius:4px; font-size:0.9em; letter-spacing:1px;">${row.sigaaCode}</span>
-                    <button class="btn-sigaa-copy" data-code="${row.sigaaCode}" title="Copiar C\u00f3digo" style="background:transparent; color:var(--primary); border:1px solid #ccc; border-radius:4px; cursor:pointer; padding:2px 6px; font-size:0.9em; transition: all 0.2s;">Copiar</button>
+                    <button class="btn-sigaa-copy" data-code="${row.sigaaCopia || row.sigaaCode}" title="Copia: ${row.sigaaCopia || row.sigaaCode}" style="background:transparent; color:var(--primary); border:1px solid #ccc; border-radius:4px; cursor:pointer; padding:2px 6px; font-size:0.9em; transition: all 0.2s;">Copiar</button>
                </div>`
+                + (row.sigaaTudo
+                    ? `<button class="btn-sigaa-copy" data-code="${row.sigaaTudo}" title="Copia todas as faixas com as datas: ${row.sigaaTudo}" style="margin-top:6px; background:transparent; color:var(--primary); border:1px solid var(--primary); border-radius:4px; cursor:pointer; padding:2px 6px; font-size:0.85em; transition: all 0.2s;">Copiar tudo</button>`
+                    : '')
             : `<span style="color:#999;">-</span>`;
 
         const btnHtml = `
@@ -8396,8 +8419,9 @@ function renderOfertasList() {
 
         const idsToRemove = Array.isArray(row.groupIds) && row.groupIds.length > 0 ? row.groupIds : [row.baseAlloc.id];
 
-        const copyBtn = tr.querySelector('.btn-sigaa-copy');
-        if (copyBtn) copyBtn.onclick = (e) => handleCopySigaa(e.currentTarget);
+        tr.querySelectorAll('.btn-sigaa-copy').forEach((copyBtn) => {
+            copyBtn.onclick = (e) => handleCopySigaa(e.currentTarget);
+        });
 
         const btnDelete = tr.querySelector('.btn-delete-row');
         if (btnDelete) {
