@@ -361,6 +361,8 @@
     font-variant-numeric: tabular-nums;
 }
 #tab-weekly .cd-unidade { font-size: 14px; font-weight: 600; color: var(--cd-texto-3); }
+/* O numero (Total CH e Meta CH) fica no centro do cartao; titulo e Restante seguem a esquerda */
+#tab-weekly .weekly-faixas-metric-value { align-self: center; text-align: center; }
 #tab-weekly .weekly-faixas-metric-sub { font-size: 11px; margin-top: 3px; line-height: 1.1; }
 #tab-weekly .cd-progresso {
     width: 100%;
