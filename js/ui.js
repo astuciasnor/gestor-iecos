@@ -1,30 +1,30 @@
-import { store } from './store.js?v=202611111512';
-import { getTurnoLetter, mapSlotToTurno, turnoDaTurmaInclui } from './turns.js?v=202611111512';
-import { normalizePeriodo as normalizePeriodoLetivoCode } from './plan_storage.js?v=202611111512';
-import { getCalendarEvents } from './calendar.js?v=202611111512';
-import { isDateOverlap } from './utils.js?v=202611111512';
-import { weeklyState } from './weekly_state.js?v=202611111512';
-import { findPendentesCobertas, isPendenteJaAlocada } from './pendentes.mjs?v=202611111512';
-import { classifySwap } from './troca_ordem.mjs?v=202611111512';
-import { closeFaixaEnds, isPauseEnd, listFaixaPauses } from './pausa_faixas.mjs?v=202611111512';
-import { numeroDaSubturma, isTurmaInteira, proximaSubturma, codigoT01Como, saoSubturmasDiferentes } from './subturmas.mjs?v=202611111512';
-import { abrirMiniCalendario, fecharMiniCalendario, miniCalendarioAberto } from './mini_calendario.mjs?v=202611111512';
-import { buildCanonicalOfferProjection } from './execution_engine.js?v=202611111512';
+import { store } from './store.js?v=202611111523';
+import { getTurnoLetter, mapSlotToTurno, turnoDaTurmaInclui } from './turns.js?v=202611111523';
+import { normalizePeriodo as normalizePeriodoLetivoCode } from './plan_storage.js?v=202611111523';
+import { getCalendarEvents } from './calendar.js?v=202611111523';
+import { isDateOverlap } from './utils.js?v=202611111523';
+import { weeklyState } from './weekly_state.js?v=202611111523';
+import { findPendentesCobertas, isPendenteJaAlocada } from './pendentes.mjs?v=202611111523';
+import { classifySwap } from './troca_ordem.mjs?v=202611111523';
+import { closeFaixaEnds, isPauseEnd, listFaixaPauses } from './pausa_faixas.mjs?v=202611111523';
+import { numeroDaSubturma, isTurmaInteira, proximaSubturma, codigoT01Como, saoSubturmasDiferentes } from './subturmas.mjs?v=202611111523';
+import { abrirMiniCalendario, fecharMiniCalendario, miniCalendarioAberto } from './mini_calendario.mjs?v=202611111523';
+import { buildCanonicalOfferProjection } from './execution_engine.js?v=202611111523';
 import {
     buildSigaaMetadataPayload,
     validateSigaaMetadataPayload,
     getSigaaCode,
     buildScopedSigaaAllocationFromOfferFaixa,
     buildSigaaHorarioResumo
-} from './sigaa_metadata.js?v=202611111512';
-import { parseBackupDataFile, extractImportPlanMeta } from './serialization.js?v=202611111512';
+} from './sigaa_metadata.js?v=202611111523';
+import { parseBackupDataFile, extractImportPlanMeta } from './serialization.js?v=202611111523';
 import {
     showToastWarning,
     showPersistentStatusMessage,
     copyTextToClipboard,
     flashButtonCopyState,
     setupCopyActionButtons
-} from './ui_feedback.js?v=202611111512';
+} from './ui_feedback.js?v=202611111523';
 import {
     normalizeHexColor,
     adjustHexColor,
@@ -33,7 +33,7 @@ import {
     tonsDaCor,
     aplicarTonsBloco,
     PALETA_CORES
-} from './color_utils.js?v=202611111512';
+} from './color_utils.js?v=202611111523';
 import {
     isFaixaAllocation,
     isPriorityRegularAllocation,
@@ -42,9 +42,9 @@ import {
     normalizeTeacherNameForMatch,
     getDocenteShortLabel,
     getAllocationTeachersForConflict
-} from './allocation_helpers.js?v=202611111512';
-import { setupSeletorCor } from './seletor_cor.js?v=202611111512';
-import { ligarSugestoesDocente } from './sugestoes_docente.mjs?v=202611111512';
+} from './allocation_helpers.js?v=202611111523';
+import { setupSeletorCor } from './seletor_cor.js?v=202611111523';
+import { ligarSugestoesDocente } from './sugestoes_docente.mjs?v=202611111523';
 import {
     VINCULOS_DOCENTE_NOVO,
     OUTRA_UNIDADE,
@@ -60,9 +60,9 @@ import {
     acharNomeConhecido,
     filtrarDocentes,
     umNomePorPessoa
-} from './docente_nomes.mjs?v=202611111512';
-import { getSessionEmail, getPerfil, fetchAllocationsForPlans } from './sync_remoto.js?v=202611111512';
-import { resolveBackendMode } from './backend_config.js?v=202611111512';
+} from './docente_nomes.mjs?v=202611111523';
+import { getSessionEmail, getPerfil, fetchAllocationsForPlans } from './sync_remoto.js?v=202611111523';
+import { resolveBackendMode } from './backend_config.js?v=202611111523';
 import {
     normalizeConflictSlotLabel,
     getAvailableTurnoOfertaOptions,
@@ -72,7 +72,7 @@ import {
     buildHorariosForUI,
     getShiftChangeMeta,
     getNativeTurnoValueForAllocation
-} from './turno_helpers.js?v=202611111512';
+} from './turno_helpers.js?v=202611111523';
 import {
     getDisciplinaCHGlobal,
     derivarBloco,
@@ -82,7 +82,7 @@ import {
     getDisciplinaInfo,
     getCursoSiglaDaTurma,
     getPrintAcademicMetaLine
-} from './curso_turma_helpers.js?v=202611111512';
+} from './curso_turma_helpers.js?v=202611111523';
 import {
     renderMonthlyCalendar,
     renderTeacherCalendar,
@@ -90,13 +90,13 @@ import {
     clearTeacherRangeCache,
     setTeacherPeriod,
     getTeacherPeriod
-} from './calendarios_ui.js?v=202611111512';
+} from './calendarios_ui.js?v=202611111523';
 import {
     refreshTeacherConflictsUI,
     setCrossPlanLoader,
     setResolverDeChoque,
     acharChoqueComOutroPL
-} from './conflitos_ui.js?v=202611111512';
+} from './conflitos_ui.js?v=202611111523';
 import {
     shouldIgnoreTurmaEventForCandidate,
     normalizeDrawnSlotsByDay,
@@ -110,7 +110,7 @@ import {
     resolveEditableFaixasFromStoredExecution,
     alignFaixasToExecutionEnd,
     buildFinalAdjustmentFaixaSuggestion
-} from './faixa_utils.js?v=202611111512';
+} from './faixa_utils.js?v=202611111523';
 import {
     timeToMinutes,
     shiftISODate,
@@ -124,14 +124,14 @@ import {
     isDateInsideRange,
     formatDateBRShortYear,
     formatDateBR
-} from './date_utils_ui.js?v=202611111512';
+} from './date_utils_ui.js?v=202611111523';
 import {
     initializeWeeklyScheduleForTurma,
     reconcileTurmaSelectionAfterPLChange,
     resetWeeklyViewOnTurmaChange,
     resolveActiveAcademicPeriod,
     slotLabelsOverlap
-} from './academic_rules.mjs?v=202611111512';
+} from './academic_rules.mjs?v=202611111523';
 
 const gridContainer = document.getElementById('weekly-grid');
 const selCurso = document.getElementById('sel-curso');
@@ -5943,23 +5943,37 @@ function onCadastroDocenteKeydown(e) {
 // Duas situacoes: (1) docente com nome, que esta no SIGAA mas nao na lista do
 // Cardume; (2) vaga: a pessoa ainda nao foi definida (substituto a contratar,
 // professor nao contatado). Na vaga o Cardume gera o nome ("Vaga1 FACIN").
-function abrirCadastroDocente(nome, { vaga = false } = {}) {
+// Aberta pela primeira linha da lista de docentes ("Cadastrar docente fora da
+// lista ou a definir"): o coordenador escolhe o caso, digita o nome so na janela,
+// e o nome (ou a vaga gerada) vai direto para o campo clicado (campo).
+function abrirCadastroDocente(nome, { vaga = false, campo = null } = {}) {
     fecharCadastroDocente();
     const esc = escapeTrocaHtml;
-    const parecidos = findSimilarNames(nome, getKnownDocenteNames());
+    const pelaLista = !!campo;
+    const parecidos = pelaLista ? [] : findSimilarNames(nome, getKnownDocenteNames());
+    // Vagas que ja existem no periodo: a mesma pessoa em outra componente usa a mesma vaga.
+    const vagasExistentes = getKnownDocenteNames().filter(ehVaga);
     const overlay = document.createElement('div');
     overlay.id = 'cadastro-docente-modal';
     overlay.className = 'troca-modal no-print';
     overlay.innerHTML = `
         <div class="troca-caixa cad-docente" role="dialog" aria-modal="true" aria-labelledby="cad-docente-titulo">
-            <h3 id="cad-docente-titulo">Cadastrar Docente Novo</h3>
-            <p class="troca-sub">Nome digitado no campo Docente: <b>${esc(nome)}</b></p>
+            <h3 id="cad-docente-titulo">${pelaLista ? 'Cadastrar docente fora da lista' : 'Cadastrar Docente Novo'}</h3>
+            ${pelaLista
+                ? '<p class="troca-sub">Escolha o caso:</p>'
+                : `<p class="troca-sub">Nome digitado no campo Docente: <b>${esc(nome)}</b></p>`}
             <div class="cad-campo cad-tipo">
-                <label><input type="radio" name="cad-tipo" value="nome"${vaga ? '' : ' checked'}>
+                <label><input type="radio" name="cad-tipo" value="nome"${pelaLista || vaga ? '' : ' checked'}>
                     <span><b>Docente com nome</b>: já está no SIGAA, mas não na lista do Cardume.</span></label>
                 <label><input type="radio" name="cad-tipo" value="vaga"${vaga ? ' checked' : ''}>
-                    <span><b>Vaga</b>: a pessoa ainda não foi definida (substituto a contratar, professor ainda não contatado).</span></label>
+                    <span><b>Vaga (a definir)</b>: a pessoa ainda não foi definida (substituto a contratar, professor ainda não contatado).</span></label>
             </div>
+            <div class="cad-corpo">
+            ${vagasExistentes.length ? `
+            <div class="cad-parecido cad-so-vaga">
+                Vagas que já existem neste período. Se for a mesma pessoa, use a mesma vaga:
+                ${vagasExistentes.map((p) => `<div class="cad-parecido-item"><b>${esc(p)}</b><button type="button" class="cad-usar" data-nome="${esc(p)}">Usar esta</button></div>`).join('')}
+            </div>` : ''}
             ${parecidos.length ? `
             <div class="cad-parecido cad-so-nome">
                 Já existe nome parecido. Se for a mesma pessoa, use o nome da lista:
@@ -5991,9 +6005,10 @@ function abrirCadastroDocente(nome, { vaga = false } = {}) {
                     <input type="text" id="cad-outra-subunidade" maxlength="60" placeholder="Ex.: Faculdade de Física">
                 </label>
             </div>
-            <label class="cad-campo cad-so-nome"><span class="cad-rotulo">Nome completo, igual ao SIGAA, <b>com os acentos</b> (digite de novo)</span>
+            <label class="cad-campo cad-so-nome"><span class="cad-rotulo">Nome completo, igual ao SIGAA, <b>com os acentos</b>${pelaLista ? '' : ' (digite de novo)'}</span>
                 <input type="text" id="cad-nome" autocomplete="off" spellcheck="false">
             </label>
+            <div class="cad-parecido cad-so-nome hidden" id="cad-parecidos-vivos"></div>
             <div class="cad-vaga-nome cad-so-vaga">Nome da vaga no Cardume: <b id="cad-vaga-preview">escolha a subunidade</b></div>
             <div class="cad-erro" id="cad-erro"></div>
             <label class="cad-conferi cad-so-nome">
@@ -6005,6 +6020,7 @@ function abrirCadastroDocente(nome, { vaga = false } = {}) {
                 <span class="cad-so-vaga">Quando souber o nome da pessoa, troque a vaga pelo nome (Editar a componente).<br></span>
                 <b>Pós-graduando, colaborador ou voluntário:</b> deixe a componente no nome do professor responsável.
             </p>
+            </div>
             <div class="troca-acoes">
                 <button type="button" class="btn-secondary troca-cancelar">Voltar e corrigir</button>
                 <button type="button" class="cad-ok" disabled>Cadastrar</button>
@@ -6014,10 +6030,34 @@ function abrirCadastroDocente(nome, { vaga = false } = {}) {
     document.addEventListener('keydown', onCadastroDocenteKeydown);
 
     const el = (sel) => overlay.querySelector(sel);
+    // Poe o nome escolhido no campo: o clicado na lista, ou o que tinha o nome digitado.
+    const colocarNome = (novo) => {
+        if (!campo) {
+            trocarNomeDocenteDigitado(nome, novo);
+            return;
+        }
+        campo.value = novo;
+        campo.dispatchEvent(new Event('input', { bubbles: true }));
+        campo.dispatchEvent(new Event('change', { bubbles: true }));
+    };
     const ehModoVaga = () => el('input[name="cad-tipo"]:checked')?.value === 'vaga';
     // Vagas ja usadas no periodo e as cadastradas agora (ainda nao salvas).
     const nomesParaNumerar = () => [...getKnownDocenteNames(), ...[...cadastrosDocentes.values()].map((c) => c.nome)];
+    // Pela lista: o nome so e digitado na janela, entao os parecidos aparecem enquanto digita.
+    const mostrarParecidos = (digitado) => {
+        const caixa = el('#cad-parecidos-vivos');
+        const conhecidos = getKnownDocenteNames();
+        const exato = digitado ? acharNomeConhecido(digitado, conhecidos) : null;
+        const lista = exato ? [exato] : (digitado ? findSimilarNames(digitado, conhecidos) : []);
+        caixa.classList.toggle('hidden', !lista.length);
+        caixa.innerHTML = lista.length
+            ? `${exato ? 'Este nome já está na lista do Cardume:' : 'Já existe nome parecido. Se for a mesma pessoa, use o nome da lista:'}
+               ${lista.map((p) => `<div class="cad-parecido-item"><b>${esc(p)}</b><button type="button" class="cad-usar" data-nome="${esc(p)}">Usar este</button></div>`).join('')}`
+            : '';
+        return exato;
+    };
     const mostrarModo = () => {
+        el('.cad-corpo').classList.toggle('hidden', !el('input[name="cad-tipo"]:checked'));
         const modoVaga = ehModoVaga();
         overlay.querySelectorAll('.cad-so-nome').forEach((n) => n.classList.toggle('hidden', modoVaga));
         overlay.querySelectorAll('.cad-so-vaga').forEach((n) => n.classList.toggle('hidden', !modoVaga));
@@ -6041,10 +6081,12 @@ function abrirCadastroDocente(nome, { vaga = false } = {}) {
             return ok ? { vaga: true, vinculo, redigitado: vagaNome, unidade, subunidade: subunidade.toUpperCase(), outra } : null;
         }
         const redigitado = limparEspacos(el('#cad-nome').value);
+        const jaNaLista = pelaLista ? mostrarParecidos(redigitado) : null;
         if (redigitado) {
             erro = problemaNoNome(redigitado);
             if (!erro && ehVaga(redigitado)) erro = 'Para vaga, escolha "Vaga" no alto da janela.';
-            if (!erro && normalizeTeacherNameForMatch(redigitado) !== normalizeTeacherNameForMatch(nome)) {
+            if (!erro && jaNaLista) erro = 'Não precisa cadastrar: clique em "Usar este".';
+            if (!erro && !pelaLista && normalizeTeacherNameForMatch(redigitado) !== normalizeTeacherNameForMatch(nome)) {
                 erro = 'Não confere com o nome do campo Docente. Confira as letras dos dois.';
             }
         }
@@ -6079,7 +6121,7 @@ function abrirCadastroDocente(nome, { vaga = false } = {}) {
         }
         const usar = e.target.closest('.cad-usar');
         if (usar) {
-            trocarNomeDocenteDigitado(nome, usar.dataset.nome);
+            colocarNome(usar.dataset.nome);
             fecharCadastroDocente();
             refreshAvisoDocenteNovo('mostrar');
             showToastWarning(`Nome trocado por "${usar.dataset.nome}", da lista do Cardume.`, 'success', 3200);
@@ -6101,7 +6143,7 @@ function abrirCadastroDocente(nome, { vaga = false } = {}) {
         });
         // Vaga: o nome gerado entra no campo. Nome: mesmas letras, mas com acento
         // ou maiuscula diferente, vale o redigitado.
-        if (dados.redigitado !== limparEspacos(nome)) trocarNomeDocenteDigitado(nome, dados.redigitado);
+        if (dados.redigitado !== limparEspacos(nome)) colocarNome(dados.redigitado);
         fecharCadastroDocente();
         refreshAvisoDocenteNovo('mostrar');
         showToastWarning(dados.vaga
@@ -6109,7 +6151,7 @@ function abrirCadastroDocente(nome, { vaga = false } = {}) {
             : `${dados.redigitado} cadastrado. Agora é só salvar a componente.`, 'success', 3600);
     });
 
-    setTimeout(() => el('input[name="cad-vinculo"]')?.focus(), 50);
+    setTimeout(() => el(pelaLista ? 'input[name="cad-tipo"]' : 'input[name="cad-vinculo"]')?.focus(), 50);
 }
 
 // Cadastros de docente novo que vao junto na alocacao: os feitos agora e os que
@@ -6132,7 +6174,13 @@ function setupAvisoDocenteNovo() {
     // e a busca do Calendario Docente).
     ligarSugestoesDocente({
         seletor: '#inp-docente, .inp-multi-name, #sel-view-docente',
-        getNomes: getKnownDocenteNames
+        getNomes: getKnownDocenteNames,
+        // Primeira linha fixa nos campos de edicao: docente ainda sem nome.
+        acaoFixa: {
+            seletor: '#inp-docente, .inp-multi-name',
+            rotulo: '+ Cadastrar docente fora da lista ou a definir…',
+            aoEscolher: (campo) => abrirCadastroDocente('', { campo })
+        }
     });
     inputConfig.docente?.addEventListener('input', () => refreshAvisoDocenteNovo('ocultar'));
     inputConfig.docente?.addEventListener('change', () => {

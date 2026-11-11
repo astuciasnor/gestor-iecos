@@ -3,18 +3,22 @@
 // "Láz" acha "Lazaro". Mostra uma linha por professor, com o nome da lista.
 // A regra de busca (filtrarDocentes) fica em docente_nomes.mjs, com as outras
 // regras de nomes; aqui so a tela.
-import { filtrarDocentes } from './docente_nomes.mjs?v=202611111512';
+import { filtrarDocentes } from './docente_nomes.mjs?v=202611111523';
 
 // Liga a lista a todos os campos que casam com o seletor (inclusive os criados
 // depois, como as linhas de "Multiplos"). Escolher um nome poe o valor no campo
 // e dispara input e change, como o datalist fazia.
-export function ligarSugestoesDocente({ seletor, getNomes }) {
+// acaoFixa (opcional): uma linha sempre no alto da lista, so nos campos que casam
+// com acaoFixa.seletor ("A definir (vaga)..."). Escolher chama acaoFixa.aoEscolher(campo)
+// e nao escreve nada no campo.
+export function ligarSugestoesDocente({ seletor, getNomes, acaoFixa = null }) {
     const lista = document.createElement('ul');
     lista.className = 'sug-docente no-print';
     lista.setAttribute('role', 'listbox');
     lista.hidden = true;
     document.body.appendChild(lista);
 
+    const ACAO = Symbol('acao');
     let campo = null;
     let itens = [];
     let ativo = -1;
@@ -41,6 +45,12 @@ export function ligarSugestoesDocente({ seletor, getNomes }) {
         const alvo = campo;
         const nome = itens[i];
         if (!alvo || !nome) return;
+        if (nome === ACAO) {
+            fechar();
+            alvo.blur();
+            acaoFixa.aoEscolher(alvo);
+            return;
+        }
         alvo.value = nome;
         alvo.dispatchEvent(new Event('input', { bubbles: true }));
         alvo.dispatchEvent(new Event('change', { bubbles: true }));
@@ -50,14 +60,20 @@ export function ligarSugestoesDocente({ seletor, getNomes }) {
         campo = input;
         itens = filtrarDocentes(input.value, getNomes());
         // O nome ja escolhido nao precisa de lista.
-        if (!itens.length || (itens.length === 1 && itens[0] === input.value)) {
+        if (itens.length === 1 && itens[0] === input.value) {
+            lista.hidden = true;
+            return;
+        }
+        if (acaoFixa && input.matches(acaoFixa.seletor)) itens.unshift(ACAO);
+        if (!itens.length) {
             lista.hidden = true;
             return;
         }
         lista.innerHTML = '';
         itens.forEach((nome, k) => {
             const li = document.createElement('li');
-            li.textContent = nome;
+            li.textContent = nome === ACAO ? acaoFixa.rotulo : nome;
+            if (nome === ACAO) li.className = 'sug-acao';
             li.setAttribute('role', 'option');
             // mousedown (e nao click): o campo nao perde o foco antes da escolha.
             li.addEventListener('mousedown', (e) => {

@@ -4116,6 +4116,11 @@ body:has(#tab-weekly.active) .top-bar .btn-print { display: none; }
     overflow: hidden;
     text-overflow: ellipsis;
 }
+.sug-docente li.sug-acao {
+    color: #8a5a00;
+    font-style: italic;
+    border-bottom: 1px solid #ecd9a8;
+}
 .sug-docente li:hover,
 .sug-docente li.ativo {
     background: var(--primary);

@@ -298,6 +298,41 @@ async function run() {
         const i = document.getElementById('inp-docente');
         i.value = ''; i.dispatchEvent(new Event('input', { bubbles: true }));
       })()`);
+
+      // Lista de docentes: primeira linha "A definir (vaga)..." abre a vaga direto.
+      await evaluate("document.getElementById('inp-docente').blur(); document.getElementById('inp-docente').focus()");
+      assert(await waitFor("!!document.querySelector('.sug-docente:not([hidden]) li:first-child.sug-acao')", 3000), 'lista sem a linha A definir (vaga) no alto');
+      await evaluate("document.querySelector('.sug-docente li.sug-acao').dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true }))");
+      assert(await waitFor("!!document.querySelector('#cadastro-docente-modal .cad-corpo.hidden')", 3000), 'janela pela lista nao pediu o caso primeiro');
+      assert(await evaluate("document.getElementById('inp-docente').value === ''"), 'a linha da lista escreveu no campo');
+      // Caso "Docente com nome": nome que ja esta na lista oferece "Usar este".
+      const conhecido = await evaluate("document.querySelector('.sug-docente') && [...document.querySelectorAll('#list-view-docentes option')].map(o => o.value)[0] || ''");
+      await evaluate(`(() => {
+        const m = document.getElementById('cadastro-docente-modal');
+        const r = m.querySelector('input[name="cad-tipo"][value="nome"]'); r.checked = true; r.dispatchEvent(new Event('change', { bubbles: true }));
+      })()`);
+      assert(await evaluate("!document.querySelector('#cadastro-docente-modal .cad-corpo').classList.contains('hidden')"), 'escolher o caso nao mostrou o formulario');
+      if (conhecido) {
+        await evaluate(`(() => {
+          const n = document.getElementById('cad-nome'); n.value = ${JSON.stringify(conhecido)};
+          n.dispatchEvent(new Event('input', { bubbles: true }));
+        })()`);
+        assert(await waitFor("!!document.querySelector('#cad-parecidos-vivos:not(.hidden) .cad-usar')", 3000), 'nome da lista sem o Usar este');
+      }
+      await evaluate(`(() => {
+        const m = document.getElementById('cadastro-docente-modal');
+        const fire = (el) => el.dispatchEvent(new Event('change', { bubbles: true }));
+        const t = m.querySelector('input[name="cad-tipo"][value="vaga"]'); t.checked = true; fire(t);
+        const radio = m.querySelector('input[name="cad-vinculo"][value="Visitante"]'); radio.checked = true; fire(radio);
+        const u = m.querySelector('#cad-unidade'); u.value = 'IECOS'; fire(u);
+        const s = m.querySelector('#cad-subunidade'); s.value = 'FEPESCA'; fire(s);
+      })()`);
+      await evaluate("document.querySelector('#cadastro-docente-modal .cad-ok').click()");
+      assert(await waitFor("!document.getElementById('cadastro-docente-modal') && /^Vaga\\d+ FEPESCA$/.test(document.getElementById('inp-docente').value)", 3000), 'vaga da lista nao entrou no campo');
+      await evaluate(`(() => {
+        const i = document.getElementById('inp-docente');
+        i.value = ''; i.dispatchEvent(new Event('input', { bubbles: true }));
+      })()`);
       await evaluate("document.querySelector('.tab-btn[data-tab=\"teacher\"]').click()");
     });
 
