@@ -26,6 +26,7 @@ const aloc = (id, turmaId, disciplina, ch, cor, docente, inicio, fim, byDay) => 
   executionByDate: {}
 });
 
+const ECO = ['2027-01-04', '2027-01-05', '2027-01-11', '2027-01-12', '2027-01-13', '2027-01-14', '2027-01-15', '2027-01-18', '2027-01-19', '2027-01-20', '2027-01-21', '2027-01-22'];
 const CENARIOS = {
   doisTurnos: {
     turma: 'EP2027C', periodo: /PL3/, termStart: '2027-06-28', termEnd: '2027-08-24', periodoNome: 'PL3',
@@ -54,6 +55,18 @@ const CENARIOS = {
     semanaAntes: '2027-08-30', diaAntes: 1,             // seg 30/08 (livre, antes da sugestao)
     semanaDepois: '2027-09-13', diaDepois: 3, diaRecuo: 1, // qua 15 -> seg 13
     manual: { ini: '2027-08-30', fim: '2027-09-01', dias: [1, 2, 3], volta: '2027-09-13' }
+  },
+  // Caso do print (10/11/2026): ECOLOGIA com pausa (F1 04-05/01, F2 11-22/01).
+  // A sugestao nao cai na pausa (06-08/01): vem depois, em 25/01. Clicar no
+  // dia 06 continua valendo (aproveitamento ate a vespera da Faixa 2 dela).
+  pausaDeOutra: {
+    fluxo: 'pausaDeOutra',
+    turma: 'EP2024', periodo: /PL1/, termStart: '2027-01-04', termEnd: '2027-03-05', periodoNome: 'PL1',
+    sugestao: '2027-01-25',
+    allocs: [{ ...aloc('p1', 'EP2024', 'ECOLOGIA', 60, '#bdb2ff', 'Ana Garcês', '2027-01-04', '2027-01-22', { 1: [...M], 2: [...M] }),
+      faixas: [{ inicio: '2027-01-04', fim: '2027-01-05', dias: [1, 2], slots: [...M], drawnSlotsByDay: { 1: [...M], 2: [...M] } },
+        { inicio: '2027-01-11', fim: '2027-01-22', dias: [1, 2, 3, 4, 5], slots: [...M], drawnSlotsByDay: { 1: [...M], 2: [...M], 3: [...M], 4: [...M], 5: [...M] } }],
+      executionByDate: Object.fromEntries(ECO.map((d) => [d, [...M]])) }]
   },
   // Caso do print (09/11/2026): Economia seg-qua; qui-sex com 3 aulas de outra
   // componente (as 2 ultimas livres); Informatica comeca no sabado de MANHA.
@@ -153,7 +166,13 @@ try {
   await novaComponente();
   confere('1. sugestao', await f1(), CFG.sugestao);
 
-  if (CFG.fluxo === 'aproveitamento') { await aproveitamento(CFG, KEY, { f1, campo, aviso, pausa, semana, celula, podeClicar, clicar, confere, evaluate, novaComponente }); } else {
+  if (CFG.fluxo === 'pausaDeOutra') {
+    await semana('2027-01-04');
+    confere('P1. dia da pausa da ECOLOGIA aceita clique?', await podeClicar(3, '08:00'), true);
+    await clicar(3, '08:00');
+    confere('P2. clique na pausa -> aproveitamento', await f1() + ' a ' + await campo('inp-data-fim-f1'), '2027-01-06 a 2027-01-10');
+    confere('P3. mensagem do aproveitamento', /Aproveitando dias livres/.test(await aviso()), true);
+  } else if (CFG.fluxo === 'aproveitamento') { await aproveitamento(CFG, KEY, { f1, campo, aviso, pausa, semana, celula, podeClicar, clicar, confere, evaluate, novaComponente }); } else {
 
   // 2) Antes da sugestao: o clique vale (aproveitamento); aqui so confere
   await semana(CFG.semanaAntes);

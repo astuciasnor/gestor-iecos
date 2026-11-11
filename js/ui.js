@@ -1,29 +1,29 @@
-import { store } from './store.js?v=202611102339';
-import { getTurnoLetter, mapSlotToTurno, turnoDaTurmaInclui } from './turns.js?v=202611102339';
-import { normalizePeriodo as normalizePeriodoLetivoCode } from './plan_storage.js?v=202611102339';
-import { getCalendarEvents } from './calendar.js?v=202611102339';
-import { isDateOverlap } from './utils.js?v=202611102339';
-import { weeklyState } from './weekly_state.js?v=202611102339';
-import { findPendentesCobertas, isPendenteJaAlocada } from './pendentes.mjs?v=202611102339';
-import { classifySwap } from './troca_ordem.mjs?v=202611102339';
-import { closeFaixaEnds, isPauseEnd, listFaixaPauses } from './pausa_faixas.mjs?v=202611102339';
-import { numeroDaSubturma, isTurmaInteira, proximaSubturma, codigoT01Como, saoSubturmasDiferentes } from './subturmas.mjs?v=202611102339';
-import { abrirMiniCalendario, fecharMiniCalendario, miniCalendarioAberto } from './mini_calendario.mjs?v=202611102339';
-import { buildCanonicalOfferProjection } from './execution_engine.js?v=202611102339';
+import { store } from './store.js?v=202611110010';
+import { getTurnoLetter, mapSlotToTurno, turnoDaTurmaInclui } from './turns.js?v=202611110010';
+import { normalizePeriodo as normalizePeriodoLetivoCode } from './plan_storage.js?v=202611110010';
+import { getCalendarEvents } from './calendar.js?v=202611110010';
+import { isDateOverlap } from './utils.js?v=202611110010';
+import { weeklyState } from './weekly_state.js?v=202611110010';
+import { findPendentesCobertas, isPendenteJaAlocada } from './pendentes.mjs?v=202611110010';
+import { classifySwap } from './troca_ordem.mjs?v=202611110010';
+import { closeFaixaEnds, isPauseEnd, listFaixaPauses } from './pausa_faixas.mjs?v=202611110010';
+import { numeroDaSubturma, isTurmaInteira, proximaSubturma, codigoT01Como, saoSubturmasDiferentes } from './subturmas.mjs?v=202611110010';
+import { abrirMiniCalendario, fecharMiniCalendario, miniCalendarioAberto } from './mini_calendario.mjs?v=202611110010';
+import { buildCanonicalOfferProjection } from './execution_engine.js?v=202611110010';
 import {
     buildSigaaMetadataPayload,
     validateSigaaMetadataPayload,
     getSigaaCode,
     buildScopedSigaaAllocationFromOfferFaixa
-} from './sigaa_metadata.js?v=202611102339';
-import { parseBackupDataFile, extractImportPlanMeta } from './serialization.js?v=202611102339';
+} from './sigaa_metadata.js?v=202611110010';
+import { parseBackupDataFile, extractImportPlanMeta } from './serialization.js?v=202611110010';
 import {
     showToastWarning,
     showPersistentStatusMessage,
     copyTextToClipboard,
     flashButtonCopyState,
     setupCopyActionButtons
-} from './ui_feedback.js?v=202611102339';
+} from './ui_feedback.js?v=202611110010';
 import {
     normalizeHexColor,
     adjustHexColor,
@@ -32,7 +32,7 @@ import {
     tonsDaCor,
     aplicarTonsBloco,
     PALETA_CORES
-} from './color_utils.js?v=202611102339';
+} from './color_utils.js?v=202611110010';
 import {
     isFaixaAllocation,
     isPriorityRegularAllocation,
@@ -41,9 +41,9 @@ import {
     normalizeTeacherNameForMatch,
     getDocenteShortLabel,
     getAllocationTeachersForConflict
-} from './allocation_helpers.js?v=202611102339';
-import { setupSeletorCor } from './seletor_cor.js?v=202611102339';
-import { ligarSugestoesDocente } from './sugestoes_docente.mjs?v=202611102339';
+} from './allocation_helpers.js?v=202611110010';
+import { setupSeletorCor } from './seletor_cor.js?v=202611110010';
+import { ligarSugestoesDocente } from './sugestoes_docente.mjs?v=202611110010';
 import {
     VINCULOS_DOCENTE_NOVO,
     OUTRA_UNIDADE,
@@ -55,9 +55,9 @@ import {
     acharNomeConhecido,
     filtrarDocentes,
     umNomePorPessoa
-} from './docente_nomes.mjs?v=202611102339';
-import { getSessionEmail, getPerfil, fetchAllocationsForPlans } from './sync_remoto.js?v=202611102339';
-import { resolveBackendMode } from './backend_config.js?v=202611102339';
+} from './docente_nomes.mjs?v=202611110010';
+import { getSessionEmail, getPerfil, fetchAllocationsForPlans } from './sync_remoto.js?v=202611110010';
+import { resolveBackendMode } from './backend_config.js?v=202611110010';
 import {
     normalizeConflictSlotLabel,
     getAvailableTurnoOfertaOptions,
@@ -67,7 +67,7 @@ import {
     buildHorariosForUI,
     getShiftChangeMeta,
     getNativeTurnoValueForAllocation
-} from './turno_helpers.js?v=202611102339';
+} from './turno_helpers.js?v=202611110010';
 import {
     getDisciplinaCHGlobal,
     derivarBloco,
@@ -77,7 +77,7 @@ import {
     getDisciplinaInfo,
     getCursoSiglaDaTurma,
     getPrintAcademicMetaLine
-} from './curso_turma_helpers.js?v=202611102339';
+} from './curso_turma_helpers.js?v=202611110010';
 import {
     renderMonthlyCalendar,
     renderTeacherCalendar,
@@ -85,13 +85,13 @@ import {
     clearTeacherRangeCache,
     setTeacherPeriod,
     getTeacherPeriod
-} from './calendarios_ui.js?v=202611102339';
+} from './calendarios_ui.js?v=202611110010';
 import {
     refreshTeacherConflictsUI,
     setCrossPlanLoader,
     setResolverDeChoque,
     acharChoqueComOutroPL
-} from './conflitos_ui.js?v=202611102339';
+} from './conflitos_ui.js?v=202611110010';
 import {
     shouldIgnoreTurmaEventForCandidate,
     normalizeDrawnSlotsByDay,
@@ -105,7 +105,7 @@ import {
     resolveEditableFaixasFromStoredExecution,
     alignFaixasToExecutionEnd,
     buildFinalAdjustmentFaixaSuggestion
-} from './faixa_utils.js?v=202611102339';
+} from './faixa_utils.js?v=202611110010';
 import {
     timeToMinutes,
     shiftISODate,
@@ -119,14 +119,14 @@ import {
     isDateInsideRange,
     formatDateBRShortYear,
     formatDateBR
-} from './date_utils_ui.js?v=202611102339';
+} from './date_utils_ui.js?v=202611110010';
 import {
     initializeWeeklyScheduleForTurma,
     reconcileTurmaSelectionAfterPLChange,
     resetWeeklyViewOnTurmaChange,
     resolveActiveAcademicPeriod,
     slotLabelsOverlap
-} from './academic_rules.mjs?v=202611102339';
+} from './academic_rules.mjs?v=202611110010';
 
 const gridContainer = document.getElementById('weekly-grid');
 const selCurso = document.getElementById('sel-curso');
@@ -2587,6 +2587,26 @@ function listarPeriodosSemSabado() {
         .filter((p) => p.inicio && p.fim);
 }
 
+// Pausas {depois, antes} das componentes da turma (ignora a em edicao): dias
+// entre o Fim de uma faixa e o Inicio da seguinte. Usado pela sugestao de
+// inicio: pausa de outra componente nao e buraco (aproveitar so pelo clique).
+function listarPausasDeOutras() {
+    const emEdicao = new Set((weeklyState.editingOriginalAllocationIds || []).map((id) => String(id)));
+    const pausas = [];
+    (store.allocations || [])
+        .filter((a) => String(a?.turmaId) === String(store.selectedTurma)
+            && isFaixaAllocation(a) && !emEdicao.has(String(a?.id)))
+        .forEach((a) => {
+            const faixas = getNormalizedIntensiveFaixas(a);
+            for (let k = 0; k + 1 < faixas.length; k++) {
+                const depois = String(faixas[k].fim || '');
+                const antes = String(faixas[k + 1].inicio || '');
+                if (depois && antes && depois < antes) pausas.push({ depois, antes });
+            }
+        });
+    return pausas;
+}
+
 function getTurmaUsaSabadoForStartSearch() {
     return store.allocations.some((a) =>
         String(a?.turmaId) === String(store.selectedTurma) &&
@@ -2666,6 +2686,10 @@ function resolveSmartComponentStartSuggestion() {
     // sabado vale normalmente (se a turma usa sabado).
     const sabadoNoMeio = listarPeriodosSemSabado();
     const sabadoNoMeioDeOutra = (dateStr) => sabadoNoMeio.some((p) => dateStr >= p.inicio && dateStr <= p.fim);
+    // Pausa no meio de outra componente tambem nao e buraco: a sugestao vem
+    // depois dela. Para aproveitar esses dias, o usuario clica neles.
+    const pausas = listarPausasDeOutras();
+    const naPausaDeOutra = (dateStr) => pausas.some((p) => dateStr > p.depois && dateStr < p.antes);
 
     const scan = (fromDate, toDate) => {
         if (!fromDate || !toDate || fromDate > toDate) return null;
@@ -2677,7 +2701,7 @@ function resolveSmartComponentStartSuggestion() {
             const dow = cursor.getDay();
             const dateStr = toISODate(cursor);
             cursor.setDate(cursor.getDate() + 1);
-            if (dow === 0 || holidays.has(dateStr)) continue;
+            if (dow === 0 || holidays.has(dateStr) || naPausaDeOutra(dateStr)) continue;
             const occupied = occupiedByDate.get(dateStr) || new Set();
             // Sabado so entra se estiver totalmente livre: com qualquer aula da
             // turma (ex.: sabado passado para a manha numa turma da tarde) a

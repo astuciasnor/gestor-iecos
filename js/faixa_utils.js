@@ -1,10 +1,10 @@
-import { store } from './store.js?v=202611102339';
-import { getCalendarEvents } from './calendar.js?v=202611102339';
-import { mapSlotToTurno } from './turns.js?v=202611102339';
-import { addDaysISO, timeToMinutes, toISODate } from './date_utils_ui.js?v=202611102339';
-import { normalizeConflictSlotLabel } from './turno_helpers.js?v=202611102339';
-import { isPriorityRegularAllocation } from './allocation_helpers.js?v=202611102339';
-import { computeRemainingFractionalHours, generateAllocationOccurrences, validateOccurrenceWithinSemesterBounds } from './academic_rules.mjs?v=202611102339';
+import { store } from './store.js?v=202611110010';
+import { getCalendarEvents } from './calendar.js?v=202611110010';
+import { mapSlotToTurno } from './turns.js?v=202611110010';
+import { addDaysISO, timeToMinutes, toISODate } from './date_utils_ui.js?v=202611110010';
+import { normalizeConflictSlotLabel } from './turno_helpers.js?v=202611110010';
+import { isPriorityRegularAllocation } from './allocation_helpers.js?v=202611110010';
+import { computeRemainingFractionalHours, generateAllocationOccurrences, validateOccurrenceWithinSemesterBounds } from './academic_rules.mjs?v=202611110010';
 
 export function shouldIgnoreTurmaEventForCandidate(event, candidateAlloc) {
     if (!event || !candidateAlloc) return false;
