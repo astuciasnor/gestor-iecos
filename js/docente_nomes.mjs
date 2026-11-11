@@ -10,7 +10,8 @@ export const VINCULOS_DOCENTE_NOVO = ['Substituto', 'Visitante', 'Efetivo'];
 export const OUTRA_UNIDADE = 'OUTRA';
 export const UNIDADES = [
     { sigla: 'IECOS', nome: 'IECOS', subunidades: ['FEPESCA', 'FACIN', 'FBIO'] },
-    { sigla: 'CBRAG', nome: 'Campus Bragança', subunidades: ['FACED', 'FAHIST', 'FAMAT', 'FALE', 'FALEST'] }
+    { sigla: 'CBRAG', nome: 'Campus Bragança', subunidades: ['FACED', 'FAHIST', 'FAMAT', 'FALE', 'FALEST'] },
+    { sigla: 'CANAN', nome: 'Campus de Ananindeua', subunidades: ['FACFIS'] }
 ];
 
 export function normalizeTeacherNameForMatch(value) {
@@ -138,6 +139,13 @@ export function ehVaga(nome) {
     return REGEX_VAGA.test(normalizeTeacherNameForMatch(nome));
 }
 
+// Rotulo curto (grade, calendario, "Multiplos"): o primeiro nome; vaga, inteira
+// ("Vaga1 FBIO"), para nao confundir vagas de faculdades diferentes.
+export function rotuloCurtoDocente(nome) {
+    const texto = String(nome || '').trim();
+    return ehVaga(texto) ? texto : (texto.split(/\s+/)[0] || texto);
+}
+
 export function siglaValida(sigla) {
     return /^[A-Za-z0-9]{2,12}$/.test(String(sigla || '').trim());
 }
@@ -211,7 +219,7 @@ export const A_DEFINIR = 'A definir';
 function rotuloMultiplos(docentes) {
     const nomes = docentes.map((d) => {
         const nome = String(d?.nome || '');
-        return /^a definir$/i.test(nome) ? A_DEFINIR : nome.split(' ')[0];
+        return /^a definir$/i.test(nome) ? A_DEFINIR : rotuloCurtoDocente(nome);
     });
     return `${nomes.join(' / ')} (Múltiplos)`;
 }

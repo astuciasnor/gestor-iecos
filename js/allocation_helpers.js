@@ -1,6 +1,6 @@
-import { store } from './store.js?v=202611111523';
-import { getDisciplinaCHGlobal } from './curso_turma_helpers.js?v=202611111523';
-import { normalizeTeacherNameForMatch } from './docente_nomes.mjs?v=202611111523';
+import { store } from './store.js?v=202611111733';
+import { getDisciplinaCHGlobal } from './curso_turma_helpers.js?v=202611111733';
+import { normalizeTeacherNameForMatch, rotuloCurtoDocente } from './docente_nomes.mjs?v=202611111733';
 
 export function getAllocationModo(alloc) {
     return String(alloc?.modo || '').trim().toLowerCase();
@@ -76,7 +76,7 @@ export function getDocenteShortLabel(fullName) {
     const match = docentes.find((d) => teacherNamesMatch(d?.docente, raw));
     const apelido = String(match?.apelido || '').trim();
     if (apelido) return apelido;
-    return raw.split(/\s+/)[0] || raw;
+    return rotuloCurtoDocente(raw);
 }
 
 export function calculateTeacherTotalCH(teacherName) {

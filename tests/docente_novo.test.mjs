@@ -6,7 +6,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import { detectTeacherConflicts } from '../js/conflicts.js';
-import { ehVaga, pareceVaga, proximaVaga, siglaValida } from '../js/docente_nomes.mjs';
+import { ehVaga, pareceVaga, proximaVaga, siglaValida, rotuloCurtoDocente } from '../js/docente_nomes.mjs';
 import { acharNomeConhecido, findNewNames, findSimilarNames, problemaNoNome, UNIDADES, VINCULOS_DOCENTE_NOVO, listarDocentesParaConferir, aplicarRevisaoDocente, removerDocenteDaAlocacao } from '../js/docente_nomes.mjs';
 
 // store.js le o localStorage ao carregar; no Node ele nao existe.
@@ -190,4 +190,13 @@ test('vaga: revisao com o nome da pessoa deixa de ser vaga', () => {
   assert.equal(r.docentesCadastrados[0].vaga, undefined);
   const mantida = aplicarRevisaoDocente(alloc, 'Vaga1 FACIN', { ...revisao, nome: 'Vaga1 FACIN' });
   assert.equal(mantida.docentesCadastrados[0].vaga, true);
+});
+
+test('rotulo curto: primeiro nome; vaga inteira; Campus de Ananindeua na lista', () => {
+  assert.equal(rotuloCurtoDocente('Evaldo Martins da Silva'), 'Evaldo');
+  assert.equal(rotuloCurtoDocente('Vaga1 FBIO'), 'Vaga1 FBIO');
+  const varios = { id: 'a9', docente: 'Evaldo / Vaga1 FBIO (Múltiplos)', docentes: [{ nome: 'Evaldo Martins da Silva', ch: 30 }, { nome: 'Vaga1 FBIO', ch: 30 }] };
+  const r = aplicarRevisaoDocente(varios, 'Vaga1 FBIO', { nome: 'Vaga2 FBIO', vinculo: 'Substituto', unidade: 'IECOS', subunidade: 'FBIO' });
+  assert.equal(r.docente, 'Evaldo / Vaga2 FBIO (Múltiplos)');
+  assert.deepEqual(UNIDADES.find((u) => u.sigla === 'CANAN'), { sigla: 'CANAN', nome: 'Campus de Ananindeua', subunidades: ['FACFIS'] });
 });
