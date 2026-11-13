@@ -44,30 +44,17 @@
 
 /* Cartao branco baixo */
 #tab-weekly .cd-contexto {
-    display: flex;
     flex-wrap: wrap;
-    align-items: center;
     justify-content: space-between;
-    gap: 12px;
     margin: 0 0 8px;                 /* 40% menor (era 14px) */
-    padding: 4px 8px 4px 11px;        /* borda interna 20% menor */
-    background: var(--cd-superficie);
-    border: 1px solid var(--cd-borda);
-    border-radius: 14px;
-    box-shadow: var(--cd-sombra);
     font-family: var(--cd-fonte);
 }
 
 /* O indicador perde a "caixa" propria e vira o lado esquerdo do cartao */
 #tab-weekly .cd-contexto .weekly-status-bar {
     flex: 1 1 320px;
-    min-width: 0;
     margin: 0;
-    padding: 0;
     gap: 12px;
-    background: transparent;
-    border: none;
-    box-shadow: none;
 }
 #tab-weekly .cd-contexto .weekly-status-icon { display: none; }   /* emoji antigo (o JS ainda o troca) */
 
@@ -140,13 +127,9 @@
     /* stretch: os dois cartoes (faixas e semana) sempre com a mesma altura,
        alinhados embaixo; o painel da semana e compacto para nao esticar o outro */
     #tab-weekly .weekly-faixas-stack {
-        grid-template-columns: minmax(0, 1fr) minmax(222px, 246px);   /* botoes com 80% da largura de antes (era 270-300px) */
         gap: 16px;
         align-items: stretch;
     }
-}
-@media (min-width: 1600px) {
-    #tab-weekly .weekly-faixas-stack { grid-template-columns: minmax(0, 1fr) minmax(246px, 294px); }   /* era 300-360px */
 }
 #tab-weekly .weekly-top-layout { margin-bottom: 10px; }   /* 40% menor (era 16px) */
 /* Espaco entre a barra de abas e o cartao "Proximo passo": 40% menor (era 16px) */
@@ -165,7 +148,6 @@
 
 /* Cabecalho: titulo e as etiquetas de legenda */
 #tab-weekly .cd-faixas-cabecalho {
-    display: flex;
     flex-wrap: wrap;
     align-items: center;
     justify-content: space-between;
@@ -185,7 +167,7 @@
     white-space: normal;
 }
 #tab-weekly .weekly-faixas-title-disc { color: var(--cd-primaria); font-size: 17px; font-weight: 800; }
-#tab-weekly .cd-etiquetas { display: flex; flex-wrap: wrap; gap: 8px; }
+#tab-weekly .cd-etiquetas { display: flex; gap: 8px; }
 #tab-weekly .cd-etiqueta {
     display: inline-flex;
     align-items: center;
@@ -209,7 +191,6 @@
 #tab-weekly .weekly-faixas-main {
     display: flex;
     flex-wrap: wrap;
-    align-items: flex-start;
     gap: 16px;
     padding: 13px 16px 16px;          /* borda interna 20% menor (era 16px 20px 20px) */
 }
@@ -217,7 +198,7 @@
 #tab-weekly .weekly-faixas-main > .weekly-faixas-table { flex: 999 1 540px; width: auto; min-width: 0; align-self: flex-start; }
 /* Coluna dos totais com a altura da tabela: cartoes em cima, "Limpar faixas"
    embaixo, com a base alinhada a ultima linha das faixas */
-#tab-weekly .weekly-faixas-main > .weekly-faixas-total { flex: 1 1 170px; justify-content: space-between; }
+#tab-weekly .weekly-faixas-main > .weekly-faixas-total { justify-content: space-between; }
 /* Cartao estreito: celulas com menos espaco lateral para a tabela caber na borda */
 @container (max-width: 640px) {
     #tab-weekly .weekly-faixas-table th,
@@ -248,22 +229,13 @@
     font-weight: 700;
     letter-spacing: .04em;
     text-transform: uppercase;
-    color: var(--cd-texto-3);
-    background: var(--cd-superficie-suave);
-    border-bottom-color: var(--cd-borda);
-    border-right-color: var(--cd-borda);
 }
 #tab-weekly .weekly-faixas-table th:last-child,
 #tab-weekly .weekly-faixas-table td:last-child { border-right: none; }
 /* Larguras pelo conteudo: em tela de notebook as colunas fixas espremiam o "Horario semanal" */
 #tab-weekly .weekly-faixas-table { table-layout: auto; }
-#tab-weekly .weekly-faixas-table .col-faixa-id { width: 132px; }
-#tab-weekly .weekly-faixas-table .col-faixa-date-start,
-#tab-weekly .weekly-faixas-table .col-faixa-date-end { width: auto; }
-#tab-weekly .weekly-faixas-table .col-faixa-ch { width: 64px; }
 #tab-weekly .weekly-faixas-table .faixa-date-display,
 #tab-weekly .weekly-faixas-table .faixa-ch-cell { white-space: nowrap; }
-#tab-weekly .weekly-faixas-table .faixa-num { padding-right: 30px; }
 
 /* Etiqueta da faixa: Faixas 2/3 com data em azul claro */
 #tab-weekly .weekly-faixas-table .faixa-pill {
@@ -294,7 +266,6 @@
     color: #FFFFFF;
 }
 /* Faixa 1 em edicao: a mesma ideia, em verde */
-#tab-weekly .weekly-faixas-table #faixa-1:has(.faixa-num.faixa-num-active) td { background: #F3FAF8; }
 #tab-weekly .weekly-faixas-table #faixa-1:has(.faixa-num.faixa-num-active) td:first-child { box-shadow: inset 4px 0 0 var(--cd-primaria); }
 #tab-weekly .weekly-faixas-table #faixa-1 .faixa-num.faixa-num-active .faixa-pill {
     background: var(--cd-primaria);
@@ -306,8 +277,6 @@
 #tab-weekly .weekly-faixas-table .faixa-date-display { font-size: 14px; font-weight: 700; color: var(--cd-texto); }
 #tab-weekly .weekly-faixas-table .faixa-date-compact:has(.inp-data-inicio) .faixa-date-display:not(.is-placeholder) { color: var(--cd-primaria); }
 #tab-weekly .weekly-faixas-table .faixa-date-display.is-placeholder { color: var(--cd-texto-apagado); font-weight: 500; }
-#tab-weekly .weekly-faixas-table .faixa-date-compact:hover,
-#tab-weekly .weekly-faixas-table .faixa-date-compact:focus-within { background: #F0FAF8; border-color: #BFE3DC; }
 #tab-weekly .weekly-faixas-table .faixa-padrao-cell { font-size: 13px; color: var(--cd-texto-2); }
 #tab-weekly .weekly-faixas-table .faixa-padrao-cell .fp-livre { color: var(--cd-texto-apagado); font-style: italic; }
 #tab-weekly .weekly-faixas-table .faixa-ch-cell { font-size: 14px; font-weight: 700; color: var(--cd-texto); }
@@ -333,11 +302,8 @@
 #tab-weekly .weekly-faixas-total { min-width: 0; gap: 6px; }
 /* Cartoes baixos: rotulo + numero (+ barra na Meta), sem sobra embaixo */
 #tab-weekly .weekly-faixas-metric-card {
-    align-items: flex-start;
     justify-content: flex-start;
     min-height: 0;
-    text-align: left;
-    padding: 7px 12px 8px;
     border: 1px solid var(--cd-borda);
     border-radius: 12px;
     background: #F8FAFB;
@@ -354,7 +320,6 @@
 #tab-weekly .weekly-faixas-metric-value,
 #tab-weekly .weekly-faixas-total #weekly-faixa-total-ch,
 #tab-weekly .weekly-faixas-total #weekly-faixa-target-ch {
-    font-size: 26px;
     font-weight: 800;
     line-height: 1.1;
     color: var(--cd-texto);
@@ -387,15 +352,12 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 8px;
     min-height: 40px;
-    padding: 0 12px;
     border: 1px solid var(--cd-perigo-borda);
     border-radius: var(--cd-raio-botao);
     background: #FFFFFF;
     color: var(--cd-perigo);
     font-family: var(--cd-fonte);
-    font-size: 14px;
     font-weight: 700;
     box-shadow: none;
     filter: none;
@@ -409,9 +371,7 @@
 #tab-weekly .weekly-faixas-stack .weekly-week-nav {
     align-items: stretch;
     justify-content: flex-start;
-    gap: 10px;
     margin: 0;
-    padding: 11px 13px;               /* compacto; borda interna 20% menor (era 14px 16px) */
     background: var(--cd-superficie);
     border: 1px solid var(--cd-borda);
     border-radius: var(--cd-raio-cartao);
@@ -421,7 +381,6 @@
 }
 #tab-weekly .weekly-week-nav .cd-rotulo { margin-bottom: -8px; }
 #tab-weekly .weekly-week-label {
-    display: block;
     text-align: left;
     font-size: 15px;
     font-weight: 800;
@@ -456,8 +415,6 @@
     filter: none;
 }
 #tab-weekly .btn-week-nav:hover { background: #F1F5F9; }
-#tab-weekly .btn-week-nav.btn-week-faixa { border-color: #C7D2FE; color: var(--cd-faixa2-texto); background: #FFFFFF; }
-#tab-weekly .btn-week-nav.btn-week-faixa:hover { background: #F5F8FE; }
 #tab-weekly .btn-week-nav:disabled,
 #tab-weekly .btn-week-nav.btn-week-faixa:disabled {
     background: #F8FAFC;
@@ -472,17 +429,7 @@
 
 /* Salvar (principal, verde) e Desfazer embaixo. Desfazer fica esmaecido; so se
    ativa logo depois de salvar (desfaz esse salvamento) e ganha destaque. */
-#tab-weekly .btn-week-nav.btn-week-undo {
-    color: #92400E;
-    background: #FFFBEB;
-    border-color: #D97706;
-}
-#tab-weekly .btn-week-nav.btn-week-undo:hover { background: #FEF3C7; }
 #tab-weekly .btn-week-nav.btn-week-undo:disabled {
-    background: #F8FAFC;
-    border-color: var(--cd-borda-suave);
-    color: #94A3B8;
-    opacity: .6;
     cursor: not-allowed;
 }
 #tab-weekly .btn-week-nav.btn-week-save-comp {
@@ -542,9 +489,6 @@
 }
 #tab-weekly .week-day-header .week-day-date {
     margin-top: 2px;
-    font-size: 12px;
-    font-weight: 500;
-    color: var(--cd-texto-3);
     text-transform: none;
 }
 
@@ -927,11 +871,6 @@
 /* ==========================================================================
    Coluna dos totais mais estreita; o espaco vai para "Horario semanal"
    ========================================================================== */
-#tab-weekly .weekly-faixas-main > .weekly-faixas-total { flex: 0 0 140px; }
-#tab-weekly #btn-limpar-faixas.weekly-faixas-clear-btn { padding: 0 8px; gap: 6px; }
-/* Datas com largura propria: a sobra da tabela vai para o "Horario semanal" */
-#tab-weekly .weekly-faixas-table .col-faixa-date-start,
-#tab-weekly .weekly-faixas-table .col-faixa-date-end { width: 124px; }
 /* Cartao estreito (totais embaixo da tabela): a linha de totais volta a ocupar tudo */
 @container (max-width: 740px) {
     #tab-weekly .weekly-faixas-main > .weekly-faixas-total { flex: 1 1 100%; }
@@ -1132,12 +1071,8 @@
 #tab-weekly .weekly-faixas-total #weekly-faixa-total-ch,
 #tab-weekly .weekly-faixas-total #weekly-faixa-target-ch { font-size: 24px; }
 #tab-weekly #btn-limpar-faixas.weekly-faixas-clear-btn {
-    padding: 2px 6px;
-    gap: 5px;
-    font-size: 13px;
     line-height: 1.15;
     text-align: center;
-    white-space: normal;
 }
 #tab-weekly .weekly-faixas-table th,
 #tab-weekly .weekly-faixas-table th:last-child { text-align: center; }
@@ -1277,7 +1212,7 @@
         flex-direction: column;
         gap: 8px;
     }
-    #tab-weekly .btn-week-nav { flex: 1 1 0; height: auto; min-height: 44px; }
+    #tab-weekly .btn-week-nav { flex: 1 1 0; height: auto; }
     #tab-weekly .cd-divisoria { flex: 0 0 1px; margin: 2px 4px; }
 }
 @media (min-width: 1600px) {
