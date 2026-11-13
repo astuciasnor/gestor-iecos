@@ -1,32 +1,32 @@
-import { store } from './store.js?v=202611132018';
-import { stableStringify } from './sync_diff.mjs?v=202611132018';
-import { getTurnoLetter, mapSlotToTurno, turnoDaTurmaInclui } from './turns.js?v=202611132018';
-import { normalizePeriodo as normalizePeriodoLetivoCode } from './plan_storage.js?v=202611132018';
-import { getCalendarEvents } from './calendar.js?v=202611132018';
-import { isDateOverlap } from './utils.js?v=202611132018';
-import { weeklyState } from './weekly_state.js?v=202611132018';
-import { findPendentesCobertas, isPendenteJaAlocada } from './pendentes.mjs?v=202611132018';
-import { classifySwap } from './troca_ordem.mjs?v=202611132018';
-import { datasFeriadoDaTurma, feriadosDaTurma } from './feriados.mjs?v=202611132018';
-import { closeFaixaEnds, isPauseEnd, listFaixaPauses } from './pausa_faixas.mjs?v=202611132018';
-import { numeroDaSubturma, isTurmaInteira, proximaSubturma, codigoT01Como, saoSubturmasDiferentes, sufixoSubturma } from './subturmas.mjs?v=202611132018';
-import { abrirMiniCalendario, fecharMiniCalendario, miniCalendarioAberto } from './mini_calendario.mjs?v=202611132018';
-import { buildCanonicalOfferProjection } from './execution_engine.js?v=202611132018';
+import { store } from './store.js?v=202611132043';
+import { stableStringify } from './sync_diff.mjs?v=202611132043';
+import { getTurnoLetter, mapSlotToTurno, turnoDaTurmaInclui } from './turns.js?v=202611132043';
+import { normalizePeriodo as normalizePeriodoLetivoCode } from './plan_storage.js?v=202611132043';
+import { getCalendarEvents } from './calendar.js?v=202611132043';
+import { isDateOverlap } from './utils.js?v=202611132043';
+import { weeklyState } from './weekly_state.js?v=202611132043';
+import { findPendentesCobertas, isPendenteJaAlocada } from './pendentes.mjs?v=202611132043';
+import { classifySwap } from './troca_ordem.mjs?v=202611132043';
+import { datasFeriadoDaTurma, feriadosDaTurma } from './feriados.mjs?v=202611132043';
+import { closeFaixaEnds, isPauseEnd, listFaixaPauses } from './pausa_faixas.mjs?v=202611132043';
+import { numeroDaSubturma, isTurmaInteira, proximaSubturma, codigoT01Como, saoSubturmasDiferentes, sufixoSubturma } from './subturmas.mjs?v=202611132043';
+import { abrirMiniCalendario, fecharMiniCalendario, miniCalendarioAberto } from './mini_calendario.mjs?v=202611132043';
+import { buildCanonicalOfferProjection } from './execution_engine.js?v=202611132043';
 import {
     buildSigaaMetadataPayload,
     validateSigaaMetadataPayload,
     getSigaaCode,
     buildScopedSigaaAllocationFromOfferFaixa,
     buildSigaaHorarioResumo
-} from './sigaa_metadata.js?v=202611132018';
-import { parseBackupDataFile, extractImportPlanMeta } from './serialization.js?v=202611132018';
+} from './sigaa_metadata.js?v=202611132043';
+import { parseBackupDataFile, extractImportPlanMeta } from './serialization.js?v=202611132043';
 import {
     showToastWarning,
     showPersistentStatusMessage,
     copyTextToClipboard,
     flashButtonCopyState,
     setupCopyActionButtons
-} from './ui_feedback.js?v=202611132018';
+} from './ui_feedback.js?v=202611132043';
 import {
     normalizeHexColor,
     adjustHexColor,
@@ -35,7 +35,7 @@ import {
     tonsDaCor,
     aplicarTonsBloco,
     PALETA_CORES
-} from './color_utils.js?v=202611132018';
+} from './color_utils.js?v=202611132043';
 import {
     isFaixaAllocation,
     isPriorityRegularAllocation,
@@ -44,9 +44,9 @@ import {
     normalizeTeacherNameForMatch,
     getDocenteShortLabel,
     getAllocationTeachersForConflict
-} from './allocation_helpers.js?v=202611132018';
-import { setupSeletorCor } from './seletor_cor.js?v=202611132018';
-import { ligarSugestoesDocente } from './sugestoes_docente.mjs?v=202611132018';
+} from './allocation_helpers.js?v=202611132043';
+import { setupSeletorCor } from './seletor_cor.js?v=202611132043';
+import { ligarSugestoesDocente } from './sugestoes_docente.mjs?v=202611132043';
 import {
     VINCULOS_DOCENTE_NOVO,
     OUTRA_UNIDADE,
@@ -63,9 +63,9 @@ import {
     acharNomeConhecido,
     filtrarDocentes,
     umNomePorPessoa
-} from './docente_nomes.mjs?v=202611132018';
-import { getSessionEmail, getPerfil, fetchAllocationsForPlans } from './sync_remoto.js?v=202611132018';
-import { resolveBackendMode } from './backend_config.js?v=202611132018';
+} from './docente_nomes.mjs?v=202611132043';
+import { getSessionEmail, getPerfil, fetchAllocationsForPlans } from './sync_remoto.js?v=202611132043';
+import { resolveBackendMode } from './backend_config.js?v=202611132043';
 import {
     normalizeConflictSlotLabel,
     getAvailableTurnoOfertaOptions,
@@ -75,7 +75,7 @@ import {
     buildHorariosForUI,
     getShiftChangeMeta,
     getNativeTurnoValueForAllocation
-} from './turno_helpers.js?v=202611132018';
+} from './turno_helpers.js?v=202611132043';
 import {
     getDisciplinaCHGlobal,
     derivarBloco,
@@ -85,7 +85,7 @@ import {
     getDisciplinaInfo,
     getCursoSiglaDaTurma,
     getPrintAcademicMetaLine
-} from './curso_turma_helpers.js?v=202611132018';
+} from './curso_turma_helpers.js?v=202611132043';
 import {
     renderMonthlyCalendar,
     renderTeacherCalendar,
@@ -93,14 +93,14 @@ import {
     clearTeacherRangeCache,
     setTeacherPeriod,
     getTeacherPeriod
-} from './calendarios_ui.js?v=202611132018';
-import { setupIndicadores, renderIndicadores, setIndicadoresLigacoes } from './indicadores_ui.js?v=202611132018';
+} from './calendarios_ui.js?v=202611132043';
+import { setupIndicadores, renderIndicadores, setIndicadoresLigacoes } from './indicadores_ui.js?v=202611132043';
 import {
     refreshTeacherConflictsUI,
     setCrossPlanLoader,
     setResolverDeChoque,
     acharChoqueComOutroPL
-} from './conflitos_ui.js?v=202611132018';
+} from './conflitos_ui.js?v=202611132043';
 import {
     shouldIgnoreTurmaEventForCandidate,
     normalizeDrawnSlotsByDay,
@@ -114,7 +114,7 @@ import {
     resolveEditableFaixasFromStoredExecution,
     alignFaixasToExecutionEnd,
     buildFinalAdjustmentFaixaSuggestion
-} from './faixa_utils.js?v=202611132018';
+} from './faixa_utils.js?v=202611132043';
 import {
     timeToMinutes,
     shiftISODate,
@@ -128,14 +128,14 @@ import {
     isDateInsideRange,
     formatDateBRShortYear,
     formatDateBR
-} from './date_utils_ui.js?v=202611132018';
+} from './date_utils_ui.js?v=202611132043';
 import {
     initializeWeeklyScheduleForTurma,
     reconcileTurmaSelectionAfterPLChange,
     resetWeeklyViewOnTurmaChange,
     resolveActiveAcademicPeriod,
     slotLabelsOverlap
-} from './academic_rules.mjs?v=202611132018';
+} from './academic_rules.mjs?v=202611132043';
 
 const gridContainer = document.getElementById('weekly-grid');
 const selCurso = document.getElementById('sel-curso');
@@ -6917,9 +6917,9 @@ function renderSlotContent(cell, allocs, dayOfWeek = 0) {
             ? `<span style="display:inline-block; font-size:0.65em; background:#e67e22; color:#fff; padding:1px 4px; border-radius:3px; margin-left:2px; font-weight:bold;" title="Aula excepcionalmente no turno ${turnoLetter === 'M' ? 'da Manhã' : turnoLetter === 'T' ? 'da Tarde' : 'da Noite'}">(${turnoLetter})</span>` : '';
 
         card.innerHTML = `
-            <div class="card-title" title="${alloc.disciplina}${docenteNome ? ` - ${docenteNome}` : ''}">
-                <span class="card-comp">${info.abrev}${sufixoSubturma(alloc.subGrupo)}${getShiftChangeMeta(alloc, alloc.horario, dayOfWeek).badgeHTML || badgeHTML}</span>
-                ${docenteNome ? `<span class="card-docente">${docenteNome}</span>` : ''}
+            <div class="card-title" title="${escapeTrocaHtml(alloc.disciplina)}${docenteNome ? ` - ${escapeTrocaHtml(docenteNome)}` : ''}">
+                <span class="card-comp">${escapeTrocaHtml(info.abrev)}${sufixoSubturma(alloc.subGrupo)}${getShiftChangeMeta(alloc, alloc.horario, dayOfWeek).badgeHTML || badgeHTML}</span>
+                ${docenteNome ? `<span class="card-docente">${escapeTrocaHtml(docenteNome)}</span>` : ''}
             </div>
             <button type="button" class="remove-btn" title="Remover" aria-label="Remover ${escapeAttrGrade(alloc.disciplina)} de ${escapeAttrGrade(rotuloCelulaGrade(cell, dayOfWeek))}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg></button>
         `;
@@ -8586,9 +8586,9 @@ function renderOfertasList() {
             ? ` <span class="subturma-selo" title="Subturma ${escapeTrocaHtml(getTurmaLabel(row.baseAlloc.turmaId, row.baseAlloc.subGrupo))}">T${String(numSub).padStart(2, '0')}</span>`
             : '';
         tr.innerHTML = `
-            <td>${row.disciplina}${seloSub}</td>
-            <td style="text-align:center; font-family:monospace; font-weight:bold;">${row.codigo || '-'}</td>
-            <td>${row.docente || '-'}</td>
+            <td>${escapeTrocaHtml(row.disciplina)}${seloSub}</td>
+            <td style="text-align:center; font-family:monospace; font-weight:bold;">${escapeTrocaHtml(row.codigo || '-')}</td>
+            <td>${escapeTrocaHtml(row.docente || '-')}</td>
             <td>${row.horarioTxt}</td>
             <td style="text-align:center;">${chInfo}</td>
             <td style="text-align:center;">${btnCopySigaa}</td>

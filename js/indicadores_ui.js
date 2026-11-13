@@ -1,11 +1,11 @@
 // Menu Indicadores (so leitura: nada e gravado).
 // Sub-aba "Carga por docente": tabela com a CH de cada docente por curso e por PL,
 // do ano inteiro ou de um PL. As contas estao em indicadores.mjs.
-import { store } from './store.js?v=202611132018';
-import { getCursoSiglaDaTurma, getDisciplinaCHGlobal } from './curso_turma_helpers.js?v=202611132018';
-import { formatDateBR } from './date_utils_ui.js?v=202611132018';
-import { UNIDADES } from './docente_nomes.mjs?v=202611132018';
-import { cargaPorDocente, ordenarLinhas, SEM_DOCENTE } from './indicadores.mjs?v=202611132018';
+import { store } from './store.js?v=202611132043';
+import { getCursoSiglaDaTurma, getDisciplinaCHGlobal } from './curso_turma_helpers.js?v=202611132043';
+import { formatDateBR } from './date_utils_ui.js?v=202611132043';
+import { UNIDADES } from './docente_nomes.mjs?v=202611132043';
+import { cargaPorDocente, ordenarLinhas, SEM_DOCENTE } from './indicadores.mjs?v=202611132043';
 
 const VALIDADE_MS = 2 * 60 * 1000; // depois disso, abrir o menu busca de novo
 
