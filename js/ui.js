@@ -1,32 +1,32 @@
-import { store } from './store.js?v=202611132043';
-import { stableStringify } from './sync_diff.mjs?v=202611132043';
-import { getTurnoLetter, mapSlotToTurno, turnoDaTurmaInclui } from './turns.js?v=202611132043';
-import { normalizePeriodo as normalizePeriodoLetivoCode } from './plan_storage.js?v=202611132043';
-import { getCalendarEvents } from './calendar.js?v=202611132043';
-import { isDateOverlap } from './utils.js?v=202611132043';
-import { weeklyState } from './weekly_state.js?v=202611132043';
-import { findPendentesCobertas, isPendenteJaAlocada } from './pendentes.mjs?v=202611132043';
-import { classifySwap } from './troca_ordem.mjs?v=202611132043';
-import { datasFeriadoDaTurma, feriadosDaTurma } from './feriados.mjs?v=202611132043';
-import { closeFaixaEnds, isPauseEnd, listFaixaPauses } from './pausa_faixas.mjs?v=202611132043';
-import { numeroDaSubturma, isTurmaInteira, proximaSubturma, codigoT01Como, saoSubturmasDiferentes, sufixoSubturma } from './subturmas.mjs?v=202611132043';
-import { abrirMiniCalendario, fecharMiniCalendario, miniCalendarioAberto } from './mini_calendario.mjs?v=202611132043';
-import { buildCanonicalOfferProjection } from './execution_engine.js?v=202611132043';
+import { store } from './store.js?v=202611132048';
+import { stableStringify } from './sync_diff.mjs?v=202611132048';
+import { getTurnoLetter, mapSlotToTurno, turnoDaTurmaInclui } from './turns.js?v=202611132048';
+import { normalizePeriodo as normalizePeriodoLetivoCode } from './plan_storage.js?v=202611132048';
+import { getCalendarEvents } from './calendar.js?v=202611132048';
+import { isDateOverlap } from './utils.js?v=202611132048';
+import { weeklyState } from './weekly_state.js?v=202611132048';
+import { findPendentesCobertas, isPendenteJaAlocada } from './pendentes.mjs?v=202611132048';
+import { classifySwap } from './troca_ordem.mjs?v=202611132048';
+import { datasFeriadoDaTurma, feriadosDaTurma } from './feriados.mjs?v=202611132048';
+import { closeFaixaEnds, isPauseEnd, listFaixaPauses } from './pausa_faixas.mjs?v=202611132048';
+import { numeroDaSubturma, isTurmaInteira, proximaSubturma, codigoT01Como, saoSubturmasDiferentes, sufixoSubturma } from './subturmas.mjs?v=202611132048';
+import { abrirMiniCalendario, fecharMiniCalendario, miniCalendarioAberto } from './mini_calendario.mjs?v=202611132048';
+import { buildCanonicalOfferProjection } from './execution_engine.js?v=202611132048';
 import {
     buildSigaaMetadataPayload,
     validateSigaaMetadataPayload,
     getSigaaCode,
     buildScopedSigaaAllocationFromOfferFaixa,
     buildSigaaHorarioResumo
-} from './sigaa_metadata.js?v=202611132043';
-import { parseBackupDataFile, extractImportPlanMeta } from './serialization.js?v=202611132043';
+} from './sigaa_metadata.js?v=202611132048';
+import { parseBackupDataFile, extractImportPlanMeta } from './serialization.js?v=202611132048';
 import {
     showToastWarning,
     showPersistentStatusMessage,
     copyTextToClipboard,
     flashButtonCopyState,
     setupCopyActionButtons
-} from './ui_feedback.js?v=202611132043';
+} from './ui_feedback.js?v=202611132048';
 import {
     normalizeHexColor,
     adjustHexColor,
@@ -35,7 +35,7 @@ import {
     tonsDaCor,
     aplicarTonsBloco,
     PALETA_CORES
-} from './color_utils.js?v=202611132043';
+} from './color_utils.js?v=202611132048';
 import {
     isFaixaAllocation,
     isPriorityRegularAllocation,
@@ -44,9 +44,9 @@ import {
     normalizeTeacherNameForMatch,
     getDocenteShortLabel,
     getAllocationTeachersForConflict
-} from './allocation_helpers.js?v=202611132043';
-import { setupSeletorCor } from './seletor_cor.js?v=202611132043';
-import { ligarSugestoesDocente } from './sugestoes_docente.mjs?v=202611132043';
+} from './allocation_helpers.js?v=202611132048';
+import { setupSeletorCor } from './seletor_cor.js?v=202611132048';
+import { ligarSugestoesDocente } from './sugestoes_docente.mjs?v=202611132048';
 import {
     VINCULOS_DOCENTE_NOVO,
     OUTRA_UNIDADE,
@@ -63,9 +63,9 @@ import {
     acharNomeConhecido,
     filtrarDocentes,
     umNomePorPessoa
-} from './docente_nomes.mjs?v=202611132043';
-import { getSessionEmail, getPerfil, fetchAllocationsForPlans } from './sync_remoto.js?v=202611132043';
-import { resolveBackendMode } from './backend_config.js?v=202611132043';
+} from './docente_nomes.mjs?v=202611132048';
+import { getSessionEmail, getPerfil, fetchAllocationsForPlans } from './sync_remoto.js?v=202611132048';
+import { resolveBackendMode } from './backend_config.js?v=202611132048';
 import {
     normalizeConflictSlotLabel,
     getAvailableTurnoOfertaOptions,
@@ -75,7 +75,7 @@ import {
     buildHorariosForUI,
     getShiftChangeMeta,
     getNativeTurnoValueForAllocation
-} from './turno_helpers.js?v=202611132043';
+} from './turno_helpers.js?v=202611132048';
 import {
     getDisciplinaCHGlobal,
     derivarBloco,
@@ -85,7 +85,7 @@ import {
     getDisciplinaInfo,
     getCursoSiglaDaTurma,
     getPrintAcademicMetaLine
-} from './curso_turma_helpers.js?v=202611132043';
+} from './curso_turma_helpers.js?v=202611132048';
 import {
     renderMonthlyCalendar,
     renderTeacherCalendar,
@@ -93,14 +93,14 @@ import {
     clearTeacherRangeCache,
     setTeacherPeriod,
     getTeacherPeriod
-} from './calendarios_ui.js?v=202611132043';
-import { setupIndicadores, renderIndicadores, setIndicadoresLigacoes } from './indicadores_ui.js?v=202611132043';
+} from './calendarios_ui.js?v=202611132048';
+import { setupIndicadores, renderIndicadores, setIndicadoresLigacoes } from './indicadores_ui.js?v=202611132048';
 import {
     refreshTeacherConflictsUI,
     setCrossPlanLoader,
     setResolverDeChoque,
     acharChoqueComOutroPL
-} from './conflitos_ui.js?v=202611132043';
+} from './conflitos_ui.js?v=202611132048';
 import {
     shouldIgnoreTurmaEventForCandidate,
     normalizeDrawnSlotsByDay,
@@ -114,7 +114,7 @@ import {
     resolveEditableFaixasFromStoredExecution,
     alignFaixasToExecutionEnd,
     buildFinalAdjustmentFaixaSuggestion
-} from './faixa_utils.js?v=202611132043';
+} from './faixa_utils.js?v=202611132048';
 import {
     timeToMinutes,
     shiftISODate,
@@ -128,14 +128,14 @@ import {
     isDateInsideRange,
     formatDateBRShortYear,
     formatDateBR
-} from './date_utils_ui.js?v=202611132043';
+} from './date_utils_ui.js?v=202611132048';
 import {
     initializeWeeklyScheduleForTurma,
     reconcileTurmaSelectionAfterPLChange,
     resetWeeklyViewOnTurmaChange,
     resolveActiveAcademicPeriod,
     slotLabelsOverlap
-} from './academic_rules.mjs?v=202611132043';
+} from './academic_rules.mjs?v=202611132048';
 
 const gridContainer = document.getElementById('weekly-grid');
 const selCurso = document.getElementById('sel-curso');
@@ -3123,7 +3123,10 @@ function isIntensiveComponentByFaixas(faixasInput = []) {
 // adiante ate achar um inicio sem conflito de turma nem de professor. Usa
 // respectTurmaOccupancy:false para manter o bloco continuo (nao desvia para
 // buracos, o que reintroduziria intercalamento).
-function stackIntensiveAfterAllocations(baseCandidate, turmaId, minStart = '') {
+// horasMinimas: horas que a componente tinha na posicao escolhida. A nova
+// posicao precisa ter pelo menos isso; se nao cabe, devolve null (o salvar barra
+// e explica, em vez de gravar menos horas sem avisar).
+function stackIntensiveAfterAllocations(baseCandidate, turmaId, minStart = '', horasMinimas = 0) {
     const origFaixas = getNormalizedIntensiveFaixas(baseCandidate);
     if (!baseCandidate || origFaixas.length === 0) return null;
 
@@ -3152,6 +3155,9 @@ function stackIntensiveAfterAllocations(baseCandidate, turmaId, minStart = '') {
         const candidateFirstStart = shiftISODate(anchor, offset);
         const delta = diffDaysISO(originalFirstStart, candidateFirstStart);
         const shiftedFaixas = shiftFaixasByDays(origFaixas, delta);
+        // A ultima faixa vai ate completar a CH: o Fim antigo valia para a posicao
+        // antiga e, levado junto, cortava aulas (defeito "salvar guarda metade da CH").
+        if (shiftedFaixas.length) shiftedFaixas[shiftedFaixas.length - 1].fim = null;
         const shiftedCandidate = buildCandidateIntensiveFromFaixas(baseCandidate, shiftedFaixas);
         if (!shiftedCandidate) continue;
 
@@ -3161,6 +3167,8 @@ function stackIntensiveAfterAllocations(baseCandidate, turmaId, minStart = '') {
             respectTurmaOccupancy: false
         });
         if (!execution || execution.totalHours <= 0 || !execution.dataInicio || !execution.dataFim) continue;
+        // Nao cabe inteira ate o fim do periodo; comecando mais tarde tambem nao cabe.
+        if (horasMinimas > 0 && execution.totalHours < horasMinimas) return null;
 
         const alignedFaixas = alignFaixasToExecutionEnd(shiftedFaixas, execution.dataFim);
         const finalCandidate = {
@@ -7534,17 +7542,20 @@ function handleAddManual() {
                 const stacked = stackIntensiveAfterAllocations(
                     candidateForStacking,
                     store.selectedTurma,
-                    inicioCalculado
+                    inicioCalculado,
+                    execution.totalHours
                 );
                 if (!stacked) {
+                    const quandoChoque = intensiveConflict.date ? ` em ${formatDateBR(intensiveConflict.date)}` : '';
                     setWeeklyBlock(
-                        'Sem espaco no periodo letivo',
-                        `Nao ha espaco livre para empilhar "${disciplina}" em sequencia. Ajuste as datas do periodo (barra lateral) ou remova alguma componente ja alocada.`
+                        'Nao cabe em sequencia',
+                        `"${intensiveConflict.disciplina}" ja ocupa esse horario${quandoChoque}. Colocada depois das componentes ja alocadas, "${disciplina}" nao cabe inteira (${execution.totalHours}h) ate o fim do periodo letivo. Ajuste a data de inicio ou os horarios das faixas e salve de novo.`,
+                        'choque'
                     );
                     showToastWarning(
-                        `Nao ha espaco livre para empilhar "${disciplina}" em sequencia dentro do periodo letivo. Ajuste as datas do periodo ou remova alguma componente.`,
-                        'error',
-                        6200
+                        `Choque com "${intensiveConflict.disciplina}"${quandoChoque}, e depois das outras componentes "${disciplina}" nao cabe inteira ate o fim do periodo. Ajuste o inicio ou os horarios e salve de novo.`,
+                        'warning',
+                        7000
                     );
                     return;
                 }
