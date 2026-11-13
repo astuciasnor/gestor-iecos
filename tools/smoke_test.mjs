@@ -381,6 +381,26 @@ async function run() {
       assert(largura > 300, `agenda publica estreita demais: ${largura}px`);
       return `largura ${Math.round(largura)}px`;
     });
+
+    await check('Menu Indicadores: carga por docente (ano inteiro, PL, clique no nome)', async () => {
+      await evaluate("document.querySelector('.tab-btn[data-tab=\"indicadores\"]').click()");
+      assert(await waitFor("document.querySelectorAll('#ind-tabela tbody .ind-docente').length > 0", 10000), 'tabela sem docentes');
+      const ano = await evaluate(`(() => {
+        const t = document.querySelector('#ind-tabela table');
+        const heads = [...t.querySelectorAll('thead th')].map((th) => th.textContent.replace(/[▲▼]/g, '').trim());
+        const totais = [...t.querySelectorAll('tbody tr')].filter((tr) => tr.querySelector('.ind-docente'))
+          .map((tr) => Number((tr.querySelector('.ind-total')?.textContent || '0').replace(/\\./g, '').replace(',', '.')) || 0);
+        return { heads, n: totais.length, ordenado: totais.every((v, i) => i === 0 || v <= totais[i - 1]) };
+      })()`);
+      assert(ano.heads.includes('Total') && ano.heads.some((h) => /^PL\d$/.test(h)), `colunas do ano: ${ano.heads.join(',')}`);
+      assert(ano.ordenado, 'docentes fora da ordem do total (maior primeiro)');
+      await evaluate("document.querySelector('#ind-pl-buttons [data-plan-key]').click()");
+      assert(await waitFor("!document.querySelector('#ind-tabela thead .ind-pl') && document.querySelector('#ind-pl-buttons .is-active')", 3000), 'o PL nao trocou a tabela');
+      const nome = await evaluate("document.querySelector('#ind-tabela .ind-docente').dataset.docente");
+      await evaluate("document.querySelector('#ind-tabela .ind-docente').click()");
+      assert(await waitFor(`document.getElementById('tab-teacher').classList.contains('active') && document.getElementById('sel-view-docente').value === ${JSON.stringify(nome)}`, 5000), 'o clique no nome nao abriu a agenda do docente');
+      return `${ano.n} docentes; colunas ${ano.heads.slice(2).join(' ')}`;
+    });
   } finally {
     const falhou = results.some((r) => !r.ok);
     if (falhou) {

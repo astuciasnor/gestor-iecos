@@ -1,8 +1,9 @@
-import { store } from './store.js?v=202611111738';
-import { getDaysArray, toLocalDateString } from './utils.js?v=202611111738';
-import { mapSlotToTurno, turnoDaTurmaInclui } from './turns.js?v=202611111738';
-import { slotLabelsOverlap } from './academic_rules.mjs?v=202611111738';
-import { mesmoDocente } from './docente_nomes.mjs?v=202611111738';
+import { store } from './store.js?v=202611122042';
+import { getDaysArray, toLocalDateString } from './utils.js?v=202611122042';
+import { mapSlotToTurno, turnoDaTurmaInclui } from './turns.js?v=202611122042';
+import { slotLabelsOverlap } from './academic_rules.mjs?v=202611122042';
+import { mesmoDocente } from './docente_nomes.mjs?v=202611122042';
+import { datasFeriadoDaTurma, feriadosDaTurma } from './feriados.mjs?v=202611122042';
 
 function normalizeKeyPart(value) {
   return String(value || '').trim().toUpperCase();
@@ -345,12 +346,19 @@ function resolveAllocationTeacherForHour(allocation, currentHourNum) {
   return slotDocente;
 }
 
-function buildAllocationDescriptors(allocations = [], computationDays = [], feriadosSet = new Set(), defaultStart = '', defaultEnd = '') {
+function buildAllocationDescriptors(allocations = [], computationDays = [], feriadosList = [], defaultStart = '', defaultEnd = '') {
   const turmaToCurso = buildTurmaToCursoMap();
   const cursoRules = buildCursoComponentCHMap();
+  // Cada alocacao pula os feriados comuns + os bloqueios da propria turma.
+  const feriadosPorTurma = new Map();
+  const feriadosDaAlocacao = (allocation) => {
+    const turmaId = String(allocation?.turmaId || '');
+    if (!feriadosPorTurma.has(turmaId)) feriadosPorTurma.set(turmaId, datasFeriadoDaTurma(feriadosList, turmaId));
+    return feriadosPorTurma.get(turmaId);
+  };
 
   return allocations.map((allocation) => {
-    const { faixas, byDate } = buildCandidateSlotsByDate(allocation, computationDays, feriadosSet, defaultStart, defaultEnd);
+    const { faixas, byDate } = buildCandidateSlotsByDate(allocation, computationDays, feriadosDaAlocacao(allocation), defaultStart, defaultEnd);
     return {
       allocation,
       allocationId: allocation?.id,
@@ -460,7 +468,8 @@ export function getCalendarEvents(turmaId, startDate, endDate, docenteFilter = n
   const visibleDays = getDaysArray(startDate, endDate);
   const visibleDateSet = new Set(visibleDays.map((date) => toLocalDateString(date)));
   const feriadosList = Array.isArray(store.rawData?.feriados) ? store.rawData.feriados : [];
-  const feriadosSet = new Set(feriadosList.map((feriado) => feriado?.data || feriado).filter(Boolean));
+  // So os feriados comuns (de todas as turmas); bloqueios por turma ficam por alocacao.
+  const feriadosSet = datasFeriadoDaTurma(feriadosList, '');
   const computationStart = String(store.settings.termStart || startDate || '').trim();
   const computationDays = getDaysArray(computationStart || startDate, endDate);
 
@@ -473,7 +482,7 @@ export function getCalendarEvents(turmaId, startDate, endDate, docenteFilter = n
   const descriptors = buildAllocationDescriptors(
     filteredAllocations,
     computationDays,
-    feriadosSet,
+    feriadosList,
     computationStart || startDate,
     endDate
   );
@@ -495,7 +504,7 @@ export function getCalendarEvents(turmaId, startDate, endDate, docenteFilter = n
       return;
     }
 
-    const feriadoObj = feriadosList.find((feriado) => (feriado?.data || feriado) === dateStr);
+    const feriadoObj = feriadosDaTurma(feriadosList, turmaId || '').find((feriado) => (feriado?.data || feriado) === dateStr);
     if (feriadoObj) {
       calendarData[dateStr] = [{ type: 'holiday', title: feriadoObj?.feriado || 'Feriado' }];
       return;

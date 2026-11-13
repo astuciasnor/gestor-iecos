@@ -190,26 +190,69 @@ export function problemaNoNome(nome) {
     return '';
 }
 
+// Nome improvisado ja gravado numa alocacao ("n.n. (substituto)", "a contratar"),
+// de antes da regra das vagas. "A definir" e o rotulo "(Multiplos)" nao contam.
+export function nomeImprovisado(nome) {
+    const texto = String(nome || '').trim();
+    if (!texto || /^a definir$/i.test(texto) || /\(m[uú]ltiplos\)/i.test(texto)) return false;
+    return pareceVaga(texto);
+}
+
+// Nomes de uma alocacao: o docente unico ou a lista (sem o rotulo "(Multiplos)").
+function nomesDaAlocacao(alloc) {
+    const lista = Array.isArray(alloc?.docentes) ? alloc.docentes.map((d) => d?.nome ?? d) : [];
+    const unico = alloc?.docente && typeof alloc.docente === 'object' ? alloc.docente.nome : alloc?.docente;
+    return [...lista, unico].map((n) => String(n || '').trim()).filter(Boolean);
+}
+
 // Docentes cadastrados pelos coordenadores que ainda nao estao na planilha
-// (dados_app.json). allocationsByPlan: { chaveDoPeriodo: [alocacoes] }.
+// (dados_app.json), e nomes improvisados sem cadastro (improvisado: true, no topo).
+// Docente com nome sai depois de revisado; vaga fica (com revisado preenchido)
+// ate ser trocada pelo nome da pessoa.
+// allocationsByPlan: { chaveDoPeriodo: [alocacoes] }.
 // Um item por nome, com as turmas/componentes onde aparece. Revisados saem da lista.
 export function listarDocentesParaConferir(allocationsByPlan = {}, nomesPlanilha = []) {
     const naPlanilha = new Set(nomesPlanilha.map(normalizeTeacherNameForMatch));
     const porNome = new Map();
+    const improvisados = new Map();
     Object.values(allocationsByPlan || {}).forEach((alocacoes) => {
         (Array.isArray(alocacoes) ? alocacoes : []).forEach((alloc) => {
+            nomesDaAlocacao(alloc).forEach((nome) => {
+                const chave = normalizeTeacherNameForMatch(nome);
+                if (!nomeImprovisado(nome) || naPlanilha.has(chave)) return;
+                if (!improvisados.has(chave)) improvisados.set(chave, { nome, improvisado: true, usos: [] });
+                const uso = [alloc.turmaId, alloc.disciplina].filter(Boolean).join(' · ');
+                const item = improvisados.get(chave);
+                if (uso && !item.usos.includes(uso)) item.usos.push(uso);
+            });
             (Array.isArray(alloc?.docentesCadastrados) ? alloc.docentesCadastrados : []).forEach((cad) => {
                 const chave = normalizeTeacherNameForMatch(cad?.nome);
-                if (!chave || cad.revisado || naPlanilha.has(chave)) return;
+                // Vaga fica na lista mesmo revisada: so sai quando vira o nome da pessoa.
+                if (!chave || (cad.revisado && !ehVaga(cad.nome)) || naPlanilha.has(chave)) return;
                 if (!porNome.has(chave)) porNome.set(chave, { ...cad, usos: [] });
                 const item = porNome.get(chave);
-                if (String(cad.em || '') < String(item.em || '')) Object.assign(item, { ...cad, usos: item.usos });
+                if (String(cad.em || '') < String(item.em || '')) Object.assign(item, { ...cad, usos: item.usos, revisado: item.revisado || cad.revisado });
+                else if (cad.revisado && !item.revisado) item.revisado = cad.revisado;
                 const uso = [alloc.turmaId, alloc.disciplina].filter(Boolean).join(' · ');
                 if (uso && !item.usos.includes(uso)) item.usos.push(uso);
             });
         });
     });
-    return [...porNome.values()].sort((a, b) => String(b.em || '').localeCompare(String(a.em || '')));
+    // Vaga: todas as componentes onde ela esta, inclusive as escolhidas pelo
+    // "Usar esta" (que nao levam o cadastro junto).
+    Object.values(allocationsByPlan || {}).forEach((alocacoes) => {
+        (Array.isArray(alocacoes) ? alocacoes : []).forEach((alloc) => {
+            nomesDaAlocacao(alloc).forEach((nome) => {
+                const item = ehVaga(nome) && porNome.get(normalizeTeacherNameForMatch(nome));
+                const uso = [alloc.turmaId, alloc.disciplina].filter(Boolean).join(' · ');
+                if (item && uso && !item.usos.includes(uso)) item.usos.push(uso);
+            });
+        });
+    });
+    const cadastrados = [...porNome.values()].sort((a, b) => String(b.em || '').localeCompare(String(a.em || '')));
+    // Improvisado que tambem tem cadastro (raro) aparece uma vez so, como cadastro.
+    const soImprovisados = [...improvisados.entries()].filter(([chave]) => !porNome.has(chave)).map(([, item]) => item);
+    return [...soImprovisados, ...cadastrados];
 }
 
 const ROTULO_MULTIPLOS = /\(m[uú]ltiplos\)/i;
@@ -251,10 +294,13 @@ export function aplicarRevisaoDocente(alloc, nomeAntigo, revisao) {
         }
         mudou = mudou || mudouLista;
     }
+    const trocouNome = mudou;
+    let achouCadastro = false;
     if (Array.isArray(copia.docentesCadastrados)) {
         copia.docentesCadastrados = copia.docentesCadastrados.map((cad) => {
             if (normalizeTeacherNameForMatch(cad?.nome) !== chave) return cad;
             mudou = true;
+            achouCadastro = true;
             const { outraUnidade: _digitadaPeloCoordenador, vaga: _eraVaga, ...resto } = cad;
             return {
                 ...resto,
@@ -270,6 +316,22 @@ export function aplicarRevisaoDocente(alloc, nomeAntigo, revisao) {
                 revisado: { por: revisao.por || '', porNome: revisao.porNome || '', em: revisao.em || '' }
             };
         });
+    }
+    // Nome improvisado (sem cadastro) trocado pelo administrador: a revisao vira o
+    // cadastro, para guardar vinculo, unidade e subunidade.
+    if (trocouNome && !achouCadastro && nomeImprovisado(nomeAntigo)) {
+        copia.docentesCadastrados = [...(Array.isArray(copia.docentesCadastrados) ? copia.docentesCadastrados : []), {
+            nome: revisao.nome,
+            vinculo: revisao.vinculo,
+            unidade: revisao.unidade,
+            subunidade: revisao.subunidade,
+            ...(ehVaga(revisao.nome) ? { vaga: true } : {}),
+            por: revisao.por || '',
+            porNome: revisao.porNome || '',
+            em: revisao.em || '',
+            cadastradoComo: { nome: nomeAntigo, improvisado: true },
+            revisado: { por: revisao.por || '', porNome: revisao.porNome || '', em: revisao.em || '' }
+        }];
     }
     return mudou ? copia : null;
 }

@@ -6,7 +6,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import { detectTeacherConflicts } from '../js/conflicts.js';
-import { ehVaga, pareceVaga, proximaVaga, siglaValida, rotuloCurtoDocente } from '../js/docente_nomes.mjs';
+import { ehVaga, pareceVaga, proximaVaga, siglaValida, rotuloCurtoDocente, nomeImprovisado } from '../js/docente_nomes.mjs';
 import { acharNomeConhecido, findNewNames, findSimilarNames, problemaNoNome, UNIDADES, VINCULOS_DOCENTE_NOVO, listarDocentesParaConferir, aplicarRevisaoDocente, removerDocenteDaAlocacao } from '../js/docente_nomes.mjs';
 
 // store.js le o localStorage ao carregar; no Node ele nao existe.
@@ -199,4 +199,60 @@ test('rotulo curto: primeiro nome; vaga inteira; Campus de Ananindeua na lista',
   const r = aplicarRevisaoDocente(varios, 'Vaga1 FBIO', { nome: 'Vaga2 FBIO', vinculo: 'Substituto', unidade: 'IECOS', subunidade: 'FBIO' });
   assert.equal(r.docente, 'Evaldo / Vaga2 FBIO (Múltiplos)');
   assert.deepEqual(UNIDADES.find((u) => u.sigla === 'CANAN'), { sigla: 'CANAN', nome: 'Campus de Ananindeua', subunidades: ['FACFIS'] });
+});
+
+test('nome improvisado: "n.n.", substituto; "A definir", vaga e "(Multiplos)" nao', () => {
+  assert.equal(nomeImprovisado('n.n. (substituto)'), true);
+  assert.equal(nomeImprovisado('Professor a contratar'), true);
+  assert.equal(nomeImprovisado('A definir'), false);
+  assert.equal(nomeImprovisado('Vaga1 FBIO'), false);
+  assert.equal(nomeImprovisado('Evaldo / n.n. (Múltiplos)'), false);
+  assert.equal(nomeImprovisado('Evaldo Martins da Silva'), false);
+});
+
+test('painel do administrador: nomes improvisados sem cadastro aparecem no topo', () => {
+  const porPeriodo = {
+    PL2: [
+      { turmaId: 'CN2025', disciplina: 'PSICOLOGIA DA APRENDIZAGEM', docente: 'n.n. (substituto)' },
+      { turmaId: 'CN2025', disciplina: 'PSICOLOGIA DA APRENDIZAGEM', docente: 'n.n. (substituto)' },
+      { turmaId: 'CN2026', disciplina: 'DIDATICA', docente: 'Ana / N.N. (Múltiplos)', docentes: [{ nome: 'Ana Souza', ch: 30 }, { nome: 'N.N. (substituto)', ch: 30 }] },
+      { turmaId: 'EP2026', disciplina: 'CALCULO', docente: 'A definir' },
+      { turmaId: 'EP2025', disciplina: 'ECOLOGIA', docentesCadastrados: [{ nome: 'Chico Buarque de Holanda', vinculo: 'Efetivo', unidade: 'IECOS', subunidade: 'FBIO', em: '2026-11-06' }] }
+    ]
+  };
+  const itens = listarDocentesParaConferir(porPeriodo, LISTA);
+  assert.deepEqual(itens.map((d) => d.nome), ['n.n. (substituto)', 'Chico Buarque de Holanda']);
+  assert.equal(itens[0].improvisado, true);
+  assert.deepEqual(itens[0].usos, ['CN2025 · PSICOLOGIA DA APRENDIZAGEM', 'CN2026 · DIDATICA']);
+});
+
+test('revisar nome improvisado: troca o nome e cria o cadastro revisado; remover vira "A definir"', () => {
+  const alloc = { id: 'x1', turmaId: 'CN2025', disciplina: 'PSICOLOGIA DA APRENDIZAGEM', docente: 'n.n. (substituto)' };
+  const revisao = { nome: 'Vaga1 FACED', vinculo: 'Substituto', unidade: 'CBRAG', subunidade: 'FACED', por: 'admin@ufpa.br', porNome: 'Admin', em: '2026-11-12' };
+  const r = aplicarRevisaoDocente(alloc, 'n.n. (substituto)', revisao);
+  assert.equal(r.docente, 'Vaga1 FACED');
+  assert.equal(r.docentesCadastrados.length, 1);
+  assert.equal(r.docentesCadastrados[0].vaga, true);
+  assert.equal(r.docentesCadastrados[0].cadastradoComo.nome, 'n.n. (substituto)');
+  // Vaga revisada continua na lista (marcada como revisada) ate virar o nome da pessoa.
+  const lista = listarDocentesParaConferir({ PL2: [r] }, []);
+  assert.deepEqual(lista.map((d) => d.nome), ['Vaga1 FACED']);
+  assert.equal(lista[0].revisado.porNome, 'Admin');
+  const comNome = aplicarRevisaoDocente(r, 'Vaga1 FACED', { ...revisao, nome: 'Maria Souza Lima', vinculo: 'Substituto' });
+  assert.deepEqual(listarDocentesParaConferir({ PL2: [comNome] }, []), [], 'vaga trocada pelo nome sai da lista');
+  // Nome comum sem cadastro continua sem cadastro novo (so troca o nome).
+  const comum = aplicarRevisaoDocente({ id: 'x2', docente: 'Ana Souza' }, 'Ana Souza', { ...revisao, nome: 'Ana Souza Lima' });
+  assert.equal(comum.docentesCadastrados, undefined);
+  const removido = removerDocenteDaAlocacao(alloc, 'n.n. (substituto)');
+  assert.equal(removido.docente, 'A definir');
+});
+
+test('vaga na lista do admin: todas as componentes, inclusive as do "Usar esta" (sem cadastro)', () => {
+  const cad = { nome: 'Vaga1 FBIO', vaga: true, vinculo: 'Substituto', unidade: 'IECOS', subunidade: 'FBIO', em: '2026-11-11' };
+  const itens = listarDocentesParaConferir({
+    PL2: [{ turmaId: 'CN2027', disciplina: 'TENDENCIAS', docente: 'Vaga1 FBIO', docentesCadastrados: [cad] }],
+    PL4: [{ turmaId: 'CN2025', disciplina: 'HISTORIAS DE VIDA', docente: 'Vaga1 FBIO' }]
+  }, []);
+  assert.deepEqual(itens[0].usos, ['CN2027 · TENDENCIAS', 'CN2025 · HISTORIAS DE VIDA']);
+  assert.equal(itens[0].revisado, undefined);
 });

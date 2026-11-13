@@ -8,7 +8,7 @@
 // Escolher uma cor dispara 'input' e 'change' no campo, como se o usuario tivesse
 // usado o seletor antigo; assim a grade se atualiza sozinha.
 
-import { PALETA_CORES, tonsDaCor, normalizeHexColor } from './color_utils.js?v=202611111738';
+import { PALETA_CORES, tonsDaCor, normalizeHexColor } from './color_utils.js?v=202611122042';
 
 export function setupSeletorCor() {
     const input = document.getElementById('inp-color');

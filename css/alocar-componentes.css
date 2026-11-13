@@ -753,9 +753,18 @@
 
 /* Titulo do cartao das faixas em UMA linha (nome longo termina em "...").
    As etiquetas ficam ao lado em cartao largo e sempre na linha de baixo em
-   cartao estreito: quem decide e a largura da tela, nao o tamanho do nome. */
-#tab-weekly .weekly-faixas-panel { container-type: inline-size; }
-#tab-weekly .cd-faixas-cabecalho { flex-wrap: nowrap; }
+   cartao estreito: quem decide e a largura da tela, nao o tamanho do nome.
+   12/11/2026: quem mede a largura e o proprio cabecalho (antes era o cartao todo;
+   o cartao nao pode medir e ao mesmo tempo dividir linhas com o painel "Concluir
+   Componente"). O titulo e as etiquetas ficam no involucro .cd-faixas-cabecalho-linha. */
+#tab-weekly .cd-faixas-cabecalho { display: block; container-type: inline-size; }
+#tab-weekly .cd-faixas-cabecalho-linha {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px 12px;
+}
 #tab-weekly .cd-faixas-cabecalho .weekly-faixas-title {
     display: block;
     flex: 1 1 0;
@@ -765,8 +774,8 @@
     text-overflow: ellipsis;
 }
 #tab-weekly .cd-etiquetas { flex: none; flex-wrap: nowrap; }
-@container (max-width: 900px) {
-    #tab-weekly .cd-faixas-cabecalho { flex-wrap: wrap; }
+@container (max-width: 868px) {      /* = cartao de 900px menos o padding do cabecalho */
+    #tab-weekly .cd-faixas-cabecalho-linha { flex-wrap: wrap; }
     #tab-weekly .cd-faixas-cabecalho .weekly-faixas-title { flex-basis: 100%; }
 }
 
@@ -1273,6 +1282,48 @@
 }
 @media (min-width: 1600px) {
     #tab-weekly .weekly-faixas-stack { grid-template-columns: minmax(0, 1fr) minmax(208px, 232px); }
+}
+
+/* Titulo "Concluir Componente" (12/11/2026): o painel ganha um cabecalho igual ao
+   do cartao das faixas (mesma altura, mesma linha divisoria) e os botoes comecam
+   na mesma linha da tabela das faixas, terminando na base dela. */
+#tab-weekly .weekly-week-nav,
+#tab-weekly .weekly-faixas-stack .weekly-week-nav { padding: 0; gap: 0; }
+#tab-weekly .cd-concluir-cabecalho {
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    padding: 13px 14px;
+    border-bottom: 1px solid var(--cd-borda-suave);
+}
+#tab-weekly .cd-concluir-titulo {
+    min-width: 0;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--cd-texto);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+#tab-weekly .weekly-week-actions,
+#tab-weekly .weekly-faixas-stack .weekly-week-actions {
+    padding: 13px 12px 16px;          /* mesmo respiro da area da tabela das faixas */
+    box-sizing: border-box;
+}
+/* Lado a lado: os dois cartoes dividem as mesmas 2 linhas (subgrid), entao o
+   cabecalho da direita tem sempre a altura do cabecalho das faixas (mesmo quando
+   as etiquetas descem para a 2a linha) e os botoes ocupam a altura da area da tabela. */
+@media (min-width: 1281px) {
+    #tab-weekly .weekly-faixas-stack { grid-template-rows: auto 1fr; row-gap: 0; }
+    #tab-weekly .weekly-faixas-stack > .weekly-faixas-panel,
+    #tab-weekly .weekly-faixas-stack > .weekly-week-nav {
+        display: grid;
+        grid-row: span 2;
+        grid-template-rows: subgrid;
+        grid-template-columns: minmax(0, 1fr);
+    }
+    /* altura minima menor: os botoes nao esticam o cartao das faixas, so preenchem */
+    #tab-weekly .btn-week-nav { min-height: 34px; }
 }
 
 /* Faixa anterior / Proxima faixa: azul suave das faixas */

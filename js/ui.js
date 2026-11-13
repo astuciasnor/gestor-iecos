@@ -1,30 +1,31 @@
-import { store } from './store.js?v=202611111738';
-import { getTurnoLetter, mapSlotToTurno, turnoDaTurmaInclui } from './turns.js?v=202611111738';
-import { normalizePeriodo as normalizePeriodoLetivoCode } from './plan_storage.js?v=202611111738';
-import { getCalendarEvents } from './calendar.js?v=202611111738';
-import { isDateOverlap } from './utils.js?v=202611111738';
-import { weeklyState } from './weekly_state.js?v=202611111738';
-import { findPendentesCobertas, isPendenteJaAlocada } from './pendentes.mjs?v=202611111738';
-import { classifySwap } from './troca_ordem.mjs?v=202611111738';
-import { closeFaixaEnds, isPauseEnd, listFaixaPauses } from './pausa_faixas.mjs?v=202611111738';
-import { numeroDaSubturma, isTurmaInteira, proximaSubturma, codigoT01Como, saoSubturmasDiferentes } from './subturmas.mjs?v=202611111738';
-import { abrirMiniCalendario, fecharMiniCalendario, miniCalendarioAberto } from './mini_calendario.mjs?v=202611111738';
-import { buildCanonicalOfferProjection } from './execution_engine.js?v=202611111738';
+import { store } from './store.js?v=202611122042';
+import { getTurnoLetter, mapSlotToTurno, turnoDaTurmaInclui } from './turns.js?v=202611122042';
+import { normalizePeriodo as normalizePeriodoLetivoCode } from './plan_storage.js?v=202611122042';
+import { getCalendarEvents } from './calendar.js?v=202611122042';
+import { isDateOverlap } from './utils.js?v=202611122042';
+import { weeklyState } from './weekly_state.js?v=202611122042';
+import { findPendentesCobertas, isPendenteJaAlocada } from './pendentes.mjs?v=202611122042';
+import { classifySwap } from './troca_ordem.mjs?v=202611122042';
+import { datasFeriadoDaTurma, feriadosDaTurma } from './feriados.mjs?v=202611122042';
+import { closeFaixaEnds, isPauseEnd, listFaixaPauses } from './pausa_faixas.mjs?v=202611122042';
+import { numeroDaSubturma, isTurmaInteira, proximaSubturma, codigoT01Como, saoSubturmasDiferentes, sufixoSubturma } from './subturmas.mjs?v=202611122042';
+import { abrirMiniCalendario, fecharMiniCalendario, miniCalendarioAberto } from './mini_calendario.mjs?v=202611122042';
+import { buildCanonicalOfferProjection } from './execution_engine.js?v=202611122042';
 import {
     buildSigaaMetadataPayload,
     validateSigaaMetadataPayload,
     getSigaaCode,
     buildScopedSigaaAllocationFromOfferFaixa,
     buildSigaaHorarioResumo
-} from './sigaa_metadata.js?v=202611111738';
-import { parseBackupDataFile, extractImportPlanMeta } from './serialization.js?v=202611111738';
+} from './sigaa_metadata.js?v=202611122042';
+import { parseBackupDataFile, extractImportPlanMeta } from './serialization.js?v=202611122042';
 import {
     showToastWarning,
     showPersistentStatusMessage,
     copyTextToClipboard,
     flashButtonCopyState,
     setupCopyActionButtons
-} from './ui_feedback.js?v=202611111738';
+} from './ui_feedback.js?v=202611122042';
 import {
     normalizeHexColor,
     adjustHexColor,
@@ -33,7 +34,7 @@ import {
     tonsDaCor,
     aplicarTonsBloco,
     PALETA_CORES
-} from './color_utils.js?v=202611111738';
+} from './color_utils.js?v=202611122042';
 import {
     isFaixaAllocation,
     isPriorityRegularAllocation,
@@ -42,9 +43,9 @@ import {
     normalizeTeacherNameForMatch,
     getDocenteShortLabel,
     getAllocationTeachersForConflict
-} from './allocation_helpers.js?v=202611111738';
-import { setupSeletorCor } from './seletor_cor.js?v=202611111738';
-import { ligarSugestoesDocente } from './sugestoes_docente.mjs?v=202611111738';
+} from './allocation_helpers.js?v=202611122042';
+import { setupSeletorCor } from './seletor_cor.js?v=202611122042';
+import { ligarSugestoesDocente } from './sugestoes_docente.mjs?v=202611122042';
 import {
     VINCULOS_DOCENTE_NOVO,
     OUTRA_UNIDADE,
@@ -61,9 +62,9 @@ import {
     acharNomeConhecido,
     filtrarDocentes,
     umNomePorPessoa
-} from './docente_nomes.mjs?v=202611111738';
-import { getSessionEmail, getPerfil, fetchAllocationsForPlans } from './sync_remoto.js?v=202611111738';
-import { resolveBackendMode } from './backend_config.js?v=202611111738';
+} from './docente_nomes.mjs?v=202611122042';
+import { getSessionEmail, getPerfil, fetchAllocationsForPlans } from './sync_remoto.js?v=202611122042';
+import { resolveBackendMode } from './backend_config.js?v=202611122042';
 import {
     normalizeConflictSlotLabel,
     getAvailableTurnoOfertaOptions,
@@ -73,7 +74,7 @@ import {
     buildHorariosForUI,
     getShiftChangeMeta,
     getNativeTurnoValueForAllocation
-} from './turno_helpers.js?v=202611111738';
+} from './turno_helpers.js?v=202611122042';
 import {
     getDisciplinaCHGlobal,
     derivarBloco,
@@ -83,7 +84,7 @@ import {
     getDisciplinaInfo,
     getCursoSiglaDaTurma,
     getPrintAcademicMetaLine
-} from './curso_turma_helpers.js?v=202611111738';
+} from './curso_turma_helpers.js?v=202611122042';
 import {
     renderMonthlyCalendar,
     renderTeacherCalendar,
@@ -91,13 +92,14 @@ import {
     clearTeacherRangeCache,
     setTeacherPeriod,
     getTeacherPeriod
-} from './calendarios_ui.js?v=202611111738';
+} from './calendarios_ui.js?v=202611122042';
+import { setupIndicadores, renderIndicadores, setIndicadoresLigacoes } from './indicadores_ui.js?v=202611122042';
 import {
     refreshTeacherConflictsUI,
     setCrossPlanLoader,
     setResolverDeChoque,
     acharChoqueComOutroPL
-} from './conflitos_ui.js?v=202611111738';
+} from './conflitos_ui.js?v=202611122042';
 import {
     shouldIgnoreTurmaEventForCandidate,
     normalizeDrawnSlotsByDay,
@@ -111,7 +113,7 @@ import {
     resolveEditableFaixasFromStoredExecution,
     alignFaixasToExecutionEnd,
     buildFinalAdjustmentFaixaSuggestion
-} from './faixa_utils.js?v=202611111738';
+} from './faixa_utils.js?v=202611122042';
 import {
     timeToMinutes,
     shiftISODate,
@@ -125,14 +127,14 @@ import {
     isDateInsideRange,
     formatDateBRShortYear,
     formatDateBR
-} from './date_utils_ui.js?v=202611111738';
+} from './date_utils_ui.js?v=202611122042';
 import {
     initializeWeeklyScheduleForTurma,
     reconcileTurmaSelectionAfterPLChange,
     resetWeeklyViewOnTurmaChange,
     resolveActiveAcademicPeriod,
     slotLabelsOverlap
-} from './academic_rules.mjs?v=202611111738';
+} from './academic_rules.mjs?v=202611122042';
 
 const gridContainer = document.getElementById('weekly-grid');
 const selCurso = document.getElementById('sel-curso');
@@ -329,7 +331,12 @@ function getPlansInRange(start, end) {
 // semAtivo: deixa de fora o PL aberto (o alerta global ja usa store.allocations).
 async function lerPlanosDoIntervalo(start, end, { semAtivo = false } = {}) {
     const activeKey = store.getActivePlanMeta()?.key || '';
-    const metas = getPlansInRange(start, end).filter((meta) => !(semAtivo && meta.key === activeKey));
+    return lerPlanos(getPlansInRange(start, end).filter((meta) => !(semAtivo && meta.key === activeKey)));
+}
+
+// Alocacoes de cada PL pedido (servidor ou navegador). Tambem usado pelo menu Indicadores.
+async function lerPlanos(metas = []) {
+    const activeKey = store.getActivePlanMeta()?.key || '';
     let byKey = {};
     if (resolveBackendMode() !== 'local') {
         byKey = await fetchAllocationsForPlans(metas.map((meta) => meta.key));
@@ -411,6 +418,24 @@ function setupTeacherYearControls() {
     };
     montarBotoesPL();
 
+    // Menu Indicadores: clicar no nome abre a agenda do docente no mesmo periodo.
+    setIndicadoresLigacoes({
+        carregar: lerPlanos,
+        erro: (msg) => showToastWarning(msg, 'error', 6000),
+        abrirDocente: (nome, periodo) => {
+            if (selViewDocente) {
+                selViewDocente.value = nome;
+                selViewDocente.dispatchEvent(new Event('input', { bubbles: true }));
+            }
+            if (periodo?.ano && selAno.value !== periodo.ano && [...selAno.options].some((o) => o.value === periodo.ano)) {
+                selAno.value = periodo.ano;
+                montarBotoesPL();
+            }
+            setTeacherPeriod(periodo);
+            switchTab('teacher');
+        }
+    });
+
     btnAno.addEventListener('click', () => mostrar({ tipo: 'ano', ano: selAno.value }));
     selAno.addEventListener('change', () => {
         montarBotoesPL();
@@ -446,6 +471,7 @@ function setupTeacherFilterControls() {
     });
 
     setupTeacherYearControls();
+    setupIndicadores();
 
     btnClear?.addEventListener('click', () => {
         if (!selViewDocente) return;
@@ -983,7 +1009,7 @@ function calcFaixaCHFromPattern(faixaIndex, patternInput) {
         slotsByDay[p.dia].add(p.slot);
     });
 
-    const feriadosSet = new Set((store.rawData?.feriados || []).map((f) => f.data || f));
+    const feriadosSet = datasFeriadoDaTurma(store.rawData?.feriados, store.selectedTurma);
     let total = 0;
     const cursor = new Date(`${start}T12:00:00`);
     const maxDate = new Date(`${end}T12:00:00`);
@@ -2682,9 +2708,7 @@ function resolveSmartComponentStartSuggestion() {
     if (targetSlots.length === 0) return empty;
 
     const occupiedByDate = buildFaixaOccupiedSlotsByDateDirect(store.selectedTurma, termStart, termEnd);
-    const holidays = new Set(
-        (store.rawData?.feriados || []).map((item) => String(item?.data || item || '').trim()).filter(Boolean)
-    );
+    const holidays = datasFeriadoDaTurma(store.rawData?.feriados, store.selectedTurma);
     const skipSaturday = !getTurmaUsaSabadoForStartSearch();
 
     // Sabado no meio de uma componente da turma que nao tem aula no sabado nao
@@ -2902,7 +2926,7 @@ function buildIntensiveTeacherConflictEntries(intense, teacherName) {
     const faixas = buildIntensiveConflictFaixas(intense, intense.dataInicio, intense.dataFim);
     if (faixas.length === 0) return [];
 
-    const feriados = new Set((store.rawData?.feriados || []).map((f) => String(f?.data || f || '')));
+    const feriados = datasFeriadoDaTurma(store.rawData?.feriados, intense.turmaId);
     const finalDaySlots = new Set(
         (Array.isArray(intense.horariosUltimoDia) ? intense.horariosUltimoDia : [])
             .map((slot) => normalizeConflictSlotLabel(slot))
@@ -3814,9 +3838,10 @@ function markStoredFaixaPauses(faixas = []) {
     }
 }
 
-function getHolidayLabelMap() {
+// Feriados comuns + bloqueios da turma (ex.: Recepcao Calouros) - ver feriados.mjs.
+function getHolidayLabelMap(turmaId = store.selectedTurma) {
     const map = new Map();
-    const feriados = Array.isArray(store.rawData?.feriados) ? store.rawData.feriados : [];
+    const feriados = feriadosDaTurma(store.rawData?.feriados, turmaId);
 
     feriados.forEach((entry) => {
         let data = '';
@@ -4463,7 +4488,6 @@ function buildIntensiveConflictFaixas(intense, rangeStart, rangeEnd) {
 function syncAllRegularDates() {
     const termStart = store.settings.termStart || '2025-01-01';
     const termEnd = store.settings.termEnd || '2025-12-31';
-    const feriadosSet = new Set((store.rawData?.feriados || []).map(f => f.data || f));
 
     const regularGroups = {};
     store.allocations.forEach(a => {
@@ -4478,6 +4502,7 @@ function syncAllRegularDates() {
         const group = regularGroups[key];
         const turmaId = group[0].turmaId;
         const disciplina = group[0].disciplina;
+        const feriadosSet = datasFeriadoDaTurma(store.rawData?.feriados, turmaId);
 
         const maxCH = getDisciplinaCHGlobal(disciplina, turmaId);
         if (maxCH === 0) return;
@@ -6889,7 +6914,7 @@ function renderSlotContent(cell, allocs, dayOfWeek = 0) {
 
         card.innerHTML = `
             <div class="card-title" title="${alloc.disciplina}${docenteNome ? ` - ${docenteNome}` : ''}">
-                <span class="card-comp">${info.abrev}${getShiftChangeMeta(alloc, alloc.horario, dayOfWeek).badgeHTML || badgeHTML}</span>
+                <span class="card-comp">${info.abrev}${sufixoSubturma(alloc.subGrupo)}${getShiftChangeMeta(alloc, alloc.horario, dayOfWeek).badgeHTML || badgeHTML}</span>
                 ${docenteNome ? `<span class="card-docente">${docenteNome}</span>` : ''}
             </div>
             <button type="button" class="remove-btn" title="Remover" aria-label="Remover ${escapeAttrGrade(alloc.disciplina)} de ${escapeAttrGrade(rotuloCelulaGrade(cell, dayOfWeek))}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg></button>
@@ -7972,7 +7997,7 @@ function trocaQueResolve(alloc) {
     const componentes = buildComponentesParaTroca(alloc.turmaId);
     const atual = componentes.find((c) => c.ids.includes(alloc.id));
     if (!atual) return null;
-    const feriados = (store.rawData?.feriados || []).map((f) => String(f?.data || f || ''));
+    const feriados = [...datasFeriadoDaTurma(store.rawData?.feriados, alloc.turmaId)];
     const distancia = (c) => Math.abs(new Date(`${c.dataInicio}T12:00:00`) - new Date(`${atual.dataInicio}T12:00:00`));
     const outras = componentes.filter((c) => c !== atual && c.registros === 1).sort((x, y) => distancia(x) - distancia(y)).slice(0, 8);
     for (const outra of outras) {
@@ -8052,7 +8077,7 @@ function abrirTrocaDeOrdem(baseAlloc) {
     const atual = componentes.find((c) => c.ids.includes(baseAlloc.id));
     if (!atual) return;
     const outras = componentes.filter((c) => c !== atual);
-    const feriados = (store.rawData?.feriados || []).map((f) => String(f?.data || f || ''));
+    const feriados = [...datasFeriadoDaTurma(store.rawData?.feriados, baseAlloc.turmaId)];
     const opcoes = outras.map((outra) => ({ outra, regra: classifySwap(atual, outra, { feriados }) }));
 
     const itens = opcoes.map(({ outra, regra }, idx) => {
@@ -8703,6 +8728,9 @@ function switchTab(tabId) {
     }
     if (tabId === 'publica') {
         renderAgendaPublica();
+    }
+    if (tabId === 'indicadores') {
+        renderIndicadores();
     }
     if (tabId === 'list') {
         renderOfertasList();

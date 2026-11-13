@@ -66,3 +66,18 @@ test('subturmas diferentes: so T01 x T02; turma inteira nunca', () => {
   assert.equal(saoSubturmasDiferentes('', 'T01'), false);
   assert.equal(saoSubturmasDiferentes(null, null), false);
 });
+
+test('nomeComSubturma: T01/T02 junto do nome; bloco e turma inteira so o nome', async () => {
+  const { nomeComSubturma } = await import('../js/subturmas.mjs');
+  assert.equal(nomeComSubturma('INICIACAO A COMPUTACAO', 'T01'), 'INICIACAO A COMPUTACAO – T01');
+  assert.equal(nomeComSubturma('INICIACAO A COMPUTACAO', 'BL1_T02'), 'INICIACAO A COMPUTACAO – T02');
+  assert.equal(nomeComSubturma('QUIMICA BASICA', 'BL1'), 'QUIMICA BASICA');
+  assert.equal(nomeComSubturma('QUIMICA BASICA', null), 'QUIMICA BASICA');
+});
+
+test('sufixoSubturma: " T01" so para subturma', async () => {
+  const { sufixoSubturma } = await import('../js/subturmas.mjs');
+  assert.equal(sufixoSubturma('T02'), ' T02');
+  assert.equal(sufixoSubturma('BL1'), '');
+  assert.equal(sufixoSubturma(undefined), '');
+});

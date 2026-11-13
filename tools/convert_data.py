@@ -26,7 +26,8 @@ horarios:
   turno | ordem | faixa
 
 feriados:
-  data | feriado | dia | tipo
+  data | feriado | dia | tipo | turmas (opcional; ex.: "EP2027, CB2027" = so
+  essas turmas, como Recepcao Calouros; vazio = todas as turmas)
 
 periodos_letivos:
   ano | periodo_letivo | inicio | fim
@@ -42,6 +43,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import unicodedata
 from dataclasses import dataclass
 from datetime import date, datetime
@@ -301,15 +303,20 @@ def build_json_from_excel(xlsx_path: Path) -> Dict[str, Any]:
     # antes disso, todos seguem o Regime 1 (preserva turmas passadas).
     data["regime_vigencia"] = "2026-08-24"
 
-    data["feriados"] = [
-        {
+    feriados_out = []
+    for row in raw["feriados"]:
+        item = {
             "data": to_date_iso(row.get("data")),
             "feriado": to_str(row.get("feriado")),
             "dia": to_str(row.get("dia")),
             "tipo": to_str(row.get("tipo")),
         }
-        for row in raw["feriados"]
-    ]
+        # Coluna opcional "turmas": bloqueio so dessas turmas (ver js/feriados.mjs).
+        turmas = [t.strip() for t in re.split(r"[,;]", to_str(row.get("turmas"))) if t.strip()]
+        if turmas:
+            item["turmas"] = turmas
+        feriados_out.append(item)
+    data["feriados"] = feriados_out
 
     periodos_letivos = []
     for row in raw["periodos_letivos"]:

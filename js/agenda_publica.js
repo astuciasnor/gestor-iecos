@@ -1,10 +1,11 @@
-import { store, normalizeLoadedAllocation } from './store.js?v=202611111738';
-import { getTurnoLetter } from './turns.js?v=202611111738';
-import { getCalendarEvents } from './calendar.js?v=202611111738';
-import { resolveActiveAcademicPeriod } from './academic_rules.mjs?v=202611111738';
-import { buildMonthMarkers, summarizeTeacherPeriod } from './resumo_docente.mjs?v=202611111738';
-import { resolveBackendMode, UFPA_API_URL } from './backend_config.js?v=202611111738';
-import { filtrarDocentes } from './docente_nomes.mjs?v=202611111738';
+import { store, normalizeLoadedAllocation } from './store.js?v=202611122042';
+import { getTurnoLetter } from './turns.js?v=202611122042';
+import { getCalendarEvents } from './calendar.js?v=202611122042';
+import { resolveActiveAcademicPeriod } from './academic_rules.mjs?v=202611122042';
+import { buildMonthMarkers, summarizeTeacherPeriod } from './resumo_docente.mjs?v=202611122042';
+import { resolveBackendMode, UFPA_API_URL } from './backend_config.js?v=202611122042';
+import { filtrarDocentes } from './docente_nomes.mjs?v=202611122042';
+import { nomeComSubturma, sufixoSubturma } from './subturmas.mjs?v=202611122042';
 
 const collator = new Intl.Collator('pt-BR', { sensitivity: 'base' });
 const PUBLIC_ASSET_VERSION = '20261028a';
@@ -1817,7 +1818,8 @@ function buildMiniChipMarkup(event, dateObj, mode, dailyEvents = []) {
     const dateStr = toIsoDate(dateObj);
     const horario = getEventHorario(event, dateStr);
     const intervalo = getEventDailyIntervalLabel(event, dailyEvents, dateStr);
-    const titulo = String(event?.title || event?.disciplina || 'Componente').trim();
+    const tituloBase = String(event?.title || event?.disciplina || 'Componente').trim();
+    const titulo = nomeComSubturma(tituloBase, event?.subGrupo);
     const docente = getEventTeacherLabel(event);
     const turma = getTurmaLabel(event?.turmaId, event?.subGrupo);
     const local = getEventLocationLabel(event);
@@ -1828,7 +1830,7 @@ function buildMiniChipMarkup(event, dateObj, mode, dailyEvents = []) {
     const turnoLabel = getEventTurnoLabel(event, dateStr);
     const chipLabel = mode === 'docente'
         ? buildTeacherChipLabel(event)
-        : getDisciplinaShortLabel(event?.disciplina || titulo, titulo, event?.turmaId);
+        : getDisciplinaShortLabel(event?.disciplina || tituloBase, tituloBase, event?.turmaId) + sufixoSubturma(event?.subGrupo);
     const wrapClass = chipLabel.length > 16 ? ' wrap' : '';
     const shiftMeta = getPublicShiftChangeMeta(event, dateStr);
     const badgeMarkup = buildPublicShiftBadgeMarkup(shiftMeta, true);
@@ -2041,7 +2043,11 @@ function getPublicShiftChangeMeta(event, dateStr = '') {
     // Deriva o turno pelo slot REAL daquele dia (executionByDate/horariosUltimoDia/ocupados),
     // permitindo detectar deslocamento de turno em qualquer dia da semana, não só no sábado.
     const daySlots = getEventHorariosForDate(event, dateStr);
-    const currentLetter = getTurnoLetter(daySlots[0] || horario);
+    // Cada chip e um horario: usa o PROPRIO slot quando ele e um dos slots reais do
+    // dia (dia com manha e tarde: so os chips da manha levam "Manha").
+    const inicio = (s) => (String(s || '').match(/\d{1,2}:\d{2}/) || [''])[0];
+    const proprio = daySlots.find((s) => inicio(s) && inicio(s) === inicio(horario));
+    const currentLetter = getTurnoLetter(proprio || daySlots[0] || horario);
     // Sábado de manhã só é mudança de turno se o turno nativo da turma NÃO for a manhã.
     // Turmas cujo horário padrão já é a manhã não recebem a tag de atenção no sábado.
     const isSaturdayMorning = !!(
@@ -2591,7 +2597,7 @@ function buildMonthlyCalendarHTML({ calendarData, year, month }) {
         uniqueDiscs.slice(0, 2).forEach(({ discKey, representative: ev }) => {
             const cor = String(ev.cor || '#355344').trim();
             const hora = formatChipStartTime(getEventHorario(ev, dateStr));
-            const sigla = getDisciplinaShortLabel(ev.disciplina, ev.title || ev.disciplina || '', ev.turmaId).slice(0, 10);
+            const sigla = getDisciplinaShortLabel(ev.disciplina, ev.title || ev.disciplina || '', ev.turmaId).slice(0, 10) + sufixoSubturma(ev.subGrupo);
             const shiftMeta = getPublicShiftChangeMeta(ev, dateStr);
             const shiftBadgeMarkup = buildPublicShiftBadgeMarkup(shiftMeta, true);
             grid += `<div class="mcd-event" style="background:${escapeHtmlAttr(cor)}" data-date="${dateStr}" data-disc-key="${escapeHtmlAttr(discKey)}" tabindex="0" role="button">`;
@@ -2633,7 +2639,7 @@ function buildDayLensMarkup(events, dateStr, filterKey = null) {
             const comp = getComponentInfo(ev.disciplina, ev.turmaId);
             const totalCh = comp?.ch || 0;
             groups.set(key, {
-                title: ev.title || ev.disciplina || 'Componente',
+                title: nomeComSubturma(ev.title || ev.disciplina || 'Componente', ev.subGrupo),
                 turmaId: ev.turmaId,
                 subGrupo: ev.subGrupo,
                 cor: ev.cor || '#355344',

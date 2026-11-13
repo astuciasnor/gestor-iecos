@@ -2,8 +2,8 @@
 // Cadastra, edita e exclui acessos, gera senha provisoria e baixa a copia do
 // banco. Quem garante que so o administrador faz isso e a API (api/index.php).
 // Mostra tambem os docentes novos cadastrados pelos coordenadores para conferir.
-import { store } from './store.js?v=202611111738';
-import { fetchAllocationsForPlans, salvarAlocacoesRevisadas, getSessionEmail, getPerfil } from './sync_remoto.js?v=202611111738';
+import { store } from './store.js?v=202611122042';
+import { fetchAllocationsForPlans, salvarAlocacoesRevisadas, getSessionEmail, getPerfil } from './sync_remoto.js?v=202611122042';
 import {
   listarDocentesParaConferir,
   aplicarRevisaoDocente,
@@ -13,7 +13,7 @@ import {
   normalizeTeacherNameForMatch,
   VINCULOS_DOCENTE_NOVO,
   UNIDADES
-} from './docente_nomes.mjs?v=202611111738';
+} from './docente_nomes.mjs?v=202611122042';
 
 let ctx = null;      // { tools, meuId, showToast, aoContarDocentes }
 let usuarios = [];
@@ -166,11 +166,11 @@ function desenharDocentes(itens) {
   }
   const linhas = itens.map((d, idx) => `
       <tr>
-        <td><strong>${esc(d.nome)}</strong>${d.vaga ? ' <span class="admin-pendente">(vaga: pessoa ainda não definida)</span>' : ''}</td>
+        <td><strong>${esc(d.nome)}</strong>${d.vaga ? ' <span class="admin-pendente">(vaga: pessoa ainda não definida)</span>' : ''}${d.revisado ? `<br><span class="admin-eu">✓ revisada por ${esc(d.revisado.porNome || d.revisado.por || 'admin')}${d.revisado.em ? ` em ${esc(formatarDia(d.revisado.em))}` : ''}</span>` : ''}${d.improvisado ? ' <span class="admin-pendente">⚠ nome improvisado: troque por uma vaga ou pelo nome</span>' : ''}</td>
         <td>${esc(d.vinculo || '—')}</td>
         <td>${esc([d.unidade, d.subunidade].filter(Boolean).join(' / ') || '—')}${d.outraUnidade ? ' <span class="admin-pendente">(outra unidade)</span>' : ''}</td>
         <td>${d.usos.map(esc).join('<br>')}</td>
-        <td>${esc(d.porNome || '')}${d.por ? `<br><span class="admin-eu">${esc(d.por)}</span>` : ''}</td>
+        <td>${d.improvisado ? '<span class="admin-eu">sem cadastro (digitado antes das vagas)</span>' : `${esc(d.porNome || '')}${d.por ? `<br><span class="admin-eu">${esc(d.por)}</span>` : ''}`}</td>
         <td>${esc(formatarDia(d.em))}</td>
         <td class="admin-botoes-linha">
           <button type="button" class="admin-btn admin-btn-mini" data-acao="revisar-docente" data-idx="${idx}">Revisar</button>
@@ -187,7 +187,9 @@ function desenharDocentes(itens) {
     <div class="admin-ajuda">Revisar: corrija o nome, a unidade e a subunidade (pode usar as siglas). Se for um professor
       que já existe, digite o nome dele como está na lista. A correção vale em todas as alocações do docente nos
       períodos em curso e futuros, e o cadastro sai desta lista.<br>
-      Remover: para cadastro indevido. As componentes ficam; o docente vira "A definir" e o coordenador escolhe outro.</div>`;
+      Vaga revisada continua aqui (✓) até você trocá-la pelo nome do professor.<br>
+      Remover: para cadastro indevido. As componentes ficam; o docente vira "A definir" e o coordenador escolhe outro.<br>
+      ⚠ Nome improvisado ("n.n.", "substituto"...): Revisar e digite uma vaga (ex.: <strong>Vaga1 FACED</strong>) ou o nome da pessoa; ou Remover.</div>`;
 }
 
 function opcoesDatalist(valores) {
@@ -237,9 +239,11 @@ function aoClicarNosDocentes(event) {
   const d = docentesItens[Number(botao.dataset.idx)];
   if (!d) return;
   docenteEmRevisao = d;
-  el('admin-revisao-origem').innerHTML = `Cadastrado por ${esc(d.porNome || d.por || 'coordenador')} em ${esc(formatarDia(d.em))} como:
+  el('admin-revisao-origem').innerHTML = d.improvisado
+    ? `Nome improvisado, sem cadastro: <strong>${esc(d.nome)}</strong>. Digite uma vaga (ex.: <strong>Vaga1 FACED</strong>, VagaN + sigla da faculdade) ou o nome da pessoa. Vale em todas as componentes onde ele aparece.`
+    : `Cadastrado por ${esc(d.porNome || d.por || 'coordenador')} em ${esc(formatarDia(d.em))} como:
     <strong>${esc(d.nome)}</strong> · ${esc(d.vinculo || '—')} · ${esc([d.unidade, d.subunidade].filter(Boolean).join(' / ') || '—')}`;
-  el('admin-r-nome').value = d.nome || '';
+  el('admin-r-nome').value = d.improvisado ? '' : (d.nome || '');
   el('admin-r-vinculo').value = VINCULOS_DOCENTE_NOVO.includes(d.vinculo) ? d.vinculo : VINCULOS_DOCENTE_NOVO[0];
   el('admin-r-unidade').value = d.unidade || '';
   el('admin-r-subunidade').value = d.subunidade || '';
@@ -529,7 +533,7 @@ async function removerCadastroDocente(d, botao) {
     const onde = alteradas
       .map((a) => [a.turmaId, a.disciplina].filter(Boolean).join(' · '))
       .filter((v, i, todos) => v && todos.indexOf(v) === i);
-    const mensagem = `Remover o cadastro de "${d.nome}"?\n\n`
+    const mensagem = `Remover ${d.improvisado ? 'o nome improvisado' : 'o cadastro de'} "${d.nome}"?\n\n`
       + (onde.length
         ? `${alteradas.length} alocação(ões) ficam com docente "A definir":\n${onde.slice(0, 12).map((v) => `• ${v}`).join('\n')}${onde.length > 12 ? `\n• e mais ${onde.length - 12}` : ''}`
         : 'O nome não aparece em nenhuma alocação dos períodos em curso e futuros.')
@@ -541,7 +545,7 @@ async function removerCadastroDocente(d, botao) {
     if (docenteEmRevisao && normalizeTeacherNameForMatch(docenteEmRevisao.nome) === normalizeTeacherNameForMatch(d.nome)) {
       docenteEmRevisao = null;
     }
-    ctx.showToast(`Cadastro de ${d.nome} removido: ${alteradas.length} alocação(ões) com docente "A definir".`, 'success', 5000);
+    ctx.showToast(`${d.improvisado ? 'Nome' : 'Cadastro de'} ${d.nome} removido: ${alteradas.length} alocação(ões) com docente "A definir".`, 'success', 5000);
     await carregarDocentes();
   });
 }

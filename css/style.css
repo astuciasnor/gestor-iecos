@@ -4134,3 +4134,149 @@ body:has(#tab-weekly.active) .top-bar .btn-print { display: none; }
     background: var(--primary);
     color: #fff;
 }
+
+/* Menu Indicadores: sub-abas (por enquanto so "Carga por docente"), o periodo
+   (mesmos botoes do Calendario Docente) e a tabela de CH por docente. */
+#tab-indicadores .ind-subabas { justify-content: flex-start; gap: 8px; margin-bottom: 14px; }
+#tab-indicadores .ind-subaba {
+    padding: 7px 16px;
+    border: 1px solid #c9d6cf;
+    border-radius: 999px;
+    color: var(--primary);
+    background: #fff;
+    font: inherit;
+    font-size: 0.86rem;
+    font-weight: 700;
+    cursor: default;
+}
+#tab-indicadores .ind-subaba.is-ativa { color: #fff; background: var(--primary); border-color: var(--primary); }
+#tab-indicadores .ind-filtros { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 10px; }
+#tab-indicadores .ind-filtros-rotulo { font-size: 0.84rem; font-weight: 700; color: #29485c; }
+#tab-indicadores #sel-ano-indicadores,
+#tab-indicadores #sel-unidade-indicadores {
+    height: 34px;
+    padding: 0 8px;
+    border: 1px solid #c9d6cf;
+    border-radius: 8px;
+    background: #fff;
+    font: inherit;
+    font-size: 0.84rem;
+    font-weight: 700;
+}
+#tab-indicadores .docente-pl-buttons { display: flex; gap: 6px; }
+#tab-indicadores .docente-periodo-btn {
+    height: 34px;
+    padding: 0 14px;
+    border: 1px solid #e3b68a;
+    border-radius: 8px;
+    color: #9a4a08;
+    background: #fff7ed;
+    cursor: pointer;
+    font: inherit;
+    font-size: 0.82rem;
+    font-weight: 800;
+    white-space: nowrap;
+}
+#tab-indicadores .docente-periodo-btn:hover { border-color: #b45309; background: #ffedd5; }
+#tab-indicadores .docente-periodo-btn.is-active { border-color: #b45309; color: #fff; background: #b45309; box-shadow: 0 2px 5px rgba(180, 83, 9, 0.25); }
+#tab-indicadores .docente-icon-btn {
+    width: 34px;
+    height: 34px;
+    border: 1px solid #dbe6f1;
+    border-radius: 6px;
+    color: #287fd0;
+    background: #f4f9ff;
+    cursor: pointer;
+    font-size: 1.08rem;
+    font-weight: 700;
+}
+#tab-indicadores .docente-icon-btn:hover { border-color: #b8d8f4; background: #eaf5ff; }
+.ind-resumo { margin: 4px 0 10px; font-size: 0.86rem; color: #29485c; }
+.ind-resumo-alerta { color: #b45309; font-weight: 700; }
+.ind-vazio { padding: 18px; color: var(--text-muted); font-style: italic; }
+.ind-tabela-rolagem { max-width: 100%; }
+/* Rolagem para o lado so em tela estreita (com ela o cabecalho nao fica preso no alto). */
+@media (max-width: 1100px) { .ind-tabela-rolagem { overflow-x: auto; } }
+.ind-tabela {
+    border-collapse: collapse;
+    min-width: 520px;
+    background: #fff;
+    font-size: 0.85rem;
+    border-top: 2px solid #2d34c6;
+}
+.ind-tabela th,
+.ind-tabela td { padding: 5px 10px; border-bottom: 1px solid #e5e9ec; }
+/* Cabecalho (duas linhas) preso no alto ao rolar. -30px: o padding de cima do
+   .tab-content (sem isso uma linha aparece acima do cabecalho). */
+.ind-tabela thead { position: sticky; top: -30px; z-index: 1; }
+.ind-tabela thead th {
+    color: #2d34c6;
+    background: #f4f6fb;
+    font-weight: 800;
+    text-align: right;
+    white-space: nowrap;
+    cursor: pointer;
+    user-select: none;
+}
+.ind-tabela thead th:hover { background: #e8ecf8; }
+.ind-tabela thead th.ind-nome { text-align: left; }
+.ind-tabela thead th.ind-pos { cursor: default; }
+.ind-tabela tbody tr:hover { background: #f7faf8; }
+.ind-tabela .ind-pos { width: 2.2em; color: var(--text-muted); text-align: right; font-size: 0.78rem; }
+.ind-tabela .ind-nome { min-width: 240px; text-align: left; }
+.ind-tabela .ind-num { min-width: 52px; text-align: right; font-variant-numeric: tabular-nums; }
+.ind-tabela .ind-grupo { border-left: 2px solid #d5dbe0; }
+.ind-tabela .ind-pl { background: #fbfaf6; }
+.ind-tabela thead .ind-pl { background: #f7f3e8; }
+.ind-tabela .ind-total { font-weight: 800; }
+.ind-tabela .ind-zero { color: #c3cbd1; }
+.ind-tabela tfoot td,
+.ind-tabela tfoot th { border-top: 2px solid #2d34c6; border-bottom: none; font-weight: 800; background: #f4f6fb; }
+.ind-docente {
+    padding: 0;
+    border: none;
+    color: #1f2937;
+    background: none;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+.ind-docente:hover { color: #287fd0; text-decoration: underline; }
+.ind-separador td {
+    padding-top: 12px;
+    color: var(--text-muted);
+    background: #fff;
+    font-size: 0.76rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+.ind-linha-vaga .ind-docente { color: #6b7280; font-style: italic; }
+.ind-linha-sem { background: #fff7ed; }
+.ind-sem-docente { color: #b45309; font-weight: 700; }
+.ind-nota { max-width: 760px; margin-top: 12px; font-size: 0.78rem; color: var(--text-muted); line-height: 1.5; }
+
+/* Com o menu Indicadores a barra de cima ficou mais cheia: em telas ate 1500px
+   as abas ficam mais justas para caber tudo (inclusive o Imprimir). */
+@media (max-width: 1500px) {
+    .top-bar { padding: 0 12px; }
+    .tabs { gap: 2px; }
+    .tab-btn { padding: 0 11px; }
+    .tab-btn[data-tab="tutorial"] { padding: 0 14px; }
+}
+.ind-improvisado { margin-left: 6px; color: #b45309; font-size: 0.76rem; font-weight: 700; font-style: normal; cursor: help; }
+.ind-tabela thead th.ind-unidade {
+    padding-top: 4px;
+    padding-bottom: 2px;
+    color: #4b5563;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    cursor: default;
+    border-bottom: 1px solid #d5dbe0;
+}
+.ind-tabela thead th.ind-unidade:hover { background: #f4f6fb; }
+.ind-tabela thead th[rowspan] { vertical-align: bottom; }
+#tab-indicadores .ind-filtros-rotulo--depois { margin-left: 10px; }

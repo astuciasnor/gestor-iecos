@@ -11,6 +11,21 @@ export function numeroDaSubturma(subGrupo) {
   return m ? parseInt(m[1], 10) : null;
 }
 
+// Nome da componente para mostrar ao usuario: com " – T01" quando e subturma,
+// para nao parecer que a componente foi cadastrada duas vezes. Bloco (BL1) ou
+// turma inteira: so o nome.
+export function nomeComSubturma(disciplina, subGrupo) {
+  const nome = String(disciplina || '').trim();
+  const numero = numeroDaSubturma(subGrupo);
+  return numero && nome ? `${nome} – ${codigoDaSubturma(numero)}` : nome;
+}
+
+// Sufixo curto para cartoes e siglas da grade: " T01" ou "".
+export function sufixoSubturma(subGrupo) {
+  const numero = numeroDaSubturma(subGrupo);
+  return numero ? ` ${codigoDaSubturma(numero)}` : '';
+}
+
 // Vale para a turma toda (sem subturma)? Vazio ou so o bloco ("BL6").
 export function isTurmaInteira(subGrupo) {
   const sg = String(subGrupo || '').trim();

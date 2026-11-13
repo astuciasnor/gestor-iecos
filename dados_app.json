@@ -1,6 +1,6 @@
 {
   "meta": {
-    "generated_at": "2026-11-11T17:53:37",
+    "generated_at": "2026-11-12T15:47:45",
     "source_file": "planilha_base.xlsx"
   },
   "docentes": [
@@ -3847,6 +3847,39 @@
       "feriado": "SIEPE",
       "dia": "Quarta-feira",
       "tipo": "evento-academico"
+    },
+    {
+      "data": "2027-03-15",
+      "feriado": "Recepção Calouros",
+      "dia": "Segunda-feira",
+      "tipo": "evento-academico",
+      "turmas": [
+        "EP2027",
+        "CB2027",
+        "CN2027"
+      ]
+    },
+    {
+      "data": "2027-03-16",
+      "feriado": "Recepção Calouros",
+      "dia": "Terça-feira",
+      "tipo": "evento-academico",
+      "turmas": [
+        "EP2027",
+        "CB2027",
+        "CN2027"
+      ]
+    },
+    {
+      "data": "2027-03-17",
+      "feriado": "Recepção Calouros",
+      "dia": "Quarta-feira",
+      "tipo": "evento-academico",
+      "turmas": [
+        "EP2027",
+        "CB2027",
+        "CN2027"
+      ]
     }
   ],
   "periodos_letivos": [

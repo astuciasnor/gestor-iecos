@@ -1,10 +1,11 @@
-import { store } from './store.js?v=202611111738';
-import { getCalendarEvents } from './calendar.js?v=202611111738';
-import { buildTeacherExecutionSnapshot, buildCanonicalOfferProjection } from './execution_engine.js?v=202611111738';
-import { detectTeacherConflicts } from './conflicts.js?v=202611111738';
-import { getHorariosByTurno, normalizeTurnoKey, getTurnoLetter, mapSlotToTurno } from './turns.js?v=202611111738';
-import { vividHexColor } from './color_utils.js?v=202611111738';
-import { formatDateBR, timeToMinutes, shortDayName } from './date_utils_ui.js?v=202611111738';
+import { store } from './store.js?v=202611122042';
+import { getCalendarEvents } from './calendar.js?v=202611122042';
+import { buildTeacherExecutionSnapshot, buildCanonicalOfferProjection } from './execution_engine.js?v=202611122042';
+import { detectTeacherConflicts } from './conflicts.js?v=202611122042';
+import { getHorariosByTurno, normalizeTurnoKey, getTurnoLetter, mapSlotToTurno } from './turns.js?v=202611122042';
+import { vividHexColor } from './color_utils.js?v=202611122042';
+import { addDaysISO, formatDateBR, timeToMinutes, shortDayName } from './date_utils_ui.js?v=202611122042';
+import { nomeComSubturma, sufixoSubturma } from './subturmas.mjs?v=202611122042';
 import {
     isFaixaAllocation,
     isScheduledRegularAllocation,
@@ -12,7 +13,7 @@ import {
     teacherNamesMatch,
     getDocenteShortLabel,
     calculateTeacherTotalCH
-} from './allocation_helpers.js?v=202611111738';
+} from './allocation_helpers.js?v=202611122042';
 import {
     normalizeTurnoOfertaKey,
     formatTurnoOfertaLabel,
@@ -22,7 +23,7 @@ import {
     buildHorariosForUI,
     getShiftChangeMeta,
     getCalendarShiftBadgeHTML
-} from './turno_helpers.js?v=202611111738';
+} from './turno_helpers.js?v=202611122042';
 import {
     getDisciplinaCHGlobal,
     getTurmaLabel,
@@ -30,11 +31,11 @@ import {
     getDisciplinaInfo,
     getCursoSiglaDaTurma,
     getPrintAcademicMetaLine
-} from './curso_turma_helpers.js?v=202611111738';
+} from './curso_turma_helpers.js?v=202611122042';
 import {
     getGanttTurnoConfigs,
     resolveTeacherShiftForSlot
-} from './turnos_docente.js?v=202611111738';
+} from './turnos_docente.js?v=202611122042';
 
 // Referencias DOM de nivel de modulo (espelham as de ui.js; modulo deferred, DOM pronto).
 const selViewDocente = document.getElementById('sel-view-docente');
@@ -695,12 +696,15 @@ export function buildCalendarTurmaResumeTable(turmaId, start, end) {
         const baseAlloc = offerGroup?.baseAlloc || {};
         const disciplina = String(offerGroup?.disciplina || baseAlloc?.disciplina || '').trim();
         if (!disciplina) return;
+        // Subturmas (T01, T02) em linhas proprias, com o codigo junto do nome.
+        const nome = nomeComSubturma(disciplina, offerGroup?.subGrupo || baseAlloc?.subGrupo);
 
-        if (!disciplinasMap.has(disciplina)) {
+        if (!disciplinasMap.has(nome)) {
             const info = getDisciplinaInfo(disciplina, turmaId);
             const totalCH = toCH(getDisciplinaCHGlobal(disciplina, turmaId)) || toCH(info?.ch) || toCH(baseAlloc?.ch);
-            disciplinasMap.set(disciplina, {
+            disciplinasMap.set(nome, {
                 disciplina,
+                nome,
                 codigo: String(info?.codigo || baseAlloc?.componenteCode || '').trim(),
                 cor: baseAlloc?.cor || store.getDisciplinaColor(disciplina, getCursoSiglaDaTurma(turmaId)) || '#f39c12',
                 totalCH,
@@ -709,7 +713,7 @@ export function buildCalendarTurmaResumeTable(turmaId, start, end) {
             });
         }
 
-        const disciplinaEntry = disciplinasMap.get(disciplina);
+        const disciplinaEntry = disciplinasMap.get(nome);
         disciplinaEntry.allocatedCH = (disciplinaEntry.allocatedCH || 0) + toCH(offerGroup?.executedHours);
         const rows = buildRowsFromOfferGroup(offerGroup);
         rows.forEach((row) => disciplinaEntry.rows.push(row));
@@ -852,7 +856,7 @@ export function buildCalendarTurmaResumeTable(turmaId, start, end) {
                     <td style="padding: 8px; border-right: 2px solid #2d34c6;">${isFirst ? escapeHtml(disc.codigo || '-') : ''}</td>
                     <td style="padding: 8px; text-align: center; border-right: 1px solid #ddd; font-weight: 700; color: #1f2937;">${isFirst ? formatCH(disc.totalCH) : ''}</td>
                     <td style="padding: 8px; text-align: center; border-right: 2px solid #2d34c6; ${allocatedCellStyle}"${allocatedTitle}>${horasDisplay}</td>
-                    <td style="padding: 8px; border-right: 1px solid #ddd; font-weight: ${isFirst ? '700' : '500'}; color: #333;">${isFirst ? escapeHtml(disc.disciplina) : ''}</td>
+                    <td style="padding: 8px; border-right: 1px solid #ddd; font-weight: ${isFirst ? '700' : '500'}; color: #333;">${isFirst ? escapeHtml(disc.nome || disc.disciplina) : ''}</td>
                     <td style="padding: 8px; border-right: 1px solid #ddd; color: #333;">${escapeHtml(row.nome || '-')}</td>
                     <td style="padding: 8px; color: #4b5563;">${escapeHtml(formatPeriodo(row.dataInicio, row.dataFim))}</td>
                 </tr>
@@ -1081,6 +1085,7 @@ function collectDocenteResumeComponents(docenteName, start, end) {
 
         components.push({
             disciplina,
+            nome: nomeComSubturma(disciplina, offerGroup?.subGrupo || baseAlloc?.subGrupo),
             codigo: String(info?.codigo || baseAlloc?.componenteCode || '').trim(),
             cor: baseAlloc?.cor || store.getDisciplinaColor(disciplina, getCursoSiglaDaTurma(turmaId)) || '#f39c12',
             turmaLabel: getTurmaLabel(turmaId, offerGroup?.subGrupo || baseAlloc?.subGrupo),
@@ -1220,7 +1225,7 @@ function buildDocenteResumeRows(components = []) {
                     <td style="padding: 8px; border-right: 2px solid #2d34c6;">${isFirst ? escapeHtml(comp.codigo || '-') : ''}</td>
                     <td style="padding: 8px; text-align: center; border-right: 1px solid #ddd; font-weight: 700; color: #1f2937; white-space: nowrap;">${isFirst ? escapeHtml(formatCHDocente(comp)) : ''}</td>
                     <td style="padding: 8px; text-align: center; border-right: 2px solid #2d34c6; font-weight: 800; color: ${corAlocada};">${isFirst ? (formatCH(comp.chAlocada) || '0') : ''}</td>
-                    <td style="padding: 8px; border-right: 1px solid #ddd; font-weight: 700; color: #333;">${isFirst ? escapeHtml(comp.disciplina) : ''}</td>
+                    <td style="padding: 8px; border-right: 1px solid #ddd; font-weight: 700; color: #333;">${isFirst ? escapeHtml(comp.nome || comp.disciplina) : ''}</td>
                     <td style="padding: 8px; border-right: 1px solid #ddd; color: #333;">${isFirst ? escapeHtml(comp.turmaLabel || '-') : ''}</td>
                     <td style="padding: 8px; border-right: 1px solid #ddd; color: #333;">${escapeHtml(faixaRow.diasLabel || '-')}</td>
                     <td style="padding: 8px; border-right: 1px solid #ddd; color: #4b5563;">${escapeHtml(formatPeriodo(faixaRow.dataInicio, faixaRow.dataFim))}</td>
@@ -1368,9 +1373,28 @@ export function generateCalendarGrid(container, turmaId, docenteName, start, end
             previousShiftLetter = currentShiftLetter;
         });
 
-        for (let i = 0; i < prefixEmptyCells; i++) {
-            grid.innerHTML += `<div class="day-cell empty"></div>`;
+        // Celulas antes do dia 1: mostram os dias do mes anterior em tom claro
+        // (so numero e feriado; as aulas ficam no bloco do proprio mes).
+        const diasAnteriores = [];
+        let cursorAnt = firstDate;
+        while (diasAnteriores.length < prefixEmptyCells) {
+            cursorAnt = addDaysISO(cursorAnt, -1);
+            if (!EXIBIR_DOMINGO && new Date(cursorAnt + 'T12:00:00').getDay() === 0) continue;
+            diasAnteriores.unshift(cursorAnt);
         }
+        diasAnteriores.forEach((dataAnt) => {
+            const eventosAnt = eventsByDate[dataAnt];
+            if (!eventosAnt) {
+                grid.innerHTML += `<div class="day-cell empty"></div>`;
+                return;
+            }
+            const feriadoAnt = eventosAnt.find((e) => e.type === 'holiday');
+            const [, mm, dd] = dataAnt.split('-');
+            grid.innerHTML += `<div class="day-cell empty" style="opacity:0.6;${feriadoAnt ? ' background-color:#f1f2f6 !important;' : ''}">
+          <span class="day-number">${dd}/${mm}</span>
+          ${feriadoAnt ? `<div style="text-align:center; color:#7f8c8d; font-style:italic; padding-top:10px; font-weight:bold; font-size:0.9em;">${feriadoAnt.title}</div>` : ''}
+        </div>`;
+        });
 
         months[monthKey].forEach((dayData) => {
             const dt = new Date(dayData.date + 'T12:00:00');
@@ -1469,7 +1493,7 @@ export function generateCalendarGrid(container, turmaId, docenteName, start, end
                                     uniqueEventsInSlot.forEach((e) => (e.conflictPartners || []).forEach((p) => {
                                         if (!conflictEntries.some((c) => c.turmaId === p.turmaId && c.disciplina === p.disciplina)) conflictEntries.push(p);
                                     }));
-                                    const conflictNames = conflictEntries.map((e) => `${getDisciplinaInfo(e.disciplina, e.turmaId).abrev} - ${e.turmaId}`).join(' <b style="color:#fff">x</b> ');
+                                    const conflictNames = conflictEntries.map((e) => `${getDisciplinaInfo(e.disciplina, e.turmaId).abrev}${sufixoSubturma(e.subGrupo)} - ${e.turmaId}`).join(' <b style="color:#fff">x</b> ');
                                     content = `<span title="Choque: ${conflictNames.replace(/<[^>]+>/g, '')}">⚠️ ${conflictNames}</span>`;
                                 } else {
                                     const event = uniqueEventsInSlot[0];
@@ -1480,7 +1504,7 @@ export function generateCalendarGrid(container, turmaId, docenteName, start, end
                                         dayOfWeek,
                                         dayData.date
                                     );
-                                    content = `${info.abrev}${shiftBadgeDisplay} - ${event.turmaId}`;
+                                    content = `${info.abrev}${sufixoSubturma(event.subGrupo)}${shiftBadgeDisplay} - ${event.turmaId}`;
                                     style = `background:${vividHexColor(event.cor || '#bdc3c7')}; color:black;`;
                                 }
                             } else {
@@ -1496,8 +1520,8 @@ export function generateCalendarGrid(container, turmaId, docenteName, start, end
                                         dayData.date
                                     );
                                     content = docenteLabel
-                                        ? `<div>${info.abrev}${eBadgeDisplay} <span style="font-size:0.82em; font-weight:600; opacity:0.92;">- ${docenteLabel}</span></div>`
-                                        : `${info.abrev}${eBadgeDisplay}`;
+                                        ? `<div>${info.abrev}${sufixoSubturma(event.subGrupo)}${eBadgeDisplay} <span style="font-size:0.82em; font-weight:600; opacity:0.92;">- ${docenteLabel}</span></div>`
+                                        : `${info.abrev}${sufixoSubturma(event.subGrupo)}${eBadgeDisplay}`;
                                     style = `background:${vividHexColor(event.cor || '#bdc3c7')}; color:black;`;
                                 } else {
                                     content = '&nbsp;';
@@ -1550,7 +1574,8 @@ export function generateCalendarGrid(container, turmaId, docenteName, start, end
                     dayData.events.forEach((ev) => {
                         const info = getDisciplinaInfo(ev.disciplina, ev.turmaId);
                         let style = `background:${vividHexColor(ev.cor || '#bdc3c7')}`;
-                        let displayLabel = docenteName ? `${info.abrev} - ${ev.turmaId}` : info.abrev;
+                        const abrevSub = `${info.abrev}${sufixoSubturma(ev.subGrupo)}`;
+                        let displayLabel = docenteName ? `${abrevSub} - ${ev.turmaId}` : abrevSub;
 
                         if (isOutOfBounds) {
                             style = `background: #c0392b !important; color: white !important; font-weight: bold; border: 1px solid #900 !important;`;
