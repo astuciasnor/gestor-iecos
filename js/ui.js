@@ -1,31 +1,32 @@
-import { store } from './store.js?v=202611122120';
-import { getTurnoLetter, mapSlotToTurno, turnoDaTurmaInclui } from './turns.js?v=202611122120';
-import { normalizePeriodo as normalizePeriodoLetivoCode } from './plan_storage.js?v=202611122120';
-import { getCalendarEvents } from './calendar.js?v=202611122120';
-import { isDateOverlap } from './utils.js?v=202611122120';
-import { weeklyState } from './weekly_state.js?v=202611122120';
-import { findPendentesCobertas, isPendenteJaAlocada } from './pendentes.mjs?v=202611122120';
-import { classifySwap } from './troca_ordem.mjs?v=202611122120';
-import { datasFeriadoDaTurma, feriadosDaTurma } from './feriados.mjs?v=202611122120';
-import { closeFaixaEnds, isPauseEnd, listFaixaPauses } from './pausa_faixas.mjs?v=202611122120';
-import { numeroDaSubturma, isTurmaInteira, proximaSubturma, codigoT01Como, saoSubturmasDiferentes, sufixoSubturma } from './subturmas.mjs?v=202611122120';
-import { abrirMiniCalendario, fecharMiniCalendario, miniCalendarioAberto } from './mini_calendario.mjs?v=202611122120';
-import { buildCanonicalOfferProjection } from './execution_engine.js?v=202611122120';
+import { store } from './store.js?v=202611132018';
+import { stableStringify } from './sync_diff.mjs?v=202611132018';
+import { getTurnoLetter, mapSlotToTurno, turnoDaTurmaInclui } from './turns.js?v=202611132018';
+import { normalizePeriodo as normalizePeriodoLetivoCode } from './plan_storage.js?v=202611132018';
+import { getCalendarEvents } from './calendar.js?v=202611132018';
+import { isDateOverlap } from './utils.js?v=202611132018';
+import { weeklyState } from './weekly_state.js?v=202611132018';
+import { findPendentesCobertas, isPendenteJaAlocada } from './pendentes.mjs?v=202611132018';
+import { classifySwap } from './troca_ordem.mjs?v=202611132018';
+import { datasFeriadoDaTurma, feriadosDaTurma } from './feriados.mjs?v=202611132018';
+import { closeFaixaEnds, isPauseEnd, listFaixaPauses } from './pausa_faixas.mjs?v=202611132018';
+import { numeroDaSubturma, isTurmaInteira, proximaSubturma, codigoT01Como, saoSubturmasDiferentes, sufixoSubturma } from './subturmas.mjs?v=202611132018';
+import { abrirMiniCalendario, fecharMiniCalendario, miniCalendarioAberto } from './mini_calendario.mjs?v=202611132018';
+import { buildCanonicalOfferProjection } from './execution_engine.js?v=202611132018';
 import {
     buildSigaaMetadataPayload,
     validateSigaaMetadataPayload,
     getSigaaCode,
     buildScopedSigaaAllocationFromOfferFaixa,
     buildSigaaHorarioResumo
-} from './sigaa_metadata.js?v=202611122120';
-import { parseBackupDataFile, extractImportPlanMeta } from './serialization.js?v=202611122120';
+} from './sigaa_metadata.js?v=202611132018';
+import { parseBackupDataFile, extractImportPlanMeta } from './serialization.js?v=202611132018';
 import {
     showToastWarning,
     showPersistentStatusMessage,
     copyTextToClipboard,
     flashButtonCopyState,
     setupCopyActionButtons
-} from './ui_feedback.js?v=202611122120';
+} from './ui_feedback.js?v=202611132018';
 import {
     normalizeHexColor,
     adjustHexColor,
@@ -34,7 +35,7 @@ import {
     tonsDaCor,
     aplicarTonsBloco,
     PALETA_CORES
-} from './color_utils.js?v=202611122120';
+} from './color_utils.js?v=202611132018';
 import {
     isFaixaAllocation,
     isPriorityRegularAllocation,
@@ -43,9 +44,9 @@ import {
     normalizeTeacherNameForMatch,
     getDocenteShortLabel,
     getAllocationTeachersForConflict
-} from './allocation_helpers.js?v=202611122120';
-import { setupSeletorCor } from './seletor_cor.js?v=202611122120';
-import { ligarSugestoesDocente } from './sugestoes_docente.mjs?v=202611122120';
+} from './allocation_helpers.js?v=202611132018';
+import { setupSeletorCor } from './seletor_cor.js?v=202611132018';
+import { ligarSugestoesDocente } from './sugestoes_docente.mjs?v=202611132018';
 import {
     VINCULOS_DOCENTE_NOVO,
     OUTRA_UNIDADE,
@@ -62,9 +63,9 @@ import {
     acharNomeConhecido,
     filtrarDocentes,
     umNomePorPessoa
-} from './docente_nomes.mjs?v=202611122120';
-import { getSessionEmail, getPerfil, fetchAllocationsForPlans } from './sync_remoto.js?v=202611122120';
-import { resolveBackendMode } from './backend_config.js?v=202611122120';
+} from './docente_nomes.mjs?v=202611132018';
+import { getSessionEmail, getPerfil, fetchAllocationsForPlans } from './sync_remoto.js?v=202611132018';
+import { resolveBackendMode } from './backend_config.js?v=202611132018';
 import {
     normalizeConflictSlotLabel,
     getAvailableTurnoOfertaOptions,
@@ -74,7 +75,7 @@ import {
     buildHorariosForUI,
     getShiftChangeMeta,
     getNativeTurnoValueForAllocation
-} from './turno_helpers.js?v=202611122120';
+} from './turno_helpers.js?v=202611132018';
 import {
     getDisciplinaCHGlobal,
     derivarBloco,
@@ -84,7 +85,7 @@ import {
     getDisciplinaInfo,
     getCursoSiglaDaTurma,
     getPrintAcademicMetaLine
-} from './curso_turma_helpers.js?v=202611122120';
+} from './curso_turma_helpers.js?v=202611132018';
 import {
     renderMonthlyCalendar,
     renderTeacherCalendar,
@@ -92,14 +93,14 @@ import {
     clearTeacherRangeCache,
     setTeacherPeriod,
     getTeacherPeriod
-} from './calendarios_ui.js?v=202611122120';
-import { setupIndicadores, renderIndicadores, setIndicadoresLigacoes } from './indicadores_ui.js?v=202611122120';
+} from './calendarios_ui.js?v=202611132018';
+import { setupIndicadores, renderIndicadores, setIndicadoresLigacoes } from './indicadores_ui.js?v=202611132018';
 import {
     refreshTeacherConflictsUI,
     setCrossPlanLoader,
     setResolverDeChoque,
     acharChoqueComOutroPL
-} from './conflitos_ui.js?v=202611122120';
+} from './conflitos_ui.js?v=202611132018';
 import {
     shouldIgnoreTurmaEventForCandidate,
     normalizeDrawnSlotsByDay,
@@ -113,7 +114,7 @@ import {
     resolveEditableFaixasFromStoredExecution,
     alignFaixasToExecutionEnd,
     buildFinalAdjustmentFaixaSuggestion
-} from './faixa_utils.js?v=202611122120';
+} from './faixa_utils.js?v=202611132018';
 import {
     timeToMinutes,
     shiftISODate,
@@ -127,14 +128,14 @@ import {
     isDateInsideRange,
     formatDateBRShortYear,
     formatDateBR
-} from './date_utils_ui.js?v=202611122120';
+} from './date_utils_ui.js?v=202611132018';
 import {
     initializeWeeklyScheduleForTurma,
     reconcileTurmaSelectionAfterPLChange,
     resetWeeklyViewOnTurmaChange,
     resolveActiveAcademicPeriod,
     slotLabelsOverlap
-} from './academic_rules.mjs?v=202611122120';
+} from './academic_rules.mjs?v=202611132018';
 
 const gridContainer = document.getElementById('weekly-grid');
 const selCurso = document.getElementById('sel-curso');
@@ -195,6 +196,8 @@ let ultimaComponenteSalva = null;
 // salvamento e a foto das alocacoes logo depois dele.
 let lastAllocationUndoSnapshot = null;
 let allocationsAposSalvar = '';
+// true = o desfazer guardado e de um Trocar (mostra "Desfazer troca" na Lista de Ofertas).
+let undoEhTroca = false;
 let componentStartSelectionMode = 'auto';
 // Faixa em modo de DESENHO (1|2|3) ou null. Antes era window.isDrawingFaixa
 // (global exposto). Agora e modulo-privado — nada externo o le/escreve (blindado).
@@ -5337,6 +5340,7 @@ export function initUI() {
 
     const btnUndoAlloc = document.getElementById('btn-undo-alloc');
     if (btnUndoAlloc) btnUndoAlloc.addEventListener('click', handleUndoLastAllocation);
+    document.getElementById('btn-undo-troca')?.addEventListener('click', handleUndoLastAllocation);
     updateUndoAllocationButtonUI();
 
     const tabButtons = Array.from(document.querySelectorAll('.tab-btn'));
@@ -7183,23 +7187,47 @@ function snapshotAllocationsForUndo() {
     }
 }
 
-// O Desfazer so vale LOGO depois de salvar: guarda como as alocacoes ficaram no
-// salvamento; qualquer outra alteracao (remover, trocar, desenhar na grade...)
-// descarta o desfazer e o botao volta a ficar esmaecido.
+// O Desfazer so vale LOGO depois de salvar: vigia so as alocacoes que o
+// salvamento mudou (idsDoDesfazer), nas turmas que o usuario pode editar. Se uma
+// delas mudar de novo (remover, trocar, desenhar na grade...), o desfazer cai e o
+// botao fica esmaecido. Mudancas em outras alocacoes nao contam: no servidor, o
+// recalculo geral mexe em turmas de outro curso (que voltam a versao do servidor)
+// e outros coordenadores salvam ao mesmo tempo.
 // A foto "depois de salvar" e tirada ao fim do salvamento (setTimeout 0), porque
 // o proprio salvamento ainda ajusta as datas das intensivas logo depois do commit.
-function assinaturaAlocacoes() {
-    try { return JSON.stringify(store.allocations || []); } catch (err) { return ''; }
+// stableStringify: o servidor devolve as alocacoes com as chaves em outra ordem.
+let idsDoDesfazer = null;
+
+function idsAlteradosNoSalvamento(antes, depois) {
+    const assinaturaAntes = new Map(antes.map((a) => [a.id, stableStringify(a)]));
+    const turmaDoId = new Map([...antes, ...depois].map((a) => [a.id, a.turmaId]));
+    const ids = new Set();
+    depois.forEach((a) => { if (assinaturaAntes.get(a.id) !== stableStringify(a)) ids.add(a.id); });
+    const idsDepois = new Set(depois.map((a) => a.id));
+    antes.forEach((a) => { if (!idsDepois.has(a.id)) ids.add(a.id); });
+    const podeEditar = typeof store.podeEditarTurma === 'function' ? store.podeEditarTurma : () => true;
+    return new Set([...ids].filter((id) => podeEditar(turmaDoId.get(id))));
 }
 
-function commitAllocationUndoSnapshot(snapshot) {
+function assinaturaAlocacoes() {
+    try {
+        const lista = store.allocations || [];
+        return stableStringify(idsDoDesfazer ? lista.filter((a) => idsDoDesfazer.has(a.id)) : lista);
+    } catch (err) { return ''; }
+}
+
+function commitAllocationUndoSnapshot(snapshot, { troca = false } = {}) {
     lastAllocationUndoSnapshot = Array.isArray(snapshot) ? snapshot : null;
+    undoEhTroca = troca;
+    idsDoDesfazer = null;
     allocationsAposSalvar = null;   // pendente ate o fim do salvamento
     updateUndoAllocationButtonUI();
     const desteSalvamento = lastAllocationUndoSnapshot;
     if (desteSalvamento) {
         setTimeout(() => {
-            if (lastAllocationUndoSnapshot === desteSalvamento) allocationsAposSalvar = assinaturaAlocacoes();
+            if (lastAllocationUndoSnapshot !== desteSalvamento) return;
+            idsDoDesfazer = idsAlteradosNoSalvamento(desteSalvamento, store.allocations || []);
+            allocationsAposSalvar = assinaturaAlocacoes();
         }, 0);
     }
 }
@@ -7207,7 +7235,27 @@ function commitAllocationUndoSnapshot(snapshot) {
 function clearAllocationUndoSnapshot() {
     lastAllocationUndoSnapshot = null;
     allocationsAposSalvar = '';
+    undoEhTroca = false;
+    idsDoDesfazer = null;
     updateUndoAllocationButtonUI();
+}
+
+// Volta so as alocacoes que o salvamento mudou; as demais ficam como estao agora
+// (inclusive o que outros coordenadores salvaram depois).
+function alocacoesDesfeitas() {
+    if (!idsDoDesfazer) return lastAllocationUndoSnapshot;
+    const antesPorId = new Map(lastAllocationUndoSnapshot.map((a) => [a.id, a]));
+    const resultado = [];
+    const vistos = new Set();
+    (store.allocations || []).forEach((a) => {
+        vistos.add(a.id);
+        if (!idsDoDesfazer.has(a.id)) resultado.push(a);
+        else if (antesPorId.has(a.id)) resultado.push(antesPorId.get(a.id));   // criada no salvamento: sai
+    });
+    lastAllocationUndoSnapshot.forEach((a) => {
+        if (idsDoDesfazer.has(a.id) && !vistos.has(a.id)) resultado.push(a);   // removida no salvamento: volta
+    });
+    return resultado;
 }
 
 function updateUndoAllocationButtonUI() {
@@ -7215,9 +7263,12 @@ function updateUndoAllocationButtonUI() {
     if (Array.isArray(lastAllocationUndoSnapshot) && typeof allocationsAposSalvar === 'string' && assinaturaAlocacoes() !== allocationsAposSalvar) {
         lastAllocationUndoSnapshot = null;   // houve outra alteracao depois do salvamento
         allocationsAposSalvar = '';
+        undoEhTroca = false;
+        idsDoDesfazer = null;
     }
-    if (!btn) return;
     const hasSnapshot = Array.isArray(lastAllocationUndoSnapshot);
+    document.getElementById('btn-undo-troca')?.classList.toggle('hidden', !(hasSnapshot && undoEhTroca));
+    if (!btn) return;
     btn.disabled = !hasSnapshot;
     btn.title = hasSnapshot
         ? 'Desfazer o salvamento que acabou de ser feito'
@@ -7229,8 +7280,12 @@ function handleUndoLastAllocation() {
         showToastWarning('Nao ha insercao recente para desfazer.', 'warning', 2600);
         return;
     }
-    if (!confirm('Desfazer a ultima insercao e voltar ao estado anterior das alocacoes?')) return;
-    store.replaceAllocations(lastAllocationUndoSnapshot);
+    const eraTroca = undoEhTroca;
+    const pergunta = eraTroca
+        ? 'Desfazer a troca e voltar à ordem anterior das componentes?'
+        : 'Desfazer a ultima insercao e voltar ao estado anterior das alocacoes?';
+    if (!confirm(pergunta)) return;
+    store.replaceAllocations(alocacoesDesfeitas());
     clearAllocationUndoSnapshot();
     if (ultimaComponenteSalva && !inputConfig.disciplina?.value) limparDatasDasFaixas();
     setComponentStartSelectionMode('auto');
@@ -7241,7 +7296,9 @@ function handleUndoLastAllocation() {
     updateWeeklyFaixaHoursDisplay();
     renderWeeklyGrid();
     renderOfertasList();
-    showToastWarning('Ultima insercao desfeita. Alocacoes voltaram ao estado anterior.', 'success', 3600);
+    showToastWarning(eraTroca
+        ? 'Troca desfeita. As componentes voltaram à ordem anterior.'
+        : 'Ultima insercao desfeita. Alocacoes voltaram ao estado anterior.', 'success', 3600);
 }
 
 function handleAddManual() {
@@ -8126,7 +8183,7 @@ function abrirTrocaDeOrdem(baseAlloc) {
         }
         const linhas = [...plano.novas].map(([alloc, posicao]) =>
             `${alloc.disciplina}\n   antes: ${formatPeriodoTroca(alloc.dataInicio, alloc.dataFim)}\n   depois: ${formatPeriodoTroca(posicao.dataInicio, posicao.dataFim)}`);
-        if (!confirm(`Trocar a ordem das componentes?\n\n${linhas.join('\n\n')}\n\nSe precisar, use o botão Desfazer.`)) return;
+        if (!confirm(`Trocar a ordem das componentes?\n\n${linhas.join('\n\n')}\n\nSe precisar, use o botão "Desfazer troca", ao lado do título da lista.`)) return;
         aplicarTrocaDeOrdem(plano);
     });
 }
@@ -8147,11 +8204,11 @@ function aplicarTrocaDeOrdem(plano) {
         return;
     }
 
-    commitAllocationUndoSnapshot(undoSnapshot);
+    commitAllocationUndoSnapshot(undoSnapshot, { troca: true });
     fecharTrocaDeOrdem();
     rerenderPlanBoundViews();
     plano.avisos.forEach((aviso) => showToastWarning(aviso, 'warning', 6000));
-    if (!plano.avisos.length) showToastWarning('Ordem trocada. Se precisar, use o botão Desfazer.', 'success', 4200);
+    if (!plano.avisos.length) showToastWarning('Ordem trocada. Se precisar, clique em "Desfazer troca", ao lado do título da lista (antes de atualizar a página).', 'success', 4500);
 }
 
 // Selo "faltam Xh" da Lista de Ofertas: a oferta tem menos aulas que a carga
@@ -8174,6 +8231,7 @@ function renderOfertasList() {
     if (!tbody) return;
     updateActivePlanStatus();
     updateListPrintHeader();
+    updateUndoAllocationButtonUI();   // "Desfazer troca" some se houve outra alteracao
 
     const theadTr = document.querySelector('#ofertas-table thead tr');
     if (theadTr && !document.getElementById('th-sigaa')) {

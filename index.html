@@ -10,13 +10,13 @@
         // Vai para o aviso antes de carregar o programa. A agenda publica nao passa por aqui.
         if (/\.github\.io$/i.test(location.hostname)) location.replace('mudou.html');
     </script>
-    <link rel="stylesheet" href="css/style.css?v=202611122120">
+    <link rel="stylesheet" href="css/style.css?v=202611132018">
     <!-- Redesenho da aba Alocar Componentes (por partes); carrega depois do style.css -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
-    <link rel="stylesheet" href="css/alocar-componentes.css?v=202611122120">
-    <link rel="stylesheet" href="css/ajuda.css?v=202611122120">
+    <link rel="stylesheet" href="css/alocar-componentes.css?v=202611132018">
+    <link rel="stylesheet" href="css/ajuda.css?v=202611132018">
 
     <style>
         :root {
@@ -1113,10 +1113,17 @@
             </section>
 
             <section id="tab-list" class="tab-content" role="tabpanel" aria-labelledby="tabbtn-list">
-                <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:10px;">
+                <div style="display:flex; align-items:center; gap:14px; margin-bottom:10px;">
                     <h3 style="margin:0;">Ofertas Cadastradas</h3>
+                    <!-- Desfazer troca: logo ao lado do titulo, onde o olho esta; so aparece logo
+                         depois de um Trocar (ver updateUndoAllocationButtonUI). F5 apaga o desfazer. -->
+                    <button id="btn-undo-troca" type="button" class="btn-secondary no-print hidden"
+                        title="Volta as duas componentes para a ordem de antes da troca"
+                        style="background:#7d6df0; color:#fff; border:none; padding:8px 14px; font-weight:600;">
+                        &#8630; Desfazer troca
+                    </button>
                     <button id="btn-export-sigaa-json" class="btn-secondary"
-                        style="background: var(--primary); color:#fff; border:none; padding:8px 12px;">
+                        style="margin-left:auto; background: var(--primary); color:#fff; border:none; padding:8px 12px;">
                         Exportar Metadados SIGAA (JSON)
                     </button>
                 </div>
@@ -1345,7 +1352,7 @@
                                 <ul class="aj-lista">
                                     <li>As componentes aparecem em ordem, com as faixas uma embaixo da outra.</li>
                                     <li><b>Editar</b> abre a componente na aba Alocar; <b>Excluir</b> apaga a oferta.</li>
-                                    <li><b>Trocar</b> troca duas componentes de lugar. Com a mesma CH, em qualquer posição; com CH diferente, só quando estão em sequência. Choque barra a troca, e ela pode ser desfeita.</li>
+                                    <li><b>Trocar</b> troca duas componentes de lugar. Com a mesma CH, em qualquer posição; com CH diferente, só quando estão em sequência. Choque barra a troca. Logo depois de trocar, o botão <b>Desfazer troca</b> aparece ao lado do título da lista. Ele some se a página for atualizada (F5).</li>
                                     <li>O selo <span class="aj-tag aj-tag--alerta">faltam Xh</span> marca a oferta com menos aulas que a CH. Ajuste em <b>Editar</b>.</li>
                                 </ul>
                             </article>
@@ -1496,7 +1503,7 @@
         </main>
     </div>
 
-    <script type="module" src="js/main.js?v=202611122120"></script>
+    <script type="module" src="js/main.js?v=202611132018"></script>
 </body>
 
 </html>
