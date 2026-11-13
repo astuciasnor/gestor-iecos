@@ -1,11 +1,11 @@
 // Menu Indicadores (so leitura: nada e gravado).
 // Sub-aba "Carga por docente": tabela com a CH de cada docente por curso e por PL,
 // do ano inteiro ou de um PL. As contas estao em indicadores.mjs.
-import { store } from './store.js?v=202611122042';
-import { getCursoSiglaDaTurma, getDisciplinaCHGlobal } from './curso_turma_helpers.js?v=202611122042';
-import { formatDateBR } from './date_utils_ui.js?v=202611122042';
-import { UNIDADES } from './docente_nomes.mjs?v=202611122042';
-import { cargaPorDocente, ordenarLinhas, SEM_DOCENTE } from './indicadores.mjs?v=202611122042';
+import { store } from './store.js?v=202611122120';
+import { getCursoSiglaDaTurma, getDisciplinaCHGlobal } from './curso_turma_helpers.js?v=202611122120';
+import { formatDateBR } from './date_utils_ui.js?v=202611122120';
+import { UNIDADES } from './docente_nomes.mjs?v=202611122120';
+import { cargaPorDocente, ordenarLinhas, SEM_DOCENTE } from './indicadores.mjs?v=202611122120';
 
 const VALIDADE_MS = 2 * 60 * 1000; // depois disso, abrir o menu busca de novo
 
@@ -133,18 +133,22 @@ export async function renderIndicadores({ recarregar = false } = {}) {
     if (!estado.ano) { desenhar(); return; }
     const velho = !estado.dados || estado.dados.ano !== estado.ano || Date.now() - estado.dados.em > VALIDADE_MS;
     if (!recarregar && !velho) { desenhar(); return; }
-    if (estado.carregando || !carregarPlanos) { desenhar(); return; }
+    if (!carregarPlanos) { desenhar(); return; }
+    // Ja carregando este mesmo ano: espera. Outro ano: a leitura antiga e
+    // descartada ao chegar (pedido abaixo) e este ano comeca a carregar ja.
+    if (estado.carregando === estado.ano) { desenhar(); return; }
 
-    estado.carregando = true;
     const ano = estado.ano;
+    estado.carregando = ano;
     desenhar();
     try {
         const planos = await carregarPlanos(metasDoAno(ano));
         if (ano === estado.ano) estado.dados = { ano, planos, em: Date.now() };
     } catch (error) {
-        avisarErro(`Não foi possível ler os períodos letivos do servidor: ${error?.message || error}`);
+        if (ano === estado.ano) avisarErro(`Não foi possível ler os períodos letivos do servidor: ${error?.message || error}`);
     } finally {
-        estado.carregando = false;
+        // So a leitura do ano atual encerra o "carregando" (uma antiga nao).
+        if (estado.carregando === ano) estado.carregando = false;
         desenhar();
     }
 }
@@ -159,7 +163,7 @@ function desenhar() {
         btn.classList.toggle('is-active', btn.dataset.planKey === estado.periodo);
     });
 
-    if (estado.carregando && !estado.dados) {
+    if (estado.carregando && (!estado.dados || estado.dados.ano !== estado.ano)) {
         alvo.innerHTML = '<p class="ind-vazio">Carregando os períodos letivos…</p>';
         if (resumo) resumo.textContent = '';
         return;
@@ -232,7 +236,7 @@ function desenhar() {
         th('nome', 'Docente', 'Nome do docente', 'ind-nome', ' rowspan="2"'),
         ...gruposUnidade.map((g) => `<th scope="colgroup" colspan="${g.n}" class="ind-unidade ind-grupo" title="Cursos da unidade ${esc(nomeUnidade(g.unidade))}">${esc(nomeUnidade(g.unidade))}</th>`),
         ...(colunasPL.length ? [`<th scope="colgroup" colspan="${colunasPL.length}" class="ind-unidade ind-grupo ind-pl">Períodos letivos</th>`] : []),
-        th('total', 'Total', 'CH total no período (todas as unidades)', 'ind-grupo ind-total', ' rowspan="2"')
+        th('total', 'Total', `CH total no período (só ${nomeUnidade(estado.unidade)})`, 'ind-grupo ind-total', ' rowspan="2"')
     ].join('');
     const cabecalho = [
         ...cursos.map((c, i) => th(`curso:${c}`, c, `CH no curso ${nomeCurso(c)} (${nomeUnidade(unidadeDe(c))})`, abreGrupo(i) ? 'ind-grupo' : '')),

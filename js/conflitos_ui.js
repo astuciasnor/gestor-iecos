@@ -1,18 +1,18 @@
-import { store } from './store.js?v=202611122042';
-import { getCalendarEvents } from './calendar.js?v=202611122042';
-import { timeToMinutes } from './date_utils_ui.js?v=202611122042';
+import { store } from './store.js?v=202611122120';
+import { getCalendarEvents } from './calendar.js?v=202611122120';
+import { timeToMinutes } from './date_utils_ui.js?v=202611122120';
 import {
     isPendingAllocation,
     getAllocationTeachersForConflict,
     normalizeTeacherNameForMatch
-} from './allocation_helpers.js?v=202611122042';
-import { normalizeConflictSlotLabel } from './turno_helpers.js?v=202611122042';
-import { slotLabelsOverlap } from './academic_rules.mjs?v=202611122042';
-import { getTurmaLabel } from './curso_turma_helpers.js?v=202611122042';
-import { renderTeacherCalendar, withPlanContext } from './calendarios_ui.js?v=202611122042';
-import { showToastWarning } from './ui_feedback.js?v=202611122042';
-import { saoSubturmasDiferentes } from './subturmas.mjs?v=202611122042';
-import { umNomePorPessoa } from './docente_nomes.mjs?v=202611122042';
+} from './allocation_helpers.js?v=202611122120';
+import { normalizeConflictSlotLabel } from './turno_helpers.js?v=202611122120';
+import { slotLabelsOverlap } from './academic_rules.mjs?v=202611122120';
+import { getTurmaLabel } from './curso_turma_helpers.js?v=202611122120';
+import { renderTeacherCalendar, withPlanContext } from './calendarios_ui.js?v=202611122120';
+import { showToastWarning } from './ui_feedback.js?v=202611122120';
+import { saoSubturmasDiferentes } from './subturmas.mjs?v=202611122120';
+import { umNomePorPessoa } from './docente_nomes.mjs?v=202611122120';
 
 // Ref DOM de nivel de modulo (modulo deferred, DOM pronto).
 const selViewDocente = document.getElementById('sel-view-docente');
@@ -380,9 +380,10 @@ function avisarChoquesNovos(conflictMap) {
 
     const primeiro = novos[0];
     const dataBR = primeiro.dataInicio ? primeiro.dataInicio.split('-').reverse().join('/') : '';
+    // O aviso usa innerHTML: nomes escapados.
     const mensagem = novos.length === 1
-        ? `Novo choque de professor: ${primeiro.professor} tem ${primeiro.discA} e ${primeiro.discB} no mesmo horário (a partir de ${dataBR}). Veja o alerta na aba Calendário Docente.`
-        : `${novos.length} novos choques de professor (${[...new Set(novos.map((d) => d.professor))].join(', ')}). Veja o alerta na aba Calendário Docente.`;
+        ? `Novo choque de professor: ${escaparHtml(primeiro.professor)} tem ${escaparHtml(primeiro.discA)} e ${escaparHtml(primeiro.discB)} no mesmo horário (a partir de ${dataBR}). Veja o alerta na aba Calendário Docente.`
+        : `${novos.length} novos choques de professor (${escaparHtml([...new Set(novos.map((d) => d.professor))].join(', '))}). Veja o alerta na aba Calendário Docente.`;
     showToastWarning(mensagem, 'warning', 12000);
 }
 
@@ -434,19 +435,20 @@ export function updateGlobalConflictsUI() {
                     celulaResolver = `<td style="${tdStyle}"><button type="button" class="btn-como-resolver" data-idx="${idx}" aria-expanded="${aberto}" style="background:#fff; color:#c0392b; border:none; border-radius:12px; padding:3px 10px; font-weight:700; font-size:0.85em; cursor:pointer;">${aberto ? 'Fechar' : 'Como resolver?'}</button></td>`;
                     if (aberto) linhaSugestoes = htmlSugestoes(d.allocIds);
                 }
+                // Nomes digitados (professor, componente): sempre escapados.
                 return `<tr>
-                    <td style="${tdStyle}">${d.dia}</td>
-                    <td style="${tdStyle}">${d.horario}</td>
-                    <td style="${tdStyle}">${dataBR}</td>
-                    <td style="${tdCompStyle}">${d.discA}</td>
-                    <td style="${tdCompStyle}">${d.discB}${selo}</td>
+                    <td style="${tdStyle}">${escaparHtml(d.dia)}</td>
+                    <td style="${tdStyle}">${escaparHtml(d.horario)}</td>
+                    <td style="${tdStyle}">${escaparHtml(dataBR)}</td>
+                    <td style="${tdCompStyle}">${escaparHtml(d.discA)}</td>
+                    <td style="${tdCompStyle}">${escaparHtml(d.discB)}${selo}</td>
                     ${celulaResolver}
                 </tr>${linhaSugestoes}`;
             }).join('');
 
             blocksHtml += `
                 <div style="margin-top: 10px;">
-                    <b style="font-size:1em;">&#128274; ${teacher}</b>
+                    <b style="font-size:1em;">&#128274; ${escaparHtml(teacher)}</b>
                     <table style="border-collapse: collapse; margin-top: 6px; width: 100%;">
                         <thead><tr>
                             <th style="${thStyle}">Dia</th>

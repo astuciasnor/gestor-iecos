@@ -1,11 +1,11 @@
-import { store, normalizeLoadedAllocation } from './store.js?v=202611122042';
-import { getTurnoLetter } from './turns.js?v=202611122042';
-import { getCalendarEvents } from './calendar.js?v=202611122042';
-import { resolveActiveAcademicPeriod } from './academic_rules.mjs?v=202611122042';
-import { buildMonthMarkers, summarizeTeacherPeriod } from './resumo_docente.mjs?v=202611122042';
-import { resolveBackendMode, UFPA_API_URL } from './backend_config.js?v=202611122042';
-import { filtrarDocentes } from './docente_nomes.mjs?v=202611122042';
-import { nomeComSubturma, sufixoSubturma } from './subturmas.mjs?v=202611122042';
+import { store, normalizeLoadedAllocation } from './store.js?v=202611122120';
+import { getTurnoLetter } from './turns.js?v=202611122120';
+import { getCalendarEvents } from './calendar.js?v=202611122120';
+import { resolveActiveAcademicPeriod } from './academic_rules.mjs?v=202611122120';
+import { buildMonthMarkers, summarizeTeacherPeriod } from './resumo_docente.mjs?v=202611122120';
+import { resolveBackendMode, UFPA_API_URL } from './backend_config.js?v=202611122120';
+import { filtrarDocentes } from './docente_nomes.mjs?v=202611122120';
+import { nomeComSubturma, sufixoSubturma } from './subturmas.mjs?v=202611122120';
 
 const collator = new Intl.Collator('pt-BR', { sensitivity: 'base' });
 const PUBLIC_ASSET_VERSION = '20261028a';
