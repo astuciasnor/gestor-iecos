@@ -53,11 +53,45 @@ no navegador).
   e obsoleto da barra lateral removidos.
 
 Pendente (pequeno, sem pressa):
-- [ ] `css/alocar-componentes.css`: 11 seletores repetidos (regras acrescentadas
+- [~] `css/alocar-componentes.css`: declaracoes mortas tiradas em 13/11 (ver abaixo); restam 23 seletores repetidos (regras acrescentadas
       por partes no redesenho). Juntar so com comparacao dos estilos calculados
       antes/depois (a ordem das regras importa).
 - [ ] `applySidebarLayoutFixes`: trocar os ajustes por texto por classes no
       `index.html` + CSS.
+
+## Noite de 13 para 14/11/2026 (branch `refatoracao`)
+
+Revisao dos commits desde 06/11 + refatoracao leve, com a regra "nada muda na
+tela". Cada passo num commit, conferido com `npm test`, `npm run smoke`, os testes
+de navegador de `tools/` e as fotos abaixo.
+
+- Ferramentas novas de conferencia (rodar antes e depois de mexer):
+  `node tools/foto_telas.mjs antes.json` / `... depois.json --comparar antes.json`
+  (texto da Lista de Ofertas, calendario mensal e grade de todas as turmas em
+  PL2 e PL4 de 2027, 12 docentes e Indicadores) e `tools/foto_estilos.mjs`
+  (estilos calculados da aba Alocar em 860/1200/1400/1700 px, com e sem
+  componente em edicao, animacoes desligadas).
+- Revisao: sem falha grave. Corrigido: disciplina e docente entravam sem escape
+  no HTML da grade e da Lista de Ofertas (cd9313c).
+- Defeito "salvar guarda metade da CH" corrigido (d07f132) com teste
+  `tools/teste_metade_ch.mjs`.
+- CSS: 64 declaracoes mortas e 13 regras vazias fora do `alocar-componentes.css`
+  (aeb2c07). Restam 23 seletores repetidos sem sobreposicao; junta-los exige
+  mover regras (muda a ordem da cascata): so com a foto de estilos.
+- `ui.js` 8.892 -> 8.038 linhas: `js/lista_ofertas_ui.js` (2259fd8) e
+  `js/cadastro_docente_ui.js` (2fd0779). Padrao: o modulo exporta
+  `ligarX({ ...funcoes do ui.js })`, chamado no ui.js onde o bloco estava
+  (funcoes declaradas com `function` ja existem nesse momento).
+- Cuidado ao extrair com script: `...nome` (espalhar) tambem precisa do prefixo
+  `ligacoes.`; conferir com uma busca por nomes do topo do ui.js sem prefixo.
+
+Observacao (nao mexido): salvar ou Trocar recalcula as datas de TODAS as turmas
+do PL aberto (`syncAllIntensiveDates`). Turmas de outro curso podem mudar (ex.:
+CN/CB2027 com a Recepcao dos Calouros); para o administrador essas mudancas vao
+para o servidor sem aviso; para coordenador sao barradas e voltam.
+
+Proximos candidatos: selecao da grade (arrastar/Shift+clique, ver memoria),
+Trocar + "Como resolver?", Unidade/Curso da barra lateral.
 
 ## Fase 1 - Migracao para o servidor da UFPA (quando a VPN sair)
 
