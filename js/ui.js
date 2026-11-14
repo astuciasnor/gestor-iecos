@@ -1,35 +1,35 @@
-import { store } from './store.js?v=202611141235';
-import { escapeTrocaHtml, contarHorasExecutadas, sugerirInicioSemChoque, fraseComeceEm, cursoDaTurma, sugerirComoResolverChoque, abrirTrocaDeOrdem, ligarTroca } from './troca_ui.js?v=202611141235';
-import { cadastrosDocentes, findNewDocenteNames, getCadastroDocente, refreshAvisoDocenteNovo, coletarCadastrosDocentes, setupAvisoDocenteNovo, ligarCadastroDocente } from './cadastro_docente_ui.js?v=202611141235';
-import { renderOfertasList, ligarListaOfertas } from './lista_ofertas_ui.js?v=202611141235';
-import { stableStringify } from './sync_diff.mjs?v=202611141235';
-import { getTurnoLetter, mapSlotToTurno, turnoDaTurmaInclui } from './turns.js?v=202611141235';
-import { normalizePeriodo as normalizePeriodoLetivoCode } from './plan_storage.js?v=202611141235';
-import { getCalendarEvents } from './calendar.js?v=202611141235';
-import { isDateOverlap } from './utils.js?v=202611141235';
-import { weeklyState } from './weekly_state.js?v=202611141235';
-import { findPendentesCobertas, isPendenteJaAlocada } from './pendentes.mjs?v=202611141235';
+import { store } from './store.js?v=202611141621';
+import { escapeTrocaHtml, contarHorasExecutadas, sugerirInicioSemChoque, fraseComeceEm, cursoDaTurma, sugerirComoResolverChoque, abrirTrocaDeOrdem, ligarTroca } from './troca_ui.js?v=202611141621';
+import { cadastrosDocentes, findNewDocenteNames, getCadastroDocente, refreshAvisoDocenteNovo, coletarCadastrosDocentes, setupAvisoDocenteNovo, ligarCadastroDocente } from './cadastro_docente_ui.js?v=202611141621';
+import { renderOfertasList, ligarListaOfertas } from './lista_ofertas_ui.js?v=202611141621';
+import { stableStringify } from './sync_diff.mjs?v=202611141621';
+import { getTurnoLetter, mapSlotToTurno, turnoDaTurmaInclui } from './turns.js?v=202611141621';
+import { normalizePeriodo as normalizePeriodoLetivoCode } from './plan_storage.js?v=202611141621';
+import { getCalendarEvents } from './calendar.js?v=202611141621';
+import { isDateOverlap } from './utils.js?v=202611141621';
+import { weeklyState } from './weekly_state.js?v=202611141621';
+import { findPendentesCobertas, isPendenteJaAlocada } from './pendentes.mjs?v=202611141621';
 
-import { datasFeriadoDaTurma, feriadosDaTurma } from './feriados.mjs?v=202611141235';
-import { closeFaixaEnds, isPauseEnd, listFaixaPauses } from './pausa_faixas.mjs?v=202611141235';
-import { numeroDaSubturma, isTurmaInteira, proximaSubturma, codigoT01Como, saoSubturmasDiferentes, sufixoSubturma } from './subturmas.mjs?v=202611141235';
-import { abrirMiniCalendario, fecharMiniCalendario, miniCalendarioAberto } from './mini_calendario.mjs?v=202611141235';
-import { buildCanonicalOfferProjection } from './execution_engine.js?v=202611141235';
+import { datasFeriadoDaTurma, feriadosDaTurma } from './feriados.mjs?v=202611141621';
+import { closeFaixaEnds, isPauseEnd, listFaixaPauses } from './pausa_faixas.mjs?v=202611141621';
+import { numeroDaSubturma, isTurmaInteira, proximaSubturma, codigoT01Como, saoSubturmasDiferentes, sufixoSubturma } from './subturmas.mjs?v=202611141621';
+import { abrirMiniCalendario, fecharMiniCalendario, miniCalendarioAberto } from './mini_calendario.mjs?v=202611141621';
+import { buildCanonicalOfferProjection } from './execution_engine.js?v=202611141621';
 import {
     buildSigaaMetadataPayload,
     validateSigaaMetadataPayload,
     getSigaaCode,
     buildScopedSigaaAllocationFromOfferFaixa,
     buildSigaaHorarioResumo
-} from './sigaa_metadata.js?v=202611141235';
-import { parseBackupDataFile, extractImportPlanMeta } from './serialization.js?v=202611141235';
+} from './sigaa_metadata.js?v=202611141621';
+import { parseBackupDataFile, extractImportPlanMeta } from './serialization.js?v=202611141621';
 import {
     showToastWarning,
     showPersistentStatusMessage,
     copyTextToClipboard,
     flashButtonCopyState,
     setupCopyActionButtons
-} from './ui_feedback.js?v=202611141235';
+} from './ui_feedback.js?v=202611141621';
 import {
     normalizeHexColor,
     adjustHexColor,
@@ -38,7 +38,7 @@ import {
     tonsDaCor,
     aplicarTonsBloco,
     PALETA_CORES
-} from './color_utils.js?v=202611141235';
+} from './color_utils.js?v=202611141621';
 import {
     isFaixaAllocation,
     isPriorityRegularAllocation,
@@ -47,8 +47,8 @@ import {
     normalizeTeacherNameForMatch,
     getDocenteShortLabel,
     getAllocationTeachersForConflict
-} from './allocation_helpers.js?v=202611141235';
-import { setupSeletorCor } from './seletor_cor.js?v=202611141235';
+} from './allocation_helpers.js?v=202611141621';
+import { setupSeletorCor } from './seletor_cor.js?v=202611141621';
 
 import {
     UNIDADES,
@@ -56,11 +56,11 @@ import {
     acharNomeConhecido,
     filtrarDocentes,
     umNomePorPessoa
-} from './docente_nomes.mjs?v=202611141235';
+} from './docente_nomes.mjs?v=202611141621';
 import {
     fetchAllocationsForPlans
-} from './sync_remoto.js?v=202611141235';
-import { resolveBackendMode } from './backend_config.js?v=202611141235';
+} from './sync_remoto.js?v=202611141621';
+import { resolveBackendMode } from './backend_config.js?v=202611141621';
 import {
     normalizeConflictSlotLabel,
     getAvailableTurnoOfertaOptions,
@@ -70,7 +70,7 @@ import {
     buildHorariosForUI,
     getShiftChangeMeta,
     getNativeTurnoValueForAllocation
-} from './turno_helpers.js?v=202611141235';
+} from './turno_helpers.js?v=202611141621';
 import {
     getDisciplinaCHGlobal,
     derivarBloco,
@@ -80,7 +80,7 @@ import {
     getDisciplinaInfo,
     getCursoSiglaDaTurma,
     getPrintAcademicMetaLine
-} from './curso_turma_helpers.js?v=202611141235';
+} from './curso_turma_helpers.js?v=202611141621';
 import {
     renderMonthlyCalendar,
     renderTeacherCalendar,
@@ -88,14 +88,14 @@ import {
     clearTeacherRangeCache,
     setTeacherPeriod,
     getTeacherPeriod
-} from './calendarios_ui.js?v=202611141235';
-import { setupIndicadores, renderIndicadores, setIndicadoresLigacoes } from './indicadores_ui.js?v=202611141235';
+} from './calendarios_ui.js?v=202611141621';
+import { setupIndicadores, renderIndicadores, setIndicadoresLigacoes } from './indicadores_ui.js?v=202611141621';
 import {
     refreshTeacherConflictsUI,
     setCrossPlanLoader,
     setResolverDeChoque,
     acharChoqueComOutroPL
-} from './conflitos_ui.js?v=202611141235';
+} from './conflitos_ui.js?v=202611141621';
 import {
     shouldIgnoreTurmaEventForCandidate,
     normalizeDrawnSlotsByDay,
@@ -109,7 +109,7 @@ import {
     resolveEditableFaixasFromStoredExecution,
     alignFaixasToExecutionEnd,
     buildFinalAdjustmentFaixaSuggestion
-} from './faixa_utils.js?v=202611141235';
+} from './faixa_utils.js?v=202611141621';
 import {
     timeToMinutes,
     shiftISODate,
@@ -123,14 +123,14 @@ import {
     isDateInsideRange,
     formatDateBRShortYear,
     formatDateBR
-} from './date_utils_ui.js?v=202611141235';
+} from './date_utils_ui.js?v=202611141621';
 import {
     initializeWeeklyScheduleForTurma,
     reconcileTurmaSelectionAfterPLChange,
     resetWeeklyViewOnTurmaChange,
     resolveActiveAcademicPeriod,
     slotLabelsOverlap
-} from './academic_rules.mjs?v=202611141235';
+} from './academic_rules.mjs?v=202611141621';
 
 const gridContainer = document.getElementById('weekly-grid');
 const selCurso = document.getElementById('sel-curso');
@@ -6140,7 +6140,8 @@ function renderWeeklyGrid() {
         if (key && dayEvents.length > 0) {
             dayEvents.forEach((e) => {
                 if (!e || e.type === 'holiday') return;
-                if (hasAnyDraftPattern && drawingDisciplina && normalizeDisciplinaInputValue(e.disciplina || '') === drawingDisciplina) return;
+                // Ofertas ja salvas com o mesmo nome continuam na grade (ex.: a T01
+                // enquanto se desenha a T02); so a oferta em Editar sai (hiddenEditIds).
 
                 let eventHorario = e.horario;
                 const eTurno = e.turno ||
@@ -6183,7 +6184,6 @@ function renderWeeklyGrid() {
             // (mesmo sem padrao desenhado, ex.: apos "Limpar Faixas"), senao ela
             // reaparece como ocupada e bloqueia o redesenho dos proprios slots.
             if (hiddenEditIds.has(String(a?.id))) return;
-            if (hasAnyDraftPattern && drawingDisciplina && normalizeDisciplinaInputValue(a.disciplina || '') === drawingDisciplina) return;
             if (!isAllocationActiveInWeeklyCell(a, dayNumber, dateStr, slotLabel)) return;
 
             if (isFaixaAllocation(a) && a.dataFim === dateStr && Array.isArray(a.horariosUltimoDia) && a.horariosUltimoDia.length > 0) {
@@ -6638,7 +6638,7 @@ function renderSlotContent(cell, allocs, dayOfWeek = 0) {
 
         card.innerHTML = `
             <div class="card-title" title="${escapeTrocaHtml(alloc.disciplina)}${docenteNome ? ` - ${escapeTrocaHtml(docenteNome)}` : ''}">
-                <span class="card-comp">${escapeTrocaHtml(info.abrev)}${sufixoSubturma(alloc.subGrupo)}${getShiftChangeMeta(alloc, alloc.horario, dayOfWeek).badgeHTML || badgeHTML}</span>
+                <span class="card-comp">${escapeTrocaHtml(info.abrev)}${sufixoSubturma(subturmaNoCartao(alloc))}${getShiftChangeMeta(alloc, alloc.horario, dayOfWeek).badgeHTML || badgeHTML}</span>
                 ${docenteNome ? `<span class="card-docente">${escapeTrocaHtml(docenteNome)}</span>` : ''}
             </div>
             <button type="button" class="remove-btn" title="Remover" aria-label="Remover ${escapeAttrGrade(alloc.disciplina)} de ${escapeAttrGrade(rotuloCelulaGrade(cell, dayOfWeek))}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg></button>
@@ -7592,6 +7592,14 @@ function concluirSalvar({ undoSnapshot, disciplina, subGrupo, posicao, aviso, re
     if (execution.wasTruncatedByCH && execution.truncationType === 'partial-day') {
         showPersistentStatusMessage('Alocacao fracionada concluida com sucesso.', 'success');
     }
+}
+// Enquanto se desenha a T02 de uma componente, a oferta que ja existe (ainda
+// sem subturma) aparece na grade como T01, o nome que ela recebe ao salvar.
+function subturmaNoCartao(alloc) {
+    const subEditor = (document.getElementById('inp-sub-turma')?.value ?? '').trim();
+    const mesmaComponente = normalizeDisciplinaInputValue(alloc?.disciplina || '') === normalizeDisciplinaInputValue(inputConfig.disciplina?.value || '');
+    if (mesmaComponente && isTurmaInteira(alloc?.subGrupo) && (numeroDaSubturma(subEditor) || 0) >= 2) return codigoT01Como(subEditor);
+    return alloc?.subGrupo;
 }
 function updateListPrintHeader() {
     const header = document.getElementById('print-header-list');
