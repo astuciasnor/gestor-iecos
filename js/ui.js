@@ -1,35 +1,35 @@
-import { store } from './store.js?v=202611141134';
-import { escapeTrocaHtml, contarHorasExecutadas, sugerirInicioSemChoque, fraseComeceEm, cursoDaTurma, sugerirComoResolverChoque, abrirTrocaDeOrdem, ligarTroca } from './troca_ui.js?v=202611141134';
-import { cadastrosDocentes, findNewDocenteNames, getCadastroDocente, refreshAvisoDocenteNovo, coletarCadastrosDocentes, setupAvisoDocenteNovo, ligarCadastroDocente } from './cadastro_docente_ui.js?v=202611141134';
-import { renderOfertasList, ligarListaOfertas } from './lista_ofertas_ui.js?v=202611141134';
-import { stableStringify } from './sync_diff.mjs?v=202611141134';
-import { getTurnoLetter, mapSlotToTurno, turnoDaTurmaInclui } from './turns.js?v=202611141134';
-import { normalizePeriodo as normalizePeriodoLetivoCode } from './plan_storage.js?v=202611141134';
-import { getCalendarEvents } from './calendar.js?v=202611141134';
-import { isDateOverlap } from './utils.js?v=202611141134';
-import { weeklyState } from './weekly_state.js?v=202611141134';
-import { findPendentesCobertas, isPendenteJaAlocada } from './pendentes.mjs?v=202611141134';
+import { store } from './store.js?v=202611141235';
+import { escapeTrocaHtml, contarHorasExecutadas, sugerirInicioSemChoque, fraseComeceEm, cursoDaTurma, sugerirComoResolverChoque, abrirTrocaDeOrdem, ligarTroca } from './troca_ui.js?v=202611141235';
+import { cadastrosDocentes, findNewDocenteNames, getCadastroDocente, refreshAvisoDocenteNovo, coletarCadastrosDocentes, setupAvisoDocenteNovo, ligarCadastroDocente } from './cadastro_docente_ui.js?v=202611141235';
+import { renderOfertasList, ligarListaOfertas } from './lista_ofertas_ui.js?v=202611141235';
+import { stableStringify } from './sync_diff.mjs?v=202611141235';
+import { getTurnoLetter, mapSlotToTurno, turnoDaTurmaInclui } from './turns.js?v=202611141235';
+import { normalizePeriodo as normalizePeriodoLetivoCode } from './plan_storage.js?v=202611141235';
+import { getCalendarEvents } from './calendar.js?v=202611141235';
+import { isDateOverlap } from './utils.js?v=202611141235';
+import { weeklyState } from './weekly_state.js?v=202611141235';
+import { findPendentesCobertas, isPendenteJaAlocada } from './pendentes.mjs?v=202611141235';
 
-import { datasFeriadoDaTurma, feriadosDaTurma } from './feriados.mjs?v=202611141134';
-import { closeFaixaEnds, isPauseEnd, listFaixaPauses } from './pausa_faixas.mjs?v=202611141134';
-import { numeroDaSubturma, isTurmaInteira, proximaSubturma, codigoT01Como, saoSubturmasDiferentes, sufixoSubturma } from './subturmas.mjs?v=202611141134';
-import { abrirMiniCalendario, fecharMiniCalendario, miniCalendarioAberto } from './mini_calendario.mjs?v=202611141134';
-import { buildCanonicalOfferProjection } from './execution_engine.js?v=202611141134';
+import { datasFeriadoDaTurma, feriadosDaTurma } from './feriados.mjs?v=202611141235';
+import { closeFaixaEnds, isPauseEnd, listFaixaPauses } from './pausa_faixas.mjs?v=202611141235';
+import { numeroDaSubturma, isTurmaInteira, proximaSubturma, codigoT01Como, saoSubturmasDiferentes, sufixoSubturma } from './subturmas.mjs?v=202611141235';
+import { abrirMiniCalendario, fecharMiniCalendario, miniCalendarioAberto } from './mini_calendario.mjs?v=202611141235';
+import { buildCanonicalOfferProjection } from './execution_engine.js?v=202611141235';
 import {
     buildSigaaMetadataPayload,
     validateSigaaMetadataPayload,
     getSigaaCode,
     buildScopedSigaaAllocationFromOfferFaixa,
     buildSigaaHorarioResumo
-} from './sigaa_metadata.js?v=202611141134';
-import { parseBackupDataFile, extractImportPlanMeta } from './serialization.js?v=202611141134';
+} from './sigaa_metadata.js?v=202611141235';
+import { parseBackupDataFile, extractImportPlanMeta } from './serialization.js?v=202611141235';
 import {
     showToastWarning,
     showPersistentStatusMessage,
     copyTextToClipboard,
     flashButtonCopyState,
     setupCopyActionButtons
-} from './ui_feedback.js?v=202611141134';
+} from './ui_feedback.js?v=202611141235';
 import {
     normalizeHexColor,
     adjustHexColor,
@@ -38,7 +38,7 @@ import {
     tonsDaCor,
     aplicarTonsBloco,
     PALETA_CORES
-} from './color_utils.js?v=202611141134';
+} from './color_utils.js?v=202611141235';
 import {
     isFaixaAllocation,
     isPriorityRegularAllocation,
@@ -47,8 +47,8 @@ import {
     normalizeTeacherNameForMatch,
     getDocenteShortLabel,
     getAllocationTeachersForConflict
-} from './allocation_helpers.js?v=202611141134';
-import { setupSeletorCor } from './seletor_cor.js?v=202611141134';
+} from './allocation_helpers.js?v=202611141235';
+import { setupSeletorCor } from './seletor_cor.js?v=202611141235';
 
 import {
     UNIDADES,
@@ -56,11 +56,11 @@ import {
     acharNomeConhecido,
     filtrarDocentes,
     umNomePorPessoa
-} from './docente_nomes.mjs?v=202611141134';
+} from './docente_nomes.mjs?v=202611141235';
 import {
     fetchAllocationsForPlans
-} from './sync_remoto.js?v=202611141134';
-import { resolveBackendMode } from './backend_config.js?v=202611141134';
+} from './sync_remoto.js?v=202611141235';
+import { resolveBackendMode } from './backend_config.js?v=202611141235';
 import {
     normalizeConflictSlotLabel,
     getAvailableTurnoOfertaOptions,
@@ -70,7 +70,7 @@ import {
     buildHorariosForUI,
     getShiftChangeMeta,
     getNativeTurnoValueForAllocation
-} from './turno_helpers.js?v=202611141134';
+} from './turno_helpers.js?v=202611141235';
 import {
     getDisciplinaCHGlobal,
     derivarBloco,
@@ -80,7 +80,7 @@ import {
     getDisciplinaInfo,
     getCursoSiglaDaTurma,
     getPrintAcademicMetaLine
-} from './curso_turma_helpers.js?v=202611141134';
+} from './curso_turma_helpers.js?v=202611141235';
 import {
     renderMonthlyCalendar,
     renderTeacherCalendar,
@@ -88,14 +88,14 @@ import {
     clearTeacherRangeCache,
     setTeacherPeriod,
     getTeacherPeriod
-} from './calendarios_ui.js?v=202611141134';
-import { setupIndicadores, renderIndicadores, setIndicadoresLigacoes } from './indicadores_ui.js?v=202611141134';
+} from './calendarios_ui.js?v=202611141235';
+import { setupIndicadores, renderIndicadores, setIndicadoresLigacoes } from './indicadores_ui.js?v=202611141235';
 import {
     refreshTeacherConflictsUI,
     setCrossPlanLoader,
     setResolverDeChoque,
     acharChoqueComOutroPL
-} from './conflitos_ui.js?v=202611141134';
+} from './conflitos_ui.js?v=202611141235';
 import {
     shouldIgnoreTurmaEventForCandidate,
     normalizeDrawnSlotsByDay,
@@ -109,7 +109,7 @@ import {
     resolveEditableFaixasFromStoredExecution,
     alignFaixasToExecutionEnd,
     buildFinalAdjustmentFaixaSuggestion
-} from './faixa_utils.js?v=202611141134';
+} from './faixa_utils.js?v=202611141235';
 import {
     timeToMinutes,
     shiftISODate,
@@ -123,14 +123,14 @@ import {
     isDateInsideRange,
     formatDateBRShortYear,
     formatDateBR
-} from './date_utils_ui.js?v=202611141134';
+} from './date_utils_ui.js?v=202611141235';
 import {
     initializeWeeklyScheduleForTurma,
     reconcileTurmaSelectionAfterPLChange,
     resetWeeklyViewOnTurmaChange,
     resolveActiveAcademicPeriod,
     slotLabelsOverlap
-} from './academic_rules.mjs?v=202611141134';
+} from './academic_rules.mjs?v=202611141235';
 
 const gridContainer = document.getElementById('weekly-grid');
 const selCurso = document.getElementById('sel-curso');
@@ -7021,21 +7021,98 @@ function handleUndoLastAllocation() {
         : 'Ultima insercao desfeita. Alocacoes voltaram ao estado anterior.', 'success', 3600);
 }
 
+// ===== Salvar Componente (botao "Salvar Componente" da aba Alocar) =====
+// handleAddManual so encadeia os passos; cada passo e uma funcao abaixo, na
+// ordem em que roda. O passo que barra o salvamento mostra o aviso (cartao e/ou
+// toast) e devolve null (ou true, em barrouPorChoqueDeProfessor).
+//   1. dadosDoSalvar ............ turma, permissao, docente(s), inicio de faixa pendente
+//   2. lerComponenteDoEditor .... componente, inicio, subturma e CH
+//   3. calcularAulasDaComponente  aulas das faixas (com o ajuste do ultimo dia)
+//   4. avisoDeDistribuicao ...... aviso que nao barra (semana parcial, CH diferente)
+//   5. posicaoSemChoqueNaTurma .. choque com outra componente da turma: empilha ou barra
+//   6. barrouPorChoqueDeProfessor
+//   7. idsQueOSalvarSubstitui ... ofertas que a nova substitui (Editar, Substituir, pendente)
+//   8. gravarComponente ......... tira as antigas, grava a nova, T01 da turma extra
+//   9. concluirSalvar ........... desfazer, recalculo das datas, editor e avisos finais
+// Dividido em 14/11/2026 sem mudar nada (conferido com tools/teste_salvar.mjs).
 function handleAddManual() {
     // Nova tentativa de salvar: limpa qualquer bloqueio anterior (sera re-setado
     // abaixo se ainda houver impedimento).
     clearWeeklyBlock();
+    const dados = dadosDoSalvar();
+    if (!dados) return;
+    const { docData, nomesDigitados } = dados;
+
+    const componente = lerComponenteDoEditor(docData);
+    if (!componente) return;
+    const { disciplina, inicio, subGrupo, subGrupoDigitado, ch: effectiveCH } = componente;
+
+    const calculo = calcularAulasDaComponente({ disciplina, inicio, subGrupo, effectiveCH });
+    if (!calculo) return;
+    const { execution, faixasConfig, diasMarcados, previewIntensive, savingIsIntensive } = calculo;
+    const aviso = avisoDeDistribuicao(execution, calculo.finalAdjustmentNotice, effectiveCH);
+
+    // Posicao calculada a partir das faixas. Pode ser deslocada adiante no passo 5
+    // (empilhada logo apos as componentes ja alocadas da turma).
+    const inicioCalculado = execution.dataInicio || inicio;
+    const dataFimCalculada = execution.dataFim || inicioCalculado;
+    const faixasConfigAjustadas = alignFaixasToExecutionEnd(faixasConfig, dataFimCalculada);
+    const diasDaExecucao = execution.unionDias || diasMarcados;
+    const usaSabado = diasDaExecucao.includes(6);
+    const sabadoManha = usaSabado && sabadoManhaEscolha;
+    const candidato = {
+        ...previewIntensive,
+        dataInicio: inicioCalculado,
+        dataFim: dataFimCalculada,
+        executionByDate: execution.byDate || {},
+        horariosOcupados: execution.unionSlots || [],
+        diasMarcados: diasDaExecucao,
+        usaSabado,
+        sabadoManha,
+        faixas: faixasConfigAjustadas
+    };
+    const isImportedSave = !!weeklyState.editingImportadoDraft;
+    const posicaoCalculada = {
+        dataInicio: inicioCalculado,
+        dataFim: dataFimCalculada,
+        executionByDate: execution.byDate || {},
+        horariosOcupados: execution.unionSlots || [],
+        horariosUltimoDia: execution.horariosUltimoDia || [],
+        diasMarcados: diasDaExecucao,
+        usaSabado,
+        faixas: faixasConfigAjustadas
+    };
+
+    const posicao = posicaoSemChoqueNaTurma({ candidato, execution, posicao: posicaoCalculada, disciplina, docData, savingIsIntensive, effectiveCH });
+    if (!posicao) return;
+    if (barrouPorChoqueDeProfessor({ candidato, posicao, docData, disciplina })) return;
+
+    const { idsToRemove, replacedOriginal } = idsQueOSalvarSubstitui({ disciplina, subGrupo, subGrupoDigitado, posicao });
+    const actionText = replacedOriginal
+        ? `Substituir "${replacedOriginal.disciplina}" por esta componente? "${replacedOriginal.disciplina}" volta para a lista de pendentes.`
+        : (idsToRemove.length > 0 ? 'Atualizar alocacao existente?' : 'Confirmar alocacao?');
+    if (!confirm(`${disciplina} (${formatDateBR(posicao.dataInicio)} a ${formatDateBR(posicao.dataFim)})\n\n${actionText}`)) return;
+
+    const { undoSnapshot, renomeadasT01 } = gravarComponente({
+        disciplina, subGrupo, effectiveCH, docData, nomesDigitados, posicao, sabadoManha, isImportedSave, idsToRemove, replacedOriginal
+    });
+    concluirSalvar({ undoSnapshot, disciplina, subGrupo, posicao, aviso, renomeadasT01, execution });
+}
+
+// 1. Turma escolhida, permissao, docente(s) preenchidos e cadastrados, nenhuma
+// faixa esperando o clique de inicio. Devolve { docData, nomesDigitados } ou null.
+function dadosDoSalvar() {
     if (!store.selectedTurma) {
         setWeeklyBlock('Selecione uma turma', 'Escolha uma turma valida na barra lateral antes de salvar a componente.');
         showToastWarning('Selecione uma turma.', 'warning', 2200);
-        return;
+        return null;
     }
-    if (bloquearSeSomenteLeitura()) return;
+    if (bloquearSeSomenteLeitura()) return null;
     const docData = getDocenteData();
     if (!docData.isValid) {
         setWeeklyBlock('Preencha o(s) docente(s)', 'Informe ao menos um professor responsavel pela componente antes de salvar.');
         showToastWarning('Preencha o(s) Docente(s).', 'warning', 2200);
-        return;
+        return null;
     }
     const nomesDigitados = docData.mode === 'multi' ? docData.docentesList.map((d) => d.nome) : [docData.docente];
     const semCadastro = findNewDocenteNames(nomesDigitados).filter((n) => !getCadastroDocente(n));
@@ -7046,19 +7123,21 @@ function handleAddManual() {
             `${semCadastro.join(', ')}: use o botão "Cadastrar Docente Novo…" (ou "Cadastrar Vaga…", se a pessoa ainda não foi definida) abaixo do campo Docente(s), ou escolha um nome da lista.`
         );
         showToastWarning(`Docente novo sem cadastro: ${semCadastro.join(', ')}. Cadastre (botão abaixo do campo) ou escolha um nome da lista.`, 'warning', 4800);
-        return;
+        return null;
     }
     if (pendingFaixaStartPick) {
         setWeeklyBlock(`Finalize o inicio da Faixa ${pendingFaixaStartPick}`, 'Clique em um dia da grade para definir a data de inicio dessa faixa e depois salve.');
         showToastWarning(`Finalize a definicao de inicio da Faixa ${pendingFaixaStartPick} antes de salvar a componente.`, 'warning', 2600);
-        return;
+        return null;
     }
     if (drawingFaixaIndex) persistActiveDrawingSelection();
+    return { docData, nomesDigitados };
+}
 
+// 2. Componente, inicio da Faixa 1, subturma e CH. Devolve null se falta algo.
+function lerComponenteDoEditor(docData) {
     const disciplina = (inputConfig.disciplina?.value ?? '').replace(/\s*\(\s*\d+\s*h\s*\)\s*$/i, '');
-    const tipo = 'faixas';
-    const inicioFaixa1 = document.getElementById('inp-data-inicio-f1')?.value ?? '';
-    const inicio = inicioFaixa1;
+    const inicio = document.getElementById('inp-data-inicio-f1')?.value ?? '';
     // Subturma so existe quando ha outra oferta da mesma componente na turma.
     // Sozinha (ex.: "BL1_T02" que o aviso antigo punha ao alocar a pendente do
     // bloco), a oferta volta a ser da turma toda ao salvar.
@@ -7067,470 +7146,451 @@ function handleAddManual() {
 
     if (!disciplina) {
         showToastWarning('Preencha o componente.', 'warning', 2200);
-        return;
+        return null;
+    }
+    if (!inicio) {
+        showToastWarning('Defina a data de início.', 'warning', 2200);
+        return null;
+    }
+    const info = getDisciplinaInfo(disciplina, store.selectedTurma);
+    const ch = info.ch || 0;
+    if (ch === 0) {
+        showToastWarning(`O componente "${disciplina}" tem CH 0.`, 'error', 3000);
+        return null;
+    }
+    if (docData.mode === 'multi' && docData.totalCH > ch) {
+        showToastWarning('A soma das cargas horárias excede a CH da disciplina.', 'error', 3200);
+        return null;
+    }
+    return { disciplina, inicio, subGrupo, subGrupoDigitado, ch };
+}
+
+// 3. Aulas das faixas desenhadas. Se sobra um ultimo dia parcial, aplica uma vez
+// a faixa de ajuste sugerida e recalcula. Devolve null se nao gera aula.
+function calcularAulasDaComponente({ disciplina, inicio, subGrupo, effectiveCH }) {
+    let faixasConfig = [];
+    try {
+        faixasConfig = collectIntensiveFaixasFromUI(inicio);
+    } catch (err) {
+        showToastWarning(err.message || 'Erro ao ler as faixas da componente.', 'error', 3200);
+        return null;
+    }
+    if (faixasConfig.length === 0) {
+        showToastWarning('Configure ao menos uma faixa da componente.', 'warning', 2600);
+        return null;
     }
 
-    if (String(tipo || '').trim().toLowerCase() === 'faixas') {
-        if (!inicio) {
-            showToastWarning('Defina a data de início.', 'warning', 2200);
-            return;
-        }
+    let diasMarcados = [];
+    let previewIntensive = null;
+    let execution = null;
+    let finalAdjustmentNotice = '';
 
-        const info = getDisciplinaInfo(disciplina, store.selectedTurma);
-        const ch = info.ch || 0;
-        if (ch === 0) {
-            showToastWarning(`O componente "${disciplina}" tem CH 0.`, 'error', 3000);
-            return;
-        }
-        if (docData.mode === 'multi' && docData.totalCH > ch) {
-            showToastWarning('A soma das cargas horárias excede a CH da disciplina.', 'error', 3200);
-            return;
-        }
+    // Estrategia B (automatica por tipo): a componente sendo salva so empurra as
+    // demais quando e INTENSIVA (dias consecutivos). Nesse caso ela ocupa o bloco
+    // "cheio" (sem desviar), expondo os conflitos reais. Componentes nao intensivas
+    // continuam desviando para os buracos livres (respectTurmaOccupancy).
+    const savingIsIntensive = isIntensiveComponentByFaixas(faixasConfig);
+    const respectTurmaOccupancy = !savingIsIntensive;
 
-        const effectiveCH = ch;
+    for (let attempt = 0; attempt < 2; attempt++) {
+        diasMarcados = [...new Set(faixasConfig.flatMap((f) => f.dias || []))].sort((a, b) => a - b);
+        if (diasMarcados.length === 0) diasMarcados = [1, 2, 3, 4, 5];
 
-        let diasMarcados = [];
+        const sabadoManha = diasMarcados.includes(6) && sabadoManhaEscolha;
 
-        let faixasConfig = [];
-        try {
-            faixasConfig = collectIntensiveFaixasFromUI(inicio);
-        } catch (err) {
-            showToastWarning(err.message || 'Erro ao ler as faixas da componente.', 'error', 3200);
-            return;
-        }
-        if (faixasConfig.length === 0) {
-            showToastWarning('Configure ao menos uma faixa da componente.', 'warning', 2600);
-            return;
-        }
-
-        let previewIntensive = null;
-        let execution = null;
-        let finalAdjustmentNotice = '';
-
-        // Estrategia B (automatica por tipo): a componente sendo salva so empurra as
-        // demais quando e INTENSIVA (dias consecutivos). Nesse caso ela ocupa o bloco
-        // "cheio" (sem desviar), expondo os conflitos reais. Componentes nao intensivas
-        // continuam desviando para os buracos livres (respectTurmaOccupancy).
-        const savingIsIntensive = isIntensiveComponentByFaixas(faixasConfig);
-        const respectTurmaOccupancy = !savingIsIntensive;
-
-        for (let attempt = 0; attempt < 2; attempt++) {
-            diasMarcados = [...new Set(faixasConfig.flatMap((f) => f.dias || []))].sort((a, b) => a - b);
-            if (diasMarcados.length === 0) diasMarcados = [1, 2, 3, 4, 5];
-
-            const sabadoManha = diasMarcados.includes(6) && sabadoManhaEscolha;
-
-            previewIntensive = {
-                turmaId: store.selectedTurma,
-                disciplina,
-                subGrupo: subGrupo || null,
-                modo: 'faixas',
-                ch: effectiveCH,
-                dataInicio: faixasConfig[0].inicio,
-                dataFim: faixasConfig[0].inicio,
-                horariosOcupados: [],
-                diasMarcados,
-                usaSabado: diasMarcados.includes(6),
-                sabadoManha: sabadoManha,
-                faixas: faixasConfig,
-                ignoreAllocationIds: getEditingOriginalAllocationIds()
-            };
-
-            execution = computeIntensiveExecution(previewIntensive, { respectPriority: true, respectTurmaOccupancy: respectTurmaOccupancy });
-            if (execution.totalHours === 0) {
-                showToastWarning('Nenhuma aula foi gerada com as faixas configuradas.', 'error', 3000);
-                return;
-            }
-
-            const finalAdjustmentSuggestion = buildFinalAdjustmentFaixaSuggestion(faixasConfig, execution);
-            if (!finalAdjustmentSuggestion || attempt > 0) {
-                break;
-            }
-
-            applyFinalAdjustmentFaixaSuggestion(finalAdjustmentSuggestion, { showToast: false });
-            faixasConfig = Array.isArray(finalAdjustmentSuggestion.faixas)
-                ? finalAdjustmentSuggestion.faixas.map(normalizeFaixaEntry).filter(Boolean)
-                : faixasConfig;
-            finalAdjustmentNotice = buildFinalAdjustmentSuggestionMessage(finalAdjustmentSuggestion);
-        }
-
-        let nonBlockingDistributionNotice = '';
-        let nonBlockingDistributionNoticeType = 'warning';
-        if (finalAdjustmentNotice) {
-            nonBlockingDistributionNotice = finalAdjustmentNotice;
-            nonBlockingDistributionNoticeType = 'success';
-        }
-        if (execution.wasTruncatedByCH) {
-            const truncatedMsg = 'A componente foi inserida, mas a ultima semana ficou parcial. Se desejar, voce pode criar uma segunda faixa para ajustar melhor a distribuicao final.';
-            nonBlockingDistributionNotice = nonBlockingDistributionNotice
-                ? `${nonBlockingDistributionNotice} ${truncatedMsg}`
-                : truncatedMsg;
-            nonBlockingDistributionNoticeType = 'warning';
-        }
-
-        if (execution.totalHours !== effectiveCH) {
-            const diff = execution.totalHours - effectiveCH;
-            const diffMsg = diff < 0
-                ? `A carga alocada ficou em ${execution.totalHours}h para uma meta de ${effectiveCH}h. Voce pode manter assim agora e ajustar depois, se desejar.`
-                : `A carga alocada ficou em ${execution.totalHours}h para uma meta de ${effectiveCH}h. Voce pode visualizar assim primeiro e ajustar depois, se desejar.`;
-
-            nonBlockingDistributionNotice = nonBlockingDistributionNotice
-                ? `${nonBlockingDistributionNotice} ${diffMsg}`
-                : diffMsg;
-            if (nonBlockingDistributionNoticeType !== 'warning') nonBlockingDistributionNoticeType = 'warning';
-        }
-
-        const inicioCalculado = execution.dataInicio || inicio;
-        const dataFimCalculada = execution.dataFim || inicioCalculado;
-        const faixasConfigAjustadas = alignFaixasToExecutionEnd(faixasConfig, dataFimCalculada);
-        const horariosUltimoDia = execution.horariosUltimoDia || [];
-        const slotsIntensiva = execution.unionSlots || [];
-        diasMarcados = execution.unionDias || diasMarcados;
-        const usaSabado = diasMarcados.includes(6);
-        const sabadoManha = usaSabado && sabadoManhaEscolha;
-
-        const candidateIntensiveForConflict = {
-            ...previewIntensive,
-            dataInicio: inicioCalculado,
-            dataFim: dataFimCalculada,
-            executionByDate: execution.byDate || {},
-            horariosOcupados: slotsIntensiva,
-            diasMarcados,
-            usaSabado,
-            sabadoManha,
-            faixas: faixasConfigAjustadas
-        };
-
-        const intensiveConflict = findTurmaConflictForCandidateExecution(candidateIntensiveForConflict, execution);
-
-        const isImportedSave = !!weeklyState.editingImportadoDraft;
-        // Valores efetivos de posicionamento. Podem ser deslocados adiante quando
-        // ha conflito: a componente intensiva e EMPILHADA em sequencia (bloco
-        // continuo) logo apos as componentes ja alocadas, sem dividir nem empurrar
-        // nenhuma outra. Isso evita intercalar uma intensiva ENTRE as faixas de
-        // outra componente (comportamento antigo de "pausa e retoma", removido).
-        let effInicio = inicioCalculado;
-        let effFim = dataFimCalculada;
-        let effExecutionByDate = execution.byDate || {};
-        let effSlots = slotsIntensiva;
-        let effUltimoDia = horariosUltimoDia;
-        let effDias = diasMarcados;
-        let effUsaSabado = usaSabado;
-        let effFaixas = faixasConfigAjustadas;
-
-        // Datas escolhidas de proposito (pausa, ou inicio clicado num dia diferente
-        // da sugestao): a componente nunca e movida sozinha. No choque, so avisa;
-        // o coordenador ajusta as datas ou faz a pausa a mao (Ajuda > Alocacao, passo 7).
-        const pausasDaComponente = listFaixaPauses(faixasConfigAjustadas);
-        const inicioClicadoForaDaSugestao = inicioDefinidoPeloClique
-            && String(faixasConfigAjustadas[0]?.inicio || '') !== dataSugerida();
-        const datasEscolhidas = pausasDaComponente.length > 0 || inicioClicadoForaDaSugestao;
-        if (intensiveConflict && datasEscolhidas) {
-            const quandoChoque = intensiveConflict.date ? ` em ${formatDateBR(intensiveConflict.date)}` : '';
-            setWeeklyBlock(
-                'Choque com outra componente',
-                `"${intensiveConflict.disciplina}" ja ocupa esse horario${quandoChoque}. Como as datas de "${disciplina}" foram escolhidas por voce, o Cardume nao a move sozinho: ajuste as datas ou faca uma pausa (Ajuda > Alocacao, passo 7) e salve de novo.`,
-                'choque'
-            );
-            showToastWarning(
-                `Choque com "${intensiveConflict.disciplina}"${quandoChoque}. Ajuste as datas das faixas ou faca uma pausa (Ajuda, passo 7).`,
-                'warning',
-                6200
-            );
-            return;
-        }
-
-        if (intensiveConflict) {
-            if (savingIsIntensive) {
-                // EMPILHAR EM SEQUENCIA: reposiciona ESTA componente para logo apos
-                // as componentes ja alocadas da turma. Nenhuma outra e dividida nem
-                // empurrada, entao nunca ha intercalamento entre faixas.
-                const candidateForStacking = {
-                    ...candidateIntensiveForConflict,
-                    docente: docData.docente,
-                    docentes: docData.docentesList
-                };
-                const stacked = stackIntensiveAfterAllocations(
-                    candidateForStacking,
-                    store.selectedTurma,
-                    inicioCalculado,
-                    execution.totalHours
-                );
-                if (!stacked) {
-                    // Componente empilhada nao cabe inteira: nao salva (texto aprovado pelo usuario em 14/11/2026).
-                    const aPartirDe = intensiveConflict.date ? `A partir de ${formatDateBR(intensiveConflict.date).slice(0, 5)} ela` : 'Ela';
-                    const textoNaoCabe = `${disciplina} não foi salva. ${aPartirDe} bate com ${intensiveConflict.disciplina}, e depois dela não sobram horas para as ${effectiveCH}h até o fim do período. Escolha outro início ou outros horários.`;
-                    setWeeklyBlock('Não cabe inteira', textoNaoCabe, 'choque');
-                    showToastWarning(textoNaoCabe, 'warning', 7000);
-                    return;
-                }
-                effInicio = stacked.candidate.dataInicio;
-                effFim = stacked.candidate.dataFim;
-                effExecutionByDate = stacked.candidate.executionByDate || {};
-                effSlots = stacked.candidate.horariosOcupados || [];
-                effUltimoDia = stacked.candidate.horariosUltimoDia || [];
-                effDias = stacked.candidate.diasMarcados || diasMarcados;
-                effUsaSabado = (stacked.candidate.diasMarcados || []).includes(6);
-                effFaixas = Array.isArray(stacked.candidate.faixas) ? stacked.candidate.faixas : faixasConfigAjustadas;
-
-                showToastWarning(
-                    `Havia conflito na data escolhida. "${disciplina}" foi posicionada em sequencia, de ${formatDateBR(effInicio)} a ${formatDateBR(effFim)}, logo apos as componentes ja alocadas.`,
-                    'success',
-                    5600
-                );
-            } else {
-                // Componente NAO intensiva com conflito residual: bloqueia (ela ja
-                // deveria ter desviado para os buracos livres). Nunca empurra nem
-                // intercala outras componentes.
-                setWeeklyBlock(
-                    'Sobreposicao de horario',
-                    `"${intensiveConflict.disciplina}" ja ocupa esse horario no mesmo periodo. Ajuste a data de inicio desta componente e salve de novo.`,
-                    'choque'
-                );
-                showToastWarning(
-                    `Sobreposicao detectada: "${intensiveConflict.disciplina}" ja ocupa esse horario no mesmo periodo. Ajuste a data de inicio desta componente.`,
-                    'warning',
-                    5600
-                );
-                return;
-            }
-        }
-
-        const teachersToCheck = (docData.mode === 'single' ? [docData.docente] : docData.docentesList.map(d => d.nome)).filter(n => n && n.trim().toUpperCase() !== 'A DEFINIR');
-
-        if (teachersToCheck.length > 0) {
-            // Checa o conflito de professor na posicao EFETIVA (apos eventual
-            // empilhamento), nao na data originalmente escolhida.
-            // docente/docentes sao obrigatorios: e por eles que a checagem sabe
-            // quais horas da componente sao de cada professor.
-            const candidateForTeacherCheck = {
-                ...candidateIntensiveForConflict,
-                docente: docData.docente,
-                docentes: docData.docentesList,
-                dataInicio: effInicio,
-                dataFim: effFim,
-                executionByDate: effExecutionByDate,
-                horariosOcupados: effSlots,
-                diasMarcados: effDias,
-                usaSabado: effUsaSabado,
-                sabadoManha,
-                faixas: effFaixas
-            };
-            const confirmedTeacherConflict = findConfirmedTeacherConflictForCandidate(
-                candidateForTeacherCheck,
-                teachersToCheck
-            );
-
-            if (confirmedTeacherConflict) {
-                const turmaNomeConflito = getTurmaLabel(
-                    confirmedTeacherConflict.event.turmaId,
-                    confirmedTeacherConflict.event.subGrupo
-                );
-                const profNomes = confirmedTeacherConflict.teacherName;
-                // Mostra o horario das duas aulas: os cursos podem usar quadros diferentes.
-                const horarioOutraAula = normalizeConflictSlotLabel(confirmedTeacherConflict.event.horario || '');
-                const horarioChoque = horarioOutraAula && horarioOutraAula !== confirmedTeacherConflict.horario
-                    ? `${confirmedTeacherConflict.horario} x ${horarioOutraAula}`
-                    : confirmedTeacherConflict.horario;
-                // Salvar e sempre uma decisao do coordenador: o choque barra mesmo
-                // quando a componente veio da "Insercao por Bloco (PPC)" (antes so
-                // avisava, e o choque entrava na grade sem ninguem perceber).
-                const outraDisciplina = confirmedTeacherConflict.event.disciplina;
-                const detalhe = `${profNomes} já tem ${outraDisciplina} na turma ${turmaNomeConflito} em ${formatDateBR(confirmedTeacherConflict.date)} (${horarioChoque}).`;
-                const sugestao = sugerirInicioSemChoque(candidateForTeacherCheck, teachersToCheck);
-                const outraTurmaId = confirmedTeacherConflict.event.turmaId;
-                const comoResolver = [
-                    sugestao
-                        ? `Sugestão: ${fraseComeceEm(`"${disciplina}"`, sugestao)}`
-                        : 'Com estes horários, não há início sem choque até o fim do período: mude os dias ou horários da semana.',
-                    store.podeEditarTurma(outraTurmaId)
-                        ? `Ou mude "${outraDisciplina}" na turma ${turmaNomeConflito}.`
-                        : `Ou converse com a coordenação de ${cursoDaTurma(outraTurmaId)} sobre "${outraDisciplina}".`
-                ].join(' ');
-                setWeeklyBlock(
-                    sugestao
-                        ? `Choque de professor · sugestão: começar em ${formatDateBR(sugestao.dataInicio)}`
-                        : 'Choque de professor',
-                    `${detalhe} Salvamento cancelado.`,
-                    'choque'
-                );
-                showToastWarning(`Choque de professor: ${detalhe} Salvamento cancelado. ${comoResolver}`, 'warning', 14000);
-                return;
-            }
-        }
-
-        const idsToRemove = store.allocations
-            .filter((a) => {
-                if (String(a.turmaId) !== String(store.selectedTurma)) return false;
-                if (a.disciplina !== disciplina || !isFaixaAllocation(a)) return false;
-                if (String(a.subGrupo || '') !== String(subGrupo || '')) return false;
-                return isDateOverlap(
-                    effInicio,
-                    effFim,
-                    a.dataInicio || store.settings.termStart,
-                    a.dataFim || store.settings.termEnd
-                );
-            })
-            .map((a) => a.id);
-
-        const replacingFrom = weeklyState.replacingFromDisciplina && weeklyState.replacingFromDisciplina !== disciplina
-            ? weeklyState.replacingFromDisciplina
-            : '';
-        let replacedOriginal = null;
-
-        // Edicao segura: inclui os IDs originais rastreados mesmo que a componente
-        // tenha sido movida para um periodo SEM sobreposicao (o filtro acima exige
-        // overlap). Guardado por turma/disciplina/subGrupo para nunca remover algo
-        // de outra componente caso o rastreio tenha ficado obsoleto.
-        weeklyState.editingOriginalAllocationIds.forEach((id) => {
-            if (idsToRemove.includes(id)) return;
-            const al = store.allocations.find((a) => a.id === id);
-            if (!al) return;
-            if (String(al.turmaId) !== String(store.selectedTurma)) return;
-            // Aceita tanto ofertas ja alocadas (faixas) quanto a oferta PENDENTE
-            // original (modo 'pendente', vinda do Bloco do PPC): ao salvar a edicao
-            // de uma pendente ela deve sair da lista de pendentes, entao seu id
-            // rastreado precisa entrar em idsToRemove.
-            const isPendingOriginal = isPendingAllocation(al);
-            // "Substituir por...": a original tem outro nome, mas foi rastreada pela linha clicada.
-            const isReplacedOriginal = !!replacingFrom && normalizeDisciplinaInputValue(al.disciplina || '') === replacingFrom;
-            if ((al.disciplina !== disciplina && !isReplacedOriginal) || !(isFaixaAllocation(al) || isPendingOriginal)) return;
-            if (isReplacedOriginal && !replacedOriginal) replacedOriginal = al;
-            // A pendente importada do Bloco do PPC guarda subGrupo=blocoId (ex.: "BL1"),
-            // mas o editor limpa o campo de sub-turma ao carregar a disciplina. Como o id
-            // foi rastreado explicitamente da linha editada, nao exigimos igualdade de
-            // subGrupo para pendentes (senao ela nunca sairia da lista). Para faixas
-            // mantemos a checagem para nao remover outra componente por engano.
-            // Subturma: vale o NUMERO, nao a escrita ("T2" e "T02" sao a mesma; a
-            // oferta sem subturma conta como T01). Assim da para corrigir o nome
-            // da subturma no Editar sem duplicar a oferta.
-            // Vale tambem o sub-grupo DIGITADO (antes da regra da subturma sozinha).
-            const numAl = numeroDaSubturma(al.subGrupo) ?? 1;
-            const mesmaSubturma = [subGrupo, subGrupoDigitado].some((sg) =>
-                String(al.subGrupo || '') === String(sg || '') || numAl === (numeroDaSubturma(sg) ?? 1)
-            );
-            if (!isPendingOriginal && !mesmaSubturma) return;
-            idsToRemove.push(id);
-        });
-
-        const actionText = replacedOriginal
-            ? `Substituir "${replacedOriginal.disciplina}" por esta componente? "${replacedOriginal.disciplina}" volta para a lista de pendentes.`
-            : (idsToRemove.length > 0 ? 'Atualizar alocacao existente?' : 'Confirmar alocacao?');
-        if (!confirm(`${disciplina} (${formatDateBR(effInicio)} a ${formatDateBR(effFim)})\n\n${actionText}`)) return;
-
-        // A componente salva sai da lista de pendentes, venha de onde vier
-        // (linha da lista, barra lateral ou "Substituir por...").
-        findPendentesCobertas({ turmaId: store.selectedTurma, disciplina, subGrupo }, store.allocations)
-            .forEach((id) => { if (!idsToRemove.includes(id)) idsToRemove.push(id); });
-
-        const docentesCadastrados = coletarCadastrosDocentes(nomesDigitados, idsToRemove);
-        const undoSnapshot = snapshotAllocationsForUndo();
-        idsToRemove.forEach((id) => store.removeAllocation(id));
-
-        if (replacedOriginal) {
-            const aindaNaTurma = store.allocations.some((a) =>
-                String(a.turmaId) === String(store.selectedTurma) && a.disciplina === replacedOriginal.disciplina
-            );
-            if (!aindaNaTurma) {
-                store.addAllocation({
-                    turmaId: store.selectedTurma,
-                    disciplina: replacedOriginal.disciplina,
-                    docente: 'A definir',
-                    modo: 'pendente',
-                    importado: !!replacedOriginal.importado,
-                    cor: replacedOriginal.cor || store.getDisciplinaColor(replacedOriginal.disciplina, getCursoSiglaDaTurma(replacedOriginal.turmaId)),
-                    dataInicio: store.settings.termStart,
-                    dataFim: store.settings.termEnd,
-                    subGrupo: replacedOriginal.subGrupo || null
-                });
-            }
-        }
-
-        store.addAllocation({
+        previewIntensive = {
             turmaId: store.selectedTurma,
-            disciplina: disciplina,
-            docente: docData.docente,
-            docentes: docData.docentesList,
+            disciplina,
+            subGrupo: subGrupo || null,
             modo: 'faixas',
             ch: effectiveCH,
-            dataInicio: effInicio,
-            dataFim: effFim,
-            modelo: 'Automatico',
-            executionByDate: effExecutionByDate,
-            horariosOcupados: effSlots,
-            horariosUltimoDia: effUltimoDia,
-            diasMarcados: effDias,
-            usaSabado: effUsaSabado,
+            dataInicio: faixasConfig[0].inicio,
+            dataFim: faixasConfig[0].inicio,
+            horariosOcupados: [],
+            diasMarcados,
+            usaSabado: diasMarcados.includes(6),
             sabadoManha: sabadoManha,
-            faixas: effFaixas,
-            subGrupo: subGrupo || null,
-            cor: inputConfig.cor ? inputConfig.cor.value : store.getDisciplinaColor(disciplina),
-            importado: isImportedSave,
-            ...(docentesCadastrados.length ? { docentesCadastrados } : {})
-        });
-        docentesCadastrados.forEach((c) => cadastrosDocentes.delete(normalizeTeacherNameForMatch(c.nome)));
+            faixas: faixasConfig,
+            ignoreAllocationIds: getEditingOriginalAllocationIds()
+        };
 
-        // Turma extra: salvou a subturma T02 (ou mais)? A oferta da mesma
-        // componente que ainda vale para a turma toda passa a ser a T01.
-        let renomeadasT01 = 0;
-        if ((numeroDaSubturma(subGrupo) || 0) >= 2) {
-            const codigoT01 = codigoT01Como(subGrupo);
-            store.allocations = store.allocations.map((a) => {
-                if (String(a.turmaId) !== String(store.selectedTurma)) return a;
-                if (a.disciplina !== disciplina || !isFaixaAllocation(a) || !isTurmaInteira(a.subGrupo)) return a;
-                renomeadasT01++;
-                return { ...a, subGrupo: codigoT01 };
-            });
-            if (renomeadasT01) store.saveAllocations();
+        execution = computeIntensiveExecution(previewIntensive, { respectPriority: true, respectTurmaOccupancy: respectTurmaOccupancy });
+        if (execution.totalHours === 0) {
+            showToastWarning('Nenhuma aula foi gerada com as faixas configuradas.', 'error', 3000);
+            return null;
         }
 
-        if (effInicio && store.selectedTurma) {
-            store.setTurmaLastStart(store.selectedTurma, effInicio);
+        const finalAdjustmentSuggestion = buildFinalAdjustmentFaixaSuggestion(faixasConfig, execution);
+        if (!finalAdjustmentSuggestion || attempt > 0) {
+            break;
         }
 
-        commitAllocationUndoSnapshot(undoSnapshot);
+        applyFinalAdjustmentFaixaSuggestion(finalAdjustmentSuggestion, { showToast: false });
+        faixasConfig = Array.isArray(finalAdjustmentSuggestion.faixas)
+            ? finalAdjustmentSuggestion.faixas.map(normalizeFaixaEntry).filter(Boolean)
+            : faixasConfig;
+        finalAdjustmentNotice = buildFinalAdjustmentSuggestionMessage(finalAdjustmentSuggestion);
+    }
+    return { execution, faixasConfig, diasMarcados, previewIntensive, savingIsIntensive, finalAdjustmentNotice };
+}
 
-        syncAllIntensiveDates();
-        const allocAtualizada = [...store.allocations].reverse().find((a) =>
-            String(a.turmaId) === String(store.selectedTurma) &&
-            isFaixaAllocation(a) &&
-            a.disciplina === disciplina &&
-            String(a.subGrupo || '') === String(subGrupo || '')
+// 4. Aviso que nao barra, mostrado depois de salvar: faixa de ajuste aplicada,
+// ultima semana parcial ou carga diferente da CH. Devolve { texto, tipo }.
+function avisoDeDistribuicao(execution, finalAdjustmentNotice, effectiveCH) {
+    let texto = '';
+    let tipo = 'warning';
+    if (finalAdjustmentNotice) {
+        texto = finalAdjustmentNotice;
+        tipo = 'success';
+    }
+    if (execution.wasTruncatedByCH) {
+        const truncatedMsg = 'A componente foi inserida, mas a ultima semana ficou parcial. Se desejar, voce pode criar uma segunda faixa para ajustar melhor a distribuicao final.';
+        texto = texto ? `${texto} ${truncatedMsg}` : truncatedMsg;
+        tipo = 'warning';
+    }
+    if (execution.totalHours !== effectiveCH) {
+        const diff = execution.totalHours - effectiveCH;
+        const diffMsg = diff < 0
+            ? `A carga alocada ficou em ${execution.totalHours}h para uma meta de ${effectiveCH}h. Voce pode manter assim agora e ajustar depois, se desejar.`
+            : `A carga alocada ficou em ${execution.totalHours}h para uma meta de ${effectiveCH}h. Voce pode visualizar assim primeiro e ajustar depois, se desejar.`;
+        texto = texto ? `${texto} ${diffMsg}` : diffMsg;
+        if (tipo !== 'warning') tipo = 'warning';
+    }
+    return { texto, tipo };
+}
+
+// 5. Choque com outra componente da turma. Devolve a posicao efetiva (a calculada
+// ou, para intensiva, a empilhada logo apos as componentes ja alocadas) ou null
+// quando barra. A componente intensiva e EMPILHADA em sequencia (bloco continuo),
+// sem dividir nem empurrar nenhuma outra: assim nunca fica intercalada ENTRE as
+// faixas de outra componente (o antigo "pausa e retoma" foi removido).
+function posicaoSemChoqueNaTurma({ candidato, execution, posicao, disciplina, docData, savingIsIntensive, effectiveCH }) {
+    const intensiveConflict = findTurmaConflictForCandidateExecution(candidato, execution);
+
+    // Datas escolhidas de proposito (pausa, ou inicio clicado num dia diferente
+    // da sugestao): a componente nunca e movida sozinha. No choque, so avisa;
+    // o coordenador ajusta as datas ou faz a pausa a mao (Ajuda > Alocacao, passo 7).
+    const pausasDaComponente = listFaixaPauses(candidato.faixas);
+    const inicioClicadoForaDaSugestao = inicioDefinidoPeloClique
+        && String(candidato.faixas[0]?.inicio || '') !== dataSugerida();
+    const datasEscolhidas = pausasDaComponente.length > 0 || inicioClicadoForaDaSugestao;
+    if (intensiveConflict && datasEscolhidas) {
+        const quandoChoque = intensiveConflict.date ? ` em ${formatDateBR(intensiveConflict.date)}` : '';
+        setWeeklyBlock(
+            'Choque com outra componente',
+            `"${intensiveConflict.disciplina}" ja ocupa esse horario${quandoChoque}. Como as datas de "${disciplina}" foram escolhidas por voce, o Cardume nao a move sozinho: ajuste as datas ou faca uma pausa (Ajuda > Alocacao, passo 7) e salve de novo.`,
+            'choque'
         );
-        if (allocAtualizada) {
-            const faixasSidebar = alignFaixasToExecutionEnd(
-                getNormalizedIntensiveFaixas(allocAtualizada),
-                allocAtualizada.dataFim || effFim
+        showToastWarning(
+            `Choque com "${intensiveConflict.disciplina}"${quandoChoque}. Ajuste as datas das faixas ou faca uma pausa (Ajuda, passo 7).`,
+            'warning',
+            6200
+        );
+        return null;
+    }
+    if (!intensiveConflict) return posicao;
+
+    if (!savingIsIntensive) {
+        // Componente NAO intensiva com conflito residual: bloqueia (ela ja
+        // deveria ter desviado para os buracos livres). Nunca empurra nem
+        // intercala outras componentes.
+        setWeeklyBlock(
+            'Sobreposicao de horario',
+            `"${intensiveConflict.disciplina}" ja ocupa esse horario no mesmo periodo. Ajuste a data de inicio desta componente e salve de novo.`,
+            'choque'
+        );
+        showToastWarning(
+            `Sobreposicao detectada: "${intensiveConflict.disciplina}" ja ocupa esse horario no mesmo periodo. Ajuste a data de inicio desta componente.`,
+            'warning',
+            5600
+        );
+        return null;
+    }
+
+    // EMPILHAR EM SEQUENCIA: reposiciona ESTA componente para logo apos
+    // as componentes ja alocadas da turma.
+    const candidateForStacking = {
+        ...candidato,
+        docente: docData.docente,
+        docentes: docData.docentesList
+    };
+    const stacked = stackIntensiveAfterAllocations(
+        candidateForStacking,
+        store.selectedTurma,
+        candidato.dataInicio,
+        execution.totalHours
+    );
+    if (!stacked) {
+        // Componente empilhada nao cabe inteira: nao salva (texto aprovado pelo usuario em 14/11/2026).
+        const aPartirDe = intensiveConflict.date ? `A partir de ${formatDateBR(intensiveConflict.date).slice(0, 5)} ela` : 'Ela';
+        const textoNaoCabe = `${disciplina} não foi salva. ${aPartirDe} bate com ${intensiveConflict.disciplina}, e depois dela não sobram horas para as ${effectiveCH}h até o fim do período. Escolha outro início ou outros horários.`;
+        setWeeklyBlock('Não cabe inteira', textoNaoCabe, 'choque');
+        showToastWarning(textoNaoCabe, 'warning', 7000);
+        return null;
+    }
+    const empilhada = {
+        dataInicio: stacked.candidate.dataInicio,
+        dataFim: stacked.candidate.dataFim,
+        executionByDate: stacked.candidate.executionByDate || {},
+        horariosOcupados: stacked.candidate.horariosOcupados || [],
+        horariosUltimoDia: stacked.candidate.horariosUltimoDia || [],
+        diasMarcados: stacked.candidate.diasMarcados || posicao.diasMarcados,
+        usaSabado: (stacked.candidate.diasMarcados || []).includes(6),
+        faixas: Array.isArray(stacked.candidate.faixas) ? stacked.candidate.faixas : posicao.faixas
+    };
+    showToastWarning(
+        `Havia conflito na data escolhida. "${disciplina}" foi posicionada em sequencia, de ${formatDateBR(empilhada.dataInicio)} a ${formatDateBR(empilhada.dataFim)}, logo apos as componentes ja alocadas.`,
+        'success',
+        5600
+    );
+    return empilhada;
+}
+
+// 6. Choque de professor na posicao EFETIVA (apos eventual empilhamento), nao na
+// data originalmente escolhida. Barra com sugestao de inicio sem choque.
+// Devolve true quando barrou.
+function barrouPorChoqueDeProfessor({ candidato, posicao, docData, disciplina }) {
+    const teachersToCheck = (docData.mode === 'single' ? [docData.docente] : docData.docentesList.map(d => d.nome)).filter(n => n && n.trim().toUpperCase() !== 'A DEFINIR');
+    if (teachersToCheck.length === 0) return false;
+
+    // docente/docentes sao obrigatorios: e por eles que a checagem sabe
+    // quais horas da componente sao de cada professor.
+    const candidateForTeacherCheck = {
+        ...candidato,
+        docente: docData.docente,
+        docentes: docData.docentesList,
+        dataInicio: posicao.dataInicio,
+        dataFim: posicao.dataFim,
+        executionByDate: posicao.executionByDate,
+        horariosOcupados: posicao.horariosOcupados,
+        diasMarcados: posicao.diasMarcados,
+        usaSabado: posicao.usaSabado,
+        sabadoManha: candidato.sabadoManha,
+        faixas: posicao.faixas
+    };
+    const confirmedTeacherConflict = findConfirmedTeacherConflictForCandidate(
+        candidateForTeacherCheck,
+        teachersToCheck
+    );
+    if (!confirmedTeacherConflict) return false;
+
+    const turmaNomeConflito = getTurmaLabel(
+        confirmedTeacherConflict.event.turmaId,
+        confirmedTeacherConflict.event.subGrupo
+    );
+    const profNomes = confirmedTeacherConflict.teacherName;
+    // Mostra o horario das duas aulas: os cursos podem usar quadros diferentes.
+    const horarioOutraAula = normalizeConflictSlotLabel(confirmedTeacherConflict.event.horario || '');
+    const horarioChoque = horarioOutraAula && horarioOutraAula !== confirmedTeacherConflict.horario
+        ? `${confirmedTeacherConflict.horario} x ${horarioOutraAula}`
+        : confirmedTeacherConflict.horario;
+    // Salvar e sempre uma decisao do coordenador: o choque barra mesmo
+    // quando a componente veio da "Insercao por Bloco (PPC)" (antes so
+    // avisava, e o choque entrava na grade sem ninguem perceber).
+    const outraDisciplina = confirmedTeacherConflict.event.disciplina;
+    const detalhe = `${profNomes} já tem ${outraDisciplina} na turma ${turmaNomeConflito} em ${formatDateBR(confirmedTeacherConflict.date)} (${horarioChoque}).`;
+    const sugestao = sugerirInicioSemChoque(candidateForTeacherCheck, teachersToCheck);
+    const outraTurmaId = confirmedTeacherConflict.event.turmaId;
+    const comoResolver = [
+        sugestao
+            ? `Sugestão: ${fraseComeceEm(`"${disciplina}"`, sugestao)}`
+            : 'Com estes horários, não há início sem choque até o fim do período: mude os dias ou horários da semana.',
+        store.podeEditarTurma(outraTurmaId)
+            ? `Ou mude "${outraDisciplina}" na turma ${turmaNomeConflito}.`
+            : `Ou converse com a coordenação de ${cursoDaTurma(outraTurmaId)} sobre "${outraDisciplina}".`
+    ].join(' ');
+    setWeeklyBlock(
+        sugestao
+            ? `Choque de professor · sugestão: começar em ${formatDateBR(sugestao.dataInicio)}`
+            : 'Choque de professor',
+        `${detalhe} Salvamento cancelado.`,
+        'choque'
+    );
+    showToastWarning(`Choque de professor: ${detalhe} Salvamento cancelado. ${comoResolver}`, 'warning', 14000);
+    return true;
+}
+
+// 7. Ofertas que a componente salva substitui: as da mesma componente e subturma
+// que se sobrepoem as novas datas, mais as rastreadas pelo Editar/Substituir.
+// Devolve { idsToRemove, replacedOriginal } (replacedOriginal: a original do
+// "Substituir por...", que volta para as pendentes).
+function idsQueOSalvarSubstitui({ disciplina, subGrupo, subGrupoDigitado, posicao }) {
+    const idsToRemove = store.allocations
+        .filter((a) => {
+            if (String(a.turmaId) !== String(store.selectedTurma)) return false;
+            if (a.disciplina !== disciplina || !isFaixaAllocation(a)) return false;
+            if (String(a.subGrupo || '') !== String(subGrupo || '')) return false;
+            return isDateOverlap(
+                posicao.dataInicio,
+                posicao.dataFim,
+                a.dataInicio || store.settings.termStart,
+                a.dataFim || store.settings.termEnd
             );
-            applyFaixasConfigToSidebar(faixasSidebar);
-        }
-        // Encerra a edicao: a componente recem salva passa a aparecer alocada na
-        // Grade Semanal (cards fixos) em vez de permanecer no visual de desenho.
-        finalizeWeeklyEditorAfterSave();
-        ultimaComponenteSalva = { turmaId: store.selectedTurma, disciplina, subGrupo: subGrupo || '' };
-        renderOfertasList();
-        populateDocentes();
-        refreshAvisoDocenteNovo('ocultar');
+        })
+        .map((a) => a.id);
 
-        // O salvar so barra choques do PL aberto. Choque com um PL vizinho (datas
-        // que se sobrepoem) so avisa: o outro PL pode estar com outra coordenacao.
-        const choqueOutroPL = allocAtualizada ? acharChoqueComOutroPL(allocAtualizada) : null;
-        if (choqueOutroPL) {
-            showToastWarning(
-                `Salvo, mas atenção: ${choqueOutroPL.professor} também tem ${choqueOutroPL.disciplina} na turma ${choqueOutroPL.turma} do período ${choqueOutroPL.plano}, em ${formatDateBR(choqueOutroPL.data)} (${choqueOutroPL.horario}). Ajuste as datas ou converse com quem coordena esse periodo.`,
-                'warning',
-                14000
-            );
-        } else if (nonBlockingDistributionNotice) {
-            showToastWarning(nonBlockingDistributionNotice, nonBlockingDistributionNoticeType, 6200);
-        } else if (renomeadasT01) {
-            showToastWarning(`Subturma ${getTurmaLabel(store.selectedTurma, subGrupo)} salva. A primeira oferta de "${escapeTrocaHtml(disciplina)}" passou a ser a ${getTurmaLabel(store.selectedTurma, codigoT01Como(subGrupo))}.`, 'success', 6000);
-        }
+    const replacingFrom = weeklyState.replacingFromDisciplina && weeklyState.replacingFromDisciplina !== disciplina
+        ? weeklyState.replacingFromDisciplina
+        : '';
+    let replacedOriginal = null;
 
-        if (execution.wasTruncatedByCH && execution.truncationType === 'partial-day') {
-            showPersistentStatusMessage('Alocacao fracionada concluida com sucesso.', 'success');
-        }
+    // Edicao segura: inclui os IDs originais rastreados mesmo que a componente
+    // tenha sido movida para um periodo SEM sobreposicao (o filtro acima exige
+    // overlap). Guardado por turma/disciplina/subGrupo para nunca remover algo
+    // de outra componente caso o rastreio tenha ficado obsoleto.
+    weeklyState.editingOriginalAllocationIds.forEach((id) => {
+        if (idsToRemove.includes(id)) return;
+        const al = store.allocations.find((a) => a.id === id);
+        if (!al) return;
+        if (String(al.turmaId) !== String(store.selectedTurma)) return;
+        // Aceita tanto ofertas ja alocadas (faixas) quanto a oferta PENDENTE
+        // original (modo 'pendente', vinda do Bloco do PPC): ao salvar a edicao
+        // de uma pendente ela deve sair da lista de pendentes, entao seu id
+        // rastreado precisa entrar em idsToRemove.
+        const isPendingOriginal = isPendingAllocation(al);
+        // "Substituir por...": a original tem outro nome, mas foi rastreada pela linha clicada.
+        const isReplacedOriginal = !!replacingFrom && normalizeDisciplinaInputValue(al.disciplina || '') === replacingFrom;
+        if ((al.disciplina !== disciplina && !isReplacedOriginal) || !(isFaixaAllocation(al) || isPendingOriginal)) return;
+        if (isReplacedOriginal && !replacedOriginal) replacedOriginal = al;
+        // A pendente importada do Bloco do PPC guarda subGrupo=blocoId (ex.: "BL1"),
+        // mas o editor limpa o campo de sub-turma ao carregar a disciplina. Como o id
+        // foi rastreado explicitamente da linha editada, nao exigimos igualdade de
+        // subGrupo para pendentes (senao ela nunca sairia da lista). Para faixas
+        // mantemos a checagem para nao remover outra componente por engano.
+        // Subturma: vale o NUMERO, nao a escrita ("T2" e "T02" sao a mesma; a
+        // oferta sem subturma conta como T01). Assim da para corrigir o nome
+        // da subturma no Editar sem duplicar a oferta.
+        // Vale tambem o sub-grupo DIGITADO (antes da regra da subturma sozinha).
+        const numAl = numeroDaSubturma(al.subGrupo) ?? 1;
+        const mesmaSubturma = [subGrupo, subGrupoDigitado].some((sg) =>
+            String(al.subGrupo || '') === String(sg || '') || numAl === (numeroDaSubturma(sg) ?? 1)
+        );
+        if (!isPendingOriginal && !mesmaSubturma) return;
+        idsToRemove.push(id);
+    });
+    return { idsToRemove, replacedOriginal };
+}
 
+// 8. Grava: tira as ofertas substituidas (e as pendentes cobertas), devolve a
+// original do "Substituir" as pendentes, grava a nova e, na turma extra (T02 ou
+// mais), passa a oferta da turma toda para T01. Devolve { undoSnapshot, renomeadasT01 }.
+function gravarComponente({ disciplina, subGrupo, effectiveCH, docData, nomesDigitados, posicao, sabadoManha, isImportedSave, idsToRemove, replacedOriginal }) {
+    // A componente salva sai da lista de pendentes, venha de onde vier
+    // (linha da lista, barra lateral ou "Substituir por...").
+    findPendentesCobertas({ turmaId: store.selectedTurma, disciplina, subGrupo }, store.allocations)
+        .forEach((id) => { if (!idsToRemove.includes(id)) idsToRemove.push(id); });
+
+    const docentesCadastrados = coletarCadastrosDocentes(nomesDigitados, idsToRemove);
+    const undoSnapshot = snapshotAllocationsForUndo();
+    idsToRemove.forEach((id) => store.removeAllocation(id));
+
+    if (replacedOriginal) {
+        const aindaNaTurma = store.allocations.some((a) =>
+            String(a.turmaId) === String(store.selectedTurma) && a.disciplina === replacedOriginal.disciplina
+        );
+        if (!aindaNaTurma) {
+            store.addAllocation({
+                turmaId: store.selectedTurma,
+                disciplina: replacedOriginal.disciplina,
+                docente: 'A definir',
+                modo: 'pendente',
+                importado: !!replacedOriginal.importado,
+                cor: replacedOriginal.cor || store.getDisciplinaColor(replacedOriginal.disciplina, getCursoSiglaDaTurma(replacedOriginal.turmaId)),
+                dataInicio: store.settings.termStart,
+                dataFim: store.settings.termEnd,
+                subGrupo: replacedOriginal.subGrupo || null
+            });
+        }
+    }
+
+    store.addAllocation({
+        turmaId: store.selectedTurma,
+        disciplina: disciplina,
+        docente: docData.docente,
+        docentes: docData.docentesList,
+        modo: 'faixas',
+        ch: effectiveCH,
+        dataInicio: posicao.dataInicio,
+        dataFim: posicao.dataFim,
+        modelo: 'Automatico',
+        executionByDate: posicao.executionByDate,
+        horariosOcupados: posicao.horariosOcupados,
+        horariosUltimoDia: posicao.horariosUltimoDia,
+        diasMarcados: posicao.diasMarcados,
+        usaSabado: posicao.usaSabado,
+        sabadoManha: sabadoManha,
+        faixas: posicao.faixas,
+        subGrupo: subGrupo || null,
+        cor: inputConfig.cor ? inputConfig.cor.value : store.getDisciplinaColor(disciplina),
+        importado: isImportedSave,
+        ...(docentesCadastrados.length ? { docentesCadastrados } : {})
+    });
+    docentesCadastrados.forEach((c) => cadastrosDocentes.delete(normalizeTeacherNameForMatch(c.nome)));
+
+    // Turma extra: salvou a subturma T02 (ou mais)? A oferta da mesma
+    // componente que ainda vale para a turma toda passa a ser a T01.
+    let renomeadasT01 = 0;
+    if ((numeroDaSubturma(subGrupo) || 0) >= 2) {
+        const codigoT01 = codigoT01Como(subGrupo);
+        store.allocations = store.allocations.map((a) => {
+            if (String(a.turmaId) !== String(store.selectedTurma)) return a;
+            if (a.disciplina !== disciplina || !isFaixaAllocation(a) || !isTurmaInteira(a.subGrupo)) return a;
+            renomeadasT01++;
+            return { ...a, subGrupo: codigoT01 };
+        });
+        if (renomeadasT01) store.saveAllocations();
+    }
+
+    if (posicao.dataInicio && store.selectedTurma) {
+        store.setTurmaLastStart(store.selectedTurma, posicao.dataInicio);
+    }
+    return { undoSnapshot, renomeadasT01 };
+}
+
+// 9. Depois de gravar: guarda o desfazer, recalcula as datas do PL, mostra as
+// faixas salvas na barra lateral, encerra a edicao e da o aviso final.
+function concluirSalvar({ undoSnapshot, disciplina, subGrupo, posicao, aviso, renomeadasT01, execution }) {
+    commitAllocationUndoSnapshot(undoSnapshot);
+
+    syncAllIntensiveDates();
+    const allocAtualizada = [...store.allocations].reverse().find((a) =>
+        String(a.turmaId) === String(store.selectedTurma) &&
+        isFaixaAllocation(a) &&
+        a.disciplina === disciplina &&
+        String(a.subGrupo || '') === String(subGrupo || '')
+    );
+    if (allocAtualizada) {
+        const faixasSidebar = alignFaixasToExecutionEnd(
+            getNormalizedIntensiveFaixas(allocAtualizada),
+            allocAtualizada.dataFim || posicao.dataFim
+        );
+        applyFaixasConfigToSidebar(faixasSidebar);
+    }
+    // Encerra a edicao: a componente recem salva passa a aparecer alocada na
+    // Grade Semanal (cards fixos) em vez de permanecer no visual de desenho.
+    finalizeWeeklyEditorAfterSave();
+    ultimaComponenteSalva = { turmaId: store.selectedTurma, disciplina, subGrupo: subGrupo || '' };
+    renderOfertasList();
+    populateDocentes();
+    refreshAvisoDocenteNovo('ocultar');
+
+    // O salvar so barra choques do PL aberto. Choque com um PL vizinho (datas
+    // que se sobrepoem) so avisa: o outro PL pode estar com outra coordenacao.
+    const choqueOutroPL = allocAtualizada ? acharChoqueComOutroPL(allocAtualizada) : null;
+    if (choqueOutroPL) {
+        showToastWarning(
+            `Salvo, mas atenção: ${choqueOutroPL.professor} também tem ${choqueOutroPL.disciplina} na turma ${choqueOutroPL.turma} do período ${choqueOutroPL.plano}, em ${formatDateBR(choqueOutroPL.data)} (${choqueOutroPL.horario}). Ajuste as datas ou converse com quem coordena esse periodo.`,
+            'warning',
+            14000
+        );
+    } else if (aviso.texto) {
+        showToastWarning(aviso.texto, aviso.tipo, 6200);
+    } else if (renomeadasT01) {
+        showToastWarning(`Subturma ${getTurmaLabel(store.selectedTurma, subGrupo)} salva. A primeira oferta de "${escapeTrocaHtml(disciplina)}" passou a ser a ${getTurmaLabel(store.selectedTurma, codigoT01Como(subGrupo))}.`, 'success', 6000);
+    }
+
+    if (execution.wasTruncatedByCH && execution.truncationType === 'partial-day') {
+        showPersistentStatusMessage('Alocacao fracionada concluida com sucesso.', 'success');
     }
 }
 function updateListPrintHeader() {

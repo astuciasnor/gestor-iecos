@@ -102,7 +102,16 @@ setas parando nessas semanas e setas clicaveis em verde.
   (Trocar CARTOGRAFIA <-> LIMNOLOGIA no EP2025, Desfazer troca, "Como resolver?"
   de um choque criado nos dados). Resultado igual antes e depois.
 
-Proximos candidatos: selecao da grade (arrastar/Shift+clique, ver memoria),
+- Salvar Componente (`handleAddManual`, 512 linhas e 22 saidas) dividido em 9
+  passos com nome (dadosDoSalvar ... concluirSalvar; lista no comentario do
+  topo). Teste novo antes de mexer: `tools/teste_salvar.mjs` (7 cenarios:
+  editar, choque de professor, docente sem cadastro, Substituir, componente
+  nova, turma extra T01/T02, nao intensiva). Resultado igual antes e depois;
+  saida dos outros testes de navegador identica; textos das mensagens iguais.
+  Sem teste automatico: "Choque com outra componente" (datas escolhidas) e
+  "Sobreposicao" (nao intensiva); o codigo deles foi movido sem mudar.
+
+Proximos candidatos: grade semanal (`renderWeeklyGrid`, 540 linhas), selecao da grade (arrastar/Shift+clique, ver memoria),
 Unidade/Curso da barra lateral, exportacoes e importacao.
 
 ## Fase 1 - Migracao para o servidor da UFPA (quando a VPN sair)
