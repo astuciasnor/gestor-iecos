@@ -25,6 +25,7 @@
     --sb-anel: rgba(166, 226, 192, 0.6); /* anel de foco (clique) */
     --sb-altura: 40px;                   /* botoes */
     --sb-altura-campo: 32px;             /* campos claros (selects, datas, textos) */
+    --sb-largura-cor: 40px;              /* botao da cor ao lado da Disciplina */
     --sb-raio: 7px;
     --sb-painel: #e6f4ea;                /* bloco do usuario */
     --sb-painel-borda: #b7d9c3;
@@ -279,18 +280,18 @@
     display: flex;
     font-family: inherit;
     align-items: center;
-    justify-content: space-between;
+    justify-content: center;             /* texto centralizado (pedido de 14/11) */
     gap: 8px;
     min-height: 32px;
     margin-top: 8px;
-    padding: 3px 6px 3px 12px;
+    padding: 3px 10px;
     background: #ffffff;
     border: 1px solid #a9cdb7;
     border-radius: 6px;
     color: var(--sb-painel-texto);
     font-size: 0.82rem;
     font-weight: 600;
-    text-align: left;
+    text-align: center;
 }
 
 .sidebar .sync-bar-admin:hover { background: #f2faf5; border-color: #5f9d78; }
@@ -495,17 +496,18 @@ aside.sidebar #active-plan-status {
 
 /* Disciplina: circulo de cor do mesmo tamanho do campo */
 .sidebar .input-row-color { gap: 10px; }
-.sidebar .cd-cor-btn { width: var(--sb-altura-campo); height: var(--sb-altura-campo); border-width: 2px; }
+/* Botao da cor: retangulo de cantos arredondados (como as amostras do menu) */
+.sidebar .cd-cor-btn { width: var(--sb-largura-cor); height: var(--sb-altura-campo); border-width: 2px; border-radius: 8px; }
 
 /* Sem a linha "Codigo ... · curso · CH" abaixo da Disciplina: o nome ja esta no
    campo, e a linha mudava a altura da barra. A subturma tem campo proprio. */
 .sidebar .disciplina-codigo-dica { display: none !important; }
-.sidebar .input-row-color input[type="color"]#inp-color { width: var(--sb-altura-campo); height: var(--sb-altura-campo); }
+.sidebar .input-row-color input[type="color"]#inp-color { width: var(--sb-largura-cor); height: var(--sb-altura-campo); }
 
 /* Docente alinhado com a caixa da Disciplina (depois do circulo de cor) */
 .sidebar #container-single-docente,
 .sidebar #container-multi-docente {
-    margin-left: calc(var(--sb-altura-campo) + 10px);
+    margin-left: calc(var(--sb-largura-cor) + 10px);
 }
 
 /* Varios docentes: nome + CH + remover, na mesma altura */
@@ -618,6 +620,30 @@ aside.sidebar #active-plan-status {
     white-space: nowrap;
 }
 
+/* Exportar, Importar e Publicar sempre lado a lado, com a mesma largura
+   (base 0): o Publicar nunca desce para uma linha propria. */
+.sidebar .actions .btn-duplo-container > button,
+.sidebar .actions .btn-duplo-container > label,
+.sidebar .actions .publish-clear-row .btn-primary {
+    flex: 1 1 0;
+    overflow: hidden;
+}
+
+/* Publicar Online com "Com a Administração" dentro do botao, em segunda
+   linha menor (so o administrador publica). */
+.sidebar .btn-publicar .publicar-textos {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 0;
+    line-height: 1.1;
+}
+.sidebar .btn-publicar .publicar-legenda {
+    font-size: 0.48rem;                  /* 20% menor (pedido de 14/11) */
+    font-weight: 500;
+    color: #ffffff;
+}
+
 /* Icones decorativos (globo, lixeira) saem para caber tudo numa linha */
 .sidebar .actions .btn-icon { display: none; }
 
@@ -626,8 +652,8 @@ aside.sidebar #active-plan-status {
     width: auto;
 }
 
-/* Exportar / Importar (JSON): secundarios em verde-claro, o mesmo tom da faixa
-   da conta; Publicar Online segue verde cheio (principal). Antes: roxo inline. */
+/* Exportar / Importar (JSON): secundarios em verde medio (menos palido que a
+   faixa da conta, pedido de 14/11); Publicar Online segue verde cheio (principal). */
 .sidebar .btn-duplo-container > button,
 .sidebar .btn-duplo-container > label {
     min-height: var(--sb-altura);
@@ -636,8 +662,8 @@ aside.sidebar #active-plan-status {
     display: flex !important;
     align-items: center;
     justify-content: center;
-    background: var(--sb-painel) !important;
-    border: 1px solid var(--sb-painel-borda) !important;
+    background: #bfe3cc !important;
+    border: 1px solid #8cc3a2 !important;
     border-radius: var(--sb-raio);
     color: var(--sb-painel-texto) !important;
     font-size: 0.85rem;
@@ -647,8 +673,8 @@ aside.sidebar #active-plan-status {
 
 .sidebar .btn-duplo-container > button:hover,
 .sidebar .btn-duplo-container > label:hover {
-    background: #d4eedd !important;
-    border-color: #8cc3a2 !important;
+    background: #aad9bb !important;
+    border-color: #6fb38b !important;
     filter: none;
     transform: none;
 }

@@ -1,8 +1,8 @@
 // Tela de acesso e barra de status da sincronizacao.
 // Modo local: senha unica, como antes. Modos supabase e ufpa: e-mail e senha de
 // cada coordenador, e as alocacoes passam a ser compartilhadas pelo servidor.
-import { resolveBackendMode } from './backend_config.js?v=202611141814';
-import * as remoto from './sync_remoto.js?v=202611141814';
+import { resolveBackendMode } from './backend_config.js?v=202611142045';
+import * as remoto from './sync_remoto.js?v=202611142045';
 
 const LOCAL_PASSWORD = 'ufpa2026';
 
@@ -193,12 +193,12 @@ function mostrarAvisoPublicar(resp) {
 // coordenadores esperando conferencia (a lista fica em "Usuarios e backup").
 async function avisarDocentesNovos(showToast) {
   try {
-    const { buscarDocentesParaConferir } = await import('./admin_ui.js?v=202611141814');
+    const { buscarDocentesParaConferir } = await import('./admin_ui.js?v=202611142045');
     // Conta a lista inteira do painel (vaga revisada tambem, ate virar nome).
     const total = (await buscarDocentesParaConferir()).length;
     marcarDocentesNovos(total);
     if (total) {
-      showToast(`${total} docente(s) novo(s) para conferir: veja em Mensagens › "Usuários e backup".`, 'warning', 7000);
+      showToast(`${total} docente(s) novo(s) para conferir: veja em Mensagens › "Ver Usuários e Backup".`, 'warning', 7000);
     }
   } catch (error) {
     console.warn('Nao foi possivel contar os docentes novos', error);
@@ -211,7 +211,7 @@ function marcarDocentesNovos(total) {
   el('sync-msg-docentes')?.remove();
   const lista = el('sync-mensagens-lista');
   if (lista && total) {
-    lista.insertAdjacentHTML('beforeend', `<div id="sync-msg-docentes" class="sync-bar-aviso sync-msg">● <b>${total}</b> docente(s) novo(s) para conferir em <b>Usuários e backup</b>.</div>`);
+    lista.insertAdjacentHTML('beforeend', `<div id="sync-msg-docentes" class="sync-bar-aviso sync-msg">● <b>${total}</b> docente(s) novo(s) para conferir em <b>Ver Usuários e Backup</b>.</div>`);
   }
   marcarBotaoMensagens();
 }
@@ -339,7 +339,7 @@ function montarBarraStatus(perfil, user, showToast) {
     ${admin ? `<div id="sync-mensagens" class="sync-mensagens" hidden>
       <div id="sync-mensagens-lista" class="sync-mensagens-lista"></div>
       <p class="sync-mensagens-vazia">Nenhuma mensagem nova.</p>
-      <button type="button" id="btn-sync-admin" class="sync-bar-admin">Usuários e backup</button>
+      <button type="button" id="btn-sync-admin" class="sync-bar-admin">Ver Usuários e Backup</button>
     </div>` : ''}
   `;
   sidebar.insertBefore(bar, sidebar.firstChild);
@@ -353,7 +353,7 @@ function montarBarraStatus(perfil, user, showToast) {
       el('btn-sync-mensagens').setAttribute('aria-expanded', String(!caixa.hidden));
     };
     el('btn-sync-admin').onclick = async () => {
-      const { abrirAdministracao } = await import('./admin_ui.js?v=202611141814');
+      const { abrirAdministracao } = await import('./admin_ui.js?v=202611142045');
       abrirAdministracao({ tools: admin, meuId: user?.id || '', showToast, aoContarDocentes: marcarDocentesNovos });
     };
   }

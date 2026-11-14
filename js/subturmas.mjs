@@ -69,3 +69,17 @@ export function saoSubturmasDiferentes(subA, subB) {
   if (na !== null && nb !== null) return na !== nb;
   return String(subA).trim().toUpperCase() !== String(subB).trim().toUpperCase();
 }
+
+// Tira o numero da subturma: "BL1_T02" -> "BL1", "T02" -> "".
+export function semSubturma(subGrupo) {
+  return String(subGrupo || '').trim().replace(/_?T0*\d+$/i, '');
+}
+
+// Depois de excluir uma subturma: as ofertas que SOBRARAM da componente na turma
+// sao todas da mesma subturma? Entao ela ficou sozinha e volta a valer para a
+// turma toda (mesma regra do Salvar). Recebe os subGrupos das que sobraram.
+export function subturmaFicouSozinha(subGruposRestantes = []) {
+  const lista = Array.isArray(subGruposRestantes) ? subGruposRestantes : [];
+  if (lista.length === 0 || !lista.some((sg) => numeroDaSubturma(sg))) return false;
+  return new Set(lista.map((sg) => numeroDaSubturma(sg) || 1)).size === 1;
+}

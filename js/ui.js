@@ -1,35 +1,35 @@
-import { store } from './store.js?v=202611141814';
-import { escapeTrocaHtml, contarHorasExecutadas, sugerirInicioSemChoque, fraseComeceEm, cursoDaTurma, sugerirComoResolverChoque, abrirTrocaDeOrdem, ligarTroca } from './troca_ui.js?v=202611141814';
-import { cadastrosDocentes, findNewDocenteNames, getCadastroDocente, refreshAvisoDocenteNovo, coletarCadastrosDocentes, setupAvisoDocenteNovo, ligarCadastroDocente } from './cadastro_docente_ui.js?v=202611141814';
-import { renderOfertasList, ligarListaOfertas } from './lista_ofertas_ui.js?v=202611141814';
-import { stableStringify } from './sync_diff.mjs?v=202611141814';
-import { getTurnoLetter, mapSlotToTurno, turnoDaTurmaInclui } from './turns.js?v=202611141814';
-import { normalizePeriodo as normalizePeriodoLetivoCode } from './plan_storage.js?v=202611141814';
-import { getCalendarEvents } from './calendar.js?v=202611141814';
-import { isDateOverlap } from './utils.js?v=202611141814';
-import { weeklyState } from './weekly_state.js?v=202611141814';
-import { findPendentesCobertas, isPendenteJaAlocada } from './pendentes.mjs?v=202611141814';
+import { store } from './store.js?v=202611142045';
+import { escapeTrocaHtml, contarHorasExecutadas, sugerirInicioSemChoque, fraseComeceEm, cursoDaTurma, sugerirComoResolverChoque, abrirTrocaDeOrdem, ligarTroca } from './troca_ui.js?v=202611142045';
+import { cadastrosDocentes, findNewDocenteNames, getCadastroDocente, refreshAvisoDocenteNovo, coletarCadastrosDocentes, setupAvisoDocenteNovo, ligarCadastroDocente } from './cadastro_docente_ui.js?v=202611142045';
+import { renderOfertasList, ligarListaOfertas } from './lista_ofertas_ui.js?v=202611142045';
+import { stableStringify } from './sync_diff.mjs?v=202611142045';
+import { getTurnoLetter, mapSlotToTurno, turnoDaTurmaInclui } from './turns.js?v=202611142045';
+import { normalizePeriodo as normalizePeriodoLetivoCode } from './plan_storage.js?v=202611142045';
+import { getCalendarEvents } from './calendar.js?v=202611142045';
+import { isDateOverlap } from './utils.js?v=202611142045';
+import { weeklyState } from './weekly_state.js?v=202611142045';
+import { findPendentesCobertas, isPendenteJaAlocada } from './pendentes.mjs?v=202611142045';
 
-import { datasFeriadoDaTurma, feriadosDaTurma } from './feriados.mjs?v=202611141814';
-import { closeFaixaEnds, isPauseEnd, listFaixaPauses } from './pausa_faixas.mjs?v=202611141814';
-import { numeroDaSubturma, isTurmaInteira, proximaSubturma, codigoT01Como, saoSubturmasDiferentes, sufixoSubturma } from './subturmas.mjs?v=202611141814';
-import { abrirMiniCalendario, fecharMiniCalendario, miniCalendarioAberto } from './mini_calendario.mjs?v=202611141814';
-import { buildCanonicalOfferProjection } from './execution_engine.js?v=202611141814';
+import { datasFeriadoDaTurma, feriadosDaTurma } from './feriados.mjs?v=202611142045';
+import { closeFaixaEnds, isPauseEnd, listFaixaPauses } from './pausa_faixas.mjs?v=202611142045';
+import { numeroDaSubturma, isTurmaInteira, proximaSubturma, codigoT01Como, saoSubturmasDiferentes, sufixoSubturma, semSubturma, subturmaFicouSozinha } from './subturmas.mjs?v=202611142045';
+import { abrirMiniCalendario, fecharMiniCalendario, miniCalendarioAberto } from './mini_calendario.mjs?v=202611142045';
+import { buildCanonicalOfferProjection } from './execution_engine.js?v=202611142045';
 import {
     buildSigaaMetadataPayload,
     validateSigaaMetadataPayload,
     getSigaaCode,
     buildScopedSigaaAllocationFromOfferFaixa,
     buildSigaaHorarioResumo
-} from './sigaa_metadata.js?v=202611141814';
-import { parseBackupDataFile, extractImportPlanMeta } from './serialization.js?v=202611141814';
+} from './sigaa_metadata.js?v=202611142045';
+import { parseBackupDataFile, extractImportPlanMeta } from './serialization.js?v=202611142045';
 import {
     showToastWarning,
     showPersistentStatusMessage,
     copyTextToClipboard,
     flashButtonCopyState,
     setupCopyActionButtons
-} from './ui_feedback.js?v=202611141814';
+} from './ui_feedback.js?v=202611142045';
 import {
     normalizeHexColor,
     adjustHexColor,
@@ -38,7 +38,7 @@ import {
     tonsDaCor,
     aplicarTonsBloco,
     PALETA_CORES
-} from './color_utils.js?v=202611141814';
+} from './color_utils.js?v=202611142045';
 import {
     isFaixaAllocation,
     isPriorityRegularAllocation,
@@ -47,8 +47,8 @@ import {
     normalizeTeacherNameForMatch,
     getDocenteShortLabel,
     getAllocationTeachersForConflict
-} from './allocation_helpers.js?v=202611141814';
-import { setupSeletorCor } from './seletor_cor.js?v=202611141814';
+} from './allocation_helpers.js?v=202611142045';
+import { setupSeletorCor } from './seletor_cor.js?v=202611142045';
 
 import {
     UNIDADES,
@@ -56,11 +56,11 @@ import {
     acharNomeConhecido,
     filtrarDocentes,
     umNomePorPessoa
-} from './docente_nomes.mjs?v=202611141814';
+} from './docente_nomes.mjs?v=202611142045';
 import {
     fetchAllocationsForPlans
-} from './sync_remoto.js?v=202611141814';
-import { resolveBackendMode } from './backend_config.js?v=202611141814';
+} from './sync_remoto.js?v=202611142045';
+import { resolveBackendMode } from './backend_config.js?v=202611142045';
 import {
     normalizeConflictSlotLabel,
     getAvailableTurnoOfertaOptions,
@@ -70,7 +70,7 @@ import {
     buildHorariosForUI,
     getShiftChangeMeta,
     getNativeTurnoValueForAllocation
-} from './turno_helpers.js?v=202611141814';
+} from './turno_helpers.js?v=202611142045';
 import {
     getDisciplinaCHGlobal,
     derivarBloco,
@@ -80,7 +80,7 @@ import {
     getDisciplinaInfo,
     getCursoSiglaDaTurma,
     getPrintAcademicMetaLine
-} from './curso_turma_helpers.js?v=202611141814';
+} from './curso_turma_helpers.js?v=202611142045';
 import {
     renderMonthlyCalendar,
     renderTeacherCalendar,
@@ -88,14 +88,14 @@ import {
     clearTeacherRangeCache,
     setTeacherPeriod,
     getTeacherPeriod
-} from './calendarios_ui.js?v=202611141814';
-import { setupIndicadores, renderIndicadores, setIndicadoresLigacoes } from './indicadores_ui.js?v=202611141814';
+} from './calendarios_ui.js?v=202611142045';
+import { setupIndicadores, renderIndicadores, setIndicadoresLigacoes } from './indicadores_ui.js?v=202611142045';
 import {
     refreshTeacherConflictsUI,
     setCrossPlanLoader,
     setResolverDeChoque,
     acharChoqueComOutroPL
-} from './conflitos_ui.js?v=202611141814';
+} from './conflitos_ui.js?v=202611142045';
 import {
     shouldIgnoreTurmaEventForCandidate,
     normalizeDrawnSlotsByDay,
@@ -109,7 +109,7 @@ import {
     resolveEditableFaixasFromStoredExecution,
     alignFaixasToExecutionEnd,
     buildFinalAdjustmentFaixaSuggestion
-} from './faixa_utils.js?v=202611141814';
+} from './faixa_utils.js?v=202611142045';
 import {
     timeToMinutes,
     shiftISODate,
@@ -123,14 +123,14 @@ import {
     isDateInsideRange,
     formatDateBRShortYear,
     formatDateBR
-} from './date_utils_ui.js?v=202611141814';
+} from './date_utils_ui.js?v=202611142045';
 import {
     initializeWeeklyScheduleForTurma,
     reconcileTurmaSelectionAfterPLChange,
     resetWeeklyViewOnTurmaChange,
     resolveActiveAcademicPeriod,
     slotLabelsOverlap
-} from './academic_rules.mjs?v=202611141814';
+} from './academic_rules.mjs?v=202611142045';
 
 const gridContainer = document.getElementById('weekly-grid');
 const selCurso = document.getElementById('sel-curso');
@@ -176,6 +176,7 @@ function resetEditingComponentState() {
     weeklyState.resetEditing();
     clearWeeklyBlock();
     hideFaixaAutoNote();
+    esconderAvisoAproveitamento();
     sabadoManhaEscolha = false;   // componente nova: sabado no turno da turma ate perguntar
     inicioDefinidoPeloClique = false;
 }
@@ -904,10 +905,12 @@ function updateWeeklyFaixaHoursDisplay(previewData = null) {
             : []
     );
     let total = preview?.execution ? (parseInt(preview.execution.totalHours, 10) || 0) : 0;
+    let chF1 = 0;
     for (let i = 1; i <= 3; i++) updateFaixaPadraoCell(i);
     renderFaixaPauseRows();
     for (let i = 1; i <= 3; i++) {
         const ch = summaryHoursByFaixa.has(i) ? summaryHoursByFaixa.get(i) : calcFaixaCH(i);
+        if (i === 1) chF1 = ch;
         const chEl = document.getElementById(`faixa-ch-f${i}`);
         if (chEl) chEl.textContent = `${ch} h`;
         if (!preview?.execution) total += ch;
@@ -919,6 +922,9 @@ function updateWeeklyFaixaHoursDisplay(previewData = null) {
     const targetCH = parseInt(preview?.targetCH, 10) || 0;
     const targetEl = document.getElementById('weekly-faixa-target-ch');
     if (targetEl) targetEl.textContent = targetCH > 0 ? String(targetCH) : '-';
+    horasDasFaixas = { f1: chF1, total, meta: targetCH };
+    conferirAvisoAproveitamento();
+    renderAvisoAproveitamento();
     // Redesenho: barra fina Total/Meta no cartao "Meta CH" (so exibicao)
     const barraEl = document.getElementById('cd-progresso-barra');
     if (barraEl) {
@@ -1317,13 +1323,100 @@ function inicioPeloClique(cellDate, slot = '') {
 
     const proxima = cellDate < dataSugerida() ? componenteQueVemPelaFrente(cellDate, slot) : null;
     if (proxima && fecharFaixa1NaVespera(proxima.inicio)) {
-        showToastWarning(`Aproveitando dias livres: a Faixa 1 vai de ${formatDateBR(cellDate)} a ${formatDateBR(valorDoCampo('inp-data-fim-f1'))}, antes de "${proxima.disciplina}". Marque os horários desses dias e depois clique no número da Faixa 2 para retomar.`, 'success', 9000);
+        mostrarAvisoAproveitamento({ inicio: cellDate, fim: valorDoCampo('inp-data-fim-f1'), disciplina: proxima.disciplina, proximaInicio: proxima.inicio });
         return true;
     }
 
     if (!mudou) return false;
     showToastWarning(`Início da Faixa 1 em ${formatDateBR(cellDate)}. Para escolher outro dia, desmarque os horários.`, 'success', 3200);
     return true;
+}
+
+// Aviso do aproveitamento no cartao "Proximo passo" (pedido de 14/11/2026): fica
+// ali e acompanha a marcacao, sem OK.
+//  fase 1 (Faixa 1 nos dias livres): pede para marcar; com horario marcado mostra
+//          as horas e o botao "Continuar: Faixa 2 em dd/mm" (= clicar no numero 2);
+//          com a CH completa, manda salvar. Refazer limpa as faixas e fica na semana.
+//  fase 2 (depois da volta): pausa, inicio da Faixa 2 e quanto falta, ate salvar.
+// Some sozinho quando as faixas deixam de ser as do aviso (conferirAvisoAproveitamento).
+let avisoAproveitamento = null;   // { fase, inicio, fim, disciplina, proximaInicio, volta }
+let horasDasFaixas = { f1: 0, total: 0, meta: 0 };   // atualizado por updateWeeklyFaixaHoursDisplay
+
+function mostrarAvisoAproveitamento(info) {
+    avisoAproveitamento = { fase: 1, ...info };
+    renderAvisoAproveitamento();
+}
+
+function renderAvisoAproveitamento() {
+    const a = avisoAproveitamento;
+    const el = document.getElementById('cd-aproveitamento');
+    const texto = document.getElementById('cd-aproveitamento-texto');
+    const continuar = document.getElementById('btn-aprov-continuar');
+    const refazer = document.getElementById('btn-aprov-refazer');
+    if (!el || !texto) return;
+    if (!a) { el.classList.add('hidden'); return; }
+
+    const { f1, total, meta } = horasDasFaixas;
+    const faltam = meta > 0 ? meta - total : 0;
+    const completa = meta > 0 && faltam <= 0;
+    const nome = `<b>${escapeTrocaHtml(a.disciplina || 'outra componente')}</b>`;
+    const data = (iso) => formatDateBR(iso);
+    let html = '';
+    let volta = '';
+    if (a.fase === 1) {
+        html = `Você está aproveitando os dias deixados livres antes de ${nome} (começa em ${data(a.proximaInicio)}). A Faixa 1 vai de <b>${data(a.inicio)} a ${data(a.fim)}</b>. `;
+        if (f1 <= 0) html += `Marque os horários: cada um se repete em todas as semanas até ${data(a.fim)}.`;
+        else if (completa) html += `<b>CH completa (${total}h).</b> Clique em Salvar Componente.`;
+        else {
+            volta = dataDaVolta();
+            html += `Faixa 1: <b>${f1}h marcadas${meta > 0 ? ` · faltam ${faltam}h` : ''}</b>.`;
+            if (!volta) html += ' Salve assim ou digite o Início da Faixa 2.';
+        }
+    } else {
+        html = a.fim && a.volta
+            ? `Pausa de ${data(shiftISODate(a.fim, 1))} a ${data(shiftISODate(a.volta, -1))}${a.disciplina ? ` por causa de ${nome}` : ''}. `
+            : '';
+        html += completa
+            ? `<b>CH completa (${total}h).</b> Clique em Salvar Componente.`
+            : `<b>A Faixa 2 começa em ${data(a.volta)}${a.ondeEstava ? ', onde a componente estava' : ''}:</b> marque os horários${meta > 0 ? ` (faltam ${faltam}h)` : ''} e depois clique em Salvar Componente.`;
+    }
+    texto.innerHTML = html;
+    texto.title = texto.textContent;
+    if (continuar) {
+        continuar.classList.toggle('hidden', !volta);
+        continuar.textContent = volta ? `Continuar: Faixa 2 em ${data(volta).slice(0, 5)}` : '';
+        continuar.title = volta ? `Pausa enquanto ${a.disciplina || 'a outra componente'} ocupa a turma; a Faixa 2 começa em ${data(volta)}.` : '';
+    }
+    if (refazer) refazer.classList.toggle('hidden', a.fase !== 1);
+    el.classList.remove('hidden');
+}
+
+function esconderAvisoAproveitamento() {
+    avisoAproveitamento = null;
+    document.getElementById('cd-aproveitamento')?.classList.add('hidden');
+}
+
+// As faixas mudaram (Fim digitado, Faixa 2 apagada, inicio desfeito...): o aviso sai.
+function conferirAvisoAproveitamento() {
+    const a = avisoAproveitamento;
+    if (!a) return;
+    const valeAinda = valorDoCampo('inp-data-inicio-f1') === a.inicio
+        && valorDoCampo('inp-data-fim-f1') === a.fim
+        && valorDoCampo('inp-data-inicio-f2') === (a.fase === 1 ? '' : a.volta);
+    if (!valeAinda) esconderAvisoAproveitamento();
+}
+
+function continuarNaFaixa2DoAproveitamento() {
+    if (retomarAproveitamento()) return;
+    showToastWarning('Não deu para começar a Faixa 2 sozinho: clique no número da Faixa 2 e depois no dia da volta, ou digite o Início dela.', 'warning', 6000);
+}
+
+function refazerAproveitamento() {
+    esconderAvisoAproveitamento();
+    inicioDefinidoPeloClique = false;
+    if (!handleClearFaixasRestart({ perguntar: false, manterSemana: true, silencioso: true })) return;
+    renderWeeklyGrid();
+    showToastWarning('Recomeçando: clique no primeiro horário do dia em que a componente deve começar.', 'success', 6000);
 }
 
 // Aproveitamento: a Faixa 1 para na vespera do dia dado, como se o Fim tivesse
@@ -1385,19 +1478,36 @@ function antigoInicioEmEdicao() {
 //    sugestao cairia depois da ultima componente da turma);
 //  - componente nova, a data sugerida (proximo dia livre depois da ultima).
 // Devolve false para seguir o caminho de sempre (clicar no dia da volta).
+// Dia da volta da Faixa 2 depois de um aproveitamento ('' quando nao da).
+function dataDaVolta() {
+    const fimF1 = valorDoCampo('inp-data-fim-f1');
+    const volta = antigoInicioEmEdicao() || dataSugerida();
+    if (!inicioDefinidoPeloClique || !isFaixaFimMarcadoComoPausa(1) || valorDoCampo('inp-data-inicio-f2')) return '';
+    if (!fimF1 || !volta || volta <= fimF1 || !getFaixaStartDateValidation(2, volta).isValid) return '';
+    return volta;
+}
+
 function retomarAproveitamento() {
     const fimF1 = valorDoCampo('inp-data-fim-f1');
     const antigoInicio = antigoInicioEmEdicao();
-    const volta = antigoInicio || dataSugerida();
-    if (!inicioDefinidoPeloClique || !isFaixaFimMarcadoComoPausa(1) || valorDoCampo('inp-data-inicio-f2')) return false;
-    if (!fimF1 || !volta || volta <= fimF1 || !getFaixaStartDateValidation(2, volta).isValid) return false;
+    const volta = dataDaVolta();
+    if (!volta) return false;
 
     if (pendingFaixaStartPick) clearPendingFaixaStartPick();
     if (!syncFaixaStartFromGridClick(2, volta, [], { force: true })) return false;
     activeFaixaIndex = 2;
+    // Aviso fixo da Faixa 2 (fase 2), ate salvar. Antes de redesenhar, para a
+    // conferencia do aviso ja ver a Faixa 2 no lugar.
+    avisoAproveitamento = {
+        fase: 2,
+        inicio: valorDoCampo('inp-data-inicio-f1'),
+        fim: fimF1,
+        volta,
+        disciplina: avisoAproveitamento?.disciplina || '',
+        ondeEstava: !!antigoInicio
+    };
     autoEnterWeeklyEditingForFaixa(2);   // redesenha a grade na semana da volta
-    const onde = antigoInicio ? 'onde a componente estava' : 'o próximo dia livre';
-    showToastWarning(`Pausa sem aula · ${formatDateBR(shiftISODate(fimF1, 1))} a ${formatDateBR(shiftISODate(volta, -1))}. A Faixa 2 começa em ${formatDateBR(volta)}, ${onde}: marque os horários dela.`, 'success', 7500);
+    updateWeeklyFaixaHoursDisplay();
     return true;
 }
 
@@ -3598,6 +3708,8 @@ function resolveInlineEditableFaixaIndex() {
 function setupFaixaControls() {
     setupFaixaQuickActions();
     document.getElementById('btn-faixa-auto-undo')?.addEventListener('click', undoFaixaAutoCreation);
+    document.getElementById('btn-aprov-continuar')?.addEventListener('click', continuarNaFaixa2DoAproveitamento);
+    document.getElementById('btn-aprov-refazer')?.addEventListener('click', refazerAproveitamento);
     document.getElementById('btn-faixa-auto-fix')?.addEventListener('click', mergeFaixaAutoCreationIntoPrevious);
     for (let i = 1; i <= 3; i++) {
         const iniEl = document.getElementById(`inp-data-inicio-f${i}`);
@@ -4115,6 +4227,7 @@ function bloquearSeSomenteLeitura(turmaId = store.selectedTurma) {
 function updateWeeklyContextNote() {
     const bar = document.getElementById('weekly-status-bar');
     if (!bar) return;
+    conferirAvisoAproveitamento();
 
     const status = computeWeeklyStatus();
 
@@ -5669,6 +5782,26 @@ function limparDatasDasFaixas() {
     updateWeeklyNavigatorLabel();
 }
 
+// Excluiu uma subturma (Lista de Ofertas ou X na grade) e a outra ficou
+// sozinha: ela perde o T01/T02 e volta a valer para a turma toda, sem precisar
+// de Editar + Salvar. Mesma regra do Salvar (resolverSubturmaAoSalvar).
+function tirarSubturmaQueFicouSozinha(removidas = []) {
+    const componentes = new Map();
+    removidas.forEach((a) => {
+        if (a && numeroDaSubturma(a.subGrupo)) componentes.set(`${a.turmaId}|${a.disciplina}`, a);
+    });
+    let mudou = false;
+    componentes.forEach(({ turmaId, disciplina }) => {
+        const daComponente = (a) => String(a.turmaId) === String(turmaId)
+            && a.disciplina === disciplina && isFaixaAllocation(a);
+        const restantes = store.allocations.filter(daComponente);
+        if (!subturmaFicouSozinha(restantes.map((a) => a.subGrupo))) return;
+        store.allocations = store.allocations.map((a) => (daComponente(a) ? { ...a, subGrupo: semSubturma(a.subGrupo) } : a));
+        mudou = true;
+    });
+    if (mudou) store.saveAllocations();
+}
+
 // Depois de salvar, as datas da componente ficam na tabela para conferencia.
 // Se ESSA componente for excluida (Lista de Ofertas ou X na grade) ou desfeita,
 // as datas saem, para nao parecer que ela continua ali.
@@ -6651,6 +6784,7 @@ function renderSlotContent(cell, allocs, dayOfWeek = 0) {
             if (bloquearSeSomenteLeitura(alloc.turmaId)) return;
             if (confirm(`Remover alocação de ${alloc.disciplina}?`)) {
                 store.removeAllocation(alloc.id);
+                tirarSubturmaQueFicouSozinha([alloc]);
                 syncAllRegularDates();
                 syncAllIntensiveDates();
                 limparFaixasSeExcluiuAUltimaSalva([alloc]);
@@ -7654,6 +7788,7 @@ ligarListaOfertas({
     finalizeWeeklyEditorAfterSave,
     limparDatasDasFaixas,
     limparFaixasSeExcluiuAUltimaSalva,
+    tirarSubturmaQueFicouSozinha,
     renderWeeklyGrid,
     loadAllocationIntoEditor,
     abrirTrocaDeOrdem

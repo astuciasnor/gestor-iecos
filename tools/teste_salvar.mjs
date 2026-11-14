@@ -7,6 +7,8 @@
 //   substituir         EP2025/PL2: Substituir SOCIOLOGIA por uma componente nao alocada (a original vira pendente)
 //   nova_componente    EP2024/PL1 (vazio): METODOLOGIA CIENTIFICA nas manhas a partir de 04/01
 //   turma_extra        EP2024/PL1: METODOLOGIA de novo (subturma T02) a partir de 01/02: a primeira vira T01
+//   excluir_t02        turma_extra e depois Excluir a T02 na Lista: a T01 volta a turma toda
+//   excluir_t01        o mesmo, excluindo a T01: a T02 volta a turma toda
 //   nao_intensiva      EP2024/PL1: MATEMATICA BASICA so segunda e quarta (regra da nao intensiva)
 // Os outros caminhos (empilhar, nao cabe inteira, pausa, inicio pelo clique) tem
 // testes proprios: teste_metade_ch, teste_pausa_intercalada, teste_inicio_clique.
@@ -98,6 +100,17 @@ const CENARIOS = {
   })()` },
   turma_extra: { pl: 'PL1', turma: 'EP2024', acoes: `(async () => {${novaMetodologia('2027-01-04')}
     document.getElementById('tabbtn-list').click(); await __w(600);${novaMetodologia('2027-02-01')}
+  })()` },
+  // Excluir uma subturma: a que sobra perde o T01/T02 sem precisar de Editar + Salvar.
+  excluir_t02: { pl: 'PL1', turma: 'EP2024', acoes: `(async () => {${novaMetodologia('2027-01-04')}
+    document.getElementById('tabbtn-list').click(); await __w(600);${novaMetodologia('2027-02-01')}
+    document.getElementById('tabbtn-list').click(); await __w(800);
+    __linha(/METODOLOGIA CIENTIFICA.{0,3}T02/, '.btn-delete-row').querySelector('.btn-delete-row').click(); await __w(1500);
+  })()` },
+  excluir_t01: { pl: 'PL1', turma: 'EP2024', acoes: `(async () => {${novaMetodologia('2027-01-04')}
+    document.getElementById('tabbtn-list').click(); await __w(600);${novaMetodologia('2027-02-01')}
+    document.getElementById('tabbtn-list').click(); await __w(800);
+    __linha(/METODOLOGIA CIENTIFICA.{0,3}T01/, '.btn-delete-row').querySelector('.btn-delete-row').click(); await __w(1500);
   })()` },
   // Segunda e quarta (dias nao seguidos): componente nao intensiva, que desvia das
   // aulas da turma em vez de empilhar; 90h nao cabem ate 05/03 (avisa as horas).
@@ -191,6 +204,10 @@ for (const [nome, cenario] of Object.entries(CENARIOS)) {
     const metod = r.turma.filter((a) => a.disciplina === 'METODOLOGIA CIENTIFICA');
     confere('METODOLOGIA T01 e T02', metod.length === 2 && metod.every((a) => /T0[12]$/.test(a.subGrupo)),
       metod.map((a) => `${a.subGrupo || '(turma)'} ${a.inicio}..${a.fim} ${a.horas}h`).join(' | '));
+  } else if (nome === 'excluir_t02' || nome === 'excluir_t01') {
+    const metod = r.turma.filter((a) => a.disciplina === 'METODOLOGIA CIENTIFICA');
+    const lista = metod.map((a) => `${a.subGrupo || '(turma)'} ${a.inicio}..${a.fim} ${a.horas}h`).join(' | ');
+    confere('sobrou uma METODOLOGIA, sem T01/T02', metod.length === 1 && !metod[0].subGrupo, lista);
   } else if (nome === 'nao_intensiva') {
     const m = of('MATEMATICA BASICA');
     confere('MATEMATICA BASICA salva (segunda e quarta)', !!m && m.horas > 0, `${m?.inicio}..${m?.fim} ${m?.horas}h`);

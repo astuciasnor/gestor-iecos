@@ -857,7 +857,7 @@
 .cd-cor-menu {
     position: fixed;
     z-index: 1000;
-    width: 300px;
+    width: 270px;               /* amostras 10% menores (14/11/2026) */
     box-sizing: border-box;
     padding: 14px;
     background: #FFFFFF;
@@ -868,10 +868,10 @@
     color: var(--cd-texto);
 }
 .cd-cor-menu[hidden] { display: none; }
-.cd-cor-grade { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; }
+.cd-cor-grade { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 7px; }
 .cd-cor-amostra {
-    width: 44px;
-    height: 44px;
+    width: 40px;
+    height: 40px;
     padding: 0;
     border: 2px solid;          /* a cor vem inline (cor forte) */
     border-radius: 10px;
@@ -880,6 +880,7 @@
 .cd-cor-amostra.is-selecionada { border: 3px solid #0F172A !important; }
 .cd-cor-amostra:focus-visible,
 .cd-cor-outro:focus-visible { outline: 3px solid var(--cd-foco); outline-offset: 2px; }
+.cd-cor-outro svg { flex-shrink: 0; }
 .cd-cor-divisoria { height: 1px; margin: 12px 0; background: var(--cd-borda-suave); }
 .cd-cor-outro {
     width: 100%;
@@ -892,8 +893,9 @@
     border-radius: 8px;
     background: transparent;
     font-family: inherit;
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 600;
+    white-space: nowrap;
     color: var(--cd-texto-2);
     cursor: pointer;
 }
@@ -1126,7 +1128,8 @@
 #tab-weekly .cd-contexto .weekly-status-bar { position: relative; overflow: hidden; }
 
 #tab-weekly .cd-aviso,
-#tab-weekly .cd-contexto #weekly-faixa-auto-note {
+#tab-weekly .cd-contexto #weekly-faixa-auto-note,
+#tab-weekly .cd-contexto .cd-aproveitamento {
     position: absolute;
     inset: 0;
     display: flex;
@@ -1144,11 +1147,13 @@
 }
 #tab-weekly .cd-aviso { z-index: 3; cursor: pointer; }
 #tab-weekly .cd-aviso.hidden,
-#tab-weekly .cd-contexto #weekly-faixa-auto-note.hidden { display: none; }
+#tab-weekly .cd-contexto #weekly-faixa-auto-note.hidden,
+#tab-weekly .cd-contexto .cd-aproveitamento.hidden { display: none; }
 
 /* Texto em no maximo 2 linhas (o texto inteiro fica no mouse) */
 #tab-weekly .cd-aviso-texto,
-#tab-weekly .cd-contexto #weekly-faixa-auto-note .wga-text {
+#tab-weekly .cd-contexto #weekly-faixa-auto-note .wga-text,
+#tab-weekly .cd-contexto .cd-aprov-texto {
     flex: 1 1 auto;
     min-width: 0;
     display: -webkit-box;
@@ -1195,6 +1200,31 @@
     white-space: nowrap;
 }
 #tab-weekly .cd-contexto #weekly-faixa-auto-note .wga-btn--muted { color: #92400E; }
+
+/* Aproveitamento de dias livres: verde, acompanha a marcacao ate salvar */
+#tab-weekly .cd-contexto .cd-aproveitamento {
+    z-index: 2;
+    background: #DCFCE7;
+    color: #14532D;
+    box-shadow: inset 4px 0 0 #16A34A;
+}
+#tab-weekly .cd-contexto .cd-aprov-acoes { flex: none; display: flex; gap: 6px; }
+#tab-weekly .cd-contexto .cd-aprov-btn {
+    min-height: 32px;
+    padding: 0 12px;
+    border: 1px solid #86C99D;
+    border-radius: 8px;
+    background: #FFFFFF;
+    color: #14532D;
+    font-family: var(--cd-fonte);
+    font-size: 12px;
+    font-weight: 700;
+    white-space: nowrap;
+    cursor: pointer;
+}
+#tab-weekly .cd-contexto .cd-aprov-btn--ok { background: #16A34A; border-color: #16A34A; color: #FFFFFF; }
+#tab-weekly .cd-contexto .cd-aprov-btn.hidden { display: none; }
+#tab-weekly .cd-contexto .cd-aprov-btn:focus-visible { outline: 3px solid var(--cd-foco); outline-offset: 2px; }
 
 /* Convite para a Ajuda dentro do cartao (so no primeiro aviso) */
 #tab-weekly .cd-contexto .weekly-status-acao {

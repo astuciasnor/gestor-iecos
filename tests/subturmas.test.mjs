@@ -6,7 +6,9 @@ import {
   codigoDaSubturma,
   proximaSubturma,
   codigoT01Como,
-  saoSubturmasDiferentes
+  saoSubturmasDiferentes,
+  semSubturma,
+  subturmaFicouSozinha
 } from '../js/subturmas.mjs';
 
 test('numero da subturma em varios formatos', () => {
@@ -80,4 +82,20 @@ test('sufixoSubturma: " T01" so para subturma', async () => {
   assert.equal(sufixoSubturma('T02'), ' T02');
   assert.equal(sufixoSubturma('BL1'), '');
   assert.equal(sufixoSubturma(undefined), '');
+});
+
+test('excluir uma subturma: a que sobra sozinha volta a turma toda', () => {
+  assert.equal(semSubturma('T01'), '');
+  assert.equal(semSubturma('BL1_T02'), 'BL1');
+  assert.equal(semSubturma('BL1'), 'BL1');
+  // sobrou so a T01 (uma ou varias faixas): fica sozinha
+  assert.equal(subturmaFicouSozinha(['T01']), true);
+  assert.equal(subturmaFicouSozinha(['T02', 'T02']), true);
+  // ainda ha duas subturmas: nada muda
+  assert.equal(subturmaFicouSozinha(['T01', 'T02']), false);
+  assert.equal(subturmaFicouSozinha(['T01', 'T02', 'T03']), false);
+  // turma inteira ou nada sobrou: nada a fazer
+  assert.equal(subturmaFicouSozinha(['']), false);
+  assert.equal(subturmaFicouSozinha(['BL1']), false);
+  assert.equal(subturmaFicouSozinha([]), false);
 });
