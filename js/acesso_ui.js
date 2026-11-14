@@ -179,13 +179,14 @@ function vigiarPublicacao(admin) {
 
 function mostrarAvisoPublicar(resp) {
   el('sync-aviso-publicar')?.remove();
-  const bar = el('sync-bar');
-  if (!bar || !resp?.mudancas) return;
-  const nomes = (resp.quem || []).map((n) => String(n).trim().split(/\s+/)[0]).filter(Boolean);
-  const quem = nomes.length ? `${nomes.join(', ')} ${nomes.length > 1 ? 'alteraram' : 'alterou'}` : 'Há alterações';
-  bar.insertAdjacentHTML('beforeend', `<div id="sync-aviso-publicar" class="sync-bar-aviso"
-    title="${resp.mudancas} mudança(s) nas alocações desde a última publicação da agenda">
-    ● ${escapeHtml(quem)} depois da última publicação: clique em <b>Publicar Online</b>.</div>`);
+  const lista = el('sync-mensagens-lista');
+  if (lista && resp?.mudancas) {
+    const nomes = (resp.quem || []).map((n) => String(n).trim().split(/\s+/)[0]).filter(Boolean);
+    const quem = nomes.length ? `${nomes.join(', ')} ${nomes.length > 1 ? 'alteraram' : 'alterou'}` : 'Há alterações';
+    lista.insertAdjacentHTML('afterbegin', `<div id="sync-aviso-publicar" class="sync-bar-aviso sync-msg"
+      title="${resp.mudancas} mudança(s) nas alocações desde a última publicação da agenda">● ${escapeHtml(quem)} depois da última publicação: clique em <b>Publicar Online</b>.</div>`);
+  }
+  marcarBotaoMensagens();
 }
 
 // Administrador: ao entrar, avisa se ha docentes novos cadastrados pelos
@@ -197,18 +198,39 @@ async function avisarDocentesNovos(showToast) {
     const total = (await buscarDocentesParaConferir()).length;
     marcarDocentesNovos(total);
     if (total) {
-      showToast(`${total} docente(s) novo(s) para conferir: veja em "Usuários e backup".`, 'warning', 7000);
+      showToast(`${total} docente(s) novo(s) para conferir: veja em Mensagens › "Usuários e backup".`, 'warning', 7000);
     }
   } catch (error) {
     console.warn('Nao foi possivel contar os docentes novos', error);
   }
 }
 
+// Linha "N docente(s) novo(s)" na caixa de Mensagens (tambem chamada pelo
+// painel do administrador quando a lista muda).
 function marcarDocentesNovos(total) {
-  const botao = el('btn-sync-admin');
+  el('sync-msg-docentes')?.remove();
+  const lista = el('sync-mensagens-lista');
+  if (lista && total) {
+    lista.insertAdjacentHTML('beforeend', `<div id="sync-msg-docentes" class="sync-bar-aviso sync-msg">● <b>${total}</b> docente(s) novo(s) para conferir em <b>Usuários e backup</b>.</div>`);
+  }
+  marcarBotaoMensagens();
+}
+
+// Botao Mensagens amarelo quando ha aviso na caixa.
+function marcarBotaoMensagens() {
+  const botao = el('btn-sync-mensagens');
   if (!botao) return;
-  botao.querySelector('.sync-bar-badge')?.remove();
-  if (total) botao.insertAdjacentHTML('beforeend', ` <span class="sync-bar-badge">${total} docente(s) novo(s)</span>`);
+  const total = el('sync-mensagens-lista')?.querySelectorAll('.sync-msg').length || 0;
+  botao.classList.toggle('tem-mensagens', total > 0);
+  botao.title = total ? `${total} aviso(s): clique para ver` : 'Sem avisos novos';
+  const contador = botao.querySelector('.sync-bar-contador');
+  if (contador) {
+    contador.textContent = total ? String(total) : '';
+    contador.hidden = !total;
+  }
+  botao.setAttribute('aria-label', total ? `Mensagens, ${total} aviso(s)` : 'Mensagens');
+  const vazia = el('sync-mensagens')?.querySelector('.sync-mensagens-vazia');
+  if (vazia) vazia.hidden = total > 0;
 }
 
 const MIN_SENHA = 8;
@@ -294,25 +316,42 @@ function montarBarraStatus(perfil, user, showToast) {
   bar.id = 'sync-bar';
   bar.className = 'sync-bar';
   const nome = perfil?.nome || user?.email || '';
-  const papel = perfil?.papel === 'admin' ? 'administrador' : (perfil?.curso || 'sem curso');
+  // Faixa de uma linha: bolinha do estado + perfil + Senha, Sair (e Mensagens).
+  // O nome (e curso, e-mail) e o estado ficam na dica do perfil (mouse ou Tab).
+  const papel = perfil?.papel === 'admin' ? 'Administrador' : 'Coordenador';
+  const quem = [nome, perfil?.papel !== 'admin' ? perfil?.curso : '', user?.email && user.email !== nome ? user.email : '']
+    .filter(Boolean).join(' – ');
   bar.innerHTML = `
-    <div class="sync-bar-user" title="${escapeHtml(user?.email || '')}">
-      <strong>${escapeHtml(nome)}</strong> <span>(${escapeHtml(papel)})</span>
-    </div>
-    <div class="sync-bar-row">
-      <span id="sync-bar-status" class="sync-bar-status" data-state="carregando" role="status" aria-live="polite">
-        ${STATUS_LABELS.carregando}
+    <span id="sync-bar-status" class="sync-bar-status" data-state="carregando" role="status" aria-live="polite"
+      title="${STATUS_LABELS.carregando}"><span class="sr-only">${STATUS_LABELS.carregando}</span></span>
+    <span class="sync-bar-user" tabindex="0" aria-describedby="sync-bar-dica">
+      <strong>${papel}</strong>
+      <span id="sync-bar-dica" class="sync-bar-dica" role="tooltip">
+        <span class="sync-bar-dica-nome">${escapeHtml(quem)}</span>
+        <span id="sync-bar-dica-estado" class="sync-bar-dica-estado">${STATUS_LABELS.carregando}</span>
       </span>
-      <span class="sync-bar-acoes">
-        <button type="button" id="btn-sync-senha" class="sync-bar-sair" title="Trocar senha" aria-label="Trocar senha">Senha</button>
-        <button type="button" id="btn-sync-sair" class="sync-bar-sair">Sair</button>
-      </span>
-    </div>
-    ${admin ? '<button type="button" id="btn-sync-admin" class="sync-bar-admin">Usuários e backup</button>' : ''}
+    </span>
+    <span class="sync-bar-acoes">
+      <button type="button" id="btn-sync-senha" class="sync-bar-sair" title="Trocar senha" aria-label="Trocar senha">Senha</button>
+      <button type="button" id="btn-sync-sair" class="sync-bar-sair">Sair</button>
+      ${admin ? '<button type="button" id="btn-sync-mensagens" class="sync-bar-sair sync-bar-mensagens" aria-expanded="false" aria-controls="sync-mensagens">Mensagens<span class="sync-bar-contador" hidden></span></button>' : ''}
+    </span>
+    ${admin ? `<div id="sync-mensagens" class="sync-mensagens" hidden>
+      <div id="sync-mensagens-lista" class="sync-mensagens-lista"></div>
+      <p class="sync-mensagens-vazia">Nenhuma mensagem nova.</p>
+      <button type="button" id="btn-sync-admin" class="sync-bar-admin">Usuários e backup</button>
+    </div>` : ''}
   `;
   sidebar.insertBefore(bar, sidebar.firstChild);
 
   if (admin) {
+    // Administrador: avisos (publicar, docentes novos) e "Usuarios e backup"
+    // ficam numa caixa que abre no botao Mensagens (amarelo quando ha aviso).
+    el('btn-sync-mensagens').onclick = () => {
+      const caixa = el('sync-mensagens');
+      caixa.hidden = !caixa.hidden;
+      el('btn-sync-mensagens').setAttribute('aria-expanded', String(!caixa.hidden));
+    };
     el('btn-sync-admin').onclick = async () => {
       const { abrirAdministracao } = await import('./admin_ui.js?v=202611141134');
       abrirAdministracao({ tools: admin, meuId: user?.id || '', showToast, aoContarDocentes: marcarDocentesNovos });
@@ -332,10 +371,17 @@ function montarBarraStatus(perfil, user, showToast) {
 function atualizarStatus(state, detail) {
   const status = el('sync-bar-status');
   if (!status) return;
+  // A faixa mostra so a bolinha (cor pelo data-state); o texto fica para leitor
+  // de tela, na dica da bolinha e na dica do perfil.
+  const rotulo = STATUS_LABELS[state] || state;
+  const texto = detail ? `${rotulo}: ${detail}` : rotulo;
   status.dataset.state = state;
-  status.textContent = STATUS_LABELS[state] || state;
-  status.title = detail || '';
-  if (detail && state === 'erro') status.textContent += `: ${detail}`;
+  status.title = texto;
+  const leitor = status.querySelector('.sr-only');
+  if (leitor) leitor.textContent = state === 'erro' ? texto : rotulo;
+  else status.textContent = texto;
+  const naDica = el('sync-bar-dica-estado');
+  if (naDica) naDica.textContent = texto;
 }
 
 function ajustarControlesOnline(showToast) {

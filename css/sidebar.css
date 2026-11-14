@@ -1,0 +1,681 @@
+/* ==========================================================================
+   Barra lateral (sidebar): verde institucional com campos claros
+   --------------------------------------------------------------------------
+   So muda a aparencia; ids, eventos e a ordem dos campos ficam como estao.
+   Tudo aqui comeca por .sidebar para nao mexer no resto do programa.
+   Carrega por ultimo no index.html. Alguns "!important" sao para vencer o
+   <style id="iecos-layout-fixes"> que o js/ui.js (applySidebarLayoutFixes)
+   poe na pagina depois de abrir, e estilos inline dos elementos.
+   ========================================================================== */
+
+.sidebar {
+    --sb-pad: 16px;                      /* margem lateral interna */
+    --sb-marca: #1c5356;                 /* = fundo do arquivo img/logo_cardume.png */
+    --sb-linha: rgba(255, 255, 255, 0.16);
+    --sb-titulo: #cfe6d8;                /* titulos de secao */
+    --sb-rotulo: #e3f1e8;                /* rotulos dos campos */
+    --sb-dica: #b9d6c5;                  /* textos de ajuda */
+    --sb-campo: #f7fbf8;
+    --sb-campo-texto: #13261b;
+    --sb-campo-borda: #c6dacd;
+    --sb-campo-borda-hover: #9cc2ab;
+    --sb-campo-dica: #6b8476;            /* placeholder */
+    --sb-campo-off: #d3e0d8;             /* desabilitado */
+    --sb-campo-off-texto: #5d7466;
+    --sb-anel: rgba(166, 226, 192, 0.6); /* anel de foco (clique) */
+    --sb-altura: 40px;                   /* botoes */
+    --sb-altura-campo: 32px;             /* campos claros (selects, datas, textos) */
+    --sb-raio: 7px;
+    --sb-painel: #e6f4ea;                /* bloco do usuario */
+    --sb-painel-borda: #b7d9c3;
+    --sb-painel-texto: #0d3b22;
+    --sb-aviso: #ffd166;
+
+    padding: 0 var(--sb-pad) var(--sb-pad);
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.35) transparent;
+    scrollbar-gutter: stable;            /* largura util igual com ou sem rolagem */
+}
+
+/* --------------------------------------------------------------------------
+   1. Identidade: faixa na cor do fundo da logo, UFPA pequena a direita
+   -------------------------------------------------------------------------- */
+.sidebar .sidebar-marca {
+    order: -1;                           /* antes do bloco do usuario (#sync-bar) */
+    display: grid;
+    /* Coluna da logo com o tamanho da logo: a frase herda essa largura */
+    grid-template-columns: minmax(0, 300px) 42px;   /* 42 = UFPA (41,1) em pixel inteiro */
+    justify-content: space-between;
+    align-items: start;
+    column-gap: 10px;
+    margin: 0 calc(-1 * var(--sb-pad)) 11px;
+    padding: 10px var(--sb-pad) 10px;
+    background: var(--sb-marca);
+    flex-shrink: 0;
+}
+
+.sidebar .sidebar-marca-logo {
+    grid-column: 1;
+    grid-row: 1;
+    display: block;
+    width: 100%;
+    max-width: 300px;
+    height: auto;                        /* proporcao original do arquivo */
+    /* Bordas esfumadas: o fundo da imagem varia um pouco e marcaria um retangulo */
+    -webkit-mask-image: linear-gradient(to right, transparent, #000 3%, #000 97%, transparent),
+                        linear-gradient(to bottom, transparent, #000 5%, #000 95%, transparent);
+    -webkit-mask-composite: source-in;
+    mask-image: linear-gradient(to right, transparent, #000 3%, #000 97%, transparent),
+                linear-gradient(to bottom, transparent, #000 5%, #000 95%, transparent);
+    mask-composite: intersect;
+}
+
+/* UFPA ao lado da logo do Cardume, bem menor que ela (52px, pedido do usuario).
+   Arquivo original reduzido pelo navegador. Canto de cima/esquerda em pixel
+   inteiro (coluna de 48px, margem fixa em vez de centralizar): imagem que comeca
+   no meio de um pixel sai borrada. */
+.sidebar .sidebar-marca-ufpa {
+    grid-column: 2;
+    grid-row: 1;
+    justify-self: start;
+    align-self: start;
+    display: block;
+    width: auto;
+    height: 52px;
+    margin-top: 11px;                    /* ~ centro da logo do Cardume (75px) */
+}
+
+/* Frase numa linha, alinhada a direita: termina onde termina "Planejador
+   Academico" dentro do arquivo da logo (98,1% da largura dela, medido nos
+   pixels). O padding em % vale sobre a coluna, que tem a largura da logo. */
+.sidebar .sidebar-marca-frase {
+    grid-column: 1;
+    grid-row: 2;
+    margin: -3px 0 0;
+    padding-right: 1.86%;
+    color: #d3e5db;
+    font-size: 0.76rem;
+    font-weight: 400;
+    line-height: 1.2;
+    letter-spacing: 0.01em;
+    text-align: right;
+    white-space: nowrap;
+}
+
+/* --------------------------------------------------------------------------
+   2. Bloco do usuario (#sync-bar, montado em js/acesso_ui.js): verde claro
+   -------------------------------------------------------------------------- */
+.sidebar .sync-bar {
+    /* Uma linha: bolinha + perfil ......... Senha Sair Mensagens.
+       A caixa de Mensagens (administrador) abre embaixo, na largura toda. */
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    column-gap: 5px;
+    margin: 0 0 1px;                     /* + 10px do titulo seguinte = ~11px */
+    padding: 5px 5px 5px 9px;
+    background: var(--sb-painel);
+    border: 1px solid var(--sb-painel-borda);
+    border-radius: 8px;
+    color: var(--sb-painel-texto);
+    font-size: 0.84rem;
+    line-height: 1.3;
+    flex-shrink: 0;
+}
+
+/* Bolinha do estado: so a cor aparece; o texto vai para leitor de tela e dicas */
+.sidebar .sync-bar-status {
+    position: relative;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #d99a00;                 /* carregando / salvando */
+    cursor: help;
+}
+.sidebar .sync-bar-status::before { content: none; }
+.sidebar .sync-bar-status::after {   /* area maior para o mouse achar a dica */
+    content: "";
+    position: absolute;
+    inset: -6px;
+}
+.sidebar .sync-bar-status[data-state="ok"] { background: #1f9d55; }
+.sidebar .sync-bar-status[data-state="erro"],
+.sidebar .sync-bar-status[data-state="offline"] {
+    background: #d0342c;
+    box-shadow: 0 0 0 3px rgba(208, 52, 44, 0.25);
+}
+.sidebar .sync-bar-status[data-state="carregando"],
+.sidebar .sync-bar-status[data-state="enviando"] {
+    box-shadow: 0 0 0 3px rgba(217, 154, 0, 0.22);
+}
+@media (prefers-reduced-motion: no-preference) {
+    .sidebar .sync-bar-status[data-state="carregando"],
+    .sidebar .sync-bar-status[data-state="enviando"] { animation: sb-pulso 1.2s ease-in-out infinite; }
+}
+@keyframes sb-pulso { 50% { opacity: 0.45; } }
+
+/* Perfil (Administrador / Coordenador); nome, curso, e-mail e estado na dica */
+.sidebar .sync-bar-user {
+    position: relative;
+    min-width: 0;
+    overflow: visible;
+    border-radius: 4px;
+    cursor: default;
+}
+.sidebar .sync-bar-user strong {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-weight: 700;
+}
+.sidebar .sync-bar-user:focus { outline: none; }
+.sidebar .sync-bar-user:focus-visible { outline: 2px solid #2f8a57; outline-offset: 1px; }
+
+.sidebar .sync-bar-dica {
+    position: absolute;
+    top: calc(100% + 9px);
+    left: -18px;
+    z-index: 30;
+    display: none;
+    width: max-content;
+    max-width: 270px;
+    padding: 6px 9px;
+    background: #10291c;
+    border-radius: 6px;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.28);
+    color: #f2f8f4;
+    font-size: 0.76rem;
+    font-weight: 400;
+    line-height: 1.35;
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+.sidebar .sync-bar-user:hover .sync-bar-dica,
+.sidebar .sync-bar-user:focus .sync-bar-dica { display: block; }
+.sidebar .sync-bar-dica > span { display: block; }
+.sidebar .sync-bar-user span { opacity: 1; }   /* style.css esmaece os spans do bloco antigo */
+.sidebar .sync-bar-dica-estado { margin-top: 2px; color: #a9d8bb; }
+
+.sidebar .sync-bar-acoes {
+    display: flex;
+    gap: 3px;
+}
+
+.sidebar .sync-bar-sair {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    height: 28px;                        /* altura de antes */
+    padding: 0 6px;
+    background: #ffffff;
+    border: 1px solid #b4d4c0;
+    border-radius: 6px;
+    color: var(--sb-painel-texto);
+    font-family: inherit;
+    font-size: 0.78rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.sidebar .sync-bar-sair:hover { background: #f2faf5; border-color: #5f9d78; }
+.sidebar .sync-bar-sair:focus-visible { outline: 2px solid #2f8a57; outline-offset: 1px; }
+
+/* Administrador: Mensagens com destaque suave; mais forte quando ha aviso */
+.sidebar .sync-bar-mensagens {
+    background: #fdf3d6;
+    border-color: #ecd393;
+    color: #4a3700;
+}
+.sidebar .sync-bar-mensagens:hover { background: #fbebbd; border-color: #d9b75e; }
+
+.sidebar .sync-bar-mensagens.tem-mensagens {
+    background: var(--sb-aviso);
+    border-color: #e0b443;
+    color: #3d2c00;
+}
+
+.sidebar .sync-bar-mensagens.tem-mensagens:hover { background: #ffdc85; border-color: #c99a2e; }
+
+.sidebar .sync-bar-contador {
+    min-width: 16px;
+    height: 16px;
+    padding: 0 3px;
+    border-radius: 8px;
+    background: #7a4f00;
+    color: #ffffff;
+    font-size: 0.68rem;
+    font-weight: 700;
+    line-height: 16px;
+    text-align: center;
+}
+.sidebar .sync-bar-contador[hidden] { display: none; }
+
+.sidebar .sync-bar-mensagens[aria-expanded="true"] {
+    border-color: var(--sb-painel-texto);
+    box-shadow: inset 0 0 0 1px var(--sb-painel-texto);
+}
+
+/* Caixa de Mensagens (administrador): abre embaixo, na largura toda */
+.sidebar .sync-mensagens {
+    grid-column: 1 / -1;
+    margin: 6px 4px 3px 0;
+    padding-top: 8px;
+    border-top: 1px solid var(--sb-painel-borda);
+}
+
+.sidebar .sync-mensagens-lista .sync-msg { margin-top: 0; }
+.sidebar .sync-mensagens-lista .sync-msg + .sync-msg { margin-top: 6px; }
+
+.sidebar .sync-mensagens-vazia {
+    margin: 0;
+    color: #3f6b52;
+    font-size: 0.78rem;
+}
+
+.sidebar .sync-mensagens-vazia[hidden] { display: none; }
+
+.sidebar .sync-bar-admin {
+    display: flex;
+    font-family: inherit;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    min-height: 32px;
+    margin-top: 8px;
+    padding: 3px 6px 3px 12px;
+    background: #ffffff;
+    border: 1px solid #a9cdb7;
+    border-radius: 6px;
+    color: var(--sb-painel-texto);
+    font-size: 0.82rem;
+    font-weight: 600;
+    text-align: left;
+}
+
+.sidebar .sync-bar-admin:hover { background: #f2faf5; border-color: #5f9d78; }
+
+/* "X alterou... clique em Publicar Online": amarelo, sem dominar o painel */
+.sidebar .sync-bar-aviso {
+    margin-top: 8px;
+    padding: 5px 8px;
+    border-left: 3px solid #e6a700;
+    border-radius: 4px;
+    background: #fff4cf;
+    color: #5a3c00;
+    font-size: 0.76rem;
+    line-height: 1.35;
+}
+
+/* --------------------------------------------------------------------------
+   3. Titulos de secao e divisorias finas
+   -------------------------------------------------------------------------- */
+/* As linhas grossas (<hr> do HTML e as que o ui.js insere) dao lugar a uma
+   linha fina em cima de cada titulo. */
+aside.sidebar hr { display: none !important; }
+
+aside.sidebar h3.sidebar-section-title {
+    margin: 10px 0 8px !important;
+    padding: 9px 0 0;
+    border-top: 1px solid var(--sb-linha);
+    border-bottom: none;
+    color: var(--sb-titulo);
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.09em;
+    line-height: 1.2;
+    text-transform: uppercase;
+}
+
+/* Ordem visual do Periodo letivo (a mesma de antes): titulo, Periodo, datas, plano ativo */
+.sidebar .periodo-letivo-title { order: 1; }
+.sidebar .periodo-letivo-title ~ * { order: 10; }
+.sidebar .periodo-letivo-control { order: 2; }
+.sidebar .periodo-letivo-dates { order: 3; }
+.sidebar #active-plan-status { order: 4; }
+
+/* --------------------------------------------------------------------------
+   4. Rotulos e linhas de controles
+   -------------------------------------------------------------------------- */
+aside.sidebar .form-group { margin-bottom: 8px !important; }
+
+.sidebar .form-group label {
+    margin-bottom: 4px;
+    color: var(--sb-rotulo);
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+/* Rotulo a esquerda e campo a direita (Periodo, Unidade, Turno), alinhados */
+.sidebar .inline-control {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0 0 7px !important;
+}
+
+.sidebar .inline-control > label {
+    flex: 0 0 58px;
+    margin: 0;
+    color: #ffffff;
+    font-size: 0.85rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.sidebar .inline-control > select {
+    flex: 1 1 auto;
+    min-width: 0;
+    max-width: none;
+}
+
+/* Periodo: o texto inteiro ("2027 - PL2 (15/03/27 a 14/07/27)") precisa caber */
+.sidebar .periodo-letivo-control select {
+    padding-left: 10px;
+    padding-right: 28px;
+    background-position: right 10px center;
+    font-size: 0.84rem;
+}
+
+/* Inicio e Fim lado a lado */
+.sidebar .compact-row {
+    display: flex;
+    gap: 10px;
+    align-items: flex-end;
+}
+
+.sidebar .compact-row .form-group {
+    flex: 1 1 0;
+    min-width: 0;
+    margin-bottom: 4px !important;
+}
+
+/* "Plano ativo: PL2 | datas | N oferta(s)": antes ficava verde sobre verde */
+aside.sidebar #active-plan-status {
+    margin: 0 !important;
+    padding: 0 !important;
+    background: none !important;
+    color: var(--sb-dica) !important;
+    font-size: 0.76rem !important;
+    line-height: 1.35 !important;
+}
+
+.sidebar .unidade-aviso { margin: -2px 0 8px; }
+
+/* --------------------------------------------------------------------------
+   5. Campos claros: mesma altura, borda e cantos
+   -------------------------------------------------------------------------- */
+.sidebar select,
+.sidebar input[type="text"],
+.sidebar input[type="date"],
+.sidebar input[type="number"],
+.sidebar input[type="search"],
+.sidebar input:not([type]) {
+    width: 100%;
+    height: var(--sb-altura-campo);
+    min-height: var(--sb-altura-campo);
+    margin: 0;
+    padding: 0 10px;
+    background-color: var(--sb-campo);
+    border: 1px solid var(--sb-campo-borda);
+    border-radius: var(--sb-raio);
+    color: var(--sb-campo-texto);
+    font-family: inherit;
+    font-size: 0.9rem;
+    font-weight: 500;
+    line-height: 1.2;
+    box-shadow: none;
+    transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.sidebar input[type="date"] {
+    color-scheme: light;                 /* icone e calendario claros */
+    padding: 0 8px 0 10px;
+    font-variant-numeric: tabular-nums;
+}
+
+.sidebar input::placeholder { color: var(--sb-campo-dica); opacity: 1; }
+
+/* Seta propria do select (a do sistema some em fundo claro em alguns navegadores) */
+.sidebar select {
+    appearance: none;
+    -webkit-appearance: none;
+    padding-right: 34px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%23164a2c' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 12px 8px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+.sidebar select option {
+    background-color: #ffffff;
+    color: var(--sb-campo-texto);
+}
+
+.sidebar select:hover:not(:disabled),
+.sidebar input:hover:not(:disabled):not([type="checkbox"]):not([type="color"]) {
+    border-color: var(--sb-campo-borda-hover);
+}
+
+/* Foco: borda verde e anel claro (o contorno laranja do teclado continua, style.css) */
+.sidebar select:focus,
+.sidebar input[type="text"]:focus,
+.sidebar input[type="date"]:focus,
+.sidebar input[type="number"]:focus,
+.sidebar input[type="search"]:focus,
+.sidebar input:not([type]):focus {
+    background-color: #ffffff;
+    border-color: #2f8a57;
+    box-shadow: 0 0 0 3px var(--sb-anel);
+}
+
+/* Desabilitado: cinza-esverdeado, texto ainda legivel */
+.sidebar select:disabled,
+.sidebar input:disabled {
+    background-color: var(--sb-campo-off);
+    border-color: var(--sb-campo-off);
+    color: var(--sb-campo-off-texto);
+    opacity: 1;
+}
+
+.sidebar select:disabled {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%237d9488' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+}
+
+/* Campo invalido (se o navegador ou o programa marcar) */
+.sidebar input:user-invalid,
+.sidebar input[aria-invalid="true"],
+.sidebar select[aria-invalid="true"] {
+    border-color: #c0392b;
+    box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.3);
+}
+
+/* Disciplina: circulo de cor do mesmo tamanho do campo */
+.sidebar .input-row-color { gap: 10px; }
+.sidebar .cd-cor-btn { width: var(--sb-altura-campo); height: var(--sb-altura-campo); border-width: 2px; }
+
+/* Sem a linha "Codigo ... · curso · CH" abaixo da Disciplina: o nome ja esta no
+   campo, e a linha mudava a altura da barra. A subturma tem campo proprio. */
+.sidebar .disciplina-codigo-dica { display: none !important; }
+.sidebar .input-row-color input[type="color"]#inp-color { width: var(--sb-altura-campo); height: var(--sb-altura-campo); }
+
+/* Docente alinhado com a caixa da Disciplina (depois do circulo de cor) */
+.sidebar #container-single-docente,
+.sidebar #container-multi-docente {
+    margin-left: calc(var(--sb-altura-campo) + 10px);
+}
+
+/* Varios docentes: nome + CH + remover, na mesma altura */
+.sidebar .teacher-row { gap: 6px; margin-bottom: 6px; }
+.sidebar .teacher-row input[type="number"] { flex: 0 0 64px; width: 64px; padding: 0 6px; text-align: center; }
+.sidebar .teacher-row button.btn-remove-row { width: 28px; height: var(--sb-altura-campo); border-radius: 6px; flex-shrink: 0; }
+
+/* Subturma (T01, T02...) */
+.sidebar #inp-sub-turma { text-align: center; }
+
+/* Textos de ajuda sobre o verde */
+.sidebar .offer-mode-help { color: var(--sb-dica); margin-top: 6px; font-size: 0.78rem; }
+
+/* --------------------------------------------------------------------------
+   6. Oferta de disciplina e botoes
+   -------------------------------------------------------------------------- */
+.sidebar .offer-mode-section { margin-bottom: 10px; }
+.sidebar .offer-mode-section + .offer-mode-section { margin-bottom: 0; }
+
+.sidebar .offer-mode-label {
+    margin-bottom: 6px;
+    color: #ffffff;
+    font-size: 0.88rem;
+    font-weight: 700;
+}
+
+/* 1. Insercao por Bloco: botao a esquerda e a dica ao lado (ganha uma linha) */
+.sidebar .offer-mode-bloco {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    column-gap: 10px;
+}
+
+.sidebar .offer-mode-bloco .offer-mode-label { flex: 1 1 100%; }
+
+/* Dica sempre em 2 linhas (quebra fixa no HTML); o botao fica com o resto da largura */
+.sidebar .offer-mode-bloco .offer-mode-help {
+    flex: 0 0 auto;
+    margin: 0;
+    line-height: 1.3;
+    white-space: nowrap;
+}
+
+.sidebar .offer-mode-bloco .offer-mode-action {
+    flex: 1 1 auto;
+    min-width: 0;
+    padding: 0 8px;
+    font-size: 0.8rem;
+}
+
+/* "Insercao por Bloco (PPC)": verde claro para ser notado, no tom dos campos */
+.sidebar .offer-mode-action {
+    flex: 0 0 auto;
+    width: auto;
+    min-height: var(--sb-altura);
+    margin: 0;
+    padding: 0 12px;
+    background: #d4eedd;
+    border: 1px solid #a6d4b7;
+    border-radius: var(--sb-raio);
+    color: #0d3b22;
+    font-family: inherit;
+    font-size: 0.84rem;
+    font-weight: 700;
+    text-overflow: ellipsis;
+}
+
+.sidebar .offer-mode-action:hover:not(:disabled) { background: #e6f6ec; border-color: #7fbf98; }
+
+/* Sem turma escolhida: o mesmo verde, translucido (da para ver que e um botao) */
+.sidebar .offer-mode-action:disabled,
+.sidebar .offer-mode-action:disabled:hover {
+    background: rgba(212, 238, 221, 0.22);
+    border-color: rgba(166, 212, 183, 0.45);
+    color: rgba(255, 255, 255, 0.78);
+    opacity: 1;
+}
+
+/* Gerenciando arquivos */
+.sidebar .actions {
+    margin-top: 0;
+    padding-top: 0;
+    border-top: none;
+}
+
+/* Exportar, Importar e Publicar numa linha so. Os dois grupos do HTML "somem"
+   (display: contents) e os botoes viram itens da mesma linha. "Limpar Tudo" so
+   aparece no modo local (no servidor o js/acesso_ui.js esconde) e desce para baixo. */
+.sidebar .actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+}
+
+.sidebar .actions .btn-duplo-container,
+.sidebar .actions .publish-clear-row { display: contents; }
+
+.sidebar .actions .btn-duplo-container > button,
+.sidebar .actions .btn-duplo-container > label,
+.sidebar .actions .publish-clear-row .btn-primary {
+    flex: 1 1 auto;
+    width: auto;
+    min-width: 0;
+    padding: 0 4px;
+    gap: 3px;
+    font-family: inherit;                /* botao nao herda a fonte: vinha Arial negrito, mais larga */
+    font-size: 0.76rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+/* Icones decorativos (globo, lixeira) saem para caber tudo numa linha */
+.sidebar .actions .btn-icon { display: none; }
+
+.sidebar .actions .publish-clear-row .btn-danger {
+    flex: 1 1 100%;
+    width: auto;
+}
+
+/* Exportar / Importar (JSON): secundarios em verde-claro, o mesmo tom da faixa
+   da conta; Publicar Online segue verde cheio (principal). Antes: roxo inline. */
+.sidebar .btn-duplo-container > button,
+.sidebar .btn-duplo-container > label {
+    min-height: var(--sb-altura);
+    margin: 0;
+    padding: 0 8px;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    background: var(--sb-painel) !important;
+    border: 1px solid var(--sb-painel-borda) !important;
+    border-radius: var(--sb-raio);
+    color: var(--sb-painel-texto) !important;
+    font-size: 0.85rem;
+    font-weight: 700;
+    line-height: 1.2 !important;
+}
+
+.sidebar .btn-duplo-container > button:hover,
+.sidebar .btn-duplo-container > label:hover {
+    background: #d4eedd !important;
+    border-color: #8cc3a2 !important;
+    filter: none;
+    transform: none;
+}
+
+.sidebar .publish-clear-row { gap: 8px; margin-bottom: 0; }
+
+.sidebar .publish-clear-row .btn-primary,
+.sidebar .publish-clear-row .btn-danger {
+    min-height: var(--sb-altura);
+    padding: 0 8px;
+    border-radius: var(--sb-raio);
+    box-shadow: none;
+    font-size: 0.88rem;
+}
+
+.sidebar .publish-clear-row .btn-primary { background-color: #2e9d5b !important; }
+.sidebar .publish-clear-row .btn-primary:hover { background-color: #34b066 !important; transform: none; }
+.sidebar .publish-clear-row .btn-danger { background-color: #d9483b; }
+.sidebar .publish-clear-row .btn-danger:hover { background-color: #c0392b; }
+
+/* "+ Adicionar" docente */
+.sidebar #btn-add-docente-row { border-radius: 6px; margin-right: 0; }
+
+/* --------------------------------------------------------------------------
+   7. Telas estreitas: a frase quebra sozinha; a sidebar mantem a largura
+   -------------------------------------------------------------------------- */
+@media (max-width: 420px) {
+    .sidebar .sidebar-marca-ufpa { height: 40px; }
+    .sidebar .sidebar-marca-frase { font-size: 0.72rem; }
+}

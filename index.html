@@ -24,25 +24,6 @@
             --primary-light: #006633;
         }
 
-        .sidebar-header-logos {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 15px;
-            margin-bottom: 20px;
-            margin-top: 15px;
-        }
-
-        .sidebar-header-logos img {
-            height: 90px;
-            width: auto;
-            border-radius: 8px;
-            background: transparent;
-            padding: 4px;
-            box-shadow: none;
-            object-fit: contain;
-        }
-
         /* Separadores da tabela "Ofertas Cadastradas" */
         #ofertas-table tr.list-section-sep td {
             background: var(--primary);
@@ -60,85 +41,7 @@
             border-top: 1px solid #dfe6eb;
         }
 
-        /* ===== Sidebar: controles compactos (Período letivo + Turno) ===== */
-        .sidebar .compact-row {
-            display: flex;
-            gap: 10px;
-            align-items: flex-end;
-        }
-
-        .sidebar .compact-row .form-group {
-            flex: 1;
-            margin-bottom: 10px;
-        }
-
-        .sidebar .inline-control {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 10px;
-            margin-top: -2px;
-            margin-bottom: 12px;
-        }
-
-        .sidebar .inline-control label {
-            margin: 0;
-            font-weight: 700;
-            white-space: nowrap;
-        }
-
-        .sidebar .inline-control select {
-            max-width: 180px;
-        }
-
-        .sidebar .periodo-letivo-title {
-            order: 1;
-        }
-
-        .sidebar .periodo-letivo-title~* {
-            order: 10;
-        }
-
-        .sidebar .inline-control.periodo-letivo-control {
-            order: 2;
-            justify-content: flex-start;
-            align-items: center;
-            gap: 8px;
-            margin-top: 2px;
-            margin-bottom: 10px;
-        }
-
-        .sidebar .inline-control.periodo-letivo-control label {
-            color: #fff;
-            font-size: 0.95rem;
-            font-weight: 700;
-        }
-
-        .sidebar .inline-control.periodo-letivo-control select {
-            flex: 1;
-            max-width: none;
-            min-width: 0;
-            padding: 7px 10px;
-            font-size: 0.82rem;
-            font-weight: 600;
-            line-height: 1.15;
-        }
-
-        .sidebar .compact-row.periodo-letivo-dates {
-            order: 3;
-        }
-
-        .sidebar .periodo-letivo-divider {
-            order: 3.5;
-            width: 100%;
-            border: none;
-            border-top: 2px solid rgba(189, 195, 199, 0.75);
-            margin: 0 0 1px;
-        }
-
-        .sidebar #active-plan-status {
-            order: 4;
-        }
+        /* Sidebar: controles, campos e espacos ficam em css/sidebar.css */
 
         .publish-clear-row {
             display: flex;
@@ -444,6 +347,8 @@
             }
         }
     </style>
+    <!-- Visual da barra lateral: depois de todos os estilos, so vale dentro de .sidebar -->
+    <link rel="stylesheet" href="css/sidebar.css?v=202611141134">
 </head>
 
 <body>
@@ -557,19 +462,18 @@
 
         <aside class="sidebar no-print">
 
-            <div class="sidebar-header-logos">
-                <img src="img/logo_ufpa.png" alt="UFPA" title="Universidade Federal do Pará" style="height: 115px;">
-                <img src="img/logo_iecos.png" alt="IECOS UFPA" title="IECOS UFPA"
-                    style="height: 95px; background: rgb(255, 255, 255); box-shadow: 0 4px 6px rgba(0,0,0,0.3); border-radius: 8px;">
-            </div>
-
-            <div
-                style="text-align: center; margin-bottom: 25px; margin-top: -10px; display: flex; flex-direction: column; align-items: center;">
-                <hr style="width: 100%; border: none; border-top: 3px solid #95a5a6; margin: 0;">
-                <img src="img/logo_cardume.png" alt="Cardume - Planejador Acadêmico"
-                    style="width: 100%; max-width: 390px; height: auto; display: block; margin: 0 auto;">
-                <hr style="width: 100%; border: none; border-top: 3px solid #95a5a6; margin: 0;">
-            </div>
+            <!-- Identidade (css/sidebar.css). O arquivo da logo ja traz "CARDUME" e
+                 "Planejador Academico"; aqui so entra a frase. A faixa tem a mesma cor
+                 do fundo da logo, entao a imagem original aparece sem moldura. O bloco do
+                 usuario (#sync-bar, js/acesso_ui.js) e posto logo abaixo pelo CSS (order). -->
+            <header class="sidebar-marca">
+                <img class="sidebar-marca-logo" src="img/logo_cardume.png" alt="Cardume – Planejador Acadêmico" width="3872" height="1088">
+                <!-- Arquivo original da UFPA (356x450, fundo transparente); o navegador reduz
+                     direto do original para a altura do CSS, sem miniatura nem filtro -->
+                <img class="sidebar-marca-ufpa" src="img/logo_ufpa.png"
+                    alt="UFPA" title="Universidade Federal do Pará" width="356" height="450">
+                <p class="sidebar-marca-frase">Planeje turmas, docentes e horários</p>
+            </header>
 
             <h3 class="sidebar-section-title periodo-letivo-title">Per&iacute;odo Letivo</h3>
 
@@ -588,7 +492,7 @@
             <hr class="periodo-letivo-divider">
 
             <div class="inline-control periodo-letivo-control">
-                <label for="sel-periodo-letivo">Per&iacute;odo:</label>
+                <label for="sel-periodo-letivo">Per&iacute;odo</label>
                 <select id="sel-periodo-letivo">
                     <option value="">Carregando...</option>
                 </select>
@@ -604,19 +508,19 @@
             <!-- Unidade: filtra os cursos (cursos[].unidade no dados_app.json). Opcoes em
                  UNIDADES (js/docente_nomes.mjs); abre no IECOS. -->
             <div class="inline-control unidade-control">
-                <label for="sel-unidade">Unidade:</label>
+                <label for="sel-unidade">Unidade</label>
                 <select id="sel-unidade"></select>
             </div>
             <small id="unidade-aviso" class="unidade-aviso" hidden></small>
 
-            <div class="form-group" style="margin-top: 0;">
+            <div class="inline-control">
                 <label for="sel-curso">Curso</label>
                 <select id="sel-curso">
                     <option value="">Selecione...</option>
                 </select>
             </div>
 
-            <div class="form-group">
+            <div class="inline-control">
                 <label for="sel-turma">Turma</label>
                 <select id="sel-turma" disabled>
                     <option value="">Selecione um curso...</option>
@@ -624,7 +528,7 @@
             </div>
 
             <div class="inline-control">
-                <label for="sel-turno-oferta">Turno:</label>
+                <label for="sel-turno-oferta">Turno</label>
                 <select id="sel-turno-oferta">
                     <option value="Manhã">Manhã</option>
                     <option value="Tarde">Tarde</option>
@@ -634,7 +538,7 @@
 
             <h3 class="sidebar-section-title">OFERTA DE DISCIPLINA</h3>
 
-            <div class="offer-mode-section">
+            <div class="offer-mode-section offer-mode-bloco">
                 <label class="offer-mode-label">
                     1. Inser&ccedil;&atilde;o por Bloco
                 </label>
@@ -644,7 +548,7 @@
                 </button>
 
                 <small class="offer-mode-help">
-                    * Ap&oacute;s importar, edite cada componente pendente indo na aba Lista de Ofertas
+                    Edite as componentes<br>na aba Lista de Ofertas
                 </small>
             </div>
 
@@ -713,6 +617,7 @@
                     </div>
 
                     <datalist id="list-docentes"></datalist>
+                </div>
 
                 <!-- Campo de Sub-grupo: aparece automaticamente quando a mesma disciplina já existe na turma -->
                 <div id="container-sub-turma" class="form-group hidden">
@@ -1212,7 +1117,7 @@
                                 <ul class="aj-lista">
                                     <li>Cada coordenador entra com o <b>seu e-mail e senha</b>. O botão <b>Senha</b>, no topo da barra lateral, troca a senha.</li>
                                     <li>Você <b>altera as turmas do seu curso</b> e <b>vê as de todos</b>. Turma de outro curso abre em modo leitura, com aviso.</li>
-                                    <li>O selo <b>Sincronizado</b> mostra que tudo foi salvo no servidor. O que os colegas mudam aparece em poucos segundos.</li>
+                                    <li>A <b>bolinha verde</b> ao lado de Administrador ou Coordenador mostra que tudo foi salvo no servidor (amarela: salvando; vermelha: falha; passe o mouse para ler). O que os colegas mudam aparece em poucos segundos.</li>
                                 </ul>
                             </article>
 
