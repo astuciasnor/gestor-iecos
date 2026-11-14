@@ -96,8 +96,14 @@ grade semanal com os dias fora do PL listrados (cartao so no dia de borda:
 "Fim do PL1 (05/03)" e, uma semana antes do inicio, "PL1 inicia em 04/01/2027"),
 setas parando nessas semanas e setas clicaveis em verde.
 
-Proximos candidatos: Trocar + "Como resolver?" (em andamento), selecao da grade
-(arrastar/Shift+clique, ver memoria), Unidade/Curso da barra lateral.
+- `ui.js` 8.115 -> 7.745 linhas: Trocar + "Como resolver?" -> `js/troca_ui.js`
+  (`ligarTroca`, 9 funcoes do editor). Teste novo antes de mover:
+  `node tools/teste_troca.mjs antes.json` / `... depois.json --comparar antes.json`
+  (Trocar CARTOGRAFIA <-> LIMNOLOGIA no EP2025, Desfazer troca, "Como resolver?"
+  de um choque criado nos dados). Resultado igual antes e depois.
+
+Proximos candidatos: selecao da grade (arrastar/Shift+clique, ver memoria),
+Unidade/Curso da barra lateral, exportacoes e importacao.
 
 ## Fase 1 - Migracao para o servidor da UFPA (quando a VPN sair)
 
@@ -135,7 +141,7 @@ turmas antes e depois (tem que dar identico).
 
 - [x] Codigo de horario SIGAA (`getSigaaCode`, `buildScopedSigaaAllocationFromOfferFaixa`)
       -> `sigaa_metadata.js`; `getGanttTurnoCode` -> `turno_helpers.js` (05/11/2026).
-- [ ] Lista de Ofertas + Trocar -> `ofertas_ui.js`. Mais acoplada do que parecia:
+- [x] Lista de Ofertas -> `lista_ofertas_ui.js` e Trocar -> `troca_ui.js` (13 e 14/11/2026). Mais acoplada do que parecia:
       usa 16 funcoes internas do `ui.js` (editor, desfazer, grade semanal,
       conflitos do candidato) e e chamada de 9 lugares. Fazer depois da virada,
       recebendo essas funcoes num objeto de contexto (`initOfertasUI({...})`),
