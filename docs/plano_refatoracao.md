@@ -90,8 +90,14 @@ do PL aberto (`syncAllIntensiveDates`). Turmas de outro curso podem mudar (ex.:
 CN/CB2027 com a Recepcao dos Calouros); para o administrador essas mudancas vao
 para o servidor sem aviso; para coordenador sao barradas e voltam.
 
-Proximos candidatos: selecao da grade (arrastar/Shift+clique, ver memoria),
-Trocar + "Como resolver?", Unidade/Curso da barra lateral.
+Revisao do usuario em 14/11 (servidor Docker): defeito da CH e Lista de Ofertas
+aprovados. Pedidos dele no mesmo dia: texto novo da mensagem "nao foi salva";
+grade semanal com os dias fora do PL listrados (cartao so no dia de borda:
+"Fim do PL1 (05/03)" e, uma semana antes do inicio, "PL1 inicia em 04/01/2027"),
+setas parando nessas semanas e setas clicaveis em verde.
+
+Proximos candidatos: Trocar + "Como resolver?" (em andamento), selecao da grade
+(arrastar/Shift+clique, ver memoria), Unidade/Curso da barra lateral.
 
 ## Fase 1 - Migracao para o servidor da UFPA (quando a VPN sair)
 

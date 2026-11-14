@@ -517,13 +517,44 @@
 #tab-weekly .cd-semana-seta--prox { right: 8px; }
 /* Reserva o lugar da seta > para ela nunca cobrir "SABADO" em telas estreitas */
 #tab-weekly .timetable .week-day-header:has(> .cd-semana-seta--prox) { padding-right: 46px; }
-#tab-weekly .cd-semana-seta:hover {
+/* Seta que pode ser clicada: fundo verde e seta branca (pedido do usuario em
+   14/11/2026); a parada fica cinza (regra :disabled abaixo). */
+#tab-weekly .cd-semana-seta:not(:disabled) {
     background: var(--cd-primaria);
     border-color: var(--cd-primaria);
     color: #FFFFFF;
     box-shadow: 0 2px 6px rgba(15, 76, 71, .25);
 }
+#tab-weekly .cd-semana-seta:hover {
+    background: var(--cd-primaria);
+    border-color: var(--cd-primaria);
+    color: #FFFFFF;
+    box-shadow: 0 3px 10px rgba(15, 76, 71, .35);
+    filter: brightness(.88);
+}
 #tab-weekly .cd-semana-seta:focus-visible { outline: 3px solid var(--cd-foco); outline-offset: 2px; }
+/* Primeira/ultima semana do PL: a seta para (ver setaSemanaPodeIr no ui.js) */
+#tab-weekly .cd-semana-seta:disabled,
+#tab-weekly .cd-semana-seta:disabled:hover {
+    background: #F1F5F9;
+    border-color: #CBD5E1;
+    color: #94A3B8;
+    box-shadow: none;
+    filter: none;
+    cursor: not-allowed;
+}
+
+/* Dias fora do periodo letivo: mesmas listras do feriado, cartao cinza-azulado
+   (nao e feriado). Desenhado em atualizarFeriadosDaGrade (ui.js). */
+#tab-weekly .cd-feriado--fora .cd-feriado-cartao {
+    background: #F8FAFC;
+    border-color: #CBD5E1;
+    border-top-color: #64748B;
+    box-shadow: 0 2px 6px rgba(51, 65, 85, .10);
+}
+#tab-weekly .cd-feriado--fora .cd-feriado-icone { color: #64748B; box-shadow: 0 1px 2px rgba(51, 65, 85, .15); }
+#tab-weekly .cd-feriado--fora .cd-feriado-nome { color: #334155; white-space: pre-line; }   /* "PL1 inicia em" / "04/01/2027" */
+#tab-weekly .cd-feriado--fora .cd-feriado-sub { color: #475569; }
 
 /* Coluna dos horarios */
 #tab-weekly .timetable .header.time {

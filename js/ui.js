@@ -1,34 +1,34 @@
-import { store } from './store.js?v=202611132116';
-import { cadastrosDocentes, findNewDocenteNames, getCadastroDocente, refreshAvisoDocenteNovo, coletarCadastrosDocentes, setupAvisoDocenteNovo, ligarCadastroDocente } from './cadastro_docente_ui.js?v=202611132116';
-import { renderOfertasList, ligarListaOfertas } from './lista_ofertas_ui.js?v=202611132116';
-import { stableStringify } from './sync_diff.mjs?v=202611132116';
-import { getTurnoLetter, mapSlotToTurno, turnoDaTurmaInclui } from './turns.js?v=202611132116';
-import { normalizePeriodo as normalizePeriodoLetivoCode } from './plan_storage.js?v=202611132116';
-import { getCalendarEvents } from './calendar.js?v=202611132116';
-import { isDateOverlap } from './utils.js?v=202611132116';
-import { weeklyState } from './weekly_state.js?v=202611132116';
-import { findPendentesCobertas, isPendenteJaAlocada } from './pendentes.mjs?v=202611132116';
-import { classifySwap } from './troca_ordem.mjs?v=202611132116';
-import { datasFeriadoDaTurma, feriadosDaTurma } from './feriados.mjs?v=202611132116';
-import { closeFaixaEnds, isPauseEnd, listFaixaPauses } from './pausa_faixas.mjs?v=202611132116';
-import { numeroDaSubturma, isTurmaInteira, proximaSubturma, codigoT01Como, saoSubturmasDiferentes, sufixoSubturma } from './subturmas.mjs?v=202611132116';
-import { abrirMiniCalendario, fecharMiniCalendario, miniCalendarioAberto } from './mini_calendario.mjs?v=202611132116';
-import { buildCanonicalOfferProjection } from './execution_engine.js?v=202611132116';
+import { store } from './store.js?v=202611141114';
+import { cadastrosDocentes, findNewDocenteNames, getCadastroDocente, refreshAvisoDocenteNovo, coletarCadastrosDocentes, setupAvisoDocenteNovo, ligarCadastroDocente } from './cadastro_docente_ui.js?v=202611141114';
+import { renderOfertasList, ligarListaOfertas } from './lista_ofertas_ui.js?v=202611141114';
+import { stableStringify } from './sync_diff.mjs?v=202611141114';
+import { getTurnoLetter, mapSlotToTurno, turnoDaTurmaInclui } from './turns.js?v=202611141114';
+import { normalizePeriodo as normalizePeriodoLetivoCode } from './plan_storage.js?v=202611141114';
+import { getCalendarEvents } from './calendar.js?v=202611141114';
+import { isDateOverlap } from './utils.js?v=202611141114';
+import { weeklyState } from './weekly_state.js?v=202611141114';
+import { findPendentesCobertas, isPendenteJaAlocada } from './pendentes.mjs?v=202611141114';
+import { classifySwap } from './troca_ordem.mjs?v=202611141114';
+import { datasFeriadoDaTurma, feriadosDaTurma } from './feriados.mjs?v=202611141114';
+import { closeFaixaEnds, isPauseEnd, listFaixaPauses } from './pausa_faixas.mjs?v=202611141114';
+import { numeroDaSubturma, isTurmaInteira, proximaSubturma, codigoT01Como, saoSubturmasDiferentes, sufixoSubturma } from './subturmas.mjs?v=202611141114';
+import { abrirMiniCalendario, fecharMiniCalendario, miniCalendarioAberto } from './mini_calendario.mjs?v=202611141114';
+import { buildCanonicalOfferProjection } from './execution_engine.js?v=202611141114';
 import {
     buildSigaaMetadataPayload,
     validateSigaaMetadataPayload,
     getSigaaCode,
     buildScopedSigaaAllocationFromOfferFaixa,
     buildSigaaHorarioResumo
-} from './sigaa_metadata.js?v=202611132116';
-import { parseBackupDataFile, extractImportPlanMeta } from './serialization.js?v=202611132116';
+} from './sigaa_metadata.js?v=202611141114';
+import { parseBackupDataFile, extractImportPlanMeta } from './serialization.js?v=202611141114';
 import {
     showToastWarning,
     showPersistentStatusMessage,
     copyTextToClipboard,
     flashButtonCopyState,
     setupCopyActionButtons
-} from './ui_feedback.js?v=202611132116';
+} from './ui_feedback.js?v=202611141114';
 import {
     normalizeHexColor,
     adjustHexColor,
@@ -37,7 +37,7 @@ import {
     tonsDaCor,
     aplicarTonsBloco,
     PALETA_CORES
-} from './color_utils.js?v=202611132116';
+} from './color_utils.js?v=202611141114';
 import {
     isFaixaAllocation,
     isPriorityRegularAllocation,
@@ -46,8 +46,8 @@ import {
     normalizeTeacherNameForMatch,
     getDocenteShortLabel,
     getAllocationTeachersForConflict
-} from './allocation_helpers.js?v=202611132116';
-import { setupSeletorCor } from './seletor_cor.js?v=202611132116';
+} from './allocation_helpers.js?v=202611141114';
+import { setupSeletorCor } from './seletor_cor.js?v=202611141114';
 
 import {
     UNIDADES,
@@ -55,11 +55,11 @@ import {
     acharNomeConhecido,
     filtrarDocentes,
     umNomePorPessoa
-} from './docente_nomes.mjs?v=202611132116';
+} from './docente_nomes.mjs?v=202611141114';
 import {
     fetchAllocationsForPlans
-} from './sync_remoto.js?v=202611132116';
-import { resolveBackendMode } from './backend_config.js?v=202611132116';
+} from './sync_remoto.js?v=202611141114';
+import { resolveBackendMode } from './backend_config.js?v=202611141114';
 import {
     normalizeConflictSlotLabel,
     getAvailableTurnoOfertaOptions,
@@ -69,7 +69,7 @@ import {
     buildHorariosForUI,
     getShiftChangeMeta,
     getNativeTurnoValueForAllocation
-} from './turno_helpers.js?v=202611132116';
+} from './turno_helpers.js?v=202611141114';
 import {
     getDisciplinaCHGlobal,
     derivarBloco,
@@ -79,7 +79,7 @@ import {
     getDisciplinaInfo,
     getCursoSiglaDaTurma,
     getPrintAcademicMetaLine
-} from './curso_turma_helpers.js?v=202611132116';
+} from './curso_turma_helpers.js?v=202611141114';
 import {
     renderMonthlyCalendar,
     renderTeacherCalendar,
@@ -87,14 +87,14 @@ import {
     clearTeacherRangeCache,
     setTeacherPeriod,
     getTeacherPeriod
-} from './calendarios_ui.js?v=202611132116';
-import { setupIndicadores, renderIndicadores, setIndicadoresLigacoes } from './indicadores_ui.js?v=202611132116';
+} from './calendarios_ui.js?v=202611141114';
+import { setupIndicadores, renderIndicadores, setIndicadoresLigacoes } from './indicadores_ui.js?v=202611141114';
 import {
     refreshTeacherConflictsUI,
     setCrossPlanLoader,
     setResolverDeChoque,
     acharChoqueComOutroPL
-} from './conflitos_ui.js?v=202611132116';
+} from './conflitos_ui.js?v=202611141114';
 import {
     shouldIgnoreTurmaEventForCandidate,
     normalizeDrawnSlotsByDay,
@@ -108,7 +108,7 @@ import {
     resolveEditableFaixasFromStoredExecution,
     alignFaixasToExecutionEnd,
     buildFinalAdjustmentFaixaSuggestion
-} from './faixa_utils.js?v=202611132116';
+} from './faixa_utils.js?v=202611141114';
 import {
     timeToMinutes,
     shiftISODate,
@@ -122,14 +122,14 @@ import {
     isDateInsideRange,
     formatDateBRShortYear,
     formatDateBR
-} from './date_utils_ui.js?v=202611132116';
+} from './date_utils_ui.js?v=202611141114';
 import {
     initializeWeeklyScheduleForTurma,
     reconcileTurmaSelectionAfterPLChange,
     resetWeeklyViewOnTurmaChange,
     resolveActiveAcademicPeriod,
     slotLabelsOverlap
-} from './academic_rules.mjs?v=202611132116';
+} from './academic_rules.mjs?v=202611141114';
 
 const gridContainer = document.getElementById('weekly-grid');
 const selCurso = document.getElementById('sel-curso');
@@ -4007,10 +4007,45 @@ function resolveWeeklyViewWeekStart() {
     return weeklyViewState.weekStartISO;
 }
 
+// Periodo letivo aberto (PL e datas), para a grade semanal marcar os dias fora
+// dele e as setas pararem na primeira e na ultima semana.
+function periodoLetivoDaGrade() {
+    return {
+        inicio: String(store.settings.termStart || '').trim(),
+        fim: String(store.settings.termEnd || '').trim(),
+        nome: String(store.settings.periodo || '').trim() || 'PL'
+    };
+}
+
+// Dias de borda do PL na grade (segunda a sabado): o ultimo dia antes do inicio
+// e o primeiro dia depois do fim. Neles fica o cartao ("PL1 inicia em 04/01" /
+// "Fim do PL1 (05/03)"). PL que comeca na segunda: a borda e o sabado da semana
+// anterior; PL que termina no sabado: a borda e a segunda seguinte.
+function diasDeBordaDoPeriodo() {
+    const { inicio, fim } = periodoLetivoDaGrade();
+    const pulaDomingo = (d, passo) => (new Date(`${d}T12:00:00`).getDay() === 0 ? addDaysISO(d, passo) : d);
+    return {
+        antes: isValidISODateValue(inicio) ? pulaDomingo(addDaysISO(inicio, -1), -1) : '',
+        depois: isValidISODateValue(fim) ? pulaDomingo(addDaysISO(fim, 1), 1) : ''
+    };
+}
+
+// A seta pode ir para a semana seguinte/anterior? So ate a semana que mostra a
+// borda do PL (ver diasDeBordaDoPeriodo); voltar para dentro, sempre pode.
+function setaSemanaPodeIr(currentStart, weekDelta) {
+    if (!currentStart || !weekDelta) return true;
+    const { antes, depois } = diasDeBordaDoPeriodo();
+    const nextStart = addDaysISO(currentStart, weekDelta * 7);
+    if (weekDelta > 0 && depois && nextStart > getWeekStartISO(depois)) return false;
+    if (weekDelta < 0 && antes && nextStart < getWeekStartISO(antes)) return false;
+    return true;
+}
+
 function moveWeeklyViewWeek(weekDelta = 0) {
     if (drawingFaixaIndex) persistActiveDrawingSelection();
     const currentStart = resolveWeeklyViewWeekStart();
     if (!currentStart) return;
+    if (!setaSemanaPodeIr(currentStart, weekDelta)) return;
     const nextDate = addDaysISO(currentStart, weekDelta * 7);
     queueWeeklyShiftAnimation(weekDelta);
     setWeeklyViewByDate(nextDate, { followFaixa: false, render: true });
@@ -6002,6 +6037,40 @@ function renderWeeklyGrid() {
     const weekDates = getWeeklyWeekDates(weekStartISO);
     updateWeeklyNavigatorLabel();
 
+    // Dias fora do periodo letivo: a coluna fica listrada, como feriado. So o dia
+    // de borda (ver diasDeBordaDoPeriodo) ganha cartao: "Fim do PL1 (05/03)" no
+    // primeiro dia depois do fim; "PL1 inicia em / 04/01/2027" no ultimo dia antes
+    // do inicio. Os outros dias fora do PL ficam so listrados (mesmo feriado).
+    // Dia em que a turma tem aula gravada nao e marcado.
+    const foraDoPeriodo = new Map();   // data -> { cartao, sub }
+    {
+        const { inicio, fim, nome } = periodoLetivoDaGrade();
+        const { antes, depois } = diasDeBordaDoPeriodo();
+        const diasComAula = new Set(turmaAllocs.flatMap((a) => Object.keys(a.executionByDate || {})));
+        weekDates.forEach((d) => {
+            if (!d || diasComAula.has(d)) return;
+            const depoisDoFim = isValidISODateValue(fim) && d > fim;
+            const antesDoInicio = isValidISODateValue(inicio) && d < inicio;
+            if (!depoisDoFim && !antesDoInicio) return;
+            let rotulo = 'Fora do período';
+            let sub = '';
+            let cartao = false;
+            if (depoisDoFim && d === depois) {
+                rotulo = `Fim do ${nome} (${formatDateBR(fim).slice(0, 5)})`;
+                sub = 'Fora do período · sem aula';
+                cartao = true;
+            } else if (antesDoInicio && d === antes) {
+                // Texto do usuario (14/11/2026): "PL1 inicia em / 04/01/2027" em negrito, duas linhas.
+                rotulo = `${nome} inicia em\n${formatDateBR(inicio)}`;
+                sub = 'Fora do período · sem aula';
+                cartao = true;
+            }
+            feriadosMap.set(d, rotulo);
+            feriadosSet.add(d);
+            foraDoPeriodo.set(d, { cartao, sub });
+        });
+    }
+
     const weeklySnapshotStart = store.settings.termStart || calStart?.value || weekDates[0] || weekStartISO;
     const weeklySnapshotEnd = weekDates[weekDates.length - 1] || weekStartISO;
     const weeklyEventsFull = getCalendarEvents(
@@ -6187,6 +6256,13 @@ function renderWeeklyGrid() {
         btn.setAttribute('aria-label', rotulo);
         btn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${anterior ? 'm15 18-6-6 6-6' : 'm9 18 6-6-6-6'}"></path></svg>`;
         btn.addEventListener('click', () => moveWeeklyViewWeek(direcao));
+        if (!setaSemanaPodeIr(weekStartISO, direcao)) {
+            const { inicio, fim, nome } = periodoLetivoDaGrade();
+            btn.disabled = true;
+            btn.title = anterior
+                ? `Antes disso não há aulas do ${nome} (começa em ${formatDateBR(inicio)})`
+                : `Depois disso não há aulas do ${nome} (termina em ${formatDateBR(fim)})`;
+        }
         return btn;
     };
 
@@ -6220,7 +6296,7 @@ function renderWeeklyGrid() {
             holidayName.textContent = holidayLabel;
             h.appendChild(holidayName);
             h.classList.add('week-day-holiday');
-            h.title = `Feriado: ${holidayLabel}`;
+            h.title = foraDoPeriodo.has(dateStr) ? `${holidayLabel} · sem aula` : `Feriado: ${holidayLabel}`;
         }
         if (idx === diasSemana.length - 1) h.appendChild(criarSetaSemana(1));
 
@@ -6278,8 +6354,14 @@ function renderWeeklyGrid() {
                 const holidayLabelForColumn = isHolidayColumn ? (feriadosMap.get(cellDate) || 'Feriado') : '';
                 if (isHolidayColumn) {
                     cell.classList.add('slot-holiday-column');
-                    cell.title = `Feriado: ${holidayLabelForColumn}`;
+                    cell.title = foraDoPeriodo.has(cellDate) ? `${holidayLabelForColumn} · sem aula` : `Feriado: ${holidayLabelForColumn}`;
                     cell.dataset.feriado = holidayLabelForColumn;   // nome usado pelo cartao do feriado
+                    if (foraDoPeriodo.has(cellDate)) {
+                        const fora = foraDoPeriodo.get(cellDate);
+                        cell.dataset.foraPeriodo = '1';
+                        cell.dataset.foraSub = fora.sub;
+                        if (!fora.cartao) cell.dataset.semCartao = '1';   // so listrado
+                    }
                 }
 
                 const allocsRaw = getWeeklySlotEvents(cellDate, horarioStr, i);
@@ -6456,8 +6538,9 @@ function atualizarFeriadosDaGrade() {
         const dir = Math.max(...rects.map((r) => r.right));
         if (!(dir > esq && fundo > topo)) return;
 
+        const foraDoPeriodo = doDia[0].dataset.foraPeriodo === '1';
         const camada = document.createElement('div');
-        camada.className = 'cd-feriado';
+        camada.className = foraDoPeriodo ? 'cd-feriado cd-feriado--fora' : 'cd-feriado';
         camada.setAttribute('role', 'note');
         camada.style.left = `${esq - base.left + palco.scrollLeft}px`;
         camada.style.top = `${topo - base.top + palco.scrollTop}px`;
@@ -6472,10 +6555,10 @@ function atualizarFeriadosDaGrade() {
         nome.textContent = doDia[0].dataset.feriado || 'Feriado';
         const sub = document.createElement('span');
         sub.className = 'cd-feriado-sub';
-        sub.textContent = 'Feriado · sem aula';
+        sub.textContent = foraDoPeriodo ? (doDia[0].dataset.foraSub ?? 'Fora do período · sem aula') : 'Feriado · sem aula';
         cartao.appendChild(nome);
-        cartao.appendChild(sub);
-        camada.appendChild(cartao);
+        if (sub.textContent) cartao.appendChild(sub);
+        if (doDia[0].dataset.semCartao !== '1') camada.appendChild(cartao);   // fora do PL sem borda: so listras
         palco.appendChild(camada);
     });
 }
@@ -7173,17 +7256,11 @@ function handleAddManual() {
                     execution.totalHours
                 );
                 if (!stacked) {
-                    const quandoChoque = intensiveConflict.date ? ` em ${formatDateBR(intensiveConflict.date)}` : '';
-                    setWeeklyBlock(
-                        'Nao cabe em sequencia',
-                        `"${intensiveConflict.disciplina}" ja ocupa esse horario${quandoChoque}. Colocada depois das componentes ja alocadas, "${disciplina}" nao cabe inteira (${execution.totalHours}h) ate o fim do periodo letivo. Ajuste a data de inicio ou os horarios das faixas e salve de novo.`,
-                        'choque'
-                    );
-                    showToastWarning(
-                        `Choque com "${intensiveConflict.disciplina}"${quandoChoque}, e depois das outras componentes "${disciplina}" nao cabe inteira ate o fim do periodo. Ajuste o inicio ou os horarios e salve de novo.`,
-                        'warning',
-                        7000
-                    );
+                    // Componente empilhada nao cabe inteira: nao salva (texto aprovado pelo usuario em 14/11/2026).
+                    const aPartirDe = intensiveConflict.date ? `A partir de ${formatDateBR(intensiveConflict.date).slice(0, 5)} ela` : 'Ela';
+                    const textoNaoCabe = `${disciplina} não foi salva. ${aPartirDe} bate com ${intensiveConflict.disciplina}, e depois dela não sobram horas para as ${effectiveCH}h até o fim do período. Escolha outro início ou outros horários.`;
+                    setWeeklyBlock('Não cabe inteira', textoNaoCabe, 'choque');
+                    showToastWarning(textoNaoCabe, 'warning', 7000);
                     return;
                 }
                 effInicio = stacked.candidate.dataInicio;

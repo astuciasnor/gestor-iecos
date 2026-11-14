@@ -125,7 +125,7 @@ try {
   })()`);
   if (ESPERA === 'barra') {
     confere('nao salvou (nao cabe inteira)', salva === null, true);
-    confere('explica que nao cabe inteira', /nao cabe inteira/i.test(toast), true);
+    confere('explica que nao foi salva', /não foi salva.*não sobram horas/i.test(toast), true);
   } else if (!salva) {
     falhas++;
     console.log('FALHA componente nao foi salva');
