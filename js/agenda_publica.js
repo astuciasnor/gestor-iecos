@@ -1,11 +1,11 @@
-import { store, normalizeLoadedAllocation } from './store.js?v=202611141621';
-import { getTurnoLetter } from './turns.js?v=202611141621';
-import { getCalendarEvents } from './calendar.js?v=202611141621';
-import { resolveActiveAcademicPeriod } from './academic_rules.mjs?v=202611141621';
-import { buildMonthMarkers, summarizeTeacherPeriod } from './resumo_docente.mjs?v=202611141621';
-import { resolveBackendMode, UFPA_API_URL } from './backend_config.js?v=202611141621';
-import { filtrarDocentes } from './docente_nomes.mjs?v=202611141621';
-import { nomeComSubturma, sufixoSubturma } from './subturmas.mjs?v=202611141621';
+import { store, normalizeLoadedAllocation } from './store.js?v=202611141734';
+import { getTurnoLetter } from './turns.js?v=202611141734';
+import { getCalendarEvents } from './calendar.js?v=202611141734';
+import { resolveActiveAcademicPeriod } from './academic_rules.mjs?v=202611141734';
+import { buildMonthMarkers, summarizeTeacherPeriod } from './resumo_docente.mjs?v=202611141734';
+import { resolveBackendMode, UFPA_API_URL } from './backend_config.js?v=202611141734';
+import { filtrarDocentes, UNIDADES } from './docente_nomes.mjs?v=202611141734';
+import { nomeComSubturma, sufixoSubturma } from './subturmas.mjs?v=202611141734';
 
 const collator = new Intl.Collator('pt-BR', { sensitivity: 'base' });
 const PUBLIC_ASSET_VERSION = '20261028a';
@@ -241,9 +241,9 @@ function cacheElements() {
     els.tabDocente = document.getElementById('tab-docente');
     els.viewDiscente = document.getElementById('view-discente');
     els.viewDocente = document.getElementById('view-docente');
+    els.selUnidade = document.getElementById('public-sel-unidade');
     els.selCurso = document.getElementById('public-sel-curso');
     els.selTurma = document.getElementById('public-sel-turma');
-    els.containerTurmas = document.getElementById('container-turmas');
     els.containerMesesDiscente = document.getElementById('container-meses-discente');
     els.inpDocente = document.getElementById('inp-docente-publico');
     els.docenteAutocomplete = els.inpDocente?.closest('.pub-autocomplete') || null;
@@ -261,7 +261,9 @@ function bindEvents() {
     els.tabDiscente?.addEventListener('click', () => switchTab('discente'));
     els.tabDocente?.addEventListener('click', () => switchTab('docente'));
 
+    els.selUnidade?.addEventListener('change', handleUnidadeChange);
     els.selCurso?.addEventListener('change', handleCursoChange);
+    els.selTurma?.addEventListener('change', handleTurmaChange);
     els.inpDocente?.addEventListener('input', handleDocenteInput);
     els.inpDocente?.addEventListener('focus', handleDocenteFocus);
     els.inpDocente?.addEventListener('blur', handleDocenteBlur);
@@ -572,31 +574,88 @@ function buildPlanOptionLabel(publication) {
     return base;
 }
 
+// Quadro "Ano" + "Periodo letivo". O ano fica no primeiro campo; o segundo so
+// lista os PLs daquele ano, com rotulo curto (ex.: "PL4 · 24/08 a 23/12").
+// Ao abrir, vale o PL escolhido em pickActivePublication (o atual).
+function publicationYear(publication) {
+    return String(publication?.termStart || '').slice(0, 4);
+}
+
+function buildPlanShortLabel(publication) {
+    const periodo = publication.periodo || publication.label || 'Período';
+    if (publication.termStart && publication.termEnd) {
+        const ddmm = (iso) => formatIsoDateBR(iso).slice(0, 5);
+        return `${periodo} · ${ddmm(publication.termStart)} a ${ddmm(publication.termEnd)}`;
+    }
+    return periodo;
+}
+
 function setupPlanSwitcher() {
     const wrap = document.getElementById('pub-plan-switch');
     const select = document.getElementById('pub-sel-plano');
-    if (!wrap || !select) return;
+    const selAno = document.getElementById('pub-sel-ano');
+    if (!wrap || !select || !selAno) return;
 
     const publications = Array.isArray(state.publicPublications) ? state.publicPublications : [];
     const ordered = getDisplayPublications(publications, state.activePublicationKey);
     if (ordered.length <= 1) {
         wrap.hidden = true;
         select.innerHTML = '';
+        selAno.innerHTML = '';
         return;
     }
 
-    select.innerHTML = '';
-    ordered.forEach((publication) => {
-        const option = document.createElement('option');
-        option.value = publication.key;
-        option.textContent = buildPlanOptionLabel(publication);
-        if (publication.key === state.activePublicationKey) option.selected = true;
-        select.appendChild(option);
-    });
-
     wrap.hidden = false;
+    syncPlanSwitcher();
     select.removeEventListener('change', handlePlanSwitchChange);
     select.addEventListener('change', handlePlanSwitchChange);
+    selAno.removeEventListener('change', handleYearSwitchChange);
+    selAno.addEventListener('change', handleYearSwitchChange);
+}
+
+// Monta os dois campos a partir do PL ativo (tambem depois de trocar de PL
+// pelo resumo do ano, que pode ir para outro ano).
+function syncPlanSwitcher() {
+    const select = document.getElementById('pub-sel-plano');
+    const selAno = document.getElementById('pub-sel-ano');
+    if (!select || !selAno) return;
+
+    const ordered = getDisplayPublications(state.publicPublications || [], state.activePublicationKey);
+    const active = ordered.find((pub) => pub.key === state.activePublicationKey) || ordered[0];
+    const activeYear = publicationYear(active);
+
+    const anos = [...new Set(ordered.map(publicationYear).filter(Boolean))];
+    selAno.innerHTML = '';
+    anos.forEach((ano) => {
+        const option = document.createElement('option');
+        option.value = ano;
+        option.textContent = ano;
+        option.selected = ano === activeYear;
+        selAno.appendChild(option);
+    });
+
+    select.innerHTML = '';
+    ordered.filter((pub) => publicationYear(pub) === activeYear).forEach((publication) => {
+        const option = document.createElement('option');
+        option.value = publication.key;
+        option.textContent = buildPlanShortLabel(publication);
+        option.title = buildPlanOptionLabel(publication);
+        option.selected = publication.key === state.activePublicationKey;
+        select.appendChild(option);
+    });
+}
+
+function handleYearSwitchChange(event) {
+    const ano = String(event?.target?.value || '').trim();
+    const ordered = getDisplayPublications(state.publicPublications || [], state.activePublicationKey);
+    const doAno = ordered.filter((pub) => publicationYear(pub) === ano);
+    // No ano escolhido: o PL em curso, senao o proximo, senao o ultimo
+    const publication = pickActivePublication(doAno);
+    if (!publication || publication.key === state.activePublicationKey) return;
+
+    state.activePublicationKey = publication.key;
+    applySelectedPublication(publication);
+    refreshAfterPlanSwitch(publication);
 }
 
 function handlePlanSwitchChange(event) {
@@ -623,10 +682,11 @@ function refreshAfterPlanSwitch(publication, { keepDocente = false } = {}) {
         if (els.inpDocente) els.inpDocente.value = '';
     }
 
-    const select = document.getElementById('pub-sel-plano');
-    if (select && publication?.key) select.value = publication.key;
+    syncPlanSwitcher();
 
     preencherCursos();
+    preencherTurmas('');               // curso volta ao vazio: turma e meses tambem
+    preencherMesesDiscente();
     syncDocenteInputState();
     syncTabUI();
     if (!keepDocente) renderActiveEmptyState();
@@ -744,16 +804,56 @@ function buildSemesterChipLabel() {
     return `${formatIsoDateBR(start)} a ${formatIsoDateBR(end)}`;
 }
 
+// Unidade de cada curso vem dos dados (cursos[].unidade); sem unidade = IECOS.
+function unidadeDoCurso(curso) {
+    return String(curso?.unidade || '').trim().toUpperCase() || 'IECOS';
+}
+
+function getPublishedCourses() {
+    const allowedCourseSiglas = getPublishedCourseSiglas();
+    return (store.rawData?.cursos || []).filter((curso) => {
+        const sigla = String(curso?.sigla || '').trim();
+        return sigla && (!allowedCourseSiglas || allowedCourseSiglas.has(sigla));
+    });
+}
+
+// Lista so as unidades com curso publicado. Fica no IECOS, a nao ser que o
+// usuario tenha escolhido outra que ainda exista neste PL.
+function preencherUnidades() {
+    if (!els.selUnidade) return;
+    const comCurso = new Set(getPublishedCourses().map(unidadeDoCurso));
+    const unidades = UNIDADES.filter((u) => comCurso.has(u.sigla));
+    comCurso.forEach((sigla) => {
+        if (!unidades.some((u) => u.sigla === sigla)) unidades.push({ sigla, nome: sigla });
+    });
+    const atual = els.selUnidade.value;
+    els.selUnidade.innerHTML = '';
+    unidades.forEach((u) => {
+        const option = document.createElement('option');
+        option.value = u.sigla;
+        option.textContent = u.nome;
+        els.selUnidade.appendChild(option);
+    });
+    const valores = unidades.map((u) => u.sigla);
+    els.selUnidade.value = valores.includes(atual) ? atual : (valores.includes('IECOS') ? 'IECOS' : (valores[0] || ''));
+}
+
+function handleUnidadeChange() {
+    if (els.selCurso) els.selCurso.value = '';
+    preencherCursos();
+    handleCursoChange();
+}
+
 function preencherCursos() {
     if (!els.selCurso) return;
 
-    const allowedCourseSiglas = getPublishedCourseSiglas();
+    preencherUnidades();
+    const unidade = els.selUnidade?.value || '';
     els.selCurso.innerHTML = '<option value="">Selecione um curso...</option>';
 
-    (store.rawData?.cursos || []).forEach((curso) => {
+    getPublishedCourses().forEach((curso) => {
         const sigla = String(curso?.sigla || '').trim();
-        if (!sigla) return;
-        if (allowedCourseSiglas && !allowedCourseSiglas.has(sigla)) return;
+        if (unidade && unidadeDoCurso(curso) !== unidade) return;
 
         const option = document.createElement('option');
         option.value = sigla;
@@ -787,13 +887,10 @@ function handleCursoChange() {
 }
 
 function preencherTurmas(cursoSigla) {
-    if (!els.containerTurmas) return;
-
-    els.containerTurmas.innerHTML = '';
-    syncHiddenTurmaSelect([]);
+    if (!els.selTurma) return;
 
     if (!cursoSigla) {
-        els.containerTurmas.innerHTML = '<span class="pub-empty">Aguardando curso...</span>';
+        syncTurmaSelect([], 'Escolha o curso');
         return;
     }
 
@@ -805,35 +902,24 @@ function preencherTurmas(cursoSigla) {
         })
         .sort((a, b) => collator.compare(String(a?.turma_label || ''), String(b?.turma_label || '')));
 
-    if (!turmas.length) {
-        els.containerTurmas.innerHTML = '<span class="pub-empty">Nenhuma turma publicada para este curso.</span>';
-        return;
-    }
-
-    syncHiddenTurmaSelect(turmas);
-
-    turmas.forEach((turma) => {
-        const button = document.createElement('button');
-        button.type = 'button';
-        button.className = 'pub-pill';
-        button.textContent = turma?.turma_label || turma?.turma_id || 'Turma';
-
-        button.addEventListener('click', () => {
-            state.discente.turmaId = String(turma?.turma_id || '').trim();
-            state.discente.mes = '';
-            highlightActiveButton(els.containerTurmas, button);
-            preencherMesesDiscente();
-            renderActiveEmptyState();
-        });
-
-        els.containerTurmas.appendChild(button);
-    });
+    syncTurmaSelect(turmas, turmas.length ? 'Selecione uma turma' : 'Nenhuma turma publicada');
 }
 
-function syncHiddenTurmaSelect(turmas) {
+function handleTurmaChange() {
+    state.discente.turmaId = String(els.selTurma?.value || '').trim();
+    state.discente.mes = '';
+    preencherMesesDiscente();
+    renderActiveEmptyState();
+}
+
+function syncTurmaSelect(turmas, placeholder) {
     if (!els.selTurma) return;
 
-    els.selTurma.innerHTML = '<option value="">Selecione uma turma...</option>';
+    els.selTurma.innerHTML = '';
+    const vazio = document.createElement('option');
+    vazio.value = '';
+    vazio.textContent = placeholder;
+    els.selTurma.appendChild(vazio);
     turmas.forEach((turma) => {
         const option = document.createElement('option');
         option.value = String(turma?.turma_id || '').trim();
@@ -1488,8 +1574,6 @@ function getWeekDisplayEnd(week) {
 }
 
 function buildResumoMarkup(periodos) {
-    const comAula = periodos.filter((p) => p.components.length);
-    const totalComponentes = comAula.reduce((n, p) => n + p.components.length, 0);
     const totalAulas = periodos.reduce((n, p) => n + p.totalAulas, 0);
     const aulasPorAno = {};
     periodos.forEach((p) => Object.entries(p.aulasPorAno || {}).forEach(([ano, aulas]) => {
@@ -1497,20 +1581,17 @@ function buildResumoMarkup(periodos) {
     }));
     const anos = Object.keys(aulasPorAno).sort();
 
-    const badges = [
-        'Resumo do ano',
-        `${totalComponentes} componente${totalComponentes === 1 ? '' : 's'}`,
-        `${comAula.length} de ${periodos.length} período${periodos.length === 1 ? '' : 's'} com aula`,
-        ...anos.map((ano) => `${ano}: ${aulasPorAno[ano]} horas-aula`),
-        anos.length === 1 ? '' : `${totalAulas} horas-aula no total`
-    ].filter(Boolean);
+    // So a carga horaria: um selo por ano (lado a lado) e o total embaixo,
+    // quando ha mais de um ano.
+    const badges = anos.map((ano) => `<span class="pub-result-badge">${escapeHtml(`${ano}: ${aulasPorAno[ano]} horas-aula`)}</span>`);
+    if (anos.length > 1) {
+        badges.push(`<span class="pub-result-badge is-total">Total: ${totalAulas} horas-aula</span>`);
+    }
     const context = `
         <div class="pub-result-context">
             <div class="pub-result-eyebrow">Consulta Docente</div>
             <h2 class="pub-result-title">${escapeHtml(state.docente.nome)}</h2>
-            <div class="pub-result-meta">
-                ${badges.map((badge) => `<span class="pub-result-badge">${escapeHtml(badge)}</span>`).join('')}
-            </div>
+            ${badges.length ? `<div class="pub-result-meta resumo-horas">${badges.join('')}</div>` : ''}
         </div>`;
 
     if (!periodos.length) {

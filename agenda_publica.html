@@ -12,7 +12,7 @@
             location.replace('https://cardume.iecos.ufpa.br/agenda_publica.html' + location.search + location.hash);
         }
     </script>
-    <link rel="stylesheet" href="css/style.css?v=202611141621">
+    <link rel="stylesheet" href="css/style.css?v=202611141734">
     <style>
         :root {
             --pub-bg: #eef3ef;
@@ -47,94 +47,53 @@
             margin: 18px auto 42px auto;
         }
 
+        /* Topo: faixa na cor do fundo da logo do Cardume (#1c5356), logo + UFPA
+           ao lado e so o titulo embaixo. O periodo ja aparece no quadro de selecao. */
         .pub-hero {
-            position: relative;
-            overflow: hidden;
-            background:
-                linear-gradient(135deg, rgba(0, 78, 40, 0.95), rgba(12, 98, 58, 0.92)),
-                linear-gradient(180deg, #0e5935, #0e5935);
+            background: #1c5356;
             color: #fff;
             border-radius: 24px;
-            padding: 18px 20px;
+            padding: 14px 20px 16px;
             box-shadow: var(--pub-shadow);
         }
 
-        .pub-hero::after {
-            content: "";
-            position: absolute;
-            right: -50px;
-            top: -50px;
-            width: 220px;
-            height: 220px;
-            background: radial-gradient(circle, rgba(255, 255, 255, 0.18), transparent 65%);
-            pointer-events: none;
-        }
-
-        .pub-hero-top {
-            display: grid;
-            grid-template-columns: 136px minmax(0, 1fr);
-            align-items: center;
-            gap: 22px;
-        }
-
-        .pub-logo {
-            width: 136px;
-            height: 136px;
-            border-radius: 30px;
-            background: rgba(255, 255, 255, 0.96);
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-            box-shadow:
-                0 14px 30px rgba(7, 33, 19, 0.20),
-                inset 0 0 0 1px rgba(10, 90, 53, 0.10);
-        }
-
-        .pub-logo img {
-            width: 106px;
-            height: 106px;
-            object-fit: contain;
-        }
-
-        .pub-title-wrap {
-            min-width: 0;
+        .pub-marca {
             display: flex;
-            flex-direction: column;
+            align-items: flex-start;
             justify-content: center;
-            gap: 14px;
+            gap: 12px;
         }
 
-        .pub-title-wrap h1 {
-            margin: 0;
-            font-size: clamp(1.8rem, 3vw, 2.5rem);
-            line-height: 1;
+        .pub-marca-logo {
+            display: block;
+            flex: 1 1 auto;
+            min-width: 0;
+            width: 100%;
+            max-width: 300px;
+            height: auto;
+            /* Bordas esfumadas: o fundo da imagem varia um pouco e marcaria um retangulo */
+            -webkit-mask-image: linear-gradient(to right, transparent, #000 3%, #000 97%, transparent),
+                                linear-gradient(to bottom, transparent, #000 5%, #000 95%, transparent);
+            -webkit-mask-composite: source-in;
+            mask-image: linear-gradient(to right, transparent, #000 3%, #000 97%, transparent),
+                        linear-gradient(to bottom, transparent, #000 5%, #000 95%, transparent);
+            mask-composite: intersect;
+        }
+
+        .pub-marca-ufpa {
+            display: block;
+            flex-shrink: 0;
+            width: auto;
+            height: 53px;                    /* ~5% maior que antes (50px) */
+            margin-top: 9px;                 /* desce para a altura do "CARDUME" */
+        }
+
+        .pub-titulo {
+            margin: 8px 0 0;
+            text-align: center;
+            font-size: clamp(1.5rem, 3vw, 2rem);
+            line-height: 1.1;
             letter-spacing: 0.02em;
-        }
-
-        .pub-meta {
-            display: grid;
-            justify-items: flex-start;
-            gap: 10px;
-        }
-
-        .pub-hero>.pub-meta {
-            display: none;
-        }
-
-        .pub-chip {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            max-width: min(100%, 420px);
-            min-height: 42px;
-            padding: 9px 16px;
-            border-radius: 999px;
-            background: rgba(255, 255, 255, 0.14);
-            border: 1px solid rgba(255, 255, 255, 0.18);
-            font-size: 0.96rem;
-            font-weight: 700;
-            color: #fff;
         }
 
         .pub-main {
@@ -144,10 +103,10 @@
         }
 
         .pub-plan-switch {
-            display: flex;
-            flex-wrap: wrap;
+            display: grid;
+            grid-template-columns: auto minmax(0, 1fr);
             align-items: center;
-            gap: 10px 14px;
+            gap: 8px 12px;
             justify-self: start;
             max-width: 100%;
             padding: 12px 16px;
@@ -172,9 +131,10 @@
 
         .pub-plan-switch .pub-select {
             width: auto;
-            min-width: 240px;
+            min-width: 0;
             max-width: 100%;
-            padding: 10px 14px;
+            justify-self: start;
+            padding: 9px 14px;
             border-radius: 14px;
             font-weight: 700;
         }
@@ -918,44 +878,17 @@
             }
 
             .pub-hero {
-                padding: 16px 14px;
+                padding: 12px 12px 14px;
                 border-radius: 20px;
             }
 
-            .pub-hero-top {
-                grid-template-columns: 102px minmax(0, 1fr);
-                align-items: center;
-                gap: 14px;
+            .pub-marca-ufpa {
+                height: 44px;
+                margin-top: 8px;
             }
 
-            .pub-logo {
-                width: 102px;
-                height: 102px;
-                border-radius: 24px;
-            }
-
-            .pub-logo img {
-                width: 78px;
-                height: 78px;
-            }
-
-            .pub-title-wrap {
-                gap: 10px;
-            }
-
-            .pub-title-wrap h1 {
-                font-size: 1.5rem;
-            }
-
-            .pub-meta {
-                gap: 8px;
-            }
-
-            .pub-chip {
-                max-width: 100%;
-                min-height: 38px;
-                padding: 8px 13px;
-                font-size: 0.88rem;
+            .pub-titulo {
+                font-size: 1.4rem;
             }
 
             .pub-autocomplete.is-lifted {
@@ -1372,32 +1305,160 @@
                 display: none !important;
             }
         }
+
+        /* Agenda Discente x Agenda Docente: dois botoes separados (o fundo da pagina
+           aparece entre eles), discretos. Fica no fim para valer sobre as regras
+           de celular acima. Nao mexe nos .pub-subtabs (que tambem usam .pub-tab). */
+        .pub-main > .pub-tabs {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 210px));
+            gap: 12px;
+            width: auto;
+            max-width: 100%;
+            padding: 0;
+            background: none;
+            border: 0;
+            border-radius: 0;
+            box-shadow: none;
+            backdrop-filter: none;
+        }
+
+        .pub-main > .pub-tabs > .pub-tab {
+            width: 100%;
+            min-width: 0;
+            min-height: 42px;
+            padding: 9px 12px;
+            border: 1px solid rgba(28, 83, 86, 0.18);
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.55);
+            color: #5b7268;
+            font-size: 0.9rem;
+            font-weight: 700;
+            box-shadow: none;
+            transition: background-color 0.15s, border-color 0.15s, color 0.15s;
+        }
+
+        .pub-main > .pub-tabs > .pub-tab:hover {
+            transform: none;
+            background: #fff;
+            border-color: rgba(28, 83, 86, 0.35);
+            color: #1c5356;
+        }
+
+        .pub-main > .pub-tabs > .pub-tab.active {
+            background: #fff;
+            border-color: #1c5356;
+            color: #1c5356;
+            box-shadow: inset 0 -3px 0 #1c5356, 0 4px 12px rgba(18, 43, 32, 0.08);
+        }
+
+        @media (max-width: 720px) {
+            .pub-main > .pub-tabs {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                justify-self: stretch;           /* ocupa a largura toda do celular */
+                gap: 10px;
+            }
+
+            .pub-main > .pub-tabs > .pub-tab {
+                font-size: 0.86rem;
+                padding: 9px 8px;
+            }
+        }
+
+        /* Agenda Docente mais compacta: menos espaco entre rotulo, dica e campo. */
+        #view-docente .pub-controls { gap: 12px; }
+        #view-docente .pub-group label { margin-bottom: 4px; }
+        #view-docente .pub-hint { margin: 0 0 8px; }
+        #view-docente .pub-input { padding: 11px 14px; border-radius: 14px; }
+
+        /* Botoes de mes (e o "Resumo do ano"): menores e esticados para dividir a
+           linha; no celular os 6 botoes de um PL de 5 meses cabem em 2 linhas. */
+        #container-meses-docente,
+        #container-meses-discente {
+            gap: 6px;
+            padding: 8px;
+            min-height: 0;
+        }
+
+        #container-meses-docente .pub-pill,
+        #container-meses-discente .pub-pill {
+            flex: 1 1 auto;
+            padding: 7px 10px;
+            font-size: 0.82rem;
+            white-space: nowrap;
+            box-shadow: none;
+        }
+
+        #container-meses-docente .pub-pill.active,
+        #container-meses-discente .pub-pill.active {
+            box-shadow: 0 4px 10px rgba(0, 78, 40, 0.18);
+        }
+
+        /* Resumo do professor: horas-aula de cada ano lado a lado e o total embaixo */
+        .pub-result-meta.resumo-horas {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 6px;
+            max-width: 420px;
+        }
+
+        .resumo-horas .pub-result-badge {
+            justify-content: center;
+            padding: 7px 10px;
+            border-radius: 10px;
+        }
+
+        .resumo-horas .pub-result-badge.is-total {
+            grid-column: 1 / -1;
+            background: #fff;
+            border-color: rgba(28, 83, 86, 0.35);
+            color: #1c5356;
+        }
+
+        /* Agenda Discente: Unidade / Curso / Turma com o rotulo ao lado da caixinha */
+        .pub-linhas {
+            display: grid;
+            grid-template-columns: auto minmax(0, 1fr);
+            align-items: center;
+            gap: 8px 12px;
+            max-width: 560px;
+        }
+
+        .pub-group.pub-linhas label {
+            margin: 0;
+        }
+
+        .pub-linhas .pub-select {
+            padding: 9px 12px;
+            border-radius: 12px;
+            font-size: 0.95rem;
+        }
+
+        .pub-linhas .pub-select:disabled {
+            background: var(--pub-soft);
+            color: #83958a;
+        }
     </style>
 </head>
 
 <body>
     <div class="pub-shell">
         <header class="pub-hero">
-            <div class="pub-hero-top">
-                <div class="pub-logo">
-                    <img src="img/logo_iecos.png" alt="Logo IECOS">
-                </div>
-                <div class="pub-title-wrap">
-                    <h1>Agenda de Aulas</h1>
-                    <div class="pub-meta">
-                        <span class="pub-chip" id="pub-periodo-chip">Per&iacute;odo: --</span>
-                        <span class="pub-chip" id="pub-faixa-chip">Per&iacute;odo: --</span>
-                    </div>
-                </div>
+            <div class="pub-marca">
+                <img class="pub-marca-logo" src="img/cardume_agenda_1x.png"
+                    srcset="img/cardume_agenda_1x.png 1x, img/cardume_agenda_2x.png 2x"
+                    alt="Cardume – Planejador Acadêmico" width="300" height="84">
+                <img class="pub-marca-ufpa" src="img/ufpa_sidebar_1x.png"
+                    srcset="img/ufpa_sidebar_1x.png 1x, img/ufpa_sidebar_2x.png 2x, img/ufpa_sidebar_3x.png 3x"
+                    alt="UFPA" title="Universidade Federal do Pará" width="40" height="50">
             </div>
-            <div class="pub-meta">
-                <span class="pub-chip" id="pub-periodo-chip">Per&iacute;odo: --</span>
-                <span class="pub-chip" id="pub-faixa-chip">Per&iacute;odo: --</span>
-            </div>
+            <h1 class="pub-titulo">Agenda de Aulas</h1>
         </header>
 
         <div class="pub-main">
             <div class="pub-plan-switch" id="pub-plan-switch" hidden>
+                <label for="pub-sel-ano">Ano</label>
+                <select id="pub-sel-ano" class="pub-select" aria-label="Selecionar o ano"></select>
                 <label for="pub-sel-plano">Per&iacute;odo letivo</label>
                 <select id="pub-sel-plano" class="pub-select" aria-label="Selecionar per&iacute;odo letivo publicado"></select>
             </div>
@@ -1411,26 +1472,23 @@
             <section class="pub-panel">
                 <section id="view-discente" class="pub-view">
                     <div class="pub-controls">
-                        <div class="pub-group is-half">
-                            <label for="public-sel-curso">1. Curso</label>
-                            <p class="pub-hint">Selecione o curso para liberar as turmas publicadas.</p>
+                        <!-- Unidade, Curso e Turma: rotulo ao lado da caixinha, uma linha cada -->
+                        <div class="pub-group pub-linhas">
+                            <label for="public-sel-unidade">Unidade</label>
+                            <select id="public-sel-unidade" class="pub-select"></select>
+                            <label for="public-sel-curso">Curso</label>
                             <select id="public-sel-curso" class="pub-select">
                                 <option value="">Carregando cursos...</option>
                             </select>
-                        </div>
-
-                        <div class="pub-group is-half">
-                            <label>2. Turma</label>
-                            <p class="pub-hint">As turmas disponiveis aparecem em botoes para toque rapido.</p>
-                            <div id="container-turmas" class="pub-pillbox">
-                                <span class="pub-empty">Aguardando curso...</span>
-                            </div>
-                            <select id="public-sel-turma" class="pub-select" style="display:none;" disabled></select>
+                            <label for="public-sel-turma">Turma</label>
+                            <select id="public-sel-turma" class="pub-select" disabled>
+                                <option value="">Escolha o curso</option>
+                            </select>
                         </div>
 
                         <div class="pub-group">
-                            <label>3. Mes</label>
-                            <p class="pub-hint">Escolha o mes para visualizar os slots da turma.</p>
+                            <label>M&ecirc;s</label>
+                            <p class="pub-hint">Escolha o m&ecirc;s para ver as aulas da turma.</p>
                             <div id="container-meses-discente" class="pub-pillbox">
                                 <span class="pub-empty">Aguardando turma...</span>
                             </div>
@@ -1442,7 +1500,7 @@
                     <div class="pub-controls">
                         <div class="pub-group is-half">
                             <label for="inp-docente-publico">1. Professor</label>
-                            <p class="pub-hint">Busque o nome do professor para visualizar sua grade semanal de aulas.</p>
+                            <p class="pub-hint">Busque o professor para ver suas aulas.</p>
                             <div class="pub-autocomplete">
                                 <input id="inp-docente-publico" class="pub-input" type="text" autocomplete="off"
                                     placeholder="Digite o nome do professor...">
@@ -1454,7 +1512,7 @@
 
                         <div id="docente-month-group" class="pub-group is-half">
                             <label>2. Resumo ou m&ecirc;s</label>
-                            <p class="pub-hint">O resumo mostra todos os per&iacute;odos publicados; o m&ecirc;s abre o calend&aacute;rio do per&iacute;odo selecionado.</p>
+                            <p class="pub-hint">Resumo dos PLs ou calend&aacute;rio do m&ecirc;s.</p>
                             <div id="container-meses-docente" class="pub-pillbox">
                                 <span class="pub-empty">Aguardando professor...</span>
                             </div>
@@ -1474,7 +1532,7 @@
     <div id="slot-lens" class="slot-lens" hidden></div>
     <div id="day-lens" class="day-lens" hidden></div>
 
-    <script type="module" src="js/agenda_publica.js?v=202611141621"></script>
+    <script type="module" src="js/agenda_publica.js?v=202611141734"></script>
 </body>
 
 </html>
