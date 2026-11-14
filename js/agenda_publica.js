@@ -1,11 +1,11 @@
-import { store, normalizeLoadedAllocation } from './store.js?v=202611141753';
-import { getTurnoLetter } from './turns.js?v=202611141753';
-import { getCalendarEvents } from './calendar.js?v=202611141753';
-import { resolveActiveAcademicPeriod } from './academic_rules.mjs?v=202611141753';
-import { buildMonthMarkers, summarizeTeacherPeriod } from './resumo_docente.mjs?v=202611141753';
-import { resolveBackendMode, UFPA_API_URL } from './backend_config.js?v=202611141753';
-import { filtrarDocentes, UNIDADES } from './docente_nomes.mjs?v=202611141753';
-import { nomeComSubturma, sufixoSubturma } from './subturmas.mjs?v=202611141753';
+import { store, normalizeLoadedAllocation } from './store.js?v=202611141814';
+import { getTurnoLetter } from './turns.js?v=202611141814';
+import { getCalendarEvents } from './calendar.js?v=202611141814';
+import { resolveActiveAcademicPeriod } from './academic_rules.mjs?v=202611141814';
+import { buildMonthMarkers, summarizeTeacherPeriod } from './resumo_docente.mjs?v=202611141814';
+import { resolveBackendMode, UFPA_API_URL } from './backend_config.js?v=202611141814';
+import { filtrarDocentes, UNIDADES } from './docente_nomes.mjs?v=202611141814';
+import { nomeComSubturma, sufixoSubturma } from './subturmas.mjs?v=202611141814';
 
 const collator = new Intl.Collator('pt-BR', { sensitivity: 'base' });
 const PUBLIC_ASSET_VERSION = '20261028a';
@@ -809,19 +809,17 @@ function unidadeDoCurso(curso) {
     return String(curso?.unidade || '').trim().toUpperCase() || 'IECOS';
 }
 
-function getPublishedCourses() {
-    const allowedCourseSiglas = getPublishedCourseSiglas();
-    return (store.rawData?.cursos || []).filter((curso) => {
-        const sigla = String(curso?.sigla || '').trim();
-        return sigla && (!allowedCourseSiglas || allowedCourseSiglas.has(sigla));
-    });
+// Unidade e Curso mostram todos os cursos cadastrados, em qualquer PL.
+// So a Turma depende do PL: sem aula publicada nele, a lista fica vazia.
+function todosOsCursos() {
+    return (store.rawData?.cursos || []).filter((curso) => String(curso?.sigla || '').trim());
 }
 
-// Lista so as unidades com curso publicado. Fica no IECOS, a nao ser que o
-// usuario tenha escolhido outra que ainda exista neste PL.
+// Lista as unidades que tem curso cadastrado. Fica no IECOS, a nao ser que o
+// usuario tenha escolhido outra.
 function preencherUnidades() {
     if (!els.selUnidade) return;
-    const comCurso = new Set(getPublishedCourses().map(unidadeDoCurso));
+    const comCurso = new Set(todosOsCursos().map(unidadeDoCurso));
     const unidades = UNIDADES.filter((u) => comCurso.has(u.sigla));
     comCurso.forEach((sigla) => {
         if (!unidades.some((u) => u.sigla === sigla)) unidades.push({ sigla, nome: sigla });
@@ -851,7 +849,7 @@ function preencherCursos() {
     const unidade = els.selUnidade?.value || '';
     els.selCurso.innerHTML = '<option value="">Selecione um curso...</option>';
 
-    getPublishedCourses().forEach((curso) => {
+    todosOsCursos().forEach((curso) => {
         const sigla = String(curso?.sigla || '').trim();
         if (unidade && unidadeDoCurso(curso) !== unidade) return;
 
@@ -860,20 +858,6 @@ function preencherCursos() {
         option.textContent = curso?.curso || sigla;
         els.selCurso.appendChild(option);
     });
-}
-
-function getPublishedCourseSiglas() {
-    if (!state.publicTurmaIds) return null;
-
-    const siglas = new Set();
-    (store.rawData?.turmas || []).forEach((turma) => {
-        const turmaId = String(turma?.turma_id || '').trim();
-        if (!state.publicTurmaIds.has(turmaId)) return;
-        const sigla = String(turma?.sigla || '').trim();
-        if (sigla) siglas.add(sigla);
-    });
-
-    return siglas.size ? siglas : null;
 }
 
 function handleCursoChange() {
@@ -897,12 +881,12 @@ function preencherTurmas(cursoSigla) {
     const turmas = (store.rawData?.turmas || [])
         .filter((turma) => {
             if (String(turma?.sigla || '').trim() !== String(cursoSigla || '').trim()) return false;
-            if (!state.publicTurmaIds) return true;
+            if (!state.publicTurmaIds) return false;
             return state.publicTurmaIds.has(String(turma?.turma_id || '').trim());
         })
         .sort((a, b) => collator.compare(String(a?.turma_label || ''), String(b?.turma_label || '')));
 
-    syncTurmaSelect(turmas, turmas.length ? 'Selecione uma turma' : 'Nenhuma turma publicada');
+    syncTurmaSelect(turmas, turmas.length ? 'Selecione uma turma' : 'Nenhuma turma neste PL');
 }
 
 function handleTurmaChange() {

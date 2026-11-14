@@ -11,7 +11,7 @@
 // CH do docente: componente dividida entre docentes = a parte declarada dele
 // (30 de 90); docente unico = a CH da componente no PPC do curso da turma.
 
-import { normalizeTeacherNameForMatch, ehVaga, nomeImprovisado } from './docente_nomes.mjs?v=202611141753';
+import { normalizeTeacherNameForMatch, ehVaga, nomeImprovisado } from './docente_nomes.mjs?v=202611141814';
 
 export const SEM_DOCENTE = 'A definir';
 
