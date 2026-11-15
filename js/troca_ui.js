@@ -2,18 +2,18 @@
 // gravacao) e o "Como resolver?" do Calendario Docente. Saiu do ui.js em
 // 14/11/2026 sem mudar nada; as funcoes do editor que ele usa chegam por
 // ligarTroca (ver ui.js). Quem pode trocar com quem: troca_ordem.mjs.
-import { slotLabelsOverlap } from './academic_rules.mjs?v=202611150039';
-import { getAllocationTeachersForConflict, isFaixaAllocation } from './allocation_helpers.js?v=202611150039';
-import { getCalendarEvents } from './calendar.js?v=202611150039';
-import { getCursoSiglaDaTurma, getDisciplinaInfo, getTurmaLabel } from './curso_turma_helpers.js?v=202611150039';
-import { addDaysISO, formatDateBR } from './date_utils_ui.js?v=202611150039';
-import { alignFaixasToExecutionEnd, buildFinalAdjustmentFaixaSuggestion, computeIntensiveExecution, getNormalizedIntensiveFaixas, normalizeFaixaEntry, shouldIgnoreTurmaEventForCandidate } from './faixa_utils.js?v=202611150039';
-import { datasFeriadoDaTurma } from './feriados.mjs?v=202611150039';
-import { store } from './store.js?v=202611150039';
-import { saoSubturmasDiferentes } from './subturmas.mjs?v=202611150039';
-import { classifySwap } from './troca_ordem.mjs?v=202611150039';
-import { normalizeConflictSlotLabel } from './turno_helpers.js?v=202611150039';
-import { showToastWarning } from './ui_feedback.js?v=202611150039';
+import { slotLabelsOverlap } from './academic_rules.mjs?v=202611150048';
+import { getAllocationTeachersForConflict, isFaixaAllocation } from './allocation_helpers.js?v=202611150048';
+import { getCalendarEvents } from './calendar.js?v=202611150048';
+import { getCursoSiglaDaTurma, getDisciplinaInfo, getTurmaLabel } from './curso_turma_helpers.js?v=202611150048';
+import { addDaysISO, formatDateBR } from './date_utils_ui.js?v=202611150048';
+import { alignFaixasToExecutionEnd, buildFinalAdjustmentFaixaSuggestion, computeIntensiveExecution, getNormalizedIntensiveFaixas, normalizeFaixaEntry, shouldIgnoreTurmaEventForCandidate } from './faixa_utils.js?v=202611150048';
+import { datasFeriadoDaTurma } from './feriados.mjs?v=202611150048';
+import { store } from './store.js?v=202611150048';
+import { saoSubturmasDiferentes } from './subturmas.mjs?v=202611150048';
+import { classifySwap } from './troca_ordem.mjs?v=202611150048';
+import { normalizeConflictSlotLabel } from './turno_helpers.js?v=202611150048';
+import { showToastWarning } from './ui_feedback.js?v=202611150048';
 
 // Do ui.js: editor, conflitos de professor, desfazer e recalculo das datas.
 let ligacoes = {};

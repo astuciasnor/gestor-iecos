@@ -1,36 +1,36 @@
-import { store } from './store.js?v=202611150039';
-import { escapeTrocaHtml, contarHorasExecutadas, sugerirInicioSemChoque, fraseComeceEm, cursoDaTurma, sugerirComoResolverChoque, abrirTrocaDeOrdem, ligarTroca } from './troca_ui.js?v=202611150039';
-import { cadastrosDocentes, findNewDocenteNames, getCadastroDocente, refreshAvisoDocenteNovo, coletarCadastrosDocentes, setupAvisoDocenteNovo, ligarCadastroDocente } from './cadastro_docente_ui.js?v=202611150039';
-import { renderOfertasList, ligarListaOfertas } from './lista_ofertas_ui.js?v=202611150039';
-import { arrastoAtivo, esquecerAncora, endDrawingDrag, setDrawingCellSelection, marcarAncoraNaGrade, ligarSelecaoDaGrade } from './grade_selecao.js?v=202611150039';
-import { stableStringify } from './sync_diff.mjs?v=202611150039';
-import { getTurnoLetter, mapSlotToTurno, turnoDaTurmaInclui } from './turns.js?v=202611150039';
-import { normalizePeriodo as normalizePeriodoLetivoCode } from './plan_storage.js?v=202611150039';
-import { getCalendarEvents } from './calendar.js?v=202611150039';
-import { isDateOverlap } from './utils.js?v=202611150039';
-import { weeklyState } from './weekly_state.js?v=202611150039';
-import { findPendentesCobertas, isPendenteJaAlocada } from './pendentes.mjs?v=202611150039';
+import { store } from './store.js?v=202611150048';
+import { escapeTrocaHtml, contarHorasExecutadas, sugerirInicioSemChoque, fraseComeceEm, cursoDaTurma, sugerirComoResolverChoque, abrirTrocaDeOrdem, ligarTroca } from './troca_ui.js?v=202611150048';
+import { cadastrosDocentes, findNewDocenteNames, getCadastroDocente, refreshAvisoDocenteNovo, coletarCadastrosDocentes, setupAvisoDocenteNovo, ligarCadastroDocente } from './cadastro_docente_ui.js?v=202611150048';
+import { renderOfertasList, ligarListaOfertas } from './lista_ofertas_ui.js?v=202611150048';
+import { arrastoAtivo, esquecerAncora, endDrawingDrag, setDrawingCellSelection, marcarAncoraNaGrade, ligarSelecaoDaGrade } from './grade_selecao.js?v=202611150048';
+import { stableStringify } from './sync_diff.mjs?v=202611150048';
+import { getTurnoLetter, mapSlotToTurno, turnoDaTurmaInclui } from './turns.js?v=202611150048';
+import { normalizePeriodo as normalizePeriodoLetivoCode } from './plan_storage.js?v=202611150048';
+import { getCalendarEvents } from './calendar.js?v=202611150048';
+import { isDateOverlap } from './utils.js?v=202611150048';
+import { weeklyState } from './weekly_state.js?v=202611150048';
+import { findPendentesCobertas, isPendenteJaAlocada } from './pendentes.mjs?v=202611150048';
 
-import { datasFeriadoDaTurma, feriadosDaTurma } from './feriados.mjs?v=202611150039';
-import { closeFaixaEnds, isPauseEnd, listFaixaPauses } from './pausa_faixas.mjs?v=202611150039';
-import { numeroDaSubturma, isTurmaInteira, proximaSubturma, codigoT01Como, saoSubturmasDiferentes, sufixoSubturma, semSubturma, subturmaFicouSozinha } from './subturmas.mjs?v=202611150039';
-import { abrirMiniCalendario, fecharMiniCalendario, miniCalendarioAberto } from './mini_calendario.mjs?v=202611150039';
-import { buildCanonicalOfferProjection } from './execution_engine.js?v=202611150039';
+import { datasFeriadoDaTurma, feriadosDaTurma } from './feriados.mjs?v=202611150048';
+import { closeFaixaEnds, isPauseEnd, listFaixaPauses } from './pausa_faixas.mjs?v=202611150048';
+import { numeroDaSubturma, isTurmaInteira, proximaSubturma, codigoT01Como, saoSubturmasDiferentes, sufixoSubturma, semSubturma, subturmaFicouSozinha } from './subturmas.mjs?v=202611150048';
+import { abrirMiniCalendario, fecharMiniCalendario, miniCalendarioAberto } from './mini_calendario.mjs?v=202611150048';
+import { buildCanonicalOfferProjection } from './execution_engine.js?v=202611150048';
 import {
     buildSigaaMetadataPayload,
     validateSigaaMetadataPayload,
     getSigaaCode,
     buildScopedSigaaAllocationFromOfferFaixa,
     buildSigaaHorarioResumo
-} from './sigaa_metadata.js?v=202611150039';
-import { parseBackupDataFile, extractImportPlanMeta } from './serialization.js?v=202611150039';
+} from './sigaa_metadata.js?v=202611150048';
+import { parseBackupDataFile, extractImportPlanMeta } from './serialization.js?v=202611150048';
 import {
     showToastWarning,
     showPersistentStatusMessage,
     copyTextToClipboard,
     flashButtonCopyState,
     setupCopyActionButtons
-} from './ui_feedback.js?v=202611150039';
+} from './ui_feedback.js?v=202611150048';
 import {
     normalizeHexColor,
     adjustHexColor,
@@ -39,7 +39,7 @@ import {
     tonsDaCor,
     aplicarTonsBloco,
     PALETA_CORES
-} from './color_utils.js?v=202611150039';
+} from './color_utils.js?v=202611150048';
 import {
     isFaixaAllocation,
     isPriorityRegularAllocation,
@@ -48,8 +48,8 @@ import {
     normalizeTeacherNameForMatch,
     getDocenteShortLabel,
     getAllocationTeachersForConflict
-} from './allocation_helpers.js?v=202611150039';
-import { setupSeletorCor } from './seletor_cor.js?v=202611150039';
+} from './allocation_helpers.js?v=202611150048';
+import { setupSeletorCor } from './seletor_cor.js?v=202611150048';
 
 import {
     UNIDADES,
@@ -57,11 +57,11 @@ import {
     acharNomeConhecido,
     filtrarDocentes,
     umNomePorPessoa
-} from './docente_nomes.mjs?v=202611150039';
+} from './docente_nomes.mjs?v=202611150048';
 import {
     fetchAllocationsForPlans
-} from './sync_remoto.js?v=202611150039';
-import { resolveBackendMode } from './backend_config.js?v=202611150039';
+} from './sync_remoto.js?v=202611150048';
+import { resolveBackendMode } from './backend_config.js?v=202611150048';
 import {
     normalizeConflictSlotLabel,
     getAvailableTurnoOfertaOptions,
@@ -71,7 +71,7 @@ import {
     buildHorariosForUI,
     getShiftChangeMeta,
     getNativeTurnoValueForAllocation
-} from './turno_helpers.js?v=202611150039';
+} from './turno_helpers.js?v=202611150048';
 import {
     getDisciplinaCHGlobal,
     derivarBloco,
@@ -81,7 +81,7 @@ import {
     getDisciplinaInfo,
     getCursoSiglaDaTurma,
     getPrintAcademicMetaLine
-} from './curso_turma_helpers.js?v=202611150039';
+} from './curso_turma_helpers.js?v=202611150048';
 import {
     renderMonthlyCalendar,
     renderTeacherCalendar,
@@ -89,14 +89,14 @@ import {
     clearTeacherRangeCache,
     setTeacherPeriod,
     getTeacherPeriod
-} from './calendarios_ui.js?v=202611150039';
-import { setupIndicadores, renderIndicadores, setIndicadoresLigacoes } from './indicadores_ui.js?v=202611150039';
+} from './calendarios_ui.js?v=202611150048';
+import { setupIndicadores, renderIndicadores, setIndicadoresLigacoes } from './indicadores_ui.js?v=202611150048';
 import {
     refreshTeacherConflictsUI,
     setCrossPlanLoader,
     setResolverDeChoque,
     acharChoqueComOutroPL
-} from './conflitos_ui.js?v=202611150039';
+} from './conflitos_ui.js?v=202611150048';
 import {
     shouldIgnoreTurmaEventForCandidate,
     normalizeDrawnSlotsByDay,
@@ -110,7 +110,7 @@ import {
     resolveEditableFaixasFromStoredExecution,
     alignFaixasToExecutionEnd,
     buildFinalAdjustmentFaixaSuggestion
-} from './faixa_utils.js?v=202611150039';
+} from './faixa_utils.js?v=202611150048';
 import {
     timeToMinutes,
     shiftISODate,
@@ -124,14 +124,14 @@ import {
     isDateInsideRange,
     formatDateBRShortYear,
     formatDateBR
-} from './date_utils_ui.js?v=202611150039';
+} from './date_utils_ui.js?v=202611150048';
 import {
     initializeWeeklyScheduleForTurma,
     reconcileTurmaSelectionAfterPLChange,
     resetWeeklyViewOnTurmaChange,
     resolveActiveAcademicPeriod,
     slotLabelsOverlap
-} from './academic_rules.mjs?v=202611150039';
+} from './academic_rules.mjs?v=202611150048';
 
 const gridContainer = document.getElementById('weekly-grid');
 const selCurso = document.getElementById('sel-curso');
@@ -6096,271 +6096,17 @@ function renderWeeklyGrid() {
     const weekDates = getWeeklyWeekDates(weekStartISO);
     updateWeeklyNavigatorLabel();
 
-    // Dias fora do periodo letivo: a coluna fica listrada, como feriado. So o dia
-    // de borda (ver diasDeBordaDoPeriodo) ganha cartao: "Fim do PL1 (05/03)" no
-    // primeiro dia depois do fim; "PL1 inicia em / 04/01/2027" no ultimo dia antes
-    // do inicio. Os outros dias fora do PL ficam so listrados (mesmo feriado).
-    // Dia em que a turma tem aula gravada nao e marcado.
-    const foraDoPeriodo = new Map();   // data -> { cartao, sub }
-    {
-        const { inicio, fim, nome } = periodoLetivoDaGrade();
-        const { antes, depois } = diasDeBordaDoPeriodo();
-        const diasComAula = new Set(turmaAllocs.flatMap((a) => Object.keys(a.executionByDate || {})));
-        weekDates.forEach((d) => {
-            if (!d || diasComAula.has(d)) return;
-            const depoisDoFim = isValidISODateValue(fim) && d > fim;
-            const antesDoInicio = isValidISODateValue(inicio) && d < inicio;
-            if (!depoisDoFim && !antesDoInicio) return;
-            let rotulo = 'Fora do período';
-            let sub = '';
-            let cartao = false;
-            if (depoisDoFim && d === depois) {
-                rotulo = `Fim do ${nome} (${formatDateBR(fim).slice(0, 5)})`;
-                sub = 'Fora do período · sem aula';
-                cartao = true;
-            } else if (antesDoInicio && d === antes) {
-                // Texto do usuario (14/11/2026): "PL1 inicia em / 04/01/2027" em negrito, duas linhas.
-                rotulo = `${nome} inicia em\n${formatDateBR(inicio)}`;
-                sub = 'Fora do período · sem aula';
-                cartao = true;
-            }
-            feriadosMap.set(d, rotulo);
-            feriadosSet.add(d);
-            foraDoPeriodo.set(d, { cartao, sub });
-        });
-    }
+    const foraDoPeriodo = marcarDiasForaDoPeriodo(weekDates, turmaAllocs, feriadosMap, feriadosSet);
 
-    const weeklySnapshotStart = store.settings.termStart || calStart?.value || weekDates[0] || weekStartISO;
-    const weeklySnapshotEnd = weekDates[weekDates.length - 1] || weekStartISO;
-    const weeklyEventsFull = getCalendarEvents(
-        String(store.selectedTurma),
-        weeklySnapshotStart,
-        weeklySnapshotEnd
-    );
-    const weeklyEventsByDate = {};
-    weekDates.forEach((d) => {
-        weeklyEventsByDate[d] = Array.isArray(weeklyEventsFull?.[d]) ? weeklyEventsFull[d] : [];
-    });
+    const { weeklyEventsByDate, hiddenEditIds } = eventosDaSemana(weekDates, weekStartISO);
 
-    // Edicao segura: oculta da grade as ofertas originais em edicao (ainda
-    // persistidas no store, removidas somente ao salvar), para que a edicao
-    // mostre apenas o desenho atual, sem duplicar a componente.
-    const hiddenEditIds = new Set(
-        (weeklyState.editingOriginalAllocationIds || []).map((id) => String(id))
-    );
-    if (hiddenEditIds.size > 0) {
-        weekDates.forEach((d) => {
-            weeklyEventsByDate[d] = weeklyEventsByDate[d].filter(
-                (ev) => !hiddenEditIds.has(String(ev?.id))
-            );
-        });
-    }
+    avisarAulasEmOutroTurno(weeklyEventsByDate, horariosUI);
 
-    const allWeeklySlots = new Set();
-    Object.values(weeklyEventsByDate).forEach(arr => {
-        arr.forEach(ev => {
-            if (ev.type !== 'holiday' && Array.isArray(ev.horariosOcupados)) {
-                ev.horariosOcupados.forEach(h => allWeeklySlots.add(h));
-            }
-        });
-    });
+    const getWeeklySlotEvents = criarEventosDaCelula({ weeklyEventsByDate, hiddenEditIds, turmaAllocs });
 
-    const isSlotInUI = (slot) => horariosUI.some(uiSlot => {
-        const t1 = String(uiSlot || '').trim().replace(/^Intervalo/i, 'INTERVALO');
-        const t2 = String(slot || '').trim().replace(/^Intervalo/i, 'INTERVALO');
-        return t1 === t2 || (t1.includes(t2) || t2.includes(t1));
-    });
+    const getSelfAllocsForCell = criarOutrasFaixasDaCelula({ hasAnyDraftPattern, drawingDisciplina });
 
-    const hiddenSlots = Array.from(allWeeklySlots).filter(s => !isSlotInUI(s));
-
-    if (hiddenSlots.length > 0) {
-        const warningBanner = document.createElement('div');
-        warningBanner.className = 'turno-alternativo-warning';
-        warningBanner.style = 'grid-column: 1/-1; background-color: #fff3cd; color: #856404; padding: 10px 15px; border-left: 5px solid #ffeeba; margin-bottom: 10px; font-size: 0.9em; border-radius: 4px; display: flex; align-items: center; gap: 10px;';
-        warningBanner.innerHTML = `<span>⚠️</span> <span><b>Atenção:</b> Há aulas desta turma programadas para turnos diferentes (ex: Sábado Manhã) nesta semana. Mude a aba de Turno acima para visualizá-las e editá-las adequadamente.</span>`;
-        if (gridContainer) gridContainer.appendChild(warningBanner);
-    }
-
-    const slotKey = (value) => {
-        const text = String(value || '').trim();
-        if (!text) return '';
-        const m = text.match(/\d{1,2}:\d{2}/);
-        return m ? m[0] : text.replace(/\s+/g, '');
-    };
-
-    const getWeeklySlotEvents = (dateStr, slotLabel, dayNumber) => {
-        const dayEvents = Array.isArray(weeklyEventsByDate?.[dateStr]) ? weeklyEventsByDate[dateStr] : [];
-        const key = slotKey(slotLabel);
-
-        const seen = new Set();
-        const out = [];
-
-        if (key && dayEvents.length > 0) {
-            dayEvents.forEach((e) => {
-                if (!e || e.type === 'holiday') return;
-                // Ofertas ja salvas com o mesmo nome continuam na grade (ex.: a T01
-                // enquanto se desenha a T02); so a oferta em Editar sai (hiddenEditIds).
-
-                let eventHorario = e.horario;
-                const eTurno = e.turno ||
-                    store.rawData?.turmas?.find(t => String(t.turma_id) === String(e.turmaId))?.turno || 'Tarde';
-                
-                const currentViewTurno = store.settings.turnoOferta || 
-                    store.rawData?.turmas?.find(t => String(t.turma_id) === String(store.selectedTurma))?.turno || 'Tarde';
-
-                if (e.sabadoManha && dayNumber === 6 && eTurno !== 'Manha' && eTurno !== 'Manhã') {
-                    // Se estamos vendo a Noite, e a aula é de Sábado Manhã (vinculada), 
-                    // mapeamos de volta para a visão da Noite para que o quadradinho apareça.
-                    eventHorario = mapSlotToTurno(e.horario, 'Manha', currentViewTurno, store.getActiveHorariosPorTurno());
-                }
-                const eventKey = slotKey(eventHorario);
-
-                const listKey = Array.isArray(e.horariosOcupados)
-                    ? e.horariosOcupados.some((h) => {
-                        let hObj = h;
-                        if (e.sabadoManha && dayNumber === 6 && eTurno !== 'Manha' && eTurno !== 'Manhã') {
-                            hObj = mapSlotToTurno(h, 'Manha', currentViewTurno, store.getActiveHorariosPorTurno());
-                        }
-                        return slotKey(hObj) === key;
-                    })
-                    : false;
-
-                if (eventKey !== key && !listKey) return;
-
-                const dedupe = `${e.id ?? ''}|${e.disciplina ?? ''}|${e.modo ?? ''}|${eventKey || key}|${e.subGrupo ?? ''}`;
-                if (seen.has(dedupe)) return;
-                seen.add(dedupe);
-                out.push(e);
-            });
-        }
-
-        if (out.length > 0 || !key) return out;
-
-        // Fallback anti-brecha: evita sumico indevido de dia util anterior por janela de renderizacao
-        turmaAllocs.forEach((a) => {
-            // Edicao segura: nunca re-adicionar a propria componente em edicao
-            // (mesmo sem padrao desenhado, ex.: apos "Limpar Faixas"), senao ela
-            // reaparece como ocupada e bloqueia o redesenho dos proprios slots.
-            if (hiddenEditIds.has(String(a?.id))) return;
-            if (!isAllocationActiveInWeeklyCell(a, dayNumber, dateStr, slotLabel)) return;
-
-            if (isFaixaAllocation(a) && a.dataFim === dateStr && Array.isArray(a.horariosUltimoDia) && a.horariosUltimoDia.length > 0) {
-                if (!a.horariosUltimoDia.some((h) => slotKey(h) === key)) return;
-            }
-
-            const dedupe = `${a.id ?? ''}|${a.disciplina ?? ''}|${a.modo ?? ''}|${key}|${a.subGrupo ?? ''}`;
-            if (seen.has(dedupe)) return;
-            seen.add(dedupe);
-            out.push(a);
-        });
-
-        return out;
-    };
-
-    // Retorna um evento sintético para células de outras faixas da componente em edição,
-    // permitindo exibir o fundo colorido mesmo após a alocação ter sido removida do store.
-    // Lê diretamente faixasPatterns[] (já carregados em memória pelo hydrateFaixasFromComponente).
-    const getSelfAllocsForCell = (dateStr, slotLabel, dayNumber) => {
-        if (!hasAnyDraftPattern || !drawingDisciplina) return [];
-
-        const activeFaixa = parseInt(drawingFaixaIndex || activeFaixaIndex, 10) || 1;
-        const cor = inputConfig.cor?.value || '#cccccc';
-        const docenteVal = inputConfig.docente?.value || '';
-
-        for (let fi = 1; fi <= 3; fi++) {
-            if (fi === activeFaixa) continue;
-
-            const fPattern = normalizeFaixaPattern(faixasPatterns[fi]);
-            if (fPattern.length === 0) continue;
-
-            // Verifica se o slot/dia estão no padrão desta faixa
-            const key = slotKey(slotLabel);
-            const matchesPattern = fPattern.some(
-                (p) => p.dia === dayNumber && slotKey(p.slot) === key
-            );
-            if (!matchesPattern) continue;
-
-            // Verifica se a data está dentro do intervalo desta faixa
-            const fIni = document.getElementById(`inp-data-inicio-f${fi}`)?.value || '';
-            const fFim = document.getElementById(`inp-data-fim-f${fi}`)?.value || '';
-            if (!fIni) continue;
-            if (dateStr < fIni) continue;
-            if (fFim && dateStr > fFim) continue;
-
-            // Retorna evento sintético com a cor original da componente
-            return [{
-                id: `_edit_f${fi}`,
-                disciplina: drawingDisciplina,
-                cor,
-                docente: docenteVal,
-                modo: 'faixas',
-                turmaId: store.selectedTurma,
-                horario: slotLabel,
-                _synthetic: true
-            }];
-        }
-
-        return [];
-    };
-
-    // Setas da semana: < no canto superior esquerdo, > ao lado de SABADO.
-    const criarSetaSemana = (direcao) => {
-        const anterior = direcao < 0;
-        const btn = document.createElement('button');
-        btn.type = 'button';
-        btn.id = anterior ? 'btn-week-prev' : 'btn-week-next';
-        btn.className = `cd-semana-seta ${anterior ? 'cd-semana-seta--ant' : 'cd-semana-seta--prox'} no-print`;
-        const rotulo = anterior ? 'Semana anterior' : 'Próxima semana';
-        btn.title = `${rotulo} (tecla ${anterior ? '←' : '→'})`;
-        btn.setAttribute('aria-label', rotulo);
-        btn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${anterior ? 'm15 18-6-6 6-6' : 'm9 18 6-6-6-6'}"></path></svg>`;
-        btn.addEventListener('click', () => moveWeeklyViewWeek(direcao));
-        if (!setaSemanaPodeIr(weekStartISO, direcao)) {
-            const { inicio, fim, nome } = periodoLetivoDaGrade();
-            btn.disabled = true;
-            btn.title = anterior
-                ? `Antes disso não há aulas do ${nome} (começa em ${formatDateBR(inicio)})`
-                : `Depois disso não há aulas do ${nome} (termina em ${formatDateBR(fim)})`;
-        }
-        return btn;
-    };
-
-    const cantoSuperior = createCell('header top-header', '');
-    cantoSuperior.appendChild(criarSetaSemana(-1));
-    gridContainer.appendChild(cantoSuperior);
-    diasSemana.forEach((dia, idx) => {
-        const dateStr = weekDates[idx] || '';
-        const holidayLabel = dateStr ? (feriadosMap.get(dateStr) || '') : '';
-        const h = createCell('header top-header week-day-header', '');
-
-        const dayName = document.createElement('span');
-        dayName.className = 'week-day-name';
-        dayName.textContent = dia.nome;
-
-        const dayDate = document.createElement('span');
-        dayDate.className = 'week-day-date';
-        dayDate.textContent = formatDayMonthShort(dateStr);
-
-        h.appendChild(dayName);
-        h.appendChild(dayDate);
-
-        if (holidayLabel) {
-            const holidayDay = document.createElement('span');
-            holidayDay.className = 'week-day-holiday-number';
-            holidayDay.textContent = String(parseInt((dateStr || '').slice(8, 10), 10) || '');
-            h.appendChild(holidayDay);
-
-            const holidayName = document.createElement('span');
-            holidayName.className = 'week-day-holiday-name';
-            holidayName.textContent = holidayLabel;
-            h.appendChild(holidayName);
-            h.classList.add('week-day-holiday');
-            h.title = foraDoPeriodo.has(dateStr) ? `${holidayLabel} · sem aula` : `Feriado: ${holidayLabel}`;
-        }
-        if (idx === diasSemana.length - 1) h.appendChild(criarSetaSemana(1));
-
-        gridContainer.appendChild(h);
-    });
+    montarCabecalhoDaGrade({ diasSemana, weekDates, feriadosMap, foraDoPeriodo, weekStartISO });
 
     horariosUI.forEach((horarioStr) => {
         const isIntervalo = horarioStr.toUpperCase().includes('INTERVALO');
@@ -6432,88 +6178,7 @@ function renderWeeklyGrid() {
                 if (allocs.length > 0 && showContextWhileDrawing) renderSlotContent(cell, allocs, i);
 
                 if (isDrawing) {
-                    const cellFaixaIndex = getFaixaIndexForDate(cellDate);
-                    const cellPattern = cellFaixaIndex ? normalizeFaixaPattern(faixasPatterns[cellFaixaIndex]) : [];
-                    const isSelected = !isHolidayColumn && cellPattern.some((p) => p.dia === i && p.slot === horarioStr);
-                    setDrawingCellSelection(cell, isSelected, drawStyles);
-                    cell.classList.remove('slot-free-draw', 'slot-week-disabled', 'slot-week-holiday');
-
-                    const isInsideFaixa = !!cellFaixaIndex;
-                    const isHoliday = !!cellDate && feriadosSet.has(cellDate);
-                    const holidayLabel = isHoliday ? (feriadosMap.get(cellDate) || 'Feriado') : '';
-                    const waitingStartPick = !!pendingFaixaStartPick;
-                    const startPickValidation = waitingStartPick
-                        ? getFaixaStartDateValidation(pendingFaixaStartPick, cellDate)
-                        : { isValid: false, message: '' };
-                    const canPickStartDate = waitingStartPick && !isHoliday && !!cellDate && startPickValidation.isValid;
-                    // Dia livre antes do inicio que pode virar o novo inicio (ver inicioPodeIrPara).
-                    const podeComecarAqui = !waitingStartPick && !isInsideFaixa && !isHoliday && allocs.length === 0
-                        && !!cellDate && inicioPodeIrPara(cellDate);
-                    const canEdit = (!waitingStartPick && isInsideFaixa && !isHoliday && allocs.length === 0) || podeComecarAqui;
-
-                    if (canPickStartDate) {
-                        cell.dataset.canEdit = '1';
-                        if (!isSelected) cell.classList.add('slot-free-draw');
-                        cell.style.cursor = 'copy';
-                        cell.style.pointerEvents = 'auto';
-                        cell.style.opacity = '1';
-                        cell.title = 'Clique para definir o inicio da Faixa ' + String(pendingFaixaStartPick) + ' nesta data.';
-                        cell.querySelectorAll('.remove-btn').forEach((btn) => { btn.style.pointerEvents = 'none'; });
-                        cell.dataset.acao = 'inicio';   // eventos em js/grade_selecao.js
-                    } else if (canEdit) {
-                        cell.dataset.canEdit = '1';
-                        if (!isSelected) cell.classList.add('slot-free-draw');
-
-                        cell.style.cursor = 'crosshair';
-                        cell.title = podeComecarAqui ? 'Clique para começar a componente neste dia' : `Faixa ${cellFaixaIndex}`;
-                        cell.dataset.acao = 'desenhar';   // clique, arrasto e Shift+clique: js/grade_selecao.js
-                    } else if (allocs.length > 0) {
-                        delete cell.dataset.canEdit;
-                        cell.style.opacity = '0.6';
-                        cell.style.pointerEvents = 'auto';
-                        if (!showContextWhileDrawing) {
-                            cell.innerHTML = '';
-                            cell.style.background = '#dfe6e9';
-                        }
-                        cell.style.cursor = 'not-allowed';
-                        cell.querySelectorAll('.remove-btn').forEach((btn) => { btn.style.pointerEvents = 'none'; });
-                        cell.title = 'Horario ocupado nesta semana (data real). Use outra semana ou ajuste inicio/faixa.';
-                    } else {
-                        delete cell.dataset.canEdit;
-                        cell.style.pointerEvents = 'auto';
-                        cell.style.cursor = 'not-allowed';
-                        if (isHoliday) {
-                            cell.classList.add('slot-week-holiday');
-                            cell.title = holidayLabel ? `Feriado: ${holidayLabel}` : 'Feriado nesta data';
-                        } else if (waitingStartPick && !!cellDate) {
-                            cell.classList.add('slot-week-disabled');
-                            cell.title = startPickValidation.message || `Data indisponível para o início da Faixa ${String(pendingFaixaStartPick)}.`;
-                        } else if (!isInsideFaixa) {
-                            if (selfAllocs.length > 0) {
-                                // Mostra o fundo colorido da componente em edição em faixas diferentes da ativa
-                                renderSlotContent(cell, selfAllocs, i);
-                                cell.style.opacity = '0.55';
-                                cell.style.cursor = 'default';
-                                cell.style.pointerEvents = 'none';
-                                cell.title = 'Alocação desta componente em outra faixa (somente leitura).';
-                            } else {
-                                cell.classList.add('slot-week-disabled', 'slot-out-of-faixa');
-                                cell.style.pointerEvents = 'auto';
-                                cell.style.cursor = 'not-allowed';
-                                const pausa = getFaixaPauseForDate(cellDate);
-                                const avisoPausa = pausa
-                                    ? `Pausa: sem aula de ${formatDateBR(pausa.inicio)} a ${formatDateBR(pausa.fim)}. Para mudar, ajuste o Fim da Faixa ${pausa.aposFaixa} ou o Inicio da Faixa ${pausa.aposFaixa + 1}.`
-                                    : '';
-                                const avisoAntes = !avisoPausa ? avisoDiaAntesDoInicio(cellDate) : '';
-                                cell.title = avisoPausa || avisoAntes || 'Slot nao disponivel para esta faixa (fora do intervalo de datas). Ajuste a data da faixa ou navegue para outra semana.';
-                                if (avisoAntes) cell.style.cursor = 'pointer';
-                                // Clique: aviso da pausa ou recomecar no dia (js/grade_selecao.js)
-                                cell.dataset.acao = 'aviso';
-                                if (avisoPausa) cell.dataset.aviso = avisoPausa;
-                                if (avisoAntes) cell.dataset.recomecar = '1';
-                            }
-                        }
-                    }
+                    prepararCelulaDeDesenho(cell, { i, horarioStr, cellDate, isHolidayColumn, allocs, selfAllocs, drawStyles, showContextWhileDrawing, feriadosMap, feriadosSet });
                 }
 
                 gridContainer.appendChild(cell);
@@ -6527,6 +6192,376 @@ function renderWeeklyGrid() {
     updateWeeklySavePatternButton();
     playWeeklyShiftAnimation();
     atualizarFeriadosDaGrade();
+}
+
+// Dias fora do periodo letivo: a coluna fica listrada, como feriado. So o dia
+// de borda (ver diasDeBordaDoPeriodo) ganha cartao: "Fim do PL1 (05/03)" no
+// primeiro dia depois do fim; "PL1 inicia em / 04/01/2027" no ultimo dia antes
+// do inicio. Os outros dias fora do PL ficam so listrados (mesmo feriado).
+// Dia em que a turma tem aula gravada nao e marcado.
+function marcarDiasForaDoPeriodo(weekDates, turmaAllocs, feriadosMap, feriadosSet) {
+    const foraDoPeriodo = new Map();   // data -> { cartao, sub }
+    const { inicio, fim, nome } = periodoLetivoDaGrade();
+    const { antes, depois } = diasDeBordaDoPeriodo();
+    const diasComAula = new Set(turmaAllocs.flatMap((a) => Object.keys(a.executionByDate || {})));
+    weekDates.forEach((d) => {
+        if (!d || diasComAula.has(d)) return;
+        const depoisDoFim = isValidISODateValue(fim) && d > fim;
+        const antesDoInicio = isValidISODateValue(inicio) && d < inicio;
+        if (!depoisDoFim && !antesDoInicio) return;
+        let rotulo = 'Fora do período';
+        let sub = '';
+        let cartao = false;
+        if (depoisDoFim && d === depois) {
+            rotulo = `Fim do ${nome} (${formatDateBR(fim).slice(0, 5)})`;
+            sub = 'Fora do período · sem aula';
+            cartao = true;
+        } else if (antesDoInicio && d === antes) {
+            // Texto do usuario (14/11/2026): "PL1 inicia em / 04/01/2027" em negrito, duas linhas.
+            rotulo = `${nome} inicia em\n${formatDateBR(inicio)}`;
+            sub = 'Fora do período · sem aula';
+            cartao = true;
+        }
+        feriadosMap.set(d, rotulo);
+        feriadosSet.add(d);
+        foraDoPeriodo.set(d, { cartao, sub });
+    });
+    return foraDoPeriodo;
+}
+
+// Aulas da turma em cada dia da semana vista, sem as ofertas que estao em Editar.
+function eventosDaSemana(weekDates, weekStartISO) {
+    const weeklySnapshotStart = store.settings.termStart || calStart?.value || weekDates[0] || weekStartISO;
+    const weeklySnapshotEnd = weekDates[weekDates.length - 1] || weekStartISO;
+    const weeklyEventsFull = getCalendarEvents(
+        String(store.selectedTurma),
+        weeklySnapshotStart,
+        weeklySnapshotEnd
+    );
+    const weeklyEventsByDate = {};
+    weekDates.forEach((d) => {
+        weeklyEventsByDate[d] = Array.isArray(weeklyEventsFull?.[d]) ? weeklyEventsFull[d] : [];
+    });
+
+    // Edicao segura: oculta da grade as ofertas originais em edicao (ainda
+    // persistidas no store, removidas somente ao salvar), para que a edicao
+    // mostre apenas o desenho atual, sem duplicar a componente.
+    const hiddenEditIds = new Set(
+        (weeklyState.editingOriginalAllocationIds || []).map((id) => String(id))
+    );
+    if (hiddenEditIds.size > 0) {
+        weekDates.forEach((d) => {
+            weeklyEventsByDate[d] = weeklyEventsByDate[d].filter(
+                (ev) => !hiddenEditIds.has(String(ev?.id))
+            );
+        });
+    }
+    return { weeklyEventsByDate, hiddenEditIds };
+}
+
+// Aviso no topo da grade quando a semana tem aulas num turno que nao esta na tela.
+function avisarAulasEmOutroTurno(weeklyEventsByDate, horariosUI) {
+    const allWeeklySlots = new Set();
+    Object.values(weeklyEventsByDate).forEach(arr => {
+        arr.forEach(ev => {
+            if (ev.type !== 'holiday' && Array.isArray(ev.horariosOcupados)) {
+                ev.horariosOcupados.forEach(h => allWeeklySlots.add(h));
+            }
+        });
+    });
+
+    const isSlotInUI = (slot) => horariosUI.some(uiSlot => {
+        const t1 = String(uiSlot || '').trim().replace(/^Intervalo/i, 'INTERVALO');
+        const t2 = String(slot || '').trim().replace(/^Intervalo/i, 'INTERVALO');
+        return t1 === t2 || (t1.includes(t2) || t2.includes(t1));
+    });
+
+    const hiddenSlots = Array.from(allWeeklySlots).filter(s => !isSlotInUI(s));
+
+    if (hiddenSlots.length > 0) {
+        const warningBanner = document.createElement('div');
+        warningBanner.className = 'turno-alternativo-warning';
+        warningBanner.style = 'grid-column: 1/-1; background-color: #fff3cd; color: #856404; padding: 10px 15px; border-left: 5px solid #ffeeba; margin-bottom: 10px; font-size: 0.9em; border-radius: 4px; display: flex; align-items: center; gap: 10px;';
+        warningBanner.innerHTML = `<span>⚠️</span> <span><b>Atenção:</b> Há aulas desta turma programadas para turnos diferentes (ex: Sábado Manhã) nesta semana. Mude a aba de Turno acima para visualizá-las e editá-las adequadamente.</span>`;
+        if (gridContainer) gridContainer.appendChild(warningBanner);
+    }
+}
+
+// Chave do horario na grade: o primeiro "hh:mm" do texto (ou o texto sem espacos).
+function slotKey(value) {
+        const text = String(value || '').trim();
+        if (!text) return '';
+        const m = text.match(/\d{1,2}:\d{2}/);
+        return m ? m[0] : text.replace(/\s+/g, '');
+}
+
+// Aulas salvas que ocupam uma celula da grade (data, horario, dia da semana).
+function criarEventosDaCelula({ weeklyEventsByDate, hiddenEditIds, turmaAllocs }) {
+    return (dateStr, slotLabel, dayNumber) => {
+            const dayEvents = Array.isArray(weeklyEventsByDate?.[dateStr]) ? weeklyEventsByDate[dateStr] : [];
+            const key = slotKey(slotLabel);
+
+            const seen = new Set();
+            const out = [];
+
+            if (key && dayEvents.length > 0) {
+                dayEvents.forEach((e) => {
+                    if (!e || e.type === 'holiday') return;
+                    // Ofertas ja salvas com o mesmo nome continuam na grade (ex.: a T01
+                    // enquanto se desenha a T02); so a oferta em Editar sai (hiddenEditIds).
+
+                    let eventHorario = e.horario;
+                    const eTurno = e.turno ||
+                        store.rawData?.turmas?.find(t => String(t.turma_id) === String(e.turmaId))?.turno || 'Tarde';
+                    
+                    const currentViewTurno = store.settings.turnoOferta || 
+                        store.rawData?.turmas?.find(t => String(t.turma_id) === String(store.selectedTurma))?.turno || 'Tarde';
+
+                    if (e.sabadoManha && dayNumber === 6 && eTurno !== 'Manha' && eTurno !== 'Manhã') {
+                        // Se estamos vendo a Noite, e a aula é de Sábado Manhã (vinculada), 
+                        // mapeamos de volta para a visão da Noite para que o quadradinho apareça.
+                        eventHorario = mapSlotToTurno(e.horario, 'Manha', currentViewTurno, store.getActiveHorariosPorTurno());
+                    }
+                    const eventKey = slotKey(eventHorario);
+
+                    const listKey = Array.isArray(e.horariosOcupados)
+                        ? e.horariosOcupados.some((h) => {
+                            let hObj = h;
+                            if (e.sabadoManha && dayNumber === 6 && eTurno !== 'Manha' && eTurno !== 'Manhã') {
+                                hObj = mapSlotToTurno(h, 'Manha', currentViewTurno, store.getActiveHorariosPorTurno());
+                            }
+                            return slotKey(hObj) === key;
+                        })
+                        : false;
+
+                    if (eventKey !== key && !listKey) return;
+
+                    const dedupe = `${e.id ?? ''}|${e.disciplina ?? ''}|${e.modo ?? ''}|${eventKey || key}|${e.subGrupo ?? ''}`;
+                    if (seen.has(dedupe)) return;
+                    seen.add(dedupe);
+                    out.push(e);
+                });
+            }
+
+            if (out.length > 0 || !key) return out;
+
+            // Fallback anti-brecha: evita sumico indevido de dia util anterior por janela de renderizacao
+            turmaAllocs.forEach((a) => {
+                // Edicao segura: nunca re-adicionar a propria componente em edicao
+                // (mesmo sem padrao desenhado, ex.: apos "Limpar Faixas"), senao ela
+                // reaparece como ocupada e bloqueia o redesenho dos proprios slots.
+                if (hiddenEditIds.has(String(a?.id))) return;
+                if (!isAllocationActiveInWeeklyCell(a, dayNumber, dateStr, slotLabel)) return;
+
+                if (isFaixaAllocation(a) && a.dataFim === dateStr && Array.isArray(a.horariosUltimoDia) && a.horariosUltimoDia.length > 0) {
+                    if (!a.horariosUltimoDia.some((h) => slotKey(h) === key)) return;
+                }
+
+                const dedupe = `${a.id ?? ''}|${a.disciplina ?? ''}|${a.modo ?? ''}|${key}|${a.subGrupo ?? ''}`;
+                if (seen.has(dedupe)) return;
+                seen.add(dedupe);
+                out.push(a);
+            });
+
+            return out;
+        };
+}
+
+// Retorna um evento sintético para células de outras faixas da componente em edição,
+// permitindo exibir o fundo colorido mesmo após a alocação ter sido removida do store.
+// Lê diretamente faixasPatterns[] (já carregados em memória pelo hydrateFaixasFromComponente).
+function criarOutrasFaixasDaCelula({ hasAnyDraftPattern, drawingDisciplina }) {
+    return (dateStr, slotLabel, dayNumber) => {
+            if (!hasAnyDraftPattern || !drawingDisciplina) return [];
+
+            const activeFaixa = parseInt(drawingFaixaIndex || activeFaixaIndex, 10) || 1;
+            const cor = inputConfig.cor?.value || '#cccccc';
+            const docenteVal = inputConfig.docente?.value || '';
+
+            for (let fi = 1; fi <= 3; fi++) {
+                if (fi === activeFaixa) continue;
+
+                const fPattern = normalizeFaixaPattern(faixasPatterns[fi]);
+                if (fPattern.length === 0) continue;
+
+                // Verifica se o slot/dia estão no padrão desta faixa
+                const key = slotKey(slotLabel);
+                const matchesPattern = fPattern.some(
+                    (p) => p.dia === dayNumber && slotKey(p.slot) === key
+                );
+                if (!matchesPattern) continue;
+
+                // Verifica se a data está dentro do intervalo desta faixa
+                const fIni = document.getElementById(`inp-data-inicio-f${fi}`)?.value || '';
+                const fFim = document.getElementById(`inp-data-fim-f${fi}`)?.value || '';
+                if (!fIni) continue;
+                if (dateStr < fIni) continue;
+                if (fFim && dateStr > fFim) continue;
+
+                // Retorna evento sintético com a cor original da componente
+                return [{
+                    id: `_edit_f${fi}`,
+                    disciplina: drawingDisciplina,
+                    cor,
+                    docente: docenteVal,
+                    modo: 'faixas',
+                    turmaId: store.selectedTurma,
+                    horario: slotLabel,
+                    _synthetic: true
+                }];
+            }
+
+            return [];
+        };
+}
+
+// Setas da semana: < no canto superior esquerdo, > ao lado de SABADO.
+function criarSetaSemana(direcao, weekStartISO) {
+        const anterior = direcao < 0;
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.id = anterior ? 'btn-week-prev' : 'btn-week-next';
+        btn.className = `cd-semana-seta ${anterior ? 'cd-semana-seta--ant' : 'cd-semana-seta--prox'} no-print`;
+        const rotulo = anterior ? 'Semana anterior' : 'Próxima semana';
+        btn.title = `${rotulo} (tecla ${anterior ? '←' : '→'})`;
+        btn.setAttribute('aria-label', rotulo);
+        btn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${anterior ? 'm15 18-6-6 6-6' : 'm9 18 6-6-6-6'}"></path></svg>`;
+        btn.addEventListener('click', () => moveWeeklyViewWeek(direcao));
+        if (!setaSemanaPodeIr(weekStartISO, direcao)) {
+            const { inicio, fim, nome } = periodoLetivoDaGrade();
+            btn.disabled = true;
+            btn.title = anterior
+                ? `Antes disso não há aulas do ${nome} (começa em ${formatDateBR(inicio)})`
+                : `Depois disso não há aulas do ${nome} (termina em ${formatDateBR(fim)})`;
+        }
+        return btn;
+}
+
+// Primeira linha da grade: seta anterior, dias da semana (com feriado) e seta proxima.
+function montarCabecalhoDaGrade({ diasSemana, weekDates, feriadosMap, foraDoPeriodo, weekStartISO }) {
+    const cantoSuperior = createCell('header top-header', '');
+    cantoSuperior.appendChild(criarSetaSemana(-1, weekStartISO));
+    gridContainer.appendChild(cantoSuperior);
+    diasSemana.forEach((dia, idx) => {
+        const dateStr = weekDates[idx] || '';
+        const holidayLabel = dateStr ? (feriadosMap.get(dateStr) || '') : '';
+        const h = createCell('header top-header week-day-header', '');
+
+        const dayName = document.createElement('span');
+        dayName.className = 'week-day-name';
+        dayName.textContent = dia.nome;
+
+        const dayDate = document.createElement('span');
+        dayDate.className = 'week-day-date';
+        dayDate.textContent = formatDayMonthShort(dateStr);
+
+        h.appendChild(dayName);
+        h.appendChild(dayDate);
+
+        if (holidayLabel) {
+            const holidayDay = document.createElement('span');
+            holidayDay.className = 'week-day-holiday-number';
+            holidayDay.textContent = String(parseInt((dateStr || '').slice(8, 10), 10) || '');
+            h.appendChild(holidayDay);
+
+            const holidayName = document.createElement('span');
+            holidayName.className = 'week-day-holiday-name';
+            holidayName.textContent = holidayLabel;
+            h.appendChild(holidayName);
+            h.classList.add('week-day-holiday');
+            h.title = foraDoPeriodo.has(dateStr) ? `${holidayLabel} · sem aula` : `Feriado: ${holidayLabel}`;
+        }
+        if (idx === diasSemana.length - 1) h.appendChild(criarSetaSemana(1, weekStartISO));
+
+        gridContainer.appendChild(h);
+    });
+}
+
+// Celula no modo de desenho: o que ela mostra e o que o clique faz (data-acao,
+// tratado em js/grade_selecao.js): escolher o inicio, desenhar ou so avisar.
+function prepararCelulaDeDesenho(cell, { i, horarioStr, cellDate, isHolidayColumn, allocs, selfAllocs, drawStyles, showContextWhileDrawing, feriadosMap, feriadosSet }) {
+    const cellFaixaIndex = getFaixaIndexForDate(cellDate);
+    const cellPattern = cellFaixaIndex ? normalizeFaixaPattern(faixasPatterns[cellFaixaIndex]) : [];
+    const isSelected = !isHolidayColumn && cellPattern.some((p) => p.dia === i && p.slot === horarioStr);
+    setDrawingCellSelection(cell, isSelected, drawStyles);
+    cell.classList.remove('slot-free-draw', 'slot-week-disabled', 'slot-week-holiday');
+
+    const isInsideFaixa = !!cellFaixaIndex;
+    const isHoliday = !!cellDate && feriadosSet.has(cellDate);
+    const holidayLabel = isHoliday ? (feriadosMap.get(cellDate) || 'Feriado') : '';
+    const waitingStartPick = !!pendingFaixaStartPick;
+    const startPickValidation = waitingStartPick
+        ? getFaixaStartDateValidation(pendingFaixaStartPick, cellDate)
+        : { isValid: false, message: '' };
+    const canPickStartDate = waitingStartPick && !isHoliday && !!cellDate && startPickValidation.isValid;
+    // Dia livre antes do inicio que pode virar o novo inicio (ver inicioPodeIrPara).
+    const podeComecarAqui = !waitingStartPick && !isInsideFaixa && !isHoliday && allocs.length === 0
+        && !!cellDate && inicioPodeIrPara(cellDate);
+    const canEdit = (!waitingStartPick && isInsideFaixa && !isHoliday && allocs.length === 0) || podeComecarAqui;
+
+    if (canPickStartDate) {
+        cell.dataset.canEdit = '1';
+        if (!isSelected) cell.classList.add('slot-free-draw');
+        cell.style.cursor = 'copy';
+        cell.style.pointerEvents = 'auto';
+        cell.style.opacity = '1';
+        cell.title = 'Clique para definir o inicio da Faixa ' + String(pendingFaixaStartPick) + ' nesta data.';
+        cell.querySelectorAll('.remove-btn').forEach((btn) => { btn.style.pointerEvents = 'none'; });
+        cell.dataset.acao = 'inicio';   // eventos em js/grade_selecao.js
+    } else if (canEdit) {
+        cell.dataset.canEdit = '1';
+        if (!isSelected) cell.classList.add('slot-free-draw');
+
+        cell.style.cursor = 'crosshair';
+        cell.title = podeComecarAqui ? 'Clique para começar a componente neste dia' : `Faixa ${cellFaixaIndex}`;
+        cell.dataset.acao = 'desenhar';   // clique, arrasto e Shift+clique: js/grade_selecao.js
+    } else if (allocs.length > 0) {
+        delete cell.dataset.canEdit;
+        cell.style.opacity = '0.6';
+        cell.style.pointerEvents = 'auto';
+        if (!showContextWhileDrawing) {
+            cell.innerHTML = '';
+            cell.style.background = '#dfe6e9';
+        }
+        cell.style.cursor = 'not-allowed';
+        cell.querySelectorAll('.remove-btn').forEach((btn) => { btn.style.pointerEvents = 'none'; });
+        cell.title = 'Horario ocupado nesta semana (data real). Use outra semana ou ajuste inicio/faixa.';
+    } else {
+        delete cell.dataset.canEdit;
+        cell.style.pointerEvents = 'auto';
+        cell.style.cursor = 'not-allowed';
+        if (isHoliday) {
+            cell.classList.add('slot-week-holiday');
+            cell.title = holidayLabel ? `Feriado: ${holidayLabel}` : 'Feriado nesta data';
+        } else if (waitingStartPick && !!cellDate) {
+            cell.classList.add('slot-week-disabled');
+            cell.title = startPickValidation.message || `Data indisponível para o início da Faixa ${String(pendingFaixaStartPick)}.`;
+        } else if (!isInsideFaixa) {
+            if (selfAllocs.length > 0) {
+                // Mostra o fundo colorido da componente em edição em faixas diferentes da ativa
+                renderSlotContent(cell, selfAllocs, i);
+                cell.style.opacity = '0.55';
+                cell.style.cursor = 'default';
+                cell.style.pointerEvents = 'none';
+                cell.title = 'Alocação desta componente em outra faixa (somente leitura).';
+            } else {
+                cell.classList.add('slot-week-disabled', 'slot-out-of-faixa');
+                cell.style.pointerEvents = 'auto';
+                cell.style.cursor = 'not-allowed';
+                const pausa = getFaixaPauseForDate(cellDate);
+                const avisoPausa = pausa
+                    ? `Pausa: sem aula de ${formatDateBR(pausa.inicio)} a ${formatDateBR(pausa.fim)}. Para mudar, ajuste o Fim da Faixa ${pausa.aposFaixa} ou o Inicio da Faixa ${pausa.aposFaixa + 1}.`
+                    : '';
+                const avisoAntes = !avisoPausa ? avisoDiaAntesDoInicio(cellDate) : '';
+                cell.title = avisoPausa || avisoAntes || 'Slot nao disponivel para esta faixa (fora do intervalo de datas). Ajuste a data da faixa ou navegue para outra semana.';
+                if (avisoAntes) cell.style.cursor = 'pointer';
+                // Clique: aviso da pausa ou recomecar no dia (js/grade_selecao.js)
+                cell.dataset.acao = 'aviso';
+                if (avisoPausa) cell.dataset.aviso = avisoPausa;
+                if (avisoAntes) cell.dataset.recomecar = '1';
+            }
+        }
+    }
 }
 
 // Feriado na grade: uma camada por cima da coluna inteira do dia (listras
