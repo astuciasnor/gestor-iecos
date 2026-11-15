@@ -3,9 +3,8 @@
    --------------------------------------------------------------------------
    So muda a aparencia; ids, eventos e a ordem dos campos ficam como estao.
    Tudo aqui comeca por .sidebar para nao mexer no resto do programa.
-   Carrega por ultimo no index.html. Alguns "!important" sao para vencer o
-   <style id="iecos-layout-fixes"> que o js/ui.js (applySidebarLayoutFixes)
-   poe na pagina depois de abrir, e estilos inline dos elementos.
+   Carrega por ultimo no index.html. Alguns "!important" vencem estilos
+   inline dos elementos e regras antigas do style.css.
    ========================================================================== */
 
 .sidebar {
@@ -311,8 +310,8 @@
 /* --------------------------------------------------------------------------
    3. Titulos de secao e divisorias finas
    -------------------------------------------------------------------------- */
-/* As linhas grossas (<hr> do HTML e as que o ui.js insere) dao lugar a uma
-   linha fina em cima de cada titulo. */
+/* As linhas grossas (<hr> do HTML) dao lugar a uma linha fina em cima de
+   cada titulo. */
 aside.sidebar hr { display: none !important; }
 
 aside.sidebar h3.sidebar-section-title {

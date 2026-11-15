@@ -1,4 +1,4 @@
-// Foto dos estilos calculados da aba Alocar (e da pagina), para comparar CSS antes/depois.
+// Foto dos estilos calculados da aba Alocar e da barra lateral, para comparar CSS antes/depois.
 // Larguras: 860, 1200, 1400, 1700. Estados: turma escolhida; componente em edicao com horarios.
 // Uso (na raiz): node tools/foto_estilos.mjs antes.json   ...muda o CSS...   node tools/foto_estilos.mjs depois.json --comparar antes.json
 import fs from 'node:fs';
@@ -33,8 +33,8 @@ const coletar = `(() => {
     st.textContent = '*, *::before, *::after { animation: none !important; transition: none !important; }';
     document.head.appendChild(st);
   }
-  const raiz = document.getElementById('tab-weekly');
-  const els = [raiz, ...raiz.querySelectorAll('*')];
+  const raizes = [document.getElementById('tab-weekly'), document.querySelector('aside.sidebar')].filter(Boolean);
+  const els = raizes.flatMap((raiz) => [raiz, ...raiz.querySelectorAll('*')]);
   els.forEach((el, i) => {
     const cs = getComputedStyle(el);
     const id = el.id ? '#' + el.id : el.tagName.toLowerCase() + '.' + [...el.classList].join('.');

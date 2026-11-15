@@ -1,35 +1,35 @@
-import { store } from './store.js?v=202611142343';
-import { escapeTrocaHtml, contarHorasExecutadas, sugerirInicioSemChoque, fraseComeceEm, cursoDaTurma, sugerirComoResolverChoque, abrirTrocaDeOrdem, ligarTroca } from './troca_ui.js?v=202611142343';
-import { cadastrosDocentes, findNewDocenteNames, getCadastroDocente, refreshAvisoDocenteNovo, coletarCadastrosDocentes, setupAvisoDocenteNovo, ligarCadastroDocente } from './cadastro_docente_ui.js?v=202611142343';
-import { renderOfertasList, ligarListaOfertas } from './lista_ofertas_ui.js?v=202611142343';
-import { stableStringify } from './sync_diff.mjs?v=202611142343';
-import { getTurnoLetter, mapSlotToTurno, turnoDaTurmaInclui } from './turns.js?v=202611142343';
-import { normalizePeriodo as normalizePeriodoLetivoCode } from './plan_storage.js?v=202611142343';
-import { getCalendarEvents } from './calendar.js?v=202611142343';
-import { isDateOverlap } from './utils.js?v=202611142343';
-import { weeklyState } from './weekly_state.js?v=202611142343';
-import { findPendentesCobertas, isPendenteJaAlocada } from './pendentes.mjs?v=202611142343';
+import { store } from './store.js?v=202611150020';
+import { escapeTrocaHtml, contarHorasExecutadas, sugerirInicioSemChoque, fraseComeceEm, cursoDaTurma, sugerirComoResolverChoque, abrirTrocaDeOrdem, ligarTroca } from './troca_ui.js?v=202611150020';
+import { cadastrosDocentes, findNewDocenteNames, getCadastroDocente, refreshAvisoDocenteNovo, coletarCadastrosDocentes, setupAvisoDocenteNovo, ligarCadastroDocente } from './cadastro_docente_ui.js?v=202611150020';
+import { renderOfertasList, ligarListaOfertas } from './lista_ofertas_ui.js?v=202611150020';
+import { stableStringify } from './sync_diff.mjs?v=202611150020';
+import { getTurnoLetter, mapSlotToTurno, turnoDaTurmaInclui } from './turns.js?v=202611150020';
+import { normalizePeriodo as normalizePeriodoLetivoCode } from './plan_storage.js?v=202611150020';
+import { getCalendarEvents } from './calendar.js?v=202611150020';
+import { isDateOverlap } from './utils.js?v=202611150020';
+import { weeklyState } from './weekly_state.js?v=202611150020';
+import { findPendentesCobertas, isPendenteJaAlocada } from './pendentes.mjs?v=202611150020';
 
-import { datasFeriadoDaTurma, feriadosDaTurma } from './feriados.mjs?v=202611142343';
-import { closeFaixaEnds, isPauseEnd, listFaixaPauses } from './pausa_faixas.mjs?v=202611142343';
-import { numeroDaSubturma, isTurmaInteira, proximaSubturma, codigoT01Como, saoSubturmasDiferentes, sufixoSubturma, semSubturma, subturmaFicouSozinha } from './subturmas.mjs?v=202611142343';
-import { abrirMiniCalendario, fecharMiniCalendario, miniCalendarioAberto } from './mini_calendario.mjs?v=202611142343';
-import { buildCanonicalOfferProjection } from './execution_engine.js?v=202611142343';
+import { datasFeriadoDaTurma, feriadosDaTurma } from './feriados.mjs?v=202611150020';
+import { closeFaixaEnds, isPauseEnd, listFaixaPauses } from './pausa_faixas.mjs?v=202611150020';
+import { numeroDaSubturma, isTurmaInteira, proximaSubturma, codigoT01Como, saoSubturmasDiferentes, sufixoSubturma, semSubturma, subturmaFicouSozinha } from './subturmas.mjs?v=202611150020';
+import { abrirMiniCalendario, fecharMiniCalendario, miniCalendarioAberto } from './mini_calendario.mjs?v=202611150020';
+import { buildCanonicalOfferProjection } from './execution_engine.js?v=202611150020';
 import {
     buildSigaaMetadataPayload,
     validateSigaaMetadataPayload,
     getSigaaCode,
     buildScopedSigaaAllocationFromOfferFaixa,
     buildSigaaHorarioResumo
-} from './sigaa_metadata.js?v=202611142343';
-import { parseBackupDataFile, extractImportPlanMeta } from './serialization.js?v=202611142343';
+} from './sigaa_metadata.js?v=202611150020';
+import { parseBackupDataFile, extractImportPlanMeta } from './serialization.js?v=202611150020';
 import {
     showToastWarning,
     showPersistentStatusMessage,
     copyTextToClipboard,
     flashButtonCopyState,
     setupCopyActionButtons
-} from './ui_feedback.js?v=202611142343';
+} from './ui_feedback.js?v=202611150020';
 import {
     normalizeHexColor,
     adjustHexColor,
@@ -38,7 +38,7 @@ import {
     tonsDaCor,
     aplicarTonsBloco,
     PALETA_CORES
-} from './color_utils.js?v=202611142343';
+} from './color_utils.js?v=202611150020';
 import {
     isFaixaAllocation,
     isPriorityRegularAllocation,
@@ -47,8 +47,8 @@ import {
     normalizeTeacherNameForMatch,
     getDocenteShortLabel,
     getAllocationTeachersForConflict
-} from './allocation_helpers.js?v=202611142343';
-import { setupSeletorCor } from './seletor_cor.js?v=202611142343';
+} from './allocation_helpers.js?v=202611150020';
+import { setupSeletorCor } from './seletor_cor.js?v=202611150020';
 
 import {
     UNIDADES,
@@ -56,11 +56,11 @@ import {
     acharNomeConhecido,
     filtrarDocentes,
     umNomePorPessoa
-} from './docente_nomes.mjs?v=202611142343';
+} from './docente_nomes.mjs?v=202611150020';
 import {
     fetchAllocationsForPlans
-} from './sync_remoto.js?v=202611142343';
-import { resolveBackendMode } from './backend_config.js?v=202611142343';
+} from './sync_remoto.js?v=202611150020';
+import { resolveBackendMode } from './backend_config.js?v=202611150020';
 import {
     normalizeConflictSlotLabel,
     getAvailableTurnoOfertaOptions,
@@ -70,7 +70,7 @@ import {
     buildHorariosForUI,
     getShiftChangeMeta,
     getNativeTurnoValueForAllocation
-} from './turno_helpers.js?v=202611142343';
+} from './turno_helpers.js?v=202611150020';
 import {
     getDisciplinaCHGlobal,
     derivarBloco,
@@ -80,7 +80,7 @@ import {
     getDisciplinaInfo,
     getCursoSiglaDaTurma,
     getPrintAcademicMetaLine
-} from './curso_turma_helpers.js?v=202611142343';
+} from './curso_turma_helpers.js?v=202611150020';
 import {
     renderMonthlyCalendar,
     renderTeacherCalendar,
@@ -88,14 +88,14 @@ import {
     clearTeacherRangeCache,
     setTeacherPeriod,
     getTeacherPeriod
-} from './calendarios_ui.js?v=202611142343';
-import { setupIndicadores, renderIndicadores, setIndicadoresLigacoes } from './indicadores_ui.js?v=202611142343';
+} from './calendarios_ui.js?v=202611150020';
+import { setupIndicadores, renderIndicadores, setIndicadoresLigacoes } from './indicadores_ui.js?v=202611150020';
 import {
     refreshTeacherConflictsUI,
     setCrossPlanLoader,
     setResolverDeChoque,
     acharChoqueComOutroPL
-} from './conflitos_ui.js?v=202611142343';
+} from './conflitos_ui.js?v=202611150020';
 import {
     shouldIgnoreTurmaEventForCandidate,
     normalizeDrawnSlotsByDay,
@@ -109,7 +109,7 @@ import {
     resolveEditableFaixasFromStoredExecution,
     alignFaixasToExecutionEnd,
     buildFinalAdjustmentFaixaSuggestion
-} from './faixa_utils.js?v=202611142343';
+} from './faixa_utils.js?v=202611150020';
 import {
     timeToMinutes,
     shiftISODate,
@@ -123,14 +123,14 @@ import {
     isDateInsideRange,
     formatDateBRShortYear,
     formatDateBR
-} from './date_utils_ui.js?v=202611142343';
+} from './date_utils_ui.js?v=202611150020';
 import {
     initializeWeeklyScheduleForTurma,
     reconcileTurmaSelectionAfterPLChange,
     resetWeeklyViewOnTurmaChange,
     resolveActiveAcademicPeriod,
     slotLabelsOverlap
-} from './academic_rules.mjs?v=202611142343';
+} from './academic_rules.mjs?v=202611150020';
 
 const gridContainer = document.getElementById('weekly-grid');
 const selCurso = document.getElementById('sel-curso');
@@ -219,96 +219,6 @@ const WEEKLY_SHIFT_ANIMATION_MS = 360;
 // Estado de visualizacao da grade: alias LOCAL para weeklyState.view (storage
 // centralizado). weeklyViewState.<campo> muta o mesmo objeto no weeklyState.
 const weeklyViewState = weeklyState.view;
-
-// ==========================================
-// AJUSTES VISUAIS DA BARRA LATERAL (SIDEBAR)
-// ==========================================
-function applySidebarLayoutFixes() {
-    if (!document.getElementById('iecos-layout-fixes')) {
-        const style = document.createElement('style');
-        style.id = 'iecos-layout-fixes';
-        style.textContent = `
-            /* Compactação Global da Sidebar */
-            .sidebar .form-group { margin-bottom: 6px !important; }
-            .sidebar h2, .sidebar h3, .sidebar h4 { margin-top: 4px !important; margin-bottom: 4px !important; }
-            
-            hr { 
-                border: none !important; 
-                border-top: 3px solid #95a5a6 !important; 
-                margin: 8px 0 !important; 
-            }
-            .custom-thick-hr {
-                border: none !important;
-                border-top: 3px solid #95a5a6 !important;
-                margin: 8px 0 !important;
-                width: 100%;
-            }
-            .custom-thick-hr.space-above {
-                margin: 8px 0 20px 0 !important;
-                border-top: 3px solid #7f8c8d !important;
-            }
-        `;
-        document.head.appendChild(style);
-    }
-
-    // So na barra lateral: antes varria a pagina toda e punha a linha tambem
-    // em textos da Ajuda que comecam com "Oferta de disciplina".
-    const allNodes = Array.from(document.querySelectorAll('.sidebar *'));
-    for (let el of allNodes) {
-
-        // PERÍODO LETIVO (Aproxima do título superior)
-        if (el.textContent && el.textContent.trim().toUpperCase() === 'PERÍODO LETIVO' && el.children.length === 0) {
-            el.style.marginTop = '2px';
-        }
-
-        // OFERTA DE DISCIPLINA
-        if (el.textContent && el.textContent.trim().toUpperCase() === 'OFERTA DE DISCIPLINA' && el.children.length === 0) {
-            el.style.marginTop = '12px';
-            el.style.marginBottom = '6px';
-
-            if (!el.previousElementSibling || el.previousElementSibling.tagName !== 'HR') {
-                const hr = document.createElement('hr');
-                hr.className = 'custom-thick-hr space-above';
-                el.parentNode.insertBefore(hr, el);
-            } else {
-                el.previousElementSibling.className = 'custom-thick-hr space-above';
-            }
-        }
-
-        // GERENCIANDO ARQUIVOS
-        if (el.textContent && el.textContent.trim().toUpperCase() === 'GERENCIANDO ARQUIVOS' && el.children.length === 0) {
-            el.style.marginTop = '12px';
-            el.style.marginBottom = '6px';
-
-            if (!el.previousElementSibling || el.previousElementSibling.tagName !== 'HR') {
-                const hr = document.createElement('hr');
-                hr.className = 'custom-thick-hr space-above';
-                el.parentNode.insertBefore(hr, el);
-            } else {
-                el.previousElementSibling.className = 'custom-thick-hr space-above';
-            }
-        }
-    }
-
-    // Remove espaçamento inútil após o seletor de turno
-    const selTurno = document.getElementById('sel-turno_oferta') || document.getElementById('sel-turno-oferta');
-    if (selTurno) {
-        const formGroup = selTurno.closest('div');
-        if (formGroup) formGroup.style.marginBottom = '2px';
-    }
-
-    // Tira os espaços brancos (<br>) depois do botão Adicionar Intensiva
-    const btnAddIntensiva = document.getElementById('btn-add-oferta');
-    if (btnAddIntensiva && btnAddIntensiva.closest('.sidebar')) {
-        btnAddIntensiva.style.marginBottom = '2px';
-        let next = btnAddIntensiva.nextSibling;
-        while (next && (next.tagName === 'BR' || (next.nodeType === 3 && next.textContent.trim() === ''))) {
-            const toRemove = next;
-            next = next.nextSibling;
-            toRemove.remove();
-        }
-    }
-}
 
 // ===== Outros PLs no Calendario Docente =====
 // Para o ano inteiro ou um PL que nao esta aberto na barra lateral, o
@@ -5371,7 +5281,6 @@ export function initUI() {
     setupCopyActionButtons();
 
     // Configura os controles fixos do painel de filtros da agenda docente.
-    applySidebarLayoutFixes();
     setupTeacherFilterControls();
 
     // Depois aplica os botões X
