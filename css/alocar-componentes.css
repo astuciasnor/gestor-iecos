@@ -1152,8 +1152,7 @@
 
 /* Texto em no maximo 2 linhas (o texto inteiro fica no mouse) */
 #tab-weekly .cd-aviso-texto,
-#tab-weekly .cd-contexto #weekly-faixa-auto-note .wga-text,
-#tab-weekly .cd-contexto .cd-aprov-texto {
+#tab-weekly .cd-contexto #weekly-faixa-auto-note .wga-text {
     flex: 1 1 auto;
     min-width: 0;
     display: -webkit-box;
@@ -1208,6 +1207,36 @@
     color: #14532D;
     box-shadow: inset 4px 0 0 #16A34A;
 }
+/* Mapa das faixas: linha 1 (texto, cortada com "..." se faltar espaco) e linha 2
+   (Faixa 1 [botao] ; Faixa 2 [botao]); o cartao cresce um pouco enquanto aparece. */
+#tab-weekly .cd-contexto .weekly-status-bar.tem-aproveitamento { min-height: 62px; }
+#tab-weekly .cd-contexto .cd-aprov-corpo {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+#tab-weekly .cd-contexto .cd-aprov-texto {
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+#tab-weekly .cd-contexto .cd-aprov-mapa {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    font-weight: 600;
+}
+#tab-weekly .cd-contexto .cd-aprov-faixa {
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+#tab-weekly .cd-contexto .cd-aprov-sep { flex: none; font-weight: 700; }
 #tab-weekly .cd-contexto .cd-aprov-acoes { flex: none; display: flex; gap: 6px; }
 #tab-weekly .cd-contexto .cd-aprov-btn {
     min-height: 32px;
@@ -1222,7 +1251,22 @@
     white-space: nowrap;
     cursor: pointer;
 }
-#tab-weekly .cd-contexto .cd-aprov-btn--ok { background: #16A34A; border-color: #16A34A; color: #FFFFFF; }
+/* "Preencher a Faixa N": verde cheio; a faixa em preenchimento fica mais escura */
+#tab-weekly .cd-contexto .cd-aprov-btn--faixa {
+    flex: none;
+    min-height: 26px;
+    padding: 0 10px;
+    background: #16A34A;
+    border-color: #16A34A;
+    color: #FFFFFF;
+}
+#tab-weekly .cd-contexto .cd-aprov-btn--faixa.is-ativa { background: #14532D; border-color: #14532D; }
+#tab-weekly .cd-contexto .cd-aprov-curto { display: none; }
+@media (max-width: 1360px) {
+    #tab-weekly .cd-contexto .cd-aprov-longo { display: none; }
+    #tab-weekly .cd-contexto .cd-aprov-curto { display: inline; }
+}
+#tab-weekly .cd-contexto .cd-aprov-btn--faixa:disabled { opacity: .45; cursor: not-allowed; }
 #tab-weekly .cd-contexto .cd-aprov-btn.hidden { display: none; }
 #tab-weekly .cd-contexto .cd-aprov-btn:focus-visible { outline: 3px solid var(--cd-foco); outline-offset: 2px; }
 

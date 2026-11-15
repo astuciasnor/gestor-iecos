@@ -10,13 +10,13 @@
         // Vai para o aviso antes de carregar o programa. A agenda publica nao passa por aqui.
         if (/\.github\.io$/i.test(location.hostname)) location.replace('mudou.html');
     </script>
-    <link rel="stylesheet" href="css/style.css?v=202611142120">
+    <link rel="stylesheet" href="css/style.css?v=202611142220">
     <!-- Redesenho da aba Alocar Componentes (por partes); carrega depois do style.css -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
-    <link rel="stylesheet" href="css/alocar-componentes.css?v=202611142120">
-    <link rel="stylesheet" href="css/ajuda.css?v=202611142120">
+    <link rel="stylesheet" href="css/alocar-componentes.css?v=202611142220">
+    <link rel="stylesheet" href="css/ajuda.css?v=202611142220">
 
     <style>
         :root {
@@ -348,7 +348,7 @@
         }
     </style>
     <!-- Visual da barra lateral: depois de todos os estilos, so vale dentro de .sidebar -->
-    <link rel="stylesheet" href="css/sidebar.css?v=202611142120">
+    <link rel="stylesheet" href="css/sidebar.css?v=202611142220">
 </head>
 
 <body>
@@ -720,9 +720,17 @@
                         <!-- Aproveitamento de dias livres: fica no cartao e acompanha a
                              marcacao ate salvar. Ver renderAvisoAproveitamento no ui.js. -->
                         <div id="cd-aproveitamento" class="cd-aproveitamento hidden" role="status">
-                            <span class="cd-aprov-texto" id="cd-aproveitamento-texto"></span>
+                            <div class="cd-aprov-corpo">
+                                <span class="cd-aprov-texto" id="cd-aproveitamento-texto"></span>
+                                <span class="cd-aprov-mapa">
+                                    <span class="cd-aprov-faixa" id="cd-aprov-f1"></span>
+                                    <button type="button" id="btn-aprov-f1" class="cd-aprov-btn cd-aprov-btn--faixa">Preencher a Faixa 1</button>
+                                    <span class="cd-aprov-sep" aria-hidden="true">;</span>
+                                    <span class="cd-aprov-faixa" id="cd-aprov-f2"></span>
+                                    <button type="button" id="btn-aprov-f2" class="cd-aprov-btn cd-aprov-btn--faixa">Preencher a Faixa 2</button>
+                                </span>
+                            </div>
                             <span class="cd-aprov-acoes">
-                                <button type="button" id="btn-aprov-continuar" class="cd-aprov-btn cd-aprov-btn--ok hidden"></button>
                                 <button type="button" id="btn-aprov-refazer" class="cd-aprov-btn">Refazer</button>
                             </span>
                         </div>
@@ -1194,10 +1202,10 @@
                                 <h3><span aria-hidden="true">↩️</span> Aproveitar dias livres <span class="aj-selo">novo</span></h3>
                                 <ul class="aj-lista">
                                     <li><b>Exemplo:</b> sobraram 28 e 29/01 livres e, em 30/01, começa outra componente. Dá para usar esses dois dias.</li>
-                                    <li><b>1.</b> Clique no primeiro horário livre de 28/01. O Cardume faz a Faixa 1 de 28 a 29/01 <b>sozinho</b>: a outra componente fica no lugar da pausa. Um aviso verde, no topo, acompanha os próximos passos.</li>
-                                    <li><b>2.</b> Marque os horários. Cada horário se repete em todas as semanas da Faixa 1, então marque <b>cada dia da semana uma vez</b>; se um dia ainda está ocupado na primeira semana, marque-o na semana seguinte. O aviso mostra as horas marcadas e quanto falta.</li>
-                                    <li><b>3.</b> Clique em <b>Continuar: Faixa 2 em dd/mm</b>, no aviso (ou no número <b>2</b>). O Cardume <b>já leva</b> a Faixa 2 para a volta: o próximo dia livre (componente nova) ou o dia em que a componente começava (Editar).</li>
-                                    <li><b>4.</b> Marque os horários da Faixa 2 e salve. Errou o dia? <b>Refazer</b>, no aviso, limpa e deixa clicar em outro dia.</li>
+                                    <li><b>1.</b> Clique no primeiro horário livre de 28/01. O Cardume faz a Faixa 1 de 28 a 29/01 <b>sozinho</b>: a outra componente fica no lugar da pausa. Um aviso verde, no topo, mostra o mapa das faixas: datas, horas marcadas e quanto falta.</li>
+                                    <li><b>2.</b> Marque os horários. Cada horário se repete em todas as semanas da Faixa 1, então marque <b>cada dia da semana uma vez</b>; se um dia ainda está ocupado na primeira semana, marque-o na semana seguinte.</li>
+                                    <li><b>3.</b> Clique em <b>Preencher a Faixa 2</b>, no aviso (ou no número <b>2</b>). O Cardume <b>já leva</b> a Faixa 2 para a volta: o próximo dia livre (componente nova) ou o dia em que a componente começava (Editar).</li>
+                                    <li><b>4.</b> Marque os horários da Faixa 2 e salve. Para voltar, <b>Preencher a Faixa 1</b>. Errou o dia? <b>Refazer</b> limpa e deixa clicar em outro dia.</li>
                                     <li><b>Componente já salva?</b> Lista de Ofertas › <b>Editar</b>. Vá até a semana dos dias livres, clique no primeiro horário e confirme <b>Recomeçar</b> (os horários marcados são apagados). Depois siga do passo 2.</li>
                                     <li>Só dias livres do período letivo aceitam o clique.</li>
                                 </ul>
@@ -1420,7 +1428,7 @@
         </main>
     </div>
 
-    <script type="module" src="js/main.js?v=202611142120"></script>
+    <script type="module" src="js/main.js?v=202611142220"></script>
 </body>
 
 </html>

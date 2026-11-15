@@ -173,7 +173,7 @@ try {
     confere('P1. dia da pausa da ECOLOGIA aceita clique?', await podeClicar(3, '08:00'), true);
     await clicar(3, '08:00');
     confere('P2. clique na pausa -> aproveitamento', await f1() + ' a ' + await campo('inp-data-fim-f1'), '2027-01-06 a 2027-01-10');
-    confere('P3. mensagem do aproveitamento', /aproveitando os dias deixados livres/i.test(await avisoAprov()), true);
+    confere('P3. mensagem do aproveitamento', /Aproveitando os dias livres antes de/.test(await avisoAprov()), true);
     // Refazer: limpa as faixas, fica na semana vista e o aviso sai
     await evaluate("document.getElementById('btn-aprov-refazer').click()"); await sleep(900);
     confere('P4. Refazer: aviso saiu', await avisoAprov(), '');
@@ -281,17 +281,21 @@ async function aproveitamento(CFG, KEY, h) {
   await clicar(4, '16:50');
   confere('A3. inicio da Faixa 1', await f1(), '2027-08-26');
   confere('A4. Fim da Faixa 1 = vespera do sabado da Informatica', await campo('inp-data-fim-f1'), '2027-08-27');
-  confere('A5. mensagem do aproveitamento (fixa no cartao)', /aproveitando os dias deixados livres.*27\/08\/2027/i.test(await avisoAprov()), true);
+  confere('A5. mapa das faixas (fixo no cartao)', /Aproveitando os dias livres antes de.*Faixa 1: 26\/08\/27 a 27\/08\/27/.test(await avisoAprov()), true);
   const dm = sugestao.slice(8, 10) + '/' + sugestao.slice(5, 7);
-  confere('A5b. horario clicado ja conta: botao Continuar com a data da volta', new RegExp('Continuar: Faixa 2 em ' + dm).test(await avisoAprov()), true);
+  confere('A5b. Faixa 1 em preenchimento e Faixa 2 com a data da volta', new RegExp('Preenchendo a Faixa 1.*Faixa 2: a partir de ' + dm).test(await avisoAprov()), true);
   confere('A6. sabado 28 fica fora da Faixa 1', await podeClicar(6, '14:00'), false);
   await clicar(4, '17:40'); await clicar(5, '16:50'); await clicar(5, '17:40');
-  confere('A6b. aviso mostra as horas marcadas e quanto falta', /h marcadas · faltam \d+h/.test(await avisoAprov()), true);
-  await evaluate("document.getElementById('btn-aprov-continuar').click()"); await sleep(900);
-  confere('A7. Continuar -> Faixa 2 na sugestao', await campo('inp-data-inicio-f2'), sugestao);
+  confere('A6b. mapa mostra as horas da Faixa 1 e quanto falta', /Faixa 1: 26\/08\/27 a 27\/08\/27 · \d+h.*faltam \d+h/.test(await avisoAprov()), true);
+  await evaluate("document.getElementById('btn-aprov-f2').click()"); await sleep(900);
+  confere('A7. Preencher a Faixa 2 -> Faixa 2 na sugestao', await campo('inp-data-inicio-f2'), sugestao);
   confere('A8. Faixa 2 comeca vazia', /a definir/i.test(await evaluate("document.getElementById('faixa-padrao-f2').textContent")), true);
   confere('A9. linha da pausa', /Pausa sem aula/.test(await pausa()), true);
-  confere('A10. aviso fixo da volta (pausa + Faixa 2)', /Pausa de 28\/08\/2027.*A Faixa 2 começa em/.test(await avisoAprov()), true);
+  confere('A10. mapa com a Faixa 2 em preenchimento', /Faixa 2: a partir de.*Preenchendo a Faixa 2/.test(await avisoAprov()), true);
+  await evaluate("document.getElementById('btn-aprov-f1').click()"); await sleep(900);
+  confere('A10b. Preencher a Faixa 1 volta para a semana dela', await semana('2027-08-23'), true);
+  confere('A10c. ... e a Faixa 1 fica em preenchimento', /Preenchendo a Faixa 1/.test(await avisoAprov()), true);
+  await evaluate("document.getElementById('btn-aprov-f2').click()"); await sleep(900);
   confere('A11. Fim da Faixa 1 mantido', await campo('inp-data-fim-f1'), '2027-08-27');
   const semanaVolta = await evaluate(`(() => { const d = new Date('${sugestao}T12:00:00'); d.setDate(d.getDate() - ((d.getDay() + 6) % 7)); return d.toISOString().slice(0, 10); })()`);
   confere('A12. grade foi para a semana da volta', await semana(semanaVolta), true);
@@ -328,7 +332,7 @@ async function aproveitamento(CFG, KEY, h) {
   await clicar(4, '17:40'); await clicar(5, '16:50'); await clicar(5, '17:40');
   await evaluate("document.querySelector('#faixa-2 .faixa-num .faixa-num-value').click()"); await sleep(900);
   confere('E4. numero 2 -> antigo inicio da componente (nao a sugestao)', await campo('inp-data-inicio-f2'), '2027-09-13');
-  confere('E4b. mensagem da volta', /onde a componente estava/.test(await avisoAprov()), true);
+  confere('E4b. Faixa 2 volta onde a componente estava', /Faixa 2: a partir de 13\/09\/27/.test(await avisoAprov()), true);
   await semana('2027-09-13');
   for (const d of [1, 2, 3, 4, 5]) for (const hh of ['14:00', '14:50', '15:40', '16:50', '17:40']) await clicar(d, hh);
   await evaluate("window.confirm = () => true; document.getElementById('btn-add-oferta').click()"); await sleep(2000);

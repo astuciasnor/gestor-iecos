@@ -1,4 +1,4 @@
-import { normalizePlanMeta as normalizeStoredPlanMeta } from './plan_storage.js?v=202611142120';
+import { normalizePlanMeta as normalizeStoredPlanMeta } from './plan_storage.js?v=202611142220';
 
 function toMiddayDate(dateStr) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(String(dateStr || '').trim())) return null;
