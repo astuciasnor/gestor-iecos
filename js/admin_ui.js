@@ -1,9 +1,10 @@
+import { escapeHtml as esc } from './texto.mjs?v=202611150125';
 // Janela "Usuarios e backup" do administrador (so no servidor da UFPA).
 // Cadastra, edita e exclui acessos, gera senha provisoria e baixa a copia do
 // banco. Quem garante que so o administrador faz isso e a API (api/index.php).
 // Mostra tambem os docentes novos cadastrados pelos coordenadores para conferir.
-import { store } from './store.js?v=202611150101';
-import { fetchAllocationsForPlans, salvarAlocacoesRevisadas, getSessionEmail, getPerfil } from './sync_remoto.js?v=202611150101';
+import { store } from './store.js?v=202611150125';
+import { fetchAllocationsForPlans, salvarAlocacoesRevisadas, getSessionEmail, getPerfil } from './sync_remoto.js?v=202611150125';
 import {
   listarDocentesParaConferir,
   aplicarRevisaoDocente,
@@ -13,7 +14,7 @@ import {
   normalizeTeacherNameForMatch,
   VINCULOS_DOCENTE_NOVO,
   UNIDADES
-} from './docente_nomes.mjs?v=202611150101';
+} from './docente_nomes.mjs?v=202611150125';
 
 let ctx = null;      // { tools, meuId, showToast, aoContarDocentes }
 let usuarios = [];
@@ -511,12 +512,6 @@ function formatarData(valor) {
   const [data, hora = ''] = String(valor).split(' ');
   const [a, m, d] = data.split('-');
   return `${d}/${m}/${a} ${hora.slice(0, 5)}`.trim();
-}
-
-function esc(value) {
-  return String(value ?? '').replace(/[&<>"']/g, (ch) => ({
-    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
-  }[ch]));
 }
 
 // Cadastro indevido: as componentes ficam, o docente vira "A definir" em todas

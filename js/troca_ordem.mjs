@@ -1,3 +1,4 @@
+import { isoToUtc, weekdayOf, addDaysISO as addDaysIso } from './datas.mjs?v=202611150125';
 // Botao "Trocar" da Lista de Ofertas: quando duas componentes da mesma turma podem trocar
 // de lugar. Funcoes puras (sem DOM nem store), testadas em tests/troca_ordem.test.mjs.
 //
@@ -10,19 +11,6 @@
 // Componente esperada: { disciplina, subGrupo, ch, dataInicio, dataFim,
 //   registros (quantos registros de alocacao formam a oferta),
 //   faixas: [{ inicio, fim, drawnSlotsByDay: { dia: [horarios] } }] }
-
-function isoToUtc(iso) {
-  const [y, m, d] = String(iso || '').split('-').map(Number);
-  return Date.UTC(y, (m || 1) - 1, d || 1);
-}
-
-export function addDaysIso(iso, days) {
-  return new Date(isoToUtc(iso) + days * 86400000).toISOString().slice(0, 10);
-}
-
-function weekdayOf(iso) {
-  return new Date(isoToUtc(iso)).getUTCDay();
-}
 
 function slotsByDay(faixa) {
   return faixa?.drawnSlotsByDay && typeof faixa.drawnSlotsByDay === 'object' ? faixa.drawnSlotsByDay : {};
@@ -87,3 +75,6 @@ export function classifySwap(a, b, { feriados = [] } = {}) {
   }
   return { ok: true, modo: 'sequencia' };
 }
+
+// addDaysIso (= addDaysISO de js/datas.mjs) segue exportado daqui (testes).
+export { addDaysIso };

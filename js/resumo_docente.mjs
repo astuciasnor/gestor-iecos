@@ -1,3 +1,4 @@
+import { isoToUtc, weekdayOf } from './datas.mjs?v=202611150125';
 // Resumo do ano do docente (agenda publica): para cada periodo letivo, as
 // componentes do professor e em quais semanas do PL ele tem aula.
 // Funcoes puras (sem DOM nem store), testadas em tests/resumo_docente.test.mjs.
@@ -7,17 +8,8 @@
 const DAY_MS = 24 * 60 * 60 * 1000;
 const WEEKDAY_SHORT = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sab'];
 
-function isoToUtc(iso) {
-  const [y, m, d] = String(iso || '').split('-').map(Number);
-  return Date.UTC(y, (m || 1) - 1, d || 1);
-}
-
 function utcToIso(ms) {
   return new Date(ms).toISOString().slice(0, 10);
-}
-
-export function weekdayOf(iso) {
-  return new Date(isoToUtc(iso)).getUTCDay();
 }
 
 // Semanas do PL, de segunda a domingo, cortadas no inicio e no fim do PL.
@@ -184,3 +176,6 @@ export function summarizeTeacherPeriod({ termStart, termEnd, entries = [] }) {
     aulasPorAno
   };
 }
+
+// weekdayOf (de js/datas.mjs) segue exportado daqui.
+export { weekdayOf };

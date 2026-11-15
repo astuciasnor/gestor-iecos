@@ -1,82 +1,18 @@
-import { store } from './store.js?v=202611150101';
-import { getDaysArray, toLocalDateString } from './utils.js?v=202611150101';
-import { mapSlotToTurno, turnoDaTurmaInclui } from './turns.js?v=202611150101';
-import { slotLabelsOverlap } from './academic_rules.mjs?v=202611150101';
-import { mesmoDocente } from './docente_nomes.mjs?v=202611150101';
-import { datasFeriadoDaTurma, feriadosDaTurma } from './feriados.mjs?v=202611150101';
-
-function normalizeKeyPart(value) {
-  return String(value || '').trim().toUpperCase();
-}
-
-function normalizeTeacherKey(value) {
-  return String(value || '').trim().toUpperCase();
-}
+import { addDaysISO } from './datas.mjs?v=202611150125';
+import { timeToMinutesSafe, normalizeDayList, normalizeSlotList, normalizeDrawnSlotsByDay, buildDrawnSlotsByDay } from './horarios.mjs?v=202611150125';
+import { normalizeKeyPart, normalizeKeyPart as normalizeTeacherKey } from './texto.mjs?v=202611150125';
+import { getNativeTurnoValueForAllocation } from './turno_helpers.js?v=202611150125';
+import { store } from './store.js?v=202611150125';
+import { getDaysArray, toLocalDateString } from './utils.js?v=202611150125';
+import { mapSlotToTurno, turnoDaTurmaInclui } from './turns.js?v=202611150125';
+import { slotLabelsOverlap } from './academic_rules.mjs?v=202611150125';
+import { mesmoDocente } from './docente_nomes.mjs?v=202611150125';
+import { datasFeriadoDaTurma, feriadosDaTurma } from './feriados.mjs?v=202611150125';
 
 function normalizeCalendarSlotKey(value) {
   const match = String(value || '').match(/\d{1,2}:\d{2}/);
   if (match) return match[0];
   return String(value || '').replace(/[^0-9:]/g, '');
-}
-
-function timeToMinutesSafe(value) {
-  const match = String(value || '').match(/(\d{1,2}):(\d{2})/);
-  if (!match) return Number.MAX_SAFE_INTEGER;
-  return (Number.parseInt(match[1], 10) * 60) + Number.parseInt(match[2], 10);
-}
-
-function addDaysISO(dateStr, days = 0) {
-  const raw = String(dateStr || '').trim();
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(raw)) return '';
-  const date = new Date(`${raw}T12:00:00`);
-  if (Number.isNaN(date.getTime())) return '';
-  date.setDate(date.getDate() + Number(days || 0));
-  return date.toISOString().split('T')[0];
-}
-
-function normalizeDayList(days = []) {
-  return [...new Set((Array.isArray(days) ? days : [])
-    .map((value) => Number.parseInt(value, 10))
-    .filter((value) => value >= 1 && value <= 6))]
-    .sort((left, right) => left - right);
-}
-
-function normalizeSlotList(slots = []) {
-  return [...new Set((Array.isArray(slots) ? slots : [])
-    .map((value) => String(value || '').trim())
-    .filter(Boolean))]
-    .sort((left, right) => timeToMinutesSafe(left) - timeToMinutesSafe(right));
-}
-
-function normalizeDrawnSlotsByDay(raw = {}) {
-  const normalized = {};
-
-  Object.entries(raw || {}).forEach(([day, slots]) => {
-    const dayNumber = Number.parseInt(day, 10);
-    if (dayNumber < 1 || dayNumber > 6) return;
-    const normalizedSlots = normalizeSlotList(slots);
-    if (normalizedSlots.length > 0) normalized[dayNumber] = normalizedSlots;
-  });
-
-  return normalized;
-}
-
-function buildDrawnSlotsByDay(days = [], slots = []) {
-  const map = {};
-  const normalizedDays = normalizeDayList(days);
-  const normalizedSlots = normalizeSlotList(slots);
-
-  normalizedDays.forEach((day) => {
-    map[day] = normalizedSlots.slice();
-  });
-
-  return map;
-}
-
-function getNativeTurnoValueForAllocation(allocation = {}) {
-  return store.rawData?.turmas?.find((turma) => String(turma?.turma_id) === String(allocation?.turmaId))?.turno
-    || allocation?.turno
-    || 'Tarde';
 }
 
 function applyExceptionalSaturdayShift(allocation = {}, dayOfWeek = 0, slots = []) {

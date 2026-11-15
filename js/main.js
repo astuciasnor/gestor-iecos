@@ -1,16 +1,17 @@
-import { store } from './store.js?v=202611150101';
-import { initUI, exportSigaaMetadataJSON, showToastWarning, refreshAfterRemoteChange } from './ui.js?v=202611150101';
-import { iniciarAcesso, isOnlineMode } from './acesso_ui.js?v=202611150101';
-import { setupAjuda } from './ajuda_ui.js?v=202611150101';
-import { fetchAllocationsForPlans, canPublishToServer, publishAgenda, getPerfil } from './sync_remoto.js?v=202611150101';
-import { filterExportableAllocations } from './academic_rules.mjs?v=202611150101';
+import { getLocalTodayIso } from './datas.mjs?v=202611150125';
+import { store } from './store.js?v=202611150125';
+import { initUI, exportSigaaMetadataJSON, showToastWarning, refreshAfterRemoteChange } from './ui.js?v=202611150125';
+import { iniciarAcesso, isOnlineMode } from './acesso_ui.js?v=202611150125';
+import { setupAjuda } from './ajuda_ui.js?v=202611150125';
+import { fetchAllocationsForPlans, canPublishToServer, publishAgenda, getPerfil } from './sync_remoto.js?v=202611150125';
+import { filterExportableAllocations } from './academic_rules.mjs?v=202611150125';
 import {
   buildPlanScopedPayload,
   buildTurmaParaCursoMap,
   collectAllocationsByCurso,
   buildTodosCursosExportSnapshot,
   buildPublicExportPayload
-} from './serialization.js?v=202611150101';
+} from './serialization.js?v=202611150125';
 
 // Cursos exportaveis: os cadastrados na aba cursos da planilha (dados_app.json).
 function getExportCursosUnidade() {
@@ -65,11 +66,6 @@ function validatePublicExportData(exportData) {
 }
 
 const MAX_FUTURE_PUBLIC_PLANS = 4;
-
-function getLocalTodayIso() {
-  const now = new Date();
-  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-}
 
 // Planos candidatos a publicacao: o ativo e os oficiais em curso ou futuros.
 function getPublicationTargets() {

@@ -1,7 +1,10 @@
-import { store } from './store.js?v=202611150101';
-import { getCalendarEvents } from './calendar.js?v=202611150101';
-import { detectTeacherConflicts } from './conflicts.js?v=202611150101';
-import { filterExportableAllocations, getTeacherActiveShifts } from './academic_rules.mjs?v=202611150101';
+import { addDaysISO as shiftISODate, sortUniqueIsoDates } from './datas.mjs?v=202611150125';
+import { timeToMinutesSafe, normalizeDayList, normalizeSlotList, normalizeDrawnSlotsByDay, buildDrawnSlotsByDay as buildDrawnSlotsMap } from './horarios.mjs?v=202611150125';
+import { normalizeKeyPart, normalizeKeyPart as normalizeTeacherKey } from './texto.mjs?v=202611150125';
+import { store } from './store.js?v=202611150125';
+import { getCalendarEvents } from './calendar.js?v=202611150125';
+import { detectTeacherConflicts } from './conflicts.js?v=202611150125';
+import { filterExportableAllocations, getTeacherActiveShifts } from './academic_rules.mjs?v=202611150125';
 
 function ensureExecutionEntry(maps, allocId) {
     if (!allocId) return;
@@ -76,26 +79,6 @@ function buildRangeMapFromDates(datesByAlloc = new Map(), fallbackStart = '', fa
     return rangeMap;
 }
 
-function normalizeKeyPart(value) {
-    return String(value || '').trim().toUpperCase();
-}
-
-function normalizeTeacherKey(value) {
-    return String(value || '').trim().toUpperCase();
-}
-
-function sortUniqueIsoDates(dates = []) {
-    return [...new Set((Array.isArray(dates) ? dates : []).map((value) => String(value || '').trim()))]
-        .filter((value) => /^\d{4}-\d{2}-\d{2}$/.test(value))
-        .sort((a, b) => a.localeCompare(b));
-}
-
-function timeToMinutesSafe(value) {
-    const match = String(value || '').match(/(\d{1,2}):(\d{2})/);
-    if (!match) return Number.MAX_SAFE_INTEGER;
-    return (Number.parseInt(match[1], 10) * 60) + Number.parseInt(match[2], 10);
-}
-
 function getAllocationDocentesList(alloc, fallbackHours = 0) {
     if (Array.isArray(alloc?.docentes) && alloc.docentes.length > 0) {
         return alloc.docentes
@@ -162,54 +145,6 @@ function buildDocenteDisplayLabel(allocations = [], docentes = []) {
         .find(Boolean);
 
     return fallback || '';
-}
-
-function shiftISODate(dateStr, days = 0) {
-    const source = String(dateStr || '').trim();
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(source)) return '';
-    const date = new Date(`${source}T12:00:00`);
-    if (Number.isNaN(date.getTime())) return '';
-    date.setDate(date.getDate() + Number(days || 0));
-    return date.toISOString().split('T')[0];
-}
-
-function normalizeDayList(days = []) {
-    return [...new Set((Array.isArray(days) ? days : [])
-        .map((value) => Number.parseInt(value, 10))
-        .filter((value) => value >= 1 && value <= 6))]
-        .sort((left, right) => left - right);
-}
-
-function normalizeSlotList(slots = []) {
-    return [...new Set((Array.isArray(slots) ? slots : [])
-        .map((value) => String(value || '').trim())
-        .filter(Boolean))]
-        .sort((left, right) => timeToMinutesSafe(left) - timeToMinutesSafe(right));
-}
-
-function normalizeDrawnSlotsByDay(raw = {}) {
-    const normalized = {};
-
-    Object.entries(raw || {}).forEach(([day, slots]) => {
-        const dayNumber = Number.parseInt(day, 10);
-        if (dayNumber < 1 || dayNumber > 6) return;
-        const normalizedSlots = normalizeSlotList(slots);
-        if (normalizedSlots.length > 0) normalized[dayNumber] = normalizedSlots;
-    });
-
-    return normalized;
-}
-
-function buildDrawnSlotsMap(days = [], slots = []) {
-    const normalizedDays = normalizeDayList(days);
-    const normalizedSlots = normalizeSlotList(slots);
-    const map = {};
-
-    normalizedDays.forEach((day) => {
-        map[day] = normalizedSlots.slice();
-    });
-
-    return map;
 }
 
 function normalizeLegacyFaixaRecord(rawFaixa = null, fallback = {}) {

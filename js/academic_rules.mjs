@@ -1,25 +1,8 @@
-import { normalizePlanMeta as normalizeStoredPlanMeta } from './plan_storage.js?v=202611150101';
-
-function toMiddayDate(dateStr) {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(String(dateStr || '').trim())) return null;
-  const date = new Date(`${dateStr}T12:00:00`);
-  return Number.isNaN(date.getTime()) ? null : date;
-}
-
-function toISODate(date) {
-  return date instanceof Date && !Number.isNaN(date.getTime())
-    ? date.toISOString().split('T')[0]
-    : '';
-}
+import { toISODate, addDaysISO, getWeekStartISO, sortUniqueIsoDates } from './datas.mjs?v=202611150125';
+import { normalizePlanMeta as normalizeStoredPlanMeta } from './plan_storage.js?v=202611150125';
 
 function normalizePlanMeta(meta = {}) {
   return normalizeStoredPlanMeta(meta);
-}
-
-export function sortUniqueIsoDates(dates = []) {
-  return [...new Set((Array.isArray(dates) ? dates : []).map((value) => String(value || '').trim()))]
-    .filter((value) => /^\d{4}-\d{2}-\d{2}$/.test(value))
-    .sort((a, b) => a.localeCompare(b));
 }
 
 function normalizeSlotList(slots = []) {
@@ -76,22 +59,6 @@ function buildShiftLabelMap(order = []) {
   return labels;
 }
 
-
-export function addDaysISO(dateStr, days) {
-  const date = toMiddayDate(dateStr);
-  if (!date) return '';
-  date.setDate(date.getDate() + Number(days || 0));
-  return toISODate(date);
-}
-
-export function getWeekStartISO(dateStr) {
-  const date = toMiddayDate(dateStr);
-  if (!date) return '';
-  const dow = date.getDay();
-  const delta = dow === 0 ? -6 : (1 - dow);
-  date.setDate(date.getDate() + delta);
-  return toISODate(date);
-}
 
 export function resolveActiveAcademicPeriod({ plans = [], preferredMeta = null, fallbackMeta = null, today = '' } = {}) {
   const officialPlans = (Array.isArray(plans) ? plans : [])
@@ -359,3 +326,6 @@ export function buildSigaaExportPayload({
     ofertas: Array.isArray(ofertas) ? ofertas.filter(Boolean) : []
   };
 }
+
+// Funcoes de data que moram em js/datas.mjs, exportadas tambem daqui.
+export { addDaysISO, getWeekStartISO, sortUniqueIsoDates };

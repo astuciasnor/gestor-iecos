@@ -1,11 +1,12 @@
-import { store, normalizeLoadedAllocation } from './store.js?v=202611150101';
-import { getTurnoLetter } from './turns.js?v=202611150101';
-import { getCalendarEvents } from './calendar.js?v=202611150101';
-import { resolveActiveAcademicPeriod } from './academic_rules.mjs?v=202611150101';
-import { buildMonthMarkers, summarizeTeacherPeriod } from './resumo_docente.mjs?v=202611150101';
-import { resolveBackendMode, UFPA_API_URL } from './backend_config.js?v=202611150101';
-import { filtrarDocentes, UNIDADES } from './docente_nomes.mjs?v=202611150101';
-import { nomeComSubturma, sufixoSubturma } from './subturmas.mjs?v=202611150101';
+import { escapeHtml } from './texto.mjs?v=202611150125';
+import { store, normalizeLoadedAllocation } from './store.js?v=202611150125';
+import { getTurnoLetter } from './turns.js?v=202611150125';
+import { getCalendarEvents } from './calendar.js?v=202611150125';
+import { resolveActiveAcademicPeriod } from './academic_rules.mjs?v=202611150125';
+import { buildMonthMarkers, summarizeTeacherPeriod } from './resumo_docente.mjs?v=202611150125';
+import { resolveBackendMode, UFPA_API_URL } from './backend_config.js?v=202611150125';
+import { filtrarDocentes, UNIDADES } from './docente_nomes.mjs?v=202611150125';
+import { nomeComSubturma, sufixoSubturma } from './subturmas.mjs?v=202611150125';
 
 const collator = new Intl.Collator('pt-BR', { sensitivity: 'base' });
 const PUBLIC_ASSET_VERSION = '20261028a';
@@ -2580,15 +2581,6 @@ function formatHolidayLabel(value, maxLen = 24) {
     if (!text) return 'Feriado';
     if (text.length <= maxLen) return text;
     return `${text.slice(0, Math.max(1, maxLen - 1)).trimEnd()}\u2026`;
-}
-
-function escapeHtml(value) {
-    return String(value ?? '')
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;');
 }
 
 function escapeHtmlAttr(value) {

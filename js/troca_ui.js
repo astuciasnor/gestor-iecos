@@ -1,19 +1,20 @@
+import { escapeHtml as escapeTrocaHtml } from './texto.mjs?v=202611150125';
 // Botao "Trocar" da Lista de Ofertas (janela, calculo das novas posicoes e
 // gravacao) e o "Como resolver?" do Calendario Docente. Saiu do ui.js em
 // 14/11/2026 sem mudar nada; as funcoes do editor que ele usa chegam por
 // ligarTroca (ver ui.js). Quem pode trocar com quem: troca_ordem.mjs.
-import { slotLabelsOverlap } from './academic_rules.mjs?v=202611150101';
-import { getAllocationTeachersForConflict, isFaixaAllocation } from './allocation_helpers.js?v=202611150101';
-import { getCalendarEvents } from './calendar.js?v=202611150101';
-import { getCursoSiglaDaTurma, getDisciplinaInfo, getTurmaLabel } from './curso_turma_helpers.js?v=202611150101';
-import { addDaysISO, formatDateBR } from './date_utils_ui.js?v=202611150101';
-import { alignFaixasToExecutionEnd, buildFinalAdjustmentFaixaSuggestion, computeIntensiveExecution, getNormalizedIntensiveFaixas, normalizeFaixaEntry, shouldIgnoreTurmaEventForCandidate } from './faixa_utils.js?v=202611150101';
-import { datasFeriadoDaTurma } from './feriados.mjs?v=202611150101';
-import { store } from './store.js?v=202611150101';
-import { saoSubturmasDiferentes } from './subturmas.mjs?v=202611150101';
-import { classifySwap } from './troca_ordem.mjs?v=202611150101';
-import { normalizeConflictSlotLabel } from './turno_helpers.js?v=202611150101';
-import { showToastWarning } from './ui_feedback.js?v=202611150101';
+import { slotLabelsOverlap } from './academic_rules.mjs?v=202611150125';
+import { getAllocationTeachersForConflict, isFaixaAllocation } from './allocation_helpers.js?v=202611150125';
+import { getCalendarEvents } from './calendar.js?v=202611150125';
+import { getCursoSiglaDaTurma, getDisciplinaInfo, getTurmaLabel } from './curso_turma_helpers.js?v=202611150125';
+import { addDaysISO, formatDateBR } from './date_utils_ui.js?v=202611150125';
+import { alignFaixasToExecutionEnd, buildFinalAdjustmentFaixaSuggestion, computeIntensiveExecution, getNormalizedIntensiveFaixas, normalizeFaixaEntry, shouldIgnoreTurmaEventForCandidate } from './faixa_utils.js?v=202611150125';
+import { datasFeriadoDaTurma } from './feriados.mjs?v=202611150125';
+import { store } from './store.js?v=202611150125';
+import { saoSubturmasDiferentes } from './subturmas.mjs?v=202611150125';
+import { classifySwap } from './troca_ordem.mjs?v=202611150125';
+import { normalizeConflictSlotLabel } from './turno_helpers.js?v=202611150125';
+import { showToastWarning } from './ui_feedback.js?v=202611150125';
 
 // Do ui.js: editor, conflitos de professor, desfazer e recalculo das datas.
 let ligacoes = {};
@@ -26,10 +27,6 @@ export function ligarTroca(fns) {
 // de turma e de professor antes de gravar.
 
 const CAMPOS_DE_POSICAO = ['dataInicio', 'dataFim', 'faixas', 'executionByDate', 'horariosOcupados', 'horariosUltimoDia', 'diasMarcados', 'usaSabado', 'sabadoManha'];
-
-export function escapeTrocaHtml(value) {
-    return String(value ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-}
 
 export function contarHorasExecutadas(byDate) {
     return Object.values(byDate || {}).reduce((n, slots) => n + (Array.isArray(slots) ? slots.length : 0), 0);
@@ -403,3 +400,6 @@ function aplicarTrocaDeOrdem(plano) {
     plano.avisos.forEach((aviso) => showToastWarning(aviso, 'warning', 6000));
     if (!plano.avisos.length) showToastWarning('Ordem trocada. Se precisar, clique em "Desfazer troca", ao lado do título da lista (antes de atualizar a página).', 'success', 4500);
 }
+
+// escapeTrocaHtml (= escapeHtml de js/texto.mjs) segue exportado daqui para o ui.js.
+export { escapeTrocaHtml };

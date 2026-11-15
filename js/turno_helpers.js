@@ -1,12 +1,8 @@
-import { store } from './store.js?v=202611150101';
-import { normalizeTurnoKey, getTurnoLetter, mapSlotToTurno, turnoDaTurmaInclui } from './turns.js?v=202611150101';
-
-export function normalizeConflictSlotLabel(value) {
-    return String(value || '')
-        .trim()
-        .replace(/\s+/g, ' ')
-        .replace(/\s*[-–]\s*/g, ' - ');
-}
+// normalizeConflictSlotLabel mora em js/horarios.mjs; e usada aqui e segue exportada daqui.
+import { normalizeConflictSlotLabel } from './horarios.mjs?v=202611150125';
+export { normalizeConflictSlotLabel };
+import { store } from './store.js?v=202611150125';
+import { normalizeTurnoKey, getTurnoLetter, mapSlotToTurno, turnoDaTurmaInclui } from './turns.js?v=202611150125';
 
 export function normalizeTurnoOfertaKey(value) {
     return normalizeTurnoKey(value);

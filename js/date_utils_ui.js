@@ -1,3 +1,7 @@
+// toISODate, addDaysISO (= shiftISODate) e getWeekStartISO moram em js/datas.mjs.
+import { toISODate, addDaysISO, getWeekStartISO } from './datas.mjs?v=202611150125';
+export { toISODate, addDaysISO, addDaysISO as shiftISODate, getWeekStartISO };
+
 export function timeToMinutes(str) {
     if (!str) return 99999;
     const match = str.match(/(\d{1,2}):(\d{2})/);
@@ -8,13 +12,6 @@ export function timeToMinutes(str) {
 export function shortDayName(dayNumber) {
     const map = { 1: 'Seg', 2: 'Ter', 3: 'Qua', 4: 'Qui', 5: 'Sex', 6: 'Sab' };
     return map[dayNumber] || String(dayNumber);
-}
-
-export function shiftISODate(dateStr, days) {
-    if (!dateStr) return '';
-    const d = new Date(`${dateStr}T12:00:00`);
-    d.setDate(d.getDate() + days);
-    return d.toISOString().split('T')[0];
 }
 
 export function isValidISODateValue(value) {
@@ -36,26 +33,6 @@ export function formatCompactFaixaDate(value) {
     const raw = String(value || '').trim();
     if (!/^\d{4}-\d{2}-\d{2}$/.test(raw)) return 'dd/mm/aaaa';
     return `${raw.slice(8, 10)}/${raw.slice(5, 7)}/${raw.slice(0, 4)}`;
-}
-
-export function toISODate(dateObj) {
-    return dateObj.toISOString().split('T')[0];
-}
-
-export function addDaysISO(dateStr, days) {
-    const d = new Date(dateStr + 'T12:00:00');
-    d.setDate(d.getDate() + days);
-    return toISODate(d);
-}
-
-export function getWeekStartISO(dateStr) {
-    if (!dateStr) return '';
-    const d = new Date(`${dateStr}T12:00:00`);
-    if (Number.isNaN(d.getTime())) return '';
-    const dow = d.getDay();
-    const delta = dow === 0 ? -6 : (1 - dow);
-    d.setDate(d.getDate() + delta);
-    return toISODate(d);
 }
 
 export function formatDayMonthShort(dateStr) {
