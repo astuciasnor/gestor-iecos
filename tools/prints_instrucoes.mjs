@@ -1,12 +1,13 @@
-// Gera os prints dos 8 passos da Ajuda > Alocacao (o antigo menu "Instrucoes de
-// preenchimento" da aba Alocar Componentes saiu em 08/11/2026). Abre o app num Chrome/Edge invisivel
-// com os dados publicados (como o teste de fumaca), monta cada situacao e
-// recorta so a parte da tela daquele passo.
+// Gera os prints da Ajuda: os 8 passos de Alocacao e os de Casos especiais (o antigo
+// menu "Instrucoes de preenchimento" da aba Alocar Componentes saiu em 08/11/2026).
+// Abre o app num Chrome/Edge invisivel com os dados publicados (como o teste de
+// fumaca), monta cada situacao e recorta so a parte da tela daquele passo.
 //
 // Uso (na raiz do projeto):   node tools/prints_instrucoes.mjs
 // Rode de novo sempre que a aparencia dessas partes mudar.
-// Saida: img/instrucoes/passo-1.png ... passo-8.png (nada mais e gravado).
-// Na Ajuda (index.html) cada imagem aparece com 70% do tamanho do recorte:
+// Saida: img/instrucoes/passo-1.png ... passo-8.png, estagio-turno.png e
+// aproveitamento.png (nada mais e gravado). passo-7 (pausa) aparece em Casos especiais.
+// Na Ajuda (index.html) cada imagem aparece no tamanho do recorte (o print sai em escala 2, fica nitido):
 // ao gerar de novo, ajuste width/height das <img class="aj-print"> se o recorte mudar.
 import fs from 'node:fs';
 import os from 'node:os';
@@ -82,6 +83,22 @@ async function main() {
     await recortar('passo-1', ['.periodo-letivo-title', '.periodo-letivo-control']);
     await recortar('passo-2', ['.sidebar-section-title:nth-of-type(2)', '#sel-turno-oferta']);
 
+    // Casos especiais > Estagio: campo Turno com a combinacao Manha e Noite (volta ao turno de antes)
+    const turnoAntes = await evaluate(`(() => {
+      const s = document.getElementById('sel-turno-oferta'), antes = s.value;
+      const op = [...s.options].find((o) => o.value === 'Manhã+Noite');
+      if (!op) return null;
+      s.value = op.value; s.dispatchEvent(new Event('change', { bubbles: true }));
+      return antes;
+    })()`);
+    if (turnoAntes === null) console.log('aviso: a turma nao tem Manhã e Noite; estagio-turno.png nao foi gerado');
+    else {
+      await sleep(800);
+      await recortar('estagio-turno', ['label[for="sel-turno-oferta"]', '#sel-turno-oferta']);
+      await evaluate(`(() => { const s = document.getElementById('sel-turno-oferta'); s.value = ${JSON.stringify(turnoAntes)}; s.dispatchEvent(new Event('change', { bubbles: true })); })()`);
+      await sleep(800);
+    }
+
     // Abre uma oferta para edicao (duplo clique num bloco da grade)
     await evaluate("document.querySelector('#weekly-grid .mini-card').dispatchEvent(new MouseEvent('dblclick', { bubbles: true }))");
     await sleep(1500);
@@ -118,6 +135,30 @@ async function main() {
     // 8: Total CH, Meta CH e o botao Salvar
     await recortar('passo-8', ['.weekly-faixas-metric-total', '.weekly-faixas-metric-target']);
     await recortar('passo-8-salvar', ['#btn-add-oferta']);
+
+    // Casos especiais > Dias livres: o aviso verde com o mapa das faixas. Montar um
+    // aproveitamento de verdade depende dos dados; aqui o aviso real (mesmo HTML e CSS)
+    // recebe o texto do exemplo da Ajuda (28 e 29/01) e a largura e reduzida para caber.
+    await evaluate(`(() => {
+      const $ = (id) => document.getElementById(id);
+      $('cd-aproveitamento-texto').innerHTML = 'Aproveitando os dias livres antes de <b>Ecologia Aquática</b> (começa em 30/01/27). Preencha os horários de cada faixa:';
+      $('cd-aprov-f1').innerHTML = '<b>Faixa 1:</b> 28/01/27 a 29/01/27 · 8h marcadas';
+      $('cd-aprov-f2').innerHTML = '<b>Faixa 2:</b> a partir de 08/03/27 · faltam 52h';
+      $('btn-aprov-f1').innerHTML = '<span class="cd-aprov-longo">Preenchendo a Faixa 1</span><span class="cd-aprov-curto">Preenchendo</span>';
+      $('btn-aprov-f1').classList.add('is-ativa');
+      $('btn-aprov-f2').innerHTML = '<span class="cd-aprov-longo">Preencher a Faixa 2</span><span class="cd-aprov-curto">Preencher</span>';
+      $('btn-aprov-f2').classList.remove('hidden', 'is-ativa'); $('btn-aprov-f2').disabled = false;
+      const barra = $('weekly-status-bar');
+      barra.classList.add('tem-aproveitamento');
+      barra.style.maxWidth = '1000px';
+      barra.style.minHeight = '62px';
+      $('cd-aviso')?.classList.add('hidden');
+      // O app esconde o aviso de novo (nao ha aproveitamento de verdade): fica a mostra so para o recorte
+      $('cd-aproveitamento').classList.remove('hidden');
+      $('cd-aproveitamento').style.setProperty('display', 'flex', 'important');
+    })()`);
+    await sleep(300);
+    await recortar('aproveitamento', ['#cd-aproveitamento']);
 
     if (errors.length) console.log(`erros no navegador: ${errors.join(' | ')}`);
   } finally {

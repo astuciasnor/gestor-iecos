@@ -1,6 +1,6 @@
 /* =====================================================================
-   Aba Ajuda: um tema por vez (Começar, Alocação, Revisão, Docentes,
-   Publicação, Arquivos). Troca de tema em js/ajuda_ui.js.
+   Aba Ajuda: um tema por vez (Começar, Alocação, Casos especiais,
+   Revisão, Docentes, Publicação, Arquivos). Troca de tema em js/ajuda_ui.js.
    Cada tema tem a sua cor: --aj-cor (forte) e --aj-suave (fundo).
    ===================================================================== */
 
@@ -19,6 +19,7 @@
 /* Cor de cada tema (botao e painel) */
 [data-aj-tema="comecar"],    [data-aj-painel="comecar"]    { --aj-cor: #1e8449; --aj-suave: #eaf6ee; }
 [data-aj-tema="alocacao"],   [data-aj-painel="alocacao"]   { --aj-cor: #2f6fb0; --aj-suave: #eaf2fb; }
+[data-aj-tema="casos"],      [data-aj-painel="casos"]      { --aj-cor: #b03a5b; --aj-suave: #fbecf1; }
 [data-aj-tema="revisao"],    [data-aj-painel="revisao"]    { --aj-cor: #7d3c98; --aj-suave: #f4ecf8; }
 [data-aj-tema="docentes"],   [data-aj-painel="docentes"]   { --aj-cor: #c0661a; --aj-suave: #fdf1e6; }
 [data-aj-tema="publicacao"], [data-aj-painel="publicacao"] { --aj-cor: #138d75; --aj-suave: #e6f6f2; }
@@ -74,7 +75,7 @@
 /* ---- Botoes dos temas ---- */
 .aj-temas {
     display: grid;
-    grid-template-columns: repeat(6, minmax(0, 1fr));
+    grid-template-columns: repeat(7, minmax(0, 1fr));
     gap: 8px;
 }
 .aj-tema {
@@ -320,6 +321,56 @@
     cursor: pointer;
 }
 
+/* ---- "Qual e o seu caso?" (tema Casos especiais): botoes que rolam ate o cartao ---- */
+.aj-casos {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 8px;
+    margin: 0 0 16px;
+}
+.aj-casos-titulo {
+    grid-column: 1 / -1;
+    font-weight: 800;
+    color: var(--aj-cor);
+}
+.aj-caso {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    background: #fff;
+    border: 1px solid var(--aj-borda);
+    border-left: 4px solid var(--aj-cor);
+    border-radius: 10px;
+    color: var(--aj-texto);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.15s;
+}
+.aj-caso:hover { background: var(--aj-suave); transform: translateY(-1px); }
+.aj-caso:focus-visible { outline: 3px solid var(--aj-cor); outline-offset: 2px; }
+.aj-caso > span:first-child { font-size: 1.2rem; flex-shrink: 0; }
+.aj-caso b { display: block; color: var(--aj-cor); font-size: 0.95rem; }
+.aj-caso small { display: block; color: #6b7c8c; font-size: 0.78rem; line-height: 1.25; }
+/* Link para outro cartao do mesmo tema, no meio do texto */
+.aj-caso-link {
+    padding: 0;
+    border: none;
+    background: none;
+    color: var(--aj-cor);
+    font: inherit;
+    font-weight: 700;
+    text-decoration: underline;
+    cursor: pointer;
+}
+/* Cartao escolhido: a borda pisca uma vez */
+.aj-cartao.aj-pisca { animation: aj-pisca 1.4s ease-out; }
+@keyframes aj-pisca {
+    0%, 40% { box-shadow: 0 0 0 4px var(--aj-cor); }
+    100%    { box-shadow: 0 2px 8px rgba(15, 35, 52, 0.05); }
+}
+
 /* ---- Roteiro de 8 passos (tema Alocacao) ---- */
 .aj-roteiro {
     list-style: none;
@@ -407,8 +458,11 @@
 }
 
 /* ---- Telas menores ---- */
+/* 7 temas numa linha so com tela larga; abaixo disso, 4 + 3 */
+@media (max-width: 1600px) {
+    .aj-temas { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
 @media (max-width: 1280px) {
-    .aj-temas { grid-template-columns: repeat(3, minmax(0, 1fr)); }
     .aj-roteiro { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (max-width: 900px) {

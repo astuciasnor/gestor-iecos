@@ -1,6 +1,7 @@
-// Aba Ajuda: mostra um tema por vez (Começar, Alocação, Revisão, Docentes,
-// Publicação, Arquivos). Lembra o ultimo tema aberto neste navegador.
+// Aba Ajuda: mostra um tema por vez (Começar, Alocação, Casos especiais,
+// Revisão, Docentes, Publicação, Arquivos). Lembra o ultimo tema aberto neste navegador.
 // Botoes .aj-ir[data-aj-ir="tema"] dentro do texto levam a outro tema.
+// Com data-aj-alvo="id" (no mesmo botao ou num .aj-caso), rola ate esse cartao.
 
 const CHAVE_TEMA = 'cardume_ajuda_tema';
 
@@ -52,10 +53,26 @@ export function setupAjuda() {
     });
   });
 
+  // Rola ate o cartao, logo abaixo do topo parado (.aj-fixo), e pisca a borda
+  function irAoCartao(id) {
+    const alvo = document.getElementById(id);
+    const aba = document.getElementById('tab-tutorial');
+    if (!alvo || !aba) return;
+    const fixo = raiz.querySelector('.aj-fixo');
+    const cobre = fixo ? fixo.offsetHeight - 30 : 0;   // 30px: respiro que o .aj-fixo cobre (ajuda.css)
+    const topo = alvo.getBoundingClientRect().top - aba.getBoundingClientRect().top + aba.scrollTop - cobre - 20;
+    aba.scrollTo({ top: Math.max(0, topo), behavior: 'smooth' });
+    alvo.classList.remove('aj-pisca');
+    void alvo.offsetWidth;   // reinicia a animacao se clicar de novo
+    alvo.classList.add('aj-pisca');
+  }
+
   raiz.addEventListener('click', (e) => {
-    const link = e.target.closest('.aj-ir[data-aj-ir]');
-    if (!link) return;
-    abrir(link.dataset.ajIr, { foco: true });
+    const link = e.target.closest('[data-aj-ir], [data-aj-alvo]');
+    if (!link || !raiz.contains(link)) return;
+    const { ajIr: tema, ajAlvo: alvo } = link.dataset;
+    if (tema) abrir(tema, { foco: !alvo });
+    if (alvo) irAoCartao(alvo);
   });
 
   abrir(lerTemaSalvo() || botoes[0].dataset.ajTema);

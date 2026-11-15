@@ -10,13 +10,13 @@
         // Vai para o aviso antes de carregar o programa. A agenda publica nao passa por aqui.
         if (/\.github\.io$/i.test(location.hostname)) location.replace('mudou.html');
     </script>
-    <link rel="stylesheet" href="css/style.css?v=202611142255">
+    <link rel="stylesheet" href="css/style.css?v=202611142343">
     <!-- Redesenho da aba Alocar Componentes (por partes); carrega depois do style.css -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
-    <link rel="stylesheet" href="css/alocar-componentes.css?v=202611142255">
-    <link rel="stylesheet" href="css/ajuda.css?v=202611142255">
+    <link rel="stylesheet" href="css/alocar-componentes.css?v=202611142343">
+    <link rel="stylesheet" href="css/ajuda.css?v=202611142343">
 
     <style>
         :root {
@@ -348,7 +348,7 @@
         }
     </style>
     <!-- Visual da barra lateral: depois de todos os estilos, so vale dentro de .sidebar -->
-    <link rel="stylesheet" href="css/sidebar.css?v=202611142255">
+    <link rel="stylesheet" href="css/sidebar.css?v=202611142343">
 </head>
 
 <body>
@@ -1069,7 +1069,8 @@
             </section>
 
             <section id="tab-tutorial" class="tab-content" role="tabpanel" aria-labelledby="tabbtn-tutorial">
-                <!-- Aba Ajuda: um tema por vez (botoes em cima). Troca de tema em js/ajuda_ui.js;
+                <!-- Aba Ajuda: um tema por vez (botoes em cima): Comecar, Alocacao (o basico),
+                     Casos especiais, Revisao, Docentes, Publicacao, Arquivos. Troca de tema em js/ajuda_ui.js;
                      visual em css/ajuda.css. Cada tema tem a sua cor (--aj-cor). -->
                 <div class="aj">
                     <!-- Titulo e botoes dos temas ficam parados no topo; so o conteudo do tema rola -->
@@ -1087,7 +1088,10 @@
                             <span class="aj-tema-icone" aria-hidden="true">🚀</span><span class="aj-tema-txt"><b>Começar</b><small>barra e abas</small></span>
                         </button>
                         <button type="button" class="aj-tema" role="tab" id="aj-tab-alocacao" data-aj-tema="alocacao" aria-controls="aj-alocacao" aria-selected="false" tabindex="-1">
-                            <span class="aj-tema-icone" aria-hidden="true">🧩</span><span class="aj-tema-txt"><b>Alocação</b><small>faixas e pausa</small></span>
+                            <span class="aj-tema-icone" aria-hidden="true">🧩</span><span class="aj-tema-txt"><b>Alocação</b><small>passo a passo</small></span>
+                        </button>
+                        <button type="button" class="aj-tema" role="tab" id="aj-tab-casos" data-aj-tema="casos" aria-controls="aj-casos" aria-selected="false" tabindex="-1">
+                            <span class="aj-tema-icone" aria-hidden="true">🧭</span><span class="aj-tema-txt"><b>Casos especiais</b><small>pausa, estágio, turnos</small></span>
                         </button>
                         <button type="button" class="aj-tema" role="tab" id="aj-tab-revisao" data-aj-tema="revisao" aria-controls="aj-revisao" aria-selected="false" tabindex="-1">
                             <span class="aj-tema-icone" aria-hidden="true">🔍</span><span class="aj-tema-txt"><b>Revisão</b><small>lista e choques</small></span>
@@ -1115,7 +1119,7 @@
                                     <li><b>Período letivo</b>: escolha o PL (ex.: <em>2027 - PL2</em>). As datas de início e fim vêm sozinhas.</li>
                                     <li><b>Unidade</b>: já vem no <b>IECOS</b>. A outra opção é o <b>CBRAG</b> (Campus Bragança), com o curso de Matemática.</li>
                                     <li><b>Curso</b> e <b>Turma</b>: o nome da turma já mostra o bloco do período (ex.: <code>EP2026_BL1</code>).</li>
-                                    <li><b>Turno</b> da grade: Manhã, Tarde ou Noite. Em casos especiais e nos <b>estágios</b>, uma componente pode usar <b>dois turnos</b>: veja <button type="button" class="aj-ir" data-aj-ir="alocacao">Alocação › Turnos</button>.</li>
+                                    <li><b>Turno</b> da grade: Manhã, Tarde ou Noite. Em casos especiais e nos <b>estágios</b>, uma componente pode usar <b>dois turnos</b>: veja <button type="button" class="aj-ir" data-aj-ir="casos" data-aj-alvo="aj-caso-turnos">Casos especiais › Turnos</button>.</li>
                                     <li><b>Oferta de disciplina</b>: importe o bloco inteiro ou escolha uma componente por vez.</li>
                                     <li><b>Arquivos</b>: exportar, importar e publicar.</li>
                                 </ol>
@@ -1159,19 +1163,19 @@
                         </div>
                     </div>
 
-                    <!-- ===== 2. ALOCACAO ===== -->
+                    <!-- ===== 2. ALOCACAO (o basico) ===== -->
                     <div class="aj-painel" id="aj-alocacao" data-aj-painel="alocacao" role="tabpanel" aria-labelledby="aj-tab-alocacao" hidden>
-                        <p class="aj-lead">Na aba <b>Alocar Componentes</b>, siga os passos na ordem. O cartão <b>Próximo passo e avisos</b>, no topo da aba, diz sempre o que falta e mostra os avisos e as orientações.</p>
+                        <p class="aj-lead">Na aba <b>Alocar Componentes</b>, siga os passos na ordem. O cartão <b>Próximo passo e avisos</b>, no topo da aba, diz sempre o que falta. Componente que para e volta, estágio, dois turnos ou turma extra: veja <button type="button" class="aj-ir" data-aj-ir="casos">Casos especiais</button>.</p>
 
                         <ol class="aj-roteiro">
-                            <li><span class="aj-num">1</span><div><b>Período letivo</b>Escolha o PL na barra lateral. Ele define o calendário de todo o planejamento.<img class="aj-print" src="img/instrucoes/passo-1.png" width="222" height="49" alt="Campo Período na barra lateral" loading="lazy"></div></li>
-                            <li><span class="aj-num">2</span><div><b>Curso e turma</b>Selecione o curso e a turma.<img class="aj-print" src="img/instrucoes/passo-2.png" width="222" height="105" alt="Campos Unidade, Curso, Turma e Turno" loading="lazy"></div></li>
-                            <li><span class="aj-num">3</span><div><b>Componente</b>No campo <b>Disciplina</b>, busque pelo nome: a lista mostra o nome, o <b>código · curso</b> e a CH. Logo abaixo, escolha o docente.<img class="aj-print" src="img/instrucoes/passo-3.png" width="222" height="83" alt="Campo Disciplina com o quadrinho da cor e o campo Docente" loading="lazy"></div></li>
-                            <li><span class="aj-num">4</span><div><b>Início da Faixa 1</b>O Cardume sugere uma data depois da última componente. Para começar em outro dia, clique no primeiro horário desse dia na grade. Na mesma semana vale o dia mais cedo marcado; desmarque tudo para voltar à sugestão. Dias livres que ficaram para trás: veja o cartão <b>Aproveitar dias livres</b>, abaixo.<img class="aj-print" src="img/instrucoes/passo-4.png" width="180" height="73" alt="Data de Início da Faixa 1" loading="lazy"></div></li>
-                            <li><span class="aj-num">5</span><div><b>Desenhe o horário</b>Clique ou arraste sobre as aulas na grade semanal. Para marcar um bloco de uma vez, clique na primeira aula e, segurando <b>Shift</b>, clique na última. A tabela mostra a CH de cada faixa.<img class="aj-print" src="img/instrucoes/passo-5.png" width="420" height="117" alt="Horários desenhados na grade" loading="lazy"></div></li>
-                            <li><span class="aj-num">6</span><div><b>O horário mudou?</b>Vá à semana da mudança (setas ‹ › no topo da grade ou ← → do teclado) e redesenhe: a <b>Faixa 2</b> nasce sozinha naquele dia.<img class="aj-print" src="img/instrucoes/passo-6.png" width="195" height="113" alt="Semana em edição e botões de faixa" loading="lazy"></div></li>
-                            <li><span class="aj-num">7</span><div><b>Parar e voltar depois</b>Quando a componente para uns dias e volta mais à frente, a volta é sempre a <b>Faixa 2</b>. Na <b>pausa</b>, digite o Fim da Faixa 1, clique no número <b>2</b> da tabela das faixas e depois no primeiro horário do dia da volta. No <b>aproveitamento de dias livres</b>, o aviso verde mostra as faixas e o botão <b>Preencher a Faixa 2</b> já leva a volta para o dia certo. Veja os exemplos nos cartões abaixo.<img class="aj-print" src="img/instrucoes/passo-7.png" width="262" height="106" alt="Faixa 1, linha de pausa e Faixa 2" loading="lazy"></div></li>
-                            <li><span class="aj-num">8</span><div><b>Salvar</b>Confira se o <b>Total CH</b> bateu com a <b>Meta</b> e clique em <b>Salvar Componente</b>.<img class="aj-print" src="img/instrucoes/passo-8-salvar.png" width="195" height="36" alt="Botão Salvar Componente" loading="lazy"></div></li>
+                            <li><span class="aj-num">1</span><div><b>Período letivo</b>Escolha o PL na barra lateral. Ele define o calendário de todo o planejamento.<img class="aj-print" src="img/instrucoes/passo-1.png" width="330" height="77" alt="Campo Período na barra lateral" loading="lazy"></div></li>
+                            <li><span class="aj-num">2</span><div><b>Unidade, curso e turma</b>A <b>Unidade</b> já vem no IECOS. Escolha o <b>curso</b> e a <b>turma</b> e confira o <b>Turno</b> da grade.<img class="aj-print" src="img/instrucoes/passo-2.png" width="330" height="194" alt="Campos Unidade, Curso, Turma e Turno" loading="lazy"></div></li>
+                            <li><span class="aj-num">3</span><div><b>Componente</b>No campo <b>Disciplina</b>, busque pelo nome: a lista mostra o nome, o <b>código · curso</b> e a CH. Logo abaixo, escolha o docente.<img class="aj-print" src="img/instrucoes/passo-3.png" width="330" height="129" alt="Campo Disciplina com o quadrinho da cor e o campo Docente" loading="lazy"></div></li>
+                            <li><span class="aj-num">4</span><div><b>Início da Faixa 1</b>O Cardume sugere uma data depois da última componente. Para começar em outro dia, clique no primeiro horário desse dia na grade. Na mesma semana vale o dia mais cedo marcado; desmarque tudo para voltar à sugestão. Sobraram dias livres para trás? Veja <button type="button" class="aj-ir" data-aj-ir="casos" data-aj-alvo="aj-caso-livres">Casos especiais › Dias livres</button>.<img class="aj-print" src="img/instrucoes/passo-4.png" width="257" height="104" alt="Data de Início da Faixa 1" loading="lazy"></div></li>
+                            <li><span class="aj-num">5</span><div><b>Desenhe o horário</b>Clique ou arraste sobre as aulas na grade semanal. Para marcar um bloco de uma vez, clique na primeira aula e, segurando <b>Shift</b>, clique na última. A tabela mostra a CH de cada faixa.<img class="aj-print" src="img/instrucoes/passo-5.png" width="600" height="167" alt="Horários desenhados na grade" loading="lazy"></div></li>
+                            <li><span class="aj-num">6</span><div><b>O horário mudou?</b>Vá à semana da mudança (setas ‹ › no topo da grade ou ← → do teclado) e redesenhe: a <b>Faixa 2</b> nasce sozinha naquele dia. <b>Faixa anterior</b> e <b>Próxima faixa</b> levam de uma faixa a outra.<img class="aj-print" src="img/instrucoes/passo-6.png" width="218" height="119" alt="Botões Faixa anterior e Próxima faixa" loading="lazy"></div></li>
+                            <li><span class="aj-num">7</span><div><b>Caso especial?</b>A componente para uns dias e volta, aproveita dias livres que sobraram, usa dois turnos, cai no sábado, é estágio ou tem turma extra? Cada caso tem o seu passo a passo em <button type="button" class="aj-ir" data-aj-ir="casos">Casos especiais</button>. Os passos 1 a 6 continuam valendo.</div></li>
+                            <li><span class="aj-num">8</span><div><b>Salvar</b>Confira se o <b>Total CH</b> bateu com a <b>Meta</b> e clique em <b>Salvar Componente</b>.<img class="aj-print" src="img/instrucoes/passo-8-salvar.png" width="218" height="60" alt="Botão Salvar Componente" loading="lazy"></div></li>
                         </ol>
 
                         <div class="aj-grade">
@@ -1182,59 +1186,7 @@
                                     <li>A nova faixa substitui a anterior a partir do seu Início. O Fim da anterior se ajusta sozinho.</li>
                                     <li>Ao criar uma faixa sozinho, o Cardume avisa (<em>“Criei a Faixa 2”</em>) e oferece <b>Desfazer</b>.</li>
                                     <li>O <b>i</b> ao lado de cada faixa explica o que fazer. <b>↺</b> zera a Faixa 1; <b>✕</b> remove a Faixa 2 ou 3.</li>
-                                </ul>
-                            </article>
-
-                            <article class="aj-cartao">
-                                <h3><span aria-hidden="true">⏸️</span> Pausa: parar e voltar depois</h3>
-                                <ul class="aj-lista">
-                                    <li><b>Exemplo:</b> aulas de 01 a 05/03, duas semanas sem aula, volta em 22/03.</li>
-                                    <li><b>1.</b> Marque os horários da primeira parte e digite o <b>Fim</b> da Faixa 1: o último dia de aula (05/03).</li>
-                                    <li><b>2.</b> Clique no número <b>2</b> e depois no primeiro horário do dia da volta (22/03). <b>Você escolhe</b> esse dia.</li>
-                                    <li><b>3.</b> Marque os horários da Faixa 2 e salve. A linha cinza mostra <em>“Pausa · sem aula”</em>.</li>
-                                    <li>Os dias da pausa ficam <b>livres para outra componente</b>. Assim duas componentes se revezam na mesma turma.</li>
-                                    <li>A componente com pausa <b>nunca é empurrada sozinha</b>: se chocar com outra, o Cardume avisa e você ajusta as datas.</li>
-                                    <li><b>Dica:</b> cada componente aceita até 2 pausas. Se precisar de mais buracos, ou se estiver caçando dias soltos para encaixá-la, mude a ordem das componentes (<b>Lista de Ofertas › Trocar</b>). O planejamento fica mais fácil de ler para você e para os professores.</li>
-                                </ul>
-                            </article>
-
-                            <article class="aj-cartao">
-                                <h3><span aria-hidden="true">↩️</span> Aproveitar dias livres</h3>
-                                <ul class="aj-lista">
-                                    <li><b>Exemplo:</b> sobraram 28 e 29/01 livres e, em 30/01, começa outra componente. Dá para usar esses dois dias.</li>
-                                    <li><b>1.</b> Clique no primeiro horário livre de 28/01. O Cardume faz a Faixa 1 de 28 a 29/01 <b>sozinho</b>: a outra componente fica no lugar da pausa. Um aviso verde, no topo, mostra o mapa das faixas: datas, horas marcadas e quanto falta.</li>
-                                    <li><b>2.</b> Marque os horários. Cada horário se repete em todas as semanas da Faixa 1, então marque <b>cada dia da semana uma vez</b>; se um dia ainda está ocupado na primeira semana, marque-o na semana seguinte.</li>
-                                    <li><b>3.</b> Clique em <b>Preencher a Faixa 2</b>, no aviso (ou no número <b>2</b>). O Cardume <b>já leva</b> a Faixa 2 para a volta: o próximo dia livre (componente nova) ou o dia em que a componente começava (Editar).</li>
-                                    <li><b>4.</b> Marque os horários da Faixa 2 e salve. Para voltar, <b>Preencher a Faixa 1</b>. Errou o dia? <b>Refazer</b> limpa e deixa clicar em outro dia.</li>
-                                    <li><b>Componente já salva?</b> Lista de Ofertas › <b>Editar</b>. Vá até a semana dos dias livres, clique no primeiro horário e confirme <b>Recomeçar</b> (os horários marcados são apagados). Depois siga do passo 2.</li>
-                                    <li>Só dias livres do período letivo aceitam o clique.</li>
-                                    <li><b>Dica:</b> o aproveitamento usa duas faixas. Se precisar de mais pedaços, mude a ordem das componentes (<b>Lista de Ofertas › Trocar</b>): o planejamento fica mais claro.</li>
-                                </ul>
-                            </article>
-
-                            <article class="aj-cartao">
-                                <h3><span aria-hidden="true">🎓</span> Estágio: turno e contraturno</h3>
-                                <ul class="aj-lista">
-                                    <li><b>Exemplo</b> (licenciatura, 105h, turma da manhã): orientação de manhã no início (15 a 17/03), estágio à noite, segunda e quarta com 3 aulas, e fechamento de manhã no fim (28 a 30/06).</li>
-                                    <li><b>Antes de tudo:</b> no <b>Turno</b> da barra lateral, escolha o turno da turma <b>combinado</b> com o contraturno. Aqui é <b>Manhã e Noite</b>. A grade passa a mostrar os dois turnos, e você desenha todas as faixas sem trocar de turno.</li>
-                                    <li><b>1.</b> Marque as manhãs de segunda a quarta na semana de 15/03 e digite o <b>Fim</b> da Faixa 1 (17/03). Dá 15h.</li>
-                                    <li><b>2.</b> Clique no número <b>2</b> e depois no primeiro horário da noite de segunda, 22/03. Marque segunda e quarta, 3 aulas por noite, e digite o <b>Fim</b> da Faixa 2 (16/06). Dá 75h.</li>
-                                    <li><b>3.</b> Clique no número <b>3</b> e depois no primeiro horário da manhã de 28/06. Marque as manhãs de segunda a quarta. Dá 15h. Salve.</li>
-                                    <li><b>A conta tem que fechar:</b> Faixa 1 + Faixa 2 + Faixa 3 = CH. O Cardume preenche as faixas pela ordem das datas. Se a Faixa 2 não tiver Fim, ela gasta as horas que eram da Faixa 3, e a Faixa 3 some. Os dias entre o Fim da Faixa 2 e a Faixa 3 viram <b>pausa</b> e dão folga se surgir um feriado.</li>
-                                    <li><b>Confira</b> na Lista de Ofertas: uma linha por faixa, com a CH de cada uma (15, 75 e 15 de 105h).</li>
-                                    <li><b>Estágio em bloco</b> (dias seguidos, manhã e tarde): escolha o Turno <b>Manhã e Tarde</b> e marque os dois turnos nos mesmos dias.</li>
-                                    <li>É uma <b>proposta</b>: escolas, empresas e fazendas mudam horários ao longo do PL. O importante é registrar o encontro inicial, o encontro final e a carga horária.</li>
-                                </ul>
-                            </article>
-
-                            <article class="aj-cartao">
-                                <h3><span aria-hidden="true">📅</span> Turnos, sábado e feriados</h3>
-                                <ul class="aj-lista">
-                                    <li><b>Dois turnos</b> (casos especiais e estágios): no <b>Turno</b> da barra lateral, escolha a combinação (ex.: <b>Manhã e Noite</b>). A grade mostra os dois turnos, e a componente é salva com os dois. Para estágio, veja o cartão <b>Estágio: turno e contraturno</b>, acima.</li>
-                                    <li><b>Feriado</b>: a coluna do dia fica listrada, com um cartão rosa e o nome do feriado. Nesse dia não há aula.</li>
-                                    <li><b>Evento só de algumas turmas</b> (ex.: Recepção Calouros): aparece igual ao feriado, mas só nas turmas escolhidas; as outras seguem normais. Quem decide os dias é a unidade acadêmica; o administrador cadastra. As aulas desses dias não são repostas sozinhas: use <b>Editar</b> para ajustar as componentes.</li>
-                                    <li><b>Sábado</b>: numa turma da tarde ou da noite, ao marcar o primeiro horário de sábado da componente, o Cardume pergunta: <b>Passar para a manhã</b> ou <b>Manter à tarde</b> (Esc também mantém). Turma da manhã não recebe pergunta. Cada horário de sábado mostra o aviso <b>⚠ Manhã</b> e um botão pequeno (ex.: <b>Sábado → manhã</b>); clique nele para trocar.</li>
-                                    <li>Aula fora do turno da turma ganha o aviso <b>Atenção Turno</b> nos calendários e na agenda.</li>
+                                    <li>As faixas também servem para <b>parar e voltar</b> e para <b>aproveitar dias livres</b>: veja <button type="button" class="aj-ir" data-aj-ir="casos">Casos especiais</button>.</li>
                                 </ul>
                             </article>
 
@@ -1257,18 +1209,108 @@
                             </article>
 
                             <article class="aj-cartao">
-                                <h3><span aria-hidden="true">🎨</span> Cor e turma extra</h3>
+                                <h3><span aria-hidden="true">🎨</span> Cor e Desfazer</h3>
                                 <ul class="aj-lista">
                                     <li>Clique no <b>quadrinho colorido</b> ao lado do campo Disciplina e escolha na paleta. A grade semanal mostra o tom suave; calendários e agenda, a cor forte. Evite duas cores parecidas na mesma turma.</li>
-                                    <li><b>Turma extra</b> (ex.: laboratório em dois grupos): escolha a mesma componente de novo e clique em <b>OK</b> na mensagem. O resto é automático: a primeira oferta vira <b>T01</b>, a nova <b>T02</b> (aparece embaixo do nome e no selo <span class="aj-tag">T02</span> da Lista de Ofertas). Cada subturma é uma oferta própria: datas, horário, docente e CH.</li>
-                                    <li>O <b>mesmo professor</b> na T01 e na T02 no mesmo horário é <b>choque</b>: a CH dele ficaria contada em dobro.</li>
                                     <li>Errou? Logo depois de salvar, o botão <b>Desfazer Alocação</b> desfaz esse salvamento. Depois de outra alteração, ele fica esmaecido.</li>
                                 </ul>
                             </article>
                         </div>
                     </div>
 
-                    <!-- ===== 3. REVISAO ===== -->
+                    <!-- ===== 3. CASOS ESPECIAIS (o que foge do basico) =====
+                         Os botoes .aj-caso[data-aj-alvo] rolam ate o cartao (js/ajuda_ui.js). -->
+                    <div class="aj-painel" id="aj-casos" data-aj-painel="casos" role="tabpanel" aria-labelledby="aj-tab-casos" hidden>
+                        <p class="aj-lead">Quando a componente foge do comum. Os passos de <button type="button" class="aj-ir" data-aj-ir="alocacao">Alocação</button> continuam valendo: aqui muda só o jeito de usar as faixas e o turno.</p>
+
+                        <nav class="aj-casos" aria-label="Qual é o seu caso?">
+                            <span class="aj-casos-titulo">Qual é o seu caso?</span>
+                            <button type="button" class="aj-caso" data-aj-alvo="aj-caso-pausa"><span aria-hidden="true">⏸️</span><span><b>Pausa</b><small>para uns dias e volta depois</small></span></button>
+                            <button type="button" class="aj-caso" data-aj-alvo="aj-caso-livres"><span aria-hidden="true">↩️</span><span><b>Dias livres</b><small>sobraram dias antes de outra</small></span></button>
+                            <button type="button" class="aj-caso" data-aj-alvo="aj-caso-turnos"><span aria-hidden="true">📅</span><span><b>Turnos e sábado</b><small>dois turnos, sábado, feriado</small></span></button>
+                            <button type="button" class="aj-caso" data-aj-alvo="aj-caso-estagio"><span aria-hidden="true">🎓</span><span><b>Estágio</b><small>turno e contraturno</small></span></button>
+                            <button type="button" class="aj-caso" data-aj-alvo="aj-caso-extra"><span aria-hidden="true">👯</span><span><b>Turma extra</b><small>dois grupos: T01 e T02</small></span></button>
+                            <button type="button" class="aj-caso" data-aj-alvo="aj-caso-ordem"><span aria-hidden="true">🔁</span><span><b>Trocar a ordem</b><small>quando é mais simples</small></span></button>
+                        </nav>
+
+                        <!-- Cartoes em pares: Pausa | Dias livres; Turnos | Estagio; Turma extra | Trocar a ordem -->
+                        <div class="aj-grade">
+                            <article class="aj-cartao" id="aj-caso-pausa">
+                                <h3><span aria-hidden="true">⏸️</span> Pausa: parar e voltar depois</h3>
+                                <ul class="aj-lista">
+                                    <li><b>Exemplo:</b> aulas de 01 a 05/03, duas semanas sem aula, volta em 22/03. A volta é sempre a <b>Faixa 2</b>.</li>
+                                    <li><b>1.</b> Marque os horários da primeira parte e digite o <b>Fim</b> da Faixa 1: o último dia de aula (05/03).</li>
+                                    <li><b>2.</b> Clique no número <b>2</b> da tabela das faixas e depois no primeiro horário do dia da volta (22/03). <b>Você escolhe</b> esse dia.</li>
+                                    <li><b>3.</b> Marque os horários da Faixa 2 e salve. A linha listrada mostra <em>“Pausa sem aula”</em>.<img class="aj-print" src="img/instrucoes/passo-7.png" width="374" height="151" alt="Faixa 1, linha de pausa e Faixa 2" loading="lazy"></li>
+                                    <li>Os dias da pausa ficam <b>livres para outra componente</b>. Assim duas componentes se revezam na mesma turma.</li>
+                                    <li>A componente com pausa <b>nunca é empurrada sozinha</b>: se chocar com outra, o Cardume avisa e você ajusta as datas.</li>
+                                    <li>Até <b>2 pausas</b> por componente. Mais que isso: <button type="button" class="aj-caso-link" data-aj-alvo="aj-caso-ordem">trocar a ordem</button>.</li>
+                                </ul>
+                            </article>
+
+                            <article class="aj-cartao" id="aj-caso-livres">
+                                <h3><span aria-hidden="true">↩️</span> Aproveitar dias livres</h3>
+                                <ul class="aj-lista">
+                                    <li><b>Exemplo:</b> sobraram 28 e 29/01 livres e, em 30/01, começa outra componente. Dá para usar esses dois dias.</li>
+                                    <li><b>1.</b> Clique no primeiro horário livre de 28/01. O Cardume faz a Faixa 1 de 28 a 29/01 <b>sozinho</b>: a outra componente fica no lugar da pausa. O aviso verde, no topo, mostra o mapa das faixas: datas, horas marcadas e quanto falta.<img class="aj-print" src="img/instrucoes/aproveitamento.png" width="1010" height="72" alt="Aviso verde com o mapa das faixas e os botões Preencher a Faixa 1 e Preencher a Faixa 2" loading="lazy"></li>
+                                    <li><b>2.</b> Marque os horários. Cada horário se repete em todas as semanas da Faixa 1, então marque <b>cada dia da semana uma vez</b>; se um dia ainda está ocupado na primeira semana, marque-o na semana seguinte.</li>
+                                    <li><b>3.</b> Clique em <b>Preencher a Faixa 2</b>, no aviso (ou no número <b>2</b>). O Cardume <b>já leva</b> a Faixa 2 para a volta: o próximo dia livre (componente nova) ou o dia em que a componente começava (Editar).</li>
+                                    <li><b>4.</b> Marque os horários da Faixa 2 e salve. Para voltar, <b>Preencher a Faixa 1</b>. Errou o dia? <b>Refazer</b> limpa e deixa clicar em outro dia.</li>
+                                    <li><b>Componente já salva?</b> Lista de Ofertas › <b>Editar</b>. Vá até a semana dos dias livres, clique no primeiro horário e confirme <b>Recomeçar</b> (os horários marcados são apagados). Depois siga do passo 2.</li>
+                                    <li>Só dias livres do período letivo aceitam o clique. Precisa de mais pedaços? <button type="button" class="aj-caso-link" data-aj-alvo="aj-caso-ordem">Trocar a ordem</button>.</li>
+                                </ul>
+                            </article>
+
+                            <article class="aj-cartao" id="aj-caso-turnos">
+                                <h3><span aria-hidden="true">📅</span> Turnos, sábado e feriados</h3>
+                                <ul class="aj-lista">
+                                    <li><b>Dois turnos</b>: no <b>Turno</b> da barra lateral, escolha a combinação (ex.: <b>Manhã e Noite</b>). A grade mostra os dois turnos, e a componente é salva com os dois. Para estágio, veja o cartão <button type="button" class="aj-caso-link" data-aj-alvo="aj-caso-estagio">Estágio</button>, ao lado.</li>
+                                    <li><b>Sábado</b>: numa turma da tarde ou da noite, ao marcar o primeiro horário de sábado da componente, o Cardume pergunta: <b>Passar para a manhã</b> ou <b>Manter à tarde</b> (Esc também mantém). Turma da manhã não recebe pergunta. Cada horário de sábado mostra o aviso <b>⚠ Manhã</b> e um botão pequeno (ex.: <b>Sábado → manhã</b>); clique nele para trocar.</li>
+                                    <li>Aula fora do turno da turma ganha o aviso <b>Atenção Turno</b> nos calendários e na agenda.</li>
+                                    <li><b>Feriado</b>: a coluna do dia fica listrada, com um cartão rosa e o nome do feriado. Nesse dia não há aula.</li>
+                                    <li><b>Evento só de algumas turmas</b> (ex.: Recepção Calouros): aparece igual ao feriado, mas só nas turmas escolhidas; as outras seguem normais. Quem decide os dias é a unidade acadêmica; o administrador cadastra. As aulas desses dias não são repostas sozinhas: use <b>Editar</b> para ajustar as componentes.</li>
+                                </ul>
+                            </article>
+
+                            <article class="aj-cartao" id="aj-caso-estagio">
+                                <h3><span aria-hidden="true">🎓</span> Estágio: turno e contraturno</h3>
+                                <ul class="aj-lista">
+                                    <li><b>Exemplo</b> (105h, turma da manhã): orientação de manhã (15 a 17/03), estágio à noite (segunda e quarta, 3 aulas) e fechamento de manhã (28 a 30/06).</li>
+                                    <li><b>Antes de tudo:</b> no <b>Turno</b> da barra lateral, escolha a combinação com o contraturno, aqui <b>Manhã e Noite</b>. Assim você desenha as 3 faixas sem trocar de turno.<img class="aj-print" src="img/instrucoes/estagio-turno.png" width="330" height="44" alt="Campo Turno com Manhã e Noite escolhido" loading="lazy"></li>
+                                    <li><b>Faixa 1:</b> manhãs de segunda a quarta na semana de 15/03; <b>Fim</b> 17/03 (15h).</li>
+                                    <li><b>Faixa 2:</b> clique no número <b>2</b> e no primeiro horário da noite de 22/03; segunda e quarta, 3 aulas; <b>Fim</b> 16/06 (75h).</li>
+                                    <li><b>Faixa 3:</b> clique no número <b>3</b> e no primeiro horário da manhã de 28/06; segunda a quarta (15h). Salve.</li>
+                                    <li><b>A conta fecha:</b> 15 + 75 + 15 = 105h. Sem o Fim da Faixa 2, ela gasta as horas da Faixa 3, e a Faixa 3 some. Os dias entre as faixas viram <b>pausa</b> e dão folga para feriado.</li>
+                                    <li><b>Estágio em bloco</b> (dias seguidos): Turno <b>Manhã e Tarde</b>, os dois turnos nos mesmos dias.</li>
+                                    <li>É uma <b>proposta</b>: o importante é registrar o encontro inicial, o final e a carga horária.</li>
+                                </ul>
+                            </article>
+
+                            <article class="aj-cartao" id="aj-caso-extra">
+                                <h3><span aria-hidden="true">👯</span> Turma extra (T01 e T02)</h3>
+                                <ul class="aj-lista">
+                                    <li><b>Exemplo:</b> laboratório com a turma dividida em dois grupos.</li>
+                                    <li>Escolha a mesma componente de novo e clique em <b>OK</b> na mensagem. O resto é automático: a primeira oferta vira <b>T01</b>, a nova <b>T02</b> (aparece embaixo do nome e no selo <span class="aj-tag">T02</span> da Lista de Ofertas).</li>
+                                    <li>Cada subturma é uma oferta própria: datas, horário, docente e CH.</li>
+                                    <li>Enquanto você desenha a T02, a T01 aparece na grade com o seu rótulo, para não marcar por cima sem querer.</li>
+                                    <li>O <b>mesmo professor</b> na T01 e na T02 no mesmo horário é <b>choque</b>: a CH dele ficaria contada em dobro.</li>
+                                    <li>Excluiu uma das duas? A que sobra volta a ser a turma normal, sem T01.</li>
+                                </ul>
+                            </article>
+
+                            <article class="aj-cartao aj-cartao--destaque" id="aj-caso-ordem">
+                                <h3><span aria-hidden="true">🔁</span> Quando é melhor trocar a ordem</h3>
+                                <ul class="aj-lista">
+                                    <li>Cada componente aceita até <b>2 pausas</b>, e o aproveitamento de dias livres usa <b>2 faixas</b>.</li>
+                                    <li>Precisa de mais buracos, ou está caçando dias soltos para encaixar uma componente? Mude a ordem das componentes em <b>Lista de Ofertas › Trocar</b>.</li>
+                                    <li>O planejamento fica mais fácil de ler para você, para os alunos e para os professores.</li>
+                                    <li>Como funciona a troca: veja <button type="button" class="aj-ir" data-aj-ir="revisao">Revisão › Lista de Ofertas</button>.</li>
+                                </ul>
+                            </article>
+                        </div>
+                    </div>
+
+                    <!-- ===== 4. REVISAO ===== -->
                     <div class="aj-painel" id="aj-revisao" data-aj-painel="revisao" role="tabpanel" aria-labelledby="aj-tab-revisao" hidden>
                         <p class="aj-lead">Antes de pedir a publicação, confira a turma na <b>Lista de Ofertas</b> e no <b>Calendário da Turma</b>.</p>
 
@@ -1314,7 +1356,7 @@
                         </div>
                     </div>
 
-                    <!-- ===== 4. DOCENTES ===== -->
+                    <!-- ===== 5. DOCENTES ===== -->
                     <div class="aj-painel" id="aj-docentes" data-aj-painel="docentes" role="tabpanel" aria-labelledby="aj-tab-docentes" hidden>
                         <p class="aj-lead">O <b>Calendário Docente</b> confere a carga horária e os choques de um professor, com tudo o que está sendo alocado agora.</p>
 
@@ -1349,7 +1391,7 @@
                         </div>
                     </div>
 
-                    <!-- ===== 5. PUBLICACAO ===== -->
+                    <!-- ===== 6. PUBLICACAO ===== -->
                     <div class="aj-painel" id="aj-publicacao" data-aj-painel="publicacao" role="tabpanel" aria-labelledby="aj-tab-publicacao" hidden>
                         <p class="aj-lead">A agenda dos alunos e dos professores só muda quando o administrador clica em <b>Publicar Online</b>. Até lá, as alocações novas ficam só no Cardume.</p>
 
@@ -1388,7 +1430,7 @@
                         </div>
                     </div>
 
-                    <!-- ===== 6. ARQUIVOS ===== -->
+                    <!-- ===== 7. ARQUIVOS ===== -->
                     <div class="aj-painel" id="aj-arquivos" data-aj-painel="arquivos" role="tabpanel" aria-labelledby="aj-tab-arquivos" hidden>
                         <p class="aj-lead">As alocações ficam no servidor da UFPA, com cópia de segurança feita pelo administrador. Os arquivos abaixo servem para guardar uma cópia sua, levar dados ao SIGAA e imprimir.</p>
 
@@ -1431,7 +1473,7 @@
         </main>
     </div>
 
-    <script type="module" src="js/main.js?v=202611142255"></script>
+    <script type="module" src="js/main.js?v=202611142343"></script>
 </body>
 
 </html>

@@ -177,7 +177,7 @@ Abas esperadas: `docentes`, `componentes`, `turmas`, `cursos`, `horarios`,
 npm test                              # todas as suites de tests/ (Node 22+)
 npm run smoke                         # abre o app num Chrome/Edge invisivel e passa pelas abas
 node tools/teste_pausa_intercalada.mjs  # pausa + outra componente no meio, de ponta a ponta
-node tools/prints_instrucoes.mjs      # refaz os prints de img/instrucoes (Ajuda > Alocacao)
+node tools/prints_instrucoes.mjs      # refaz os prints de img/instrucoes (Ajuda > Alocacao e Casos especiais)
 ```
 
 **Versao dos arquivos (cache):** todos os `.js`/`.css` sao chamados com o mesmo
