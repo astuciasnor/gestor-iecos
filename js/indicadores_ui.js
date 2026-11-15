@@ -1,12 +1,13 @@
-import { escapeHtml as esc } from './texto.mjs?v=202611150125';
+import { UNIDADE_PADRAO, unidadeDoCurso } from './unidades.mjs?v=202611150136';
+import { escapeHtml as esc } from './texto.mjs?v=202611150136';
 // Menu Indicadores (so leitura: nada e gravado).
 // Sub-aba "Carga por docente": tabela com a CH de cada docente por curso e por PL,
 // do ano inteiro ou de um PL. As contas estao em indicadores.mjs.
-import { store } from './store.js?v=202611150125';
-import { getCursoSiglaDaTurma, getDisciplinaCHGlobal } from './curso_turma_helpers.js?v=202611150125';
-import { formatDateBR } from './date_utils_ui.js?v=202611150125';
-import { UNIDADES } from './docente_nomes.mjs?v=202611150125';
-import { cargaPorDocente, ordenarLinhas, SEM_DOCENTE } from './indicadores.mjs?v=202611150125';
+import { store } from './store.js?v=202611150136';
+import { getCursoSiglaDaTurma, getDisciplinaCHGlobal } from './curso_turma_helpers.js?v=202611150136';
+import { formatDateBR } from './date_utils_ui.js?v=202611150136';
+import { UNIDADES } from './docente_nomes.mjs?v=202611150136';
+import { cargaPorDocente, ordenarLinhas, SEM_DOCENTE } from './indicadores.mjs?v=202611150136';
 
 const VALIDADE_MS = 2 * 60 * 1000; // depois disso, abrir o menu busca de novo
 
@@ -15,7 +16,7 @@ let abrirAgendaDocente = null; // (nome, periodo) => void, vem do ui.js
 let avisarErro = (msg) => console.warn(msg);
 
 const estado = {
-    unidade: 'IECOS',        // so os cursos desta unidade (IECOS ou CBRAG)
+    unidade: UNIDADE_PADRAO, // so os cursos desta unidade (IECOS, CBRAG...)
     ano: '',
     periodo: 'ano',          // 'ano' ou a chave do PL
     ordem: { coluna: 'total', crescente: false },
@@ -34,9 +35,9 @@ function fmtCH(n) {
     return Number.isInteger(n) ? n.toLocaleString('pt-BR') : n.toLocaleString('pt-BR', { maximumFractionDigits: 1 });
 }
 
-// Unidade do curso (cursos[].unidade no dados_app.json; sem ela, IECOS).
+// Unidade do curso (cursos[].unidade no dados_app.json; sem ela, UNIDADE_PADRAO).
 function unidadeDe(sigla) {
-    return String((store.rawData?.cursos || []).find((c) => c.sigla === sigla)?.unidade || 'IECOS').toUpperCase();
+    return unidadeDoCurso((store.rawData?.cursos || []).find((c) => c.sigla === sigla));
 }
 
 function nomeUnidade(sigla) {
@@ -72,7 +73,7 @@ export function setupIndicadores() {
     const selUnidade = document.getElementById('sel-unidade-indicadores');
     if (selUnidade) {
         const unidades = [...new Set((store.rawData?.cursos || []).map((c) => unidadeDe(c.sigla)))];
-        if (!unidades.includes('IECOS')) unidades.unshift('IECOS');
+        if (!unidades.includes(UNIDADE_PADRAO)) unidades.unshift(UNIDADE_PADRAO);
         selUnidade.innerHTML = unidades.map((u) => `<option value="${esc(u)}">${esc(u === nomeUnidade(u) ? u : `${nomeUnidade(u)} (${u})`)}</option>`).join('');
         selUnidade.value = estado.unidade;
         selUnidade.addEventListener('change', () => { estado.unidade = selUnidade.value; desenhar(); });

@@ -167,3 +167,50 @@ turmas antes e depois (tem que dar identico).
 - [x] `agenda_publica.js`: a gaveta de detalhes no celular, que nunca abria,
       foi removida com o HTML e o CSS dela (05/11/2026; a lupa continua).
 - [ ] Estilos inline (`.style`) da interface para classes CSS, aos poucos.
+
+## Noite de 14 para 15/11/2026 (branches `refatoracao2`, `-passo4`, `-passo5`)
+
+Refatoracao moderada aprovada pelo usuario, com a regra "nada muda na tela".
+As branches estao em fila: `refatoracao2` (passos 1-3) -> `refatoracao2-passo4`
+-> `refatoracao2-passo5` (o passo 5 mexe nas mesmas funcoes pequenas do
+calendario que o passo 4 reorganizou; em fila nao ha conflito).
+
+Conferencia de cada passo (antes/depois): `npm test`, `npm run smoke`,
+`tools/foto_telas.mjs` (texto; com `HTML=1`, o HTML inteiro dos calendarios,
+com cores), `tools/foto_estilos.mjs` (agora tambem a barra lateral; diferencas
+de ate 0,1px sao ruido de texto), `teste_salvar` e `teste_troca` com
+`--comparar`, os outros testes de navegador de `tools/` e uma foto da agenda
+publica (todas as turmas do PL e 10 docentes). Tudo igual em todos os passos.
+
+- Passo 1: sai `applySidebarLayoutFixes` (ui.js). O `<style>` e os ajustes que
+  ela fazia ja eram vencidos pelo `sidebar.css`; as `<hr>` que inseria ficavam
+  escondidas.
+- Passo 2: `initUI` vira uma lista de chamadas (`ligarCampoDisciplina`,
+  `ligarCorDoEditor`, `ligarSalvarEDesfazer`, `ligarAbas`,
+  `ligarCalendarioDaTurma`, `ligarImpressao`, `ligarFiltroDocente`,
+  `ligarImportacaoJson`).
+- Passo 3: `js/grade_selecao.js` (clique, arrasto, Shift+clique e inicio da
+  faixa): os eventos ficam na grade, uma vez so; cada celula diz o que faz em
+  `data-acao` (`inicio`, `desenhar`, `aviso`). `mouseenter` e ouvido na
+  captura. `renderWeeklyGrid` 503 -> 168 linhas (9 funcoes com nome).
+  `teste_shift_retangulo` ganhou arrasto com o mouse de verdade.
+- Passo 4: `generateCalendarGrid` e `buildCalendarTurmaResumeTable`
+  (calendarios_ui.js) em funcoes por mes, dia, horario, componentes e HTML.
+- Passo 5: `js/datas.mjs`, `js/horarios.mjs`, `js/texto.mjs` e `js/unidades.mjs`
+  (puros, com testes) recebem as copias repetidas (escapeHtml x6, datas,
+  horarios, unidade padrao e "unidade do curso" x3). Os nomes exportados
+  antigos continuam valendo. Unica diferenca: data invalida devolve '' em vez
+  de lancar erro.
+
+Cuidado aprendido: `export { x } from '...'` NAO cria `x` dentro do arquivo;
+se o arquivo usa `x`, precisa de `import { x }` + `export { x }` (pego pela
+conferencia: erro no Calendario Docente).
+
+Para quando o Cardume tiver muitas unidades e cursos (decisao do usuario):
+- [ ] A lista `UNIDADES` (com subunidades) ainda esta no codigo
+      (`js/unidades.mjs`); o ideal e vir do `dados_app.json`, como os cursos.
+- [ ] Textos com "IECOS" fixo: nome sugerido do PDF (`buildPrintFileName`),
+      mensagem de acesso do administrador e a dica da grade vazia
+      ("Escolha a unidade (IECOS ou CBRAG)").
+- [ ] Listas de reserva `['EP', 'CB', 'CN']` (main.js, serialization.js) so
+      valem sem cursos cadastrados; podem sair.

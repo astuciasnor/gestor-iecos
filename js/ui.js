@@ -1,37 +1,38 @@
-import { getLocalTodayIso } from './datas.mjs?v=202611150125';
-import { store } from './store.js?v=202611150125';
-import { escapeTrocaHtml, contarHorasExecutadas, sugerirInicioSemChoque, fraseComeceEm, cursoDaTurma, sugerirComoResolverChoque, abrirTrocaDeOrdem, ligarTroca } from './troca_ui.js?v=202611150125';
-import { cadastrosDocentes, findNewDocenteNames, getCadastroDocente, refreshAvisoDocenteNovo, coletarCadastrosDocentes, setupAvisoDocenteNovo, ligarCadastroDocente } from './cadastro_docente_ui.js?v=202611150125';
-import { renderOfertasList, ligarListaOfertas } from './lista_ofertas_ui.js?v=202611150125';
-import { arrastoAtivo, esquecerAncora, endDrawingDrag, setDrawingCellSelection, marcarAncoraNaGrade, ligarSelecaoDaGrade } from './grade_selecao.js?v=202611150125';
-import { stableStringify } from './sync_diff.mjs?v=202611150125';
-import { getTurnoLetter, mapSlotToTurno, turnoDaTurmaInclui } from './turns.js?v=202611150125';
-import { normalizePeriodo as normalizePeriodoLetivoCode } from './plan_storage.js?v=202611150125';
-import { getCalendarEvents } from './calendar.js?v=202611150125';
-import { isDateOverlap } from './utils.js?v=202611150125';
-import { weeklyState } from './weekly_state.js?v=202611150125';
-import { findPendentesCobertas, isPendenteJaAlocada } from './pendentes.mjs?v=202611150125';
+import { UNIDADE_PADRAO, unidadeDoCurso } from './unidades.mjs?v=202611150136';
+import { getLocalTodayIso } from './datas.mjs?v=202611150136';
+import { store } from './store.js?v=202611150136';
+import { escapeTrocaHtml, contarHorasExecutadas, sugerirInicioSemChoque, fraseComeceEm, cursoDaTurma, sugerirComoResolverChoque, abrirTrocaDeOrdem, ligarTroca } from './troca_ui.js?v=202611150136';
+import { cadastrosDocentes, findNewDocenteNames, getCadastroDocente, refreshAvisoDocenteNovo, coletarCadastrosDocentes, setupAvisoDocenteNovo, ligarCadastroDocente } from './cadastro_docente_ui.js?v=202611150136';
+import { renderOfertasList, ligarListaOfertas } from './lista_ofertas_ui.js?v=202611150136';
+import { arrastoAtivo, esquecerAncora, endDrawingDrag, setDrawingCellSelection, marcarAncoraNaGrade, ligarSelecaoDaGrade } from './grade_selecao.js?v=202611150136';
+import { stableStringify } from './sync_diff.mjs?v=202611150136';
+import { getTurnoLetter, mapSlotToTurno, turnoDaTurmaInclui } from './turns.js?v=202611150136';
+import { normalizePeriodo as normalizePeriodoLetivoCode } from './plan_storage.js?v=202611150136';
+import { getCalendarEvents } from './calendar.js?v=202611150136';
+import { isDateOverlap } from './utils.js?v=202611150136';
+import { weeklyState } from './weekly_state.js?v=202611150136';
+import { findPendentesCobertas, isPendenteJaAlocada } from './pendentes.mjs?v=202611150136';
 
-import { datasFeriadoDaTurma, feriadosDaTurma } from './feriados.mjs?v=202611150125';
-import { closeFaixaEnds, isPauseEnd, listFaixaPauses } from './pausa_faixas.mjs?v=202611150125';
-import { numeroDaSubturma, isTurmaInteira, proximaSubturma, codigoT01Como, saoSubturmasDiferentes, sufixoSubturma, semSubturma, subturmaFicouSozinha } from './subturmas.mjs?v=202611150125';
-import { abrirMiniCalendario, fecharMiniCalendario, miniCalendarioAberto } from './mini_calendario.mjs?v=202611150125';
-import { buildCanonicalOfferProjection } from './execution_engine.js?v=202611150125';
+import { datasFeriadoDaTurma, feriadosDaTurma } from './feriados.mjs?v=202611150136';
+import { closeFaixaEnds, isPauseEnd, listFaixaPauses } from './pausa_faixas.mjs?v=202611150136';
+import { numeroDaSubturma, isTurmaInteira, proximaSubturma, codigoT01Como, saoSubturmasDiferentes, sufixoSubturma, semSubturma, subturmaFicouSozinha } from './subturmas.mjs?v=202611150136';
+import { abrirMiniCalendario, fecharMiniCalendario, miniCalendarioAberto } from './mini_calendario.mjs?v=202611150136';
+import { buildCanonicalOfferProjection } from './execution_engine.js?v=202611150136';
 import {
     buildSigaaMetadataPayload,
     validateSigaaMetadataPayload,
     getSigaaCode,
     buildScopedSigaaAllocationFromOfferFaixa,
     buildSigaaHorarioResumo
-} from './sigaa_metadata.js?v=202611150125';
-import { parseBackupDataFile, extractImportPlanMeta } from './serialization.js?v=202611150125';
+} from './sigaa_metadata.js?v=202611150136';
+import { parseBackupDataFile, extractImportPlanMeta } from './serialization.js?v=202611150136';
 import {
     showToastWarning,
     showPersistentStatusMessage,
     copyTextToClipboard,
     flashButtonCopyState,
     setupCopyActionButtons
-} from './ui_feedback.js?v=202611150125';
+} from './ui_feedback.js?v=202611150136';
 import {
     normalizeHexColor,
     adjustHexColor,
@@ -40,7 +41,7 @@ import {
     tonsDaCor,
     aplicarTonsBloco,
     PALETA_CORES
-} from './color_utils.js?v=202611150125';
+} from './color_utils.js?v=202611150136';
 import {
     isFaixaAllocation,
     isPriorityRegularAllocation,
@@ -49,8 +50,8 @@ import {
     normalizeTeacherNameForMatch,
     getDocenteShortLabel,
     getAllocationTeachersForConflict
-} from './allocation_helpers.js?v=202611150125';
-import { setupSeletorCor } from './seletor_cor.js?v=202611150125';
+} from './allocation_helpers.js?v=202611150136';
+import { setupSeletorCor } from './seletor_cor.js?v=202611150136';
 
 import {
     UNIDADES,
@@ -58,11 +59,11 @@ import {
     acharNomeConhecido,
     filtrarDocentes,
     umNomePorPessoa
-} from './docente_nomes.mjs?v=202611150125';
+} from './docente_nomes.mjs?v=202611150136';
 import {
     fetchAllocationsForPlans
-} from './sync_remoto.js?v=202611150125';
-import { resolveBackendMode } from './backend_config.js?v=202611150125';
+} from './sync_remoto.js?v=202611150136';
+import { resolveBackendMode } from './backend_config.js?v=202611150136';
 import {
     normalizeConflictSlotLabel,
     getAvailableTurnoOfertaOptions,
@@ -72,7 +73,7 @@ import {
     buildHorariosForUI,
     getShiftChangeMeta,
     getNativeTurnoValueForAllocation
-} from './turno_helpers.js?v=202611150125';
+} from './turno_helpers.js?v=202611150136';
 import {
     getDisciplinaCHGlobal,
     derivarBloco,
@@ -82,7 +83,7 @@ import {
     getDisciplinaInfo,
     getCursoSiglaDaTurma,
     getPrintAcademicMetaLine
-} from './curso_turma_helpers.js?v=202611150125';
+} from './curso_turma_helpers.js?v=202611150136';
 import {
     renderMonthlyCalendar,
     renderTeacherCalendar,
@@ -90,14 +91,14 @@ import {
     clearTeacherRangeCache,
     setTeacherPeriod,
     getTeacherPeriod
-} from './calendarios_ui.js?v=202611150125';
-import { setupIndicadores, renderIndicadores, setIndicadoresLigacoes } from './indicadores_ui.js?v=202611150125';
+} from './calendarios_ui.js?v=202611150136';
+import { setupIndicadores, renderIndicadores, setIndicadoresLigacoes } from './indicadores_ui.js?v=202611150136';
 import {
     refreshTeacherConflictsUI,
     setCrossPlanLoader,
     setResolverDeChoque,
     acharChoqueComOutroPL
-} from './conflitos_ui.js?v=202611150125';
+} from './conflitos_ui.js?v=202611150136';
 import {
     shouldIgnoreTurmaEventForCandidate,
     normalizeDrawnSlotsByDay,
@@ -111,7 +112,7 @@ import {
     resolveEditableFaixasFromStoredExecution,
     alignFaixasToExecutionEnd,
     buildFinalAdjustmentFaixaSuggestion
-} from './faixa_utils.js?v=202611150125';
+} from './faixa_utils.js?v=202611150136';
 import {
     timeToMinutes,
     shiftISODate,
@@ -125,14 +126,14 @@ import {
     isDateInsideRange,
     formatDateBRShortYear,
     formatDateBR
-} from './date_utils_ui.js?v=202611150125';
+} from './date_utils_ui.js?v=202611150136';
 import {
     initializeWeeklyScheduleForTurma,
     reconcileTurmaSelectionAfterPLChange,
     resetWeeklyViewOnTurmaChange,
     resolveActiveAcademicPeriod,
     slotLabelsOverlap
-} from './academic_rules.mjs?v=202611150125';
+} from './academic_rules.mjs?v=202611150136';
 
 const gridContainer = document.getElementById('weekly-grid');
 const selCurso = document.getElementById('sel-curso');
@@ -5806,9 +5807,9 @@ function syncCursoTurmaSelectionAfterPlanChange() {
 // Cada curso tem a sua unidade (cursos[].unidade no dados_app.json; sem ela,
 // IECOS). A unidade escolhida filtra a lista de cursos. Abre no IECOS, ou na
 // unidade do ultimo curso usado.
-const UNIDADE_PADRAO = 'IECOS';
+// UNIDADE_PADRAO e unidadeDoCurso: js/unidades.mjs.
 function getUnidadeDoCurso(curso) {
-    return String(curso?.unidade || UNIDADE_PADRAO).trim().toUpperCase();
+    return unidadeDoCurso(curso);
 }
 
 function getUnidadeSelecionada() {

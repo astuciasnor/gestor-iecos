@@ -5,14 +5,9 @@
 // voluntario nao: a componente fica no nome do professor responsavel.
 export const VINCULOS_DOCENTE_NOVO = ['Substituto', 'Visitante', 'Efetivo'];
 
-// Unidades com subunidades conhecidas. Professor de outra unidade: o coordenador
-// digita unidade e subunidade (ex.: CANAN / FACFIS) e o administrador confere.
-export const OUTRA_UNIDADE = 'OUTRA';
-export const UNIDADES = [
-    { sigla: 'IECOS', nome: 'IECOS', subunidades: ['FEPESCA', 'FACIN', 'FBIO'] },
-    { sigla: 'CBRAG', nome: 'Campus Bragança', subunidades: ['FACED', 'FAHIST', 'FAMAT', 'FALE', 'FALEST'] },
-    { sigla: 'CANAN', nome: 'Campus de Ananindeua', subunidades: ['FACFIS'] }
-];
+// Unidades (IECOS, CBRAG...) moram em js/unidades.mjs; seguem exportadas daqui.
+import { OUTRA_UNIDADE, UNIDADES } from './unidades.mjs?v=202611150136';
+export { OUTRA_UNIDADE, UNIDADES };
 
 export function normalizeTeacherNameForMatch(value) {
     return String(value || '')

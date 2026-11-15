@@ -1,12 +1,13 @@
-import { escapeHtml } from './texto.mjs?v=202611150125';
-import { store, normalizeLoadedAllocation } from './store.js?v=202611150125';
-import { getTurnoLetter } from './turns.js?v=202611150125';
-import { getCalendarEvents } from './calendar.js?v=202611150125';
-import { resolveActiveAcademicPeriod } from './academic_rules.mjs?v=202611150125';
-import { buildMonthMarkers, summarizeTeacherPeriod } from './resumo_docente.mjs?v=202611150125';
-import { resolveBackendMode, UFPA_API_URL } from './backend_config.js?v=202611150125';
-import { filtrarDocentes, UNIDADES } from './docente_nomes.mjs?v=202611150125';
-import { nomeComSubturma, sufixoSubturma } from './subturmas.mjs?v=202611150125';
+import { UNIDADE_PADRAO, unidadeDoCurso } from './unidades.mjs?v=202611150136';
+import { escapeHtml } from './texto.mjs?v=202611150136';
+import { store, normalizeLoadedAllocation } from './store.js?v=202611150136';
+import { getTurnoLetter } from './turns.js?v=202611150136';
+import { getCalendarEvents } from './calendar.js?v=202611150136';
+import { resolveActiveAcademicPeriod } from './academic_rules.mjs?v=202611150136';
+import { buildMonthMarkers, summarizeTeacherPeriod } from './resumo_docente.mjs?v=202611150136';
+import { resolveBackendMode, UFPA_API_URL } from './backend_config.js?v=202611150136';
+import { filtrarDocentes, UNIDADES } from './docente_nomes.mjs?v=202611150136';
+import { nomeComSubturma, sufixoSubturma } from './subturmas.mjs?v=202611150136';
 
 const collator = new Intl.Collator('pt-BR', { sensitivity: 'base' });
 const PUBLIC_ASSET_VERSION = '20261028a';
@@ -805,10 +806,8 @@ function buildSemesterChipLabel() {
     return `${formatIsoDateBR(start)} a ${formatIsoDateBR(end)}`;
 }
 
-// Unidade de cada curso vem dos dados (cursos[].unidade); sem unidade = IECOS.
-function unidadeDoCurso(curso) {
-    return String(curso?.unidade || '').trim().toUpperCase() || 'IECOS';
-}
+// Unidade de cada curso vem dos dados (cursos[].unidade); sem unidade = UNIDADE_PADRAO
+// (unidadeDoCurso em js/unidades.mjs).
 
 // Unidade e Curso mostram todos os cursos cadastrados, em qualquer PL.
 // So a Turma depende do PL: sem aula publicada nele, a lista fica vazia.
@@ -834,7 +833,7 @@ function preencherUnidades() {
         els.selUnidade.appendChild(option);
     });
     const valores = unidades.map((u) => u.sigla);
-    els.selUnidade.value = valores.includes(atual) ? atual : (valores.includes('IECOS') ? 'IECOS' : (valores[0] || ''));
+    els.selUnidade.value = valores.includes(atual) ? atual : (valores.includes(UNIDADE_PADRAO) ? UNIDADE_PADRAO : (valores[0] || ''));
 }
 
 function handleUnidadeChange() {
