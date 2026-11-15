@@ -1,18 +1,18 @@
 // Lista de Ofertas: a tabela da aba "Lista de Ofertas" (ofertas da turma, Copiar
 // SIGAA, Editar, Substituir, Trocar e Excluir). Saiu do ui.js em 13/11/2026 sem
 // mudar nada; as funcoes do editor que ela usa chegam por ligarListaOfertas (ver ui.js).
-import { isPendingAllocation } from './allocation_helpers.js?v=202611142045';
-import { refreshTeacherConflictsUI } from './conflitos_ui.js?v=202611142045';
-import { getDisciplinaInfo, getTurmaLabel } from './curso_turma_helpers.js?v=202611142045';
-import { formatDateBR } from './date_utils_ui.js?v=202611142045';
-import { buildCanonicalOfferProjection } from './execution_engine.js?v=202611142045';
-import { getNormalizedIntensiveFaixas } from './faixa_utils.js?v=202611142045';
-import { isPendenteJaAlocada } from './pendentes.mjs?v=202611142045';
-import { buildScopedSigaaAllocationFromOfferFaixa, buildSigaaHorarioResumo, getSigaaCode } from './sigaa_metadata.js?v=202611142045';
-import { store } from './store.js?v=202611142045';
-import { numeroDaSubturma } from './subturmas.mjs?v=202611142045';
-import { copyTextToClipboard, flashButtonCopyState } from './ui_feedback.js?v=202611142045';
-import { weeklyState } from './weekly_state.js?v=202611142045';
+import { isPendingAllocation } from './allocation_helpers.js?v=202611142120';
+import { refreshTeacherConflictsUI } from './conflitos_ui.js?v=202611142120';
+import { getDisciplinaInfo, getTurmaLabel } from './curso_turma_helpers.js?v=202611142120';
+import { formatDateBR } from './date_utils_ui.js?v=202611142120';
+import { buildCanonicalOfferProjection } from './execution_engine.js?v=202611142120';
+import { getNormalizedIntensiveFaixas } from './faixa_utils.js?v=202611142120';
+import { isPendenteJaAlocada } from './pendentes.mjs?v=202611142120';
+import { buildScopedSigaaAllocationFromOfferFaixa, buildSigaaHorarioResumo, getSigaaCode } from './sigaa_metadata.js?v=202611142120';
+import { store } from './store.js?v=202611142120';
+import { numeroDaSubturma } from './subturmas.mjs?v=202611142120';
+import { copyTextToClipboard, flashButtonCopyState } from './ui_feedback.js?v=202611142120';
+import { weeklyState } from './weekly_state.js?v=202611142120';
 
 // Funcoes do ui.js (editor, grade, desfazer, troca...) que a lista chama.
 let ligacoes = {};
@@ -238,9 +238,10 @@ export function renderOfertasList() {
                         termEnd: semesterEnd
                     })
                 ]));
-                // O "Copiar" leva sempre o codigo com as datas, no formato do SIGAA:
-                // 26M23456 (18/09/2026 - 21/09/2026). Com varias faixas, "Copiar tudo"
-                // junta todas: 26M23456 (18/09/2026 - 21/09/2026), 23456M56 (22/09/2026 - 06/11/2026)
+                // Um "Copiar" so por componente (pedido de 14/11/2026), na primeira linha
+                // dela: leva todas as faixas com as datas, no formato do SIGAA:
+                // 26M23456 (18/09/2026 - 21/09/2026), 23456M56 (22/09/2026 - 06/11/2026).
+                // As outras faixas mostram so o codigo.
                 const textosParaCopiar = resolvedFaixas.map((faixa, idx) => (
                     codigosDasFaixas[idx] && codigosDasFaixas[idx] !== '-'
                         ? buildSigaaHorarioResumo([{
@@ -250,9 +251,7 @@ export function renderOfertasList() {
                         }], formatDateBR)
                         : ''
                 ));
-                const sigaaTudo = resolvedFaixas.length > 1 && textosParaCopiar.every(Boolean)
-                    ? textosParaCopiar.join(', ')
-                    : '';
+                const copiaDaComponente = textosParaCopiar.filter(Boolean).join(', ');
 
                 resolvedFaixas.forEach((faixa, idx) => {
                     const faixaStart = faixa?.inicio || base.dataInicio || semesterStart;
@@ -282,8 +281,7 @@ export function renderOfertasList() {
                         chMax: base.ch || info.ch,
                         details: `${faixa?.executionDays || 0} ocorr\u00eancias`,
                         sigaaCode,
-                        sigaaCopia: textosParaCopiar[idx],
-                        sigaaTudo: idx === 0 ? sigaaTudo : '',
+                        sigaaCopia: idx === 0 ? copiaDaComponente : '',
                         sabadoLabel,
                         faixaIndex: idx + 1
                     });
@@ -359,11 +357,8 @@ export function renderOfertasList() {
         const btnCopySigaa = row.sigaaCode && row.sigaaCode !== '-'
             ? `<div style="display:flex; align-items:center; justify-content:center; gap:6px;">
                     <span style="font-family:monospace; font-weight:bold; background:#ecf0f1; padding:2px 6px; border-radius:4px; font-size:0.9em; letter-spacing:1px;">${row.sigaaCode}</span>
-                    <button class="btn-sigaa-copy" data-code="${row.sigaaCopia || row.sigaaCode}" title="Copia: ${row.sigaaCopia || row.sigaaCode}" style="background:transparent; color:var(--primary); border:1px solid #ccc; border-radius:4px; cursor:pointer; padding:2px 6px; font-size:0.9em; transition: all 0.2s;">Copiar</button>
+                    ${row.sigaaCopia ? `<button class="btn-sigaa-copy" data-code="${row.sigaaCopia}" title="Copia a componente inteira (todas as faixas, com as datas): ${row.sigaaCopia}" style="background:transparent; color:var(--primary); border:1px solid #ccc; border-radius:4px; cursor:pointer; padding:2px 6px; font-size:0.9em; transition: all 0.2s;">Copiar</button>` : ''}
                </div>`
-                + (row.sigaaTudo
-                    ? `<button class="btn-sigaa-copy" data-code="${row.sigaaTudo}" title="Copia todas as faixas com as datas: ${row.sigaaTudo}" style="margin-top:6px; background:transparent; color:var(--primary); border:1px solid var(--primary); border-radius:4px; cursor:pointer; padding:2px 6px; font-size:0.85em; transition: all 0.2s;">Copiar tudo</button>`
-                    : '')
             : `<span style="color:#999;">-</span>`;
 
         const btnHtml = `
