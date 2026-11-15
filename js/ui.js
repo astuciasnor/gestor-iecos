@@ -1,35 +1,35 @@
-import { store } from './store.js?v=202611150020';
-import { escapeTrocaHtml, contarHorasExecutadas, sugerirInicioSemChoque, fraseComeceEm, cursoDaTurma, sugerirComoResolverChoque, abrirTrocaDeOrdem, ligarTroca } from './troca_ui.js?v=202611150020';
-import { cadastrosDocentes, findNewDocenteNames, getCadastroDocente, refreshAvisoDocenteNovo, coletarCadastrosDocentes, setupAvisoDocenteNovo, ligarCadastroDocente } from './cadastro_docente_ui.js?v=202611150020';
-import { renderOfertasList, ligarListaOfertas } from './lista_ofertas_ui.js?v=202611150020';
-import { stableStringify } from './sync_diff.mjs?v=202611150020';
-import { getTurnoLetter, mapSlotToTurno, turnoDaTurmaInclui } from './turns.js?v=202611150020';
-import { normalizePeriodo as normalizePeriodoLetivoCode } from './plan_storage.js?v=202611150020';
-import { getCalendarEvents } from './calendar.js?v=202611150020';
-import { isDateOverlap } from './utils.js?v=202611150020';
-import { weeklyState } from './weekly_state.js?v=202611150020';
-import { findPendentesCobertas, isPendenteJaAlocada } from './pendentes.mjs?v=202611150020';
+import { store } from './store.js?v=202611150030';
+import { escapeTrocaHtml, contarHorasExecutadas, sugerirInicioSemChoque, fraseComeceEm, cursoDaTurma, sugerirComoResolverChoque, abrirTrocaDeOrdem, ligarTroca } from './troca_ui.js?v=202611150030';
+import { cadastrosDocentes, findNewDocenteNames, getCadastroDocente, refreshAvisoDocenteNovo, coletarCadastrosDocentes, setupAvisoDocenteNovo, ligarCadastroDocente } from './cadastro_docente_ui.js?v=202611150030';
+import { renderOfertasList, ligarListaOfertas } from './lista_ofertas_ui.js?v=202611150030';
+import { stableStringify } from './sync_diff.mjs?v=202611150030';
+import { getTurnoLetter, mapSlotToTurno, turnoDaTurmaInclui } from './turns.js?v=202611150030';
+import { normalizePeriodo as normalizePeriodoLetivoCode } from './plan_storage.js?v=202611150030';
+import { getCalendarEvents } from './calendar.js?v=202611150030';
+import { isDateOverlap } from './utils.js?v=202611150030';
+import { weeklyState } from './weekly_state.js?v=202611150030';
+import { findPendentesCobertas, isPendenteJaAlocada } from './pendentes.mjs?v=202611150030';
 
-import { datasFeriadoDaTurma, feriadosDaTurma } from './feriados.mjs?v=202611150020';
-import { closeFaixaEnds, isPauseEnd, listFaixaPauses } from './pausa_faixas.mjs?v=202611150020';
-import { numeroDaSubturma, isTurmaInteira, proximaSubturma, codigoT01Como, saoSubturmasDiferentes, sufixoSubturma, semSubturma, subturmaFicouSozinha } from './subturmas.mjs?v=202611150020';
-import { abrirMiniCalendario, fecharMiniCalendario, miniCalendarioAberto } from './mini_calendario.mjs?v=202611150020';
-import { buildCanonicalOfferProjection } from './execution_engine.js?v=202611150020';
+import { datasFeriadoDaTurma, feriadosDaTurma } from './feriados.mjs?v=202611150030';
+import { closeFaixaEnds, isPauseEnd, listFaixaPauses } from './pausa_faixas.mjs?v=202611150030';
+import { numeroDaSubturma, isTurmaInteira, proximaSubturma, codigoT01Como, saoSubturmasDiferentes, sufixoSubturma, semSubturma, subturmaFicouSozinha } from './subturmas.mjs?v=202611150030';
+import { abrirMiniCalendario, fecharMiniCalendario, miniCalendarioAberto } from './mini_calendario.mjs?v=202611150030';
+import { buildCanonicalOfferProjection } from './execution_engine.js?v=202611150030';
 import {
     buildSigaaMetadataPayload,
     validateSigaaMetadataPayload,
     getSigaaCode,
     buildScopedSigaaAllocationFromOfferFaixa,
     buildSigaaHorarioResumo
-} from './sigaa_metadata.js?v=202611150020';
-import { parseBackupDataFile, extractImportPlanMeta } from './serialization.js?v=202611150020';
+} from './sigaa_metadata.js?v=202611150030';
+import { parseBackupDataFile, extractImportPlanMeta } from './serialization.js?v=202611150030';
 import {
     showToastWarning,
     showPersistentStatusMessage,
     copyTextToClipboard,
     flashButtonCopyState,
     setupCopyActionButtons
-} from './ui_feedback.js?v=202611150020';
+} from './ui_feedback.js?v=202611150030';
 import {
     normalizeHexColor,
     adjustHexColor,
@@ -38,7 +38,7 @@ import {
     tonsDaCor,
     aplicarTonsBloco,
     PALETA_CORES
-} from './color_utils.js?v=202611150020';
+} from './color_utils.js?v=202611150030';
 import {
     isFaixaAllocation,
     isPriorityRegularAllocation,
@@ -47,8 +47,8 @@ import {
     normalizeTeacherNameForMatch,
     getDocenteShortLabel,
     getAllocationTeachersForConflict
-} from './allocation_helpers.js?v=202611150020';
-import { setupSeletorCor } from './seletor_cor.js?v=202611150020';
+} from './allocation_helpers.js?v=202611150030';
+import { setupSeletorCor } from './seletor_cor.js?v=202611150030';
 
 import {
     UNIDADES,
@@ -56,11 +56,11 @@ import {
     acharNomeConhecido,
     filtrarDocentes,
     umNomePorPessoa
-} from './docente_nomes.mjs?v=202611150020';
+} from './docente_nomes.mjs?v=202611150030';
 import {
     fetchAllocationsForPlans
-} from './sync_remoto.js?v=202611150020';
-import { resolveBackendMode } from './backend_config.js?v=202611150020';
+} from './sync_remoto.js?v=202611150030';
+import { resolveBackendMode } from './backend_config.js?v=202611150030';
 import {
     normalizeConflictSlotLabel,
     getAvailableTurnoOfertaOptions,
@@ -70,7 +70,7 @@ import {
     buildHorariosForUI,
     getShiftChangeMeta,
     getNativeTurnoValueForAllocation
-} from './turno_helpers.js?v=202611150020';
+} from './turno_helpers.js?v=202611150030';
 import {
     getDisciplinaCHGlobal,
     derivarBloco,
@@ -80,7 +80,7 @@ import {
     getDisciplinaInfo,
     getCursoSiglaDaTurma,
     getPrintAcademicMetaLine
-} from './curso_turma_helpers.js?v=202611150020';
+} from './curso_turma_helpers.js?v=202611150030';
 import {
     renderMonthlyCalendar,
     renderTeacherCalendar,
@@ -88,14 +88,14 @@ import {
     clearTeacherRangeCache,
     setTeacherPeriod,
     getTeacherPeriod
-} from './calendarios_ui.js?v=202611150020';
-import { setupIndicadores, renderIndicadores, setIndicadoresLigacoes } from './indicadores_ui.js?v=202611150020';
+} from './calendarios_ui.js?v=202611150030';
+import { setupIndicadores, renderIndicadores, setIndicadoresLigacoes } from './indicadores_ui.js?v=202611150030';
 import {
     refreshTeacherConflictsUI,
     setCrossPlanLoader,
     setResolverDeChoque,
     acharChoqueComOutroPL
-} from './conflitos_ui.js?v=202611150020';
+} from './conflitos_ui.js?v=202611150030';
 import {
     shouldIgnoreTurmaEventForCandidate,
     normalizeDrawnSlotsByDay,
@@ -109,7 +109,7 @@ import {
     resolveEditableFaixasFromStoredExecution,
     alignFaixasToExecutionEnd,
     buildFinalAdjustmentFaixaSuggestion
-} from './faixa_utils.js?v=202611150020';
+} from './faixa_utils.js?v=202611150030';
 import {
     timeToMinutes,
     shiftISODate,
@@ -123,14 +123,14 @@ import {
     isDateInsideRange,
     formatDateBRShortYear,
     formatDateBR
-} from './date_utils_ui.js?v=202611150020';
+} from './date_utils_ui.js?v=202611150030';
 import {
     initializeWeeklyScheduleForTurma,
     reconcileTurmaSelectionAfterPLChange,
     resetWeeklyViewOnTurmaChange,
     resolveActiveAcademicPeriod,
     slotLabelsOverlap
-} from './academic_rules.mjs?v=202611150020';
+} from './academic_rules.mjs?v=202611150030';
 
 const gridContainer = document.getElementById('weekly-grid');
 const selCurso = document.getElementById('sel-curso');
@@ -5294,142 +5294,171 @@ export function initUI() {
 
     enforceCanonicalFaixaMode();
 
-    if (inputConfig.disciplina) {
-        inputConfig.disciplina.addEventListener('input', atualizarDicaCodigoDisciplina);
-        inputConfig.disciplina.addEventListener('input', () => {
-            const discNome = normalizeDisciplinaInputValue(inputConfig.disciplina.value || '');
-            const isEditingSameDisc = weeklyState.editingDisciplinaDraft && discNome === weeklyState.editingDisciplinaDraft;
-            const isNewDiscSelection = !!discNome && discNome !== weeklyState.lastDisciplinaInputNormalized && !isEditingSameDisc;
-            // Em "Substituir por..." as faixas ficam; a troca e aplicada no 'change'.
-            if (isNewDiscSelection && !weeklyState.replacingFromDisciplina) {
-                clearWeeklyBlock();
-                setComponentStartSelectionMode('auto');
-                collapseFaixasForNewComponent({ useCurrentUI: false });
-                weeklyState.editingDisciplinaDraft = '';
-                weeklyState.editingImportadoDraft = false;
-                weeklyState.editingOriginalAllocationIds = [];
-                weeklyState.editingComponentOriginalStart = '';
-            }
-            weeklyState.lastDisciplinaInputNormalized = discNome;
-            updateWeeklyFaixasTitleDisciplina();
-            updateWeeklyFaixaHoursDisplay();
-            if (store.selectedTurma) renderWeeklyGrid();
-        });
+    ligarCampoDisciplina();
+    ligarCorDoEditor();
+    ligarSalvarEDesfazer();
+    ligarAbas();
+    setupSubtabs();
+    ligarCalendarioDaTurma();
+    ligarImpressao();
+    ligarFiltroDocente();
+    ligarImportacaoJson();
 
-        // Detecção de duplicata: mostra o campo sub-grupo quando a mesma disciplina já existe na turma
-        inputConfig.disciplina.addEventListener('change', () => {
-            const discNome = normalizeDisciplinaInputValue(inputConfig.disciplina.value || '');
-            if (weeklyState.replacingFromDisciplina) {
-                const isValidDisc = !!discNome && getDisciplinaInfo(discNome, store.selectedTurma).ch > 0;
-                if (isValidDisc && discNome !== weeklyState.editingDisciplinaDraft) {
-                    applyReplacementDisciplina(discNome);
-                }
-                weeklyState.lastDisciplinaInputNormalized = normalizeDisciplinaInputValue(inputConfig.disciplina.value || '');
-                updateWeeklyFaixasTitleDisciplina();
-                updateWeeklyFaixaHoursDisplay();
-                if (store.selectedTurma) renderWeeklyGrid();
-                return;
-            }
-            const isEditingSameDisc = weeklyState.editingDisciplinaDraft && discNome === weeklyState.editingDisciplinaDraft;
-            const isNewDiscSelection = !!discNome && discNome !== weeklyState.lastDisciplinaInputNormalized && !isEditingSameDisc;
-            let pendingPreferredStart = '';
-            if (isNewDiscSelection) {
-                clearWeeklyBlock();
-                setComponentStartSelectionMode('auto');
-                pendingPreferredStart = getPreferredStartDateForCurrentTurma();
-                notifyStartSuggestionFeedback();
-                collapseFaixasForNewComponent({ preferredStart: pendingPreferredStart, useCurrentUI: false });
-                weeklyState.editingDisciplinaDraft = '';
-                weeklyState.editingImportadoDraft = false;
-                weeklyState.editingOriginalAllocationIds = [];
-                weeklyState.editingComponentOriginalStart = '';
-                
-                // Aplica a cor automática (da paleta de 20 cores ou do JSON), com realce de croma
-                if (inputConfig.cor) {
-                    inputConfig.cor.value = corParaSeletor(store.getDisciplinaColor(discNome));
-                }
-            }
-            weeklyState.lastDisciplinaInputNormalized = discNome;
-            updateWeeklyFaixasTitleDisciplina();
-            updateWeeklyFaixaHoursDisplay();
-            if (store.selectedTurma) {
-                applyWeekAutoPositionForComponentChange({ render: false });
-                // Reposiciona a grade no início da Faixa 1 — applyWeekAutoPositionForComponentChange
-                // pode ter sobrescrito a posição definida por collapseFaixasForNewComponent.
-                const f1Start = document.getElementById('inp-data-inicio-f1')?.value;
-                if (f1Start) {
-                    setWeeklyViewByDate(f1Start, { followFaixa: false, render: false });
-                }
-                renderWeeklyGrid();
-            }
-            const containerSub = document.getElementById('container-sub-turma');
-            const inpSub = document.getElementById('inp-sub-turma');
-            const preview = document.getElementById('preview-sub-turma');
-            if (!containerSub || !inpSub) return;
+    populateUnidades();
+    populateCursos();
+    populateDocentes();
+    renderOfertasList();
+    updateWeeklyFaixasTitleDisciplina();
+}
 
-            if (!discNome || !store.selectedTurma) {
-                containerSub.classList.add('hidden');
-                inpSub.value = '';
-                return;
-            }
+// Campo Disciplina: digitar (input) e escolher da lista (change).
+function ligarCampoDisciplina() {
+    if (!inputConfig.disciplina) return;
+    inputConfig.disciplina.addEventListener('input', atualizarDicaCodigoDisciplina);
+    inputConfig.disciplina.addEventListener('input', aoDigitarDisciplina);
+    // Detecção de duplicata: mostra o campo sub-grupo quando a mesma disciplina já existe na turma
+    inputConfig.disciplina.addEventListener('change', aoEscolherDisciplina);
+}
 
-            // Editando esta mesma componente: o sub-grupo veio da oferta (loadAllocationIntoEditor).
-            if (isEditingSameDisc) return;
+function aoDigitarDisciplina() {
+    const discNome = normalizeDisciplinaInputValue(inputConfig.disciplina.value || '');
+    const isEditingSameDisc = weeklyState.editingDisciplinaDraft && discNome === weeklyState.editingDisciplinaDraft;
+    const isNewDiscSelection = !!discNome && discNome !== weeklyState.lastDisciplinaInputNormalized && !isEditingSameDisc;
+    // Em "Substituir por..." as faixas ficam; a troca e aplicada no 'change'.
+    if (isNewDiscSelection && !weeklyState.replacingFromDisciplina) {
+        clearWeeklyBlock();
+        setComponentStartSelectionMode('auto');
+        collapseFaixasForNewComponent({ useCurrentUI: false });
+        weeklyState.editingDisciplinaDraft = '';
+        weeklyState.editingImportadoDraft = false;
+        weeklyState.editingOriginalAllocationIds = [];
+        weeklyState.editingComponentOriginalStart = '';
+    }
+    weeklyState.lastDisciplinaInputNormalized = discNome;
+    updateWeeklyFaixasTitleDisciplina();
+    updateWeeklyFaixaHoursDisplay();
+    if (store.selectedTurma) renderWeeklyGrid();
+}
 
-            // Turma extra: a componente ja tem horarios nesta turma e neste PL
-            // (store.allocations e so o PL aberto). Pendente do bloco nao conta:
-            // escolher a componente pendente e aloca-la, nao criar outra turma.
-            const existing = store.allocations.filter(a =>
-                String(a.turmaId) === String(store.selectedTurma) &&
-                a.disciplina === discNome &&
-                !isPendingAllocation(a)
-            );
-            const proxima = proximaSubturma(existing.map((a) => a.subGrupo));
+function aoEscolherDisciplina() {
+    const discNome = normalizeDisciplinaInputValue(inputConfig.disciplina.value || '');
+    if (weeklyState.replacingFromDisciplina) {
+        const isValidDisc = !!discNome && getDisciplinaInfo(discNome, store.selectedTurma).ch > 0;
+        if (isValidDisc && discNome !== weeklyState.editingDisciplinaDraft) {
+            applyReplacementDisciplina(discNome);
+        }
+        weeklyState.lastDisciplinaInputNormalized = normalizeDisciplinaInputValue(inputConfig.disciplina.value || '');
+        updateWeeklyFaixasTitleDisciplina();
+        updateWeeklyFaixaHoursDisplay();
+        if (store.selectedTurma) renderWeeklyGrid();
+        return;
+    }
+    const isEditingSameDisc = weeklyState.editingDisciplinaDraft && discNome === weeklyState.editingDisciplinaDraft;
+    const isNewDiscSelection = !!discNome && discNome !== weeklyState.lastDisciplinaInputNormalized && !isEditingSameDisc;
+    let pendingPreferredStart = '';
+    if (isNewDiscSelection) {
+        clearWeeklyBlock();
+        setComponentStartSelectionMode('auto');
+        pendingPreferredStart = getPreferredStartDateForCurrentTurma();
+        notifyStartSuggestionFeedback();
+        collapseFaixasForNewComponent({ preferredStart: pendingPreferredStart, useCurrentUI: false });
+        weeklyState.editingDisciplinaDraft = '';
+        weeklyState.editingImportadoDraft = false;
+        weeklyState.editingOriginalAllocationIds = [];
+        weeklyState.editingComponentOriginalStart = '';
+        
+        // Aplica a cor automática (da paleta de 20 cores ou do JSON), com realce de croma
+        if (inputConfig.cor) {
+            inputConfig.cor.value = corParaSeletor(store.getDisciplinaColor(discNome));
+        }
+    }
+    weeklyState.lastDisciplinaInputNormalized = discNome;
+    updateWeeklyFaixasTitleDisciplina();
+    updateWeeklyFaixaHoursDisplay();
+    if (store.selectedTurma) {
+        applyWeekAutoPositionForComponentChange({ render: false });
+        // Reposiciona a grade no início da Faixa 1 — applyWeekAutoPositionForComponentChange
+        // pode ter sobrescrito a posição definida por collapseFaixasForNewComponent.
+        const f1Start = document.getElementById('inp-data-inicio-f1')?.value;
+        if (f1Start) {
+            setWeeklyViewByDate(f1Start, { followFaixa: false, render: false });
+        }
+        renderWeeklyGrid();
+    }
+    conferirTurmaExtra(discNome, isEditingSameDisc);
+}
 
-            if (proxima) {
-                const confirmou = confirm(
-                    `Você está tentando inserir o mesmo componente para a mesma turma no mesmo PL.\n\n` +
-                    `"${discNome}" · ${getTurmaLabel(store.selectedTurma)}\n\n` +
-                    `Tem certeza que deseja fazer isso? Ela será a subturma ${proxima.rotulo}.` +
-                    (existing.some((a) => isTurmaInteira(a.subGrupo)) ? `\n(A oferta que já existe passa a ser a T01 quando você salvar.)` : '')
-                );
+// Turma extra: a mesma componente de novo na turma vira a proxima subturma (T02...).
+function conferirTurmaExtra(discNome, isEditingSameDisc) {
+    const containerSub = document.getElementById('container-sub-turma');
+    const inpSub = document.getElementById('inp-sub-turma');
+    const preview = document.getElementById('preview-sub-turma');
+    if (!containerSub || !inpSub) return;
 
-                if (!confirmou) {
-                    inputConfig.disciplina.value = '';
-                    atualizarDicaCodigoDisciplina();
-                    weeklyState.lastDisciplinaInputNormalized = '';
-                    containerSub.classList.add('hidden');
-                    inpSub.value = '';
-                    return;
-                }
-
-                // Automatico: o OK da mensagem ja cria a subturma. O campo fica
-                // escondido (so guarda o valor); a subturma aparece embaixo do nome.
-                inpSub.value = proxima.codigo;
-                containerSub.classList.add('hidden');
-                atualizarDicaCodigoDisciplina();
-            } else {
-                containerSub.classList.add('hidden');
-                inpSub.value = '';
-            }
-
-            // Preview do rótulo gerado
-            const updatePreview = () => {
-                atualizarDicaCodigoDisciplina();
-                const sg = inpSub.value.trim();
-                if (sg && store.selectedTurma) {
-                    const label = getTurmaLabel(store.selectedTurma, sg);
-                    preview.textContent = `→ Rótulo: ${label}`;
-                } else {
-                    preview.textContent = '';
-                }
-            };
-            inpSub.removeEventListener('input', updatePreview);
-            inpSub.addEventListener('input', updatePreview);
-            updatePreview();
-        });
+    if (!discNome || !store.selectedTurma) {
+        containerSub.classList.add('hidden');
+        inpSub.value = '';
+        return;
     }
 
+    // Editando esta mesma componente: o sub-grupo veio da oferta (loadAllocationIntoEditor).
+    if (isEditingSameDisc) return;
+
+    // Turma extra: a componente ja tem horarios nesta turma e neste PL
+    // (store.allocations e so o PL aberto). Pendente do bloco nao conta:
+    // escolher a componente pendente e aloca-la, nao criar outra turma.
+    const existing = store.allocations.filter(a =>
+        String(a.turmaId) === String(store.selectedTurma) &&
+        a.disciplina === discNome &&
+        !isPendingAllocation(a)
+    );
+    const proxima = proximaSubturma(existing.map((a) => a.subGrupo));
+
+    if (proxima) {
+        const confirmou = confirm(
+            `Você está tentando inserir o mesmo componente para a mesma turma no mesmo PL.\n\n` +
+            `"${discNome}" · ${getTurmaLabel(store.selectedTurma)}\n\n` +
+            `Tem certeza que deseja fazer isso? Ela será a subturma ${proxima.rotulo}.` +
+            (existing.some((a) => isTurmaInteira(a.subGrupo)) ? `\n(A oferta que já existe passa a ser a T01 quando você salvar.)` : '')
+        );
+
+        if (!confirmou) {
+            inputConfig.disciplina.value = '';
+            atualizarDicaCodigoDisciplina();
+            weeklyState.lastDisciplinaInputNormalized = '';
+            containerSub.classList.add('hidden');
+            inpSub.value = '';
+            return;
+        }
+
+        // Automatico: o OK da mensagem ja cria a subturma. O campo fica
+        // escondido (so guarda o valor); a subturma aparece embaixo do nome.
+        inpSub.value = proxima.codigo;
+        containerSub.classList.add('hidden');
+        atualizarDicaCodigoDisciplina();
+    } else {
+        containerSub.classList.add('hidden');
+        inpSub.value = '';
+    }
+
+    // Preview do rótulo gerado
+    const updatePreview = () => {
+        atualizarDicaCodigoDisciplina();
+        const sg = inpSub.value.trim();
+        if (sg && store.selectedTurma) {
+            const label = getTurmaLabel(store.selectedTurma, sg);
+            preview.textContent = `→ Rótulo: ${label}`;
+        } else {
+            preview.textContent = '';
+        }
+    };
+    inpSub.removeEventListener('input', updatePreview);
+    inpSub.addEventListener('input', updatePreview);
+    updatePreview();
+}
+
+// Cor da componente: repinta o desenho ao trocar.
+function ligarCorDoEditor() {
     if (inputConfig.cor) {
         const repaintDrawing = () => {
             if (!drawingFaixaIndex) return;
@@ -5439,7 +5468,10 @@ export function initUI() {
         inputConfig.cor.addEventListener('input', repaintDrawing);
         inputConfig.cor.addEventListener('change', repaintDrawing);
     }
+}
 
+// Salvar Componente, Desfazer Alocacao e Desfazer troca.
+function ligarSalvarEDesfazer() {
     const btnAdd = document.getElementById('btn-add-oferta');
     if (btnAdd) btnAdd.addEventListener('click', handleAddManual);
 
@@ -5447,7 +5479,10 @@ export function initUI() {
     if (btnUndoAlloc) btnUndoAlloc.addEventListener('click', handleUndoLastAllocation);
     document.getElementById('btn-undo-troca')?.addEventListener('click', handleUndoLastAllocation);
     updateUndoAllocationButtonUI();
+}
 
+// Abas do topo (clique e teclado).
+function ligarAbas() {
     const tabButtons = Array.from(document.querySelectorAll('.tab-btn'));
     tabButtons.forEach((btn, idx) => {
         btn.addEventListener('click', () => switchTab(btn.dataset.tab));
@@ -5464,15 +5499,19 @@ export function initUI() {
             target.focus();
         });
     });
+}
 
-    setupSubtabs();
-
+// Calendario da Turma: Atualizar e voltar ao periodo do PL.
+function ligarCalendarioDaTurma() {
     const btnGerarCal = document.getElementById('btn-gerar-cal');
     if (btnGerarCal) btnGerarCal.addEventListener('click', handleCalendarViewportChange);
 
     const btnResetViewPeriod = document.getElementById('btn-reset-view-period');
     if (btnResetViewPeriod) btnResetViewPeriod.addEventListener('click', resetCalendarViewportToPlan);
+}
 
+// Imprimir: botao e nome sugerido do PDF.
+function ligarImpressao() {
     const btnPrint = document.querySelector('.btn-print');
     if (btnPrint) {
         btnPrint.removeAttribute('onclick');
@@ -5490,7 +5529,10 @@ export function initUI() {
         if (titleBeforePrint !== null) document.title = titleBeforePrint;
         titleBeforePrint = null;
     });
+}
 
+// Calendario Docente: campo do professor.
+function ligarFiltroDocente() {
     if (selViewDocente) {
         selViewDocente.addEventListener('change', () => {
             ajustarNomeDigitado(selViewDocente, { parcial: true });
@@ -5504,7 +5546,10 @@ export function initUI() {
             }
         });
     }
+}
 
+// Importar JSON: arquivo e a janela Substituir / Mesclar / Cancelar.
+function ligarImportacaoJson() {
     const inpImport = sanitizeImportInputElement();
     if (inpImport) {
         // Neutraliza handlers legados e impede bind duplicado no input de importacao.
@@ -5566,12 +5611,6 @@ export function initUI() {
             closeModal();
         });
     }
-
-    populateUnidades();
-    populateCursos();
-    populateDocentes();
-    renderOfertasList();
-    updateWeeklyFaixasTitleDisciplina();
 }
 
 // Marca alocacoes vindas de arquivo importado para que sobreposicoes sejam
