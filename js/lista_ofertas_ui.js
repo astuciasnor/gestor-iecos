@@ -1,21 +1,35 @@
 // Lista de Ofertas: a tabela da aba "Lista de Ofertas" (ofertas da turma, Copiar
 // SIGAA, Editar, Substituir, Trocar e Excluir). Saiu do ui.js em 13/11/2026 sem
 // mudar nada; as funcoes do editor que ela usa chegam por ligarListaOfertas (ver ui.js).
-import { isPendingAllocation } from './allocation_helpers.js?v=202611142220';
-import { refreshTeacherConflictsUI } from './conflitos_ui.js?v=202611142220';
-import { getDisciplinaInfo, getTurmaLabel } from './curso_turma_helpers.js?v=202611142220';
-import { formatDateBR } from './date_utils_ui.js?v=202611142220';
-import { buildCanonicalOfferProjection } from './execution_engine.js?v=202611142220';
-import { getNormalizedIntensiveFaixas } from './faixa_utils.js?v=202611142220';
-import { isPendenteJaAlocada } from './pendentes.mjs?v=202611142220';
-import { buildScopedSigaaAllocationFromOfferFaixa, buildSigaaHorarioResumo, getSigaaCode } from './sigaa_metadata.js?v=202611142220';
-import { store } from './store.js?v=202611142220';
-import { numeroDaSubturma } from './subturmas.mjs?v=202611142220';
-import { copyTextToClipboard, flashButtonCopyState } from './ui_feedback.js?v=202611142220';
-import { weeklyState } from './weekly_state.js?v=202611142220';
+import { isPendingAllocation } from './allocation_helpers.js?v=202611142255';
+import { refreshTeacherConflictsUI } from './conflitos_ui.js?v=202611142255';
+import { getDisciplinaInfo, getTurmaLabel } from './curso_turma_helpers.js?v=202611142255';
+import { formatDateBR } from './date_utils_ui.js?v=202611142255';
+import { buildCanonicalOfferProjection } from './execution_engine.js?v=202611142255';
+import { getNormalizedIntensiveFaixas } from './faixa_utils.js?v=202611142255';
+import { isPendenteJaAlocada } from './pendentes.mjs?v=202611142255';
+import { buildScopedSigaaAllocationFromOfferFaixa, buildSigaaHorarioResumo, getSigaaCode } from './sigaa_metadata.js?v=202611142255';
+import { store } from './store.js?v=202611142255';
+import { numeroDaSubturma } from './subturmas.mjs?v=202611142255';
+import { copyTextToClipboard, flashButtonCopyState } from './ui_feedback.js?v=202611142255';
+import { weeklyState } from './weekly_state.js?v=202611142255';
 
 // Funcoes do ui.js (editor, grade, desfazer, troca...) que a lista chama.
 let ligacoes = {};
+
+// Celula SIGAA unica por oferta: linhas seguidas da mesma oferta (mesmos ids)
+// dividem uma celula (rowspan) com os codigos das faixas e um botao so.
+function marcarCelulasSigaa(rows) {
+    const chave = (row) => (Array.isArray(row.groupIds) ? row.groupIds.join('|') : '');
+    for (let i = 0; i < rows.length;) {
+        let fim = i + 1;
+        while (fim < rows.length && chave(rows[fim]) && chave(rows[fim]) === chave(rows[i])) fim++;
+        rows[i].sigaaRowspan = fim - i;
+        rows[i].sigaaCodigosDaCelula = rows.slice(i, fim).map((r) => r.sigaaCode);
+        for (let k = i + 1; k < fim; k++) rows[k].sigaaCoberta = true;
+        i = fim;
+    }
+}
 export function ligarListaOfertas(fns) {
     ligacoes = fns;
 }
@@ -238,10 +252,11 @@ export function renderOfertasList() {
                         termEnd: semesterEnd
                     })
                 ]));
-                // Um "Copiar" so por componente (pedido de 14/11/2026), na primeira linha
-                // dela: leva todas as faixas com as datas, no formato do SIGAA:
+                // Um botao so por componente (pedidos de 14/11/2026): a celula SIGAA
+                // ocupa as linhas de todas as faixas (rowspan, ver marcarCelulasSigaa),
+                // com os codigos um embaixo do outro e "Copiar faixas" no meio; com uma
+                // faixa, "Copiar". Leva todas as faixas com as datas, no formato do SIGAA:
                 // 26M23456 (18/09/2026 - 21/09/2026), 23456M56 (22/09/2026 - 06/11/2026).
-                // As outras faixas mostram so o codigo.
                 const textosParaCopiar = resolvedFaixas.map((faixa, idx) => (
                     codigosDasFaixas[idx] && codigosDasFaixas[idx] !== '-'
                         ? buildSigaaHorarioResumo([{
@@ -281,7 +296,8 @@ export function renderOfertasList() {
                         chMax: base.ch || info.ch,
                         details: `${faixa?.executionDays || 0} ocorr\u00eancias`,
                         sigaaCode,
-                        sigaaCopia: idx === 0 ? copiaDaComponente : '',
+                        sigaaCopia: copiaDaComponente,
+                        numFaixas: resolvedFaixas.length,
                         sabadoLabel,
                         faixaIndex: idx + 1
                     });
@@ -354,12 +370,18 @@ export function renderOfertasList() {
             : `<b style="color:${color}">${row.totalHoras}</b> / ${row.chMax}h <small>(${row.details})</small>${row.sabadoLabel || ''}`
                 + (horasFaltando ? `<br><span class="falta-badge" title="A oferta tem menos aulas que a carga horaria. Use Editar para ajustar datas ou horarios.">faltam ${horasFaltando}h</span>` : '');
 
-        const btnCopySigaa = row.sigaaCode && row.sigaaCode !== '-'
-            ? `<div style="display:flex; align-items:center; justify-content:center; gap:6px;">
-                    <span style="font-family:monospace; font-weight:bold; background:#ecf0f1; padding:2px 6px; border-radius:4px; font-size:0.9em; letter-spacing:1px;">${row.sigaaCode}</span>
-                    ${row.sigaaCopia ? `<button class="btn-sigaa-copy" data-code="${row.sigaaCopia}" title="Copia a componente inteira (todas as faixas, com as datas): ${row.sigaaCopia}" style="background:transparent; color:var(--primary); border:1px solid #ccc; border-radius:4px; cursor:pointer; padding:2px 6px; font-size:0.9em; transition: all 0.2s;">Copiar</button>` : ''}
+        const codigoSigaa = (codigo) => `<span style="font-family:monospace; font-weight:bold; background:#ecf0f1; padding:2px 6px; border-radius:4px; font-size:0.9em; letter-spacing:1px;">${codigo}</span>`;
+        const codigosDaCelula = (row.sigaaCodigosDaCelula || [row.sigaaCode]).filter((c) => c && c !== '-');
+        const rotuloCopiar = (row.numFaixas || 1) > 1 ? 'Copiar faixas' : 'Copiar';
+        const conteudoSigaa = codigosDaCelula.length
+            ? `<div style="display:flex; flex-direction:column; align-items:center; gap:6px;">
+                    ${codigosDaCelula.map(codigoSigaa).join('')}
+                    ${row.sigaaCopia ? `<button class="btn-sigaa-copy" data-code="${row.sigaaCopia}" title="Copia a componente inteira (todas as faixas, com as datas): ${row.sigaaCopia}" style="background:transparent; color:var(--primary); border:1px solid #ccc; border-radius:4px; cursor:pointer; padding:2px 6px; font-size:0.9em; transition: all 0.2s;">${rotuloCopiar}</button>` : ''}
                </div>`
             : `<span style="color:#999;">-</span>`;
+        const celulaSigaa = row.sigaaCoberta
+            ? ''
+            : `<td style="text-align:center; vertical-align:middle;"${(row.sigaaRowspan || 1) > 1 ? ` rowspan="${row.sigaaRowspan}"` : ''}>${conteudoSigaa}</td>`;
 
         const btnHtml = `
             <button class="btn-primary btn-edit-row" style="padding:4px 8px; margin:0; font-size:0.85em; background-color:#2980b9; border:none; color:white; border-radius:3px; cursor:pointer;" title="Editar">Editar</button>
@@ -379,7 +401,7 @@ export function renderOfertasList() {
             <td>${ligacoes.escapeTrocaHtml(row.docente || '-')}</td>
             <td>${row.horarioTxt}</td>
             <td style="text-align:center;">${chInfo}</td>
-            <td style="text-align:center;">${btnCopySigaa}</td>
+            ${celulaSigaa}
             <td style="white-space:nowrap;"><div style="display:grid; grid-template-columns:repeat(2, auto); gap:5px; justify-content:center;">${btnHtml}</div></td>
         `;
 
@@ -469,6 +491,8 @@ export function renderOfertasList() {
         if (faixaA !== faixaB) return faixaA - faixaB;
         return String(a.docente || '').localeCompare(String(b.docente || ''));
     });
+
+    marcarCelulasSigaa(canonicalRows);
 
     tbody.innerHTML = '';
     let previousCanonicalRow = null;
