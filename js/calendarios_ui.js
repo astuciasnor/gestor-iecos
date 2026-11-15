@@ -1,11 +1,11 @@
-import { store } from './store.js?v=202611150048';
-import { getCalendarEvents } from './calendar.js?v=202611150048';
-import { buildTeacherExecutionSnapshot, buildCanonicalOfferProjection } from './execution_engine.js?v=202611150048';
-import { detectTeacherConflicts } from './conflicts.js?v=202611150048';
-import { getHorariosByTurno, normalizeTurnoKey, getTurnoLetter, mapSlotToTurno } from './turns.js?v=202611150048';
-import { vividHexColor } from './color_utils.js?v=202611150048';
-import { addDaysISO, formatDateBR, timeToMinutes, shortDayName } from './date_utils_ui.js?v=202611150048';
-import { nomeComSubturma, sufixoSubturma } from './subturmas.mjs?v=202611150048';
+import { store } from './store.js?v=202611150101';
+import { getCalendarEvents } from './calendar.js?v=202611150101';
+import { buildTeacherExecutionSnapshot, buildCanonicalOfferProjection } from './execution_engine.js?v=202611150101';
+import { detectTeacherConflicts } from './conflicts.js?v=202611150101';
+import { getHorariosByTurno, normalizeTurnoKey, getTurnoLetter, mapSlotToTurno } from './turns.js?v=202611150101';
+import { vividHexColor } from './color_utils.js?v=202611150101';
+import { addDaysISO, formatDateBR, timeToMinutes, shortDayName } from './date_utils_ui.js?v=202611150101';
+import { nomeComSubturma, sufixoSubturma } from './subturmas.mjs?v=202611150101';
 import {
     isFaixaAllocation,
     isScheduledRegularAllocation,
@@ -13,7 +13,7 @@ import {
     teacherNamesMatch,
     getDocenteShortLabel,
     calculateTeacherTotalCH
-} from './allocation_helpers.js?v=202611150048';
+} from './allocation_helpers.js?v=202611150101';
 import {
     normalizeTurnoOfertaKey,
     formatTurnoOfertaLabel,
@@ -23,7 +23,7 @@ import {
     buildHorariosForUI,
     getShiftChangeMeta,
     getCalendarShiftBadgeHTML
-} from './turno_helpers.js?v=202611150048';
+} from './turno_helpers.js?v=202611150101';
 import {
     getDisciplinaCHGlobal,
     getTurmaLabel,
@@ -31,11 +31,11 @@ import {
     getDisciplinaInfo,
     getCursoSiglaDaTurma,
     getPrintAcademicMetaLine
-} from './curso_turma_helpers.js?v=202611150048';
+} from './curso_turma_helpers.js?v=202611150101';
 import {
     getGanttTurnoConfigs,
     resolveTeacherShiftForSlot
-} from './turnos_docente.js?v=202611150048';
+} from './turnos_docente.js?v=202611150101';
 
 // Referencias DOM de nivel de modulo (espelham as de ui.js; modulo deferred, DOM pronto).
 const selViewDocente = document.getElementById('sel-view-docente');
@@ -583,6 +583,9 @@ function renderTeacherRangeCalendar(container, docente, view) {
     });
 }
 
+// Tabela de resumo do Calendario da Turma: uma linha por docente de cada
+// componente (#, codigo, CH, CH alocada, componente, docente, periodo) e o total.
+// toCH, formatCH, formatPeriodo e escapeHtml sao as do fim deste arquivo.
 export function buildCalendarTurmaResumeTable(turmaId, start, end) {
     if (!turmaId) return null;
 
@@ -592,99 +595,83 @@ export function buildCalendarTurmaResumeTable(turmaId, start, end) {
     ));
     if (allocations.length === 0) return null;
 
-    function toCH(value) {
-        const num = Number.parseFloat(value);
-        return Number.isFinite(num) && num > 0 ? num : 0;
+    const disciplinasMap = disciplinasDaTurma(turmaId, allocations, start, end);
+    const disciplinas = [...disciplinasMap.values()].map(juntarLinhasDaDisciplina);
+    ordenarENumerarDisciplinas(disciplinas);
+    return htmlDaTabelaDaTurma(disciplinas);
+}
+
+// Docentes de uma alocacao (varios ou um so), com a CH de cada um.
+function extractDocentes(alloc, fallbackCH = 0) {
+    if (Array.isArray(alloc?.docentes) && alloc.docentes.length > 0) {
+        return alloc.docentes
+            .map((docente) => ({
+                nome: String(docente?.nome || '').trim(),
+                ch: toCH(docente?.ch)
+            }))
+            .filter((docente) => docente.nome);
     }
 
-    function formatCH(value) {
-        const num = Number.parseFloat(value);
-        if (!Number.isFinite(num) || num <= 0) return '';
-        return Number.isInteger(num)
-            ? String(num)
-            : num.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 1 });
+    const nome = String(alloc?.docente || '').trim();
+    if (!nome) return [];
+    return [{
+        nome,
+        ch: toCH(alloc?.ch) || toCH(fallbackCH)
+    }];
+}
+
+// Linhas (uma por docente e trecho de datas) de uma oferta da projecao canonica.
+function buildRowsFromOfferGroup(group, start, end) {
+    const declaredDocentes = Array.isArray(group?.docentes) ? group.docentes : [];
+    const fallbackStart = String(group?.start || start || '').trim();
+    const fallbackEnd = String(group?.end || end || fallbackStart || '').trim();
+    const segments = Array.isArray(group?.teacherSegments) ? group.teacherSegments : [];
+
+    if (segments.length > 0) {
+        return segments
+            .slice()
+            .sort((left, right) => {
+                const startDiff = String(left?.start || '').localeCompare(String(right?.start || ''));
+                if (startDiff !== 0) return startDiff;
+                return String(left?.nome || '').localeCompare(String(right?.nome || ''), 'pt-BR', { sensitivity: 'base' });
+            })
+            .map((segment) => {
+                const nome = String(segment?.nome || '').trim();
+                const declared = declaredDocentes.find((docente) => teacherNamesMatch(docente?.nome, nome));
+                return {
+                    nome: nome || '-',
+                    ch: toCH(segment?.ch) || toCH(declared?.ch),
+                    // Horas executadas por este docente nesta oferta (coluna "CH alocada").
+                    horas: segments.length === 1 ? toCH(group?.executedHours) : toCH(segment?.hours),
+                    dataInicio: String(segment?.start || fallbackStart || '').trim(),
+                    dataFim: String(segment?.end || fallbackEnd || '').trim()
+                };
+            });
     }
 
-    function formatPeriodo(dataInicio, dataFim) {
-        if (!dataInicio || !dataFim) return '-';
-        return `${formatDateBR(dataInicio)} a ${formatDateBR(dataFim)}`;
-    }
-
-    function escapeHtml(value) {
-        return String(value ?? '')
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            .replace(/"/g, '&quot;')
-            .replace(/'/g, '&#39;');
-    }
-
-    function extractDocentes(alloc, fallbackCH = 0) {
-        if (Array.isArray(alloc?.docentes) && alloc.docentes.length > 0) {
-            return alloc.docentes
-                .map((docente) => ({
-                    nome: String(docente?.nome || '').trim(),
-                    ch: toCH(docente?.ch)
-                }))
-                .filter((docente) => docente.nome);
-        }
-
-        const nome = String(alloc?.docente || '').trim();
-        if (!nome) return [];
-        return [{
-            nome,
-            ch: toCH(alloc?.ch) || toCH(fallbackCH)
-        }];
-    }
-
-    function buildRowsFromOfferGroup(group) {
-        const declaredDocentes = Array.isArray(group?.docentes) ? group.docentes : [];
-        const fallbackStart = String(group?.start || start || '').trim();
-        const fallbackEnd = String(group?.end || end || fallbackStart || '').trim();
-        const segments = Array.isArray(group?.teacherSegments) ? group.teacherSegments : [];
-
-        if (segments.length > 0) {
-            return segments
-                .slice()
-                .sort((left, right) => {
-                    const startDiff = String(left?.start || '').localeCompare(String(right?.start || ''));
-                    if (startDiff !== 0) return startDiff;
-                    return String(left?.nome || '').localeCompare(String(right?.nome || ''), 'pt-BR', { sensitivity: 'base' });
-                })
-                .map((segment) => {
-                    const nome = String(segment?.nome || '').trim();
-                    const declared = declaredDocentes.find((docente) => teacherNamesMatch(docente?.nome, nome));
-                    return {
-                        nome: nome || '-',
-                        ch: toCH(segment?.ch) || toCH(declared?.ch),
-                        // Horas executadas por este docente nesta oferta (coluna "CH alocada").
-                        horas: segments.length === 1 ? toCH(group?.executedHours) : toCH(segment?.hours),
-                        dataInicio: String(segment?.start || fallbackStart || '').trim(),
-                        dataFim: String(segment?.end || fallbackEnd || '').trim()
-                    };
-                });
-        }
-
-        if (declaredDocentes.length > 0) {
-            return declaredDocentes.map((docente) => ({
-                nome: String(docente?.nome || '').trim() || '-',
-                ch: toCH(docente?.ch),
-                horas: declaredDocentes.length === 1 ? toCH(group?.executedHours) : 0,
-                dataInicio: fallbackStart,
-                dataFim: fallbackEnd
-            }));
-        }
-
-        const fallbackDocente = String(group?.baseAlloc?.docente || group?.docenteLabel || '').trim();
-        return [{
-            nome: fallbackDocente || '-',
-            ch: 0,
-            horas: toCH(group?.executedHours),
+    if (declaredDocentes.length > 0) {
+        return declaredDocentes.map((docente) => ({
+            nome: String(docente?.nome || '').trim() || '-',
+            ch: toCH(docente?.ch),
+            horas: declaredDocentes.length === 1 ? toCH(group?.executedHours) : 0,
             dataInicio: fallbackStart,
             dataFim: fallbackEnd
-        }];
+        }));
     }
 
+    const fallbackDocente = String(group?.baseAlloc?.docente || group?.docenteLabel || '').trim();
+    return [{
+        nome: fallbackDocente || '-',
+        ch: 0,
+        horas: toCH(group?.executedHours),
+        dataInicio: fallbackStart,
+        dataFim: fallbackEnd
+    }];
+}
+
+// Componentes da turma (Map nome -> { disciplina, codigo, cor, totalCH, allocatedCH, rows }):
+// pela projecao canonica das ofertas; sem ela, direto das alocacoes.
+function disciplinasDaTurma(turmaId, allocations, start, end) {
     const offerProjection = buildCanonicalOfferProjection({
         allocations,
         startDate: start,
@@ -715,7 +702,7 @@ export function buildCalendarTurmaResumeTable(turmaId, start, end) {
 
         const disciplinaEntry = disciplinasMap.get(nome);
         disciplinaEntry.allocatedCH = (disciplinaEntry.allocatedCH || 0) + toCH(offerGroup?.executedHours);
-        const rows = buildRowsFromOfferGroup(offerGroup);
+        const rows = buildRowsFromOfferGroup(offerGroup, start, end);
         rows.forEach((row) => disciplinaEntry.rows.push(row));
     });
 
@@ -758,55 +745,59 @@ export function buildCalendarTurmaResumeTable(turmaId, start, end) {
             });
         });
     }
+    return disciplinasMap;
+}
 
-    const disciplinas = [...disciplinasMap.values()].map((disciplina) => {
-        const merged = new Map();
+// Junta as linhas repetidas (mesmo docente e datas), ordena e fecha as horas de uma componente.
+function juntarLinhasDaDisciplina(disciplina) {
+    const merged = new Map();
 
-        disciplina.rows.forEach((row) => {
-            const rowKey = `${row.nome}|${row.dataInicio}|${row.dataFim}`;
-            if (!merged.has(rowKey)) {
-                merged.set(rowKey, { ...row });
-                return;
-            }
-            const current = merged.get(rowKey);
-            merged.set(rowKey, {
-                ...current,
-                ch: Math.max(toCH(current?.ch), toCH(row?.ch)),
-                horas: toCH(current?.horas) + toCH(row?.horas)
-            });
+    disciplina.rows.forEach((row) => {
+        const rowKey = `${row.nome}|${row.dataInicio}|${row.dataFim}`;
+        if (!merged.has(rowKey)) {
+            merged.set(rowKey, { ...row });
+            return;
+        }
+        const current = merged.get(rowKey);
+        merged.set(rowKey, {
+            ...current,
+            ch: Math.max(toCH(current?.ch), toCH(row?.ch)),
+            horas: toCH(current?.horas) + toCH(row?.horas)
         });
-
-        const rows = [...merged.values()]
-            .sort((a, b) => {
-                const startCmp = String(a.dataInicio || '').localeCompare(String(b.dataInicio || ''));
-                if (startCmp !== 0) return startCmp;
-                return String(a.nome || '').localeCompare(String(b.nome || ''), 'pt-BR', { sensitivity: 'base' });
-            });
-
-        const totalFromRows = rows.reduce((sum, row) => sum + toCH(row.horas), 0);
-        // CH alocada = horas efetivamente executadas (projecao canonica). No
-        // caminho de fallback (sem projecao) usa a soma das linhas para nao
-        // sinalizar divergencia falsa.
-        const allocatedCH = (disciplina.allocatedCH === null || disciplina.allocatedCH === undefined)
-            ? totalFromRows
-            : toCH(disciplina.allocatedCH);
-        // Cada linha mostra as suas horas. Se as linhas nao fecham com o total
-        // (ex.: docente sem aula observada), mostra o total so na primeira linha.
-        const rowsFecham = rows.length === 1 || Math.abs(totalFromRows - allocatedCH) <= 0.01;
-        rows.forEach((row, idx) => {
-            row.horas = rowsFecham && rows.length > 1 ? toCH(row.horas) : (idx === 0 ? allocatedCH : null);
-        });
-        const totalChRows = rows.reduce((sum, row) => sum + toCH(row.ch), 0);
-        return {
-            ...disciplina,
-            rows,
-            allocatedCH,
-            totalCH: toCH(disciplina.totalCH) > 0 ? toCH(disciplina.totalCH) : (totalChRows || totalFromRows)
-        };
     });
 
-    // Ordena as disciplinas pela ordem cronologica de oferta (data de inicio mais
-    // antiga) e renumera (#1, #2, ...), em vez de ordem alfabetica/insercao.
+    const rows = [...merged.values()]
+        .sort((a, b) => {
+            const startCmp = String(a.dataInicio || '').localeCompare(String(b.dataInicio || ''));
+            if (startCmp !== 0) return startCmp;
+            return String(a.nome || '').localeCompare(String(b.nome || ''), 'pt-BR', { sensitivity: 'base' });
+        });
+
+    const totalFromRows = rows.reduce((sum, row) => sum + toCH(row.horas), 0);
+    // CH alocada = horas efetivamente executadas (projecao canonica). No
+    // caminho de fallback (sem projecao) usa a soma das linhas para nao
+    // sinalizar divergencia falsa.
+    const allocatedCH = (disciplina.allocatedCH === null || disciplina.allocatedCH === undefined)
+        ? totalFromRows
+        : toCH(disciplina.allocatedCH);
+    // Cada linha mostra as suas horas. Se as linhas nao fecham com o total
+    // (ex.: docente sem aula observada), mostra o total so na primeira linha.
+    const rowsFecham = rows.length === 1 || Math.abs(totalFromRows - allocatedCH) <= 0.01;
+    rows.forEach((row, idx) => {
+        row.horas = rowsFecham && rows.length > 1 ? toCH(row.horas) : (idx === 0 ? allocatedCH : null);
+    });
+    const totalChRows = rows.reduce((sum, row) => sum + toCH(row.ch), 0);
+    return {
+        ...disciplina,
+        rows,
+        allocatedCH,
+        totalCH: toCH(disciplina.totalCH) > 0 ? toCH(disciplina.totalCH) : (totalChRows || totalFromRows)
+    };
+}
+
+// Ordena as disciplinas pela ordem cronologica de oferta (data de inicio mais
+// antiga) e renumera (#1, #2, ...), em vez de ordem alfabetica/insercao.
+function ordenarENumerarDisciplinas(disciplinas) {
     disciplinas.sort((a, b) => {
         const aStart = String(a.rows?.[0]?.dataInicio || '').trim();
         const bStart = String(b.rows?.[0]?.dataInicio || '').trim();
@@ -815,7 +806,10 @@ export function buildCalendarTurmaResumeTable(turmaId, start, end) {
         return String(a.disciplina || '').localeCompare(String(b.disciplina || ''), 'pt-BR', { sensitivity: 'base' });
     });
     disciplinas.forEach((disc, idx) => { disc.numero = idx + 1; });
+}
 
+// HTML da tabela: cabecalho, linhas de cada componente (na cor dela) e o total.
+function htmlDaTabelaDaTurma(disciplinas) {
     const totalGeralCH = disciplinas.reduce((sum, disc) => sum + toCH(disc.totalCH), 0);
     const totalGeralAlocada = disciplinas.reduce((sum, disc) => sum + toCH(disc.allocatedCH), 0);
     const totalAlocadaMismatch = Math.abs(totalGeralAlocada - totalGeralCH) > 0.01;
@@ -1237,6 +1231,8 @@ function buildDocenteResumeRows(components = []) {
     return tableHtml;
 }
 
+// Calendario mes a mes (Calendario da Turma e Calendario Docente): titulo,
+// tabela de resumo e um bloco por mes, com os horarios de cada dia.
 export function generateCalendarGrid(container, turmaId, docenteName, start, end, titleHTML, options = {}) {
     container.innerHTML = '';
 
@@ -1245,40 +1241,49 @@ export function generateCalendarGrid(container, turmaId, docenteName, start, end
     header.innerHTML = titleHTML;
     container.appendChild(header);
 
-    // Docente com varios PLs (ex.: ano inteiro): a tabela (por PL) e os eventos ja chegam prontos.
-    if (typeof options.resumeTableHtml === 'string') {
-        if (options.resumeTableHtml) {
-            const tableDiv = document.createElement('div');
-            tableDiv.className = 'calendar-turma-resume-container';
-            tableDiv.innerHTML = options.resumeTableHtml;
-            container.appendChild(tableDiv);
-        }
-    } else if (turmaId) {
-        // Adiciona tabela resumo de disciplinas para turmas
-        const resumeTable = buildCalendarTurmaResumeTable(turmaId, start, end);
-        if (resumeTable) {
-            const tableDiv = document.createElement('div');
-            tableDiv.className = 'calendar-turma-resume-container';
-            tableDiv.innerHTML = resumeTable;
-            container.appendChild(tableDiv);
-        }
-    } else if (docenteName) {
-        // Tabela resumo das componentes lecionadas pelo docente (Calendario Docente)
-        const resumeTable = buildCalendarDocenteResumeTable(docenteName, start, end);
-        if (resumeTable) {
-            const tableDiv = document.createElement('div');
-            tableDiv.className = 'calendar-turma-resume-container';
-            tableDiv.innerHTML = resumeTable;
-            container.appendChild(tableDiv);
-        }
-    }
+    anexarTabelaDeResumo(container, turmaId, docenteName, start, end, options);
 
     const eventsByDate = options.eventsByDate || getCalendarEvents(turmaId, start, end, docenteName);
     // Fim do periodo letivo (dia depois dele fica vermelho). Com varios PLs cada
     // aula ja esta dentro do seu PL, entao o limite e o fim do intervalo.
     const termEndLimit = options.termEndLimit !== undefined ? options.termEndLimit : store.settings.termEnd;
     const useNativeShiftMapping = !!options.useNativeShiftMapping;
+    const slotsToRender = horariosDoCalendario(eventsByDate, turmaId, docenteName, options);
 
+    const months = agruparPorMes(eventsByDate);
+    const ctx = { eventsByDate, slotsToRender, termEndLimit, useNativeShiftMapping, docenteName };
+    Object.keys(months).forEach((monthKey) => {
+        container.appendChild(montarMesDoCalendario(monthKey, months[monthKey], ctx));
+    });
+}
+
+// Domingo fica fora do calendario mensal (as colunas vao de segunda a sabado).
+const EXIBIR_DOMINGO = false;
+
+// Tabela de resumo acima dos meses: pronta (docente com varios PLs), da turma ou do docente.
+function anexarTabelaDeResumo(container, turmaId, docenteName, start, end, options) {
+    const anexar = (html) => {
+        const tableDiv = document.createElement('div');
+        tableDiv.className = 'calendar-turma-resume-container';
+        tableDiv.innerHTML = html;
+        container.appendChild(tableDiv);
+    };
+    // Docente com varios PLs (ex.: ano inteiro): a tabela (por PL) e os eventos ja chegam prontos.
+    if (typeof options.resumeTableHtml === 'string') {
+        if (options.resumeTableHtml) anexar(options.resumeTableHtml);
+    } else if (turmaId) {
+        // Adiciona tabela resumo de disciplinas para turmas
+        const resumeTable = buildCalendarTurmaResumeTable(turmaId, start, end);
+        if (resumeTable) anexar(resumeTable);
+    } else if (docenteName) {
+        // Tabela resumo das componentes lecionadas pelo docente (Calendario Docente)
+        const resumeTable = buildCalendarDocenteResumeTable(docenteName, start, end);
+        if (resumeTable) anexar(resumeTable);
+    }
+}
+
+// Horarios (linhas) de cada dia: os pedidos, os da turma ou os turnos do docente.
+function horariosDoCalendario(eventsByDate, turmaId, docenteName, options) {
     let slotsToRender = [];
 
     if (Array.isArray(options.slotsToRenderOverride) && options.slotsToRenderOverride.length > 0) {
@@ -1320,7 +1325,11 @@ export function generateCalendarGrid(container, turmaId, docenteName, start, end
             .sort((a, b) => timeToMinutes(a) - timeToMinutes(b));
         }
     }
+    return slotsToRender;
+}
 
+// { 'AAAA-MM': [{ date, events }, ...] } em ordem de data.
+function agruparPorMes(eventsByDate) {
     const months = {};
     Object.keys(eventsByDate)
         .sort()
@@ -1329,284 +1338,303 @@ export function generateCalendarGrid(container, turmaId, docenteName, start, end
             if (!months[k]) months[k] = [];
             months[k].push({ date: dateStr, events: eventsByDate[dateStr] });
         });
+    return months;
+}
 
-    const EXIBIR_DOMINGO = false;
+// Um mes: titulo, cabecalho dos dias, dias do mes anterior (claros), os dias e o fim da ultima semana.
+function montarMesDoCalendario(monthKey, diasDoMes, ctx) {
+    const { eventsByDate, slotsToRender } = ctx;
+    const monthDiv = document.createElement('div');
+    monthDiv.className = 'calendar-month';
 
-    Object.keys(months).forEach((monthKey) => {
-        const monthDiv = document.createElement('div');
-        monthDiv.className = 'calendar-month';
+    const [y, m] = monthKey.split('-');
+    const nomeMes = new Date(y, m - 1, 2).toLocaleString('pt-BR', { month: 'long', year: 'numeric' });
+    monthDiv.innerHTML = `<h3>${nomeMes.toUpperCase()}</h3>`;
 
-        const [y, m] = monthKey.split('-');
-        const nomeMes = new Date(y, m - 1, 2).toLocaleString('pt-BR', { month: 'long', year: 'numeric' });
-        monthDiv.innerHTML = `<h3>${nomeMes.toUpperCase()}</h3>`;
+    const grid = document.createElement('div');
+    grid.className = 'month-grid';
 
-        const grid = document.createElement('div');
-        grid.className = 'month-grid';
+    if (!EXIBIR_DOMINGO) {
+        grid.style.gridTemplateColumns = 'repeat(6, 1fr)';
+    }
 
-        if (!EXIBIR_DOMINGO) {
-            grid.style.gridTemplateColumns = 'repeat(6, 1fr)';
+    const diasCabecalho = EXIBIR_DOMINGO ? ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'] : ['S', 'T', 'Q', 'Q', 'S', 'S'];
+    diasCabecalho.forEach((d) => (grid.innerHTML += `<div class="day-header">${d}</div>`));
+
+    const firstDate = diasDoMes[0].date;
+    const startDow = new Date(firstDate + 'T12:00:00').getDay();
+
+    let prefixEmptyCells = 0;
+    if (EXIBIR_DOMINGO) {
+        prefixEmptyCells = startDow;
+    } else {
+        prefixEmptyCells = startDow === 0 ? 0 : startDow - 1;
+    }
+
+    const turnoBoundarySlots = new Set();
+    let previousShiftLetter = '';
+    slotsToRender.forEach((slot) => {
+        const rawSlot = String(slot || '').trim();
+        if (!rawSlot || rawSlot.toUpperCase().includes('INTERVALO')) return;
+        const currentShiftLetter = getTurnoLetter(rawSlot);
+        if (!currentShiftLetter) return;
+        if (previousShiftLetter && currentShiftLetter !== previousShiftLetter) {
+            turnoBoundarySlots.add(rawSlot);
         }
+        previousShiftLetter = currentShiftLetter;
+    });
 
-        const diasCabecalho = EXIBIR_DOMINGO ? ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'] : ['S', 'T', 'Q', 'Q', 'S', 'S'];
-        diasCabecalho.forEach((d) => (grid.innerHTML += `<div class="day-header">${d}</div>`));
-
-        const firstDate = months[monthKey][0].date;
-        const startDow = new Date(firstDate + 'T12:00:00').getDay();
-
-        let prefixEmptyCells = 0;
-        if (EXIBIR_DOMINGO) {
-            prefixEmptyCells = startDow;
-        } else {
-            prefixEmptyCells = startDow === 0 ? 0 : startDow - 1;
+    // Celulas antes do dia 1: mostram os dias do mes anterior em tom claro
+    // (so numero e feriado; as aulas ficam no bloco do proprio mes).
+    const diasAnteriores = [];
+    let cursorAnt = firstDate;
+    while (diasAnteriores.length < prefixEmptyCells) {
+        cursorAnt = addDaysISO(cursorAnt, -1);
+        if (!EXIBIR_DOMINGO && new Date(cursorAnt + 'T12:00:00').getDay() === 0) continue;
+        diasAnteriores.unshift(cursorAnt);
+    }
+    diasAnteriores.forEach((dataAnt) => {
+        const eventosAnt = eventsByDate[dataAnt];
+        if (!eventosAnt) {
+            grid.innerHTML += `<div class="day-cell empty"></div>`;
+            return;
         }
-
-        const turnoBoundarySlots = new Set();
-        let previousShiftLetter = '';
-        slotsToRender.forEach((slot) => {
-            const rawSlot = String(slot || '').trim();
-            if (!rawSlot || rawSlot.toUpperCase().includes('INTERVALO')) return;
-            const currentShiftLetter = getTurnoLetter(rawSlot);
-            if (!currentShiftLetter) return;
-            if (previousShiftLetter && currentShiftLetter !== previousShiftLetter) {
-                turnoBoundarySlots.add(rawSlot);
-            }
-            previousShiftLetter = currentShiftLetter;
-        });
-
-        // Celulas antes do dia 1: mostram os dias do mes anterior em tom claro
-        // (so numero e feriado; as aulas ficam no bloco do proprio mes).
-        const diasAnteriores = [];
-        let cursorAnt = firstDate;
-        while (diasAnteriores.length < prefixEmptyCells) {
-            cursorAnt = addDaysISO(cursorAnt, -1);
-            if (!EXIBIR_DOMINGO && new Date(cursorAnt + 'T12:00:00').getDay() === 0) continue;
-            diasAnteriores.unshift(cursorAnt);
-        }
-        diasAnteriores.forEach((dataAnt) => {
-            const eventosAnt = eventsByDate[dataAnt];
-            if (!eventosAnt) {
-                grid.innerHTML += `<div class="day-cell empty"></div>`;
-                return;
-            }
-            const feriadoAnt = eventosAnt.find((e) => e.type === 'holiday');
-            const [, mm, dd] = dataAnt.split('-');
-            grid.innerHTML += `<div class="day-cell empty" style="opacity:0.6;${feriadoAnt ? ' background-color:#f1f2f6 !important;' : ''}">
+        const feriadoAnt = eventosAnt.find((e) => e.type === 'holiday');
+        const [, mm, dd] = dataAnt.split('-');
+        grid.innerHTML += `<div class="day-cell empty" style="opacity:0.6;${feriadoAnt ? ' background-color:#f1f2f6 !important;' : ''}">
           <span class="day-number">${dd}/${mm}</span>
           ${feriadoAnt ? `<div style="text-align:center; color:#7f8c8d; font-style:italic; padding-top:10px; font-weight:bold; font-size:0.9em;">${feriadoAnt.title}</div>` : ''}
         </div>`;
-        });
+    });
 
-        months[monthKey].forEach((dayData) => {
-            const dt = new Date(dayData.date + 'T12:00:00');
-            const dayOfWeek = dt.getDay();
+    diasDoMes.forEach((dayData) => {
+        const cell = montarDiaDoCalendario(dayData, ctx, turnoBoundarySlots);
+        if (cell) grid.appendChild(cell);
+    });
 
-            if (!EXIBIR_DOMINGO && dayOfWeek === 0) return;
+    const lastDateObj = new Date(diasDoMes[diasDoMes.length - 1].date + 'T12:00:00');
+    const lastDow = lastDateObj.getDay();
 
-            const cell = document.createElement('div');
-            cell.className = 'day-cell';
+    let emptySuffix = 0;
+    if (EXIBIR_DOMINGO) {
+        emptySuffix = 6 - lastDow;
+    } else {
+        if (lastDow === 0) emptySuffix = 0;
+        else emptySuffix = 6 - lastDow;
+    }
 
-            if (dayOfWeek === 0 || dayOfWeek === 6) cell.classList.add('weekend');
+    for (let i = 0; i < emptySuffix; i++) {
+        grid.innerHTML += `<div class="day-cell empty" style="border-bottom: 2px solid #bdc3c7;"></div>`;
+    }
 
-            const isOutOfBounds = termEndLimit && dayData.date > termEndLimit;
-            if (isOutOfBounds) {
-                cell.style.cssText += 'background-color: #ffebee !important; border-color: #ffcdd2 !important;';
-            }
+    monthDiv.appendChild(grid);
+    return monthDiv;
+}
 
-            let html = `<span class="day-number">${dayData.date.split('-')[2]}</span>`;
-            const holidayEvent = dayData.events.find((e) => e.type === 'holiday');
+// Um dia do mes (null no domingo): numero, feriado ou uma linha por horario.
+function montarDiaDoCalendario(dayData, ctx, turnoBoundarySlots) {
+    const { slotsToRender, termEndLimit, docenteName } = ctx;
+    const dt = new Date(dayData.date + 'T12:00:00');
+    const dayOfWeek = dt.getDay();
 
-            if (holidayEvent) {
-                cell.style.cssText += 'background-color: #f1f2f6 !important;';
-                html += `<div style="text-align:center; color:#7f8c8d; font-style:italic; padding-top:10px; font-weight:bold; font-size:0.9em;">
+    if (!EXIBIR_DOMINGO && dayOfWeek === 0) return null;
+
+    const cell = document.createElement('div');
+    cell.className = 'day-cell';
+
+    if (dayOfWeek === 0 || dayOfWeek === 6) cell.classList.add('weekend');
+
+    const isOutOfBounds = termEndLimit && dayData.date > termEndLimit;
+    if (isOutOfBounds) {
+        cell.style.cssText += 'background-color: #ffebee !important; border-color: #ffcdd2 !important;';
+    }
+
+    let html = `<span class="day-number">${dayData.date.split('-')[2]}</span>`;
+    const holidayEvent = dayData.events.find((e) => e.type === 'holiday');
+
+    if (holidayEvent) {
+        cell.style.cssText += 'background-color: #f1f2f6 !important;';
+        html += `<div style="text-align:center; color:#7f8c8d; font-style:italic; padding-top:10px; font-weight:bold; font-size:0.9em;">
           ${holidayEvent.title}
         </div>`;
+    } else {
+        if (slotsToRender.length > 0) {
+            slotsToRender.forEach((slotTime) => {
+                html += linhaDoHorario(slotTime, dayData, dayOfWeek, isOutOfBounds, ctx, turnoBoundarySlots);
+            });
+        } else {
+            dayData.events.forEach((ev) => {
+                const info = getDisciplinaInfo(ev.disciplina, ev.turmaId);
+                let style = `background:${vividHexColor(ev.cor || '#bdc3c7')}`;
+                const abrevSub = `${info.abrev}${sufixoSubturma(ev.subGrupo)}`;
+                let displayLabel = docenteName ? `${abrevSub} - ${ev.turmaId}` : abrevSub;
+
+                if (isOutOfBounds) {
+                    style = `background: #c0392b !important; color: white !important; font-weight: bold; border: 1px solid #900 !important;`;
+                    displayLabel = `⚠️ ${displayLabel}`;
+                }
+
+                html += `<div class="event-chip" style="${style}" title="${isOutOfBounds ? 'FORA DO SEMESTRE!' : ''}">${displayLabel}</div>`;
+            });
+        }
+    }
+
+    cell.innerHTML = html;
+    return cell;
+}
+
+// Aulas de um dia num horario (com Sabado de manha e troca de turno levados em conta).
+function aulasNoHorario(dayData, dayOfWeek, slotTimeNorm, normalizeTime, useNativeShiftMapping) {
+    return dayData.events.filter(e => {
+        const eTurno = e.turno ||
+            store.rawData?.turmas?.find(t => String(t.turma_id) === String(e.turmaId))?.turno || 'Tarde';
+        let eHorario = e.horario;
+        let eHorariosUltimoDia = e.horariosUltimoDia;
+        let eHorariosOcupados = e.horariosOcupados;
+
+        if (e.sabadoManha && dayOfWeek === 6 && eTurno !== 'Manha' && eTurno !== 'Manhã') {
+            if (eHorario) eHorario = mapSlotToTurno(eHorario, 'Manha', eTurno, store.getActiveHorariosPorTurno());
+            if (Array.isArray(eHorariosUltimoDia)) eHorariosUltimoDia = eHorariosUltimoDia.map(h => mapSlotToTurno(h, 'Manha', eTurno, store.getActiveHorariosPorTurno()));
+            if (Array.isArray(eHorariosOcupados)) eHorariosOcupados = eHorariosOcupados.map(h => mapSlotToTurno(h, 'Manha', eTurno, store.getActiveHorariosPorTurno()));
+        }
+
+        if (eHorario) eHorario = getShiftChangeMeta(e, eHorario, dayOfWeek, dayData.date).mappedSlot || eHorario;
+        if (Array.isArray(eHorariosUltimoDia)) {
+            eHorariosUltimoDia = eHorariosUltimoDia.map((h) => getShiftChangeMeta(e, h, dayOfWeek, dayData.date).mappedSlot || h);
+        }
+        if (Array.isArray(eHorariosOcupados)) {
+            eHorariosOcupados = eHorariosOcupados.map((h) => getShiftChangeMeta(e, h, dayOfWeek, dayData.date).mappedSlot || h);
+        }
+        if (!useNativeShiftMapping) {
+            eHorario = e.horario;
+            eHorariosUltimoDia = e.horariosUltimoDia;
+            eHorariosOcupados = e.horariosOcupados;
+        }
+
+        if (eHorario && normalizeTime(eHorario) === slotTimeNorm) return true;
+
+        // NOVO: RESPEITA OS SLOTS LIMITADOS NO ÚLTIMO DIA DA INTENSIVA
+        // Removida check isFaixaAllocation
+        if (e.dataFim === dayData.date && eHorariosUltimoDia) {
+            return eHorariosUltimoDia.some(h => normalizeTime(h) === slotTimeNorm);
+        }
+
+        if (eHorariosOcupados && eHorariosOcupados.some(h => normalizeTime(h) === slotTimeNorm)) return true;
+        return false;
+    });
+}
+
+// Uma linha (hora + conteudo) de um dia: intervalo, aula, choque ou vazio.
+function linhaDoHorario(slotTime, dayData, dayOfWeek, isOutOfBounds, ctx, turnoBoundarySlots) {
+    const { useNativeShiftMapping, docenteName } = ctx;
+    const isIntervalo = slotTime.toUpperCase().includes('INTERVALO');
+    const timeMatch = slotTime.match(/\d{2}:\d{2}/);
+    const timeLabel = timeMatch ? timeMatch[0] : '';
+
+    const normalizeTime = (t) => (t || '').replace(/\s/g, '');
+    const slotTimeNorm = normalizeTime(slotTime);
+
+    const eventsInSlot = aulasNoHorario(dayData, dayOfWeek, slotTimeNorm, normalizeTime, useNativeShiftMapping);
+    const dedupeEventKey = (e) => `${e.turmaId || ''}|${e.disciplina || ''}|${e.modo || ''}|${e.subGrupo || ''}|${slotTimeNorm}`;
+    const seenSlotEvents = new Set();
+    const uniqueEventsInSlot = eventsInSlot.filter((e) => {
+        const key = dedupeEventKey(e);
+        if (seenSlotEvents.has(key)) return false;
+        seenSlotEvents.add(key);
+        return true;
+    });
+
+    let content = '';
+    let style = '';
+
+    if (isIntervalo) {
+        content = '<span style="color:#7f8c8d; font-style:italic; font-size:0.85em;">Intervalo</span>';
+        style = 'background:#e0e0e0;';
+    } else if (uniqueEventsInSlot.length > 0) {
+        const hasSpecificConflict = uniqueEventsInSlot.some(e => e.conflictsAt && e.conflictsAt.includes(slotTimeNorm));
+        const implicitConflict = uniqueEventsInSlot.length > 1;
+
+        if (docenteName) {
+            if (hasSpecificConflict || implicitConflict) {
+                style = 'background: #c0392b; color: white; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight:bold;';
+                const conflictEntries = [...uniqueEventsInSlot];
+                uniqueEventsInSlot.forEach((e) => (e.conflictPartners || []).forEach((p) => {
+                    if (!conflictEntries.some((c) => c.turmaId === p.turmaId && c.disciplina === p.disciplina)) conflictEntries.push(p);
+                }));
+                const conflictNames = conflictEntries.map((e) => `${getDisciplinaInfo(e.disciplina, e.turmaId).abrev}${sufixoSubturma(e.subGrupo)} - ${e.turmaId}`).join(' <b style="color:#fff">x</b> ');
+                content = `<span title="Choque: ${conflictNames.replace(/<[^>]+>/g, '')}">⚠️ ${conflictNames}</span>`;
             } else {
-                if (slotsToRender.length > 0) {
-                    slotsToRender.forEach((slotTime) => {
-                        const isIntervalo = slotTime.toUpperCase().includes('INTERVALO');
-                        const timeMatch = slotTime.match(/\d{2}:\d{2}/);
-                        const timeLabel = timeMatch ? timeMatch[0] : '';
+                const event = uniqueEventsInSlot[0];
+                const info = getDisciplinaInfo(event.disciplina, event.turmaId);
+                const shiftBadgeDisplay = getCalendarShiftBadgeHTML(
+                    event,
+                    slotTime,
+                    dayOfWeek,
+                    dayData.date
+                );
+                content = `${info.abrev}${sufixoSubturma(event.subGrupo)}${shiftBadgeDisplay} - ${event.turmaId}`;
+                style = `background:${vividHexColor(event.cor || '#bdc3c7')}; color:black;`;
+            }
+        } else {
+            const event = uniqueEventsInSlot[0];
+            if (event) {
+                const info = getDisciplinaInfo(event.disciplina, event.turmaId);
+                const docenteFirst = getDocenteShortLabel(event.docente) || '';
+                const docenteLabel = (docenteFirst && !/^a$/i.test(docenteFirst)) ? docenteFirst.toUpperCase() : '';
+                const eBadgeDisplay = getCalendarShiftBadgeHTML(
+                    event,
+                    slotTime,
+                    dayOfWeek,
+                    dayData.date
+                );
+                content = docenteLabel
+                    ? `<div>${info.abrev}${sufixoSubturma(event.subGrupo)}${eBadgeDisplay} <span style="font-size:0.82em; font-weight:600; opacity:0.92;">- ${docenteLabel}</span></div>`
+                    : `${info.abrev}${sufixoSubturma(event.subGrupo)}${eBadgeDisplay}`;
+                style = `background:${vividHexColor(event.cor || '#bdc3c7')}; color:black;`;
+            } else {
+                content = '&nbsp;';
+                style = 'background: #ecf0f1;';
+            }
+        }
 
-                        const normalizeTime = (t) => (t || '').replace(/\s/g, '');
-                        const slotTimeNorm = normalizeTime(slotTime);
+        if (isOutOfBounds) {
+            style = 'background: #c0392b !important; color: white !important; font-weight: bold; border: 1px solid #900 !important;';
+            if (!content.includes('⚠️')) {
+                content = `⚠️ ${content}`;
+            }
+        }
 
-                        const eventsInSlot = dayData.events.filter(e => {
-                            const eTurno = e.turno ||
-                                store.rawData?.turmas?.find(t => String(t.turma_id) === String(e.turmaId))?.turno || 'Tarde';
-                            let eHorario = e.horario;
-                            let eHorariosUltimoDia = e.horariosUltimoDia;
-                            let eHorariosOcupados = e.horariosOcupados;
+    } else {
+        content = '&nbsp;';
+        style = 'background: #ecf0f1;';
+    }
 
-                            if (e.sabadoManha && dayOfWeek === 6 && eTurno !== 'Manha' && eTurno !== 'Manhã') {
-                                if (eHorario) eHorario = mapSlotToTurno(eHorario, 'Manha', eTurno, store.getActiveHorariosPorTurno());
-                                if (Array.isArray(eHorariosUltimoDia)) eHorariosUltimoDia = eHorariosUltimoDia.map(h => mapSlotToTurno(h, 'Manha', eTurno, store.getActiveHorariosPorTurno()));
-                                if (Array.isArray(eHorariosOcupados)) eHorariosOcupados = eHorariosOcupados.map(h => mapSlotToTurno(h, 'Manha', eTurno, store.getActiveHorariosPorTurno()));
-                            }
+    const hasOverriding = uniqueEventsInSlot.some(e => (e.isIntensive || e.isPriority) && !docenteName);
 
-                            if (eHorario) eHorario = getShiftChangeMeta(e, eHorario, dayOfWeek, dayData.date).mappedSlot || eHorario;
-                            if (Array.isArray(eHorariosUltimoDia)) {
-                                eHorariosUltimoDia = eHorariosUltimoDia.map((h) => getShiftChangeMeta(e, h, dayOfWeek, dayData.date).mappedSlot || h);
-                            }
-                            if (Array.isArray(eHorariosOcupados)) {
-                                eHorariosOcupados = eHorariosOcupados.map((h) => getShiftChangeMeta(e, h, dayOfWeek, dayData.date).mappedSlot || h);
-                            }
-                            if (!useNativeShiftMapping) {
-                                eHorario = e.horario;
-                                eHorariosUltimoDia = e.horariosUltimoDia;
-                                eHorariosOcupados = e.horariosOcupados;
-                            }
+    let className = 'cal-slot-content';
+    if (hasOverriding) className += ' overriding-event';
 
-                            if (eHorario && normalizeTime(eHorario) === slotTimeNorm) return true;
+    let tooltip = '';
+    if (isOutOfBounds && uniqueEventsInSlot.length > 0) {
+        tooltip = `title="ALERTA: Aula marcada fora do semestre letivo!"`;
+    }
 
-                            // NOVO: RESPEITA OS SLOTS LIMITADOS NO ÚLTIMO DIA DA INTENSIVA
-                            // Removida check isFaixaAllocation
-                            if (e.dataFim === dayData.date && eHorariosUltimoDia) {
-                                return eHorariosUltimoDia.some(h => normalizeTime(h) === slotTimeNorm);
-                            }
+    let rowStyle = '';
+    if (isTurnoDividerSlot(slotTime) || (typeof turnoBoundarySlots !== 'undefined' && turnoBoundarySlots.has(slotTime))) {
+        const isIntervaloManha = slotTime.includes('10:20');
+        const borderStyle = isIntervaloManha ? '2px dashed #ced4da' : '3px dashed #bdc3c7';
+        rowStyle = `border-top: ${borderStyle}; margin-top: 2px; padding-top: 2px;`;
+    }
 
-                            if (eHorariosOcupados && eHorariosOcupados.some(h => normalizeTime(h) === slotTimeNorm)) return true;
-                            return false;
-                        });
-                        const dedupeEventKey = (e) => `${e.turmaId || ''}|${e.disciplina || ''}|${e.modo || ''}|${e.subGrupo || ''}|${slotTimeNorm}`;
-                        const seenSlotEvents = new Set();
-                        const uniqueEventsInSlot = eventsInSlot.filter((e) => {
-                            const key = dedupeEventKey(e);
-                            if (seenSlotEvents.has(key)) return false;
-                            seenSlotEvents.add(key);
-                            return true;
-                        });
+    let turnoClass = '';
+    const tLetter = getTurnoLetter(slotTime);
+    if (tLetter === 'M') turnoClass = 'turno-manha';
+    else if (tLetter === 'T') turnoClass = 'turno-tarde';
+    else if (tLetter === 'N') turnoClass = 'turno-noite';
 
-                        let content = '';
-                        let style = '';
-
-                        if (isIntervalo) {
-                            content = '<span style="color:#7f8c8d; font-style:italic; font-size:0.85em;">Intervalo</span>';
-                            style = 'background:#e0e0e0;';
-                        } else if (uniqueEventsInSlot.length > 0) {
-                            const hasSpecificConflict = uniqueEventsInSlot.some(e => e.conflictsAt && e.conflictsAt.includes(slotTimeNorm));
-                            const implicitConflict = uniqueEventsInSlot.length > 1;
-
-                            if (docenteName) {
-                                if (hasSpecificConflict || implicitConflict) {
-                                    style = 'background: #c0392b; color: white; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight:bold;';
-                                    const conflictEntries = [...uniqueEventsInSlot];
-                                    uniqueEventsInSlot.forEach((e) => (e.conflictPartners || []).forEach((p) => {
-                                        if (!conflictEntries.some((c) => c.turmaId === p.turmaId && c.disciplina === p.disciplina)) conflictEntries.push(p);
-                                    }));
-                                    const conflictNames = conflictEntries.map((e) => `${getDisciplinaInfo(e.disciplina, e.turmaId).abrev}${sufixoSubturma(e.subGrupo)} - ${e.turmaId}`).join(' <b style="color:#fff">x</b> ');
-                                    content = `<span title="Choque: ${conflictNames.replace(/<[^>]+>/g, '')}">⚠️ ${conflictNames}</span>`;
-                                } else {
-                                    const event = uniqueEventsInSlot[0];
-                                    const info = getDisciplinaInfo(event.disciplina, event.turmaId);
-                                    const shiftBadgeDisplay = getCalendarShiftBadgeHTML(
-                                        event,
-                                        slotTime,
-                                        dayOfWeek,
-                                        dayData.date
-                                    );
-                                    content = `${info.abrev}${sufixoSubturma(event.subGrupo)}${shiftBadgeDisplay} - ${event.turmaId}`;
-                                    style = `background:${vividHexColor(event.cor || '#bdc3c7')}; color:black;`;
-                                }
-                            } else {
-                                const event = uniqueEventsInSlot[0];
-                                if (event) {
-                                    const info = getDisciplinaInfo(event.disciplina, event.turmaId);
-                                    const docenteFirst = getDocenteShortLabel(event.docente) || '';
-                                    const docenteLabel = (docenteFirst && !/^a$/i.test(docenteFirst)) ? docenteFirst.toUpperCase() : '';
-                                    const eBadgeDisplay = getCalendarShiftBadgeHTML(
-                                        event,
-                                        slotTime,
-                                        dayOfWeek,
-                                        dayData.date
-                                    );
-                                    content = docenteLabel
-                                        ? `<div>${info.abrev}${sufixoSubturma(event.subGrupo)}${eBadgeDisplay} <span style="font-size:0.82em; font-weight:600; opacity:0.92;">- ${docenteLabel}</span></div>`
-                                        : `${info.abrev}${sufixoSubturma(event.subGrupo)}${eBadgeDisplay}`;
-                                    style = `background:${vividHexColor(event.cor || '#bdc3c7')}; color:black;`;
-                                } else {
-                                    content = '&nbsp;';
-                                    style = 'background: #ecf0f1;';
-                                }
-                            }
-
-                            if (isOutOfBounds) {
-                                style = 'background: #c0392b !important; color: white !important; font-weight: bold; border: 1px solid #900 !important;';
-                                if (!content.includes('⚠️')) {
-                                    content = `⚠️ ${content}`;
-                                }
-                            }
-
-                        } else {
-                            content = '&nbsp;';
-                            style = 'background: #ecf0f1;';
-                        }
-
-                        const hasOverriding = uniqueEventsInSlot.some(e => (e.isIntensive || e.isPriority) && !docenteName);
-
-                        let className = 'cal-slot-content';
-                        if (hasOverriding) className += ' overriding-event';
-
-                        let tooltip = '';
-                        if (isOutOfBounds && uniqueEventsInSlot.length > 0) {
-                            tooltip = `title="ALERTA: Aula marcada fora do semestre letivo!"`;
-                        }
-
-                        let rowStyle = '';
-                        if (isTurnoDividerSlot(slotTime) || (typeof turnoBoundarySlots !== 'undefined' && turnoBoundarySlots.has(slotTime))) {
-                            const isIntervaloManha = slotTime.includes('10:20');
-                            const borderStyle = isIntervaloManha ? '2px dashed #ced4da' : '3px dashed #bdc3c7';
-                            rowStyle = `border-top: ${borderStyle}; margin-top: 2px; padding-top: 2px;`;
-                        }
-
-                        let turnoClass = '';
-                        const tLetter = getTurnoLetter(slotTime);
-                        if (tLetter === 'M') turnoClass = 'turno-manha';
-                        else if (tLetter === 'T') turnoClass = 'turno-tarde';
-                        else if (tLetter === 'N') turnoClass = 'turno-noite';
-
-                        html += `
+    return `
               <div class="cal-slot-row ${turnoClass}${isIntervalo ? ' cal-slot-interval' : ''}" style="${rowStyle}">
                 <div class="cal-slot-time">${timeLabel}</div>
                 <div class="${className}" style="${style}" ${tooltip}>${content}</div>
               </div>`;
-                    });
-                } else {
-                    dayData.events.forEach((ev) => {
-                        const info = getDisciplinaInfo(ev.disciplina, ev.turmaId);
-                        let style = `background:${vividHexColor(ev.cor || '#bdc3c7')}`;
-                        const abrevSub = `${info.abrev}${sufixoSubturma(ev.subGrupo)}`;
-                        let displayLabel = docenteName ? `${abrevSub} - ${ev.turmaId}` : abrevSub;
-
-                        if (isOutOfBounds) {
-                            style = `background: #c0392b !important; color: white !important; font-weight: bold; border: 1px solid #900 !important;`;
-                            displayLabel = `⚠️ ${displayLabel}`;
-                        }
-
-                        html += `<div class="event-chip" style="${style}" title="${isOutOfBounds ? 'FORA DO SEMESTRE!' : ''}">${displayLabel}</div>`;
-                    });
-                }
-            }
-
-            cell.innerHTML = html;
-            grid.appendChild(cell);
-        });
-
-        const lastDateObj = new Date(months[monthKey][months[monthKey].length - 1].date + 'T12:00:00');
-        const lastDow = lastDateObj.getDay();
-
-        let emptySuffix = 0;
-        if (EXIBIR_DOMINGO) {
-            emptySuffix = 6 - lastDow;
-        } else {
-            if (lastDow === 0) emptySuffix = 0;
-            else emptySuffix = 6 - lastDow;
-        }
-
-        for (let i = 0; i < emptySuffix; i++) {
-            grid.innerHTML += `<div class="day-cell empty" style="border-bottom: 2px solid #bdc3c7;"></div>`;
-        }
-
-        monthDiv.appendChild(grid);
-        container.appendChild(monthDiv);
-    });
 }

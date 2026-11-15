@@ -1,6 +1,7 @@
 // Foto das telas do Cardume (texto), para comparar antes/depois da refatoracao.
 // Uso (na raiz): node tools/foto_telas.mjs antes.json   ...muda o codigo...   node tools/foto_telas.mjs depois.json --comparar antes.json
 // Dados: alocacoes_publicas.json do repositorio (ou DADOS=arquivo.json), modo local, sem servidor.
+// HTML=1: o calendario mensal e o do docente vao com o HTML inteiro (cores e estilos), nao so o texto.
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -8,6 +9,7 @@ import { sleep, startServer, findBrowser, openBrowser, cdp } from './smoke_test.
 import { ROOT } from './bump_version.mjs';
 
 const saida = process.argv[2] || 'foto.json';
+const CAL = process.env.HTML ? 'innerHTML' : 'innerText';   // o que gravar dos calendarios
 const agenda = JSON.parse(fs.readFileSync(process.env.DADOS || path.join(ROOT, 'alocacoes_publicas.json'), 'utf8'));
 const pubs = agenda.publications.filter((p) => p?.plan?.key && Array.isArray(p.allocations));
 const main = pubs.find((p) => p.plan.key.startsWith('PL2__2027'));
@@ -52,7 +54,7 @@ try {
           document.querySelector('.tab-btn[data-tab="list"]').click(); await wait(120);
           const lista = document.getElementById('tab-list').innerText;
           document.querySelector('.tab-btn[data-tab="monthly"]').click(); await wait(250);
-          const mensal = document.getElementById('tab-monthly').innerText;
+          const mensal = document.getElementById('tab-monthly').${CAL};
           document.querySelector('.tab-btn[data-tab="weekly"]').click(); await wait(250);
           const semanal = document.getElementById('tab-weekly').innerText;
           out[chave] = { lista, mensal, semanal };
@@ -69,7 +71,7 @@ try {
     for (const nome of nomes) {
       await evaluate(`(() => { const i = document.getElementById('sel-view-docente'); i.value = ${JSON.stringify(nome)}; i.dispatchEvent(new Event('input', { bubbles: true })); i.dispatchEvent(new Event('change', { bubbles: true })); })()`);
       await sleep(500);
-      foto[per.t].docentes[nome] = await evaluate("document.getElementById('tab-teacher').innerText");
+      foto[per.t].docentes[nome] = await evaluate(`document.getElementById('tab-teacher').${CAL}`);
     }
     await evaluate("document.querySelector('.tab-btn[data-tab=\"indicadores\"]').click()");
     await sleep(1500);
