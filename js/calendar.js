@@ -1,9 +1,9 @@
-import { store } from './store.js?v=202611150030';
-import { getDaysArray, toLocalDateString } from './utils.js?v=202611150030';
-import { mapSlotToTurno, turnoDaTurmaInclui } from './turns.js?v=202611150030';
-import { slotLabelsOverlap } from './academic_rules.mjs?v=202611150030';
-import { mesmoDocente } from './docente_nomes.mjs?v=202611150030';
-import { datasFeriadoDaTurma, feriadosDaTurma } from './feriados.mjs?v=202611150030';
+import { store } from './store.js?v=202611150039';
+import { getDaysArray, toLocalDateString } from './utils.js?v=202611150039';
+import { mapSlotToTurno, turnoDaTurmaInclui } from './turns.js?v=202611150039';
+import { slotLabelsOverlap } from './academic_rules.mjs?v=202611150039';
+import { mesmoDocente } from './docente_nomes.mjs?v=202611150039';
+import { datasFeriadoDaTurma, feriadosDaTurma } from './feriados.mjs?v=202611150039';
 
 function normalizeKeyPart(value) {
   return String(value || '').trim().toUpperCase();

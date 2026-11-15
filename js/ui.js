@@ -1,35 +1,36 @@
-import { store } from './store.js?v=202611150030';
-import { escapeTrocaHtml, contarHorasExecutadas, sugerirInicioSemChoque, fraseComeceEm, cursoDaTurma, sugerirComoResolverChoque, abrirTrocaDeOrdem, ligarTroca } from './troca_ui.js?v=202611150030';
-import { cadastrosDocentes, findNewDocenteNames, getCadastroDocente, refreshAvisoDocenteNovo, coletarCadastrosDocentes, setupAvisoDocenteNovo, ligarCadastroDocente } from './cadastro_docente_ui.js?v=202611150030';
-import { renderOfertasList, ligarListaOfertas } from './lista_ofertas_ui.js?v=202611150030';
-import { stableStringify } from './sync_diff.mjs?v=202611150030';
-import { getTurnoLetter, mapSlotToTurno, turnoDaTurmaInclui } from './turns.js?v=202611150030';
-import { normalizePeriodo as normalizePeriodoLetivoCode } from './plan_storage.js?v=202611150030';
-import { getCalendarEvents } from './calendar.js?v=202611150030';
-import { isDateOverlap } from './utils.js?v=202611150030';
-import { weeklyState } from './weekly_state.js?v=202611150030';
-import { findPendentesCobertas, isPendenteJaAlocada } from './pendentes.mjs?v=202611150030';
+import { store } from './store.js?v=202611150039';
+import { escapeTrocaHtml, contarHorasExecutadas, sugerirInicioSemChoque, fraseComeceEm, cursoDaTurma, sugerirComoResolverChoque, abrirTrocaDeOrdem, ligarTroca } from './troca_ui.js?v=202611150039';
+import { cadastrosDocentes, findNewDocenteNames, getCadastroDocente, refreshAvisoDocenteNovo, coletarCadastrosDocentes, setupAvisoDocenteNovo, ligarCadastroDocente } from './cadastro_docente_ui.js?v=202611150039';
+import { renderOfertasList, ligarListaOfertas } from './lista_ofertas_ui.js?v=202611150039';
+import { arrastoAtivo, esquecerAncora, endDrawingDrag, setDrawingCellSelection, marcarAncoraNaGrade, ligarSelecaoDaGrade } from './grade_selecao.js?v=202611150039';
+import { stableStringify } from './sync_diff.mjs?v=202611150039';
+import { getTurnoLetter, mapSlotToTurno, turnoDaTurmaInclui } from './turns.js?v=202611150039';
+import { normalizePeriodo as normalizePeriodoLetivoCode } from './plan_storage.js?v=202611150039';
+import { getCalendarEvents } from './calendar.js?v=202611150039';
+import { isDateOverlap } from './utils.js?v=202611150039';
+import { weeklyState } from './weekly_state.js?v=202611150039';
+import { findPendentesCobertas, isPendenteJaAlocada } from './pendentes.mjs?v=202611150039';
 
-import { datasFeriadoDaTurma, feriadosDaTurma } from './feriados.mjs?v=202611150030';
-import { closeFaixaEnds, isPauseEnd, listFaixaPauses } from './pausa_faixas.mjs?v=202611150030';
-import { numeroDaSubturma, isTurmaInteira, proximaSubturma, codigoT01Como, saoSubturmasDiferentes, sufixoSubturma, semSubturma, subturmaFicouSozinha } from './subturmas.mjs?v=202611150030';
-import { abrirMiniCalendario, fecharMiniCalendario, miniCalendarioAberto } from './mini_calendario.mjs?v=202611150030';
-import { buildCanonicalOfferProjection } from './execution_engine.js?v=202611150030';
+import { datasFeriadoDaTurma, feriadosDaTurma } from './feriados.mjs?v=202611150039';
+import { closeFaixaEnds, isPauseEnd, listFaixaPauses } from './pausa_faixas.mjs?v=202611150039';
+import { numeroDaSubturma, isTurmaInteira, proximaSubturma, codigoT01Como, saoSubturmasDiferentes, sufixoSubturma, semSubturma, subturmaFicouSozinha } from './subturmas.mjs?v=202611150039';
+import { abrirMiniCalendario, fecharMiniCalendario, miniCalendarioAberto } from './mini_calendario.mjs?v=202611150039';
+import { buildCanonicalOfferProjection } from './execution_engine.js?v=202611150039';
 import {
     buildSigaaMetadataPayload,
     validateSigaaMetadataPayload,
     getSigaaCode,
     buildScopedSigaaAllocationFromOfferFaixa,
     buildSigaaHorarioResumo
-} from './sigaa_metadata.js?v=202611150030';
-import { parseBackupDataFile, extractImportPlanMeta } from './serialization.js?v=202611150030';
+} from './sigaa_metadata.js?v=202611150039';
+import { parseBackupDataFile, extractImportPlanMeta } from './serialization.js?v=202611150039';
 import {
     showToastWarning,
     showPersistentStatusMessage,
     copyTextToClipboard,
     flashButtonCopyState,
     setupCopyActionButtons
-} from './ui_feedback.js?v=202611150030';
+} from './ui_feedback.js?v=202611150039';
 import {
     normalizeHexColor,
     adjustHexColor,
@@ -38,7 +39,7 @@ import {
     tonsDaCor,
     aplicarTonsBloco,
     PALETA_CORES
-} from './color_utils.js?v=202611150030';
+} from './color_utils.js?v=202611150039';
 import {
     isFaixaAllocation,
     isPriorityRegularAllocation,
@@ -47,8 +48,8 @@ import {
     normalizeTeacherNameForMatch,
     getDocenteShortLabel,
     getAllocationTeachersForConflict
-} from './allocation_helpers.js?v=202611150030';
-import { setupSeletorCor } from './seletor_cor.js?v=202611150030';
+} from './allocation_helpers.js?v=202611150039';
+import { setupSeletorCor } from './seletor_cor.js?v=202611150039';
 
 import {
     UNIDADES,
@@ -56,11 +57,11 @@ import {
     acharNomeConhecido,
     filtrarDocentes,
     umNomePorPessoa
-} from './docente_nomes.mjs?v=202611150030';
+} from './docente_nomes.mjs?v=202611150039';
 import {
     fetchAllocationsForPlans
-} from './sync_remoto.js?v=202611150030';
-import { resolveBackendMode } from './backend_config.js?v=202611150030';
+} from './sync_remoto.js?v=202611150039';
+import { resolveBackendMode } from './backend_config.js?v=202611150039';
 import {
     normalizeConflictSlotLabel,
     getAvailableTurnoOfertaOptions,
@@ -70,7 +71,7 @@ import {
     buildHorariosForUI,
     getShiftChangeMeta,
     getNativeTurnoValueForAllocation
-} from './turno_helpers.js?v=202611150030';
+} from './turno_helpers.js?v=202611150039';
 import {
     getDisciplinaCHGlobal,
     derivarBloco,
@@ -80,7 +81,7 @@ import {
     getDisciplinaInfo,
     getCursoSiglaDaTurma,
     getPrintAcademicMetaLine
-} from './curso_turma_helpers.js?v=202611150030';
+} from './curso_turma_helpers.js?v=202611150039';
 import {
     renderMonthlyCalendar,
     renderTeacherCalendar,
@@ -88,14 +89,14 @@ import {
     clearTeacherRangeCache,
     setTeacherPeriod,
     getTeacherPeriod
-} from './calendarios_ui.js?v=202611150030';
-import { setupIndicadores, renderIndicadores, setIndicadoresLigacoes } from './indicadores_ui.js?v=202611150030';
+} from './calendarios_ui.js?v=202611150039';
+import { setupIndicadores, renderIndicadores, setIndicadoresLigacoes } from './indicadores_ui.js?v=202611150039';
 import {
     refreshTeacherConflictsUI,
     setCrossPlanLoader,
     setResolverDeChoque,
     acharChoqueComOutroPL
-} from './conflitos_ui.js?v=202611150030';
+} from './conflitos_ui.js?v=202611150039';
 import {
     shouldIgnoreTurmaEventForCandidate,
     normalizeDrawnSlotsByDay,
@@ -109,7 +110,7 @@ import {
     resolveEditableFaixasFromStoredExecution,
     alignFaixasToExecutionEnd,
     buildFinalAdjustmentFaixaSuggestion
-} from './faixa_utils.js?v=202611150030';
+} from './faixa_utils.js?v=202611150039';
 import {
     timeToMinutes,
     shiftISODate,
@@ -123,14 +124,14 @@ import {
     isDateInsideRange,
     formatDateBRShortYear,
     formatDateBR
-} from './date_utils_ui.js?v=202611150030';
+} from './date_utils_ui.js?v=202611150039';
 import {
     initializeWeeklyScheduleForTurma,
     reconcileTurmaSelectionAfterPLChange,
     resetWeeklyViewOnTurmaChange,
     resolveActiveAcademicPeriod,
     slotLabelsOverlap
-} from './academic_rules.mjs?v=202611150030';
+} from './academic_rules.mjs?v=202611150039';
 
 const gridContainer = document.getElementById('weekly-grid');
 const selCurso = document.getElementById('sel-curso');
@@ -199,14 +200,7 @@ let componentStartSelectionMode = 'auto';
 // (global exposto). Agora e modulo-privado — nada externo o le/escreve (blindado).
 let drawingFaixaIndex = null;
 let drawingViewMode = 'context';
-const drawingDragState = {
-    active: false,
-    shouldSelect: true,
-    touchedAnyCell: false
-};
-// Ancora do Shift+clique (como no Excel): a ultima celula clicada na grade.
-// { dia, horario, date, select } ou null. Ver marcarRetangulo.
-let ancoraRetangulo = null;
+// Arrasto e ancora do Shift+clique: js/grade_selecao.js.
 
 let chLimitWarningLockUntil = 0;
 let pendingFaixaStartPick = null;
@@ -2088,84 +2082,19 @@ function marcarSabadoManhaNaCelula(cell) {
     cell.appendChild(caixa);
 }
 
-function setDrawingCellSelection(cell, selected, styles) {
-    if (!cell) return;
-    if (selected) {
-        cell.classList.add('selected-slot');
-        cell.classList.remove('slot-free-draw');
-        // O background precisa de !important inline para vencer a regra de tint
-        // por turno (.timetable .slot.turno-* { background-color: ... !important }),
-        // senao a celula pintada fica com a cor do turno e so a borda aparece colorida.
-        cell.style.setProperty('background', styles.background, 'important');
-        cell.style.border = styles.border;
-        cell.style.color = styles.color;
-        cell.style.fontWeight = styles.fontWeight;
-        cell.style.boxShadow = styles.boxShadow || '';
-    } else {
-        cell.classList.remove('selected-slot');
-        if (cell.dataset.canEdit === '1') cell.classList.add('slot-free-draw');
-        cell.style.removeProperty('background');
-        cell.style.border = '';
-        cell.style.color = '';
-        cell.style.fontWeight = '';
-        cell.style.boxShadow = '';
-    }
-    marcarSabadoManhaNaCelula(cell);
-}
-
-// Shift+clique: marca (ou apaga, se a ancora foi apagada) o retangulo entre a
-// ancora e a celula clicada, como no Excel. Pula intervalo, feriado, horario
-// ocupado e dia fora da faixa. Acha cada celula pela posicao, porque uma
-// marcacao pode redesenhar a grade (inicio, sabado, faixa nova). Retorna false
-// se nao ha ancora nesta semana (o clique segue como clique normal).
-function marcarRetangulo(dia, horario, date) {
-    const a = ancoraRetangulo;
-    if (!a || !date || getWeekStartISO(a.date) !== getWeekStartISO(date)) return false;
-
-    const horarios = [...new Set([...gridContainer.querySelectorAll('.slot[data-horario]')].map((c) => c.dataset.horario))];
-    const l1 = horarios.indexOf(a.horario);
-    const l2 = horarios.indexOf(horario);
-    if (l1 < 0 || l2 < 0) return false;
-    const linhas = horarios.slice(Math.min(l1, l2), Math.max(l1, l2) + 1);
-
-    const celulaEm = (d, h) => [...gridContainer.querySelectorAll(`.slot[data-dia="${d}"]`)]
-        .find((c) => c.dataset.horario === h);
-    let mudou = false;
-    for (let d = Math.min(a.dia, dia); d <= Math.max(a.dia, dia); d++) {
-        for (const h of linhas) {
-            const cell = celulaEm(d, h);
-            if (!cell || cell.dataset.canEdit !== '1') continue;
-            if (cell.classList.contains('selected-slot') === a.select) continue;
-            if (!tryApplyDrawingSelection(cell, a.select, getDrawingSelectedStyles())) {
-                if (a.select) { if (mudou) persistActiveDrawingSelection(); return true; }   // CH cheia: para aqui
-                continue;
-            }
-            mudou = true;
-        }
-    }
-    if (mudou) persistActiveDrawingSelection();
-    marcarAncoraNaGrade();
-    return true;
-}
-
-function marcarAncoraNaGrade() {
-    if (!gridContainer) return;
-    gridContainer.querySelectorAll('.slot-ancora').forEach((c) => c.classList.remove('slot-ancora'));
-    const a = ancoraRetangulo;
-    if (!a) return;
-    const cell = [...gridContainer.querySelectorAll(`.slot[data-dia="${a.dia}"]`)]
-        .find((c) => c.dataset.horario === a.horario && c.dataset.date === a.date);
-    cell?.classList.add('slot-ancora');
-}
-
-function endDrawingDrag() {
-    const shouldPersist = !!drawingFaixaIndex && drawingDragState.active && drawingDragState.touchedAnyCell;
-    drawingDragState.active = false;
-    drawingDragState.shouldSelect = true;
-    drawingDragState.touchedAnyCell = false;
-    if (document.body) document.body.style.userSelect = '';
-    if (shouldPersist) persistActiveDrawingSelection();
-}
+// Clique, arrasto e Shift+clique na grade semanal (eventos na grade): js/grade_selecao.js.
+ligarSelecaoDaGrade({
+    grade: () => gridContainer,
+    faixaEmDesenho: () => drawingFaixaIndex,
+    tryApplyDrawingSelection,
+    getDrawingSelectedStyles,
+    persistActiveDrawingSelection,
+    marcarSabadoManhaNaCelula,
+    applyPendingFaixaStartByDate,
+    recomecarNoDia,
+    showToastWarning,
+    getWeekStartISO
+});
 
 function getDrawingSelectionFromDOM() {
     if (!drawingFaixaIndex) return [];
@@ -2233,7 +2162,7 @@ function activateDrawingMode(faixaIndex, options = {}) {
 
     const prevFaixa = parseInt(drawingFaixaIndex, 10);
     if (!Number.isNaN(prevFaixa) && prevFaixa >= 1 && prevFaixa <= 3 && prevFaixa !== faixaIndex) {
-        if (drawingDragState.active) {
+        if (arrastoAtivo()) {
             endDrawingDrag();
         } else {
             persistActiveDrawingSelection();
@@ -2277,7 +2206,7 @@ function activateDrawingMode(faixaIndex, options = {}) {
 
 function deactivateDrawingMode() {
     endDrawingDrag();
-    ancoraRetangulo = null;
+    esquecerAncora();
     if (pendingFaixaStartPick) clearPendingFaixaStartPick();
     drawingFaixaIndex = null;
     weeklyViewState.followActiveFaixa = false;
@@ -6530,50 +6459,14 @@ function renderWeeklyGrid() {
                         cell.style.opacity = '1';
                         cell.title = 'Clique para definir o inicio da Faixa ' + String(pendingFaixaStartPick) + ' nesta data.';
                         cell.querySelectorAll('.remove-btn').forEach((btn) => { btn.style.pointerEvents = 'none'; });
-
-                        const handleStartPick = (e) => {
-                            if (typeof e.button === 'number' && e.button !== 0) return;
-                            e.preventDefault();
-                            e.stopPropagation();
-                            endDrawingDrag();
-                            applyPendingFaixaStartByDate(cellDate, { dia: i, slot: horarioStr });
-                        };
-                        cell.addEventListener('pointerdown', handleStartPick);
+                        cell.dataset.acao = 'inicio';   // eventos em js/grade_selecao.js
                     } else if (canEdit) {
                         cell.dataset.canEdit = '1';
                         if (!isSelected) cell.classList.add('slot-free-draw');
 
                         cell.style.cursor = 'crosshair';
                         cell.title = podeComecarAqui ? 'Clique para começar a componente neste dia' : `Faixa ${cellFaixaIndex}`;
-                        cell.addEventListener('mousedown', (e) => {
-                            if (e.button !== 0) return;
-                            e.preventDefault();
-                            e.stopPropagation();
-                            if (e.shiftKey && marcarRetangulo(i, horarioStr, cellDate)) return;
-                            drawingDragState.active = true;
-                            drawingDragState.shouldSelect = !cell.classList.contains('selected-slot');
-                            ancoraRetangulo = { dia: i, horario: horarioStr, date: cellDate, select: drawingDragState.shouldSelect };
-                            marcarAncoraNaGrade();
-                            drawingDragState.touchedAnyCell = false;
-                            if (document.body) document.body.style.userSelect = 'none';
-
-                            const applied = tryApplyDrawingSelection(cell, drawingDragState.shouldSelect, drawStyles);
-                            if (!applied) {
-                                drawingDragState.active = false;
-                                if (document.body) document.body.style.userSelect = '';
-                                return;
-                            }
-                            drawingDragState.touchedAnyCell = true;
-                        });
-                        cell.addEventListener('mouseenter', () => {
-                            if (!drawingDragState.active) return;
-                            const applied = tryApplyDrawingSelection(cell, drawingDragState.shouldSelect, drawStyles);
-                            if (!applied) {
-                                endDrawingDrag();
-                                return;
-                            }
-                            drawingDragState.touchedAnyCell = true;
-                        });
+                        cell.dataset.acao = 'desenhar';   // clique, arrasto e Shift+clique: js/grade_selecao.js
                     } else if (allocs.length > 0) {
                         delete cell.dataset.canEdit;
                         cell.style.opacity = '0.6';
@@ -6614,12 +6507,10 @@ function renderWeeklyGrid() {
                                 const avisoAntes = !avisoPausa ? avisoDiaAntesDoInicio(cellDate) : '';
                                 cell.title = avisoPausa || avisoAntes || 'Slot nao disponivel para esta faixa (fora do intervalo de datas). Ajuste a data da faixa ou navegue para outra semana.';
                                 if (avisoAntes) cell.style.cursor = 'pointer';
-                                cell.addEventListener('click', (e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    if (avisoAntes) { recomecarNoDia(cellDate, i, horarioStr); return; }
-                                    showToastWarning(avisoPausa || 'Slot nao disponivel. Ajuste a data da faixa.', 'warning', avisoPausa ? 4200 : 2400);
-                                });
+                                // Clique: aviso da pausa ou recomecar no dia (js/grade_selecao.js)
+                                cell.dataset.acao = 'aviso';
+                                if (avisoPausa) cell.dataset.aviso = avisoPausa;
+                                if (avisoAntes) cell.dataset.recomecar = '1';
                             }
                         }
                     }

@@ -108,6 +108,25 @@ try {
   await sleep(600);
   confere('4. arrasto pinta 2', /5@14:00 5@14:50/.test(await marcadas()), true);
 
+  // 5) Arrasto com o mouse de verdade (apertar, mover passando pelo intervalo, soltar)
+  const centro = async (dia, hora) => JSON.parse(await evaluate(`(() => { const r = ${celula(dia, hora)}.getBoundingClientRect(); return JSON.stringify({ x: r.left + r.width / 2, y: r.top + r.height / 2 }); })()`));
+  const arrastar = async (de, ate) => {
+    const a = await centro(...de), b = await centro(...ate);
+    await send('Input.dispatchMouseEvent', { type: 'mouseMoved', x: a.x, y: a.y });
+    await send('Input.dispatchMouseEvent', { type: 'mousePressed', x: a.x, y: a.y, button: 'left', clickCount: 1 });
+    for (let k = 1; k <= 6; k++) {
+      await send('Input.dispatchMouseEvent', { type: 'mouseMoved', x: a.x + (b.x - a.x) * k / 6, y: a.y + (b.y - a.y) * k / 6, button: 'left', buttons: 1 });
+      await sleep(40);
+    }
+    await send('Input.dispatchMouseEvent', { type: 'mouseReleased', x: b.x, y: b.y, button: 'left', clickCount: 1 });
+    await sleep(600);
+  };
+  await arrastar([5, '15:40'], [5, '16:50']);
+  confere('5. arrasto real marca', /5@15:40 5@16:50/.test(await marcadas()), true);
+  // 6) Arrasto real comecando numa aula marcada: apaga
+  await arrastar([5, '14:00'], [5, '14:50']);
+  confere('6. arrasto real apaga', /5@14:00|5@14:50/.test(await marcadas()), false);
+
   if (errors.length) { falhas++; console.log('erros:', errors.join(' | ')); }
 } finally { ws.close(); proc.kill(); server.close(); await sleep(400); try { fs.rmSync(profileDir, { recursive: true, force: true }); } catch {} }
 console.log(falhas ? `\n${falhas} falha(s)` : '\nTudo certo.');
