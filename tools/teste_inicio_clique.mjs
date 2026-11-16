@@ -96,6 +96,20 @@ const CENARIOS = {
       aloc('n1', 'EP2027', 'ECONOMIA PESQUEIRA', 60, '#4dabf7', 'Colin', '2027-08-24', '2027-09-29',
         { 2: [...T], 3: [...T] })
     ]
+  },
+  // Choque na grade (16/11/2026): como naoContinua, mais METODOLOGIA nas
+  // segundas a partir da semana 3 (06/09). A segunda marcada fica em choque
+  // em 06/09: a celula aparece laranja (slot-choque) e o Salvar bloqueia.
+  choque: {
+    fluxo: 'choque',
+    turma: 'EP2027', periodo: /PL4/, termStart: '2027-08-23', termEnd: '2027-12-23', periodoNome: 'PL4',
+    sugestao: '2027-09-09',   // a METODOLOGIA das segundas muda a sugestao
+    allocs: [
+      aloc('n1', 'EP2027', 'ECONOMIA PESQUEIRA', 60, '#4dabf7', 'Colin', '2027-08-24', '2027-09-29',
+        { 2: [...T], 3: [...T] }),
+      aloc('n2', 'EP2027', 'METODOLOGIA CIENTIFICA', 30, '#ffd6a5', 'Hudson', '2027-09-06', '2027-10-04',
+        { 1: [...T] })
+    ]
   }
 };
 
@@ -209,6 +223,19 @@ try {
     console.log('      gravado:', gravado);
     confere('N8. gravou uma faixa so, desde a segunda 23/08', /^\[\["2027-08-23","\d{4}-\d\d-\d\d",\[1\]\]\]$/.test(gravado), true);
     confere('N9. depois de salvar o cartao sai', await avisoAprov(), '');
+  } else if (CFG.fluxo === 'choque') {
+    await semana('2027-08-23');
+    await clicar(1, '14:00');
+    confere('Q1. sem corte (segunda 30/08 livre)', /A Faixa 1 segue toda semana/.test(await avisoAprov()), true);
+    for (const hh of ['14:50', '15:40', '16:50', '17:40']) await clicar(1, hh);
+    confere('Q2. semana 30/08: marcada, sem choque', await semana('2027-08-30') && await evaluate(`${celula(1, '14:00')}.classList.contains('slot-choque')`), false);
+    await semana('2027-09-06');
+    confere('Q3. segunda 06/09: celula em choque', await evaluate(`${celula(1, '14:00')}.classList.contains('slot-choque')`), true);
+    confere('Q4. dica do choque', /^Choque em 06\/09\/2027: .+ \(em edição\) e METODOLOGIA CIENTIFICA no mesmo horário/.test(await evaluate(`${celula(1, '14:00')}.title`)), true);
+    confere('Q5. terca 07/09 (feriado/ECONOMIA) sem choque', await evaluate(`${celula(2, '14:00')}.classList.contains('slot-choque')`), false);
+    await evaluate("window.confirm = () => true; document.getElementById('btn-add-oferta').click()"); await sleep(2000);
+    const gravou = await evaluate(`JSON.parse(localStorage.getItem(${JSON.stringify(KEY)})).some(x => /MATEM/.test(x.disciplina))`);
+    confere('Q6. Salvar bloqueia com choque', gravou, false);
   } else if (CFG.fluxo === 'aproveitamento') { await aproveitamento(CFG, KEY, { f1, campo, aviso, avisoAprov, pausa, semana, celula, podeClicar, clicar, confere, evaluate, novaComponente }); } else {
 
   // 2) Antes da sugestao: o clique vale (aproveitamento); aqui so confere

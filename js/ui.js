@@ -6553,7 +6553,10 @@ function prepararCelulaDeDesenho(cell, { i, horarioStr, cellDate, isHolidayColum
         cell.dataset.acao = 'desenhar';   // clique, arrasto e Shift+clique: js/grade_selecao.js
     } else if (allocs.length > 0) {
         delete cell.dataset.canEdit;
-        cell.style.opacity = '0.6';
+        // Horario marcado da componente em edicao em cima de outra: choque, bem
+        // visivel (laranja do cartao "Choque com outra componente", 16/11/2026).
+        const choque = isSelected && !isHoliday;
+        cell.style.opacity = choque ? '1' : '0.6';
         cell.style.pointerEvents = 'auto';
         if (!showContextWhileDrawing) {
             cell.innerHTML = '';
@@ -6562,6 +6565,7 @@ function prepararCelulaDeDesenho(cell, { i, horarioStr, cellDate, isHolidayColum
         cell.style.cursor = 'not-allowed';
         cell.querySelectorAll('.remove-btn').forEach((btn) => { btn.style.pointerEvents = 'none'; });
         cell.title = 'Horario ocupado nesta semana (data real). Use outra semana ou ajuste inicio/faixa.';
+        if (choque) marcarChoqueNaCelula(cell, cellDate, allocs);
     } else {
         delete cell.dataset.canEdit;
         cell.style.pointerEvents = 'auto';
@@ -6598,6 +6602,20 @@ function prepararCelulaDeDesenho(cell, { i, horarioStr, cellDate, isHolidayColum
             }
         }
     }
+}
+
+// Celula em choque: borda laranja continua, fundo listrado e um sinal no canto
+// (css .slot-choque). Inline com !important porque a marcacao da faixa
+// (setDrawingCellSelection) tambem pinta inline.
+function marcarChoqueNaCelula(cell, cellDate, allocs) {
+    cell.classList.add('slot-choque');
+    cell.style.setProperty('background', 'repeating-linear-gradient(135deg, #FEF3C7 0, #FEF3C7 7px, #FDE68A 7px, #FDE68A 14px)', 'important');
+    cell.style.border = '2px solid #D97706';
+    cell.style.boxShadow = 'none';
+    const emEdicao = normalizeDisciplinaInputValue(inputConfig.disciplina?.value || '') || 'esta componente';
+    const outras = [...new Set(allocs.map((a) => a.disciplina).filter(Boolean))].join(' e ');
+    cell.title = `Choque em ${formatDateBR(cellDate)}: ${emEdicao} (em edição) e ${outras} no mesmo horário. Mude o horário de uma delas.`;
+    cell.querySelectorAll('.mini-card, .card-title').forEach((el) => { el.title = cell.title; });
 }
 
 // Feriado na grade: uma camada por cima da coluna inteira do dia (listras
