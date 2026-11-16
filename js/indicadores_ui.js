@@ -1,13 +1,13 @@
-import { UNIDADE_PADRAO, unidadeDoCurso } from './unidades.mjs?v=202611161929';
-import { escapeHtml as esc } from './texto.mjs?v=202611161929';
+import { UNIDADE_PADRAO, unidadeDoCurso } from './unidades.mjs?v=202611161938';
+import { escapeHtml as esc } from './texto.mjs?v=202611161938';
 // Menu Indicadores (so leitura: nada e gravado).
 // Sub-aba "Carga por docente": tabela com a CH de cada docente por curso e por PL,
 // do ano inteiro ou de um PL. As contas estao em indicadores.mjs.
-import { store } from './store.js?v=202611161929';
-import { getCursoSiglaDaTurma, getDisciplinaCHGlobal } from './curso_turma_helpers.js?v=202611161929';
-import { formatDateBR } from './date_utils_ui.js?v=202611161929';
-import { UNIDADES } from './docente_nomes.mjs?v=202611161929';
-import { cargaPorDocente, ordenarLinhas, SEM_DOCENTE } from './indicadores.mjs?v=202611161929';
+import { store } from './store.js?v=202611161938';
+import { getCursoSiglaDaTurma, getDisciplinaCHGlobal } from './curso_turma_helpers.js?v=202611161938';
+import { formatDateBR } from './date_utils_ui.js?v=202611161938';
+import { UNIDADES } from './docente_nomes.mjs?v=202611161938';
+import { cargaPorDocente, ordenarLinhas, SEM_DOCENTE } from './indicadores.mjs?v=202611161938';
 
 const VALIDADE_MS = 2 * 60 * 1000; // depois disso, abrir o menu busca de novo
 
