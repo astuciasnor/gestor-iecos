@@ -1394,6 +1394,22 @@
             box-shadow: 0 4px 10px rgba(0, 78, 40, 0.18);
         }
 
+        /* Meses numa linha so: com a caixa estreita (celular, ou a metade da tela
+           na Agenda Docente) os meses viram "Ago", "Set"... (nome inteiro no title).
+           Se nem assim couber, o "Resumo do ano" sobe para uma linha propria. */
+        #container-meses-docente,
+        #container-meses-discente { container-type: inline-size; }
+        .pub-pill .mes-curto { display: none; }
+        @container (max-width: 600px) {
+            .pub-pill .mes-longo { display: none; }
+            .pub-pill .mes-curto { display: inline; }
+            #container-meses-docente .pub-pill,
+            #container-meses-discente .pub-pill { padding: 7px 6px; }
+        }
+        @container (max-width: 420px) {
+            #container-meses-docente .pub-pill--resumo { flex-basis: 100%; }
+        }
+
         /* Resumo do professor: horas-aula de cada ano lado a lado e o total embaixo */
         .pub-result-meta.resumo-horas {
             display: grid;

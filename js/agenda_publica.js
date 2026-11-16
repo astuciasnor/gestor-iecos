@@ -948,7 +948,10 @@ function renderMonthButtons({ container, selectedMonth, emptyLabel, onSelect, en
         const button = document.createElement('button');
         button.type = 'button';
         button.className = 'pub-pill';
-        button.textContent = month.label;
+        // Nome inteiro e abreviado: o CSS escolhe qual mostrar pela largura da
+        // caixa, para os meses de um PL caberem numa linha so (ate no celular).
+        button.title = month.label;
+        button.innerHTML = `<span class="mes-longo">${month.label}</span><span class="mes-curto">${month.label.slice(0, 3)}</span>`;
 
         if (month.key === selectedMonth) button.classList.add('active');
 
