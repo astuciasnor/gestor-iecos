@@ -1198,6 +1198,8 @@ function aplicarInicioDaFaixa1(dateStr) {
 // pela frente nesse horario, como pausa (igual ao Fim digitado). O mapa das
 // faixas aparece no cartao "Proximo passo" (renderAvisoAproveitamento); o botao
 // "Preencher a Faixa 2" ou o numero 2 retomam (ver retomarAproveitamento).
+// So corta se a componente da frente for continua (regra da 1a semana, em
+// componenteQueVemPelaFrente); se nao for, o cartao explica "A Faixa 1 segue toda semana".
 // Desmarcar tudo devolve o inicio a sugestao. Data digitada a mao (modo
 // 'manual') nunca e trocada.
 // Componente ja desenhada/salva: o clique so marca horarios, como sempre.
@@ -1231,15 +1233,22 @@ function inicioPeloClique(cellDate, slot = '') {
     const mudou = aplicarInicioDaFaixa1(cellDate);
 
     const proxima = cellDate < dataSugerida() ? componenteQueVemPelaFrente(cellDate, slot) : null;
-    if (proxima && fecharFaixa1NaVespera(proxima.inicio)) {
+    if (proxima?.corta && fecharFaixa1NaVespera(proxima.inicio)) {
         mostrarAvisoAproveitamento({ inicio: cellDate, fim: valorDoCampo('inp-data-fim-f1'), disciplina: proxima.disciplina, proximaInicio: proxima.inicio });
         return true;
     }
 
     if (!mudou) return false;
+    if (proxima) {
+        // Componente da frente nao continua: sem corte, e o cartao diz por que.
+        mostrarAvisoAproveitamento({ semCorte: true, inicio: cellDate, disciplina: proxima.disciplina, conferido: proxima.conferido });
+        return true;
+    }
     showToastWarning(`Início da Faixa 1 em ${formatDateBR(cellDate)}. Para escolher outro dia, desmarque os horários.`, 'success', 3200);
     return true;
 }
+
+const DIAS_PLURAL = ['domingos', 'segundas', 'terças', 'quartas', 'quintas', 'sextas', 'sábados'];
 
 // Aviso do aproveitamento no cartao "Proximo passo" (pedidos de 14/11/2026): um
 // mapa das faixas, em duas linhas, que acompanha a marcacao ate salvar.
@@ -1271,6 +1280,16 @@ function renderAvisoAproveitamento() {
     if (!el || !texto || !rotulo1 || !rotulo2 || !btn1 || !btn2) return;
     barra?.classList.toggle('tem-aproveitamento', !!a);
     if (!a) { el.classList.add('hidden'); return; }
+    const mapa = el.querySelector('.cd-aprov-mapa');
+    mapa?.classList.toggle('hidden', !!a.semCorte);
+    if (a.semCorte) {
+        const dia = DIAS_PLURAL[new Date(`${a.inicio}T12:00:00`).getDay()];
+        const quando = a.conferido ? ` (conferido em ${formatDateBR(a.conferido)})` : '';
+        texto.innerHTML = `<b>A Faixa 1 segue toda semana:</b> <b>${escapeTrocaHtml(a.disciplina)}</b> não tem aula às ${dia} neste horário${quando}. Se houver choque em outra semana, o app avisa.`;
+        texto.title = texto.textContent;
+        el.classList.remove('hidden');
+        return;
+    }
 
     const { f1, f2, total, meta } = horasDasFaixas;
     const faltam = meta > 0 ? Math.max(0, meta - total) : 0;
@@ -1343,6 +1362,10 @@ function esconderAvisoAproveitamento() {
 function conferirAvisoAproveitamento() {
     const a = avisoAproveitamento;
     if (!a) return;
+    if (a.semCorte) {   // fica ate o inicio mudar ou surgir uma Faixa 2
+        if (valorDoCampo('inp-data-inicio-f1') !== a.inicio || valorDoCampo('inp-data-inicio-f2')) esconderAvisoAproveitamento();
+        return;
+    }
     const valeAinda = valorDoCampo('inp-data-inicio-f1') === a.inicio
         && valorDoCampo('inp-data-fim-f1') === a.fim
         && valorDoCampo('inp-data-inicio-f2') === (a.volta || '');
@@ -1376,8 +1399,10 @@ function fecharFaixa1NaVespera(dia) {
 }
 
 // Aproveitamento: a primeira componente da turma que ocupa ESTE horario depois do
-// dia clicado. Devolve { disciplina, inicio }, onde inicio e o primeiro dia dela
-// (qualquer horario) depois do dia clicado; a Faixa 1 termina na vespera. Olhar o
+// dia clicado. Devolve { disciplina, inicio, corta, conferido }: inicio e o
+// primeiro dia dela (qualquer horario) depois do dia clicado (a Faixa 1 termina
+// na vespera, se corta); conferido e o dia da regra da 1a semana ('' se cair
+// depois do fim do periodo). Olhar o
 // horario clicado deixa passar a parceira de 3 aulas quando o clique foi nas 2
 // livres; olhar o primeiro dia da componente pega o sabado de manha dela.
 function componenteQueVemPelaFrente(cellDate, slot) {
@@ -1397,16 +1422,30 @@ function componenteQueVemPelaFrente(cellDate, slot) {
         && normalizeDisciplinaInputValue(e.disciplina || '') !== emEdicao);
     const datas = Object.keys(eventos).filter((d) => d >= desde && d <= termEnd).sort();
 
+    const usaAlvo = (e) => chave(e.horario) === alvo
+        || (Array.isArray(e.horariosOcupados) && e.horariosOcupados.some((h) => chave(h) === alvo));
     let disciplina = '';
     for (const d of datas) {
-        const ocupa = aulasDoDia(d).find((e) => chave(e.horario) === alvo
-            || (Array.isArray(e.horariosOcupados) && e.horariosOcupados.some((h) => chave(h) === alvo)));
+        const ocupa = aulasDoDia(d).find(usaAlvo);
         if (ocupa) { disciplina = normalizeDisciplinaInputValue(ocupa.disciplina || ''); break; }
     }
     if (!disciplina) return null;
 
     const inicio = datas.find((d) => aulasDoDia(d).some((e) => normalizeDisciplinaInputValue(e.disciplina || '') === disciplina));
-    return inicio ? { disciplina, inicio } : null;
+    if (!inicio) return null;
+
+    // Regra da 1a semana (16/11/2026): so corta se a componente da frente for
+    // continua. Confere o MESMO dia da semana e horario do clique na primeira
+    // semana dela (feriado -> semana seguinte). Ocupado, por ela ou por outra ->
+    // corta. Livre -> nao corta: ela e semanal (ex.: ter+qua toda semana) e o dia
+    // clicado nunca sera dela. Choques em semanas mais adiante ficam com o aviso
+    // de choque. Ver docs/casos_aproveitamento.xlsx.
+    const diaClicado = new Date(`${cellDate}T12:00:00`).getDay();
+    let conferido = shiftISODate(inicio, (diaClicado - new Date(`${inicio}T12:00:00`).getDay() + 7) % 7);
+    const feriado = (d) => (Array.isArray(eventos[d]) ? eventos[d] : []).some((e) => e?.type === 'holiday');
+    while (conferido <= termEnd && feriado(conferido)) conferido = shiftISODate(conferido, 7);
+    const corta = conferido <= termEnd && aulasDoDia(conferido).some(usaAlvo);
+    return { disciplina, inicio, corta, conferido: conferido <= termEnd ? conferido : '' };
 }
 
 // Inicio original da componente aberta em Editar ('' se for componente nova).

@@ -84,6 +84,18 @@ const CENARIOS = {
       { ...aloc('c3', 'EP2027', 'INFORMATICA BASICA', 60, '#3bf0e0', 'Dhemersson', '2027-08-28', '2027-09-10',
         { 1: [...T], 2: [...T], 3: [...T], 4: [...T], 5: [...T], 6: [...M] }), sabadoManha: true }
     ]
+  },
+  // Regra da 1a semana (16/11/2026): ECONOMIA as tercas e quartas, toda semana
+  // (nao continua). Clicar na segunda livre antes dela NAO corta a Faixa 1: a
+  // segunda 30/08 (1a semana dela) esta livre. O cartao explica "A Faixa 1 segue toda semana".
+  naoContinua: {
+    fluxo: 'naoContinua',
+    turma: 'EP2027', periodo: /PL4/, termStart: '2027-08-23', termEnd: '2027-12-23', periodoNome: 'PL4',
+    sugestao: '2027-08-26',   // quinta: primeiro horario livre a partir do 1o dia da ECONOMIA
+    allocs: [
+      aloc('n1', 'EP2027', 'ECONOMIA PESQUEIRA', 60, '#4dabf7', 'Colin', '2027-08-24', '2027-09-29',
+        { 2: [...T], 3: [...T] })
+    ]
   }
 };
 
@@ -181,6 +193,22 @@ try {
     confere('P6. Refazer: inicio volta a sugestao', await f1(), CFG.sugestao);
     confere('P7. Refazer: grade fica na semana vista', /04\/01\/2027/.test(await evaluate("document.getElementById('weekly-week-label').textContent")), true);
     confere('P8. Refazer: o dia livre aceita clique de novo', await podeClicar(3, '08:00'), true);
+  } else if (CFG.fluxo === 'naoContinua') {
+    await semana('2027-08-23');
+    confere('N1. segunda livre antes da sugestao aceita clique?', await podeClicar(1, '14:00'), true);
+    await clicar(1, '14:00');
+    confere('N2. inicio da Faixa 1 na segunda', await f1(), '2027-08-23');
+    confere('N3. Fim da Faixa 1 NAO cortado no domingo', await campo('inp-data-fim-f1') !== '2027-08-23', true);
+    confere('N4. sem linha de pausa', /Pausa sem aula/.test(await pausa()), false);
+    confere('N5. cartao explica "segue toda semana"', /A Faixa 1 segue toda semana: ECONOMIA PESQUEIRA não tem aula às segundas neste horário \(conferido em 30\/08\/2027\)\. Se houver choque em outra semana, o app avisa/.test(await avisoAprov()), true);
+    for (const hh of ['14:50', '15:40', '16:50', '17:40']) await clicar(1, hh);
+    confere('N6. o cartao fica enquanto marca', /A Faixa 1 segue toda semana/.test(await avisoAprov()), true);
+    confere('N7. segunda da semana seguinte faz parte da Faixa 1', await semana('2027-08-30') && await evaluate(`${celula(1, '14:00')}.classList.contains('selected-slot')`), true);
+    await evaluate("window.confirm = () => true; document.getElementById('btn-add-oferta').click()"); await sleep(2000);
+    const gravado = await evaluate(`(() => { const a = JSON.parse(localStorage.getItem(${JSON.stringify(KEY)})); const m = a.find(x => /MATEM/.test(x.disciplina)); return m ? JSON.stringify((m.faixas || []).map(f => [f.inicio, f.fim, f.dias])) : 'nao gravou'; })()`);
+    console.log('      gravado:', gravado);
+    confere('N8. gravou uma faixa so, desde a segunda 23/08', /^\[\["2027-08-23","\d{4}-\d\d-\d\d",\[1\]\]\]$/.test(gravado), true);
+    confere('N9. depois de salvar o cartao sai', await avisoAprov(), '');
   } else if (CFG.fluxo === 'aproveitamento') { await aproveitamento(CFG, KEY, { f1, campo, aviso, avisoAprov, pausa, semana, celula, podeClicar, clicar, confere, evaluate, novaComponente }); } else {
 
   // 2) Antes da sugestao: o clique vale (aproveitamento); aqui so confere
