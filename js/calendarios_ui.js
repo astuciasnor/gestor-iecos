@@ -1,12 +1,12 @@
-import { escapeHtml } from './texto.mjs?v=202611161826';
-import { store } from './store.js?v=202611161826';
-import { getCalendarEvents } from './calendar.js?v=202611161826';
-import { buildTeacherExecutionSnapshot, buildCanonicalOfferProjection } from './execution_engine.js?v=202611161826';
-import { detectTeacherConflicts } from './conflicts.js?v=202611161826';
-import { getHorariosByTurno, normalizeTurnoKey, getTurnoLetter, mapSlotToTurno } from './turns.js?v=202611161826';
-import { vividHexColor } from './color_utils.js?v=202611161826';
-import { addDaysISO, formatDateBR, timeToMinutes, shortDayName } from './date_utils_ui.js?v=202611161826';
-import { nomeComSubturma, sufixoSubturma } from './subturmas.mjs?v=202611161826';
+import { escapeHtml } from './texto.mjs?v=202611161929';
+import { store } from './store.js?v=202611161929';
+import { getCalendarEvents } from './calendar.js?v=202611161929';
+import { buildTeacherExecutionSnapshot, buildCanonicalOfferProjection } from './execution_engine.js?v=202611161929';
+import { detectTeacherConflicts } from './conflicts.js?v=202611161929';
+import { getHorariosByTurno, normalizeTurnoKey, getTurnoLetter, mapSlotToTurno } from './turns.js?v=202611161929';
+import { vividHexColor } from './color_utils.js?v=202611161929';
+import { addDaysISO, formatDateBR, timeToMinutes, shortDayName } from './date_utils_ui.js?v=202611161929';
+import { nomeComSubturma, sufixoSubturma } from './subturmas.mjs?v=202611161929';
 import {
     isFaixaAllocation,
     isScheduledRegularAllocation,
@@ -14,7 +14,7 @@ import {
     teacherNamesMatch,
     getDocenteShortLabel,
     calculateTeacherTotalCH
-} from './allocation_helpers.js?v=202611161826';
+} from './allocation_helpers.js?v=202611161929';
 import {
     normalizeTurnoOfertaKey,
     formatTurnoOfertaLabel,
@@ -24,7 +24,7 @@ import {
     buildHorariosForUI,
     getShiftChangeMeta,
     getCalendarShiftBadgeHTML
-} from './turno_helpers.js?v=202611161826';
+} from './turno_helpers.js?v=202611161929';
 import {
     getDisciplinaCHGlobal,
     getTurmaLabel,
@@ -32,11 +32,11 @@ import {
     getDisciplinaInfo,
     getCursoSiglaDaTurma,
     getPrintAcademicMetaLine
-} from './curso_turma_helpers.js?v=202611161826';
+} from './curso_turma_helpers.js?v=202611161929';
 import {
     getGanttTurnoConfigs,
     resolveTeacherShiftForSlot
-} from './turnos_docente.js?v=202611161826';
+} from './turnos_docente.js?v=202611161929';
 
 // Referencias DOM de nivel de modulo (espelham as de ui.js; modulo deferred, DOM pronto).
 const selViewDocente = document.getElementById('sel-view-docente');

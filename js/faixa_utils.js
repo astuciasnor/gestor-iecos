@@ -1,11 +1,11 @@
-import { store } from './store.js?v=202611161826';
-import { getCalendarEvents } from './calendar.js?v=202611161826';
-import { mapSlotToTurno } from './turns.js?v=202611161826';
-import { addDaysISO, timeToMinutes, toISODate } from './date_utils_ui.js?v=202611161826';
-import { normalizeConflictSlotLabel } from './turno_helpers.js?v=202611161826';
-import { isPriorityRegularAllocation } from './allocation_helpers.js?v=202611161826';
-import { datasFeriadoDaTurma } from './feriados.mjs?v=202611161826';
-import { computeRemainingFractionalHours, generateAllocationOccurrences, validateOccurrenceWithinSemesterBounds } from './academic_rules.mjs?v=202611161826';
+import { store } from './store.js?v=202611161929';
+import { getCalendarEvents } from './calendar.js?v=202611161929';
+import { mapSlotToTurno } from './turns.js?v=202611161929';
+import { addDaysISO, timeToMinutes, toISODate } from './date_utils_ui.js?v=202611161929';
+import { normalizeConflictSlotLabel } from './turno_helpers.js?v=202611161929';
+import { isPriorityRegularAllocation } from './allocation_helpers.js?v=202611161929';
+import { datasFeriadoDaTurma } from './feriados.mjs?v=202611161929';
+import { computeRemainingFractionalHours, generateAllocationOccurrences, validateOccurrenceWithinSemesterBounds } from './academic_rules.mjs?v=202611161929';
 
 export function shouldIgnoreTurmaEventForCandidate(event, candidateAlloc) {
     if (!event || !candidateAlloc) return false;
