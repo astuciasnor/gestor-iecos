@@ -1,0 +1,138 @@
+<!doctype html>
+<!-- Pagina de instrucoes do script Cardume -> SIGAA para os coordenadores.
+     No servidor fica em /sigaa/index.html (montar_envio_ufpa.py copia), ao lado
+     do sigaa_preencher.user.js. Endereco para mandar: https://cardume.iecos.ufpa.br/sigaa/ -->
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cardume no SIGAA</title>
+<style>
+    :root {
+        --verde: #1e6b52;
+        --verde-claro: #e8f3ee;
+        --texto: #1f2937;
+        --suave: #5b6472;
+        --borda: #d8dee6;
+        --fundo: #f6f8fa;
+        --cartao: #ffffff;
+        --aviso: #fff7e6;
+        --aviso-borda: #e5a50a;
+    }
+    * { box-sizing: border-box; }
+    body {
+        margin: 0;
+        background: var(--fundo);
+        color: var(--texto);
+        font: 16px/1.55 'Segoe UI', system-ui, -apple-system, Arial, sans-serif;
+    }
+    main { max-width: 760px; margin: 0 auto; padding: 24px 16px 48px; }
+    h1 { font-size: 1.6rem; margin: 0 0 4px; color: var(--verde); }
+    .sub { color: var(--suave); margin: 0 0 24px; }
+    section {
+        background: var(--cartao);
+        border: 1px solid var(--borda);
+        border-radius: 10px;
+        padding: 18px 20px;
+        margin-bottom: 16px;
+    }
+    h2 { font-size: 1.15rem; margin: 0 0 10px; display: flex; align-items: center; gap: 10px; }
+    .num {
+        flex: 0 0 auto;
+        width: 28px; height: 28px; border-radius: 50%;
+        background: var(--verde); color: #fff;
+        display: inline-flex; align-items: center; justify-content: center;
+        font-size: .95rem;
+    }
+    ol, ul { margin: 6px 0; padding-left: 22px; }
+    li { margin: 4px 0; }
+    .botoes { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 4px; }
+    a.botao {
+        display: inline-block; text-decoration: none;
+        border: 1px solid var(--verde); color: var(--verde);
+        border-radius: 6px; padding: 7px 14px; font-weight: 600;
+    }
+    a.botao:hover { background: var(--verde-claro); }
+    a.botao.principal { background: var(--verde); color: #fff; font-size: 1.05rem; padding: 10px 18px; }
+    a.botao.principal:hover { filter: brightness(1.1); }
+    .pequeno { font-size: .9rem; color: var(--suave); }
+    .aviso {
+        background: var(--aviso);
+        border: 1px solid var(--aviso-borda);
+        border-left-width: 5px;
+        border-radius: 8px;
+        padding: 12px 16px;
+        margin: 10px 0 0;
+    }
+    code {
+        background: #eef1f4; border-radius: 4px; padding: 1px 5px;
+        font: .9em Consolas, 'Courier New', monospace;
+        word-break: break-word;
+    }
+    .verde { color: var(--verde); font-weight: 700; }
+    footer { color: var(--suave); font-size: .85rem; text-align: center; margin-top: 24px; }
+</style>
+</head>
+<body>
+<main>
+    <h1>Cardume → SIGAA</h1>
+    <p class="sub">Como lançar o horário da turma no SIGAA com um clique, a partir do Cardume.</p>
+
+    <section>
+        <h2><span class="num">1</span> Instalar o Tampermonkey (uma vez só)</h2>
+        <p>O Tampermonkey é uma extensão gratuita do navegador que roda pequenos scripts. Escolha o seu navegador:</p>
+        <div class="botoes">
+            <a class="botao" href="https://chromewebstore.google.com/detail/tampermonkey/dhdgffkkebhmkfjojejmpbldmpobfkfo" target="_blank" rel="noopener">Chrome</a>
+            <a class="botao" href="https://microsoftedge.microsoft.com/addons/detail/tampermonkey/iikmkjmpaadaobahmlepeloendndfphd" target="_blank" rel="noopener">Edge</a>
+            <a class="botao" href="https://addons.mozilla.org/pt-BR/firefox/addon/tampermonkey/" target="_blank" rel="noopener">Firefox</a>
+        </div>
+        <p>Clique em <b>Usar no Chrome</b> (ou <b>Obter</b> / <b>Adicionar</b>) e confirme.</p>
+        <div class="aviso">
+            <b>No Chrome e no Edge falta um passo:</b> sem ele o script não roda.
+            <ul>
+                <li><b>Chrome:</b> abra <code>chrome://extensions</code>, clique em <b>Detalhes</b> no Tampermonkey e ligue <b>Permitir scripts do usuário</b>. Se essa opção não aparecer, ligue o <b>Modo do desenvolvedor</b> no canto de cima, à direita.</li>
+                <li><b>Edge:</b> abra <code>edge://extensions</code> e ligue o <b>Modo de desenvolvedor</b> (menu da esquerda).</li>
+            </ul>
+        </div>
+    </section>
+
+    <section>
+        <h2><span class="num">2</span> Instalar o script do Cardume (uma vez só)</h2>
+        <div class="botoes">
+            <a class="botao principal" href="sigaa_preencher.user.js">Instalar o script</a>
+        </div>
+        <p>O Tampermonkey abre uma página com o script: clique em <b>Instalar</b>.</p>
+        <p class="pequeno">Se aparecer só um texto de código, o Tampermonkey ainda não está ativo: volte ao passo 1.</p>
+    </section>
+
+    <section>
+        <h2><span class="num">3</span> Usar (a cada componente)</h2>
+        <ol>
+            <li>No <b>Cardume</b>, abra a aba <b>Lista de Ofertas</b> e, na componente, clique em <b>Copiar</b> (ou <b>Copiar faixas</b>, quando houver mais de uma faixa).<br>
+                <span class="pequeno">O texto copiado é parecido com <code>EP05073: 23T234 (04/01/2027 - 10/01/2027), 23T23456 (11/01/2027 - 02/02/2027)</code>.</span></li>
+            <li>No <b>SIGAA</b>, vá até a tela <b>Horário da Turma</b> dessa componente.</li>
+            <li>No canto de baixo, à direita, aparece o botão <span class="verde">Preencher pelo Cardume</span>. Clique nele.<br>
+                <span class="pequeno">Se o navegador perguntar se pode ver o que foi copiado, clique em <b>Permitir</b>. Se não deixar, o script abre uma caixa para você colar o texto.</span></li>
+            <li>Confira o resumo (componente e faixas) e clique em <b>OK</b>.</li>
+            <li>Espere sem mexer: a página recarrega algumas vezes enquanto cada faixa é adicionada.</li>
+            <li>No fim aparece <b>✔ CONCLUÍDO</b> com o horário que ficou no SIGAA. Se estiver igual ao do Cardume, clique em <b>OK</b> e siga no <b>Próximo Passo</b> do SIGAA.</li>
+        </ol>
+    </section>
+
+    <section>
+        <h2><span class="num">!</span> Bom saber</h2>
+        <ul>
+            <li>O script <b>confere o código da componente</b>: se o texto copiado for de outra, ele não faz nada.</li>
+            <li>Se algo sair diferente do esperado, ele <b>para e explica</b> (mensagem que começa com “PAREI”). As faixas que já entraram ficam no SIGAA; ao clicar de novo, elas são puladas.</li>
+            <li>Ele só clica em <b>Atualizar Grade de Horários</b> e <b>Adicionar Horário</b>. Nunca clica em Próximo Passo, Passo Anterior ou Cancelar.</li>
+            <li>Ele roda só no seu navegador, no SIGAA em que você já entrou. Não vê nem guarda senha e não envia nada para a internet.</li>
+        </ul>
+        <div class="aviso">
+            <b>Aviso do SIGAA:</b> mudar as datas ou os horários de uma turma <b>apaga as frequências já lançadas</b>. Use em turmas que ainda não têm frequência.
+        </div>
+    </section>
+
+    <footer>Cardume · IECOS/UFPA · script versão 1.4</footer>
+</main>
+</body>
+</html>

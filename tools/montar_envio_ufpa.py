@@ -31,6 +31,8 @@ def main():
     # nenhuma tela do Cardume; tools/ e bloqueada no .htaccess, por isso sigaa/).
     (DESTINO / 'sigaa').mkdir(parents=True, exist_ok=True)
     shutil.copy2(RAIZ / 'tools' / 'sigaa_preencher.user.js', DESTINO / 'sigaa' / 'sigaa_preencher.user.js')
+    # Pagina de instrucoes: https://cardume.iecos.ufpa.br/sigaa/ (link para os coordenadores).
+    shutil.copy2(RAIZ / 'tools' / 'sigaa_instrucoes.html', DESTINO / 'sigaa' / 'index.html')
     arquivos = [p for p in DESTINO.rglob('*') if p.is_file()]
     assert not (DESTINO / 'api' / 'config.php').exists()
     tamanho = sum(p.stat().st_size for p in arquivos) / 1024 / 1024
