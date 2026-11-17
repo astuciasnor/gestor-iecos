@@ -3413,21 +3413,21 @@
       "turno": "Manhã",
       "ordem": 1,
       "faixa": "08:00 - 08:50",
-      "sigaa": 2
+      "sigaa": 1
     },
     {
       "regime": 2,
       "turno": "Manhã",
       "ordem": 2,
       "faixa": "08:50 - 09:40",
-      "sigaa": 3
+      "sigaa": 2
     },
     {
       "regime": 2,
       "turno": "Manhã",
       "ordem": 3,
       "faixa": "09:40 - 10:30",
-      "sigaa": 4
+      "sigaa": 3
     },
     {
       "regime": 2,
@@ -3441,14 +3441,14 @@
       "turno": "Manhã",
       "ordem": 5,
       "faixa": "10:50 - 11:40",
-      "sigaa": 5
+      "sigaa": 4
     },
     {
       "regime": 2,
       "turno": "Manhã",
       "ordem": 6,
       "faixa": "11:40 - 12:30",
-      "sigaa": 6
+      "sigaa": 5
     },
     {
       "regime": 2,
