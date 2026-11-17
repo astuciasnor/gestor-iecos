@@ -233,6 +233,14 @@ try {
     confere('Q3. segunda 06/09: celula em choque', await evaluate(`${celula(1, '14:00')}.classList.contains('slot-choque')`), true);
     confere('Q4. dica do choque', /^Choque em 06\/09\/2027: .+ \(em edição\) e METODOLOGIA CIENTIFICA no mesmo horário/.test(await evaluate(`${celula(1, '14:00')}.title`)), true);
     confere('Q5. terca 07/09 (feriado/ECONOMIA) sem choque', await evaluate(`${celula(2, '14:00')}.classList.contains('slot-choque')`), false);
+    // FOTO=arquivo.png: foto da celula em choque e vizinhas (para ver o visual).
+    if (process.env.FOTO) {
+      const r = JSON.parse(await evaluate(`(() => { const c = ${celula(1, '14:00')}; c.scrollIntoView({ block: 'center' }); const b = c.getBoundingClientRect(); return JSON.stringify({ x: b.left, y: b.top, w: b.width, h: b.height }); })()`));
+      await sleep(300);
+      const shot = await send('Page.captureScreenshot', { format: 'png', clip: { x: Math.max(0, r.x - 120), y: Math.max(0, r.y - 110), width: r.w * 3 + 160, height: r.h * 4 + 140, scale: 2 } });
+      fs.writeFileSync(process.env.FOTO, Buffer.from(shot.result.data, 'base64'));
+      console.log('      foto:', process.env.FOTO);
+    }
     await evaluate("window.confirm = () => true; document.getElementById('btn-add-oferta').click()"); await sleep(2000);
     const gravou = await evaluate(`JSON.parse(localStorage.getItem(${JSON.stringify(KEY)})).some(x => /MATEM/.test(x.disciplina))`);
     confere('Q6. Salvar bloqueia com choque', gravou, false);
@@ -395,6 +403,7 @@ async function aproveitamento(CFG, KEY, h) {
   console.log('      editada:', editada);
   confere('E5. edicao salva com a pausa, uma componente so', /^\[\[\["2027-08-26","2027-08-27"\],\["2027-09-13"/.test(editada), true);
 }
-for (const nome of Object.keys(CENARIOS)) await rodar(nome);
+// CENARIO=choque: roda so um cenario.
+for (const nome of Object.keys(CENARIOS).filter((n) => !process.env.CENARIO || n === process.env.CENARIO)) await rodar(nome);
 console.log(falhasTotais ? `${falhasTotais} falha(s)` : 'Tudo certo: o inicio pelo clique funciona.');
 process.exitCode = falhasTotais ? 1 : 0;

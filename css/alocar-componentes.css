@@ -1414,17 +1414,42 @@
 #tab-weekly .week-day-header.week-day-holiday .week-day-date { color: #7f8c8d; font-weight: 600; }
 
 /* Choque na grade (16/11/2026): horario marcado da componente em edicao em cima
-   de outra componente. Fundo listrado e borda laranja vem inline
-   (marcarChoqueNaCelula, js/ui.js); aqui o sinal no canto. O X do bloco some:
-   nao da para remover daqui. */
+   de outra componente. Fundo (cor da componente em edicao) e borda laranja vem
+   inline (marcarChoqueNaCelula, js/ui.js); aqui o sinal no canto e o cartao da
+   que ja estava encostado a direita, deixando a faixa da cor em edicao a
+   esquerda (17/11/2026). O X do bloco some: nao da para remover daqui. */
 #tab-weekly .timetable .slot.slot-choque { border-radius: 10px; }
+/* Cartao da que ja estava: a direita, um pouco apagado. */
+#tab-weekly #weekly-grid .slot.slot-choque .mini-card {
+    margin-left: 34%;
+    width: 66%;
+    max-width: 66%;
+    padding-right: 8px;
+    opacity: .85;
+}
+/* Folha da cor da componente em edicao, por cima da ponta do cartao, com sombra. */
+#tab-weekly .timetable .slot.slot-choque::before {
+    content: "";
+    position: absolute;
+    left: 4px;
+    top: 4px;
+    bottom: 4px;
+    width: 36%;
+    z-index: 2;
+    background: inherit;
+    border-radius: 8px;
+    box-shadow: 3px 0 6px rgba(15, 23, 42, .22);
+    pointer-events: none;
+}
 #tab-weekly #weekly-grid .slot.slot-choque .mini-card .remove-btn { display: none !important; }
+/* Sinal de choque no meio da folha rosa. */
 #tab-weekly .timetable .slot.slot-choque::after {
     content: "\26A0";
     position: absolute;
-    top: 4px;
-    right: 6px;
-    z-index: 2;
+    top: 50%;
+    left: calc(4px + 18% - 10px);
+    transform: translateY(-50%);
+    z-index: 3;
     width: 20px;
     height: 20px;
     border-radius: 50%;

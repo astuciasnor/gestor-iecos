@@ -6565,7 +6565,7 @@ function prepararCelulaDeDesenho(cell, { i, horarioStr, cellDate, isHolidayColum
         cell.style.cursor = 'not-allowed';
         cell.querySelectorAll('.remove-btn').forEach((btn) => { btn.style.pointerEvents = 'none'; });
         cell.title = 'Horario ocupado nesta semana (data real). Use outra semana ou ajuste inicio/faixa.';
-        if (choque) marcarChoqueNaCelula(cell, cellDate, allocs);
+        if (choque) marcarChoqueNaCelula(cell, cellDate, allocs, drawStyles);
     } else {
         delete cell.dataset.canEdit;
         cell.style.pointerEvents = 'auto';
@@ -6604,12 +6604,15 @@ function prepararCelulaDeDesenho(cell, { i, horarioStr, cellDate, isHolidayColum
     }
 }
 
-// Celula em choque: borda laranja continua, fundo listrado e um sinal no canto
-// (css .slot-choque). Inline com !important porque a marcacao da faixa
-// (setDrawingCellSelection) tambem pinta inline.
-function marcarChoqueNaCelula(cell, cellDate, allocs) {
+// Celula em choque: borda laranja continua e um sinal no canto (css .slot-choque).
+// Fundo = cor da componente em edicao (a mesma das outras celulas marcadas), e o
+// cartao da componente que ja estava fica encostado a direita, deixando uma faixa
+// dessa cor a esquerda (pedido de 17/11/2026: antes era listrado amarelo e o
+// cartao amarelo se perdia nele). Inline com !important porque a marcacao da
+// faixa (setDrawingCellSelection) tambem pinta inline.
+function marcarChoqueNaCelula(cell, cellDate, allocs, drawStyles) {
     cell.classList.add('slot-choque');
-    cell.style.setProperty('background', 'repeating-linear-gradient(135deg, #FEF3C7 0, #FEF3C7 7px, #FDE68A 7px, #FDE68A 14px)', 'important');
+    if (drawStyles?.background) cell.style.setProperty('background', drawStyles.background, 'important');
     cell.style.border = '2px solid #D97706';
     cell.style.boxShadow = 'none';
     const emEdicao = normalizeDisciplinaInputValue(inputConfig.disciplina?.value || '') || 'esta componente';
