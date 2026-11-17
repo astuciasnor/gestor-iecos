@@ -34,6 +34,8 @@ export function setupAjuda() {
       p.classList.toggle('is-ativo', ativo);
       p.hidden = !ativo;
     });
+    // Botoes proprios do tema (ex.: "Qual e o seu caso?") ficam no topo parado
+    raiz.querySelectorAll('[data-aj-sub]').forEach((n) => { n.hidden = n.dataset.ajSub !== escolhido; });
     if (foco) botao.focus();
     // O topo da Ajuda fica parado (.aj-fixo): o tema novo comeca do inicio
     const aba = document.getElementById('tab-tutorial');

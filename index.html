@@ -1106,6 +1106,19 @@
                             <span class="aj-tema-icone" aria-hidden="true">💾</span><span class="aj-tema-txt"><b>Arquivos</b><small>backup e PDF</small></span>
                         </button>
                     </nav>
+
+                    <!-- Botoes do tema Casos especiais: ficam no topo parado, ligados ao botao do tema
+                         por uma arvore com setas (css/ajuda.css). Aparecem so nesse tema (js/ajuda_ui.js). -->
+                    <nav class="aj-casos" data-aj-sub="casos" aria-label="Qual é o seu caso?" hidden>
+                        <span class="aj-casos-titulo">Qual é o seu caso?</span>
+                        <button type="button" class="aj-caso" data-aj-alvo="aj-caso-porque"><span aria-hidden="true">💡</span><span><b>Por que casos especiais?</b><small>quando usar e lista de casos</small></span></button>
+                        <button type="button" class="aj-caso" data-aj-alvo="aj-caso-pausa"><span aria-hidden="true">⏸️</span><span><b>Pausa</b><small>para uns dias e volta depois</small></span></button>
+                        <button type="button" class="aj-caso" data-aj-alvo="aj-caso-livres"><span aria-hidden="true">↩️</span><span><b>Dias livres</b><small>sobraram dias antes de outra</small></span></button>
+                        <button type="button" class="aj-caso" data-aj-alvo="aj-caso-turnos"><span aria-hidden="true">📅</span><span><b>Turnos e sábado</b><small>dois turnos, sábado, feriado</small></span></button>
+                        <button type="button" class="aj-caso" data-aj-alvo="aj-caso-estagio"><span aria-hidden="true">🎓</span><span><b>Estágio</b><small>turno e contraturno</small></span></button>
+                        <button type="button" class="aj-caso" data-aj-alvo="aj-caso-extra"><span aria-hidden="true">👯</span><span><b>Turma extra</b><small>dois grupos: T01 e T02</small></span></button>
+                        <button type="button" class="aj-caso" data-aj-alvo="aj-caso-ordem"><span aria-hidden="true">🔁</span><span><b>Trocar a ordem</b><small>quando é mais simples</small></span></button>
+                    </nav>
                     </div>
 
                     <!-- ===== 1. COMECAR ===== -->
@@ -1219,19 +1232,8 @@
                     </div>
 
                     <!-- ===== 3. CASOS ESPECIAIS (o que foge do basico) =====
-                         Os botoes .aj-caso[data-aj-alvo] rolam ate o cartao (js/ajuda_ui.js). -->
+                         Os botoes .aj-caso[data-aj-alvo] (no topo parado, .aj-fixo) rolam ate o cartao (js/ajuda_ui.js). -->
                     <div class="aj-painel" id="aj-casos" data-aj-painel="casos" role="tabpanel" aria-labelledby="aj-tab-casos" hidden>
-                        <nav class="aj-casos" aria-label="Qual é o seu caso?">
-                            <span class="aj-casos-titulo">Qual é o seu caso?</span>
-                            <button type="button" class="aj-caso" data-aj-alvo="aj-caso-porque"><span aria-hidden="true">💡</span><span><b>Por que casos especiais?</b><small>quando usar e lista de casos</small></span></button>
-                            <button type="button" class="aj-caso" data-aj-alvo="aj-caso-pausa"><span aria-hidden="true">⏸️</span><span><b>Pausa</b><small>para uns dias e volta depois</small></span></button>
-                            <button type="button" class="aj-caso" data-aj-alvo="aj-caso-livres"><span aria-hidden="true">↩️</span><span><b>Dias livres</b><small>sobraram dias antes de outra</small></span></button>
-                            <button type="button" class="aj-caso" data-aj-alvo="aj-caso-turnos"><span aria-hidden="true">📅</span><span><b>Turnos e sábado</b><small>dois turnos, sábado, feriado</small></span></button>
-                            <button type="button" class="aj-caso" data-aj-alvo="aj-caso-estagio"><span aria-hidden="true">🎓</span><span><b>Estágio</b><small>turno e contraturno</small></span></button>
-                            <button type="button" class="aj-caso" data-aj-alvo="aj-caso-extra"><span aria-hidden="true">👯</span><span><b>Turma extra</b><small>dois grupos: T01 e T02</small></span></button>
-                            <button type="button" class="aj-caso" data-aj-alvo="aj-caso-ordem"><span aria-hidden="true">🔁</span><span><b>Trocar a ordem</b><small>quando é mais simples</small></span></button>
-                        </nav>
-
                         <!-- Cartoes em pares: Pausa | Dias livres; Turnos | Estagio; Turma extra | Trocar a ordem -->
                         <div class="aj-grade">
                             <!-- Cartao largo (ocupa as duas colunas): por que existem os casos especiais -->

@@ -326,19 +326,75 @@
     cursor: pointer;
 }
 
-/* ---- "Qual e o seu caso?" (tema Casos especiais): botoes que rolam ate o cartao ---- */
+/* ---- "Qual e o seu caso?" (tema Casos especiais): botoes que rolam ate o cartao ----
+   Ficam dentro do topo parado (.aj-fixo), logo abaixo dos temas, e so aparecem
+   no tema Casos especiais. Em tela larga (7 temas numa linha) as 7 colunas
+   coincidem com as dos temas e uma arvore liga "Casos especiais" (3a coluna)
+   a cada botao, com uma seta. Medidas da arvore:
+     coluna = (100% - 6 vaos de 8px) / 7 ; centro da coluna i = i*(coluna+8px) + coluna/2
+     tronco: do topo do nav ate a barra (y = 32px); barra: do centro da 1a ao da 7a coluna;
+     galho com seta: da barra ate o botao (14px). */
+[data-aj-sub="casos"] { --aj-cor: #b03a5b; --aj-suave: #fbecf1; }
+.aj-casos[hidden] { display: none; }
 .aj-casos {
+    --aj-col: calc((100% - 48px) / 7);
+    position: relative;
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
     gap: 8px;
-    margin: 0 0 16px;
+    padding-top: 4px;
 }
 .aj-casos-titulo {
     grid-column: 1 / -1;
+    line-height: 20px;
     font-weight: 800;
     color: var(--aj-cor);
 }
+@media (min-width: 1601px) {
+    .aj-casos { grid-template-columns: repeat(7, minmax(0, 1fr)); }
+    .aj-casos-titulo { margin-bottom: 14px; }
+    /* tronco, saindo de baixo do botao Casos especiais */
+    .aj-casos::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: calc(2 * (var(--aj-col) + 8px) + var(--aj-col) / 2 - 1px);
+        width: 2px;
+        height: 33px;
+        background: var(--aj-cor);
+    }
+    /* barra horizontal */
+    .aj-casos::after {
+        content: '';
+        position: absolute;
+        top: 31px;
+        left: calc(var(--aj-col) / 2 - 1px);
+        right: calc(var(--aj-col) / 2 - 1px);
+        height: 2px;
+        background: var(--aj-cor);
+    }
+    /* galho + seta ate cada botao */
+    .aj-caso::before {
+        content: '';
+        position: absolute;
+        top: -15px;
+        left: calc(50% - 1px);
+        width: 2px;
+        height: 9px;
+        background: var(--aj-cor);
+    }
+    .aj-caso::after {
+        content: '';
+        position: absolute;
+        top: -7px;
+        left: calc(50% - 5px);
+        border: 5px solid transparent;
+        border-bottom: 0;
+        border-top: 6px solid var(--aj-cor);
+    }
+}
 .aj-caso {
+    position: relative;
     display: flex;
     align-items: center;
     gap: 8px;
@@ -482,7 +538,7 @@
 
 /* Na impressao sai so o tema aberto, sem os botoes */
 @media print {
-    .aj-temas { display: none !important; }
+    .aj-temas, .aj-casos { display: none !important; }
     .aj-fixo { position: static; margin: 0; padding: 0; box-shadow: none; }
     .aj-cartao, .aj-roteiro > li { break-inside: avoid; box-shadow: none; }
 }
