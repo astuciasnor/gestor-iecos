@@ -266,7 +266,12 @@ export function renderOfertasList() {
                         }], formatDateBR)
                         : ''
                 ));
-                const copiaDaComponente = textosParaCopiar.filter(Boolean).join(', ');
+                // Codigo da componente na frente (17/11/2026), para o script do SIGAA
+                // (tools/sigaa_preencher.user.js) conferir se a turma aberta e a certa:
+                // EP05073: 23T234 (04/01/2027 - 10/01/2027), 23T23456 (11/01/2027 - 02/02/2027)
+                const faixasCopiadas = textosParaCopiar.filter(Boolean).join(', ');
+                const codigoComponente = /^[A-Z]{2,4}\d{3,6}$/i.test(String(info.codigo || '').trim()) ? String(info.codigo).trim() : '';
+                const copiaDaComponente = faixasCopiadas && codigoComponente ? `${codigoComponente}: ${faixasCopiadas}` : faixasCopiadas;
 
                 resolvedFaixas.forEach((faixa, idx) => {
                     const faixaStart = faixa?.inicio || base.dataInicio || semesterStart;
