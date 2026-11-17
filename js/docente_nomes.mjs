@@ -6,7 +6,7 @@
 export const VINCULOS_DOCENTE_NOVO = ['Substituto', 'Visitante', 'Efetivo'];
 
 // Unidades (IECOS, CBRAG...) moram em js/unidades.mjs; seguem exportadas daqui.
-import { OUTRA_UNIDADE, UNIDADES } from './unidades.mjs?v=202611161938';
+import { OUTRA_UNIDADE, UNIDADES } from './unidades.mjs?v=202611162306';
 export { OUTRA_UNIDADE, UNIDADES };
 
 export function normalizeTeacherNameForMatch(value) {
