@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Cardume -> SIGAA: preencher horario da turma
 // @namespace    cardume.iecos.ufpa.br
-// @version      1.3
+// @version      1.4
 // @description  Preenche as faixas de horario (datas + expressao) na tela "Horario da Turma" do SIGAA, a partir do texto do botao "Copiar faixas" do Cardume.
 // @match        https://sigaa.ufpa.br/sigaa/*
 // @grant        none
@@ -186,6 +186,26 @@
         b.onclick = () => { limparFila(); mostrarInicial('Preenchimento cancelado. O que ja foi adicionado continua no SIGAA.'); };
         painel.append(p, b);
     }
+    // Fim: so a mensagem e um botao OK, que fecha o painel (pedido de 17/11/2026:
+    // o "Preencher pelo Cardume" no fim parecia que faltava fazer algo).
+    // Ao abrir outra tela de horario, o botao verde volta.
+    function mostrarConcluido(quantas, horario) {
+        painel.innerHTML = '';
+        painel.style.borderColor = '#27ae60';
+        const p = document.createElement('div');
+        p.style.cssText = 'margin-bottom:8px; white-space:pre-wrap;';
+        p.textContent =
+            `✔ CONCLUÍDO: ${quantas} faixa(s) adicionada(s).\n\n` +
+            `Horário no SIGAA:\n${horario}\n\n` +
+            'Confira se está igual ao "Copiar faixas" do Cardume.\n' +
+            'Se estiver, clique em OK e siga no botão "Próximo Passo" do SIGAA.';
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.textContent = 'OK';
+        b.style.cssText = estiloBotao('#27ae60') + ' min-width:80px;';
+        b.onclick = () => { painel.remove(); };
+        painel.append(p, b);
+    }
     // Para tudo, limpa a fila e explica.
     function parar(motivo) {
         limparFila();
@@ -321,12 +341,7 @@
             fila.i += 1;
             if (fila.i >= fila.faixas.length) {
                 limparFila();
-                mostrarInicial(
-                    `CONCLUIDO: ${fila.faixas.length} faixa(s) adicionada(s).\n\n` +
-                    `Horario no SIGAA:\n${horario}\n\n` +
-                    'Confira com o "Copiar faixas" do Cardume. O "Proximo Passo" e com voce.'
-                );
-                painel.style.borderColor = '#27ae60';
+                mostrarConcluido(fila.faixas.length, horario);
                 return;
             }
             fila.etapa = 'preencher';
