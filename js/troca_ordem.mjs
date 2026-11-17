@@ -1,4 +1,4 @@
-import { isoToUtc, weekdayOf, addDaysISO as addDaysIso } from './datas.mjs?v=202611162306';
+import { isoToUtc, weekdayOf, addDaysISO as addDaysIso } from './datas.mjs?v=202611162317';
 // Botao "Trocar" da Lista de Ofertas: quando duas componentes da mesma turma podem trocar
 // de lugar. Funcoes puras (sem DOM nem store), testadas em tests/troca_ordem.test.mjs.
 //
