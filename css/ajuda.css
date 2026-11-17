@@ -186,6 +186,11 @@
 .aj-cartao--destaque { background: var(--aj-suave); }
 .aj-cartao--novo { border-top-color: #e0a200; background: #fffbea; }
 .aj-cartao--alerta { border-top-color: #c0392b; }
+/* Cartao que ocupa as duas colunas da .aj-grade (os pares seguintes nao mudam) */
+.aj-cartao--largo { grid-column: 1 / -1; }
+.aj-lista--2col { columns: 2; column-gap: 28px; }
+.aj-lista--2col > li { break-inside: avoid; }
+@media (max-width: 900px) { .aj-lista--2col { columns: 1; } }
 .aj-cartao--alerta .aj-lista > li::before { background: #c0392b; }
 
 .aj-selo {

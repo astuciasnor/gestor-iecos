@@ -1221,10 +1221,9 @@
                     <!-- ===== 3. CASOS ESPECIAIS (o que foge do basico) =====
                          Os botoes .aj-caso[data-aj-alvo] rolam ate o cartao (js/ajuda_ui.js). -->
                     <div class="aj-painel" id="aj-casos" data-aj-painel="casos" role="tabpanel" aria-labelledby="aj-tab-casos" hidden>
-                        <p class="aj-lead">Quando a componente foge do comum. Os passos de <button type="button" class="aj-ir" data-aj-ir="alocacao">Alocação</button> continuam valendo: aqui muda só o jeito de usar as faixas e o turno.</p>
-
                         <nav class="aj-casos" aria-label="Qual é o seu caso?">
                             <span class="aj-casos-titulo">Qual é o seu caso?</span>
+                            <button type="button" class="aj-caso" data-aj-alvo="aj-caso-porque"><span aria-hidden="true">💡</span><span><b>Por que casos especiais?</b><small>quando usar e lista de casos</small></span></button>
                             <button type="button" class="aj-caso" data-aj-alvo="aj-caso-pausa"><span aria-hidden="true">⏸️</span><span><b>Pausa</b><small>para uns dias e volta depois</small></span></button>
                             <button type="button" class="aj-caso" data-aj-alvo="aj-caso-livres"><span aria-hidden="true">↩️</span><span><b>Dias livres</b><small>sobraram dias antes de outra</small></span></button>
                             <button type="button" class="aj-caso" data-aj-alvo="aj-caso-turnos"><span aria-hidden="true">📅</span><span><b>Turnos e sábado</b><small>dois turnos, sábado, feriado</small></span></button>
@@ -1235,6 +1234,20 @@
 
                         <!-- Cartoes em pares: Pausa | Dias livres; Turnos | Estagio; Turma extra | Trocar a ordem -->
                         <div class="aj-grade">
+                            <!-- Cartao largo (ocupa as duas colunas): por que existem os casos especiais -->
+                            <article class="aj-cartao aj-cartao--destaque aj-cartao--largo" id="aj-caso-porque">
+                                <h3><span aria-hidden="true">💡</span> Por que casos especiais?</h3>
+                                <p>A maioria das componentes é simples: começa, segue toda semana no mesmo horário e termina. Algumas <b>fogem do comum</b>: param no meio, usam dois turnos ou dividem a turma. Para elas, os passos de <button type="button" class="aj-ir" data-aj-ir="alocacao">Alocação</button> continuam valendo; muda só o jeito de usar as <b>faixas</b> e o <b>turno</b>.</p>
+                                <ul class="aj-lista aj-lista--2col">
+                                    <li><button type="button" class="aj-caso-link" data-aj-alvo="aj-caso-pausa">Pausa</button>: a componente para uns dias e volta depois (ex.: revezar com outra).</li>
+                                    <li><button type="button" class="aj-caso-link" data-aj-alvo="aj-caso-livres">Dias livres</button>: sobraram dias antes de outra componente começar.</li>
+                                    <li><button type="button" class="aj-caso-link" data-aj-alvo="aj-caso-turnos">Turnos e sábado</button>: dois turnos, sábado em turma da tarde ou noite, feriados e eventos.</li>
+                                    <li><button type="button" class="aj-caso-link" data-aj-alvo="aj-caso-estagio">Estágio</button>: parte no turno da turma, parte no contraturno.</li>
+                                    <li><button type="button" class="aj-caso-link" data-aj-alvo="aj-caso-extra">Turma extra</button>: a turma dividida em dois grupos, T01 e T02.</li>
+                                    <li><button type="button" class="aj-caso-link" data-aj-alvo="aj-caso-ordem">Trocar a ordem</button>: quando mudar a ordem das componentes é mais simples que fazer pausas.</li>
+                                </ul>
+                            </article>
+
                             <article class="aj-cartao" id="aj-caso-pausa">
                                 <h3><span aria-hidden="true">⏸️</span> Pausa: parar e voltar depois</h3>
                                 <ul class="aj-lista">
