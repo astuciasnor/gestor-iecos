@@ -48,3 +48,80 @@ test('sem turno da turma ou sem horario: conta (lado seguro)', () => {
     assert.equal(aulaContaComoChoque({ disciplina: 'ESTÁGIO I', horario: '18:30 - 19:20' }, ''), true);
     assert.equal(aulaContaComoChoque({ disciplina: 'ESTÁGIO I', horario: 'M1' }, 'Manhã'), true);
 });
+
+// ---------------------------------------------------------------- Montar estagio
+import { calcularEstagio, faixasDoEstagio, expressaoSigaaDaEtapa, horasPorTurno, turnoQueMostra, choqueDaEtapa, diasQueFaltamNoPadrao } from '../js/estagio.mjs';
+
+const PL2 = { termStart: '2027-03-15', termEnd: '2027-07-14' };
+const FERIADOS = new Set(['2027-03-26', '2027-04-21', '2027-05-01', '2027-06-03']);
+const MAX = { M: 6, T: 6, N: 4 };
+const SLOTS = {
+    M: ['08:00 - 08:50', '08:50 - 09:40', '09:40 - 10:30', '10:50 - 11:40', '11:40 - 12:30', '12:30 - 13:20'],
+    T: ['14:00 - 14:50', '14:50 - 15:40', '15:40 - 16:30', '16:50 - 17:40', '17:40 - 18:30', '18:30 - 19:20'],
+    N: ['19:00 - 19:50', '19:50 - 20:40', '20:40 - 21:30', '21:30 - 22:20']
+};
+const sandra = () => [
+    { tipo: 'encontro', turno: 'Manhã', horasDia: 5, mes: '2027-03', dias: ['2027-03-15', '2027-03-16', '2027-03-17'] },
+    { tipo: 'campo', turno: 'Noite', horasDia: 3, mes: '2027-03', diasSemana: [1, 3] },
+    { tipo: 'encontro', turno: 'Manhã', horasDia: 5, mes: '2027-06', dias: ['2027-06-28', '2027-06-29', '2027-06-30'] }
+];
+
+test('caso Sandra: o estágio em campo termina em 16/06 com 25 aulas e fecha 105 h', () => {
+    const r = calcularEstagio({ etapas: sandra(), ch: 105, ...PL2, feriados: FERIADOS });
+    assert.equal(r.alocada, 105);
+    assert.equal(r.etapas[1].aulas.length, 25);
+    assert.equal(r.etapas[1].aulas[0], '2027-03-22');
+    assert.equal(r.etapas[1].aulas.at(-1), '2027-06-16');
+    assert.ok(!r.etapas[1].aulas.includes('2027-04-21')); // feriado
+    assert.ok(r.avisos.some((a) => a.tipo === 'ok'));
+    assert.ok(!r.avisos.some((a) => a.tipo === 'erro'));
+});
+
+test('caso Sandra vira 3 faixas: sem pausa depois do encontro, pausa antes do fechamento', () => {
+    const r = calcularEstagio({ etapas: sandra(), ch: 105, ...PL2, feriados: FERIADOS });
+    const f = faixasDoEstagio(r.etapas, SLOTS, FERIADOS);
+    assert.equal(f.length, 3);
+    assert.deepEqual([f[0].inicio, f[0].fim, f[0].pausa], ['2027-03-15', '2027-03-21', false]);
+    assert.deepEqual([f[1].inicio, f[1].fim, f[1].pausa], ['2027-03-22', '2027-06-16', true]);
+    assert.deepEqual([f[2].inicio, f[2].fim], ['2027-06-28', '']);
+    assert.equal(f[0].pattern.length, 3 * 5);   // seg-qua x 5 aulas
+    assert.equal(f[1].pattern.length, 2 * 3);   // seg/qua x 3 aulas da noite
+    assert.deepEqual(f[1].pattern.map((p) => p.slot).slice(0, 3), SLOTS.N.slice(0, 3));
+    assert.equal(expressaoSigaaDaEtapa(r.etapas[1], MAX), '24N123');
+    assert.equal(expressaoSigaaDaEtapa(r.etapas[0], MAX), '234M12345');
+});
+
+test('manhã e noite no mesmo PL (4 etapas, turma da Tarde)', () => {
+    const etapas = [
+        { tipo: 'encontro', turno: 'Tarde', horasDia: 5, mes: '2027-03', dias: ['2027-03-15', '2027-03-16', '2027-03-17'] },
+        { tipo: 'campo', turno: 'Manhã', horasDia: 3, mes: '2027-03', diasSemana: [1, 3], fim: '2027-04-30' },
+        { tipo: 'campo', turno: 'Noite', horasDia: 3, mes: '2027-05', diasSemana: [2, 4] },
+        { tipo: 'encontro', turno: 'Tarde', horasDia: 5, mes: '2027-07', dias: ['2027-07-05', '2027-07-06', '2027-07-07'] }
+    ];
+    const r = calcularEstagio({ etapas, ch: 105, ...PL2, feriados: FERIADOS });
+    assert.equal(r.alocada, 105);
+    assert.equal(r.etapas[1].aulas.length, 11);
+    assert.equal(r.etapas[2].aulas.at(-1), '2027-06-22');
+    assert.equal(faixasDoEstagio(r.etapas, SLOTS, FERIADOS).length, 4);
+    assert.equal(choqueDaEtapa('Manhã', 'Tarde'), 'nao');
+    assert.equal(choqueDaEtapa('Tarde', 'Tarde'), 'sim');
+    assert.equal(choqueDaEtapa('Manhã+Tarde', 'Tarde'), 'parte');
+    assert.equal(turnoQueMostra(['T', 'M', 'N']), 'Integral');
+    assert.equal(turnoQueMostra(['M', 'N']), 'Manhã+Noite');
+});
+
+test('avisos: padrão semanal quebrado, sobra de horas e 10 h por dia', () => {
+    assert.deepEqual(diasQueFaltamNoPadrao(['2027-03-15', '2027-03-22'], FERIADOS), []);          // toda segunda
+    assert.deepEqual(diasQueFaltamNoPadrao(['2027-03-15', '2027-03-17', '2027-03-22'], FERIADOS), []);
+    // seg 15, qua 17, ter 23: a faixa repetiria seg/ter/qua, faltam ter 16 e seg 22
+    assert.deepEqual(diasQueFaltamNoPadrao(['2027-03-15', '2027-03-17', '2027-03-23'], FERIADOS), ['2027-03-16', '2027-03-22']);
+    const etapas = sandra();
+    etapas[1].horasDia = 4; // 75 h nao divide por 4
+    const r = calcularEstagio({ etapas, ch: 105, ...PL2, feriados: FERIADOS });
+    assert.ok(r.avisos.some((a) => a.tipo === 'erro' && a.texto.includes('Sobra 1 h')));
+    assert.deepEqual(horasPorTurno('Manhã+Tarde', 10, MAX), [['M', 5], ['T', 5]]);
+    assert.deepEqual(horasPorTurno('Manhã+Noite', 10, MAX), [['M', 6], ['N', 4]]);
+    const dez = calcularEstagio({ etapas: [{ tipo: 'encontro', turno: 'Manhã+Tarde', horasDia: 10, mes: '2027-03', dias: ['2027-03-15'] }], ch: 10, ...PL2, feriados: FERIADOS });
+    assert.equal(dez.alocada, 10);
+    assert.ok(dez.avisos.some((a) => a.tipo === 'info'));
+});

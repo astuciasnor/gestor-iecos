@@ -2,6 +2,8 @@ import { UNIDADE_PADRAO, unidadeDoCurso } from './unidades.mjs?v=202611171437';
 import { getLocalTodayIso } from './datas.mjs?v=202611171437';
 import { store } from './store.js?v=202611171437';
 import { MAX_FAIXAS, NUMEROS_FAIXAS, idsDatasFaixas } from './faixas.mjs?v=202611171437';
+import { ehEstagio, letrasDoTurno } from './estagio.mjs?v=202611171437';
+import { abrirMontarEstagio } from './montar_estagio_ui.js?v=202611171437';
 import { escapeTrocaHtml, contarHorasExecutadas, sugerirInicioSemChoque, fraseComeceEm, cursoDaTurma, sugerirComoResolverChoque, abrirTrocaDeOrdem, ligarTroca } from './troca_ui.js?v=202611171437';
 import { cadastrosDocentes, findNewDocenteNames, getCadastroDocente, refreshAvisoDocenteNovo, coletarCadastrosDocentes, setupAvisoDocenteNovo, ligarCadastroDocente } from './cadastro_docente_ui.js?v=202611171437';
 import { renderOfertasList, ligarListaOfertas } from './lista_ofertas_ui.js?v=202611171437';
@@ -2015,6 +2017,11 @@ function getWeeklyFaixasTitleDisciplinaAtiva() {
 }
 
 function updateWeeklyFaixasTitleDisciplina() {
+    // Botao "Montar estagio": so com turma e componente de estagio escolhidas.
+    document.getElementById('btn-montar-estagio')?.classList.toggle(
+        'hidden',
+        !store.selectedTurma || !ehEstagio(getWeeklyFaixasTitleDisciplinaAtiva())
+    );
     const prefixEl = document.getElementById('weekly-faixas-title-prefix');
     const discEl = document.getElementById('weekly-faixas-title-disc');
     if (!prefixEl || !discEl) return;
@@ -3567,8 +3574,75 @@ function resolveInlineEditableFaixaIndex() {
     return NUMEROS_FAIXAS.find((i) => hasStart(i)) || null;
 }
 
+// ==== MONTAR ESTAGIO ====
+// Abre a janela (js/montar_estagio_ui.js) com o que a tela sabe da componente.
+function abrirJanelaMontarEstagio() {
+    const componente = getWeeklyFaixasTitleDisciplinaAtiva();
+    if (!store.selectedTurma || !ehEstagio(componente)) return;
+    updateWeeklyFaixaHoursDisplay();
+    const ch = horasDasFaixas.meta;
+    if (!ch) {
+        showToastWarning('Esta componente está sem CH no cadastro: não dá para montar o estágio.', 'warning', 4000);
+        return;
+    }
+    // Aulas de cada turno no quadro de horarios do curso (sem intervalos).
+    const quadro = store.getActiveHorariosPorTurno() || {};
+    const slotsPorLetra = { M: [], T: [], N: [] };
+    Object.entries(quadro).forEach(([turno, lista]) => {
+        const letras = letrasDoTurno(turno);
+        if (letras.length !== 1 || !Array.isArray(lista)) return;
+        slotsPorLetra[letras[0]] = lista.filter((s) => s && !String(s).toUpperCase().includes('INTERVALO'));
+    });
+    abrirMontarEstagio({
+        componente: componente.toLocaleUpperCase('pt-BR'),
+        ch,
+        turnoTurma: getNativeTurnoValueForAllocation({ turmaId: store.selectedTurma }),
+        termStart: String(store.settings.termStart || '').trim(),
+        termEnd: String(store.settings.termEnd || '').trim(),
+        feriados: getHolidayLabelMap(),
+        slotsPorLetra,
+        aoAplicar: aplicarFaixasDoEstagio
+    });
+}
+
+// Coloca as faixas montadas no cartao, como se o coordenador tivesse desenhado.
+// faixas: [{ inicio, fim, pausa, pattern: [{ dia, slot }] }] (js/estagio.mjs).
+function aplicarFaixasDoEstagio({ faixas = [], turnoOferta = '' }) {
+    if (!faixas.length) return;
+    // Turno da barra lateral com todos os turnos usados (ex.: Manha e Noite).
+    const valorTurno = resolveTurnoOfertaValue(turnoOferta);
+    if (valorTurno && store.settings.turnoOferta !== valorTurno) {
+        store.setTurnoOferta(valorTurno);
+        if (selTurnoOferta) selTurnoOferta.value = valorTurno;
+    }
+    endDrawingDrag();
+    if (pendingFaixaStartPick) clearPendingFaixaStartPick();
+    hideFaixaAutoNote();
+    for (let i = 1; i <= MAX_FAIXAS; i++) clearFaixaState(i);
+    faixas.slice(0, MAX_FAIXAS).forEach((faixa, idx) => {
+        const i = idx + 1;
+        const iniEl = document.getElementById(`inp-data-inicio-f${i}`);
+        const fimEl = document.getElementById(`inp-data-fim-f${i}`);
+        if (iniEl) iniEl.value = faixa.inicio || '';
+        if (fimEl) fimEl.value = faixa.fim || '';
+        faixasPatterns[i] = normalizeFaixaPattern(faixa.pattern);
+        setFaixaFimPausaMark(i, !!faixa.pausa);
+    });
+    setComponentStartSelectionMode('manual');
+    applyFaixaDateAutofill();
+    for (let i = 1; i <= MAX_FAIXAS; i++) setFaixaStatus(i, normalizeFaixaPattern(faixasPatterns[i]).length);
+    activeFaixaIndex = 1;
+    autoEnterWeeklyEditingForFaixa(1);
+    refreshPendingFaixaStartPickUI();
+    updateWeeklyFaixaHoursDisplay();
+    updateWeeklyContextNote();
+    rerenderPlanBoundViews();
+    showToastWarning(`Estágio montado em ${faixas.length} faixa(s). Confira na grade e clique em Salvar Componente.`, 'success', 7000);
+}
+
 function setupFaixaControls() {
     setupFaixaQuickActions();
+    document.getElementById('btn-montar-estagio')?.addEventListener('click', abrirJanelaMontarEstagio);
     document.getElementById('btn-faixa-auto-undo')?.addEventListener('click', undoFaixaAutoCreation);
     document.getElementById('btn-aprov-f1')?.addEventListener('click', () => preencherFaixaDoAviso(1));
     document.getElementById('btn-aprov-f2')?.addEventListener('click', () => preencherFaixaDoAviso(2));
