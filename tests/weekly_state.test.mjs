@@ -36,10 +36,10 @@ test('faixasPatterns com faixa nao-array e detectado', () => {
 
 test('faixasPatterns com chave inesperada e detectado', () => {
   restoreCleanState();
-  weeklyState.faixasPatterns[4] = [];
+  weeklyState.faixasPatterns[5] = []; // ha 4 faixas (js/faixas.mjs): a 5 e inesperada
   const problems = weeklyState.checkInvariants('teste');
   assert.ok(problems.some((p) => p.includes('chaves inesperadas')));
-  delete weeklyState.faixasPatterns[4];
+  delete weeklyState.faixasPatterns[5];
 });
 
 test('editingComponentOriginalStart sem IDs originais e detectado (desync)', () => {
@@ -89,17 +89,19 @@ test('resetEditing zera os campos e mantem invariantes limpos', () => {
   assert.deepEqual(weeklyState.checkInvariants('teste'), []);
 });
 
-test('clearFaixasPatterns limpa as 3 faixas preservando o objeto', () => {
+test('clearFaixasPatterns limpa as 4 faixas preservando o objeto', () => {
   restoreCleanState();
   const ref = weeklyState.faixasPatterns;
   weeklyState.faixasPatterns[1] = [{ dia: 1, slot: 'M1' }];
   weeklyState.faixasPatterns[2] = [{ dia: 2, slot: 'M2' }];
+  weeklyState.faixasPatterns[4] = [{ dia: 3, slot: 'M3' }];
 
   weeklyState.clearFaixasPatterns();
 
   assert.deepEqual(weeklyState.faixasPatterns[1], []);
   assert.deepEqual(weeklyState.faixasPatterns[2], []);
   assert.deepEqual(weeklyState.faixasPatterns[3], []);
+  assert.deepEqual(weeklyState.faixasPatterns[4], []);
   // identidade do objeto preservada (alias em ui.js depende disso)
   assert.equal(weeklyState.faixasPatterns, ref);
 });

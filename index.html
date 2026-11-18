@@ -749,7 +749,7 @@
                                 </div>
                                 <div class="cd-etiquetas" aria-label="Legenda das faixas">
                                     <span class="cd-etiqueta cd-etiqueta--f1"><span class="cd-ponto"></span>Faixa 1 &middot; data inicial</span>
-                                    <span class="cd-etiqueta cd-etiqueta--fx"><span class="cd-ponto"></span>Faixas 2 e 3 &middot; opcionais</span>
+                                    <span class="cd-etiqueta cd-etiqueta--fx"><span class="cd-ponto"></span>Faixas 2 a 4 &middot; opcionais</span>
                                     <span class="cd-etiqueta cd-etiqueta--pausa"><span class="cd-ponto"></span>Pausa &middot; sem aula</span>
                                 </div>
                             </div></div>
@@ -847,6 +847,32 @@
                                             <td id="faixa-padrao-f3" class="faixa-padrao-cell"></td>
                                             <td id="faixa-ch-f3" class="faixa-ch-cell">0 h</td>
                                         </tr>
+                                        <tr id="faixa-pausa-3" class="faixa-pausa-row hidden">
+                                            <td colspan="5"><div class="faixa-pausa-faixa"><svg class="cd-icone" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1"></rect><rect x="14" y="5" width="4" height="14" rx="1"></rect></svg><b>Pausa sem aula</b> &middot; <span class="faixa-pausa-texto"></span></div></td>
+                                        </tr>
+                                        <tr id="faixa-4" class="faixa-item hidden">
+                                            <td class="faixa-num">
+                                                <span class="faixa-pill"><span class="faixa-num-value">Faixa&nbsp;4</span><span class="faixa-info" role="button" tabindex="0" aria-label="Sobre a Faixa 4" title="Opcional. Aparece quando a Faixa 3 ja comecou e funciona como as outras: nasce ao redesenhar numa semana posterior da Faixa 3 ou pelo clique no numero da faixa. Util no estagio (manha num periodo, noite noutro).">i</span></span>
+                                                <button type="button" class="faixa-quick-action-trigger faixa-quick-action-remove" data-faixa-action="4" aria-label="Remover faixa 4" title="Remover faixa 4">&#10005;</button>
+                                                <button type="button" class="faixa-quick-action-confirm" data-faixa-confirm="4">Confirmar</button>
+                                            </td>
+                                            <td>
+                                                <div class="faixa-date-compact">
+                                                    <input type="date" id="inp-data-inicio-f4" class="inp-data-inicio faixa-date-native" aria-label="Inicio da faixa 4">
+                                                    <span class="faixa-date-display is-placeholder" data-date-display-for="inp-data-inicio-f4">A definir</span>
+                                                    <button type="button" class="faixa-date-trigger" data-date-target="inp-data-inicio-f4" aria-label="Selecionar data de inicio da faixa 4" title="Selecionar data">&#128197;</button>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div class="faixa-date-compact">
+                                                    <input type="date" id="inp-data-fim-f4" class="inp-data-fim faixa-date-native" aria-label="Fim da faixa 4">
+                                                    <span class="faixa-date-display is-placeholder" data-date-display-for="inp-data-fim-f4">A definir</span>
+                                                    <button type="button" class="faixa-date-trigger" data-date-target="inp-data-fim-f4" aria-label="Selecionar data de fim da faixa 4" title="Selecionar data">&#128197;</button>
+                                                </div>
+                                            </td>
+                                            <td id="faixa-padrao-f4" class="faixa-padrao-cell"></td>
+                                            <td id="faixa-ch-f4" class="faixa-ch-cell">0 h</td>
+                                        </tr>
                                     </tbody>
                                 </table>
                                 <div class="weekly-faixas-total" aria-live="polite">
@@ -874,6 +900,7 @@
                                 <span id="status-draw-f1"></span>
                                 <span id="status-draw-f2"></span>
                                 <span id="status-draw-f3"></span>
+                                <span id="status-draw-f4"></span>
                             </div>
                         </div>
 
@@ -1195,10 +1222,10 @@
                             <article class="aj-cartao">
                                 <h3><span aria-hidden="true">📐</span> Faixas</h3>
                                 <ul class="aj-lista">
-                                    <li>Faixa é o <b>horário semanal válido num intervalo de datas</b>. Cada componente tem até 3.</li>
+                                    <li>Faixa é o <b>horário semanal válido num intervalo de datas</b>. Cada componente tem até 4.</li>
                                     <li>A nova faixa substitui a anterior a partir do seu Início. O Fim da anterior se ajusta sozinho.</li>
                                     <li>Ao criar uma faixa sozinho, o Cardume avisa (<em>“Criei a Faixa 2”</em>) e oferece <b>Desfazer</b>.</li>
-                                    <li>O <b>i</b> ao lado de cada faixa explica o que fazer. <b>↺</b> zera a Faixa 1; <b>✕</b> remove a Faixa 2 ou 3.</li>
+                                    <li>O <b>i</b> ao lado de cada faixa explica o que fazer. <b>↺</b> zera a Faixa 1; <b>✕</b> remove a Faixa 2, 3 ou 4 (e as seguintes).</li>
                                     <li>As faixas também servem para <b>parar e voltar</b> e para <b>aproveitar dias livres</b>: veja <button type="button" class="aj-ir" data-aj-ir="casos">Casos especiais</button>.</li>
                                 </ul>
                             </article>
@@ -1259,7 +1286,7 @@
                                     <li><b>3.</b> Marque os horários da Faixa 2 e salve. A linha listrada mostra <em>“Pausa sem aula”</em>.<img class="aj-print" src="img/instrucoes/passo-7.png" width="374" height="151" alt="Faixa 1, linha de pausa e Faixa 2" loading="lazy"></li>
                                     <li>Os dias da pausa ficam <b>livres para outra componente</b>. Assim duas componentes se revezam na mesma turma.</li>
                                     <li>A componente com pausa <b>nunca é empurrada sozinha</b>: se chocar com outra, o Cardume avisa e você ajusta as datas.</li>
-                                    <li>Até <b>2 pausas</b> por componente. Mais que isso: <button type="button" class="aj-caso-link" data-aj-alvo="aj-caso-ordem">trocar a ordem</button>.</li>
+                                    <li>Até <b>3 pausas</b> por componente. Mais que isso: <button type="button" class="aj-caso-link" data-aj-alvo="aj-caso-ordem">trocar a ordem</button>.</li>
                                 </ul>
                             </article>
 
@@ -1317,7 +1344,7 @@
                             <article class="aj-cartao aj-cartao--destaque" id="aj-caso-ordem">
                                 <h3><span aria-hidden="true">🔁</span> Quando é melhor trocar a ordem</h3>
                                 <ul class="aj-lista">
-                                    <li>Cada componente aceita até <b>2 pausas</b>, e o aproveitamento de dias livres usa <b>2 faixas</b>.</li>
+                                    <li>Cada componente aceita até <b>3 pausas</b>, e o aproveitamento de dias livres usa <b>2 faixas</b>.</li>
                                     <li>Precisa de mais buracos, ou está caçando dias soltos para encaixar uma componente? Mude a ordem das componentes em <b>Lista de Ofertas › Trocar</b>.</li>
                                     <li>O planejamento fica mais fácil de ler para você, para os alunos e para os professores.</li>
                                     <li>Como funciona a troca: veja <button type="button" class="aj-ir" data-aj-ir="revisao">Revisão › Lista de Ofertas</button>.</li>

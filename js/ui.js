@@ -1,6 +1,7 @@
 import { UNIDADE_PADRAO, unidadeDoCurso } from './unidades.mjs?v=202611171437';
 import { getLocalTodayIso } from './datas.mjs?v=202611171437';
 import { store } from './store.js?v=202611171437';
+import { MAX_FAIXAS, NUMEROS_FAIXAS, idsDatasFaixas } from './faixas.mjs?v=202611171437';
 import { escapeTrocaHtml, contarHorasExecutadas, sugerirInicioSemChoque, fraseComeceEm, cursoDaTurma, sugerirComoResolverChoque, abrirTrocaDeOrdem, ligarTroca } from './troca_ui.js?v=202611171437';
 import { cadastrosDocentes, findNewDocenteNames, getCadastroDocente, refreshAvisoDocenteNovo, coletarCadastrosDocentes, setupAvisoDocenteNovo, ligarCadastroDocente } from './cadastro_docente_ui.js?v=202611171437';
 import { renderOfertasList, ligarListaOfertas } from './lista_ofertas_ui.js?v=202611171437';
@@ -651,7 +652,7 @@ function getFaixaSlotsAndDays(faixaIndex = 1) {
 function buildEffectiveFaixaPatternMap(overrideFaixaIndex = null, overridePattern = null) {
     const map = {};
 
-    for (let i = 1; i <= 3; i++) {
+    for (let i = 1; i <= MAX_FAIXAS; i++) {
         const pattern = (i === overrideFaixaIndex)
             ? normalizeFaixaPattern(overridePattern)
             : normalizeFaixaPattern(faixasPatterns[i]);
@@ -814,9 +815,9 @@ function updateWeeklyFaixaHoursDisplay(previewData = null) {
     let total = preview?.execution ? (parseInt(preview.execution.totalHours, 10) || 0) : 0;
     let chF1 = 0;
     let chF2 = 0;
-    for (let i = 1; i <= 3; i++) updateFaixaPadraoCell(i);
+    for (let i = 1; i <= MAX_FAIXAS; i++) updateFaixaPadraoCell(i);
     renderFaixaPauseRows();
-    for (let i = 1; i <= 3; i++) {
+    for (let i = 1; i <= MAX_FAIXAS; i++) {
         const ch = summaryHoursByFaixa.has(i) ? summaryHoursByFaixa.get(i) : calcFaixaCH(i);
         if (i === 1) chF1 = ch;
         if (i === 2) chF2 = ch;
@@ -950,7 +951,7 @@ function calcTotalConfiguredCHWithOverride(faixaIndex, overridePattern) {
 
     const patterns = buildEffectiveFaixaPatternMap(faixaIndex, overridePattern);
     let total = 0;
-    for (let i = 1; i <= 3; i++) {
+    for (let i = 1; i <= MAX_FAIXAS; i++) {
         total += calcFaixaCHFromPattern(i, patterns[i] || []);
     }
     return total;
@@ -1052,12 +1053,12 @@ function warnCHLimitReached(limit) {
 }
 
 function refreshPendingFaixaStartPickUI() {
-    for (let i = 1; i <= 3; i++) {
+    for (let i = 1; i <= MAX_FAIXAS; i++) {
         const row = document.getElementById(`faixa-${i}`);
         const numCell = row ? row.querySelector('.faixa-num') : null;
         if (!row || !numCell) continue;
 
-        const selectable = i === 2 || i === 3;
+        const selectable = i >= 2;
         const waiting = pendingFaixaStartPick === i;
         numCell.classList.toggle('faixa-num-start-pick', selectable);
         row.classList.toggle('faixa-start-pick-waiting', waiting);
@@ -1083,7 +1084,7 @@ function refreshActiveFaixaHighlight() {
     const activeIdx = drawingFaixaIndex
         ? parseInt(drawingFaixaIndex, 10)
         : (parseInt(activeFaixaIndex, 10) || null);
-    for (let i = 1; i <= 3; i++) {
+    for (let i = 1; i <= MAX_FAIXAS; i++) {
         const row = document.getElementById(`faixa-${i}`);
         const numCell = row ? row.querySelector('.faixa-num') : null;
         if (!numCell) continue;
@@ -1094,18 +1095,11 @@ function refreshActiveFaixaHighlight() {
 function setPendingFaixaStartPick(faixaIndex, options = {}) {
     const { quiet = false } = options;
     const idx = parseInt(faixaIndex, 10);
-    if (Number.isNaN(idx) || idx < 2 || idx > 3) return false;
+    if (Number.isNaN(idx) || idx < 2 || idx > MAX_FAIXAS) return false;
 
-    const f1Ini = document.getElementById('inp-data-inicio-f1')?.value || '';
-    const f2Ini = document.getElementById('inp-data-inicio-f2')?.value || '';
-
-    if (idx === 2 && !f1Ini) {
-        showToastWarning('Defina primeiro o inicio da Faixa 1.', 'warning', 2200);
-        return false;
-    }
-
-    if (idx === 3 && !f2Ini) {
-        showToastWarning('Defina primeiro o inicio da Faixa 2.', 'warning', 2200);
+    // Cada faixa so comeca depois que a anterior tem inicio.
+    if (!document.getElementById(`inp-data-inicio-f${idx - 1}`)?.value) {
+        showToastWarning(`Defina primeiro o inicio da Faixa ${idx - 1}.`, 'warning', 2200);
         return false;
     }
 
@@ -1132,7 +1126,7 @@ function setPendingFaixaStartPick(faixaIndex, options = {}) {
 // da faixa, esse horario ja fica marcado nela (o primeiro horario da volta).
 function applyPendingFaixaStartByDate(dateStr, celula = null) {
     const idx = parseInt(pendingFaixaStartPick, 10);
-    if (Number.isNaN(idx) || idx < 2 || idx > 3) return false;
+    if (Number.isNaN(idx) || idx < 2 || idx > MAX_FAIXAS) return false;
 
     const applied = syncFaixaStartFromGridClick(idx, dateStr, [], { force: true });
     if (!applied) return false;
@@ -1179,9 +1173,7 @@ function aplicarInicioDaFaixa1(dateStr) {
     if (store.selectedTurma) store.setTurmaLastStart(store.selectedTurma, novo);
 
     applyFaixaDateAutofill({ forceSingleBounds: true, preferredStart: novo });
-    setFaixaStatus(1, getFaixaSlotsAndDays(1).pattern.length);
-    setFaixaStatus(2, getFaixaSlotsAndDays(2).pattern.length);
-    setFaixaStatus(3, getFaixaSlotsAndDays(3).pattern.length);
+    for (let i = 1; i <= MAX_FAIXAS; i++) setFaixaStatus(i, getFaixaSlotsAndDays(i).pattern.length);
     refreshPendingFaixaStartPickUI();
     updateWeeklyFaixaHoursDisplay();
     updateWeeklyNavigatorLabel();
@@ -1207,7 +1199,7 @@ function aplicarInicioDaFaixa1(dateStr) {
 // (inicioDefinidoPeloClique fica declarada no topo, junto do estado de edicao.)
 
 function componenteSemHorarios() {
-    return [1, 2, 3].every((i) => normalizeFaixaPattern(faixasPatterns[i]).length === 0);
+    return NUMEROS_FAIXAS.every((i) => normalizeFaixaPattern(faixasPatterns[i]).length === 0);
 }
 
 // Data sugerida para a componente em edicao (ou o inicio do periodo letivo).
@@ -1526,17 +1518,13 @@ function inicioVoltaParaSugestao() {
 function syncFaixaStartFromGridClick(faixaIndex, cellDate, currentPattern = [], options = {}) {
     const { force = false } = options;
     const idx = parseInt(faixaIndex, 10);
-    if (Number.isNaN(idx) || idx < 1 || idx > 3) return false;
+    if (Number.isNaN(idx) || idx < 1 || idx > MAX_FAIXAS) return false;
 
     const dateStr = String(cellDate || '').trim();
     if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return false;
 
-    if (idx === 2 && !document.getElementById('inp-data-inicio-f1')?.value) {
-        showToastWarning('Defina primeiro o inicio da Faixa 1.', 'warning', 2200);
-        return false;
-    }
-    if (idx === 3 && !document.getElementById('inp-data-inicio-f2')?.value) {
-        showToastWarning('Defina primeiro o inicio da Faixa 2.', 'warning', 2200);
+    if (idx >= 2 && !document.getElementById(`inp-data-inicio-f${idx - 1}`)?.value) {
+        showToastWarning(`Defina primeiro o inicio da Faixa ${idx - 1}.`, 'warning', 2200);
         return false;
     }
 
@@ -1567,9 +1555,7 @@ function syncFaixaStartFromGridClick(faixaIndex, cellDate, currentPattern = [], 
     if (idx === 1 && store.selectedTurma) store.setTurmaLastStart(store.selectedTurma, dateStr);
 
     applyFaixaDateAutofill();
-    setFaixaStatus(1, getFaixaSlotsAndDays(1).pattern.length);
-    setFaixaStatus(2, getFaixaSlotsAndDays(2).pattern.length);
-    setFaixaStatus(3, getFaixaSlotsAndDays(3).pattern.length);
+    for (let i = 1; i <= MAX_FAIXAS; i++) setFaixaStatus(i, getFaixaSlotsAndDays(i).pattern.length);
     refreshPendingFaixaStartPickUI();
     updateWeeklyFaixaHoursDisplay();
     updateWeeklyNavigatorLabel();
@@ -1583,7 +1569,7 @@ function syncFaixaStartFromGridClick(faixaIndex, cellDate, currentPattern = [], 
 // da faixa, de um jeito que alteraria aulas ja existentes antes daquela semana,
 // cria a proxima faixa: copia do padrao anterior + a mudanca, a partir da menor
 // data alterada na semana. Se nada antes muda, a mudanca fica na propria faixa.
-// Limite de 3 faixas.
+// Limite: MAX_FAIXAS (js/faixas.mjs).
 
 // Mudancas da semana atual que ficaram na propria faixa (nao alteravam o passado).
 // Se outra mudanca da mesma semana exigir nova faixa, elas migram juntas.
@@ -1592,7 +1578,7 @@ let drawnWeekAbsorbed = { week: '', faixa: 0, changes: [] };
 let faixaAutoNote = null;
 
 function getFaixaRangeFromUI(idx) {
-    if (Number.isNaN(idx) || idx < 1 || idx > 3) return null;
+    if (Number.isNaN(idx) || idx < 1 || idx > MAX_FAIXAS) return null;
     const iniEl = document.getElementById(`inp-data-inicio-f${idx}`);
     const fimEl = document.getElementById(`inp-data-fim-f${idx}`);
     const nextIniEl = document.getElementById(`inp-data-inicio-f${idx + 1}`);
@@ -1614,7 +1600,7 @@ function getFaixaRangeFromUI(idx) {
 
 function getFaixaIndexForDate(dateStr) {
     if (!dateStr) return null;
-    for (let i = 3; i >= 1; i--) {
+    for (let i = MAX_FAIXAS; i >= 1; i--) {
         const range = getFaixaRangeFromUI(i);
         if (range && isDateInsideRange(dateStr, range.start, range.end)) return i;
     }
@@ -1641,7 +1627,7 @@ function weekdayOccursBetween(dia, startISO, endExclusiveISO) {
 
 function captureFaixasDraft() {
     const draft = { patterns: {}, ini: {}, fim: {}, pausa: {} };
-    for (let i = 1; i <= 3; i++) {
+    for (let i = 1; i <= MAX_FAIXAS; i++) {
         draft.patterns[i] = normalizeFaixaPattern(faixasPatterns[i]);
         draft.ini[i] = document.getElementById(`inp-data-inicio-f${i}`)?.value || '';
         draft.fim[i] = document.getElementById(`inp-data-fim-f${i}`)?.value || '';
@@ -1651,7 +1637,7 @@ function captureFaixasDraft() {
 }
 
 function restoreFaixasDraft(draft) {
-    for (let i = 1; i <= 3; i++) {
+    for (let i = 1; i <= MAX_FAIXAS; i++) {
         const iniEl = document.getElementById(`inp-data-inicio-f${i}`);
         const fimEl = document.getElementById(`inp-data-fim-f${i}`);
         if (iniEl) iniEl.value = draft.ini[i] || '';
@@ -1664,7 +1650,7 @@ function restoreFaixasDraft(draft) {
 // A mudanca de horario recomeca as faixas: as seguintes sao apagadas e a nova
 // faixa vai do dia da mudanca ate completar a CH. O coordenador redesenha o resto.
 function restartFaixasAfter(faixaIndex, inicio, pattern) {
-    for (let i = 3; i > faixaIndex; i--) clearFaixaState(i);
+    for (let i = MAX_FAIXAS; i > faixaIndex; i--) clearFaixaState(i);
     const idx = faixaIndex + 1;
     const iniEl = document.getElementById(`inp-data-inicio-f${idx}`);
     if (iniEl) iniEl.value = inicio;
@@ -1702,7 +1688,7 @@ function listDatesAffectedByPatternChange(before, after, startISO, endExclusiveI
 
 function refreshFaixasAfterStructureChange() {
     applyFaixaDateAutofill();
-    for (let i = 1; i <= 3; i++) setFaixaStatus(i, normalizeFaixaPattern(faixasPatterns[i]).length);
+    for (let i = 1; i <= MAX_FAIXAS; i++) setFaixaStatus(i, normalizeFaixaPattern(faixasPatterns[i]).length);
     refreshPendingFaixaStartPickUI();
     refreshActiveFaixaHighlight();
     updateWeeklySavePatternButton();
@@ -1728,7 +1714,7 @@ function applyDrawnCellChange({ faixaIndex, date, dia, slot, select }) {
 
     // A faixa seguinte comecou nesta mesma semana, depois deste dia: as mudancas
     // da semana vao juntas para ela, que passa a comecar aqui.
-    const nextIniEl = k < 3 ? document.getElementById(`inp-data-inicio-f${k + 1}`) : null;
+    const nextIniEl = k < MAX_FAIXAS ? document.getElementById(`inp-data-inicio-f${k + 1}`) : null;
     const nextStart = nextIniEl?.value || '';
     if (nextStart && getWeekStartISO(nextStart) === cellWeek && date < nextStart && date > kRange.start) {
         faixasPatterns[k + 1] = toggleFaixaPatternSlot(faixasPatterns[k + 1], dia, slot, select);
@@ -1760,8 +1746,8 @@ function applyDrawnCellChange({ faixaIndex, date, dia, slot, select }) {
         return { applied: true, structural: false, faixa: k };
     }
 
-    if (k >= 3) {
-        showToastWarning('A Faixa 3 e a ultima. Para mudar o horario a partir desta semana, redesenhe numa semana da Faixa 2: as faixas recomecam dali.', 'error', 5600);
+    if (k >= MAX_FAIXAS) {
+        showToastWarning(`A Faixa ${MAX_FAIXAS} e a ultima. Para mudar o horario a partir desta semana, redesenhe numa semana da Faixa ${MAX_FAIXAS - 1}: as faixas recomecam dali.`, 'error', 5600);
         return { applied: false };
     }
 
@@ -1772,7 +1758,7 @@ function applyDrawnCellChange({ faixaIndex, date, dia, slot, select }) {
     absorbed.slice().reverse().forEach((c) => {
         previousPattern = toggleFaixaPatternSlot(previousPattern, c.dia, c.slot, !c.select);
     });
-    const removed = [1, 2, 3].filter((i) => i > k && !!draft.ini[i]);
+    const removed = NUMEROS_FAIXAS.filter((i) => i > k && !!draft.ini[i]);
     const affectedDates = listDatesAffectedByPatternChange(previousPattern, nextPattern, kRange.start, start);
     faixasPatterns[k] = previousPattern;
     restartFaixasAfter(k, start, nextPattern);
@@ -1885,12 +1871,12 @@ function turmaJaTemManha() {
 }
 
 function componenteTemSabado() {
-    return [1, 2, 3].some((i) => normalizeFaixaPattern(faixasPatterns[i]).some((p) => p.dia === 6));
+    return NUMEROS_FAIXAS.some((i) => normalizeFaixaPattern(faixasPatterns[i]).some((p) => p.dia === 6));
 }
 
 // Um horario de sabado desenhado fora da manha (o que pede a escolha); null = nenhum.
 function sabadoForaDaManhaDesenhado() {
-    for (let i = 1; i <= 3; i++) {
+    for (let i = 1; i <= MAX_FAIXAS; i++) {
         const fora = normalizeFaixaPattern(faixasPatterns[i]).find((p) => p.dia === 6 && !ehAulaDaManha(p.slot));
         if (fora) return fora.slot;
     }
@@ -2157,7 +2143,7 @@ function updateWeeklySavePatternButton() {
 
     if (drawingFaixaIndex) {
         const faixaIndex = parseInt(drawingFaixaIndex, 10);
-        if (!Number.isNaN(faixaIndex) && faixaIndex >= 1 && faixaIndex <= 3) {
+        if (!Number.isNaN(faixaIndex) && faixaIndex >= 1 && faixaIndex <= MAX_FAIXAS) {
             isActive = true;
             hasSelection = normalizeFaixaPattern(faixasPatterns[faixaIndex]).length > 0;
         }
@@ -2175,9 +2161,9 @@ function updateWeeklySavePatternButton() {
 function persistActiveDrawingSelection() {
     if (!drawingFaixaIndex) return 0;
     const faixaIndex = parseInt(drawingFaixaIndex, 10);
-    if (Number.isNaN(faixaIndex) || faixaIndex < 1 || faixaIndex > 3) return 0;
+    if (Number.isNaN(faixaIndex) || faixaIndex < 1 || faixaIndex > MAX_FAIXAS) return 0;
 
-    for (let i = 1; i <= 3; i++) setFaixaStatus(i, normalizeFaixaPattern(faixasPatterns[i]).length);
+    for (let i = 1; i <= MAX_FAIXAS; i++) setFaixaStatus(i, normalizeFaixaPattern(faixasPatterns[i]).length);
     updateWeeklySavePatternButton();
     return normalizeFaixaPattern(faixasPatterns[faixaIndex]).length;
 }
@@ -2203,7 +2189,7 @@ function activateDrawingMode(faixaIndex, options = {}) {
     }
 
     const prevFaixa = parseInt(drawingFaixaIndex, 10);
-    if (!Number.isNaN(prevFaixa) && prevFaixa >= 1 && prevFaixa <= 3 && prevFaixa !== faixaIndex) {
+    if (!Number.isNaN(prevFaixa) && prevFaixa >= 1 && prevFaixa <= MAX_FAIXAS && prevFaixa !== faixaIndex) {
         if (arrastoAtivo()) {
             endDrawingDrag();
         } else {
@@ -2269,21 +2255,17 @@ function collapseFaixasForNewComponent(options = {}) {
     const preferredStart = resolvePreferredStartForNewComponent(options);
     ultimaComponenteSalva = null;
 
-    ['inp-data-inicio-f1', 'inp-data-fim-f1', 'inp-data-inicio-f2', 'inp-data-fim-f2', 'inp-data-inicio-f3', 'inp-data-fim-f3'].forEach((id) => {
+    idsDatasFaixas().forEach((id) => {
         const el = document.getElementById(id);
         if (el) el.value = '';
     });
-    for (let i = 1; i <= 3; i++) setFaixaFimPausaMark(i, false);
+    for (let i = 1; i <= MAX_FAIXAS; i++) setFaixaFimPausaMark(i, false);
 
-    faixasPatterns[1] = [];
-    faixasPatterns[2] = [];
-    faixasPatterns[3] = [];
+    for (let i = 1; i <= MAX_FAIXAS; i++) faixasPatterns[i] = [];
     activeFaixaIndex = 1;
     if (drawingFaixaIndex) drawingFaixaIndex = 1;
 
-    setFaixaStatus(1, 0);
-    setFaixaStatus(2, 0);
-    setFaixaStatus(3, 0);
+    for (let i = 1; i <= MAX_FAIXAS; i++) setFaixaStatus(i, 0);
 
     applyFaixaDateAutofill({ forceSingleBounds: true, preferredStart });
     
@@ -2306,14 +2288,14 @@ function clearFaixaState(faixaNum, options = {}) {
     setFaixaFimPausaMark(faixaNum, false);
 
     faixasPatterns[faixaNum] = [];
-    if (pendingFaixaStartPick === faixaNum || (faixaNum === 2 && pendingFaixaStartPick === 3)) {
+    if (pendingFaixaStartPick === faixaNum || (faixaNum >= 2 && pendingFaixaStartPick > faixaNum)) {
         clearPendingFaixaStartPick();
     }
     setFaixaStatus(faixaNum, 0);
 }
 
 function syncFaixaStartSnapshots() {
-    for (let i = 1; i <= 3; i++) {
+    for (let i = 1; i <= MAX_FAIXAS; i++) {
         const input = document.getElementById(`inp-data-inicio-f${i}`);
         if (!input) continue;
         input.dataset.lastValidValue = String(input.value || '').trim();
@@ -2322,7 +2304,7 @@ function syncFaixaStartSnapshots() {
 
 function getFaixaQuickActionWarningText(faixaNum) {
     const idx = parseInt(faixaNum, 10);
-    if (Number.isNaN(idx) || idx < 1 || idx > 3) return '';
+    if (Number.isNaN(idx) || idx < 1 || idx > MAX_FAIXAS) return '';
     if (idx === 1) return 'Zerar faixa 1? (apaga tudo)';
     const preview = buildWeeklyFaixaExecutionPreview();
     const getFaixaHours = (faixaIndex) => {
@@ -2331,7 +2313,8 @@ function getFaixaQuickActionWarningText(faixaNum) {
             : null;
         return summaryEntry ? (parseInt(summaryEntry.horas, 10) || 0) : calcFaixaCH(faixaIndex);
     };
-    const affectedHours = idx === 2 ? (getFaixaHours(2) + getFaixaHours(3)) : getFaixaHours(3);
+    // Remover a Faixa N apaga ela e as seguintes.
+    const affectedHours = NUMEROS_FAIXAS.filter((n) => n >= idx).reduce((soma, n) => soma + getFaixaHours(n), 0);
     return affectedHours > 0
         ? `Remover faixa ${idx}? (apaga ${affectedHours}h)`
         : `Remover faixa ${idx}?`;
@@ -2346,7 +2329,7 @@ function closeFaixaQuickActionConfirm() {
 
 function openFaixaQuickActionConfirm(faixaNum) {
     const idx = parseInt(faixaNum, 10);
-    if (Number.isNaN(idx) || idx < 1 || idx > 3) return;
+    if (Number.isNaN(idx) || idx < 1 || idx > MAX_FAIXAS) return;
     if (pendingFaixaQuickActionConfirm && pendingFaixaQuickActionConfirm !== idx) {
         closeFaixaQuickActionConfirm();
     }
@@ -2366,7 +2349,7 @@ function openFaixaQuickActionConfirm(faixaNum) {
 
 function executeFaixaQuickAction(faixaNum) {
     const idx = parseInt(faixaNum, 10);
-    if (Number.isNaN(idx) || idx < 1 || idx > 3) return;
+    if (Number.isNaN(idx) || idx < 1 || idx > MAX_FAIXAS) return;
     hideFaixaAutoNote();
 
     closeFaixaQuickActionConfirm();
@@ -2378,16 +2361,14 @@ function executeFaixaQuickAction(faixaNum) {
         weeklyViewState.followActiveFaixa = false;
         setComponentStartSelectionMode('auto');
 
-        ['inp-data-inicio-f1', 'inp-data-fim-f1', 'inp-data-inicio-f2', 'inp-data-fim-f2', 'inp-data-inicio-f3', 'inp-data-fim-f3']
+        idsDatasFaixas()
             .forEach((id) => {
                 const el = document.getElementById(id);
                 if (el) el.value = '';
             });
-        for (let i = 1; i <= 3; i++) setFaixaFimPausaMark(i, false);
+        for (let i = 1; i <= MAX_FAIXAS; i++) setFaixaFimPausaMark(i, false);
 
-        faixasPatterns[1] = [];
-        faixasPatterns[2] = [];
-        faixasPatterns[3] = [];
+        for (let i = 1; i <= MAX_FAIXAS; i++) faixasPatterns[i] = [];
         activeFaixaIndex = 1;
 
         const termStart = String(store.settings.termStart || inpTermStart?.value || calStart?.value || '').trim();
@@ -2396,9 +2377,7 @@ function executeFaixaQuickAction(faixaNum) {
         if (f1Ini && termStart) f1Ini.value = termStart;
         if (f1Fim) f1Fim.value = '';
 
-        setFaixaStatus(1, 0);
-        setFaixaStatus(2, 0);
-        setFaixaStatus(3, 0);
+        for (let i = 1; i <= MAX_FAIXAS; i++) setFaixaStatus(i, 0);
 
         applyFaixaDateAutofill({ forceSingleBounds: true, preferredStart: termStart });
         autoEnterWeeklyEditingForFaixa(1);
@@ -2411,16 +2390,10 @@ function executeFaixaQuickAction(faixaNum) {
         return;
     }
 
-    if (idx === 2) {
-        clearFaixaState(2);
-        clearFaixaState(3);
-        activeFaixaIndex = 1;
-        if (drawingFaixaIndex && parseInt(drawingFaixaIndex, 10) > 1) drawingFaixaIndex = 1;
-    } else {
-        clearFaixaState(3);
-        if (drawingFaixaIndex && parseInt(drawingFaixaIndex, 10) === 3) drawingFaixaIndex = 2;
-        if (activeFaixaIndex === 3) activeFaixaIndex = 2;
-    }
+    // Remover a Faixa N apaga ela e as seguintes; a ativa passa a ser a anterior.
+    for (let i = idx; i <= MAX_FAIXAS; i++) clearFaixaState(i);
+    if (activeFaixaIndex >= idx) activeFaixaIndex = idx - 1;
+    if (drawingFaixaIndex && parseInt(drawingFaixaIndex, 10) >= idx) drawingFaixaIndex = idx - 1;
 
     applyFaixaDateAutofill();
     refreshPendingFaixaStartPickUI();
@@ -2446,7 +2419,7 @@ function setupFaixaQuickActions() {
         });
     }
 
-    for (let i = 1; i <= 3; i++) {
+    for (let i = 1; i <= MAX_FAIXAS; i++) {
         const row = document.getElementById(`faixa-${i}`);
         if (!row) continue;
         const triggerBtn = row.querySelector('.faixa-quick-action-trigger');
@@ -2477,7 +2450,7 @@ function applyFaixasConfigToSidebar(faixasConfig = []) {
         ? faixasConfig.map(normalizeFaixaEntry).filter(Boolean).sort((a, b) => a.inicio.localeCompare(b.inicio))
         : [];
 
-    for (let i = 1; i <= 3; i++) {
+    for (let i = 1; i <= MAX_FAIXAS; i++) {
         const faixa = sorted[i - 1] || null;
         const iniEl = document.getElementById(`inp-data-inicio-f${i}`);
         const fimEl = document.getElementById(`inp-data-fim-f${i}`);
@@ -2499,7 +2472,7 @@ function applyFaixasConfigToSidebar(faixasConfig = []) {
 function getLastValidFaixaFromUI() {
     const faixas = [];
 
-    for (let i = 1; i <= 3; i++) {
+    for (let i = 1; i <= MAX_FAIXAS; i++) {
         const inicio = String(document.getElementById(`inp-data-inicio-f${i}`)?.value || '').trim();
         const rawFim = String(document.getElementById(`inp-data-fim-f${i}`)?.value || '').trim();
         const nextInicio = String(document.getElementById(`inp-data-inicio-f${i + 1}`)?.value || '').trim();
@@ -2550,7 +2523,7 @@ function getCanonicalFirstFaixaStartDate() {
 function getFaixaStartDateValidation(faixaIndex, candidateDate) {
     const idx = parseInt(faixaIndex, 10);
     const dateStr = String(candidateDate || '').trim();
-    if (Number.isNaN(idx) || idx < 1 || idx > 3) {
+    if (Number.isNaN(idx) || idx < 1 || idx > MAX_FAIXAS) {
         return { isValid: false, message: 'Faixa inválida.' };
     }
     if (!isValidISODateValue(dateStr)) {
@@ -2588,7 +2561,7 @@ function getFaixaStartDateValidation(faixaIndex, candidateDate) {
         };
     }
 
-    const nextStart = idx < 3
+    const nextStart = idx < MAX_FAIXAS
         ? String(document.getElementById(`inp-data-inicio-f${idx + 1}`)?.value || '').trim()
         : '';
     if (isValidISODateValue(nextStart) && dateStr >= nextStart) {
@@ -3253,14 +3226,7 @@ function refreshCompactFaixaDateDisplay(input) {
 }
 
 function refreshAllCompactFaixaDateDisplays() {
-    [
-        'inp-data-inicio-f1',
-        'inp-data-fim-f1',
-        'inp-data-inicio-f2',
-        'inp-data-fim-f2',
-        'inp-data-inicio-f3',
-        'inp-data-fim-f3'
-    ].forEach((id) => refreshCompactFaixaDateDisplay(document.getElementById(id)));
+    idsDatasFaixas().forEach((id) => refreshCompactFaixaDateDisplay(document.getElementById(id)));
 }
 
 function resolveCompactFaixaPickerAnchor(input) {
@@ -3269,20 +3235,15 @@ function resolveCompactFaixaPickerAnchor(input) {
     const termStart = String(store.settings.termStart || inpTermStart?.value || calStart?.value || '').trim();
     if (!input.id.startsWith('inp-data-inicio-f')) return '';
 
-    if (input.id === 'inp-data-inicio-f1') return termStart;
-    if (input.id === 'inp-data-inicio-f2') {
-        return String(document.getElementById('inp-data-inicio-f1')?.value || termStart || '').trim();
+    // Inicio da Faixa N: abre no inicio da faixa anterior mais proxima que tenha
+    // data; a Faixa 1 abre no inicio do periodo.
+    const n = parseInt(input.id.slice('inp-data-inicio-f'.length), 10);
+    if (!Number.isFinite(n) || n < 1 || n > MAX_FAIXAS) return '';
+    for (let j = n - 1; j >= 1; j--) {
+        const anterior = String(document.getElementById(`inp-data-inicio-f${j}`)?.value || '').trim();
+        if (anterior) return anterior;
     }
-    if (input.id === 'inp-data-inicio-f3') {
-        return String(
-            document.getElementById('inp-data-inicio-f2')?.value
-            || document.getElementById('inp-data-inicio-f1')?.value
-            || termStart
-            || ''
-        ).trim();
-    }
-
-    return '';
+    return String(termStart || '').trim();
 }
 
 // Mes em que o mini calendario abre: a propria data; senao a ancora da faixa
@@ -3328,14 +3289,7 @@ function openCompactFaixaDatePicker(input) {
 }
 
 function setupCompactFaixaDateFields() {
-    const ids = [
-        'inp-data-inicio-f1',
-        'inp-data-fim-f1',
-        'inp-data-inicio-f2',
-        'inp-data-fim-f2',
-        'inp-data-inicio-f3',
-        'inp-data-fim-f3'
-    ];
+    const ids = idsDatasFaixas();
 
     ids.forEach((id) => {
         const input = document.getElementById(id);
@@ -3409,7 +3363,7 @@ function setFaixaFimPausaMark(faixaNum, on) {
 
 // Depois de digitar o Fim de uma faixa: diz o que acontece e como retomar.
 function avisarFimDigitado(faixaNum) {
-    if (faixaNum < 1 || faixaNum > 2) return;
+    if (faixaNum < 1 || faixaNum >= MAX_FAIXAS) return;
     const fim = valorDoCampo(`inp-data-fim-f${faixaNum}`);
     const proximoInicio = valorDoCampo(`inp-data-inicio-f${faixaNum + 1}`);
     if (!fim) return;
@@ -3421,7 +3375,7 @@ function avisarFimDigitado(faixaNum) {
 }
 
 function isFaixaEmPausa(faixaNum) {
-    if (faixaNum < 1 || faixaNum > 2 || !isFaixaFimMarcadoComoPausa(faixaNum)) return false;
+    if (faixaNum < 1 || faixaNum >= MAX_FAIXAS || !isFaixaFimMarcadoComoPausa(faixaNum)) return false;
     return isPauseEnd(
         valorDoCampo(`inp-data-inicio-f${faixaNum}`),
         valorDoCampo(`inp-data-fim-f${faixaNum}`),
@@ -3432,7 +3386,7 @@ function isFaixaEmPausa(faixaNum) {
 // Pausas que a tabela de faixas mostra agora: [{ aposFaixa, inicio, fim }].
 function getFaixaPausesFromUI() {
     const faixas = [];
-    for (let i = 1; i <= 3; i++) {
+    for (let i = 1; i <= MAX_FAIXAS; i++) {
         const inicio = String(document.getElementById(`inp-data-inicio-f${i}`)?.value || '').trim();
         if (!inicio) break;
         const fim = isFaixaEmPausa(i) ? String(document.getElementById(`inp-data-fim-f${i}`)?.value || '').trim() : '';
@@ -3450,7 +3404,7 @@ function getFaixaPauseForDate(dateStr) {
 // Linha cinza "sem aula" entre as faixas da tabela.
 function renderFaixaPauseRows() {
     const pausas = getFaixaPausesFromUI();
-    for (let k = 1; k <= 2; k++) {
+    for (let k = 1; k < MAX_FAIXAS; k++) {
         const row = document.getElementById(`faixa-pausa-${k}`);
         if (!row) continue;
         const pausa = pausas.find((p) => p.aposFaixa === k);
@@ -3467,55 +3421,45 @@ function renderFaixaPauseRows() {
 function applyFaixaDateAutofill(options = {}) {
     const { forceSingleBounds = false, preferredStart = '' } = options;
 
-    const f1Ini = document.getElementById('inp-data-inicio-f1');
-    const f1Fim = document.getElementById('inp-data-fim-f1');
-    const f2Ini = document.getElementById('inp-data-inicio-f2');
-    const f2Fim = document.getElementById('inp-data-fim-f2');
-    const f3Ini = document.getElementById('inp-data-inicio-f3');
-    const f3Fim = document.getElementById('inp-data-fim-f3');
+    const iniDa = (i) => document.getElementById(`inp-data-inicio-f${i}`);
+    const fimDa = (i) => document.getElementById(`inp-data-fim-f${i}`);
+    const temInicio = (i) => !!iniDa(i)?.value;
+    const f1Ini = iniDa(1);
 
     const resolvedPreferredStart = preferredStart || getPreferredStartDateForCurrentTurma();
     const isEditingF1Start = f1Ini && document.activeElement === f1Ini;
     if (resolvedPreferredStart && f1Ini && !f1Ini.value && !isEditingF1Start) f1Ini.value = resolvedPreferredStart;
 
-    const hasF2 = !!(f2Ini && f2Ini.value);
-    const hasF3 = !!(f3Ini && f3Ini.value);
-
     // O Fim de uma faixa e a vespera da seguinte, exceto quando o coordenador
-    // digitou um Fim mais cedo (pausa): esse fica.
-    if (hasF2 && f1Fim) {
-        const endF1 = shiftISODate(f2Ini.value, -1);
-        if (endF1 && !isFaixaEmPausa(1)) {
-            f1Fim.value = endF1;
-            setFaixaFimPausaMark(1, false);
+    // digitou um Fim mais cedo (pausa): esse fica. Faixa sem inicio fica sem Fim.
+    for (let i = 1; i <= MAX_FAIXAS; i++) {
+        const fim = fimDa(i);
+        if (!fim) continue;
+        if (i < MAX_FAIXAS && temInicio(i + 1)) {
+            const vespera = shiftISODate(iniDa(i + 1).value, -1);
+            if (vespera && !isFaixaEmPausa(i)) {
+                fim.value = vespera;
+                setFaixaFimPausaMark(i, false);
+            }
+        } else if (i === 1 ? forceSingleBounds : !temInicio(i)) {
+            fim.value = '';
+            setFaixaFimPausaMark(i, false);
         }
-    } else if (forceSingleBounds && f1Fim) {
-        f1Fim.value = '';
-        setFaixaFimPausaMark(1, false);
     }
 
-    if (hasF3 && f2Fim) {
-        const endF2 = shiftISODate(f3Ini.value, -1);
-        if (endF2 && !isFaixaEmPausa(2)) {
-            f2Fim.value = endF2;
-            setFaixaFimPausaMark(2, false);
+    // A primeira faixa (depois da 1) sem inicio apaga ela e as seguintes.
+    const primeiraVazia = NUMEROS_FAIXAS.find((i) => i >= 2 && !temInicio(i));
+    if (primeiraVazia) {
+        for (let i = primeiraVazia; i <= MAX_FAIXAS; i++) {
+            clearFaixaState(i);
+            if (iniDa(i)) iniDa(i).value = '';
         }
-    } else if (f2Fim && !hasF2) {
-        f2Fim.value = '';
-        setFaixaFimPausaMark(2, false);
     }
 
-    if (!hasF3 && f3Fim) f3Fim.value = '';
-
-    if (!hasF2) {
-        clearFaixaState(2);
-        clearFaixaState(3);
-        if (f2Ini) f2Ini.value = '';
-        if (f3Ini) f3Ini.value = '';
-    } else if (!hasF3) {
-        clearFaixaState(3);
-        if (f3Ini) f3Ini.value = '';
-    }
+    // A ultima linha so aparece quando a anterior ja comecou: o cartao nao cresce
+    // para quem usa ate 3 faixas.
+    document.getElementById(`faixa-${MAX_FAIXAS}`)
+        ?.classList.toggle('hidden', !temInicio(MAX_FAIXAS - 1) && !temInicio(MAX_FAIXAS));
 
     syncFaixaStartSnapshots();
     refreshAllCompactFaixaDateDisplays();
@@ -3555,7 +3499,7 @@ function autoEnterWeeklyEditingForFaixa(faixaIndex) {
     });
 }
 
-// Limpa as 3 faixas e reposiciona a Faixa 1 no primeiro dia com a 1ª OU a 4ª
+// Limpa as faixas e reposiciona a Faixa 1 no primeiro dia com a 1ª OU a 4ª
 // aula livre (busca via getPreferredStartDateForCurrentTurma), deixando o desenho
 // pronto para recomeçar a inserção de faixas a partir dessa data.
 // Opcoes (usadas por recomecarNoDia): perguntar=false pula a confirmacao (ja
@@ -3568,8 +3512,8 @@ function handleClearFaixasRestart(options = {}) {
         return false;
     }
 
-    const hasWork = [1, 2, 3].some((n) => (faixasPatterns[n]?.length || 0) > 0)
-        || [1, 2, 3].some((n) => !!document.getElementById(`inp-data-inicio-f${n}`)?.value);
+    const hasWork = NUMEROS_FAIXAS.some((n) => (faixasPatterns[n]?.length || 0) > 0)
+        || NUMEROS_FAIXAS.some((n) => !!document.getElementById(`inp-data-inicio-f${n}`)?.value);
     if (perguntar && hasWork && !confirm('Limpar todas as faixas e recomeçar? Os slots desenhados serão apagados e a data inicial voltará para o primeiro dia com a 1ª ou 4ª aula livre.')) {
         return false;
     }
@@ -3618,12 +3562,9 @@ function resolveInlineEditableFaixaIndex() {
     const hasStart = (idx) => !!document.getElementById(`inp-data-inicio-f${idx}`)?.value;
 
     const current = parseInt(drawingFaixaIndex || activeFaixaIndex, 10);
-    if (!Number.isNaN(current) && current >= 1 && current <= 3 && hasStart(current)) return current;
+    if (!Number.isNaN(current) && current >= 1 && current <= MAX_FAIXAS && hasStart(current)) return current;
 
-    if (hasStart(1)) return 1;
-    if (hasStart(2)) return 2;
-    if (hasStart(3)) return 3;
-    return null;
+    return NUMEROS_FAIXAS.find((i) => hasStart(i)) || null;
 }
 
 function setupFaixaControls() {
@@ -3633,7 +3574,7 @@ function setupFaixaControls() {
     document.getElementById('btn-aprov-f2')?.addEventListener('click', () => preencherFaixaDoAviso(2));
     document.getElementById('btn-aprov-refazer')?.addEventListener('click', refazerAproveitamento);
     document.getElementById('btn-faixa-auto-fix')?.addEventListener('click', mergeFaixaAutoCreationIntoPrevious);
-    for (let i = 1; i <= 3; i++) {
+    for (let i = 1; i <= MAX_FAIXAS; i++) {
         const iniEl = document.getElementById(`inp-data-inicio-f${i}`);
         const fimEl = document.getElementById(`inp-data-fim-f${i}`);
 
@@ -3641,8 +3582,8 @@ function setupFaixaControls() {
             ['change'].forEach((evt) => {
                 iniEl.addEventListener(evt, () => {
                     const previousValue = String(iniEl.dataset.lastValidValue || '').trim();
-                    if (i === 3 && iniEl.value && !document.getElementById('inp-data-inicio-f2')?.value) {
-                        showToastWarning('Defina primeiro o inicio da Faixa 2.', 'warning', 2200);
+                    if (i >= 3 && iniEl.value && !document.getElementById(`inp-data-inicio-f${i - 1}`)?.value) {
+                        showToastWarning(`Defina primeiro o inicio da Faixa ${i - 1}.`, 'warning', 2200);
                         iniEl.value = '';
                         refreshCompactFaixaDateDisplay(iniEl);
                         return;
@@ -3658,17 +3599,11 @@ function setupFaixaControls() {
                         }
                     }
 
-                    if (i === 2 && !iniEl.value) {
-                        clearFaixaState(2);
-                        clearFaixaState(3);
-                        const f3Ini = document.getElementById('inp-data-inicio-f3');
-                        if (f3Ini) f3Ini.value = '';
-                        activeFaixaIndex = 1;
-                        if (drawingFaixaIndex && parseInt(drawingFaixaIndex, 10) > 1) drawingFaixaIndex = 1;
-                    }
-                    if (i === 3 && !iniEl.value) {
-                        clearFaixaState(3);
-                        if (drawingFaixaIndex && parseInt(drawingFaixaIndex, 10) === 3) drawingFaixaIndex = 2;
+                    // Inicio apagado: a faixa e as seguintes saem.
+                    if (i >= 2 && !iniEl.value) {
+                        for (let j = i; j <= MAX_FAIXAS; j++) clearFaixaState(j);
+                        if (i === 2 || activeFaixaIndex >= i) activeFaixaIndex = i - 1;
+                        if (drawingFaixaIndex && parseInt(drawingFaixaIndex, 10) >= i) drawingFaixaIndex = i - 1;
                     }
 
                     if (pendingFaixaStartPick === i && iniEl.value) clearPendingFaixaStartPick();
@@ -3679,9 +3614,7 @@ function setupFaixaControls() {
                         setComponentStartSelectionMode(iniEl.value ? 'manual' : 'auto');
                     }
                     applyFaixaDateAutofill();
-                    setFaixaStatus(1, getFaixaSlotsAndDays(1).pattern.length);
-                    setFaixaStatus(2, getFaixaSlotsAndDays(2).pattern.length);
-                    setFaixaStatus(3, getFaixaSlotsAndDays(3).pattern.length);
+                    for (let i = 1; i <= MAX_FAIXAS; i++) setFaixaStatus(i, getFaixaSlotsAndDays(i).pattern.length);
 
                     if (iniEl.value) {
                         activeFaixaIndex = i;
@@ -3733,7 +3666,7 @@ function setupFaixaControls() {
         info.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') mostrar(e); });
     });
 
-    for (let i = 2; i <= 3; i++) {
+    for (let i = 2; i <= MAX_FAIXAS; i++) {
         const faixaNumValue = document.querySelector(`#faixa-${i} .faixa-num .faixa-num-value`);
         if (!faixaNumValue || faixaNumValue.dataset.startPickBound === '1') continue;
 
@@ -3793,7 +3726,7 @@ function setupFaixaControls() {
         window.addEventListener('blur', endDrawingDrag);
     }
 
-    for (let i = 1; i <= 3; i++) {
+    for (let i = 1; i <= MAX_FAIXAS; i++) {
         setFaixaStatus(i, getFaixaSlotsAndDays(i).pattern.length);
     }
     applyFaixaDateAutofill({ forceSingleBounds: true });
@@ -3818,7 +3751,7 @@ function hydrateFaixa1FromComponente(allocation) {
     const fim = document.getElementById('inp-data-fim-f1');
     if (ini && allocation.dataInicio) ini.value = allocation.dataInicio;
     if (fim && allocation.dataFim) fim.value = allocation.dataFim;
-    for (let i = 1; i <= 3; i++) setFaixaFimPausaMark(i, false);
+    for (let i = 1; i <= MAX_FAIXAS; i++) setFaixaFimPausaMark(i, false);
 
     setFaixaStatus(1, faixasPatterns[1].length);
     applyFaixaDateAutofill();
@@ -3840,14 +3773,14 @@ function hydrateFaixasFromComponente(allocation, options = {}) {
         return resolved;
     }
 
-    for (let i = 1; i <= 3; i++) {
+    for (let i = 1; i <= MAX_FAIXAS; i++) {
         const ini = document.getElementById(`inp-data-inicio-f${i}`);
         const fim = document.getElementById(`inp-data-fim-f${i}`);
         if (ini) ini.value = '';
         if (fim) fim.value = '';
     }
 
-    faixas.slice(0, 3).forEach((faixa, idx) => {
+    faixas.slice(0, MAX_FAIXAS).forEach((faixa, idx) => {
         const i = idx + 1;
         const ini = document.getElementById(`inp-data-inicio-f${i}`);
         const fim = document.getElementById(`inp-data-fim-f${i}`);
@@ -3871,7 +3804,7 @@ function hydrateFaixasFromComponente(allocation, options = {}) {
 // Componente salva com pausa (Fim antes da vespera da faixa seguinte): marca
 // esses Fins para que o preenchimento automatico nao os cole de novo.
 function markStoredFaixaPauses(faixas = []) {
-    for (let i = 1; i <= 3; i++) {
+    for (let i = 1; i <= MAX_FAIXAS; i++) {
         const atual = faixas[i - 1];
         const proxima = faixas[i];
         setFaixaFimPausaMark(i, !!(atual && proxima && isPauseEnd(atual.inicio, atual.fim, proxima.inicio)));
@@ -3918,13 +3851,13 @@ function getWeeklyWeekDates(weekStartISO) {
 
 function getActiveFaixaStartDate(faixaIndex) {
     const idx = parseInt(faixaIndex, 10);
-    if (Number.isNaN(idx) || idx < 1 || idx > 3) return '';
+    if (Number.isNaN(idx) || idx < 1 || idx > MAX_FAIXAS) return '';
     return document.getElementById(`inp-data-inicio-f${idx}`)?.value || '';
 }
 
 function getAvailableFaixasForNavigation() {
     const out = [];
-    for (let i = 1; i <= 3; i++) {
+    for (let i = 1; i <= MAX_FAIXAS; i++) {
         const ini = getActiveFaixaStartDate(i);
         if (ini) out.push({ idx: i, start: ini });
     }
@@ -4299,7 +4232,7 @@ function computeWeeklyStatus() {
 
     const discUpper = disc.toLocaleUpperCase('pt-BR');
     const parsedIdx = parseInt(drawingFaixaIndex || activeFaixaIndex, 10);
-    const idx = (!Number.isNaN(parsedIdx) && parsedIdx >= 1 && parsedIdx <= 3) ? parsedIdx : 1;
+    const idx = (!Number.isNaN(parsedIdx) && parsedIdx >= 1 && parsedIdx <= MAX_FAIXAS) ? parsedIdx : 1;
     const ini = document.getElementById(`inp-data-inicio-f${idx}`)?.value || '';
 
     if (idx === 1 && !ini) {
@@ -4327,7 +4260,7 @@ function computeWeeklyStatus() {
             // Com o chip de encaixe (data \u00B7 horario) nao ha dica: o chip ja diz onde comecar.
             hint: chip
                 ? ''
-                : 'Clique/arraste nos horarios vagos e clique em "Salvar Componente". Faixas 2 e 3 sao opcionais, para mudancas de horario no periodo.',
+                : 'Clique/arraste nos horarios vagos e clique em "Salvar Componente". Faixas 2 a 4 sao opcionais, para mudancas de horario no periodo.',
             chip
         };
     }
@@ -4435,7 +4368,7 @@ function isAllocationActiveInWeeklyCell(alloc, dayNumber, dateStr, horarioStr) {
 function collectIntensiveFaixasFromPatternMap(patternsMap = {}, fallbackInicio) {
     const faixas = [];
 
-    for (let i = 1; i <= 3; i++) {
+    for (let i = 1; i <= MAX_FAIXAS; i++) {
         const inicio = (document.getElementById(`inp-data-inicio-f${i}`)?.value || (i === 1 ? fallbackInicio : '')).trim();
         const fim = (document.getElementById(`inp-data-fim-f${i}`)?.value || '').trim() || null;
         const pattern = normalizeFaixaPattern(patternsMap?.[i]);
@@ -4465,7 +4398,7 @@ function collectIntensiveFaixasFromPatternMap(patternsMap = {}, fallbackInicio) 
     const sorted = faixas.sort((a, b) => a.inicio.localeCompare(b.inicio));
     const pausaPorIndice = {};
     sorted.forEach((faixa, idx) => {
-        for (let i = 1; i <= 3; i++) {
+        for (let i = 1; i <= MAX_FAIXAS; i++) {
             const iniEl = document.getElementById(`inp-data-inicio-f${i}`);
             if (iniEl?.value === faixa.inicio) {
                 pausaPorIndice[idx] = isFaixaFimMarcadoComoPausa(i);
@@ -4984,9 +4917,7 @@ function resetWeeklyDraftStateForPlanSwitch(preferredStart = '') {
     pendingFaixaStartPick = null;
     pendingFaixaQuickActionConfirm = null;
     weeklyState.clearFaixasPatterns();
-    setFaixaStatus(1, 0);
-    setFaixaStatus(2, 0);
-    setFaixaStatus(3, 0);
+    for (let i = 1; i <= MAX_FAIXAS; i++) setFaixaStatus(i, 0);
     collapseFaixasForNewComponent({
         preferredStart,
         useCurrentUI: false
@@ -5707,9 +5638,7 @@ function resetWeeklyEditorForTurma(turmaId, options = {}) {
     });
 
     weeklyState.clearFaixasPatterns();
-    setFaixaStatus(1, 0);
-    setFaixaStatus(2, 0);
-    setFaixaStatus(3, 0);
+    for (let i = 1; i <= MAX_FAIXAS; i++) setFaixaStatus(i, 0);
 
     const anchorDate = resetWeekToPlanStart
         ? (resetState.firstFaixaStart || termStart)
@@ -5734,7 +5663,7 @@ function resetWeeklyEditorForTurma(turmaId, options = {}) {
 // Para reeditar, o fluxo e pela aba Lista de Ofertas (duplo clique / botao editar).
 // Limpa as datas e a pausa da tabela das faixas (sem mexer na semana mostrada).
 function limparDatasDasFaixas() {
-    for (let i = 1; i <= 3; i++) {
+    for (let i = 1; i <= MAX_FAIXAS; i++) {
         ['inicio', 'fim'].forEach((campo) => {
             const el = document.getElementById(`inp-data-${campo}-f${i}`);
             if (el) el.value = '';
@@ -5791,9 +5720,7 @@ function finalizeWeeklyEditorAfterSave() {
     resetEditingComponentState();
 
     weeklyState.clearFaixasPatterns();
-    setFaixaStatus(1, 0);
-    setFaixaStatus(2, 0);
-    setFaixaStatus(3, 0);
+    for (let i = 1; i <= MAX_FAIXAS; i++) setFaixaStatus(i, 0);
 
     // Limpa o campo de disciplina para a proxima componente. Como o editor fica
     // sem disciplina, resolveInlineEditableFaixaIndex retorna null e a grade nao
@@ -6095,7 +6022,7 @@ function renderWeeklyGrid() {
 
     const drawingDisciplina = normalizeDisciplinaInputValue(inputConfig.disciplina?.value || '');
     const turmaAllocs = store.allocations.filter((a) => String(a.turmaId) === String(store.selectedTurma));
-    const hasAnyDraftPattern = isDrawing && [1, 2, 3].some((idx) => normalizeFaixaPattern(faixasPatterns[idx]).length > 0);
+    const hasAnyDraftPattern = isDrawing && NUMEROS_FAIXAS.some((idx) => normalizeFaixaPattern(faixasPatterns[idx]).length > 0);
     const drawStyles = isDrawing ? getDrawingSelectedStyles() : null;
     const showContextWhileDrawing = !isDrawing || drawingViewMode === 'context';
     const feriadosMap = getHolidayLabelMap();
@@ -6418,7 +6345,7 @@ function criarOutrasFaixasDaCelula({ hasAnyDraftPattern, drawingDisciplina }) {
             const cor = inputConfig.cor?.value || '#cccccc';
             const docenteVal = inputConfig.docente?.value || '';
 
-            for (let fi = 1; fi <= 3; fi++) {
+            for (let fi = 1; fi <= MAX_FAIXAS; fi++) {
                 if (fi === activeFaixa) continue;
 
                 const fPattern = normalizeFaixaPattern(faixasPatterns[fi]);
@@ -6794,7 +6721,7 @@ function renderSlotContent(cell, allocs, dayOfWeek = 0) {
 function prepareEditorForReplacement(original) {
     weeklyState.replacingFromDisciplina = normalizeDisciplinaInputValue(original?.disciplina || '');
 
-    for (let i = 3; i >= 1; i--) {
+    for (let i = MAX_FAIXAS; i >= 1; i--) {
         if (!document.getElementById(`inp-data-inicio-f${i}`)?.value) continue;
         const fim = document.getElementById(`inp-data-fim-f${i}`);
         if (fim) fim.value = '';
