@@ -32,7 +32,8 @@ export function detectTeacherConflicts({
   Object.entries(eventsByDate || {}).forEach(([dateStr, events]) => {
     const dayEvents = (Array.isArray(events) ? events : [])
       .map((event) => ({ event, slot: normalizeConflictSlotLabel(event?.horario || '') }))
-      .filter((item) => item.slot);
+      // semChoque: estagio fora do turno da turma (marcado em js/calendar.js).
+      .filter((item) => item.slot && !item.event?.semChoque);
 
     for (let i = 0; i < dayEvents.length; i++) {
       for (let j = i + 1; j < dayEvents.length; j++) {

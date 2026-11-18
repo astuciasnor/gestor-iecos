@@ -101,6 +101,7 @@ import {
 } from './conflitos_ui.js?v=202611171437';
 import {
     shouldIgnoreTurmaEventForCandidate,
+    candidatoSemChoque,
     normalizeDrawnSlotsByDay,
     normalizeFaixaEntry,
     getNormalizedIntensiveFaixas,
@@ -2936,6 +2937,7 @@ function buildIntensiveTeacherConflictEntries(intense, teacherName) {
 
                 const resolvedTeacher = resolveTeacherForAllocationHour(intense, currentHour);
                 if (normalizeTeacherNameForMatch(resolvedTeacher) !== normalizedTeacher) continue;
+                if (candidatoSemChoque(intense, slot)) continue; // estagio fora do turno
 
                 entries.push({
                     date: currentDate,
@@ -2985,6 +2987,7 @@ function buildIntensiveTeacherConflictEntries(intense, teacherName) {
             currentHour += 1;
             const resolvedTeacher = resolveTeacherForAllocationHour(intense, currentHour);
             if (normalizeTeacherNameForMatch(resolvedTeacher) !== normalizedTeacher) continue;
+            if (candidatoSemChoque(intense, slot)) continue; // estagio fora do turno
 
             entries.push({
                 date: currentDate,
@@ -3017,7 +3020,7 @@ function findConfirmedTeacherConflictForCandidate(candidateAlloc, teacherNames =
 
         Object.entries(existingEventsByDate || {}).forEach(([dateStr, events]) => {
             (events || []).forEach((event) => {
-                if (!event || ficaComATurma(event)) return;
+                if (!event || event.semChoque || ficaComATurma(event)) return;
                 const slot = normalizeConflictSlotLabel(event.horario || '');
                 if (!slot) return;
                 if (!existingByDate.has(dateStr)) existingByDate.set(dateStr, []);
@@ -3067,6 +3070,7 @@ function findTurmaConflictForCandidateExecution(candidateAlloc, execution = {}) 
     for (const dateStr of usedDates) {
         const slots = getExecutionSlotsForDate(execution, dateStr);
         for (const slot of slots) {
+            if (candidatoSemChoque(candidateAlloc, slot)) continue; // estagio fora do turno
             const key = `${dateStr}|${normalizeConflictSlotLabel(slot)}`;
             const event = existingByKey.get(key);
             if (!event) continue;

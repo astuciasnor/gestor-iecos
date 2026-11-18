@@ -8,6 +8,7 @@ import { mapSlotToTurno, turnoDaTurmaInclui } from './turns.js?v=202611171437';
 import { slotLabelsOverlap } from './academic_rules.mjs?v=202611171437';
 import { mesmoDocente } from './docente_nomes.mjs?v=202611171437';
 import { datasFeriadoDaTurma, feriadosDaTurma } from './feriados.mjs?v=202611171437';
+import { aulaContaComoChoque } from './estagio.mjs?v=202611171437';
 
 function normalizeCalendarSlotKey(value) {
   const match = String(value || '').match(/\d{1,2}:\d{2}/);
@@ -64,6 +65,7 @@ function markCalendarVisualConflicts(events = []) {
   (events || []).forEach((event) => {
     const slotKey = normalizeCalendarSlotKey(event?.horario || '');
     if (!slotKey) return;
+    if (event?.semChoque) return; // estagio fora do turno da turma (js/estagio.mjs)
 
     const identity = getCalendarConflictIdentity(event, slotKey);
     if (!items.some((item) => item.identity === identity)) {
@@ -467,7 +469,12 @@ export function getCalendarEvents(turmaId, startDate, endDate, docenteFilter = n
         dataFim: derivedMeta.dataFim || allocation?.dataFim || allocation?.dataInicio || '',
         horariosUltimoDia: Array.isArray(derivedMeta.horariosUltimoDia) ? derivedMeta.horariosUltimoDia.slice() : [],
         offerKey: descriptor.offerKey,
-        occurrenceIndex: occurrence.occurrenceIndex
+        occurrenceIndex: occurrence.occurrenceIndex,
+        // Estagio fora do turno da turma nao gera choque com nada (js/estagio.mjs).
+        semChoque: !aulaContaComoChoque(
+          { disciplina: allocation?.disciplina, horario: occurrence.horario },
+          getNativeTurnoValueForAllocation(allocation)
+        )
       });
     });
 

@@ -78,7 +78,7 @@ export function detectGlobalTeacherConflictsStable() {
 
             (events || []).forEach((event) => {
                 const slotKey = normalizeConflictSlotLabel(event?.horario || '');
-                if (!slotKey) return;
+                if (!slotKey || event?.semChoque) return; // estagio fora do turno: sem choque
 
                 const identity = getTeacherEventIdentity(event, slotKey);
                 if (!items.some((item) => item.identity === identity)) {
@@ -256,10 +256,10 @@ function detectCrossPlanConflicts() {
                 const listaB = eventosOutro?.[data] || [];
                 if (!listaB.length) return;
                 (listaA || []).forEach((a) => {
-                    const slotA = a && a.type !== 'holiday' ? normalizeConflictSlotLabel(a.horario || '') : '';
+                    const slotA = a && a.type !== 'holiday' && !a.semChoque ? normalizeConflictSlotLabel(a.horario || '') : '';
                     if (!slotA) return;
                     listaB.forEach((b) => {
-                        const slotB = b && b.type !== 'holiday' ? normalizeConflictSlotLabel(b.horario || '') : '';
+                        const slotB = b && b.type !== 'holiday' && !b.semChoque ? normalizeConflictSlotLabel(b.horario || '') : '';
                         if (!slotB || !slotLabelsOverlap(slotA, slotB)) return;
                         const discA = `${getTurmaLabel(a.turmaId, a.subGrupo)} - ${a.disciplina} (${rotuloAtivo})`;
                         const discB = `${b.rotuloTurma || getTurmaLabel(b.turmaId, b.subGrupo)} - ${b.disciplina} (${rotuloOutro})`;
@@ -326,10 +326,10 @@ export function acharChoqueComOutroPL(alloc) {
                 const outras = deles?.[data] || [];
                 if (!outras.length) continue;
                 for (const a of (lista || [])) {
-                    if (!a || a.type === 'holiday' || !ehEstaOferta(a)) continue;
+                    if (!a || a.type === 'holiday' || a.semChoque || !ehEstaOferta(a)) continue;
                     const slotA = normalizeConflictSlotLabel(a.horario || '');
                     if (!slotA) continue;
-                    const b = outras.find((ev) => ev && ev.type !== 'holiday'
+                    const b = outras.find((ev) => ev && ev.type !== 'holiday' && !ev.semChoque
                         && slotLabelsOverlap(slotA, normalizeConflictSlotLabel(ev.horario || '')));
                     if (b) {
                         return { professor, data, horario: slotA, disciplina: b.disciplina, turma: b.rotuloTurma, plano: planLabel(meta) };
