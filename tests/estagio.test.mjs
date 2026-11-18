@@ -125,3 +125,35 @@ test('avisos: padrão semanal quebrado, sobra de horas e 10 h por dia', () => {
     assert.equal(dez.alocada, 10);
     assert.ok(dez.avisos.some((a) => a.tipo === 'info'));
 });
+
+test('dias planejados: campo do meio dura N dias; encontro avisa quando marcou menos', () => {
+    const etapas = [
+        { tipo: 'encontro', turno: 'Tarde', horasDia: 5, mes: '2027-03', diasPlanejados: 3, dias: ['2027-03-15', '2027-03-16', '2027-03-17'] },
+        { tipo: 'campo', turno: 'Manhã', horasDia: 3, mes: '2027-03', diasSemana: [1, 3], diasPlanejados: 11 },
+        { tipo: 'campo', turno: 'Noite', horasDia: 3, mes: '2027-05', diasSemana: [2, 4] },
+        { tipo: 'encontro', turno: 'Tarde', horasDia: 5, mes: '2027-07', diasPlanejados: 3, dias: ['2027-07-05', '2027-07-06', '2027-07-07'] }
+    ];
+    const r = calcularEstagio({ etapas, ch: 105, ...PL2, feriados: FERIADOS, turnoDaTurma: 'Tarde' });
+    assert.equal(r.etapas[1].aulas.length, 11);
+    assert.equal(r.etapas[1].aulas.at(-1), '2027-04-28');   // 11 seg/qua desde 22/03 (21/04 e feriado)
+    assert.equal(r.alocada, 105);
+    assert.ok(!r.avisos.some((a) => a.tipo === 'erro'));
+
+    etapas[0].dias = ['2027-03-15', '2027-03-16'];
+    const faltando = calcularEstagio({ etapas, ch: 105, ...PL2, feriados: FERIADOS, turnoDaTurma: 'Tarde' });
+    assert.ok(faltando.avisos.some((a) => a.tipo === 'erro' && a.texto.includes('2 de 3 dias')));
+});
+
+test('sugestão: campo na Manhã e Tarde de turma da manhã pode ficar só na Manhã, até 6 h', () => {
+    const etapas = [
+        { tipo: 'encontro', turno: 'Manhã', horasDia: 5, mes: '2027-03', dias: ['2027-03-15', '2027-03-16'] },
+        { tipo: 'campo', turno: 'Manhã+Tarde', horasDia: 8, mes: '2027-03', diasSemana: [1, 2, 3, 4, 5] }
+    ];
+    const r = calcularEstagio({ etapas, ch: 90, ...PL2, feriados: FERIADOS, turnoDaTurma: 'Manhã' });
+    const dica = r.avisos.find((a) => a.acao);
+    assert.ok(dica);
+    assert.deepEqual([dica.acao.etapa, dica.acao.turno, dica.acao.horasDia], [1, 'Manhã', 6]);
+    // campo fora do turno da turma: sem sugestao
+    etapas[1].turno = 'Noite'; etapas[1].horasDia = 3;
+    assert.ok(!calcularEstagio({ etapas, ch: 90, ...PL2, feriados: FERIADOS, turnoDaTurma: 'Manhã' }).avisos.some((a) => a.acao));
+});

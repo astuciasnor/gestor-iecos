@@ -138,11 +138,14 @@ export function limitesDoMes(mes) {
 const fmtBR = (iso) => iso ? `${iso.slice(8, 10)}/${iso.slice(5, 7)}` : '';
 
 // Calcula as aulas de cada etapa.
-// etapas: [{ tipo: 'encontro'|'campo', turno, horasDia, mes: 'AAAA-MM',
+// etapas: [{ tipo: 'encontro'|'campo', turno, horasDia, mes: 'AAAA-MM', diasPlanejados,
 //            dias: [iso] (encontro), diasSemana: [1..6], inicio, fim (campo) }]
-// Devolve { etapas: [{ ...etapa, aulas: [iso], calculado }], alocada, avisos: [{ tipo, texto }] }.
-// tipo do aviso: 'erro' (impede Aplicar), 'ok' ou 'info'.
-export function calcularEstagio({ etapas = [], ch = 0, termStart, termEnd, feriados = new Set() }) {
+// diasPlanejados: no encontro, quantos dias o coordenador quer marcar; no campo
+// (menos o ultimo), quantos dias de aula a partir do comeco (o fim sai disso).
+// Devolve { etapas: [{ ...etapa, aulas: [iso], calculado }], alocada, avisos: [{ tipo, texto, acao? }] }.
+// tipo do aviso: 'erro' (impede Aplicar), 'ok' ou 'info'. acao: sugestao com botao
+// ({ etapa, turno, horasDia }).
+export function calcularEstagio({ etapas = [], ch = 0, termStart, termEnd, feriados = new Set(), turnoDaTurma = '', maxPorLetra = null }) {
     const R = etapas.map((e) => ({
         ...e,
         aulas: e.tipo === 'encontro'
@@ -187,6 +190,13 @@ export function calcularEstagio({ etapas = [], ch = 0, termStart, termEnd, feria
                     if (aulas.length * r.horasDia >= r.precisa) break;
                 }
             }
+        } else if (Number(r.diasPlanejados) > 0) {
+            // N dias de aula a partir do comeco, ate a proxima etapa.
+            for (let d = ini; d && d < limite && d <= termEnd; d = addDaysISO(d, 1)) {
+                if (!semana.has(weekdayOf(d)) || !diaLetivo(d, feriados)) continue;
+                aulas.push(d);
+                if (aulas.length >= Number(r.diasPlanejados)) break;
+            }
         } else {
             const fimMes = r.mes ? limitesDoMes(r.mes).ultimo : termEnd;
             const fim = [r.fim || fimMes, addDaysISO(limite, -1), termEnd].sort()[0];
@@ -202,14 +212,20 @@ export function calcularEstagio({ etapas = [], ch = 0, termStart, termEnd, feria
     const alocada = R.reduce((s, r) => s + horas(r), 0);
     const avisos = [];
     R.forEach((r, k) => {
+        const planejados = Number(r.diasPlanejados) || 0;
         if (r.tipo === 'encontro') {
             if (!r.aulas.length) avisos.push({ tipo: 'erro', texto: `Etapa ${k + 1}: marque os dias do encontro.` });
+            else if (planejados && r.aulas.length !== planejados) {
+                avisos.push({ tipo: 'erro', texto: `Etapa ${k + 1}: ${r.aulas.length} de ${planejados} dias marcados. Marque os dias que faltam ou mude o número de dias.` });
+            }
             const faltam = diasQueFaltamNoPadrao(r.aulas, feriados);
             if (faltam.length) {
                 avisos.push({ tipo: 'erro', texto: `Etapa ${k + 1}: os dias não repetem o mesmo padrão toda semana. Marque também ${faltam.slice(0, 5).map(fmtBR).join(', ')}${faltam.length > 5 ? '…' : ''} ou desmarque o dia que sobra.` });
             }
         } else if (!(r.diasSemana || []).length) {
             avisos.push({ tipo: 'erro', texto: `Etapa ${k + 1}: escolha os dias da semana do estágio em campo.` });
+        } else if (!r.calculado && planejados && r.aulas.length < planejados) {
+            avisos.push({ tipo: 'erro', texto: `Etapa ${k + 1}: só cabem ${r.aulas.length} dos ${planejados} dias antes da próxima etapa. Diminua os dias ou escolha mais dias da semana.` });
         }
     });
     for (let k = 1; k < R.length; k++) {
@@ -230,6 +246,26 @@ export function calcularEstagio({ etapas = [], ch = 0, termStart, termEnd, feria
     if (!avisos.some((a) => a.tipo === 'erro') && alocada === ch) avisos.push({ tipo: 'ok', texto: 'Fecha exato. Pode conferir as faixas.' });
     if (R.some((r) => Number(r.horasDia) > 6)) {
         avisos.push({ tipo: 'info', texto: 'Acima de 6 h por dia: a Lei do Estágio (11.788/2008) fala em 6 h/dia e 30 h/semana no período de aulas. É só um lembrete.' });
+    }
+    // Sugestao: campo que ocupa o turno da turma e mais um turno (ou passa de 6 h)
+    // pode ficar so no turno da turma, ate 6 h; o outro turno fica livre para
+    // outra componente. So sugere: o coordenador decide pelo botao.
+    const letrasTurma = letrasDoTurno(turnoDaTurma);
+    if (letrasTurma.length === 1) {
+        const [lt] = letrasTurma;
+        const nomeTurma = { M: 'Manhã', T: 'Tarde', N: 'Noite' }[lt];
+        // Ate 6 h (Lei do Estagio), ou menos se o turno tem menos aulas no quadro.
+        const maxTurma = Math.min(6, maxPorLetra?.[lt] || (lt === 'N' ? 4 : 6));
+        R.forEach((r, k) => {
+            const letras = letrasDoTurno(r.turno);
+            if (r.tipo !== 'campo' || !letras.includes(lt)) return;
+            if (letras.length === 1 && Number(r.horasDia) <= maxTurma) return;
+            avisos.push({
+                tipo: 'info',
+                texto: `Etapa ${k + 1}: com o estágio em campo só na ${nomeTurma} (até ${maxTurma} h), o outro turno fica livre para uma componente comum da turma.`,
+                acao: { etapa: k, turno: nomeTurma, horasDia: Math.min(maxTurma, Number(r.horasDia) || maxTurma), rotulo: `Usar só ${nomeTurma}, ${Math.min(maxTurma, Number(r.horasDia) || maxTurma)} h` }
+            });
+        });
     }
     return { etapas: R, alocada, avisos };
 }

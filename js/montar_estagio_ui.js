@@ -50,6 +50,7 @@ export function abrirMontarEstagio(ctx) {
     const novaEtapa = (tipo, turno, mes) => ({
         tipo, turno, mes,
         horasDia: Math.min(tipo === 'encontro' ? 5 : 3, maxHorasDia(turno, maxPorLetra)),
+        diasPlanejados: tipo === 'encontro' ? 3 : 10,
         dias: [], diasSemana: tipo === 'campo' ? [1, 3] : [], inicio: null, fim: null, ver: mes
     });
     // Ponto de partida comum (encontro, campo, encontro); tudo e editavel.
@@ -89,7 +90,7 @@ export function abrirMontarEstagio(ctx) {
 
 function calcular() {
     const { ctx, etapas, n, feriadosSet } = estado;
-    return calcularEstagio({ etapas: etapas.slice(0, n), ch: ctx.ch, termStart: ctx.termStart, termEnd: ctx.termEnd, feriados: feriadosSet });
+    return calcularEstagio({ etapas: etapas.slice(0, n), ch: ctx.ch, termStart: ctx.termStart, termEnd: ctx.termEnd, feriados: feriadosSet, turnoDaTurma: ctx.turnoTurma, maxPorLetra: estado.maxPorLetra });
 }
 
 function desenhar() {
@@ -102,7 +103,7 @@ function desenhar() {
     });
     const corpo = modal.querySelector('.me-corpo');
     if (estado.passo === 1) corpo.innerHTML = htmlPasso1();
-    else if (estado.passo === 2) corpo.innerHTML = htmlPasso2(r);
+    else if (estado.passo === 2) { corpo.innerHTML = htmlPasso2(r); preencherInfoEtapa(r); }
     else corpo.innerHTML = htmlPasso3(r);
     const pronto = r.alocada === estado.ctx.ch && !r.avisos.some((a) => a.tipo === 'erro');
     modal.querySelector('.me-rodape').innerHTML = estado.passo === 1
@@ -122,13 +123,48 @@ function atualizarResultados() {
         modal.querySelector('.me-resumo').innerHTML = htmlResumo(r);
         modal.querySelector('.me-regua').outerHTML = htmlRegua(r);
         modal.querySelector('.me-placar-area').innerHTML = htmlPlacar(r);
+        modal.querySelector('.me-dias').innerHTML = htmlQuadrados(r);
+        preencherInfoEtapa(r);
     }
     if (estado.passo === 1) {
         modal.querySelectorAll('[data-etapa]').forEach((linha) => {
             const e = estado.etapas[Number(linha.dataset.etapa)];
             linha.querySelector('.me-choque-cel').innerHTML = htmlChoque(e.turno);
         });
+        const sugestoes = modal.querySelector('.me-sugestoes');
+        if (sugestoes) sugestoes.innerHTML = htmlSugestoes(r);
     }
+}
+
+// Indice do ultimo estagio em campo (o que tem os dias calculados).
+function ultimoCampo() {
+    let k = -1;
+    estado.etapas.slice(0, estado.n).forEach((e, i) => { if (e.tipo === 'campo') k = i; });
+    return k;
+}
+
+// Avisos com botao (sugestao de ficar so no turno da turma, ate 6 h).
+function htmlSugestoes(r) {
+    return r.avisos.filter((a) => a.acao).map((a) => `
+        <div class="me-aviso me-aviso--info me-aviso--acao">
+            <span>${esc(a.texto)}</span>
+            <button type="button" class="me-btn me-btn--mini" data-sugestao="${a.acao.etapa}" data-turno="${esc(a.acao.turno)}" data-horas="${a.acao.horasDia}">${esc(a.acao.rotulo)}</button>
+        </div>`).join('');
+}
+
+// Tabela Etapa | Dias | Horas/dia | Total (a soma tem que dar a CH).
+function htmlTotais(r) {
+    const linhas = r.etapas.map((e, k) => `
+        <tr><td><span class="me-pill me-cor-${k + 1}">${k + 1}</span> ${e.tipo === 'encontro' ? 'Encontro' : 'Campo'}</td>
+            <td class="me-num">${e.aulas.length}${e.calculado ? '<small> calc.</small>' : ''}</td>
+            <td class="me-num">${e.horasDia}</td>
+            <td class="me-num">${e.aulas.length * e.horasDia} h</td></tr>`).join('');
+    const ok = r.alocada === estado.ctx.ch;
+    return `<table class="me-totais">
+        <thead><tr><th>Etapa</th><th class="me-num">Dias</th><th class="me-num">Horas</th><th class="me-num">Total</th></tr></thead>
+        <tbody>${linhas}</tbody>
+        <tfoot><tr><td colspan="3">Total (CH ${estado.ctx.ch} h)</td><td class="me-num ${ok ? 'me-ok' : 'me-erro'}"><b>${r.alocada} h</b></td></tr></tfoot>
+    </table>`;
 }
 
 // ---------------------------------------------------------------- passo 1
@@ -141,12 +177,16 @@ const opcoes = (lista, atual) => lista.map(([v, t]) => `<option value="${esc(v)}
 
 function htmlPasso1() {
     const { etapas, n, turnosPossiveis, meses, maxPorLetra } = estado;
+    const calc = ultimoCampo();
     const linhas = etapas.slice(0, n).map((e, k) => `
         <div class="me-etapa me-cor-${k + 1}" data-etapa="${k}">
             <span class="me-etapa-nome">Etapa ${k + 1}</span>
             <select data-campo="tipo" aria-label="Etapa ${k + 1}: o que é">${opcoes([['encontro', 'Encontro com orientador'], ['campo', 'Estágio em campo']], e.tipo)}</select>
             <select data-campo="turno" aria-label="Etapa ${k + 1}: turno">${opcoes(turnosPossiveis.map((t) => [t, rotuloTurno(t)]), e.turno)}</select>
             <select data-campo="mes" aria-label="Etapa ${k + 1}: mês">${opcoes(meses.map((m) => [m, MESES[Number(m.slice(5, 7)) - 1]]), e.mes)}</select>
+            ${k === calc
+                ? '<span class="me-horas" title="O último estágio em campo tem os dias calculados para a CH fechar exata">calculado</span>'
+                : `<span class="me-horas"><input type="number" data-campo="diasPlanejados" min="1" max="120" value="${e.diasPlanejados}" aria-label="Etapa ${k + 1}: número de dias"> dias</span>`}
             <span class="me-horas"><input type="number" data-campo="horasDia" min="1" max="${maxHorasDia(e.turno, maxPorLetra)}" value="${e.horasDia}" aria-label="Etapa ${k + 1}: horas por dia"> h/dia</span>
             <span class="me-choque-cel">${htmlChoque(e.turno)}</span>
         </div>`).join('');
@@ -157,9 +197,10 @@ function htmlPasso1() {
             <span class="me-nota">Cada etapa vira uma faixa. Encontro: dias com a turma e o orientador. Campo: escola, laboratório, empresa, fazenda.</span>
         </div>
         <div class="me-etapas">
-            <div class="me-etapa me-etapa--cab"><span></span><span>O que é</span><span>Turno</span><span>Mês</span><span>Horas</span><span>Choque</span></div>
+            <div class="me-etapa me-etapa--cab"><span></span><span>O que é</span><span>Turno</span><span>Mês</span><span>Dias</span><span>Horas</span><span>Choque</span></div>
             ${linhas}
-        </div>`;
+        </div>
+        <div class="me-sugestoes">${htmlSugestoes(calcular())}</div>`;
 }
 
 // ---------------------------------------------------------------- passo 2
@@ -177,14 +218,13 @@ function htmlResumo(r) {
     return `${e.aulas.length} dia${e.aulas.length === 1 ? '' : 's'} · ${e.aulas.length * e.horasDia} h · ${periodo}${e.calculado && e.aulas.length ? ' <span class="me-ok">· fim calculado para fechar a CH</span>' : ''}`;
 }
 
-function htmlPasso2(r) {
+// Quadradinhos dos dias do mes visto da etapa ativa.
+function htmlQuadrados(r) {
     const k = estado.ativo;
     const e = estado.etapas[k];
-    const calc = r.etapas[k];
-    const { ctx, feriadosSet } = estado;
+    const { ctx } = estado;
     const dono = (iso) => r.etapas.findIndex((x) => x.aulas.includes(iso));
-    const mesVisto = e.ver || e.mes;
-    const { primeiro, ultimo } = limitesDoMes(mesVisto);
+    const { primeiro, ultimo } = limitesDoMes(e.ver || e.mes);
     let quadrados = '';
     for (let d = primeiro; d <= ultimo; d = addDaysISO(d, 1)) {
         const dow = weekdayOf(d);
@@ -202,17 +242,51 @@ function htmlPasso2(r) {
         const titulo = `${SEMANA[dow]} ${fmt(d)}${feriado ? ' · ' + feriado : ''}${outro ? ' · Etapa ' + (quem + 1) : ''}${foraDoPL ? ' · fora do período' : ''}`;
         quadrados += `<button type="button" class="${cls}" data-dia="${d}" aria-pressed="${meu}" ${bloqueado ? 'disabled' : ''} title="${esc(titulo)}"><span>${SEMANA1[dow]}</span><b>${Number(d.slice(8, 10))}</b></button>`;
     }
+    return quadrados;
+}
+
+// Textos da etapa ativa que mudam ao digitar (dias marcados, dias calculados, fim).
+function preencherInfoEtapa(r) {
+    const modal = document.getElementById('montar-estagio-modal');
+    const e = estado.etapas[estado.ativo];
+    const calc = r.etapas[estado.ativo];
+    if (!modal || !e || !calc) return;
+    const marcados = modal.querySelector('.me-marcados');
+    if (marcados) {
+        marcados.textContent = `${calc.aulas.length} de ${e.diasPlanejados}`;
+        marcados.className = `me-marcados ${calc.aulas.length === Number(e.diasPlanejados) ? 'me-ok' : 'me-erro'}`;
+    }
+    const diasCalc = modal.querySelector('.me-dias-calc');
+    if (diasCalc) diasCalc.textContent = `${calc.aulas.length} (calculado)`;
+    const termina = modal.querySelector('.me-termina');
+    if (termina) termina.textContent = calc.aulas.length ? fmt(calc.aulas[calc.aulas.length - 1]) : '—';
+}
+
+function htmlPasso2(r) {
+    const k = estado.ativo;
+    const e = estado.etapas[k];
+    const calc = r.etapas[k];
+    const { ctx } = estado;
+    const mesVisto = e.ver || e.mes;
     const idxMes = estado.meses.indexOf(mesVisto);
+    const inputDias = `<label>Dias <input type="number" data-campo="diasPlanejados" min="1" max="120" value="${e.diasPlanejados}"></label>`;
+    const inputHoras = `<label>Horas/dia <input type="number" data-campo="horasDia" min="1" max="${maxHorasDia(e.turno, estado.maxPorLetra)}" value="${e.horasDia}"></label>`;
     const campos = e.tipo === 'campo' ? `
         <div class="me-campos me-cor-${k + 1}">
-            <span class="me-rotulo">Dias</span>
+            <span class="me-rotulo">Dias da semana</span>
             <span class="me-chips">${[1, 2, 3, 4, 5, 6].map((x) => `<button type="button" class="me-chip" data-semana="${x}" aria-pressed="${e.diasSemana.includes(x)}">${SEMANA[x]}</button>`).join('')}</span>
             <label>Começa <input type="date" data-campo="inicio" value="${esc(calc.inicioUsado || '')}" min="${ctx.termStart}" max="${ctx.termEnd}"></label>
             ${calc.calculado
-                ? `<span class="me-rotulo">Termina: <b class="me-ok">${calc.aulas.length ? fmt(calc.aulas[calc.aulas.length - 1]) + ' (calculado)' : 'calculado'}</b></span>`
-                : `<label>Termina <input type="date" data-campo="fim" value="${esc(e.fim || limitesDoMes(e.mes).ultimo)}" min="${ctx.termStart}" max="${ctx.termEnd}"></label>`}
-            <label>Horas/dia <input type="number" data-campo="horasDia" min="1" max="${maxHorasDia(e.turno, estado.maxPorLetra)}" value="${e.horasDia}"></label>
-        </div>` : '';
+                ? '<span class="me-rotulo">Dias: <b class="me-ok me-dias-calc"></b></span>'
+                : inputDias}
+            ${inputHoras}
+            <span class="me-rotulo">Termina: <b class="me-dado me-termina"></b></span>
+        </div>` : `
+        <div class="me-campos me-cor-${k + 1}">
+            ${inputDias}
+            <span class="me-rotulo">Marcados: <b class="me-marcados"></b></span>
+            ${inputHoras}
+        </div>`;
     return `
         ${htmlAbas(r)}
         <div class="me-painel me-cor-${k + 1}">
@@ -223,7 +297,7 @@ function htmlPasso2(r) {
                 <span class="me-nota">${e.tipo === 'encontro' ? 'Clique nos dias do encontro.' : 'Os dias saem dos dias da semana escolhidos.'}</span>
                 ${htmlChoque(e.turno)}
             </div>
-            <div class="me-dias-rolagem"><div class="me-dias">${quadrados}</div></div>
+            <div class="me-dias-rolagem"><div class="me-dias">${htmlQuadrados(r)}</div></div>
             ${campos}
             <div class="me-resumo">${htmlResumo(r)}</div>
         </div>
@@ -261,12 +335,15 @@ function htmlRegua(r) {
 function htmlPlacar(r) {
     const ch = estado.ctx.ch;
     const d = ch - r.alocada;
-    return `<div class="me-placar">
-            <div><small>Prevista</small><b>${ch} h</b></div>
-            <div><small>Alocada</small><b>${r.alocada} h</b></div>
-            <div class="${d === 0 ? 'me-placar--ok' : 'me-placar--falta'}"><small>${d < 0 ? 'Sobra' : 'Falta'}</small><b>${Math.abs(d)} h${d === 0 ? ' ✔' : ''}</b></div>
+    return `<div class="me-placar-col">
+            <div class="me-placar">
+                <div><small>Prevista</small><b>${ch} h</b></div>
+                <div><small>Alocada</small><b>${r.alocada} h</b></div>
+                <div class="${d === 0 ? 'me-placar--ok' : 'me-placar--falta'}"><small>${d < 0 ? 'Sobra' : 'Falta'}</small><b>${Math.abs(d)} h${d === 0 ? ' ✔' : ''}</b></div>
+            </div>
+            <div class="me-avisos">${r.avisos.filter((a) => !a.acao).map((a) => `<div class="me-aviso me-aviso--${a.tipo}">${esc(a.texto)}</div>`).join('')}${htmlSugestoes(r)}</div>
         </div>
-        <div class="me-avisos">${r.avisos.map((a) => `<div class="me-aviso me-aviso--${a.tipo}">${esc(a.texto)}</div>`).join('')}</div>`;
+        ${htmlTotais(r)}`;
 }
 
 // ---------------------------------------------------------------- passo 3
@@ -329,6 +406,13 @@ function aoClicar(e) {
         desenhar();
         return;
     }
+    if (b.dataset.sugestao !== undefined) {
+        const alvoEtapa = s.etapas[Number(b.dataset.sugestao)];
+        alvoEtapa.turno = b.dataset.turno;
+        alvoEtapa.horasDia = Math.min(Number(b.dataset.horas), maxHorasDia(alvoEtapa.turno, s.maxPorLetra));
+        desenhar();
+        return;
+    }
     if (b.hasAttribute('data-aplicar')) aplicar();
 }
 
@@ -342,6 +426,7 @@ function aoMudar(e) {
     if (campo === 'tipo') {
         etapa.tipo = t.value;
         if (etapa.tipo === 'campo' && !etapa.diasSemana.length) etapa.diasSemana = [1, 3];
+        if (!etapa.diasPlanejados) etapa.diasPlanejados = etapa.tipo === 'encontro' ? 3 : 10;
     } else if (campo === 'turno') {
         etapa.turno = t.value;
         etapa.horasDia = Math.min(etapa.horasDia, maxHorasDia(etapa.turno, s.maxPorLetra));
@@ -359,12 +444,14 @@ function aoMudar(e) {
 
 function aoDigitar(e) {
     const t = e.target;
-    if (t.type !== 'number' || t.dataset.campo !== 'horasDia') return;
+    const campo = t.dataset.campo;
+    if (t.type !== 'number' || (campo !== 'horasDia' && campo !== 'diasPlanejados')) return;
     const linha = t.closest('[data-etapa]');
     const etapa = estado.etapas[linha ? Number(linha.dataset.etapa) : estado.ativo];
     const v = parseInt(t.value, 10);
     if (Number.isNaN(v)) return;
-    etapa.horasDia = Math.max(1, Math.min(v, maxHorasDia(etapa.turno, estado.maxPorLetra)));
+    if (campo === 'horasDia') etapa.horasDia = Math.max(1, Math.min(v, maxHorasDia(etapa.turno, estado.maxPorLetra)));
+    else etapa.diasPlanejados = Math.max(1, Math.min(v, 120));
     atualizarResultados();
 }
 
