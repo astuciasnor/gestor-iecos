@@ -108,6 +108,25 @@ export function getShiftChangeLabel(letter = '') {
     return '';
 }
 
+// Quadro de horarios de TODOS os regimes, por turno ({ 'Manhã': [...], 'Tarde': [...],
+// 'Noite': [...] }). Usado para saber o turno de uma aula pelo rotulo (ex.: no
+// regime 1 a ultima aula da Tarde e 18:00 - 18:50). Guardado enquanto os dados
+// nao mudam.
+let quadroCache = { dados: null, quadro: null };
+export function getQuadroTodosRegimes() {
+    const rd = store.rawData || {};
+    if (quadroCache.dados === rd && quadroCache.quadro) return quadroCache.quadro;
+    const quadro = {};
+    const somar = (hp) => Object.entries(hp || {}).forEach(([turno, lista]) => {
+        if (!Array.isArray(lista)) return;
+        (quadro[turno] = quadro[turno] || []).push(...lista);
+    });
+    Object.values(rd.horarios_por_regime || {}).forEach(somar);
+    somar(rd.horarios_por_turno);
+    quadroCache = { dados: rd, quadro };
+    return quadro;
+}
+
 export function getNativeTurnoValueForAllocation(allocLike = {}) {
     return store.rawData?.turmas?.find((turma) => String(turma?.turma_id) === String(allocLike?.turmaId))?.turno
         || allocLike?.turno

@@ -8,7 +8,7 @@ import { getAllocationTeachersForConflict, isFaixaAllocation } from './allocatio
 import { getCalendarEvents } from './calendar.js?v=202611171437';
 import { getCursoSiglaDaTurma, getDisciplinaInfo, getTurmaLabel } from './curso_turma_helpers.js?v=202611171437';
 import { addDaysISO, formatDateBR } from './date_utils_ui.js?v=202611171437';
-import { alignFaixasToExecutionEnd, buildFinalAdjustmentFaixaSuggestion, computeIntensiveExecution, getNormalizedIntensiveFaixas, normalizeFaixaEntry, shouldIgnoreTurmaEventForCandidate } from './faixa_utils.js?v=202611171437';
+import { alignFaixasToExecutionEnd, buildFinalAdjustmentFaixaSuggestion, computeIntensiveExecution, getNormalizedIntensiveFaixas, normalizeFaixaEntry, shouldIgnoreTurmaEventForCandidate, candidatoSemChoque } from './faixa_utils.js?v=202611171437';
 import { datasFeriadoDaTurma } from './feriados.mjs?v=202611171437';
 import { store } from './store.js?v=202611171437';
 import { saoSubturmasDiferentes } from './subturmas.mjs?v=202611171437';
@@ -114,7 +114,7 @@ export function sugerirInicioSemChoque(candidato, professores = []) {
         const porData = new Map();
         Object.entries(getCalendarEvents(null, inicioBusca, fimPL, nome) || {}).forEach(([data, lista]) => {
             (lista || []).forEach((ev) => {
-                if (!ev || String(ev.turmaId) === String(candidato.turmaId)) return;
+                if (!ev || ev.semChoque || String(ev.turmaId) === String(candidato.turmaId)) return;
                 const slot = normalizeConflictSlotLabel(ev.horario || '');
                 if (!slot) return;
                 if (!porData.has(data)) porData.set(data, []);
@@ -134,7 +134,8 @@ export function sugerirInicioSemChoque(candidato, professores = []) {
         if (calc.posicao.dataInicio !== dia) continue;
         const nova = { ...candidato, ...calc.posicao };
         const chocaNaTurma = Object.entries(nova.executionByDate || {}).some(([data, slots]) =>
-            (slots || []).some((s) => turmaOcupada.has(`${data}|${normalizeConflictSlotLabel(s)}`)));
+            (slots || []).some((s) => !candidatoSemChoque(candidato, s)
+                && turmaOcupada.has(`${data}|${normalizeConflictSlotLabel(s)}`)));
         if (chocaNaTurma) continue;
         const chocaProfessor = agendas.some(({ nome, porData }) =>
             ligacoes.buildIntensiveTeacherConflictEntries(nova, nome).some((aula) =>
@@ -158,6 +159,7 @@ function acharChoqueNaTurma(candidato) {
     }));
     for (const [data, slots] of Object.entries(candidato.executionByDate || {})) {
         for (const slot of (slots || [])) {
+            if (candidatoSemChoque(candidato, slot)) continue; // estagio fora do turno
             const ev = ocupados.get(`${data}|${normalizeConflictSlotLabel(slot)}`);
             if (ev) return { date: data, horario: slot, disciplina: ev.disciplina || '' };
         }

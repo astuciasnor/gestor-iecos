@@ -2,13 +2,26 @@ import { store } from './store.js?v=202611171437';
 import { getCalendarEvents } from './calendar.js?v=202611171437';
 import { mapSlotToTurno } from './turns.js?v=202611171437';
 import { addDaysISO, timeToMinutes, toISODate } from './date_utils_ui.js?v=202611171437';
-import { normalizeConflictSlotLabel } from './turno_helpers.js?v=202611171437';
+import { normalizeConflictSlotLabel, getNativeTurnoValueForAllocation, getQuadroTodosRegimes } from './turno_helpers.js?v=202611171437';
+import { aulaContaComoChoque } from './estagio.mjs?v=202611171437';
 import { isPriorityRegularAllocation } from './allocation_helpers.js?v=202611171437';
 import { datasFeriadoDaTurma } from './feriados.mjs?v=202611171437';
 import { computeRemainingFractionalHours, generateAllocationOccurrences, validateOccurrenceWithinSemesterBounds } from './academic_rules.mjs?v=202611171437';
 
+// Horario da componente em edicao que nao gera choque: estagio fora do turno
+// da turma (js/estagio.mjs). Vale para a turma e para o professor.
+export function candidatoSemChoque(candidateAlloc, horario) {
+    return !aulaContaComoChoque(
+        { disciplina: candidateAlloc?.disciplina, horario },
+        getNativeTurnoValueForAllocation(candidateAlloc),
+        getQuadroTodosRegimes()
+    );
+}
+
 export function shouldIgnoreTurmaEventForCandidate(event, candidateAlloc) {
     if (!event || !candidateAlloc) return false;
+    // Estagio fora do turno da turma nao ocupa o horario (marcado em calendar.js).
+    if (event.semChoque) return true;
     if (candidateAlloc.id !== undefined && candidateAlloc.id !== null && event.id !== undefined && event.id !== null) {
         if (String(event.id) === String(candidateAlloc.id)) return true;
     }

@@ -14,6 +14,8 @@
 // nao da para reatribuir um binding de import, por isso o estado vive num objeto).
 // ---------------------------------------------------------------------------
 
+import { NUMEROS_FAIXAS } from './faixas.mjs?v=202611171437';
+
 export const weeklyState = {
     // Rascunho da disciplina carregada no editor (nome normalizado, sem "(60h)").
     editingDisciplinaDraft: '',
@@ -42,12 +44,12 @@ export const weeklyState = {
     lastDisciplinaInputNormalized: '',
 
     // --- Estado de DESENHO / FAIXAS ---
-    // Padroes desenhados por faixa (1|2|3) -> array de { dia, slot }. E MUTADO
+    // Padroes desenhados por faixa (1..MAX_FAIXAS, js/faixas.mjs) -> array de { dia, slot }. E MUTADO
     // IN-PLACE (faixasPatterns[i] = ...) e nunca reatribuido como objeto inteiro,
     // para que o alias `const faixasPatterns = weeklyState.faixasPatterns` em
-    // ui.js continue apontando para este mesmo objeto. Para limpar os 3, use
+    // ui.js continue apontando para este mesmo objeto. Para limpar todos, use
     // clearFaixasPatterns() (preserva a identidade do objeto).
-    faixasPatterns: { 1: [], 2: [], 3: [] },
+    faixasPatterns: Object.fromEntries(NUMEROS_FAIXAS.map((i) => [i, []])),
 
     // --- Estado de VISUALIZACAO da grade semanal ---
     // weekStartISO: 1a data (segunda) da semana exibida; followActiveFaixa:
@@ -61,13 +63,11 @@ export const weeklyState = {
     // Flag interna do trace de diagnostico (ver isTraceEnabled/setTrace).
     _traceEnabled: false,
 
-    // Limpa os 3 padroes de faixa IN-PLACE (preserva a identidade do objeto
+    // Limpa os padroes de todas as faixas IN-PLACE (preserva a identidade do objeto
     // faixasPatterns para o alias de ui.js seguir valido). Substitui o antigo
     // `faixasPatterns = { 1: [], 2: [], 3: [] }`.
     clearFaixasPatterns() {
-        this.faixasPatterns[1] = [];
-        this.faixasPatterns[2] = [];
-        this.faixasPatterns[3] = [];
+        NUMEROS_FAIXAS.forEach((i) => { this.faixasPatterns[i] = []; });
         this.trace('clearFaixasPatterns');
         this.checkInvariants('clearFaixasPatterns');
     },
@@ -122,11 +122,9 @@ export const weeklyState = {
             editingComponentOriginalStart: this.editingComponentOriginalStart,
             replacingFromDisciplina: this.replacingFromDisciplina,
             lastDisciplinaInputNormalized: this.lastDisciplinaInputNormalized,
-            faixasPatterns: {
-                1: (this.faixasPatterns?.[1] || []).length,
-                2: (this.faixasPatterns?.[2] || []).length,
-                3: (this.faixasPatterns?.[3] || []).length
-            },
+            faixasPatterns: Object.fromEntries(
+                NUMEROS_FAIXAS.map((i) => [i, (this.faixasPatterns?.[i] || []).length])
+            ),
             view: { ...this.view }
         };
     },
@@ -145,14 +143,14 @@ export const weeklyState = {
     checkInvariants(context = '') {
         const problems = [];
 
-        // faixasPatterns deve ter exatamente as chaves 1,2,3, cada uma array.
-        [1, 2, 3].forEach((k) => {
+        // faixasPatterns deve ter exatamente as chaves 1..MAX_FAIXAS, cada uma array.
+        NUMEROS_FAIXAS.forEach((k) => {
             if (!Array.isArray(this.faixasPatterns?.[k])) {
                 problems.push(`faixasPatterns[${k}] nao e array`);
             }
         });
         const extraKeys = Object.keys(this.faixasPatterns || {})
-            .filter((k) => !['1', '2', '3'].includes(String(k)));
+            .filter((k) => !NUMEROS_FAIXAS.map(String).includes(String(k)));
         if (extraKeys.length) problems.push(`faixasPatterns com chaves inesperadas: ${extraKeys.join(',')}`);
 
         // Tipos basicos.

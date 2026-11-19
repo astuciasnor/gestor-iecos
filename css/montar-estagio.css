@@ -1,0 +1,242 @@
+/* Janela "Montar estagio" (js/montar_estagio_ui.js) e o botao no cartao de faixas.
+   Cores do Cardume; cada etapa tem uma cor (me-cor-1..4), a mesma nas abas,
+   nos dias marcados, na regua e na tabela final. */
+
+/* Botao no cabecalho do cartao de faixas */
+.cd-btn-montar-estagio {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    margin-left: auto;
+    padding: 6px 12px;
+    border: 0;
+    border-radius: 6px;
+    background: #0F766E;
+    color: #FFFFFF;
+    font: 600 13px Inter, system-ui, sans-serif;
+    cursor: pointer;
+    white-space: nowrap;
+}
+.cd-btn-montar-estagio:hover { background: #0B5A54; }
+.cd-btn-montar-estagio:focus-visible { outline: 3px solid rgba(15, 118, 110, .35); outline-offset: 2px; }
+.cd-btn-montar-estagio.hidden { display: none; }
+
+/* Cores das etapas */
+.me-cor-1 { --c: #2F6FB0; --cs: #DDEAF8; }
+.me-cor-2 { --c: #1E8A5A; --cs: #DCF1E5; }
+.me-cor-3 { --c: #7D3C98; --cs: #F1E6F6; }
+.me-cor-4 { --c: #C0661A; --cs: #FAE8D8; }
+
+.me-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    background: rgba(15, 23, 42, .55);
+    font-family: Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
+    color: #0F172A;
+}
+.me-caixa {
+    display: flex;
+    flex-direction: column;
+    width: min(1000px, 100%);
+    max-height: 92vh;
+    border-radius: 12px;
+    background: #FFFFFF;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, .35);
+    overflow: hidden;
+}
+.me-cab {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px 16px;
+    padding: 14px 18px;
+    border-bottom: 1px solid #DCE5EA;
+}
+.me-cab h3 { margin: 0; font-size: 17px; color: #0F766E; }
+.me-sub { display: block; font-size: 12.5px; color: #64748B; }
+.me-passos { display: flex; gap: 4px; margin: 0 0 0 auto; padding: 0; list-style: none; }
+.me-passos button {
+    display: flex; align-items: center; gap: 6px;
+    padding: 5px 10px; border: 0; border-radius: 99px;
+    background: transparent; color: #64748B; font: 600 12.5px Inter, system-ui, sans-serif; cursor: pointer;
+}
+.me-passos button i {
+    display: grid; place-items: center; width: 20px; height: 20px;
+    border: 1.5px solid currentColor; border-radius: 50%; font-style: normal; font-size: 11px;
+}
+.me-passos button[aria-current="step"] { background: #E6F4F1; color: #0F766E; }
+.me-passos button[aria-current="step"] i { background: #0F766E; border-color: #0F766E; color: #FFFFFF; }
+.me-fechar {
+    width: 30px; height: 30px; border: 0; border-radius: 6px;
+    background: transparent; color: #64748B; font-size: 22px; line-height: 1; cursor: pointer;
+}
+.me-fechar:hover { background: #F4F7F9; color: #0F172A; }
+
+.me-corpo { display: grid; gap: 14px; align-content: start; min-height: 320px; padding: 16px 18px; overflow-y: auto; }
+.me-rodape {
+    display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px;
+    padding: 12px 18px; border-top: 1px solid #DCE5EA; background: #F4F7F9;
+}
+.me-btn {
+    padding: 8px 16px; border: 1px solid #DCE5EA; border-radius: 7px;
+    background: #FFFFFF; color: #0F172A; font: 600 13px Inter, system-ui, sans-serif; cursor: pointer;
+}
+.me-btn--pri { margin-left: auto; border-color: #0F766E; background: #0F766E; color: #FFFFFF; }
+.me-btn--pri:hover:not(:disabled) { background: #0B5A54; }
+.me-btn:disabled { opacity: .45; cursor: not-allowed; }
+.me-modal button:focus-visible, .me-modal input:focus-visible, .me-modal select:focus-visible {
+    outline: 2px solid #0F766E; outline-offset: 2px;
+}
+.me-nota { font-size: 12.5px; color: #64748B; }
+.me-rotulo { font-size: 13px; color: #64748B; }
+.me-ok { color: #15803D; }
+.me-modal select, .me-modal input[type="date"], .me-modal input[type="number"] {
+    padding: 5px 7px; border: 1px solid #DCE5EA; border-radius: 6px;
+    background: #FFFFFF; color: #0F172A; font: 500 13px Inter, system-ui, sans-serif;
+}
+.me-modal input[type="number"] { width: 58px; }
+
+/* Passo 1 */
+.me-linha-topo { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; }
+.me-seg { display: inline-flex; border: 1px solid #DCE5EA; border-radius: 8px; overflow: hidden; }
+.me-seg button {
+    padding: 5px 15px; border: 0; border-right: 1px solid #DCE5EA;
+    background: #FFFFFF; color: #0F172A; font: 700 13px Inter, system-ui, sans-serif; cursor: pointer;
+}
+.me-seg button:last-child { border-right: 0; }
+.me-seg button[aria-pressed="true"] { background: #0F766E; color: #FFFFFF; }
+.me-etapas { display: grid; gap: 8px; }
+.me-etapa {
+    display: grid;
+    grid-template-columns: 70px minmax(160px, 1.3fr) minmax(120px, 1fr) minmax(96px, .8fr) 96px 100px 124px;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 12px;
+    border: 1px solid #DCE5EA;
+    border-left: 4px solid var(--c, #DCE5EA);
+    border-radius: 8px;
+}
+.me-etapa select { width: 100%; }
+.me-etapa--cab {
+    padding-top: 0; padding-bottom: 0; border: 0;
+    font-size: 10.5px; font-weight: 600; letter-spacing: .07em; text-transform: uppercase; color: #64748B;
+}
+.me-etapa-nome { font-size: 13px; font-weight: 700; color: var(--c); }
+.me-horas { display: flex; align-items: center; gap: 6px; font-size: 12.5px; color: #64748B; }
+.me-choque { padding: 2px 8px; border-radius: 99px; font-size: 11.5px; font-weight: 600; white-space: nowrap; }
+.me-choque--sim { background: #FCE9E9; color: #B91C1C; }
+.me-choque--nao { background: #E3F5E8; color: #15803D; }
+.me-choque--parte { background: #FEF0DA; color: #92400E; }
+@media (max-width: 760px) {
+    .me-etapa { grid-template-columns: 1fr 1fr; }
+    .me-etapa-nome { grid-column: 1 / -1; }
+    .me-etapa--cab { display: none; }
+}
+
+/* Passo 2 */
+.me-abas { display: flex; flex-wrap: wrap; gap: 6px; }
+.me-aba {
+    display: grid; gap: 1px; min-width: 130px; padding: 7px 12px;
+    border: 1.5px solid #DCE5EA; border-radius: 8px; background: #FFFFFF;
+    color: var(--c); font: 700 12.5px Inter, system-ui, sans-serif; text-align: left; cursor: pointer;
+}
+.me-aba small { color: #64748B; font-weight: 500; font-size: 11.5px; }
+.me-aba[aria-selected="true"] { border-color: var(--c); background: var(--cs); }
+.me-painel { display: grid; gap: 12px; padding: 14px; border: 1px solid var(--c); border-radius: 10px; }
+.me-mesbar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; font-size: 13px; }
+.me-mesbar b { min-width: 120px; font-size: 15px; }
+.me-seta {
+    display: grid; place-items: center; width: 28px; height: 28px;
+    border: 1px solid #DCE5EA; border-radius: 6px; background: #FFFFFF; font-weight: 700; cursor: pointer;
+}
+.me-seta:disabled { opacity: .3; cursor: not-allowed; }
+.me-dias-rolagem { overflow-x: auto; padding-bottom: 4px; }
+.me-dias { display: flex; gap: 2px; min-width: max-content; }
+.me-dia {
+    display: grid; place-items: center; align-content: center;
+    width: 26px; height: 40px; padding: 0;
+    border: 1px solid #DCE5EA; border-radius: 5px; background: #FFFFFF; color: #0F172A;
+    font-family: Inter, system-ui, sans-serif; font-variant-numeric: tabular-nums; cursor: pointer;
+}
+.me-dia span { font-size: 9.5px; line-height: 1.1; color: #64748B; }
+.me-dia b { font-size: 12.5px; line-height: 1.2; }
+.me-dia--seg { margin-left: 6px; }
+.me-dia--meu, .me-dia--outro { border-color: var(--c); background: var(--c); }
+.me-dia--meu b, .me-dia--meu span, .me-dia--outro b, .me-dia--outro span { color: #FFFFFF; }
+.me-dia--outro { opacity: .45; }
+.me-dia--feriado { border: 1px dashed #B03A5B; }
+.me-dia--apagado { opacity: .3; }
+.me-dia:disabled { cursor: default; }
+.me-campos { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; font-size: 13px; }
+.me-campos label { display: flex; align-items: center; gap: 8px; color: #64748B; }
+.me-chips { display: flex; flex-wrap: wrap; gap: 4px; }
+.me-chip {
+    padding: 3px 9px; border: 1px solid #DCE5EA; border-radius: 99px;
+    background: #FFFFFF; color: #64748B; font: 600 12px Inter, system-ui, sans-serif; cursor: pointer;
+}
+.me-chip[aria-pressed="true"] { border-color: var(--c); background: var(--c); color: #FFFFFF; }
+.me-resumo { font-size: 13px; font-weight: 600; }
+
+.me-regua { overflow-x: auto; overflow-y: hidden; }
+.me-regua-int { min-width: 700px; }
+.me-meses { position: relative; height: 18px; margin-left: 110px; }
+.me-meses span { position: absolute; transform: translateX(4px); font-size: 10.5px; font-weight: 700; letter-spacing: .06em; color: #64748B; }
+.me-faixa-regua { display: flex; margin-top: 4px; }
+.me-faixa-rot { display: flex; flex-direction: column; justify-content: center; width: 110px; flex: none; padding-right: 8px; font-size: 12px; font-weight: 700; }
+.me-faixa-rot small { font-size: 10.5px; font-weight: 600; color: #B45309; }
+.me-trilho { position: relative; flex: 1; height: 32px; border-radius: 5px; background: #F4F7F9; }
+.me-faixa-regua--turma .me-trilho { background: #FEF3E2; }
+.me-mesl { position: absolute; top: 0; bottom: 0; width: 1px; background: #DCE5EA; }
+.me-bloco { position: absolute; top: 4px; height: 24px; border: 1px solid var(--c); border-radius: 4px; background: var(--cs); }
+.me-bloco span { position: absolute; top: 3px; left: 4px; font-size: 10px; font-weight: 700; color: var(--c); }
+.me-aula { position: absolute; top: 8px; width: 2px; height: 16px; border-radius: 1px; background: var(--c); transform: translateX(-1px); }
+
+.me-placar { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border: 1px solid #DCE5EA; border-radius: 8px; overflow: hidden; }
+.me-placar div { display: grid; padding: 8px 14px; border-right: 1px solid #DCE5EA; }
+.me-placar div:last-child { border-right: 0; }
+.me-placar small { font-size: 10.5px; font-weight: 600; letter-spacing: .07em; text-transform: uppercase; color: #64748B; }
+.me-placar b { font-size: 19px; font-variant-numeric: tabular-nums; }
+.me-placar--ok { background: #E3F5E8; } .me-placar--ok b { color: #15803D; }
+.me-placar--falta { background: #FCE9E9; } .me-placar--falta b { color: #B91C1C; }
+.me-avisos { display: grid; gap: 6px; margin-top: 8px; }
+.me-aviso { padding: 7px 12px; border-radius: 6px; font-size: 12.5px; }
+.me-aviso--erro { background: #FCE9E9; color: #B91C1C; }
+.me-aviso--ok { background: #E3F5E8; color: #15803D; }
+.me-aviso--info { background: #FEF0DA; color: #92400E; }
+
+/* Passo 3 */
+.me-tabela-rolagem { overflow-x: auto; }
+.me-tabela { width: 100%; border-collapse: collapse; }
+.me-tabela th, .me-tabela td { padding: 8px 12px; border-bottom: 1px solid #DCE5EA; font-size: 13px; text-align: left; white-space: nowrap; }
+.me-tabela th { font-size: 10.5px; font-weight: 600; letter-spacing: .07em; text-transform: uppercase; color: #64748B; }
+.me-tabela code { padding: 2px 6px; border-radius: 4px; background: #F4F7F9; font: 600 12px ui-monospace, Consolas, monospace; }
+.me-tabela .me-pausa td { padding: 4px 12px; background: #FEF3E2; color: #92400E; font-size: 12px; font-style: italic; }
+.me-num { text-align: right !important; font-variant-numeric: tabular-nums; }
+.me-pill { display: inline-block; padding: 2px 9px; border-radius: 99px; background: var(--cs); color: var(--c); font-size: 12px; font-weight: 600; }
+
+/* Coluna Dias e tabela de totais (18/11/2026) */
+.me-erro { color: #B91C1C; }
+.me-dado { color: #0F172A; }
+.me-placar-area { display: grid; grid-template-columns: minmax(0, 1fr) minmax(240px, 300px); gap: 14px; align-items: start; }
+@media (max-width: 760px) { .me-placar-area { grid-template-columns: 1fr; } }
+.me-placar-col { display: grid; gap: 8px; min-width: 0; }
+.me-placar-col .me-avisos { margin-top: 0; }
+.me-totais { width: 100%; border-collapse: collapse; border: 1px solid #DCE5EA; border-radius: 8px; overflow: hidden; font-size: 12.5px; }
+.me-totais th, .me-totais td { padding: 5px 10px; border-bottom: 1px solid #E5ECF0; text-align: left; white-space: nowrap; }
+.me-totais th { background: #F4F7F9; font-size: 10.5px; font-weight: 600; letter-spacing: .07em; text-transform: uppercase; color: #64748B; }
+.me-totais tfoot td { border-bottom: 0; background: #F4F7F9; font-weight: 600; }
+.me-totais small { color: #64748B; font-weight: 500; }
+.me-totais .me-pill { padding: 0 7px; margin-right: 4px; }
+/* Dia em que o estagio em campo comeca (clique nos quadradinhos) */
+.me-dia--inicio { box-shadow: 0 0 0 2px #FFFFFF, 0 0 0 4px var(--c); }
+.me-pendencias { margin: 4px 0 0; padding-left: 18px; }
+/* Regua: semanas e legenda */
+.me-semanal { position: absolute; top: 6px; bottom: 6px; width: 1px; background: #E2E8F0; }
+.me-aula { pointer-events: auto; cursor: default; }
+.me-regua-legenda { margin: 6px 0 0 110px; font-size: 11.5px; color: #64748B; }
