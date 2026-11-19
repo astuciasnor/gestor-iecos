@@ -323,6 +323,10 @@ function htmlRegua(r) {
         marcasMes += `<span style="left:${pos(ini).toFixed(2)}%">${MESES[Number(m.slice(5, 7)) - 1].slice(0, 3).toUpperCase()}</span>`;
         if (i) linhasMes += `<i class="me-mesl" style="left:${pos(ini).toFixed(2)}%"></i>`;
     });
+    // Linha fina em cada segunda-feira: separa as semanas.
+    for (let d = ctx.termStart; d <= ctx.termEnd; d = addDaysISO(d, 1)) {
+        if (weekdayOf(d) === 1 && d !== ctx.termStart) linhasMes += `<i class="me-semanal" style="left:${pos(d).toFixed(2)}%"></i>`;
+    }
     const turma = letrasDoTurno(ctx.turnoTurma);
     const faixas = ['M', 'T', 'N'].filter((l) => estado.maxPorLetra[l] > 0).map((l) => {
         let blocos = '';
@@ -331,12 +335,13 @@ function htmlRegua(r) {
             const a = e.aulas[0];
             const z = e.aulas[e.aulas.length - 1];
             blocos += `<div class="me-bloco me-cor-${k + 1}" style="left:${pos(a).toFixed(2)}%;width:max(${(pos(addDaysISO(z, 1)) - pos(a)).toFixed(2)}%,5px)"><span>E${k + 1}</span></div>`;
-            e.aulas.forEach((d) => { blocos += `<i class="me-aula me-cor-${k + 1}" style="left:${(pos(d) + 50 / total).toFixed(2)}%"></i>`; });
+            e.aulas.forEach((d) => { blocos += `<i class="me-aula me-cor-${k + 1}" style="left:${(pos(d) + 50 / total).toFixed(2)}%" title="Etapa ${k + 1} · ${SEMANA[weekdayOf(d)]} ${fmt(d)}"></i>`; });
         });
         const daTurma = turma.includes(l);
         return `<div class="me-faixa-regua ${daTurma ? 'me-faixa-regua--turma' : ''}"><span class="me-faixa-rot">${NOME_LETRA[l]}${daTurma ? '<small>turno da turma</small>' : ''}</span><div class="me-trilho">${linhasMes}${blocos}</div></div>`;
     }).join('');
-    return `<div class="me-regua"><div class="me-regua-int"><div class="me-meses">${marcasMes}</div>${faixas}</div></div>`;
+    return `<div class="me-regua"><div class="me-regua-int"><div class="me-meses">${marcasMes}</div>${faixas}
+        <div class="me-regua-legenda">Cada risquinho é um dia de aula (passe o mouse para ver a data) · linhas finas separam as semanas</div></div></div>`;
 }
 
 function htmlPlacar(r) {

@@ -236,3 +236,7 @@
 /* Dia em que o estagio em campo comeca (clique nos quadradinhos) */
 .me-dia--inicio { box-shadow: 0 0 0 2px #FFFFFF, 0 0 0 4px var(--c); }
 .me-pendencias { margin: 4px 0 0; padding-left: 18px; }
+/* Regua: semanas e legenda */
+.me-semanal { position: absolute; top: 6px; bottom: 6px; width: 1px; background: #E2E8F0; }
+.me-aula { pointer-events: auto; cursor: default; }
+.me-regua-legenda { margin: 6px 0 0 110px; font-size: 11.5px; color: #64748B; }
