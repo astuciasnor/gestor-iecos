@@ -178,9 +178,31 @@ function vigiarPublicacao(admin) {
   window.addEventListener('cardume:agenda-publicada', conferir);
 }
 
+// Ultima publicacao feita por coordenador ja vista pelo administrador (por navegador).
+const CHAVE_PUBLICACAO_VISTA = 'cardume:publicacao-coordenador-vista';
+function lerPublicacaoVista() {
+  try { return localStorage.getItem(CHAVE_PUBLICACAO_VISTA) || ''; } catch { return ''; }
+}
+
 function mostrarAvisoPublicar(resp) {
   el('sync-aviso-publicar')?.remove();
+  el('sync-aviso-publicou')?.remove();
   const lista = el('sync-mensagens-lista');
+  const pub = resp?.publicado_por_coordenador;
+  if (lista && pub?.id && String(pub.id) !== lerPublicacaoVista()) {
+    const nome = String(pub.quem || 'Um coordenador').trim().split(/\s+/)[0];
+    const em = String(pub.em || '').replace(/^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2}).*$/, '$3/$2 às $4:$5');
+    lista.insertAdjacentHTML('afterbegin', `<div id="sync-aviso-publicou" class="sync-bar-aviso sync-msg" role="button" tabindex="0"
+      title="Clique para esconder este aviso">● ${escapeHtml(nome)}${pub.curso ? ` (${escapeHtml(pub.curso)})` : ''} publicou a agenda dos alunos em ${escapeHtml(em)}. <u>Ok</u></div>`);
+    const linha = el('sync-aviso-publicou');
+    const esconder = () => {
+      try { localStorage.setItem(CHAVE_PUBLICACAO_VISTA, String(pub.id)); } catch { /* sem armazenamento: some so agora */ }
+      linha.remove();
+      marcarBotaoMensagens();
+    };
+    linha.addEventListener('click', esconder);
+    linha.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); esconder(); } });
+  }
   if (lista && resp?.mudancas) {
     const nomes = (resp.quem || []).map((n) => String(n).trim().split(/\s+/)[0]).filter(Boolean);
     const quem = nomes.length ? `${nomes.join(', ')} ${nomes.length > 1 ? 'alteraram' : 'alterou'}` : 'Há alterações';

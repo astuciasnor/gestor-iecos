@@ -382,13 +382,16 @@ function exportarJSONCurso(sigla) {
   if (btnExportPublic) {
     btnExportPublic.onclick = async () => {
       const fileName = 'alocacoes_publicas.json';
-      // No servidor da UFPA a agenda vai direto para o servidor (so o administrador);
+      // No servidor da UFPA a agenda vai direto para o servidor (administrador ou
+      // coordenador; o administrador e avisado de quem publicou);
       // nos outros modos sai o arquivo para tools/publish_online.py.
       const noServidor = canPublishToServer();
-      if (noServidor && getPerfil()?.papel !== 'admin') {
-        showToastWarning('Somente o administrador pode publicar a agenda.', 'warning', 4200);
+      const perfil = getPerfil();
+      if (noServidor && !perfil) {
+        showToastWarning('Entre com seu login de coordenador para publicar a agenda.', 'warning', 4200);
         return;
       }
+      const ehCoordenador = noServidor && perfil?.papel !== 'admin';
       let allocationsByKey = null;
       if (isOnlineMode()) {
         try {
@@ -421,6 +424,9 @@ function exportarJSONCurso(sigla) {
       const shouldExport = confirm(
         `Confirmar publicação online?\n\n` +
         `Períodos em curso e futuros com turmas cadastradas:\n${resumo}\n\n` +
+        (ehCoordenador
+          ? 'A agenda vai inteira, com todos os cursos como estão salvos agora. O administrador será avisado.\n\n'
+          : '') +
         (noServidor
           ? 'Clique em OK para publicar a agenda dos alunos agora.'
           : 'Clique em OK para gerar o arquivo público.')

@@ -15,7 +15,7 @@
 //   GET  mudancas &plano=K&desde=N mudancas do periodo K depois do cursor N
 //   POST salvar   {linhas: [{id, plano, curso, turma, dados}]}
 //   POST excluir  {ids: [...]}
-//   POST publicar {publications: [...]}  agenda publica (so o administrador)
+//   POST publicar {publications: [...]}  agenda publica (administrador ou coordenador)
 //   POST publicar_parte &lote=L&parte=N  (corpo: um pedaco do JSON acima)
 //   POST publicar {lote: L, partes: N}   monta e publica os pedacos enviados
 //     (o servidor da UFPA recusa envios maiores que 128 KB; a agenda e maior)
@@ -283,7 +283,7 @@ function acaoExcluir(mysqli $db): void
 // ate AGENDA_FUTUROS futuros.
 function acaoPublicar(mysqli $db): void
 {
-    $u = exigirAdmin($db);
+    $u = exigirPublicador($db);
     $corpo = corpoJson();
     if (isset($corpo->lote)) $corpo = montarLote($db, $corpo);
     $novas = $corpo->publications ?? null;
@@ -323,7 +323,7 @@ function acaoPublicar(mysqli $db): void
 // substitui a anterior.
 function acaoPublicarParte(mysqli $db): void
 {
-    exigirAdmin($db);
+    exigirPublicador($db);
     $lote = loteValido($_GET['lote'] ?? null);
     $parte = filter_var($_GET['parte'] ?? '', FILTER_VALIDATE_INT, ['options' => ['min_range' => 0, 'max_range' => MAX_PARTES - 1]]);
     if ($parte === false) throw new ErroApi(400, 'parte invalida');
@@ -476,10 +476,28 @@ function acaoPendentePublicar(mysqli $db): void
                               FROM alocacoes_historico h LEFT JOIN usuarios u ON u.id = h.usuario
                               WHERE h.em > ?
                               GROUP BY h.usuario, u.nome, u.email ORDER BY ultima DESC', [$ultima ?? '1970-01-01']);
+    // Ultima publicacao feita por um coordenador (o administrador e avisado).
+    // A hora vai no fuso de Belem, qualquer que seja o fuso do banco.
+    $porCoordenador = consultarUm($db, 'SELECT a.id, TIMESTAMPDIFF(SECOND, a.publicado_em, NOW()) AS ha_seg,
+                                               COALESCE(u.nome, u.email) AS quem, u.curso, u.papel
+                                        FROM agenda_publicada a LEFT JOIN usuarios u ON u.id = a.publicado_por
+                                        ORDER BY a.id DESC LIMIT 1');
+    if (!$porCoordenador || ($porCoordenador['papel'] ?? 'admin') === 'admin') {
+        $porCoordenador = null;
+    } else {
+        $porCoordenador = [
+            'id' => (int) $porCoordenador['id'],
+            'em' => (new DateTimeImmutable('now', new DateTimeZone(FUSO_UFPA)))
+                ->modify('-' . max(0, (int) $porCoordenador['ha_seg']) . ' seconds')->format('Y-m-d H:i'),
+            'quem' => $porCoordenador['quem'],
+            'curso' => $porCoordenador['curso'],
+        ];
+    }
     responder(200, [
         'publicado_em' => $ultima,
         'mudancas' => array_sum(array_map(fn ($l) => (int) $l['n'], $linhas)),
         'quem' => array_values(array_filter(array_column($linhas, 'quem'))),
+        'publicado_por_coordenador' => $porCoordenador,
     ]);
 }
 
@@ -675,7 +693,18 @@ function exigirUsuario(mysqli $db): array
 function exigirAdmin(mysqli $db): array
 {
     $u = exigirUsuario($db);
-    if ($u['papel'] !== 'admin') throw new ErroApi(403, 'Somente o administrador pode publicar a agenda.', 'so_admin');
+    if ($u['papel'] !== 'admin') throw new ErroApi(403, 'Somente o administrador pode fazer isso.', 'so_admin');
+    return $u;
+}
+
+// Publicar a agenda: administrador ou coordenador com curso (a agenda vai inteira,
+// com todos os cursos como estao salvos; o administrador ve quem publicou).
+function exigirPublicador(mysqli $db): array
+{
+    $u = exigirUsuario($db);
+    if ($u['papel'] !== 'admin' && trim((string) $u['curso']) === '') {
+        throw new ErroApi(403, 'Seu acesso ainda nao tem curso: peca ao administrador.', 'sem_curso');
+    }
     return $u;
 }
 
