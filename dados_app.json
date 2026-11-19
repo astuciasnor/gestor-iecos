@@ -1,6 +1,6 @@
 {
   "meta": {
-    "generated_at": "2026-11-12T15:47:45",
+    "generated_at": "2026-11-19T17:02:41",
     "source_file": "planilha_base.xlsx"
   },
   "docentes": [
@@ -510,6 +510,13 @@
       "unidade": "CBRAG",
       "subunidade": "FAMAT",
       "apelido": "Leila",
+      "nomes_anteriores": []
+    },
+    {
+      "docente": "Carlos Alberto Brito da Silva Junior",
+      "unidade": "CANAN",
+      "subunidade": "FACFIS",
+      "apelido": "Brito",
       "nomes_anteriores": []
     }
   ],
