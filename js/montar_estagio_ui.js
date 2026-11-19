@@ -224,6 +224,7 @@ function htmlQuadrados(r) {
     const e = estado.etapas[k];
     const { ctx } = estado;
     const dono = (iso) => r.etapas.findIndex((x) => x.aulas.includes(iso));
+    const calcAtivo = r.etapas[k];
     const { primeiro, ultimo } = limitesDoMes(e.ver || e.mes);
     let quadrados = '';
     for (let d = primeiro; d <= ultimo; d = addDaysISO(d, 1)) {
@@ -236,10 +237,17 @@ function htmlQuadrados(r) {
         // Dia de outro ENCONTRO fica travado; dia de estagio em campo pode ser
         // marcado (o campo e recalculado e passa a comecar depois do encontro).
         const deOutroEncontro = outro && r.etapas[quem].tipo === 'encontro';
-        const bloqueado = e.tipo !== 'encontro' || foraDoPL || dow === 0 || !!feriado || deOutroEncontro;
+        // No campo, o clique escolhe o dia em que ele comeca: nao antes do dia
+        // seguinte a etapa anterior.
+        const campo = e.tipo === 'campo';
+        const antesDoMinimo = campo && calcAtivo?.inicioMinimo && d < calcAtivo.inicioMinimo;
+        const comecaAqui = campo && calcAtivo?.inicioUsado === d;
+        const bloqueado = foraDoPL || dow === 0 || !!feriado || deOutroEncontro || antesDoMinimo;
         const cls = ['me-dia', dow === 1 ? 'me-dia--seg' : '', meu ? `me-dia--meu me-cor-${k + 1}` : '', outro ? `me-dia--outro me-cor-${quem + 1}` : '',
-            feriado ? 'me-dia--feriado' : '', (dow === 0 || foraDoPL) ? 'me-dia--apagado' : ''].join(' ');
-        const titulo = `${SEMANA[dow]} ${fmt(d)}${feriado ? ' · ' + feriado : ''}${outro ? ' · Etapa ' + (quem + 1) : ''}${foraDoPL ? ' · fora do período' : ''}`;
+            feriado ? 'me-dia--feriado' : '', (dow === 0 || foraDoPL || antesDoMinimo) ? 'me-dia--apagado' : '',
+            comecaAqui ? `me-dia--inicio me-cor-${k + 1}` : ''].join(' ');
+        const acao = campo ? (antesDoMinimo ? ' · antes da etapa anterior terminar' : ' · clique: o estágio começa neste dia') : '';
+        const titulo = `${SEMANA[dow]} ${fmt(d)}${feriado ? ' · ' + feriado : ''}${outro ? ' · Etapa ' + (quem + 1) : ''}${foraDoPL ? ' · fora do período' : ''}${bloqueado ? '' : acao}`;
         quadrados += `<button type="button" class="${cls}" data-dia="${d}" aria-pressed="${meu}" ${bloqueado ? 'disabled' : ''} title="${esc(titulo)}"><span>${SEMANA1[dow]}</span><b>${Number(d.slice(8, 10))}</b></button>`;
     }
     return quadrados;
@@ -301,7 +309,7 @@ function htmlPasso2(r) {
                 <button type="button" class="me-seta" data-mes-delta="-1" aria-label="Mês anterior" ${idxMes <= 0 ? 'disabled' : ''}>‹</button>
                 <b>${MESES[Number(mesVisto.slice(5, 7)) - 1]} ${mesVisto.slice(0, 4)}</b>
                 <button type="button" class="me-seta" data-mes-delta="1" aria-label="Mês seguinte" ${idxMes >= estado.meses.length - 1 ? 'disabled' : ''}>›</button>
-                <span class="me-nota">${e.tipo === 'encontro' ? 'Clique nos dias do encontro.' : 'Os dias saem dos dias da semana escolhidos.'}</span>
+                <span class="me-nota">${e.tipo === 'encontro' ? 'Clique nos dias do encontro.' : 'Clique no dia em que o estágio começa (use ‹ › para trocar o mês). Os dias saem dos dias da semana.'}</span>
                 ${htmlChoque(e.turno)}
             </div>
             <div class="me-dias-rolagem"><div class="me-dias">${htmlQuadrados(r)}</div></div>
@@ -398,6 +406,12 @@ function aoClicar(e) {
         const i = s.meses.indexOf(etapa.ver || etapa.mes) + Number(b.dataset.mesDelta);
         if (i >= 0 && i < s.meses.length) etapa.ver = s.meses[i];
         desenhar();
+        return;
+    }
+    if (b.dataset.dia && etapa.tipo === 'campo') {
+        etapa.inicio = b.dataset.dia; // o campo comeca no dia clicado
+        desenhar();
+        document.querySelector(`#montar-estagio-modal [data-dia="${b.dataset.dia}"]`)?.focus();
         return;
     }
     if (b.dataset.dia) {

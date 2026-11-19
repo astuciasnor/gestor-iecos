@@ -237,3 +237,5 @@
 .me-totais tfoot td { border-bottom: 0; background: #F4F7F9; font-weight: 600; }
 .me-totais small { color: #64748B; font-weight: 500; }
 .me-totais .me-pill { padding: 0 7px; margin-right: 4px; }
+/* Dia em que o estagio em campo comeca (clique nos quadradinhos) */
+.me-dia--inicio { box-shadow: 0 0 0 2px #FFFFFF, 0 0 0 4px var(--c); }

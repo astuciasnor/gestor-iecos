@@ -166,6 +166,18 @@ try {
   console.log('  ' + comeco);
   const [quis] = comeco.split(' ');
   confere('a data de comeco digitada nao volta sozinha', comeco.includes('campo fica: ' + quis), comeco);
+  // Tambem pelo clique: volta um mes e clica num dia livre (depois do minimo)
+  const clique = await evaluate(`(async () => {
+    const inp = __t.q('[data-campo="inicio"]');
+    const minimo = inp.min;
+    __t.q('[data-mes-delta="-1"]')?.click(); await __t.wait(300);
+    const livre = __t.qa('.me-dia:not(:disabled)').map(b => b.dataset.dia).find(d => d > minimo);
+    if (!livre) return 'sem dia livre';
+    __t.q('[data-dia="' + livre + '"]').click(); await __t.wait(400);
+    return livre + ' -> ' + __t.q('[data-campo="inicio"]').value;
+  })()`);
+  const [diaClicado, , ficouClique] = clique.split(' ');
+  confere('clique num dia define o Comeca do campo', diaClicado === ficouClique, clique);
   await foto('2-datas');
 
   await evaluate("__t.clicar('[data-ir=\"3\"]')");
