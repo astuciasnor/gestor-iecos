@@ -157,9 +157,8 @@ const fmtBR = (iso) => iso ? `${iso.slice(8, 10)}/${iso.slice(5, 7)}` : '';
 //            dias: [iso] (encontro), diasSemana: [1..6], inicio, fim (campo) }]
 // diasPlanejados: no encontro, quantos dias o coordenador quer marcar; no campo
 // (menos o ultimo), quantos dias de aula a partir do comeco (o fim sai disso).
-// Devolve { etapas: [{ ...etapa, aulas: [iso], calculado }], alocada, avisos: [{ tipo, texto, acao? }] }.
-// tipo do aviso: 'erro' (impede Aplicar), 'ok' ou 'info'. acao: sugestao com botao
-// ({ etapa, turno, horasDia }).
+// Devolve { etapas: [{ ...etapa, aulas: [iso], calculado }], alocada, avisos: [{ tipo, texto }] }.
+// tipo do aviso: 'erro' (impede Aplicar), 'ok' ou 'info'.
 export function calcularEstagio({ etapas = [], ch = 0, termStart, termEnd, feriados = new Set(), turnoDaTurma = '', maxPorLetra = null }) {
     const R = etapas.map((e) => ({
         ...e,
@@ -267,26 +266,6 @@ export function calcularEstagio({ etapas = [], ch = 0, termStart, termEnd, feria
     if (!avisos.some((a) => a.tipo === 'erro') && alocada === ch) avisos.push({ tipo: 'ok', texto: 'Fecha exato. Pode conferir as faixas.' });
     if (R.some((r) => Number(r.horasDia) > 6)) {
         avisos.push({ tipo: 'info', texto: 'Acima de 6 h por dia: a Lei do Estágio (11.788/2008) fala em 6 h/dia e 30 h/semana no período de aulas. É só um lembrete.' });
-    }
-    // Sugestao: campo que ocupa o turno da turma e mais um turno (ou passa de 6 h)
-    // pode ficar so no turno da turma, ate 6 h; o outro turno fica livre para
-    // outra componente. So sugere: o coordenador decide pelo botao.
-    const letrasTurma = letrasDoTurno(turnoDaTurma);
-    if (letrasTurma.length === 1) {
-        const [lt] = letrasTurma;
-        const nomeTurma = { M: 'Manhã', T: 'Tarde', N: 'Noite' }[lt];
-        // Ate 6 h (Lei do Estagio), ou menos se o turno tem menos aulas no quadro.
-        const maxTurma = Math.min(6, maxPorLetra?.[lt] || (lt === 'N' ? 4 : 6));
-        R.forEach((r, k) => {
-            const letras = letrasDoTurno(r.turno);
-            if (r.tipo !== 'campo' || !letras.includes(lt)) return;
-            if (letras.length === 1 && Number(r.horasDia) <= maxTurma) return;
-            avisos.push({
-                tipo: 'info',
-                texto: `Etapa ${k + 1}: com o estágio em campo só na ${nomeTurma} (até ${maxTurma} h), o outro turno fica livre para uma componente comum da turma.`,
-                acao: { etapa: k, turno: nomeTurma, horasDia: Math.min(maxTurma, Number(r.horasDia) || maxTurma), rotulo: `Usar só ${nomeTurma}, ${Math.min(maxTurma, Number(r.horasDia) || maxTurma)} h` }
-            });
-        });
     }
     return { etapas: R, alocada, avisos };
 }

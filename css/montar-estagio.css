@@ -220,13 +220,9 @@
 .me-num { text-align: right !important; font-variant-numeric: tabular-nums; }
 .me-pill { display: inline-block; padding: 2px 9px; border-radius: 99px; background: var(--cs); color: var(--c); font-size: 12px; font-weight: 600; }
 
-/* Coluna Dias, sugestoes, tabela de totais (18/11/2026) */
+/* Coluna Dias e tabela de totais (18/11/2026) */
 .me-erro { color: #B91C1C; }
 .me-dado { color: #0F172A; }
-.me-sugestoes { display: grid; gap: 6px; }
-.me-aviso--acao { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
-.me-btn--mini { padding: 4px 10px; border-color: #92400E; background: #FFFFFF; color: #92400E; font-size: 12px; }
-.me-btn--mini:hover { background: #FEF3E2; }
 .me-placar-area { display: grid; grid-template-columns: minmax(0, 1fr) minmax(240px, 300px); gap: 14px; align-items: start; }
 @media (max-width: 760px) { .me-placar-area { grid-template-columns: 1fr; } }
 .me-placar-col { display: grid; gap: 8px; min-width: 0; }

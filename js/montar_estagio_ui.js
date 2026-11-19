@@ -131,8 +131,6 @@ function atualizarResultados() {
             const e = estado.etapas[Number(linha.dataset.etapa)];
             linha.querySelector('.me-choque-cel').innerHTML = htmlChoque(e.turno);
         });
-        const sugestoes = modal.querySelector('.me-sugestoes');
-        if (sugestoes) sugestoes.innerHTML = htmlSugestoes(r);
     }
 }
 
@@ -143,14 +141,6 @@ function ultimoCampo() {
     return k;
 }
 
-// Avisos com botao (sugestao de ficar so no turno da turma, ate 6 h).
-function htmlSugestoes(r) {
-    return r.avisos.filter((a) => a.acao).map((a) => `
-        <div class="me-aviso me-aviso--info me-aviso--acao">
-            <span>${esc(a.texto)}</span>
-            <button type="button" class="me-btn me-btn--mini" data-sugestao="${a.acao.etapa}" data-turno="${esc(a.acao.turno)}" data-horas="${a.acao.horasDia}">${esc(a.acao.rotulo)}</button>
-        </div>`).join('');
-}
 
 // Tabela Etapa | Dias | Horas/dia | Total (a soma tem que dar a CH).
 function htmlTotais(r) {
@@ -199,8 +189,7 @@ function htmlPasso1() {
         <div class="me-etapas">
             <div class="me-etapa me-etapa--cab"><span></span><span>O que é</span><span>Turno</span><span>Mês</span><span>Dias</span><span>Horas</span><span>Choque</span></div>
             ${linhas}
-        </div>
-        <div class="me-sugestoes">${htmlSugestoes(calcular())}</div>`;
+        </div>`;
 }
 
 // ---------------------------------------------------------------- passo 2
@@ -359,7 +348,7 @@ function htmlPlacar(r) {
                 <div><small>Alocada</small><b>${r.alocada} h</b></div>
                 <div class="${d === 0 ? 'me-placar--ok' : 'me-placar--falta'}"><small>${d < 0 ? 'Sobra' : 'Falta'}</small><b>${Math.abs(d)} h${d === 0 ? ' ✔' : ''}</b></div>
             </div>
-            <div class="me-avisos">${r.avisos.filter((a) => !a.acao).map((a) => `<div class="me-aviso me-aviso--${a.tipo}">${esc(a.texto)}</div>`).join('')}${htmlSugestoes(r)}</div>
+            <div class="me-avisos">${r.avisos.map((a) => `<div class="me-aviso me-aviso--${a.tipo}">${esc(a.texto)}</div>`).join('')}</div>
         </div>
         ${htmlTotais(r)}`;
 }
@@ -434,13 +423,6 @@ function aoClicar(e) {
     if (b.dataset.semana) {
         const x = Number(b.dataset.semana);
         etapa.diasSemana = etapa.diasSemana.includes(x) ? etapa.diasSemana.filter((y) => y !== x) : [...etapa.diasSemana, x].sort();
-        desenhar();
-        return;
-    }
-    if (b.dataset.sugestao !== undefined) {
-        const alvoEtapa = s.etapas[Number(b.dataset.sugestao)];
-        alvoEtapa.turno = b.dataset.turno;
-        alvoEtapa.horasDia = Math.min(Number(b.dataset.horas), maxHorasDia(alvoEtapa.turno, s.maxPorLetra));
         desenhar();
         return;
     }

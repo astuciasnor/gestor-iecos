@@ -144,19 +144,6 @@ test('dias planejados: campo do meio dura N dias; encontro avisa quando marcou m
     assert.ok(faltando.avisos.some((a) => a.tipo === 'erro' && a.texto.includes('2 de 3 dias')));
 });
 
-test('sugestão: campo na Manhã e Tarde de turma da manhã pode ficar só na Manhã, até 6 h', () => {
-    const etapas = [
-        { tipo: 'encontro', turno: 'Manhã', horasDia: 5, mes: '2027-03', dias: ['2027-03-15', '2027-03-16'] },
-        { tipo: 'campo', turno: 'Manhã+Tarde', horasDia: 8, mes: '2027-03', diasSemana: [1, 2, 3, 4, 5] }
-    ];
-    const r = calcularEstagio({ etapas, ch: 90, ...PL2, feriados: FERIADOS, turnoDaTurma: 'Manhã' });
-    const dica = r.avisos.find((a) => a.acao);
-    assert.ok(dica);
-    assert.deepEqual([dica.acao.etapa, dica.acao.turno, dica.acao.horasDia], [1, 'Manhã', 6]);
-    // campo fora do turno da turma: sem sugestao
-    etapas[1].turno = 'Noite'; etapas[1].horasDia = 3;
-    assert.ok(!calcularEstagio({ etapas, ch: 90, ...PL2, feriados: FERIADOS, turnoDaTurma: 'Manhã' }).avisos.some((a) => a.acao));
-});
 
 test('campo pode começar semanas depois do encontro (vira pausa); antes do mínimo, usa o mínimo', () => {
     const etapas = sandra();

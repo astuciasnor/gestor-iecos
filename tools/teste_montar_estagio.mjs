@@ -109,23 +109,6 @@ try {
   console.log('  ' + await evaluate("__t.q('.me-sub').textContent"));
   await foto('1-etapas');
 
-  // Sugestao: campo da Etapa 2 em Manha e Tarde, 8 h -> botao "Usar so Manha, 6 h"
-  await evaluate(`(async () => {
-    const linha = __t.q('[data-etapa="1"]');
-    const turno = linha.querySelector('[data-campo="turno"]'); turno.value = 'Manhã+Tarde'; __t.fire(turno, 'change'); await __t.wait(300);
-    const h = __t.q('[data-etapa="1"] [data-campo="horasDia"]'); h.value = '8'; __t.fire(h, 'input'); await __t.wait(300);
-  })()`);
-  confere('sugestao aparece (campo na Manha e Tarde, 8 h)', await evaluate("!!__t.q('[data-sugestao=\"1\"]')"));
-  await foto('1b-sugestao');
-  await evaluate("__t.clicar('[data-sugestao=\"1\"]')");
-  const depoisSug = await evaluate(`(() => { const l = __t.q('[data-etapa="1"]'); return l.querySelector('[data-campo="turno"]').value + ' ' + l.querySelector('[data-campo="horasDia"]').value; })()`);
-  const maxManha = await evaluate("Math.min(6, Number(__t.q('[data-etapa=\"1\"] [data-campo=\"horasDia\"]').max))");
-  confere('botao da sugestao troca para so a Manha, ate 6 h', depoisSug === 'Manhã ' + maxManha, depoisSug);
-  // volta ao contraturno para o resto do teste
-  await evaluate(`(async () => {
-    const turno = __t.q('[data-etapa="1"] [data-campo="turno"]'); turno.value = 'Noite'; __t.fire(turno, 'change'); await __t.wait(300);
-    const h = __t.q('[data-etapa="1"] [data-campo="horasDia"]'); h.value = '3'; __t.fire(h, 'input'); await __t.wait(300);
-  })()`);
 
   // Passo 3 antes de marcar os dias: diz exatamente o que falta
   await evaluate("__t.clicar('[data-passo=\"3\"]')");
