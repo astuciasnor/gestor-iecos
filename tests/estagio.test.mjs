@@ -170,3 +170,21 @@ test('campo pode começar semanas depois do encontro (vira pausa); antes do mín
     const cedo = calcularEstagio({ etapas, ch: 105, ...PL2, feriados: FERIADOS });
     assert.equal(cedo.etapas[1].aulas[0], '2027-03-22');
 });
+
+test('sábado: só de manhã, a partir da 1a aula, até 5 aulas', () => {
+    const etapas = [
+        { tipo: 'encontro', turno: 'Tarde', horasDia: 5, mes: '2027-03', dias: ['2027-03-15', '2027-03-16'] },
+        { tipo: 'campo', turno: 'Manhã+Tarde', horasDia: 8, mes: '2027-03', diasSemana: [1, 2, 3, 4, 5, 6] }
+    ];
+    const r = calcularEstagio({ etapas, ch: 76, ...PL2, feriados: FERIADOS, turnoDaTurma: 'Tarde', maxPorLetra: MAX });
+    const campo = r.etapas[1];
+    // qua 17, qui 18, sex 19 (8 h) + sab 20 (5 h) ... sex 26 e feriado ... sab 27 (5 h) = 66 h
+    assert.equal(r.alocada, 76);
+    assert.equal(campo.aulas.at(-1), '2027-03-27');
+    assert.ok(!r.avisos.some((a) => a.tipo === 'erro'));
+    assert.ok(campo.aulas.includes('2027-03-20'));
+    assert.equal(expressaoSigaaDaEtapa(campo, MAX), '23456M1234 23456T1234 7M12345');
+    const f = faixasDoEstagio(r.etapas, SLOTS, FERIADOS);
+    const sabado = f[1].pattern.filter((p) => p.dia === 6).map((p) => p.slot);
+    assert.deepEqual(sabado, SLOTS.M.slice(0, 5));
+});

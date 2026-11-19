@@ -8,7 +8,7 @@
 // As contas ficam em js/estagio.mjs (testadas); aqui so a tela.
 import {
     calcularEstagio, faixasDoEstagio, expressaoSigaaDaEtapa, letrasDoTurno, turnoQueMostra,
-    choqueDaEtapa, maxHorasDia, limitesDoMes
+    choqueDaEtapa, maxHorasDia, limitesDoMes, horasDaEtapa, horasNoSabado
 } from './estagio.mjs?v=202611171437';
 import { addDaysISO, weekdayOf } from './datas.mjs?v=202611171437';
 import { MAX_FAIXAS } from './faixas.mjs?v=202611171437';
@@ -157,8 +157,8 @@ function htmlTotais(r) {
     const linhas = r.etapas.map((e, k) => `
         <tr><td><span class="me-pill me-cor-${k + 1}">${k + 1}</span> ${e.tipo === 'encontro' ? 'Encontro' : 'Campo'}</td>
             <td class="me-num">${e.aulas.length}${e.calculado ? '<small> calc.</small>' : ''}</td>
-            <td class="me-num">${e.horasDia}</td>
-            <td class="me-num">${e.aulas.length * e.horasDia} h</td></tr>`).join('');
+            <td class="me-num">${e.horasDia}${e.aulas.some((d) => weekdayOf(d) === 6) ? `<small> sáb. ${horasNoSabado(e.horasDia, estado.maxPorLetra)}</small>` : ''}</td>
+            <td class="me-num">${horasDaEtapa(e, estado.maxPorLetra)} h</td></tr>`).join('');
     const ok = r.alocada === estado.ctx.ch;
     return `<table class="me-totais">
         <thead><tr><th>Etapa</th><th class="me-num">Dias</th><th class="me-num">Horas</th><th class="me-num">Total</th></tr></thead>
@@ -215,7 +215,7 @@ function htmlResumo(r) {
     const e = r.etapas[estado.ativo];
     if (!e) return '';
     const periodo = e.aulas.length ? `${fmt(e.aulas[0])} a ${fmt(e.aulas[e.aulas.length - 1])}` : 'sem dias ainda';
-    return `${e.aulas.length} dia${e.aulas.length === 1 ? '' : 's'} · ${e.aulas.length * e.horasDia} h · ${periodo}${e.calculado && e.aulas.length ? ' <span class="me-ok">· fim calculado para fechar a CH</span>' : ''}`;
+    return `${e.aulas.length} dia${e.aulas.length === 1 ? '' : 's'} · ${horasDaEtapa(e, estado.maxPorLetra)} h · ${periodo}${e.calculado && e.aulas.length ? ' <span class="me-ok">· fim calculado para fechar a CH</span>' : ''}`;
 }
 
 // Quadradinhos dos dias do mes visto da etapa ativa.
@@ -231,7 +231,10 @@ function htmlQuadrados(r) {
         const dow = weekdayOf(d);
         const foraDoPL = d < ctx.termStart || d > ctx.termEnd;
         const feriado = ctx.feriados.get(d);
-        const quem = dono(d);
+        let quem = dono(d);
+        // Vendo um encontro, os dias do estagio em campo nao aparecem: o campo
+        // se recalcula sozinho e passa a comecar depois do encontro.
+        if (e.tipo === 'encontro' && quem !== -1 && quem !== k && r.etapas[quem].tipo === 'campo') quem = -1;
         const meu = quem === k;
         const outro = quem !== -1 && !meu;
         // Dia de outro ENCONTRO fica travado; dia de estagio em campo pode ser
@@ -288,7 +291,7 @@ function htmlPasso2(r) {
     const campos = e.tipo === 'campo' ? `
         <div class="me-campos me-cor-${k + 1}">
             <span class="me-rotulo">Dias da semana</span>
-            <span class="me-chips">${[1, 2, 3, 4, 5, 6].map((x) => `<button type="button" class="me-chip" data-semana="${x}" aria-pressed="${e.diasSemana.includes(x)}">${SEMANA[x]}</button>`).join('')}</span>
+            <span class="me-chips">${[1, 2, 3, 4, 5, 6].map((x) => `<button type="button" class="me-chip" data-semana="${x}" aria-pressed="${e.diasSemana.includes(x)}" ${x === 6 ? 'title="Sábado: só de manhã, a partir das 8h, até 5 aulas"' : ''}>${x === 6 ? 'Sáb (manhã)' : SEMANA[x]}</button>`).join('')}</span>
             <label>Começa <input type="date" data-campo="inicio" value="${esc(calc.inicioUsado || '')}" min="${esc(calc.inicioMinimo || ctx.termStart)}" max="${ctx.termEnd}"></label>
             <span class="me-nota me-inicio-nota"></span>
             ${calc.calculado
@@ -375,7 +378,7 @@ function htmlPasso3(r) {
             <td>${e.tipo === 'encontro' ? 'Encontro' : 'Campo'} · ${esc(rotuloTurno(e.turno))}</td>
             <td>${fmt(e.aulas[0])}</td><td>${fmt(e.aulas[e.aulas.length - 1])}</td>
             <td><code>${esc(expressaoSigaaDaEtapa(e, estado.maxPorLetra))}</code></td>
-            <td class="me-num">${e.aulas.length * e.horasDia} h</td>
+            <td class="me-num">${horasDaEtapa(e, estado.maxPorLetra)} h</td>
             <td>${htmlChoque(e.turno)}</td></tr>`;
     });
     const pronto = r.alocada === estado.ctx.ch && !r.avisos.some((a) => a.tipo === 'erro');
@@ -493,7 +496,10 @@ function aplicar() {
     if (r.alocada !== s.ctx.ch || r.avisos.some((a) => a.tipo === 'erro')) return;
     const faixas = faixasDoEstagio(r.etapas, s.ctx.slotsPorLetra, s.feriadosSet);
     const letras = new Set(letrasDoTurno(s.ctx.turnoTurma));
-    r.etapas.forEach((e) => { if (e.aulas.length) letrasDoTurno(e.turno).forEach((l) => letras.add(l)); });
+    r.etapas.forEach((e) => {
+        if (e.aulas.length) letrasDoTurno(e.turno).forEach((l) => letras.add(l));
+        if (e.aulas.some((d) => weekdayOf(d) === 6)) letras.add('M'); // sabado e de manha
+    });
     const aoAplicar = s.ctx.aoAplicar;
     fecharMontarEstagio();
     aoAplicar({ faixas, turnoOferta: turnoQueMostra([...letras]) });

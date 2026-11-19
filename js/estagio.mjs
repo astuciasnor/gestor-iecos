@@ -114,6 +114,21 @@ export function maxHorasDia(turnoEtapa, maxPorLetra) {
 
 const diaLetivo = (iso, feriados) => weekdayOf(iso) !== 0 && !feriados.has(iso);
 
+// SABADO (18/11/2026): estagio no sabado e so de manha, a partir da 1a aula
+// (8h), no maximo 5 aulas - escola e empresa raramente funcionam a tarde.
+export const HORAS_SABADO = 5;
+export function horasNoSabado(horasDia, maxPorLetra = null) {
+    return Math.min(Number(horasDia) || 0, HORAS_SABADO, maxPorLetra?.M ?? HORAS_SABADO);
+}
+// Horas de um dia da etapa: no sabado, as aulas da manha; nos outros, as horas/dia.
+export function horasNoDia(etapa, iso, maxPorLetra = null) {
+    return weekdayOf(iso) === 6 ? horasNoSabado(etapa.horasDia, maxPorLetra) : (Number(etapa.horasDia) || 0);
+}
+// Horas de todas as aulas da etapa.
+export function horasDaEtapa(etapa, maxPorLetra = null) {
+    return (etapa.aulas || []).reduce((s, d) => s + horasNoDia(etapa, d, maxPorLetra), 0);
+}
+
 // Dias de um encontro que faltam para repetir o mesmo padrao semanal entre o
 // primeiro e o ultimo dia (a faixa repete os dias da semana nesse intervalo).
 export function diasQueFaltamNoPadrao(dias = [], feriados = new Set()) {
@@ -153,7 +168,7 @@ export function calcularEstagio({ etapas = [], ch = 0, termStart, termEnd, feria
             : [],
         calculado: false
     }));
-    const horas = (r) => r.aulas.length * (Number(r.horasDia) || 0);
+    const horas = (r) => horasDaEtapa(r, maxPorLetra);
     let ultimoCampo = -1;
     R.forEach((r, k) => { if (r.tipo === 'campo') ultimoCampo = k; });
 
@@ -188,10 +203,12 @@ export function calcularEstagio({ etapas = [], ch = 0, termStart, termEnd, feria
             const outras = R.reduce((s, o, j) => s + (j === k ? 0 : (j < k || o.tipo === 'encontro' ? horas(o) : 0)), 0);
             r.precisa = ch - outras;
             if (r.precisa > 0 && r.horasDia > 0) {
+                let soma = 0;
                 for (let d = ini; d && d < limite && d <= termEnd; d = addDaysISO(d, 1)) {
                     if (!semana.has(weekdayOf(d)) || !diaLetivo(d, feriados)) continue;
                     aulas.push(d);
-                    if (aulas.length * r.horasDia >= r.precisa) break;
+                    soma += horasNoDia(r, d, maxPorLetra);
+                    if (soma >= r.precisa) break;
                 }
             }
         } else if (Number(r.diasPlanejados) > 0) {
@@ -275,11 +292,16 @@ export function calcularEstagio({ etapas = [], ch = 0, termStart, termEnd, feria
 }
 
 // Expressao SIGAA de uma etapa: dias '2'..'7' + letra + aulas ('24N123').
+// Sabado a parte, so de manha: '7M12345'.
 export function expressaoSigaaDaEtapa(etapa, maxPorLetra) {
-    const dias = [...new Set((etapa.aulas || []).map(weekdayOf))].sort().map((d) => d + 1).join('');
-    return horasPorTurno(etapa.turno, etapa.horasDia, maxPorLetra)
-        .map(([l, h]) => dias + l + Array.from({ length: h }, (_, i) => i + 1).join(''))
-        .join(' ');
+    const semana = [...new Set((etapa.aulas || []).map(weekdayOf))].sort();
+    const aulasDe = (h) => Array.from({ length: h }, (_, i) => i + 1).join('');
+    const dias = semana.filter((d) => d !== 6).map((d) => d + 1).join('');
+    const partes = dias
+        ? horasPorTurno(etapa.turno, etapa.horasDia, maxPorLetra).map(([l, h]) => dias + l + aulasDe(h))
+        : [];
+    if (semana.includes(6)) partes.push('7M' + aulasDe(horasNoSabado(etapa.horasDia, maxPorLetra)));
+    return partes.join(' ');
 }
 
 // Etapas calculadas -> faixas do Cardume: [{ inicio, fim, pausa, pattern: [{ dia, slot }] }].
@@ -294,7 +316,9 @@ export function faixasDoEstagio(etapasCalculadas = [], slotsPorLetra = {}, feria
         const slots = horasPorTurno(e.turno, e.horasDia, maxPorLetra)
             .flatMap(([l, h]) => (slotsPorLetra[l] || []).slice(0, h));
         const diasSemana = [...new Set(e.aulas.map(weekdayOf))].sort();
-        const pattern = diasSemana.flatMap((dia) => slots.map((slot) => ({ dia, slot })));
+        // Sabado: as primeiras aulas da manha (ver HORAS_SABADO).
+        const slotsSabado = (slotsPorLetra.M || []).slice(0, horasNoSabado(e.horasDia, maxPorLetra));
+        const pattern = diasSemana.flatMap((dia) => (dia === 6 ? slotsSabado : slots).map((slot) => ({ dia, slot })));
         const inicio = e.aulas[0];
         const ultimaAula = e.aulas[e.aulas.length - 1];
         const proxima = comAula[idx + 1];
