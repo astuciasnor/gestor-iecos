@@ -10,14 +10,14 @@
         // Vai para o aviso antes de carregar o programa. A agenda publica nao passa por aqui.
         if (/\.github\.io$/i.test(location.hostname)) location.replace('mudou.html');
     </script>
-    <link rel="stylesheet" href="css/style.css?v=202611182310">
+    <link rel="stylesheet" href="css/style.css?v=202611191754">
     <!-- Redesenho da aba Alocar Componentes (por partes); carrega depois do style.css -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
-    <link rel="stylesheet" href="css/alocar-componentes.css?v=202611182310">
-    <link rel="stylesheet" href="css/ajuda.css?v=202611182310">
-    <link rel="stylesheet" href="css/montar-estagio.css?v=202611182310">
+    <link rel="stylesheet" href="css/alocar-componentes.css?v=202611191754">
+    <link rel="stylesheet" href="css/ajuda.css?v=202611191754">
+    <link rel="stylesheet" href="css/montar-estagio.css?v=202611191754">
 
     <style>
         :root {
@@ -349,7 +349,7 @@
         }
     </style>
     <!-- Visual da barra lateral: depois de todos os estilos, so vale dentro de .sidebar -->
-    <link rel="stylesheet" href="css/sidebar.css?v=202611182310">
+    <link rel="stylesheet" href="css/sidebar.css?v=202611191754">
 </head>
 
 <body>
@@ -1047,7 +1047,8 @@
 
             <section id="tab-indicadores" class="tab-content" role="tabpanel" aria-labelledby="tabbtn-indicadores">
                 <div class="subtab-bar ind-subabas no-print" role="tablist" aria-label="Tipos de indicador">
-                    <button type="button" class="ind-subaba is-ativa" role="tab" aria-selected="true">Carga por docente</button>
+                    <button type="button" class="ind-subaba is-ativa" data-subaba="carga" role="tab" aria-selected="true">Carga por docente</button>
+                    <button type="button" class="ind-subaba" data-subaba="dias" role="tab" aria-selected="false">Dias do docente</button>
                 </div>
                 <div class="ind-filtros no-print">
                     <span class="ind-filtros-rotulo">Unidade:</span>
@@ -1057,16 +1058,28 @@
                     <button id="btn-ano-inteiro-indicadores" type="button" class="docente-periodo-btn is-active"
                         title="PL1 a PL4 do ano escolhido, com a CH de cada PL">📆 Ano inteiro</button>
                     <div id="ind-pl-buttons" class="docente-pl-buttons" role="group" aria-label="Período letivo"></div>
+                    <!-- Quebra de linha: o Docente fica na 2a linha, embaixo da Unidade. -->
+                    <span id="ind-docente-quebra" class="ind-quebra hidden" aria-hidden="true"></span>
+                    <span id="ind-docente-box" class="ind-docente-box hidden">
+                        <span class="ind-filtros-rotulo">Docente:</span>
+                        <input type="text" id="inp-docente-dias" aria-label="Docente" placeholder="Busque o professor..." autocomplete="off">
+                    </span>
                     <button id="btn-atualizar-indicadores" type="button" class="docente-icon-btn docente-icon-btn--refresh"
                         title="Ler de novo as alocações (outros coordenadores podem ter mudado algo)" aria-label="Atualizar">⟳</button>
                 </div>
                 <p id="ind-resumo" class="ind-resumo" aria-live="polite"></p>
                 <div id="ind-tabela"></div>
-                <p class="ind-nota">
+                <p class="ind-nota" id="ind-nota-carga">
                     Conta tudo o que está no Cardume, <b>inclusive o que ainda não foi publicado</b>, nos cursos da unidade escolhida.
                     Componente dividida entre docentes: a parte de cada um (ex.: 30 de 90 h).
                     Componentes pendentes (ainda sem horário) não entram.
                     Clique no nome para ver a agenda do docente no mesmo período.
+                </p>
+                <p class="ind-nota hidden" id="ind-nota-dias">
+                    Cada linha é uma componente do docente e cada quadradinho é um dia do período letivo; o mesmo dia fica alinhado na vertical.
+                    <b>Dia carregado</b> (vermelho) = duas ou mais componentes diferentes no mesmo dia, por exemplo uma de manhã e outra à tarde.
+                    Não é choque de horário: é só um dia pesado para o docente. T01 e T02 da mesma componente contam como duas.
+                    Entram as componentes do docente em todas as unidades, inclusive o que ainda não foi publicado.
                 </p>
             </section>
 
@@ -1526,7 +1539,7 @@
         </main>
     </div>
 
-    <script type="module" src="js/main.js?v=202611182310"></script>
+    <script type="module" src="js/main.js?v=202611191754"></script>
 </body>
 
 </html>

@@ -1,5 +1,5 @@
-import { toISODate, addDaysISO, getWeekStartISO, sortUniqueIsoDates } from './datas.mjs?v=202611182310';
-import { normalizePlanMeta as normalizeStoredPlanMeta } from './plan_storage.js?v=202611182310';
+import { toISODate, addDaysISO, getWeekStartISO, sortUniqueIsoDates } from './datas.mjs?v=202611191754';
+import { normalizePlanMeta as normalizeStoredPlanMeta } from './plan_storage.js?v=202611191754';
 
 function normalizePlanMeta(meta = {}) {
   return normalizeStoredPlanMeta(meta);
