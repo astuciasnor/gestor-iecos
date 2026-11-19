@@ -1,5 +1,5 @@
-import { normalizeConflictSlotLabel } from './horarios.mjs?v=202611171437';
-import { sortUniqueIsoDates, normalizeShiftKey, slotLabelsOverlap } from './academic_rules.mjs?v=202611171437';
+import { normalizeConflictSlotLabel } from './horarios.mjs?v=202611182310';
+import { sortUniqueIsoDates, normalizeShiftKey, slotLabelsOverlap } from './academic_rules.mjs?v=202611182310';
 
 function addPairConflictEntry(targetMap, key, entry) {
   if (!targetMap.has(key)) {
