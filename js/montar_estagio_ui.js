@@ -387,7 +387,14 @@ function htmlPasso3(r) {
         </table></div>
         ${pronto
             ? '<p class="me-nota">Ao aplicar, as faixas vão para o cartão e o turno da barra lateral passa a mostrar todos os turnos usados. Depois, confira na grade e clique em Salvar Componente.</p>'
-            : `<div class="me-aviso me-aviso--erro">A CH ainda não fecha (${r.alocada} de ${estado.ctx.ch} h) ou há um aviso nas Datas. Volte e ajuste.</div>`}`;
+            : htmlPendencias(r)}`;
+}
+
+// O que ainda impede o Aplicar, com as palavras de cada aviso.
+function htmlPendencias(r) {
+    const itens = r.avisos.filter((a) => a.tipo === 'erro').map((a) => `<li>${esc(a.texto)}</li>`);
+    if (r.alocada !== estado.ctx.ch && !itens.length) itens.push(`<li>A CH ainda não fecha: ${r.alocada} de ${estado.ctx.ch} h.</li>`);
+    return `<div class="me-aviso me-aviso--erro"><b>Para aplicar, volte às Datas e resolva:</b><ul class="me-pendencias">${itens.join('')}</ul></div>`;
 }
 
 // ---------------------------------------------------------------- eventos

@@ -127,6 +127,11 @@ try {
     const h = __t.q('[data-etapa="1"] [data-campo="horasDia"]'); h.value = '3'; __t.fire(h, 'input'); await __t.wait(300);
   })()`);
 
+  // Passo 3 antes de marcar os dias: diz exatamente o que falta
+  await evaluate("__t.clicar('[data-passo=\"3\"]')");
+  const pend = await evaluate("__t.qa('.me-pendencias li').map(li => li.textContent).join(' | ')");
+  confere('passo 3 lista o que falta resolver', /marque os dias do encontro/.test(pend), pend);
+
   // Passo 2: encontro 1 (3 dias no 1o mes) e encontro 3 (3 dias no ultimo mes)
   await evaluate("__t.clicar('[data-ir=\"2\"]')");
   console.log('  etapa 1:', await evaluate('__t.marcarDiasSeguidos(3)'));

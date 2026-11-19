@@ -183,7 +183,7 @@
 .me-chip[aria-pressed="true"] { border-color: var(--c); background: var(--c); color: #FFFFFF; }
 .me-resumo { font-size: 13px; font-weight: 600; }
 
-.me-regua { overflow-x: auto; }
+.me-regua { overflow-x: auto; overflow-y: hidden; }
 .me-regua-int { min-width: 700px; }
 .me-meses { position: relative; height: 18px; margin-left: 110px; }
 .me-meses span { position: absolute; transform: translateX(4px); font-size: 10.5px; font-weight: 700; letter-spacing: .06em; color: #64748B; }
@@ -239,3 +239,4 @@
 .me-totais .me-pill { padding: 0 7px; margin-right: 4px; }
 /* Dia em que o estagio em campo comeca (clique nos quadradinhos) */
 .me-dia--inicio { box-shadow: 0 0 0 2px #FFFFFF, 0 0 0 4px var(--c); }
+.me-pendencias { margin: 4px 0 0; padding-left: 18px; }
