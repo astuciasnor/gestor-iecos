@@ -20,6 +20,20 @@ export function ehEstagio(nomeComponente) {
     return /\bESTAGIO\b/.test(nome);
 }
 
+// CH DO ORIENTADOR (reuniao com as coordenacoes, 19/11/2026): o estagio pode ter,
+// por exemplo, 90 h, mas so 45 h contam para o docente orientador. O coordenador
+// informa esse numero na janela "Montar estagio" e ele fica na alocacao
+// (alloc.chOrientador). So muda a SOMA de CH do docente (Indicadores e tabela da
+// agenda do docente). Aulas, choques, faixas e SIGAA continuam com a CH toda.
+// Devolve as horas validas (1 a chTotal) ou 0 quando nao ha (vale a CH toda).
+export function chDoOrientador(alloc, chTotal = 0) {
+    if (!ehEstagio(alloc?.disciplina)) return 0;
+    const v = Math.round(Number(alloc?.chOrientador));
+    if (!Number.isFinite(v) || v <= 0) return 0;
+    const total = Number(chTotal) || 0;
+    return total > 0 && v > total ? 0 : v;
+}
+
 // "14:00 - 14:50" -> 840. Sem hora -> NaN.
 function minutosDoInicio(horario) {
     const m = String(horario || '').match(/(\d{1,2}):(\d{2})/);

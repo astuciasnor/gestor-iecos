@@ -1258,6 +1258,7 @@ const DIAS_PLURAL = ['domingos', 'segundas', 'terças', 'quartas', 'quintas', 's
 // do aviso (conferirAvisoAproveitamento).
 let avisoAproveitamento = null;   // { inicio, fim, disciplina, proximaInicio, volta, ondeEstava }
 let horasDasFaixas = { f1: 0, f2: 0, total: 0, meta: 0 };   // atualizado por updateWeeklyFaixaHoursDisplay
+let chOrientadorAoCarregar = null; // { chave, valor } posto por loadAllocationIntoEditor (CH do orientador)
 
 function mostrarAvisoAproveitamento(info) {
     avisoAproveitamento = { ...info, volta: '' };
@@ -2019,10 +2020,9 @@ function getWeeklyFaixasTitleDisciplinaAtiva() {
 
 function updateWeeklyFaixasTitleDisciplina() {
     // Botao "Montar estagio": so com turma e componente de estagio escolhidas.
-    document.getElementById('btn-montar-estagio')?.classList.toggle(
-        'hidden',
-        !store.selectedTurma || !ehEstagio(getWeeklyFaixasTitleDisciplinaAtiva())
-    );
+    const semEstagio = !store.selectedTurma || !ehEstagio(getWeeklyFaixasTitleDisciplinaAtiva());
+    document.getElementById('btn-montar-estagio')?.classList.toggle('hidden', semEstagio);
+    atualizarCaixaChOrientador(semEstagio);
     const prefixEl = document.getElementById('weekly-faixas-title-prefix');
     const discEl = document.getElementById('weekly-faixas-title-disc');
     if (!prefixEl || !discEl) return;
@@ -3575,6 +3575,52 @@ function resolveInlineEditableFaixaIndex() {
     return NUMEROS_FAIXAS.find((i) => hasStart(i)) || null;
 }
 
+// ==== CH DO ORIENTADOR (estagio, reuniao de 19/11/2026) ====
+// Caixinha "Orientador [45] h" ao lado do botao Montar estagio. O valor vale so
+// para a componente aberta (turma + componente): trocou de componente, a caixa
+// volta vazia, ou com o valor salvo dela quando vem do Editar. Vai para a
+// alocacao como chOrientador e so muda a soma de CH do docente (js/estagio.mjs).
+
+function chaveDoOrientador(turmaId, disciplina) {
+    const nome = String(disciplina || '').replace(/\s*\(\s*\d+\s*h\s*\)\s*$/i, '').trim().toLocaleUpperCase('pt-BR');
+    return turmaId && nome ? `${turmaId}|${nome}` : '';
+}
+
+function atualizarCaixaChOrientador(semEstagio) {
+    const box = document.getElementById('box-ch-orientador');
+    const inp = document.getElementById('inp-ch-orientador');
+    if (!box || !inp) return;
+    box.classList.toggle('hidden', semEstagio);
+    const chave = semEstagio ? '' : chaveDoOrientador(store.selectedTurma, getWeeklyFaixasTitleDisciplinaAtiva());
+    if (inp.dataset.chave !== chave) {
+        const salvo = chOrientadorAoCarregar?.chave === chave ? chOrientadorAoCarregar.valor : '';
+        inp.value = salvo ? String(salvo) : '';
+        inp.dataset.chave = chave;
+    }
+    const ch = horasDasFaixas.meta || 0;
+    if (ch) inp.max = String(ch);
+    box.classList.toggle('cd-ch-orientador--falta', !inp.value);
+}
+
+// Valor da caixinha para a componente aberta (0 = nao informado ou invalido).
+function lerChOrientadorDoCartao() {
+    const box = document.getElementById('box-ch-orientador');
+    const inp = document.getElementById('inp-ch-orientador');
+    if (!box || !inp || box.classList.contains('hidden')) return 0;
+    if (inp.dataset.chave !== chaveDoOrientador(store.selectedTurma, getWeeklyFaixasTitleDisciplinaAtiva())) return 0;
+    const v = parseInt(inp.value, 10);
+    const ch = horasDasFaixas.meta || 0;
+    return Number.isFinite(v) && v > 0 && (!ch || v <= ch) ? v : 0;
+}
+
+function porChOrientadorNoCartao(valor) {
+    const inp = document.getElementById('inp-ch-orientador');
+    if (!inp) return;
+    inp.value = valor ? String(valor) : '';
+    inp.dataset.chave = chaveDoOrientador(store.selectedTurma, getWeeklyFaixasTitleDisciplinaAtiva());
+    document.getElementById('box-ch-orientador')?.classList.toggle('cd-ch-orientador--falta', !inp.value);
+}
+
 // ==== MONTAR ESTAGIO ====
 // Abre a janela (js/montar_estagio_ui.js) com o que a tela sabe da componente.
 function abrirJanelaMontarEstagio() {
@@ -3602,14 +3648,16 @@ function abrirJanelaMontarEstagio() {
         termEnd: String(store.settings.termEnd || '').trim(),
         feriados: getHolidayLabelMap(),
         slotsPorLetra,
+        chOrientador: lerChOrientadorDoCartao(),
         aoAplicar: aplicarFaixasDoEstagio
     });
 }
 
 // Coloca as faixas montadas no cartao, como se o coordenador tivesse desenhado.
 // faixas: [{ inicio, fim, pausa, pattern: [{ dia, slot }] }] (js/estagio.mjs).
-function aplicarFaixasDoEstagio({ faixas = [], turnoOferta = '' }) {
+function aplicarFaixasDoEstagio({ faixas = [], turnoOferta = '', chOrientador = 0 }) {
     if (!faixas.length) return;
+    porChOrientadorNoCartao(chOrientador);
     // Turno da barra lateral com todos os turnos usados (ex.: Manha e Noite).
     const valorTurno = resolveTurnoOfertaValue(turnoOferta);
     if (valorTurno && store.settings.turnoOferta !== valorTurno) {
@@ -3644,6 +3692,10 @@ function aplicarFaixasDoEstagio({ faixas = [], turnoOferta = '' }) {
 function setupFaixaControls() {
     setupFaixaQuickActions();
     document.getElementById('btn-montar-estagio')?.addEventListener('click', abrirJanelaMontarEstagio);
+    document.getElementById('inp-ch-orientador')?.addEventListener('input', (ev) => {
+        ev.target.dataset.chave = chaveDoOrientador(store.selectedTurma, getWeeklyFaixasTitleDisciplinaAtiva());
+        document.getElementById('box-ch-orientador')?.classList.toggle('cd-ch-orientador--falta', !ev.target.value);
+    });
     document.getElementById('btn-faixa-auto-undo')?.addEventListener('click', undoFaixaAutoCreation);
     document.getElementById('btn-aprov-f1')?.addEventListener('click', () => preencherFaixaDoAviso(1));
     document.getElementById('btn-aprov-f2')?.addEventListener('click', () => preencherFaixaDoAviso(2));
@@ -6867,6 +6919,8 @@ function loadAllocationIntoEditor(allocation, idsToRemove = [], options = {}) {
     weeklyState.editingDisciplinaDraft = normalizeDisciplinaInputValue(a.disciplina);
     weeklyState.replacingFromDisciplina = '';
     weeklyState.editingImportadoDraft = !!a.importado;
+    // CH do orientador salva (estagio): a caixinha do cartao mostra ao abrir.
+    chOrientadorAoCarregar = { chave: chaveDoOrientador(a.turmaId, a.disciplina), valor: parseInt(a.chOrientador, 10) || 0 };
     setComponentStartSelectionMode('auto');
     updateWeeklyFaixasTitleDisciplina();
     let editorFaixasAdjusted = false;
@@ -7629,6 +7683,7 @@ function gravarComponente({ disciplina, subGrupo, effectiveCH, docData, nomesDig
         docentes: docData.docentesList,
         modo: 'faixas',
         ch: effectiveCH,
+        ...(lerChOrientadorDoCartao() ? { chOrientador: lerChOrientadorDoCartao() } : {}),
         dataInicio: posicao.dataInicio,
         dataFim: posicao.dataFim,
         modelo: 'Automatico',

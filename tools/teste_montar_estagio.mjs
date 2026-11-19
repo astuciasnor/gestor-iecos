@@ -107,6 +107,11 @@ try {
   await evaluate("document.getElementById('btn-montar-estagio').click()");
   confere('janela abre', await waitFor('!!document.getElementById("montar-estagio-modal")', 3000));
   console.log('  ' + await evaluate("__t.q('.me-sub').textContent"));
+  // CH do orientador (19/11/2026): vazia avisa; digitada, a nota muda.
+  confere('CH do orientador vazia avisa', /Não informada/.test(await evaluate("__t.q('#me-orientador-nota').textContent")));
+  await evaluate("(() => { const i = __t.q('#me-ch-orientador'); i.value = '45'; __t.fire(i, 'input'); })()");
+  const notaOri = await evaluate("__t.q('#me-orientador-nota').textContent");
+  confere('CH do orientador 45 h na janela', /conta 45 h/.test(notaOri), notaOri);
   await foto('1-etapas');
 
 
@@ -182,6 +187,23 @@ try {
   confere('cartao com as faixas e a CH completa', m && m[1] === m[2], cartao);
   console.log('  turno da barra lateral: ' + await evaluate("document.getElementById('sel-turno-oferta').selectedOptions[0]?.textContent"));
   await foto('4-cartao-depois');
+  const caixa = await evaluate("document.getElementById('inp-ch-orientador').value + ' | visivel ' + !document.getElementById('box-ch-orientador').classList.contains('hidden')");
+  confere('caixinha Orientador no cartao com 45', caixa === '45 | visivel true', caixa);
+
+  // Salva com um docente e confere o campo gravado na alocacao.
+  await evaluate(`(async () => { __t.setVal('inp-docente', 'Ana Garcês'); await __t.wait(500); document.getElementById('btn-add-oferta').click(); await __t.wait(2500); })()`);
+  const gravado = await evaluate(`(() => {
+    for (const key of Object.keys(localStorage).filter(k => k.startsWith('academic_plan_v1::'))) {
+      const lista = JSON.parse(localStorage.getItem(key) || '[]');
+      const a = lista.find(x => x.modo === 'faixas' && /EST[AÁ]GIO/i.test(x.disciplina) && x.docente === 'Ana Garcês');
+      if (a) return 'chOrientador=' + a.chOrientador + ' ch=' + a.ch + ' docente=' + a.docente;
+    }
+    return 'nao achei | ' + (document.getElementById('status-msg')?.textContent || '') + ' | ' + [...document.querySelectorAll('.toast, .toast-warning, [class*=toast]')].map(t => t.textContent.trim()).join(' / ').slice(0, 300);
+  })()`);
+  confere('alocacao salva com chOrientador 45', /chOrientador=45 /.test(gravado), gravado);
+  // Trocar de componente esvazia a caixinha (o valor e so da componente aberta).
+  await evaluate(`(async () => { __t.setVal('inp-disciplina', ''); await __t.wait(600); })()`);
+  confere('caixinha some sem componente', await evaluate("document.getElementById('box-ch-orientador').classList.contains('hidden')"));
 
   if (errors.length) { falhas++; console.log('Erros no navegador:', errors.join(' | ')); }
   console.log(`\nFotos em ${FOTOS}`);

@@ -31,6 +31,20 @@ test('componente dividida: cada docente com a sua parte (30/90)', () => {
     assert.deepEqual(linha(r, 'Bruno Lima').porCurso, { CB: 60 });
 });
 
+test('estagio com CH do orientador: o docente conta 45 de 105; sem ela, a CH toda', () => {
+    const r = cargaPorDocente([{ periodo: 'PL2', allocations: [
+        { turmaId: 'CB2024', disciplina: 'ESTAGIO', modo: 'faixas', docente: 'Sandra Bastos', chOrientador: 45 },
+        { turmaId: 'CB2024', disciplina: 'ESTAGIO', modo: 'faixas', docente: 'Sandra Bastos', chOrientador: 45 },
+        { turmaId: 'CB2025', disciplina: 'ESTAGIO', modo: 'faixas', docente: 'Sandra Bastos' }
+    ] }], opcoes);
+    assert.equal(linha(r, 'Sandra Bastos').total, 45 + 105);
+    // Fora do estagio o campo nao vale (nao muda nada).
+    const r2 = cargaPorDocente([{ periodo: 'PL1', allocations: [
+        { turmaId: 'EP2026', disciplina: 'CALCULO I', modo: 'faixas', docente: 'Ana Souza', chOrientador: 30 }
+    ] }], opcoes);
+    assert.equal(linha(r2, 'Ana Souza').total, 60);
+});
+
 test('pendentes ficam de fora; "A definir" e sem docente vao para a linha A definir', () => {
     const r = cargaPorDocente([{ periodo: 'PL1', allocations: [
         { turmaId: 'EP2026', disciplina: 'ESTAGIO', modo: 'pendente', docente: 'Ana Souza' },

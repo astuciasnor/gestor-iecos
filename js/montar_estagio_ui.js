@@ -37,7 +37,8 @@ function aoTeclar(e) {
 }
 
 // ctx: { componente, ch, turnoTurma, termStart, termEnd, feriados: Map(iso -> nome),
-//        slotsPorLetra: { M: [...], T: [...], N: [...] }, aoAplicar({ faixas, turnoOferta }) }
+//        slotsPorLetra: { M: [...], T: [...], N: [...] }, chOrientador (0 = nao informada),
+//        aoAplicar({ faixas, turnoOferta, chOrientador }) }
 export function abrirMontarEstagio(ctx) {
     fecharMontarEstagio();
     const maxPorLetra = Object.fromEntries(Object.entries(ctx.slotsPorLetra).map(([l, lista]) => [l, (lista || []).length]));
@@ -60,7 +61,7 @@ export function abrirMontarEstagio(ctx) {
         novaEtapa('encontro', turnoTurma, meses[meses.length - 1]),
         novaEtapa('campo', contraturno, meses[Math.min(1, meses.length - 1)])
     ];
-    estado = { ctx, maxPorLetra, turnosPossiveis, meses, etapas, n: 3, passo: 1, ativo: 0, feriadosSet: new Set(ctx.feriados.keys()) };
+    estado = { ctx, maxPorLetra, turnosPossiveis, meses, etapas, n: 3, passo: 1, ativo: 0, feriadosSet: new Set(ctx.feriados.keys()), chOrientador: Number(ctx.chOrientador) || 0 };
 
     const overlay = document.createElement('div');
     overlay.id = 'montar-estagio-modal';
@@ -189,7 +190,20 @@ function htmlPasso1() {
         <div class="me-etapas">
             <div class="me-etapa me-etapa--cab"><span></span><span>O que é</span><span>Turno</span><span>Mês</span><span>Dias</span><span>Horas</span><span>Choque</span></div>
             ${linhas}
+        </div>
+        <div class="me-linha-topo me-orientador">
+            <label class="me-rotulo" for="me-ch-orientador">CH do orientador</label>
+            <span class="me-horas"><input type="number" id="me-ch-orientador" data-campo="chOrientador" min="1" max="${estado.ctx.ch}" value="${estado.chOrientador || ''}" placeholder="${estado.ctx.ch}"> h de ${estado.ctx.ch} h</span>
+            <span class="me-nota" id="me-orientador-nota">${htmlNotaOrientador()}</span>
         </div>`;
+}
+
+// CH do orientador (reuniao de 19/11/2026): so muda a soma de CH do docente.
+function htmlNotaOrientador() {
+    const ch = estado.ctx.ch;
+    const v = estado.chOrientador;
+    if (!v) return `<span class="me-orientador-falta">Não informada: o docente conta as ${ch} h.</span> É a CH que vale para o docente (Indicadores). As aulas continuam somando ${ch} h.`;
+    return `O docente conta ${v} h nos Indicadores. As aulas continuam somando ${ch} h (o resto é do aluno no campo).`;
 }
 
 // ---------------------------------------------------------------- passo 2
@@ -383,7 +397,8 @@ function htmlPasso3(r) {
             <tfoot><tr><td colspan="5"><b>Total</b></td><td class="me-num"><b>${r.alocada} h</b></td><td></td></tr></tfoot>
         </table></div>
         ${pronto
-            ? '<p class="me-nota">Ao aplicar, as faixas vão para o cartão e o turno da barra lateral passa a mostrar todos os turnos usados. Depois, confira na grade e clique em Salvar Componente.</p>'
+            ? `<p class="me-nota">Ao aplicar, as faixas vão para o cartão e o turno da barra lateral passa a mostrar todos os turnos usados. Depois, confira na grade e clique em Salvar Componente.</p>
+               <p class="me-nota">${htmlNotaOrientador()}</p>`
             : htmlPendencias(r)}`;
 }
 
@@ -467,6 +482,13 @@ function aoMudar(e) {
 function aoDigitar(e) {
     const t = e.target;
     const campo = t.dataset.campo;
+    if (t.type === 'number' && campo === 'chOrientador') {
+        const v = parseInt(t.value, 10);
+        estado.chOrientador = Number.isFinite(v) && v > 0 && v <= estado.ctx.ch ? v : 0;
+        const nota = document.getElementById('me-orientador-nota');
+        if (nota) nota.innerHTML = htmlNotaOrientador();
+        return;
+    }
     if (t.type !== 'number' || (campo !== 'horasDia' && campo !== 'diasPlanejados')) return;
     const linha = t.closest('[data-etapa]');
     const etapa = estado.etapas[linha ? Number(linha.dataset.etapa) : estado.ativo];
@@ -489,5 +511,5 @@ function aplicar() {
     });
     const aoAplicar = s.ctx.aoAplicar;
     fecharMontarEstagio();
-    aoAplicar({ faixas, turnoOferta: turnoQueMostra([...letras]) });
+    aoAplicar({ faixas, turnoOferta: turnoQueMostra([...letras]), chOrientador: s.chOrientador });
 }

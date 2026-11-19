@@ -1,4 +1,5 @@
 import { escapeHtml } from './texto.mjs?v=202611191754';
+import { chDoOrientador } from './estagio.mjs?v=202611191754';
 import { store } from './store.js?v=202611191754';
 import { getCalendarEvents } from './calendar.js?v=202611191754';
 import { buildTeacherExecutionSnapshot, buildCanonicalOfferProjection } from './execution_engine.js?v=202611191754';
@@ -1020,11 +1021,18 @@ function collectDocenteResumeComponents(docenteName, start, end) {
         const curricularCH = toCH(getDisciplinaCHGlobal(disciplina, turmaId))
             || toCH(info?.ch) || toCH(baseAlloc?.ch);
         // Parte deste docente: componente compartilhada usa a CH declarada para
-        // ele; docente unico responde pela CH toda.
+        // ele; docente unico responde pela CH toda, ou, no estagio, pela CH do
+        // orientador informada no "Montar estagio" (js/estagio.mjs).
         const compartilhada = docentesOferta.length > 1;
+        const chOrientador = compartilhada ? 0 : allocations
+            .filter((a) => (offerGroup?.allocationIds || []).includes(a.id))
+            .reduce((v, a) => v || chDoOrientador(a, curricularCH), 0);
         const chDocente = compartilhada
             ? (toCH(declaredDocente?.ch) || toCH(segment?.ch))
-            : curricularCH;
+            : (chOrientador || curricularCH);
+        // Quanto as aulas no calendario devem somar (a cor da CH alocada): no
+        // estagio com CH do orientador, as aulas continuam sendo a CH toda.
+        const metaAlocada = chOrientador ? curricularCH : chDocente;
 
         const aulas = (Array.isArray(offerGroup?.allocationIds) ? offerGroup.allocationIds : [])
             .flatMap((id) => [...(aulasPorAlocacao.get(id)?.values() || [])])
@@ -1077,7 +1085,9 @@ function collectDocenteResumeComponents(docenteName, start, end) {
             turmaLabel: getTurmaLabel(turmaId, offerGroup?.subGrupo || baseAlloc?.subGrupo),
             curricularCH,
             compartilhada,
+            orientador: !!chOrientador,
             chDocente,
+            metaAlocada,
             chAlocada,
             faixaRows,
             sortStart: faixaRows[0]?.dataInicio || String(offerGroup?.start || start || '').trim()
@@ -1095,6 +1105,7 @@ function collectDocenteResumeComponents(docenteName, start, end) {
 function sumComponentsCH(components = []) {
     return {
         ch: components.reduce((sum, comp) => sum + toCH(comp.chDocente), 0),
+        meta: components.reduce((sum, comp) => sum + toCH(comp.metaAlocada ?? comp.chDocente), 0),
         alocada: components.reduce((sum, comp) => sum + toCH(comp.chAlocada), 0)
     };
 }
@@ -1109,9 +1120,9 @@ function corDaAlocada(chDocente, chAlocada) {
 }
 
 // CH do docente: "60" quando ele da a componente toda; "30/90" quando divide
-// com outros (parte dele / CH da componente).
+// com outros (parte dele / CH da componente); "45/90" no estagio com CH do orientador.
 function formatCHDocente(comp) {
-    if (!comp.compartilhada) return formatCH(comp.chDocente) || formatCH(comp.curricularCH) || '-';
+    if (!comp.compartilhada && !comp.orientador) return formatCH(comp.chDocente) || formatCH(comp.curricularCH) || '-';
     return `${formatCH(comp.chDocente) || '?'}/${formatCH(comp.curricularCH) || '?'}`;
 }
 
@@ -1142,7 +1153,7 @@ function buildDocenteResumeTableHtml(sections = [], totalLabel = 'Total', cabeca
                 <tr style="background: #f5f5f5; border-top: 2px solid #2d34c6; border-bottom: 2px solid #333;">
                     <th style="padding: 8px 8px 16px 8px; text-align: left; border-right: 1px solid #ddd; width: 4%;">#</th>
                     <th style="padding: 8px 8px 16px 8px; text-align: left; border-right: 2px solid #2d34c6; width: 9%;">Código</th>
-                    <th style="padding: 8px 8px 16px 8px; text-align: center; border-right: 1px solid #ddd; width: 8%; color: #2d34c6;" title="CH que cabe a este docente. Componente dividida com outros docentes: parte dele / CH da componente.">CH docente</th>
+                    <th style="padding: 8px 8px 16px 8px; text-align: center; border-right: 1px solid #ddd; width: 8%; color: #2d34c6;" title="CH que cabe a este docente. Componente dividida com outros docentes, ou estágio com CH do orientador: parte dele / CH da componente.">CH docente</th>
                     <th style="padding: 8px 8px 16px 8px; text-align: center; border-right: 2px solid #2d34c6; width: 8%; color: #2d34c6;" title="Horas já alocadas para este docente no calendário. Verde: bate com a CH docente. Vermelho: não bate.">CH alocada</th>
                     <th style="padding: 8px 8px 16px 8px; text-align: left; border-right: 1px solid #ddd; width: 21%;">Disciplina</th>
                     <th style="padding: 8px 8px 16px 8px; text-align: left; border-right: 1px solid #ddd; width: 11%;">Turma</th>
@@ -1162,7 +1173,7 @@ function buildDocenteResumeTableHtml(sections = [], totalLabel = 'Total', cabeca
                 <tr style="background: #f8fafc; ${borda}">
                     <td colspan="2" style="padding: ${pad}; border-right: 1px solid #ddd; text-align: right; font-weight: ${peso}; color: #1e3a8a;">${escapeHtml(rotulo)}</td>
                     <td style="padding: ${pad}; text-align: center; border-right: 1px solid #ddd; font-weight: ${peso}; color: #1e3a8a;">${formatCH(soma.ch) || '0'}</td>
-                    <td style="padding: ${pad}; text-align: center; border-right: 2px solid #2d34c6; font-weight: ${peso}; color: ${corDaAlocada(soma.ch, soma.alocada)};">${formatCH(soma.alocada) || '0'}</td>
+                    <td style="padding: ${pad}; text-align: center; border-right: 2px solid #2d34c6; font-weight: ${peso}; color: ${corDaAlocada(soma.meta, soma.alocada)};">${formatCH(soma.alocada) || '0'}</td>
                     <td colspan="${COLS - 4}" style="padding: ${pad};"></td>
                 </tr>
             `;
@@ -1200,7 +1211,7 @@ function buildDocenteResumeTableHtml(sections = [], totalLabel = 'Total', cabeca
 function buildDocenteResumeRows(components = []) {
     let tableHtml = '';
     components.forEach((comp) => {
-        const corAlocada = corDaAlocada(comp.chDocente, comp.chAlocada);
+        const corAlocada = corDaAlocada(comp.metaAlocada ?? comp.chDocente, comp.chAlocada);
         comp.faixaRows.forEach((faixaRow, idx) => {
             const isFirst = idx === 0;
             const bordaTopo = isFirst ? 'border-top: 2px solid #94a3b8;' : '';
