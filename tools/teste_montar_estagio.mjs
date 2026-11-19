@@ -154,7 +154,18 @@ try {
   })()`);
   console.log('  campo:', ajuste);
   confere('a CH fecha exata', await evaluate('__t.fechou()'), await evaluate('__t.placar()'));
+  // O campo comeca 3 semanas depois do encontro: a data digitada fica e a CH ainda fecha
   await evaluate("__t.clicar('[data-aba=\"1\"]')");
+  const comeco = await evaluate(`(async () => {
+    const inp = __t.q('[data-campo="inicio"]');
+    const ini = new Date(inp.min + 'T12:00:00'); ini.setDate(ini.getDate() + 21);
+    const iso = ini.toISOString().slice(0, 10);
+    inp.value = iso; __t.fire(inp, 'input', 'change'); await __t.wait(400);
+    return iso + ' | campo fica: ' + __t.q('[data-campo="inicio"]').value + ' | ' + __t.q('.me-resumo').textContent.trim();
+  })()`);
+  console.log('  ' + comeco);
+  const [quis] = comeco.split(' ');
+  confere('a data de comeco digitada nao volta sozinha', comeco.includes('campo fica: ' + quis), comeco);
   await foto('2-datas');
 
   await evaluate("__t.clicar('[data-ir=\"3\"]')");

@@ -258,6 +258,12 @@ function preencherInfoEtapa(r) {
     }
     const diasCalc = modal.querySelector('.me-dias-calc');
     if (diasCalc) diasCalc.textContent = `${calc.aulas.length} (calculado)`;
+    const notaInicio = modal.querySelector('.me-inicio-nota');
+    if (notaInicio) {
+        notaInicio.textContent = e.inicio && calc.inicioMinimo && e.inicio < calc.inicioMinimo
+            ? `Começa no mínimo em ${fmt(calc.inicioMinimo)}, depois da etapa anterior.`
+            : '';
+    }
     const termina = modal.querySelector('.me-termina');
     if (termina) termina.textContent = calc.aulas.length ? fmt(calc.aulas[calc.aulas.length - 1]) : '—';
 }
@@ -275,7 +281,8 @@ function htmlPasso2(r) {
         <div class="me-campos me-cor-${k + 1}">
             <span class="me-rotulo">Dias da semana</span>
             <span class="me-chips">${[1, 2, 3, 4, 5, 6].map((x) => `<button type="button" class="me-chip" data-semana="${x}" aria-pressed="${e.diasSemana.includes(x)}">${SEMANA[x]}</button>`).join('')}</span>
-            <label>Começa <input type="date" data-campo="inicio" value="${esc(calc.inicioUsado || '')}" min="${ctx.termStart}" max="${ctx.termEnd}"></label>
+            <label>Começa <input type="date" data-campo="inicio" value="${esc(calc.inicioUsado || '')}" min="${esc(calc.inicioMinimo || ctx.termStart)}" max="${ctx.termEnd}"></label>
+            <span class="me-nota me-inicio-nota"></span>
             ${calc.calculado
                 ? '<span class="me-rotulo">Dias: <b class="me-ok me-dias-calc"></b></span>'
                 : inputDias}
@@ -437,7 +444,11 @@ function aoMudar(e) {
         etapa.inicio = null;
         etapa.fim = null;
     } else if (campo === 'inicio' || campo === 'fim') {
+        // Datas: so recalcula, sem redesenhar o campo (senao a data digitada
+        // volta para o minimo a cada numero teclado).
         etapa[campo] = t.value || null;
+        atualizarResultados();
+        return;
     }
     desenhar();
 }

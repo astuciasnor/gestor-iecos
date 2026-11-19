@@ -157,3 +157,16 @@ test('sugestão: campo na Manhã e Tarde de turma da manhã pode ficar só na Ma
     etapas[1].turno = 'Noite'; etapas[1].horasDia = 3;
     assert.ok(!calcularEstagio({ etapas, ch: 90, ...PL2, feriados: FERIADOS, turnoDaTurma: 'Manhã' }).avisos.some((a) => a.acao));
 });
+
+test('campo pode começar semanas depois do encontro (vira pausa); antes do mínimo, usa o mínimo', () => {
+    const etapas = sandra();
+    etapas[1].inicio = '2027-04-05'; // encontro termina 17/03; campo so em abril
+    const r = calcularEstagio({ etapas, ch: 105, ...PL2, feriados: FERIADOS });
+    assert.equal(r.etapas[1].aulas[0], '2027-04-05');
+    assert.equal(r.etapas[1].inicioMinimo, '2027-03-18');
+    const f = faixasDoEstagio(r.etapas, SLOTS, FERIADOS);
+    assert.deepEqual([f[0].fim, f[0].pausa], ['2027-03-17', true]); // pausa de 18/03 a 04/04
+    etapas[1].inicio = '2027-03-01'; // antes do encontro: comeca no minimo
+    const cedo = calcularEstagio({ etapas, ch: 105, ...PL2, feriados: FERIADOS });
+    assert.equal(cedo.etapas[1].aulas[0], '2027-03-22');
+});

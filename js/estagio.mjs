@@ -175,7 +175,11 @@ export function calcularEstagio({ etapas = [], ch = 0, termStart, termEnd, feria
             return;
         }
         const base = r.inicio || (r.mes ? limitesDoMes(r.mes).primeiro : termStart);
-        let ini = [base, termStart, fimAnterior ? addDaysISO(fimAnterior, 1) : ''].filter(Boolean).sort().pop();
+        // O campo comeca quando o coordenador quiser, mas nunca antes do dia
+        // seguinte a etapa anterior (nem antes do periodo).
+        const minimo = [termStart, fimAnterior ? addDaysISO(fimAnterior, 1) : ''].filter(Boolean).sort().pop();
+        r.inicioMinimo = minimo;
+        let ini = [base, minimo].filter(Boolean).sort().pop();
         const limite = proximoInicio(k);
         const semana = new Set((r.diasSemana || []).map(Number));
         const aulas = [];
