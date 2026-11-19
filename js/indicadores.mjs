@@ -10,8 +10,11 @@
 //
 // CH do docente: componente dividida entre docentes = a parte declarada dele
 // (30 de 90); docente unico = a CH da componente no PPC do curso da turma.
+// Estagio com "CH do orientador" informada (janela Montar estagio): o docente
+// unico conta essa CH (45 de 90), nao a CH toda.
 
 import { normalizeTeacherNameForMatch, ehVaga, nomeImprovisado } from './docente_nomes.mjs?v=202611191754';
+import { chDoOrientador } from './estagio.mjs?v=202611191754';
 
 export const SEM_DOCENTE = 'A definir';
 
@@ -75,10 +78,13 @@ export function ofertasDoPlano(allocations = [], { cursoDaTurma, chDaComponente 
                 disciplina,
                 curso: cursoDaTurma(turmaId) || '?',
                 ch: toCH(chDaComponente(disciplina, turmaId)) || toCH(chDaComponente(semSufixo, turmaId)) || toCH(alloc?.ch),
+                chOrientador: 0,
                 docentes: new Map()
             };
             porOferta.set(chave, oferta);
         }
+        // Estagio: CH que conta para o orientador (js/estagio.mjs), se informada.
+        oferta.chOrientador = oferta.chOrientador || chDoOrientador(alloc, oferta.ch);
         // Junta os docentes de todas as alocacoes da oferta (a mesma pessoa uma vez).
         docentesDaAlocacao(alloc).forEach((d) => {
             const k = normalizeTeacherNameForMatch(d.nome);
@@ -90,12 +96,15 @@ export function ofertasDoPlano(allocations = [], { cursoDaTurma, chDaComponente 
     return [...porOferta.values()].map((oferta) => {
         const lista = [...oferta.docentes.values()];
         const dividida = lista.length > 1;
+        // Docente unico responde pela CH toda; no estagio, pela CH do orientador.
+        const chDoUnico = oferta.chOrientador || oferta.ch;
         return {
             turmaId: oferta.turmaId,
             disciplina: oferta.disciplina,
             curso: oferta.curso,
             ch: oferta.ch,
-            docentes: lista.map((d) => ({ nome: d.nome, ch: dividida ? d.ch : (oferta.ch || d.ch) }))
+            chOrientador: oferta.chOrientador,
+            docentes: lista.map((d) => ({ nome: d.nome, ch: dividida ? d.ch : (chDoUnico || d.ch) }))
         };
     });
 }

@@ -189,3 +189,32 @@ test('regime 1: a aula das 18:00 é da Tarde (pelo quadro), então conta choque 
     assert.equal(aulaContaComoChoque({ disciplina: estagio, horario: '18:30 - 19:20' }, 'Tarde', quadro), false);
     assert.equal(aulaContaComoChoque({ disciplina: estagio, horario: '07:30 - 08:20' }, 'Tarde', quadro), false);
 });
+
+// CH do orientador (reuniao de 19/11/2026): so conta para o docente, so no estagio.
+import { chDoOrientador } from '../js/estagio.mjs';
+
+test('CH do orientador: vale so em estagio, entre 1 h e a CH toda', () => {
+    const est = (v) => ({ disciplina: 'ESTAGIO SUPERVISIONADO OBRIGATORIO DE AQUICULTURA', chOrientador: v });
+    assert.equal(chDoOrientador(est(45), 90), 45);
+    assert.equal(chDoOrientador(est('45'), 90), 45);
+    assert.equal(chDoOrientador(est(90), 90), 90);
+    assert.equal(chDoOrientador(est(120), 90), 0);   // maior que a CH: ignora
+    assert.equal(chDoOrientador(est(0), 90), 0);
+    assert.equal(chDoOrientador(est(undefined), 90), 0);
+    assert.equal(chDoOrientador({ disciplina: 'ECOLOGIA', chOrientador: 30 }, 60), 0); // nao e estagio
+    assert.equal(chDoOrientador(est(45)), 45);       // sem CH total conhecida
+});
+
+// CH do orientador (reuniao de 19/11/2026): so conta para o docente, so no estagio.
+test('CH do orientador: vale so em estagio, entre 1 h e a CH toda', async () => {
+    const { chDoOrientador } = await import('../js/estagio.mjs');
+    const est = (v) => ({ disciplina: 'ESTAGIO SUPERVISIONADO OBRIGATORIO DE AQUICULTURA', chOrientador: v });
+    assert.equal(chDoOrientador(est(45), 90), 45);
+    assert.equal(chDoOrientador(est('45'), 90), 45);
+    assert.equal(chDoOrientador(est(90), 90), 90);
+    assert.equal(chDoOrientador(est(120), 90), 0);   // maior que a CH: ignora
+    assert.equal(chDoOrientador(est(0), 90), 0);
+    assert.equal(chDoOrientador(est(undefined), 90), 0);
+    assert.equal(chDoOrientador({ disciplina: 'ECOLOGIA', chOrientador: 30 }, 60), 0); // nao e estagio
+    assert.equal(chDoOrientador(est(45)), 45);       // sem CH total conhecida
+});

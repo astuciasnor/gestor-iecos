@@ -240,3 +240,19 @@
 .me-semanal { position: absolute; top: 6px; bottom: 6px; width: 1px; background: #E2E8F0; }
 .me-aula { pointer-events: auto; cursor: default; }
 .me-regua-legenda { margin: 6px 0 0 110px; font-size: 11.5px; color: #64748B; }
+
+/* CH do orientador (19/11/2026): linha abaixo das etapas */
+.me-orientador { margin-top: 12px; flex-wrap: wrap; }
+.me-orientador-falta { color: #B45309; font-weight: 600; }
+
+/* Caixinha "Orientador [45] h" ao lado do botao (19/11/2026) */
+.cd-ch-orientador {
+    display: inline-flex; align-items: center; gap: 4px; margin-left: 6px;
+    font-size: 12px; font-weight: 600; color: #0F766E; white-space: nowrap; cursor: default;
+}
+.cd-ch-orientador.hidden { display: none; }
+.cd-ch-orientador input {
+    width: 52px; padding: 3px 5px; border: 1px solid #99CCC6; border-radius: 6px;
+    font-size: 12px; text-align: center;
+}
+.cd-ch-orientador--falta input { border-color: #D97706; background: #FFFBEB; }
