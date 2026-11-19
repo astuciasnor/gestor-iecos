@@ -61,8 +61,9 @@ O guia de uso para os coordenadores fica dentro do app, na aba **Ajuda**
   CH alocada (verde/vermelha) e conflitos, inclusive entre PLs.
 
 **Publicacao e administracao**
-- **Publicar Online** (so o administrador): grava a agenda no servidor; entram
-  o periodo em curso e ate 4 futuros com alocacoes.
+- **Publicar Online** (coordenador ou administrador): grava a agenda inteira no
+  servidor; entram o periodo em curso e ate 4 futuros com alocacoes. Quando um
+  coordenador publica, o administrador ve um aviso na barra (clique em Ok esconde).
 - Menu **Agenda Publica**: a agenda publicada num celular grande, dentro do app.
 - **Usuarios e backup** (administrador): acessos, senha provisoria, docentes
   novos para conferir e copia `.sql` do banco.

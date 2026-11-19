@@ -147,7 +147,8 @@ export async function novaSenhaUsuario(id) {
   return chamar('usuario_senha', { corpo: { id } });
 }
 
-// Aviso "publique": { publicado_em, mudancas, quem: [nomes] }.
+// Aviso "publique": { publicado_em, mudancas, quem: [nomes],
+//   publicado_por_coordenador: { id, em, quem, curso } | null }.
 export async function pendentePublicar() {
   return chamar('pendente_publicar');
 }
@@ -172,7 +173,7 @@ export async function baixarBackup() {
   return { blob: await resp.blob(), nome };
 }
 
-// Agenda publica gravada no proprio servidor (so o administrador).
+// Agenda publica gravada no proprio servidor (coordenador ou administrador).
 // Devolve { id, periodos: [{ periodo, alocacoes }] } do que ficou publicado.
 export async function publicarAgenda(publications) {
   const bytes = new TextEncoder().encode(JSON.stringify({ publications }));
