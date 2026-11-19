@@ -2,7 +2,7 @@ import { store } from './store.js?v=202611171437';
 import { getCalendarEvents } from './calendar.js?v=202611171437';
 import { mapSlotToTurno } from './turns.js?v=202611171437';
 import { addDaysISO, timeToMinutes, toISODate } from './date_utils_ui.js?v=202611171437';
-import { normalizeConflictSlotLabel, getNativeTurnoValueForAllocation } from './turno_helpers.js?v=202611171437';
+import { normalizeConflictSlotLabel, getNativeTurnoValueForAllocation, getQuadroTodosRegimes } from './turno_helpers.js?v=202611171437';
 import { aulaContaComoChoque } from './estagio.mjs?v=202611171437';
 import { isPriorityRegularAllocation } from './allocation_helpers.js?v=202611171437';
 import { datasFeriadoDaTurma } from './feriados.mjs?v=202611171437';
@@ -13,7 +13,8 @@ import { computeRemainingFractionalHours, generateAllocationOccurrences, validat
 export function candidatoSemChoque(candidateAlloc, horario) {
     return !aulaContaComoChoque(
         { disciplina: candidateAlloc?.disciplina, horario },
-        getNativeTurnoValueForAllocation(candidateAlloc)
+        getNativeTurnoValueForAllocation(candidateAlloc),
+        getQuadroTodosRegimes()
     );
 }
 

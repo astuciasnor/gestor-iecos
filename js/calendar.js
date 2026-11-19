@@ -1,7 +1,7 @@
 import { addDaysISO } from './datas.mjs?v=202611171437';
 import { timeToMinutesSafe, normalizeDayList, normalizeSlotList, normalizeDrawnSlotsByDay, buildDrawnSlotsByDay } from './horarios.mjs?v=202611171437';
 import { normalizeKeyPart, normalizeKeyPart as normalizeTeacherKey } from './texto.mjs?v=202611171437';
-import { getNativeTurnoValueForAllocation } from './turno_helpers.js?v=202611171437';
+import { getNativeTurnoValueForAllocation, getQuadroTodosRegimes } from './turno_helpers.js?v=202611171437';
 import { store } from './store.js?v=202611171437';
 import { getDaysArray, toLocalDateString } from './utils.js?v=202611171437';
 import { mapSlotToTurno, turnoDaTurmaInclui } from './turns.js?v=202611171437';
@@ -473,7 +473,8 @@ export function getCalendarEvents(turmaId, startDate, endDate, docenteFilter = n
         // Estagio fora do turno da turma nao gera choque com nada (js/estagio.mjs).
         semChoque: !aulaContaComoChoque(
           { disciplina: allocation?.disciplina, horario: occurrence.horario },
-          getNativeTurnoValueForAllocation(allocation)
+          getNativeTurnoValueForAllocation(allocation),
+          getQuadroTodosRegimes()
         )
       });
     });

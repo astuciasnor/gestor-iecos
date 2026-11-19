@@ -175,3 +175,17 @@ test('sábado: só de manhã, a partir da 1a aula, até 5 aulas', () => {
     const sabado = f[1].pattern.filter((p) => p.dia === 6).map((p) => p.slot);
     assert.deepEqual(sabado, SLOTS.M.slice(0, 5));
 });
+
+test('regime 1: a aula das 18:00 é da Tarde (pelo quadro), então conta choque em turma da Tarde', () => {
+    const quadro = {
+        'Manhã': ['07:30 - 08:20', '12:00 - 12:50'],
+        'Tarde': ['13:30 - 14:20', '17:10 - 18:00', '18:00 - 18:50'],
+        'Noite': ['18:30 - 19:20', '21:00 - 21:50']
+    };
+    assert.equal(turnoDoHorario('18:00 - 18:50', quadro), 'tarde');
+    assert.equal(turnoDoHorario('12:00 - 12:50', quadro), 'manha');
+    const estagio = 'ESTÁGIO SUPERVISIONADO';
+    assert.equal(aulaContaComoChoque({ disciplina: estagio, horario: '18:00 - 18:50' }, 'Tarde', quadro), true);
+    assert.equal(aulaContaComoChoque({ disciplina: estagio, horario: '18:30 - 19:20' }, 'Tarde', quadro), false);
+    assert.equal(aulaContaComoChoque({ disciplina: estagio, horario: '07:30 - 08:20' }, 'Tarde', quadro), false);
+});
