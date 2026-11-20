@@ -1,12 +1,12 @@
 // Docente novo: o aviso embaixo do campo Docente(s) e a janela "Cadastrar Docente
 // Novo" / "Cadastrar Vaga". Saiu do ui.js em 13/11/2026 sem mudar nada; as funcoes
 // do editor que ele usa chegam por ligarCadastroDocente (ver ui.js).
-import { normalizeTeacherNameForMatch } from './allocation_helpers.js?v=202611201748';
-import { OUTRA_UNIDADE, UNIDADES, VINCULOS_DOCENTE_NOVO, acharNomeConhecido, ehVaga, findNewNames, findSimilarNames, limparEspacos, pareceVaga, problemaNoNome, proximaVaga, siglaValida } from './docente_nomes.mjs?v=202611201748';
-import { store } from './store.js?v=202611201748';
-import { ligarSugestoesDocente } from './sugestoes_docente.mjs?v=202611201748';
-import { getPerfil, getSessionEmail } from './sync_remoto.js?v=202611201748';
-import { showToastWarning } from './ui_feedback.js?v=202611201748';
+import { normalizeTeacherNameForMatch } from './allocation_helpers.js?v=202611201756';
+import { OUTRA_UNIDADE, UNIDADES, VINCULOS_DOCENTE_NOVO, acharNomeConhecido, ehVaga, findNewNames, findSimilarNames, limparEspacos, pareceVaga, problemaNoNome, proximaVaga, siglaValida } from './docente_nomes.mjs?v=202611201756';
+import { store } from './store.js?v=202611201756';
+import { ligarSugestoesDocente } from './sugestoes_docente.mjs?v=202611201756';
+import { getPerfil, getSessionEmail } from './sync_remoto.js?v=202611201756';
+import { showToastWarning } from './ui_feedback.js?v=202611201756';
 
 // Do ui.js: lista de nomes conhecidos, escape de HTML, ajuste do nome digitado e os campos do editor.
 let ligacoes = {};

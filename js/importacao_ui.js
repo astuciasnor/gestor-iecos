@@ -2,11 +2,11 @@
 // #import-modal) e "Insercao por Bloco (PPC)" (componentes de um periodo do curso
 // como pendentes). Saiu do ui.js em 20/11/2026 sem mudar nada; as funcoes do
 // ui.js que ela usa chegam por ligarImportacao (modulo novo nao importa ui.js).
-import { store } from './store.js?v=202611201748';
-import { getTurmaLabel } from './curso_turma_helpers.js?v=202611201748';
-import { renderOfertasList } from './lista_ofertas_ui.js?v=202611201748';
-import { parseBackupDataFile, extractImportPlanMeta } from './serialization.js?v=202611201748';
-import { showToastWarning } from './ui_feedback.js?v=202611201748';
+import { store } from './store.js?v=202611201756';
+import { getTurmaLabel } from './curso_turma_helpers.js?v=202611201756';
+import { renderOfertasList } from './lista_ofertas_ui.js?v=202611201756';
+import { parseBackupDataFile, extractImportPlanMeta } from './serialization.js?v=202611201756';
+import { showToastWarning } from './ui_feedback.js?v=202611201756';
 
 // Funcoes do ui.js (plano, datas, docentes, abas) que a importacao chama.
 let ligacoes = {};

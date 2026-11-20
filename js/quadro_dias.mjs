@@ -1,5 +1,5 @@
-import { escapeHtml as esc } from './texto.mjs?v=202611201748';
-import { vividHexColor, hexToRgb, rgbToHsl, hslToRgb } from './color_utils.js?v=202611201748';
+import { escapeHtml as esc } from './texto.mjs?v=202611201756';
+import { vividHexColor, hexToRgb, rgbToHsl, hslToRgb } from './color_utils.js?v=202611201756';
 // Desenho do quadro "Dias do docente": uma coluna por dia do PL, a linha
 // "Dia a dia" (verde = 1 componente, vermelho = 2 ou mais) e uma linha por
 // componente. Usado em Indicadores > Dias do docente; sem store e sem DOM
