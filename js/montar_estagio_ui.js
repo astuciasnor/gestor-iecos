@@ -8,7 +8,7 @@
 // As contas ficam em js/estagio.mjs (testadas); aqui so a tela.
 import {
     calcularEstagio, faixasDoEstagio, expressaoSigaaDaEtapa, letrasDoTurno, turnoQueMostra,
-    choqueDaEtapa, maxHorasDia, limitesDoMes, horasDaEtapa, horasNoSabado
+    choqueDaEtapa, maxHorasDia, limitesDoMes, horasDaEtapa, horasNoSabado, opcoesDoCampo
 } from './estagio.mjs?v=202611191932';
 import { addDaysISO, weekdayOf } from './datas.mjs?v=202611191932';
 import { MAX_FAIXAS } from './faixas.mjs?v=202611191932';
@@ -132,6 +132,10 @@ function atualizarResultados() {
             const e = estado.etapas[Number(linha.dataset.etapa)];
             linha.querySelector('.me-choque-cel').innerHTML = htmlChoque(e.turno);
         });
+        const calc = modal.querySelector('.me-dias-calc');
+        if (calc) calc.textContent = htmlDiasCalculados();
+        const box = modal.querySelector('#me-opcoes');
+        if (box) box.innerHTML = htmlOpcoesCampo();
     }
 }
 
@@ -176,7 +180,7 @@ function htmlPasso1() {
             <select data-campo="turno" aria-label="Etapa ${k + 1}: turno">${opcoes(turnosPossiveis.map((t) => [t, rotuloTurno(t)]), e.turno)}</select>
             <select data-campo="mes" aria-label="Etapa ${k + 1}: mês">${opcoes(meses.map((m) => [m, MESES[Number(m.slice(5, 7)) - 1]]), e.mes)}</select>
             ${k === calc
-                ? '<span class="me-horas" title="O último estágio em campo tem os dias calculados para a CH fechar exata">calculado</span>'
+                ? `<span class="me-horas me-dias-calc" title="Dias calculados com a CH que falta e as horas por dia (o número exato sai no passo 2)">${htmlDiasCalculados()}</span>`
                 : `<span class="me-horas"><input type="number" data-campo="diasPlanejados" min="1" max="120" value="${e.diasPlanejados}" aria-label="Etapa ${k + 1}: número de dias"> dias</span>`}
             <span class="me-horas"><input type="number" data-campo="horasDia" min="1" max="${maxHorasDia(e.turno, maxPorLetra)}" value="${e.horasDia}" aria-label="Etapa ${k + 1}: horas por dia"> h/dia</span>
             <span class="me-choque-cel">${htmlChoque(e.turno)}</span>
@@ -191,11 +195,37 @@ function htmlPasso1() {
             <div class="me-etapa me-etapa--cab"><span></span><span>O que é</span><span>Turno</span><span>Mês</span><span>Dias</span><span>Horas</span><span>Choque</span></div>
             ${linhas}
         </div>
+        <div class="me-opcoes" id="me-opcoes">${htmlOpcoesCampo()}</div>
         <div class="me-linha-topo me-orientador">
             <label class="me-rotulo" for="me-ch-orientador">CH do orientador</label>
-            <span class="me-horas"><input type="number" id="me-ch-orientador" data-campo="chOrientador" min="1" max="${estado.ctx.ch}" value="${estado.chOrientador || ''}" placeholder="${estado.ctx.ch}"> h de ${estado.ctx.ch} h</span>
+            <span class="me-horas"><input type="number" id="me-ch-orientador" data-campo="chOrientador" min="1" max="${estado.ctx.ch}" value="${estado.chOrientador || ''}" placeholder="—"> h de ${estado.ctx.ch} h</span>
             <span class="me-nota" id="me-orientador-nota">${htmlNotaOrientador()}</span>
         </div>`;
+}
+
+// Opcoes do estagio em campo (pedido de 19/11/2026): depois dos encontros, a
+// janela diz quanto falta para o campo e quais horas/dia x dias fecham exato.
+function calcularOpcoesCampo() {
+    estado.opcoesCampo = opcoesDoCampo({ etapas: estado.etapas.slice(0, estado.n), ch: estado.ctx.ch, maxPorLetra: estado.maxPorLetra });
+    return estado.opcoesCampo;
+}
+
+function htmlDiasCalculados() {
+    const o = calcularOpcoesCampo();
+    return o && o.dias ? `cerca de ${o.dias} dias` : 'calculado';
+}
+
+function htmlOpcoesCampo() {
+    const o = calcularOpcoesCampo();
+    if (!o) return '';
+    const etapa = `Estágio em campo (Etapa ${o.etapa + 1})`;
+    if (o.precisa <= 0) return `<div class="me-aviso me-aviso--erro">Os encontros já somam a CH toda: o ${etapa.toLowerCase()} ficaria sem horas. Diminua os dias ou as horas dos encontros.</div>`;
+    const situacao = o.exato
+        ? `<b>${o.horasDia} h/dia × ${o.dias} dias</b> <span class="me-ok">fecha exato ✔</span>`
+        : `com ${o.horasDia} h/dia seriam cerca de ${o.dias} dias, <span class="me-opcoes-nao">mas não fecha exato</span>`;
+    const chips = o.opcoes.map((op, i) => `<button type="button" class="me-opcao" data-opcao="${i}">${op.horasDia} h/dia × ${op.dias} dias${op.horasEncontro ? `<small>encontros com ${op.horasEncontro} h/dia</small>` : ''}</button>`).join('');
+    return `<div class="me-opcoes-texto">${etapa}: faltam <b>${o.precisa} h</b>; ${situacao}.</div>
+        ${chips ? `<div class="me-opcoes-lista"><span>${o.exato ? 'Outras opções' : 'Opções que fecham exato'}:</span>${chips}</div>` : ''}`;
 }
 
 // CH do orientador (reuniao de 19/11/2026): so muda a soma de CH do docente.
@@ -420,6 +450,15 @@ function aoClicar(e) {
     if (b.dataset.ir) { s.passo = Number(b.dataset.ir); desenhar(); return; }
     if (b.dataset.n) { s.n = Number(b.dataset.n); s.ativo = Math.min(s.ativo, s.n - 1); desenhar(); return; }
     if (b.dataset.aba) { s.ativo = Number(b.dataset.aba); desenhar(); return; }
+    if (b.dataset.opcao && s.opcoesCampo) {
+        // Opcao do estagio em campo: poe as horas/dia (e as dos encontros, se mudam).
+        const op = s.opcoesCampo.opcoes[Number(b.dataset.opcao)];
+        if (!op) return;
+        s.etapas[s.opcoesCampo.etapa].horasDia = op.horasDia;
+        if (op.horasEncontro) s.etapas.slice(0, s.n).forEach((e) => { if (e.tipo === 'encontro') e.horasDia = op.horasEncontro; });
+        desenhar();
+        return;
+    }
     const etapa = s.etapas[s.ativo];
     if (b.dataset.mesDelta) {
         const i = s.meses.indexOf(etapa.ver || etapa.mes) + Number(b.dataset.mesDelta);
