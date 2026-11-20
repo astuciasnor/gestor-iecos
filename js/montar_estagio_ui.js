@@ -1,14 +1,16 @@
 // Janela "Montar estagio" (botao no cartao de faixas, so em componente de estagio).
 // O coordenador lanca o plano do orientador em 3 passos:
-//   1. Etapas: ate 4 (encontro com o orientador ou estagio em campo), turno, mes, horas/dia;
-//   2. Datas: encontro = clica nos dias; campo = dias da semana, comeco e fim
-//      (o ultimo campo tem o fim calculado para a CH fechar exata);
+//   1. Etapas: ate 4 (encontro com o orientador ou estagio em campo), turno, mes,
+//      DIAS e HORAS/DIA. A soma tem que fechar a CH exata para avancar; a janela
+//      mostra opcoes que fecham (19/11/2026). Dias e horas so mudam aqui.
+//   2. Datas: os meses do PL um abaixo do outro. Encontro = clica nos dias; campo =
+//      dias da semana e dia de comeco. Em etapa de 2 turnos, as horas de cada turno.
 //   3. Faixas: confere e aplica. Cada etapa vira uma faixa; depois tudo segue
 //      editavel no cartao, como sempre.
 // As contas ficam em js/estagio.mjs (testadas); aqui so a tela.
 import {
     calcularEstagio, faixasDoEstagio, expressaoSigaaDaEtapa, letrasDoTurno, turnoQueMostra,
-    choqueDaEtapa, maxHorasDia, limitesDoMes, horasDaEtapa, horasNoSabado, opcoesDoCampo, faltaDaEtapa
+    choqueDaEtapa, maxHorasDia, limitesDoMes, horasDaEtapa, horasNoSabado, opcoesDoCampo, somaPlanejada, horasPorTurno
 } from './estagio.mjs?v=202611192241';
 import { addDaysISO, weekdayOf } from './datas.mjs?v=202611192241';
 import { MAX_FAIXAS } from './faixas.mjs?v=202611192241';
@@ -23,6 +25,8 @@ const rotuloTurno = (t) => t.replace('+', ' e ');
 const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const fmt = (iso) => (iso ? `${iso.slice(8, 10)}/${iso.slice(5, 7)}` : '');
 const mesDe = (iso) => String(iso || '').slice(0, 7);
+// Rotulo curto da etapa nas opcoes e nas abas: "Orient. (F1)", "Campo (F2)".
+const rotuloEtapa = (e, k) => `${e.tipo === 'encontro' ? 'Orient.' : 'Campo'} (F${k + 1})`;
 
 let estado = null; // a janela aberta (so uma por vez)
 
@@ -52,7 +56,8 @@ export function abrirMontarEstagio(ctx) {
         tipo, turno, mes,
         horasDia: Math.min(tipo === 'encontro' ? 5 : 3, maxHorasDia(turno, maxPorLetra)),
         diasPlanejados: tipo === 'encontro' ? 3 : 10,
-        dias: [], diasSemana: tipo === 'campo' ? [1, 3] : [], inicio: null, fim: null, ver: mes
+        dias: [], diasSemana: tipo === 'campo' ? [1, 3] : [], inicio: null, fim: null, ver: mes,
+        horasPrimeiroTurno: null
     });
     // Ponto de partida comum (encontro, campo, encontro); tudo e editavel.
     const etapas = [
@@ -69,7 +74,7 @@ export function abrirMontarEstagio(ctx) {
     overlay.innerHTML = `
         <div class="me-caixa" role="dialog" aria-modal="true" aria-labelledby="me-titulo">
             <div class="me-cab">
-                <div><h3 id="me-titulo">Montar estágio</h3><span class="me-sub">${esc(ctx.componente)} · ${ctx.ch} h · turma ${esc(rotuloTurno(ctx.turnoTurma))}</span></div>
+                <div><h3 id="me-titulo">Montar estágio</h3><span class="me-sub">${esc(ctx.componente)} · <b>${ctx.ch} h</b> · turma ${esc(rotuloTurno(ctx.turnoTurma))}</span></div>
                 <ol class="me-passos">
                     <li><button type="button" data-passo="1"><i>1</i>Etapas</button></li>
                     <li><button type="button" data-passo="2"><i>2</i>Datas</button></li>
@@ -91,24 +96,46 @@ export function abrirMontarEstagio(ctx) {
 
 function calcular() {
     const { ctx, etapas, n, feriadosSet } = estado;
-    return calcularEstagio({ etapas: etapas.slice(0, n), ch: ctx.ch, termStart: ctx.termStart, termEnd: ctx.termEnd, feriados: feriadosSet, turnoDaTurma: ctx.turnoTurma, maxPorLetra: estado.maxPorLetra });
+    return calcularEstagio({ etapas: etapas.slice(0, n), ch: ctx.ch, termStart: ctx.termStart, termEnd: ctx.termEnd, feriados: feriadosSet, turnoDaTurma: ctx.turnoTurma, maxPorLetra: estado.maxPorLetra, diasFixos: true });
+}
+
+// Passo 1 fechado: dias x horas de todas as etapas = CH (so assim vai as Datas).
+function somaDoPasso1() {
+    return somaPlanejada(estado.etapas.slice(0, estado.n));
+}
+function passo1Fecha() {
+    return somaDoPasso1() === estado.ctx.ch;
 }
 
 function desenhar() {
     const modal = document.getElementById('montar-estagio-modal');
     if (!modal) return;
+    if (estado.passo > 1 && !passo1Fecha()) estado.passo = 1;
     const r = calcular();
-    modal.querySelectorAll('.me-passos button').forEach((b) => {
-        if (Number(b.dataset.passo) === estado.passo) b.setAttribute('aria-current', 'step');
-        else b.removeAttribute('aria-current');
-    });
     const corpo = modal.querySelector('.me-corpo');
     if (estado.passo === 1) corpo.innerHTML = htmlPasso1();
     else if (estado.passo === 2) { corpo.innerHTML = htmlPasso2(r); preencherInfoEtapa(r); }
     else corpo.innerHTML = htmlPasso3(r);
+    atualizarRodape(r);
+}
+
+// Botoes dos passos e rodape. Datas e Faixas so abrem com o passo 1 fechado.
+function atualizarRodape(r = calcular()) {
+    const modal = document.getElementById('montar-estagio-modal');
+    if (!modal) return;
+    const fecha = passo1Fecha();
+    modal.querySelectorAll('.me-passos button').forEach((b) => {
+        if (Number(b.dataset.passo) === estado.passo) b.setAttribute('aria-current', 'step');
+        else b.removeAttribute('aria-current');
+        b.disabled = Number(b.dataset.passo) > 1 && !fecha;
+    });
     const pronto = r.alocada === estado.ctx.ch && !r.avisos.some((a) => a.tipo === 'erro');
+    const falta = estado.ctx.ch - somaDoPasso1();
+    const notaPasso1 = fecha
+        ? 'Prefere fazer à mão? Feche e use o cartão de faixas.'
+        : `Para ir às datas, a soma das etapas precisa fechar ${estado.ctx.ch} h (${falta > 0 ? `faltam ${falta} h` : `passou ${-falta} h`}).`;
     modal.querySelector('.me-rodape').innerHTML = estado.passo === 1
-        ? '<span class="me-nota">Prefere fazer à mão? Feche e use o cartão de faixas.</span><button type="button" class="me-btn me-btn--pri" data-ir="2">Próximo: datas ›</button>'
+        ? `<span class="me-nota">${notaPasso1}</span><button type="button" class="me-btn me-btn--pri" data-ir="2" ${fecha ? '' : 'disabled'}>Próximo: datas ›</button>`
         : estado.passo === 2
             ? '<button type="button" class="me-btn" data-ir="1">‹ Etapas</button><button type="button" class="me-btn me-btn--pri" data-ir="3">Próximo: faixas ›</button>'
             : `<button type="button" class="me-btn" data-ir="2">‹ Datas</button><button type="button" class="me-btn me-btn--pri" data-aplicar ${pronto ? '' : 'disabled'}>Aplicar nas faixas</button>`;
@@ -121,10 +148,9 @@ function atualizarResultados() {
     if (!modal) return;
     if (estado.passo === 2) {
         modal.querySelector('.me-abas').outerHTML = htmlAbas(r);
-        modal.querySelector('.me-resumo').innerHTML = htmlResumo(r);
-        modal.querySelector('.me-regua').outerHTML = htmlRegua(r);
-        modal.querySelector('.me-placar-area').innerHTML = htmlPlacar(r);
-        modal.querySelector('.me-dias').innerHTML = htmlQuadrados(r);
+        modal.querySelector('.me-cal').outerHTML = htmlCalendario(r);
+        modal.querySelector('.me-totais-area').innerHTML = htmlTotais(r);
+        modal.querySelector('.me-erros-etapa').innerHTML = htmlErrosDaEtapa(r);
         preencherInfoEtapa(r);
     }
     if (estado.passo === 1) {
@@ -132,26 +158,17 @@ function atualizarResultados() {
             const e = estado.etapas[Number(linha.dataset.etapa)];
             linha.querySelector('.me-choque-cel').innerHTML = htmlChoque(e.turno);
         });
-        const calc = modal.querySelector('.me-dias-calc');
-        if (calc) calc.textContent = htmlDiasCalculados();
         const box = modal.querySelector('#me-opcoes');
         if (box) box.innerHTML = htmlOpcoesCampo();
     }
+    atualizarRodape(r);
 }
-
-// Indice do ultimo estagio em campo (o que tem os dias calculados).
-function ultimoCampo() {
-    let k = -1;
-    estado.etapas.slice(0, estado.n).forEach((e, i) => { if (e.tipo === 'campo') k = i; });
-    return k;
-}
-
 
 // Tabela Etapa | Dias | Horas/dia | Total (a soma tem que dar a CH).
 function htmlTotais(r) {
     const linhas = r.etapas.map((e, k) => `
         <tr><td><span class="me-pill me-cor-${k + 1}">${k + 1}</span> ${e.tipo === 'encontro' ? 'Encontro' : 'Campo'}</td>
-            <td class="me-num">${e.aulas.length}${e.calculado ? '<small> calc.</small>' : ''}</td>
+            <td class="me-num">${e.aulas.length}</td>
             <td class="me-num">${e.horasDia}${e.aulas.some((d) => weekdayOf(d) === 6) ? `<small> sáb. ${horasNoSabado(e.horasDia, estado.maxPorLetra)}</small>` : ''}</td>
             <td class="me-num">${horasDaEtapa(e, estado.maxPorLetra)} h</td></tr>`).join('');
     const ok = r.alocada === estado.ctx.ch;
@@ -172,16 +189,13 @@ const opcoes = (lista, atual) => lista.map(([v, t]) => `<option value="${esc(v)}
 
 function htmlPasso1() {
     const { etapas, n, turnosPossiveis, meses, maxPorLetra } = estado;
-    const calc = ultimoCampo();
     const linhas = etapas.slice(0, n).map((e, k) => `
         <div class="me-etapa me-cor-${k + 1}" data-etapa="${k}">
             <span class="me-etapa-nome">Etapa ${k + 1}</span>
             <select data-campo="tipo" aria-label="Etapa ${k + 1}: o que é">${opcoes([['encontro', 'Encontro com orientador'], ['campo', 'Estágio em campo']], e.tipo)}</select>
             <select data-campo="turno" aria-label="Etapa ${k + 1}: turno">${opcoes(turnosPossiveis.map((t) => [t, rotuloTurno(t)]), e.turno)}</select>
             <select data-campo="mes" aria-label="Etapa ${k + 1}: mês">${opcoes(meses.map((m) => [m, MESES[Number(m.slice(5, 7)) - 1]]), e.mes)}</select>
-            ${k === calc
-                ? `<span class="me-horas me-dias-calc" title="Dias calculados com a CH que falta e as horas por dia (o número exato sai no passo 2)">${htmlDiasCalculados()}</span>`
-                : `<span class="me-horas"><input type="number" data-campo="diasPlanejados" min="1" max="120" value="${e.diasPlanejados}" aria-label="Etapa ${k + 1}: número de dias"> dias</span>`}
+            <span class="me-horas"><input type="number" data-campo="diasPlanejados" min="1" max="120" value="${e.diasPlanejados}" aria-label="Etapa ${k + 1}: número de dias"> dias</span>
             <span class="me-horas"><input type="number" data-campo="horasDia" min="1" max="${maxHorasDia(e.turno, maxPorLetra)}" value="${e.horasDia}" aria-label="Etapa ${k + 1}: horas por dia"> h/dia</span>
             <span class="me-choque-cel">${htmlChoque(e.turno)}</span>
         </div>`).join('');
@@ -203,29 +217,42 @@ function htmlPasso1() {
         </div>`;
 }
 
-// Opcoes do estagio em campo (pedido de 19/11/2026): depois dos encontros, a
-// janela diz quanto falta para o campo e quais horas/dia x dias fecham exato.
+// Opcoes que fecham exato (pedido de 19/11/2026): a soma das etapas e, abaixo,
+// cartoes com dias x horas de cada etapa. Um clique poe os numeros na tabela.
 function calcularOpcoesCampo() {
     estado.opcoesCampo = opcoesDoCampo({ etapas: estado.etapas.slice(0, estado.n), ch: estado.ctx.ch, maxPorLetra: estado.maxPorLetra });
     return estado.opcoesCampo;
 }
 
-function htmlDiasCalculados() {
-    const o = calcularOpcoesCampo();
-    return o && o.dias ? `cerca de ${o.dias} dias` : 'calculado';
+// Etapas como ficariam com a opcao escolhida.
+function etapasComOpcao(op, etapaCampo) {
+    return estado.etapas.slice(0, estado.n).map((e, k) => {
+        if (k === etapaCampo) return { ...e, horasDia: op.horasDia, diasPlanejados: op.dias };
+        if (e.tipo === 'encontro' && op.horasEncontro) return { ...e, horasDia: op.horasEncontro };
+        return e;
+    });
 }
 
 function htmlOpcoesCampo() {
+    const ch = estado.ctx.ch;
+    const soma = somaDoPasso1();
+    const status = soma === ch
+        ? `<div class="me-soma me-soma--ok">Soma das etapas: <b>${soma} h</b> de ${ch} h · fecha exato ✔</div>`
+        : `<div class="me-soma me-soma--erro">Soma das etapas: <b>${soma} h</b> de ${ch} h · ${soma < ch ? `faltam ${ch - soma} h` : `passou ${soma - ch} h`}</div>`;
     const o = calcularOpcoesCampo();
-    if (!o) return '';
-    const etapa = `Estágio em campo (Etapa ${o.etapa + 1})`;
-    if (o.precisa <= 0) return `<div class="me-aviso me-aviso--erro">Os encontros já somam a CH toda: o ${etapa.toLowerCase()} ficaria sem horas. Diminua os dias ou as horas dos encontros.</div>`;
-    const situacao = o.exato
-        ? `<b>${o.horasDia} h/dia × ${o.dias} dias</b> <span class="me-ok">fecha exato ✔</span>`
-        : `com ${o.horasDia} h/dia seriam cerca de ${o.dias} dias, <span class="me-opcoes-nao">mas não fecha exato</span>`;
-    const chips = o.opcoes.map((op, i) => `<button type="button" class="me-opcao" data-opcao="${i}">${op.horasDia} h/dia × ${op.dias} dias${op.horasEncontro ? `<small>encontros com ${op.horasEncontro} h/dia</small>` : ''}</button>`).join('');
-    return `<div class="me-opcoes-texto">${etapa}: faltam <b>${o.precisa} h</b>; ${situacao}.</div>
-        ${chips ? `<div class="me-opcoes-lista"><span>${o.exato ? 'Outras opções' : 'Opções que fecham exato'}:</span>${chips}</div>` : ''}`;
+    if (!o) return status;
+    if (o.precisa <= 0 && !o.opcoes.length) return `${status}<div class="me-aviso me-aviso--erro">Os encontros já somam a CH toda: o estágio em campo ficaria sem horas. Diminua os dias ou as horas dos encontros.</div>`;
+    if (!o.opcoes.length) return status;
+    const cartoes = o.opcoes.map((op, i) => {
+        const linhas = etapasComOpcao(op, o.etapa).map((e, k) => {
+            const total = (Number(e.diasPlanejados) || 0) * (Number(e.horasDia) || 0);
+            return `<li><span>${rotuloEtapa(e, k)}:</span> ${e.diasPlanejados} dias × ${e.horasDia} h/dia = <b>${total} h</b></li>`;
+        }).join('');
+        return `<button type="button" class="me-opcao" data-opcao="${i}"><ul>${linhas}</ul><span class="me-opcao-total">${ch} h</span></button>`;
+    }).join('');
+    return `${status}
+        <div class="me-opcoes-titulo">${soma === ch ? 'Outras opções que também fecham exato' : 'Opções que fecham exato a Carga Horária do Estágio'}:</div>
+        <div class="me-opcoes-lista">${cartoes}</div>`;
 }
 
 // CH do orientador (reuniao de 19/11/2026): so muda a soma de CH do docente.
@@ -237,71 +264,103 @@ function htmlNotaOrientador() {
 }
 
 // ---------------------------------------------------------------- passo 2
+// Abas: uma por etapa, com as horas previstas (do passo 1) e as que faltam marcar.
 function htmlAbas(r) {
-    return `<div class="me-abas" role="tablist">${r.etapas.map((e, k) => `
+    return `<div class="me-abas" role="tablist">${r.etapas.map((e, k) => {
+        const previstas = (Number(e.diasPlanejados) || 0) * (Number(e.horasDia) || 0);
+        const falta = previstas - horasDaEtapa(e, estado.maxPorLetra);
+        const ok = falta === 0;
+        return `
         <button type="button" role="tab" class="me-aba me-cor-${k + 1}" data-aba="${k}" aria-selected="${k === estado.ativo}">
-            Etapa ${k + 1}<small>${e.tipo === 'encontro' ? 'Encontro' : 'Campo'} · ${esc(rotuloTurno(e.turno))} · ${e.aulas.length} dia${e.aulas.length === 1 ? '' : 's'}</small>
-        </button>`).join('')}</div>`;
+            <span class="me-aba-nome">${rotuloEtapa(e, k)}<small>${esc(rotuloTurno(e.turno))} · ${e.diasPlanejados} dias</small></span>
+            <span class="me-aba-horas">
+                <span><small>Previstas</small><b>${previstas} h</b></span>
+                <span class="${ok ? 'me-ok' : 'me-erro'}"><small>${falta < 0 ? 'Sobram' : 'Faltam'}</small><b>${Math.abs(falta)} h${ok ? ' ✔' : ''}</b></span>
+            </span>
+        </button>`;
+    }).join('')}</div>`;
 }
 
-function htmlResumo(r) {
-    const e = r.etapas[estado.ativo];
-    if (!e) return '';
-    const periodo = e.aulas.length ? `${fmt(e.aulas[0])} a ${fmt(e.aulas[e.aulas.length - 1])}` : 'sem dias ainda';
-    return `${e.aulas.length} dia${e.aulas.length === 1 ? '' : 's'} · ${horasDaEtapa(e, estado.maxPorLetra)} h · ${periodo}${e.calculado && e.aulas.length ? ' <span class="me-ok">· fim calculado para fechar a CH</span>' : ''}`;
-}
-
-// Quadradinhos dos dias do mes visto da etapa ativa.
-function htmlQuadrados(r) {
+// Um dia (quadradinho) para a etapa ativa.
+function htmlDia(d, r) {
     const k = estado.ativo;
     const e = estado.etapas[k];
     const { ctx } = estado;
-    const dono = (iso) => r.etapas.findIndex((x) => x.aulas.includes(iso));
     const calcAtivo = r.etapas[k];
-    const { primeiro, ultimo } = limitesDoMes(e.ver || e.mes);
-    let quadrados = '';
-    for (let d = primeiro; d <= ultimo; d = addDaysISO(d, 1)) {
-        const dow = weekdayOf(d);
-        const foraDoPL = d < ctx.termStart || d > ctx.termEnd;
-        const feriado = ctx.feriados.get(d);
-        let quem = dono(d);
-        // Vendo um encontro, os dias do estagio em campo nao aparecem: o campo
-        // se recalcula sozinho e passa a comecar depois do encontro.
-        if (e.tipo === 'encontro' && quem !== -1 && quem !== k && r.etapas[quem].tipo === 'campo') quem = -1;
-        const meu = quem === k;
-        const outro = quem !== -1 && !meu;
-        // Dia de outro ENCONTRO fica travado; dia de estagio em campo pode ser
-        // marcado (o campo e recalculado e passa a comecar depois do encontro).
-        const deOutroEncontro = outro && r.etapas[quem].tipo === 'encontro';
-        // No campo, o clique escolhe o dia em que ele comeca: nao antes do dia
-        // seguinte a etapa anterior.
-        const campo = e.tipo === 'campo';
-        const antesDoMinimo = campo && calcAtivo?.inicioMinimo && d < calcAtivo.inicioMinimo;
-        const comecaAqui = campo && calcAtivo?.inicioUsado === d;
-        const bloqueado = foraDoPL || dow === 0 || !!feriado || deOutroEncontro || antesDoMinimo;
-        const cls = ['me-dia', dow === 1 ? 'me-dia--seg' : '', meu ? `me-dia--meu me-cor-${k + 1}` : '', outro ? `me-dia--outro me-cor-${quem + 1}` : '',
-            feriado ? 'me-dia--feriado' : '', (dow === 0 || foraDoPL || antesDoMinimo) ? 'me-dia--apagado' : '',
-            comecaAqui ? `me-dia--inicio me-cor-${k + 1}` : ''].join(' ');
-        const acao = campo ? (antesDoMinimo ? ' · antes da etapa anterior terminar' : ' · clique: o estágio começa neste dia') : '';
-        const titulo = `${SEMANA[dow]} ${fmt(d)}${feriado ? ' · ' + feriado : ''}${outro ? ' · Etapa ' + (quem + 1) : ''}${foraDoPL ? ' · fora do período' : ''}${bloqueado ? '' : acao}`;
-        quadrados += `<button type="button" class="${cls}" data-dia="${d}" aria-pressed="${meu}" ${bloqueado ? 'disabled' : ''} title="${esc(titulo)}"><span>${SEMANA1[dow]}</span><b>${Number(d.slice(8, 10))}</b></button>`;
-    }
-    return quadrados;
+    const dow = weekdayOf(d);
+    const foraDoPL = d < ctx.termStart || d > ctx.termEnd;
+    const feriado = ctx.feriados.get(d);
+    let quem = r.etapas.findIndex((x) => x.aulas.includes(d));
+    // Vendo um encontro, os dias do estagio em campo nao aparecem: o campo
+    // se recalcula sozinho e passa a comecar depois do encontro.
+    if (e.tipo === 'encontro' && quem !== -1 && quem !== k && r.etapas[quem].tipo === 'campo') quem = -1;
+    const meu = quem === k;
+    const outro = quem !== -1 && !meu;
+    const deOutroEncontro = outro && r.etapas[quem].tipo === 'encontro';
+    // No campo, o clique escolhe o dia em que ele comeca: nao antes do dia
+    // seguinte a etapa anterior.
+    const campo = e.tipo === 'campo';
+    const antesDoMinimo = campo && calcAtivo?.inicioMinimo && d < calcAtivo.inicioMinimo;
+    const comecaAqui = campo && calcAtivo?.inicioUsado === d;
+    const bloqueado = foraDoPL || dow === 0 || !!feriado || deOutroEncontro || antesDoMinimo;
+    const cls = ['me-dia', meu ? `me-dia--meu me-cor-${k + 1}` : '', outro ? `me-dia--outro me-cor-${quem + 1}` : '',
+        feriado ? 'me-dia--feriado' : '', (dow === 0 || foraDoPL || antesDoMinimo) ? 'me-dia--apagado' : '',
+        comecaAqui ? `me-dia--inicio me-cor-${k + 1}` : ''].join(' ');
+    const acao = campo ? (antesDoMinimo ? ' · antes da etapa anterior terminar' : ' · clique: o estágio começa neste dia') : '';
+    const titulo = `${SEMANA[dow]} ${fmt(d)}${feriado ? ' · ' + feriado : ''}${outro ? ' · ' + rotuloEtapa(r.etapas[quem], quem) : ''}${foraDoPL ? ' · fora do período' : ''}${bloqueado ? '' : acao}`;
+    return `<button type="button" class="${cls}" data-dia="${d}" aria-pressed="${meu}" ${bloqueado ? 'disabled' : ''} title="${esc(titulo)}"><span>${SEMANA1[dow]}</span><b>${Number(d.slice(8, 10))}</b></button>`;
 }
 
-// Textos da etapa ativa que mudam ao digitar (dias marcados, dias calculados, fim).
+// Os meses do PL um abaixo do outro; o dia 1 de todos os meses na mesma coluna.
+function htmlCalendario(r) {
+    const linhas = estado.meses.map((m) => {
+        const nDias = Number(limitesDoMes(m).ultimo.slice(8, 10));
+        let dias = '';
+        for (let i = 1; i <= 31; i++) dias += i <= nDias ? htmlDia(`${m}-${String(i).padStart(2, '0')}`, r) : '<span class="me-dia-vazio"></span>';
+        return `<div class="me-cal-linha"><span class="me-cal-mes">${MESES[Number(m.slice(5, 7)) - 1]} ${m.slice(0, 4)}</span><div class="me-cal-dias">${dias}</div></div>`;
+    }).join('');
+    return `<div class="me-cal">${linhas}</div>`;
+}
+
+// Horas por turno. Etapa de 2 turnos: o coordenador escolhe as do 1o turno e o
+// 2o fica com o resto, igual em todos os dias da etapa. Etapa de 1 turno: so mostra.
+function htmlTurnos(e) {
+    const letras = letrasDoTurno(e.turno);
+    const partes = horasPorTurno(e.turno, e.horasDia, estado.maxPorLetra, e.horasPrimeiroTurno);
+    const horas = (l) => (partes.find(([x]) => x === l) || [l, 0])[1];
+    if (letras.length === 1) {
+        return `<div class="me-turnos"><span class="me-rotulo">Horas por dia</span>
+            <label>${NOME_LETRA[letras[0]]} <input type="number" value="${horas(letras[0])}" readonly tabindex="-1"></label>
+            <span class="me-nota">(do passo 1, iguais em todos os dias)</span></div>`;
+    }
+    const [a, b] = letras;
+    const h = Number(e.horasDia) || 0;
+    const min = Math.max(0, h - (estado.maxPorLetra[b] || 0));
+    const max = Math.min(estado.maxPorLetra[a] || h, h);
+    return `<div class="me-turnos"><span class="me-rotulo">Horas por dia</span>
+        <label>${NOME_LETRA[a]} <input type="number" data-campo="horasPrimeiroTurno" min="${min}" max="${max}" value="${horas(a)}" aria-label="Horas por dia no turno da ${NOME_LETRA[a]}"></label>
+        <span>+</span>
+        <label>${NOME_LETRA[b]} <input type="number" class="me-turno2" value="${horas(b)}" readonly tabindex="-1" aria-label="Horas por dia no turno da ${NOME_LETRA[b]}"></label>
+        <span>= <b>${h} h</b></span>
+        <span class="me-nota">(iguais em todos os dias da etapa)</span></div>`;
+}
+
+// Avisos da etapa ativa que nao sao a contagem (a contagem esta na aba).
+function htmlErrosDaEtapa(r) {
+    const k = estado.ativo;
+    const prefixos = [`Etapa ${k + 1}:`, `A Etapa ${k + 1} `];
+    return r.avisos
+        .filter((a) => a.tipo === 'erro' && prefixos.some((p) => a.texto.startsWith(p)))
+        .filter((a) => !/marque os dias do encontro|dias marcados/.test(a.texto))
+        .map((a) => `<div class="me-aviso me-aviso--erro">${esc(a.texto)}</div>`).join('');
+}
+
+// Textos da etapa ativa que mudam ao digitar (comeco minimo, fim).
 function preencherInfoEtapa(r) {
     const modal = document.getElementById('montar-estagio-modal');
     const e = estado.etapas[estado.ativo];
     const calc = r.etapas[estado.ativo];
     if (!modal || !e || !calc) return;
-    const marcados = modal.querySelector('.me-marcados');
-    if (marcados) {
-        marcados.textContent = `${calc.aulas.length} de ${e.diasPlanejados}`;
-        marcados.className = `me-marcados ${calc.aulas.length === Number(e.diasPlanejados) ? 'me-ok' : 'me-erro'}`;
-    }
-    const diasCalc = modal.querySelector('.me-dias-calc');
-    if (diasCalc) diasCalc.textContent = `${calc.aulas.length} (calculado)`;
     const notaInicio = modal.querySelector('.me-inicio-nota');
     if (notaInicio) {
         notaInicio.textContent = e.inicio && calc.inicioMinimo && e.inicio < calc.inicioMinimo
@@ -310,13 +369,6 @@ function preencherInfoEtapa(r) {
     }
     const termina = modal.querySelector('.me-termina');
     if (termina) termina.textContent = calc.aulas.length ? fmt(calc.aulas[calc.aulas.length - 1]) : '—';
-    // "Falta selecionar N dias" (vermelho) ate completar: "Falta 0 dias" (verde).
-    const falta = modal.querySelector('.me-falta');
-    if (falta) {
-        const f = faltaDaEtapa(calc, estado.maxPorLetra);
-        falta.textContent = f.texto;
-        falta.className = `me-falta ${f.ok ? 'me-falta--ok' : 'me-falta--erro'}`;
-    }
 }
 
 function htmlPasso2(r) {
@@ -324,91 +376,28 @@ function htmlPasso2(r) {
     const e = estado.etapas[k];
     const calc = r.etapas[k];
     const { ctx } = estado;
-    const mesVisto = e.ver || e.mes;
-    const idxMes = estado.meses.indexOf(mesVisto);
-    const inputDias = `<label>Dias <input type="number" data-campo="diasPlanejados" min="1" max="120" value="${e.diasPlanejados}"></label>`;
-    const inputHoras = `<label>Horas/dia <input type="number" data-campo="horasDia" min="1" max="${maxHorasDia(e.turno, estado.maxPorLetra)}" value="${e.horasDia}"></label>`;
-    const campos = e.tipo === 'campo' ? `
-        <div class="me-campos me-cor-${k + 1}">
+    const plano = `${e.diasPlanejados} dias × ${e.horasDia} h/dia`;
+    const campo = e.tipo === 'campo' ? `
+        <div class="me-campos">
             <span class="me-rotulo">Dias da semana</span>
             <span class="me-chips">${[1, 2, 3, 4, 5, 6].map((x) => `<button type="button" class="me-chip" data-semana="${x}" aria-pressed="${e.diasSemana.includes(x)}" ${x === 6 ? 'title="Sábado: só de manhã, a partir das 8h, até 5 aulas"' : ''}>${x === 6 ? 'Sáb (manhã)' : SEMANA[x]}</button>`).join('')}</span>
             <label>Começa <input type="date" data-campo="inicio" value="${esc(calc.inicioUsado || '')}" min="${esc(calc.inicioMinimo || ctx.termStart)}" max="${ctx.termEnd}"></label>
-            <span class="me-nota me-inicio-nota"></span>
-            ${calc.calculado
-                ? '<span class="me-rotulo">Dias: <b class="me-ok me-dias-calc"></b></span>'
-                : inputDias}
-            ${inputHoras}
             <span class="me-rotulo">Termina: <b class="me-dado me-termina"></b></span>
-            <span class="me-falta" role="status"></span>
-        </div>` : `
-        <div class="me-campos me-cor-${k + 1}">
-            ${inputDias}
-            <span class="me-rotulo">Marcados: <b class="me-marcados"></b></span>
-            ${inputHoras}
-            <span class="me-falta" role="status"></span>
-        </div>`;
+            <span class="me-nota me-inicio-nota"></span>
+        </div>` : '';
+    const instrucao = e.tipo === 'encontro'
+        ? `Clique nos <b>${e.diasPlanejados} dias</b> do encontro (${plano}, do passo 1).`
+        : `Escolha os dias da semana e clique no dia em que o estágio começa: os <b>${e.diasPlanejados} dias</b> saem daí (${plano}, do passo 1).`;
     return `
         ${htmlAbas(r)}
         <div class="me-painel me-cor-${k + 1}">
-            <div class="me-mesbar">
-                <button type="button" class="me-seta" data-mes-delta="-1" aria-label="Mês anterior" ${idxMes <= 0 ? 'disabled' : ''}>‹</button>
-                <b>${MESES[Number(mesVisto.slice(5, 7)) - 1]} ${mesVisto.slice(0, 4)}</b>
-                <button type="button" class="me-seta" data-mes-delta="1" aria-label="Mês seguinte" ${idxMes >= estado.meses.length - 1 ? 'disabled' : ''}>›</button>
-                <span class="me-nota">${e.tipo === 'encontro' ? 'Clique nos dias do encontro.' : 'Clique no dia em que o estágio começa (use ‹ › para trocar o mês). Os dias saem dos dias da semana.'}</span>
-                ${htmlChoque(e.turno)}
-            </div>
-            <div class="me-dias-rolagem"><div class="me-dias">${htmlQuadrados(r)}</div></div>
-            ${campos}
-            <div class="me-resumo">${htmlResumo(r)}</div>
+            <div class="me-mesbar"><span class="me-instrucao">${instrucao}</span>${htmlChoque(e.turno)}</div>
+            ${campo}
+            ${htmlTurnos(e)}
+            <div class="me-erros-etapa">${htmlErrosDaEtapa(r)}</div>
+            ${htmlCalendario(r)}
         </div>
-        ${htmlRegua(r)}
-        <div class="me-placar-area">${htmlPlacar(r)}</div>`;
-}
-
-function htmlRegua(r) {
-    const { ctx } = estado;
-    const total = Math.round((Date.parse(ctx.termEnd) - Date.parse(ctx.termStart)) / 864e5) + 1;
-    const pos = (iso) => ((Date.parse(iso) - Date.parse(ctx.termStart)) / 864e5) / total * 100;
-    let marcasMes = '';
-    let linhasMes = '';
-    estado.meses.forEach((m, i) => {
-        const ini = i === 0 ? ctx.termStart : limitesDoMes(m).primeiro;
-        marcasMes += `<span style="left:${pos(ini).toFixed(2)}%">${MESES[Number(m.slice(5, 7)) - 1].slice(0, 3).toUpperCase()}</span>`;
-        if (i) linhasMes += `<i class="me-mesl" style="left:${pos(ini).toFixed(2)}%"></i>`;
-    });
-    // Linha fina em cada segunda-feira: separa as semanas.
-    for (let d = ctx.termStart; d <= ctx.termEnd; d = addDaysISO(d, 1)) {
-        if (weekdayOf(d) === 1 && d !== ctx.termStart) linhasMes += `<i class="me-semanal" style="left:${pos(d).toFixed(2)}%"></i>`;
-    }
-    const turma = letrasDoTurno(ctx.turnoTurma);
-    const faixas = ['M', 'T', 'N'].filter((l) => estado.maxPorLetra[l] > 0).map((l) => {
-        let blocos = '';
-        r.etapas.forEach((e, k) => {
-            if (!e.aulas.length || !letrasDoTurno(e.turno).includes(l)) return;
-            const a = e.aulas[0];
-            const z = e.aulas[e.aulas.length - 1];
-            blocos += `<div class="me-bloco me-cor-${k + 1}" style="left:${pos(a).toFixed(2)}%;width:max(${(pos(addDaysISO(z, 1)) - pos(a)).toFixed(2)}%,5px)"><span>E${k + 1}</span></div>`;
-            e.aulas.forEach((d) => { blocos += `<i class="me-aula me-cor-${k + 1}" style="left:${(pos(d) + 50 / total).toFixed(2)}%" title="Etapa ${k + 1} · ${SEMANA[weekdayOf(d)]} ${fmt(d)}"></i>`; });
-        });
-        const daTurma = turma.includes(l);
-        return `<div class="me-faixa-regua ${daTurma ? 'me-faixa-regua--turma' : ''}"><span class="me-faixa-rot">${NOME_LETRA[l]}${daTurma ? '<small>turno da turma</small>' : ''}</span><div class="me-trilho">${linhasMes}${blocos}</div></div>`;
-    }).join('');
-    return `<div class="me-regua"><div class="me-regua-int"><div class="me-meses">${marcasMes}</div>${faixas}
-        <div class="me-regua-legenda">Cada risquinho é um dia de aula (passe o mouse para ver a data) · linhas finas separam as semanas</div></div></div>`;
-}
-
-function htmlPlacar(r) {
-    const ch = estado.ctx.ch;
-    const d = ch - r.alocada;
-    return `<div class="me-placar-col">
-            <div class="me-placar">
-                <div><small>Prevista</small><b>${ch} h</b></div>
-                <div><small>Alocada</small><b>${r.alocada} h</b></div>
-                <div class="${d === 0 ? 'me-placar--ok' : 'me-placar--falta'}"><small>${d < 0 ? 'Sobra' : 'Falta'}</small><b>${Math.abs(d)} h${d === 0 ? ' ✔' : ''}</b></div>
-            </div>
-            <div class="me-avisos">${r.avisos.map((a) => `<div class="me-aviso me-aviso--${a.tipo}">${esc(a.texto)}</div>`).join('')}</div>
-        </div>
-        ${htmlTotais(r)}`;
+        <div class="me-totais-area">${htmlTotais(r)}</div>`;
 }
 
 // ---------------------------------------------------------------- passo 3
@@ -460,21 +449,16 @@ function aoClicar(e) {
     if (b.dataset.n) { s.n = Number(b.dataset.n); s.ativo = Math.min(s.ativo, s.n - 1); desenhar(); return; }
     if (b.dataset.aba) { s.ativo = Number(b.dataset.aba); desenhar(); return; }
     if (b.dataset.opcao && s.opcoesCampo) {
-        // Opcao do estagio em campo: poe as horas/dia (e as dos encontros, se mudam).
+        // Opcao que fecha exato: poe dias e horas do campo (e as horas dos encontros, se mudam).
         const op = s.opcoesCampo.opcoes[Number(b.dataset.opcao)];
         if (!op) return;
         s.etapas[s.opcoesCampo.etapa].horasDia = op.horasDia;
-        if (op.horasEncontro) s.etapas.slice(0, s.n).forEach((e) => { if (e.tipo === 'encontro') e.horasDia = op.horasEncontro; });
+        s.etapas[s.opcoesCampo.etapa].diasPlanejados = op.dias;
+        if (op.horasEncontro) s.etapas.slice(0, s.n).forEach((x) => { if (x.tipo === 'encontro') x.horasDia = op.horasEncontro; });
         desenhar();
         return;
     }
     const etapa = s.etapas[s.ativo];
-    if (b.dataset.mesDelta) {
-        const i = s.meses.indexOf(etapa.ver || etapa.mes) + Number(b.dataset.mesDelta);
-        if (i >= 0 && i < s.meses.length) etapa.ver = s.meses[i];
-        desenhar();
-        return;
-    }
     if (b.dataset.dia && etapa.tipo === 'campo') {
         etapa.inicio = b.dataset.dia; // o campo comeca no dia clicado
         desenhar();
@@ -511,10 +495,11 @@ function aoMudar(e) {
     } else if (campo === 'turno') {
         etapa.turno = t.value;
         etapa.horasDia = Math.min(etapa.horasDia, maxHorasDia(etapa.turno, s.maxPorLetra));
+        etapa.horasPrimeiroTurno = null;
     } else if (campo === 'mes') {
+        // Os dias ja marcados ficam (os meses aparecem todos nas Datas).
         etapa.mes = t.value;
         etapa.ver = t.value;
-        etapa.dias = etapa.dias.filter((d) => mesDe(d) === t.value); // dias de outro mes saem
         etapa.inicio = null;
         etapa.fim = null;
     } else if (campo === 'inicio' || campo === 'fim') {
@@ -537,13 +522,27 @@ function aoDigitar(e) {
         if (nota) nota.innerHTML = htmlNotaOrientador();
         return;
     }
+    if (t.type === 'number' && campo === 'horasPrimeiroTurno') {
+        // Horas do 1o turno (etapa de 2 turnos); o 2o fica com o resto.
+        const etapa = estado.etapas[estado.ativo];
+        const v = parseInt(t.value, 10);
+        if (Number.isNaN(v)) return;
+        etapa.horasPrimeiroTurno = v;
+        const partes = horasPorTurno(etapa.turno, etapa.horasDia, estado.maxPorLetra, v);
+        const t2 = document.querySelector('#montar-estagio-modal .me-turno2');
+        if (t2) t2.value = String(partes[1]?.[1] ?? 0);
+        atualizarResultados();
+        return;
+    }
     if (t.type !== 'number' || (campo !== 'horasDia' && campo !== 'diasPlanejados')) return;
     const linha = t.closest('[data-etapa]');
     const etapa = estado.etapas[linha ? Number(linha.dataset.etapa) : estado.ativo];
     const v = parseInt(t.value, 10);
     if (Number.isNaN(v)) return;
-    if (campo === 'horasDia') etapa.horasDia = Math.max(1, Math.min(v, maxHorasDia(etapa.turno, estado.maxPorLetra)));
-    else etapa.diasPlanejados = Math.max(1, Math.min(v, 120));
+    if (campo === 'horasDia') {
+        etapa.horasDia = Math.max(1, Math.min(v, maxHorasDia(etapa.turno, estado.maxPorLetra)));
+        etapa.horasPrimeiroTurno = null;
+    } else etapa.diasPlanejados = Math.max(1, Math.min(v, 120));
     atualizarResultados();
 }
 

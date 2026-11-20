@@ -112,13 +112,26 @@ export function choqueDaEtapa(turnoEtapa, turnoDaTurma) {
 
 // Horas por dia divididas entre os turnos da etapa (ex.: Manhã+Tarde, 10 h -> 5 + 5).
 // maxPorLetra: { M: 6, T: 6, N: 4 } (aulas de cada turno no quadro).
-export function horasPorTurno(turnoEtapa, horasDia, maxPorLetra) {
+// primeiroTurno (19/11/2026): horas do 1o turno escolhidas pelo coordenador
+// (ex.: 6 h = 4 de manha + 2 a tarde), iguais em todos os dias da etapa; o 2o
+// turno fica com o resto. Sem ele, divide ao meio.
+export function horasPorTurno(turnoEtapa, horasDia, maxPorLetra, primeiroTurno = null) {
     const letras = letrasDoTurno(turnoEtapa);
     const h = Math.max(0, Number(horasDia) || 0);
     if (letras.length === 1) return [[letras[0], Math.min(h, maxPorLetra[letras[0]] || h)]];
     const [a, b] = letras;
-    const primeira = Math.min(maxPorLetra[a] || h, Math.max(h - (maxPorLetra[b] || 0), Math.ceil(h / 2)));
+    const minimo = Math.max(0, h - (maxPorLetra[b] || 0));
+    const maximo = Math.min(maxPorLetra[a] || h, h);
+    const pedido = Number(primeiroTurno);
+    const primeira = Number.isFinite(pedido) && primeiroTurno !== null && primeiroTurno !== ''
+        ? Math.max(minimo, Math.min(maximo, Math.round(pedido)))
+        : Math.min(maximo, Math.max(minimo, Math.ceil(h / 2)));
     return [[a, primeira], [b, Math.min(h - primeira, maxPorLetra[b] || 0)]].filter((p) => p[1] > 0);
+}
+
+// Soma do que foi planejado no passo 1: dias x horas/dia de todas as etapas.
+export function somaPlanejada(etapas = []) {
+    return etapas.reduce((s, e) => s + (Number(e.diasPlanejados) || 0) * (Number(e.horasDia) || 0), 0);
 }
 
 // Maximo de horas por dia de um turno (ate 10).
@@ -185,7 +198,7 @@ export function opcoesDoCampo({ etapas = [], ch = 0, maxPorLetra = {}, limite = 
     });
     const exato = precisa > 0 && c0 > 0 && precisa % c0 === 0;
     const opcoes = candidatas
-        .filter((o) => !(exato && o.horasEncontro === null && o.horasDia === c0))
+        .filter((o) => !(o.horasEncontro === null && o.horasDia === c0 && o.dias === num(campo.diasPlanejados)))
         .sort((a, b) => a.distancia - b.distancia || a.dias - b.dias)
         .slice(0, limite)
         .map(({ horasDia, dias, horasEncontro }) => ({ horasDia, dias, horasEncontro }));
@@ -257,7 +270,9 @@ const fmtBR = (iso) => iso ? `${iso.slice(8, 10)}/${iso.slice(5, 7)}` : '';
 // (menos o ultimo), quantos dias de aula a partir do comeco (o fim sai disso).
 // Devolve { etapas: [{ ...etapa, aulas: [iso], calculado }], alocada, avisos: [{ tipo, texto }] }.
 // tipo do aviso: 'erro' (impede Aplicar), 'ok' ou 'info'.
-export function calcularEstagio({ etapas = [], ch = 0, termStart, termEnd, feriados = new Set(), turnoDaTurma = '', maxPorLetra = null }) {
+// diasFixos (19/11/2026): a janela fixa os dias de TODAS as etapas no passo 1
+// (inclusive do ultimo campo); sem ele, o ultimo campo tem os dias calculados.
+export function calcularEstagio({ etapas = [], ch = 0, termStart, termEnd, feriados = new Set(), turnoDaTurma = '', maxPorLetra = null, diasFixos = false }) {
     const R = etapas.map((e) => ({
         ...e,
         aulas: e.tipo === 'encontro'
@@ -267,7 +282,7 @@ export function calcularEstagio({ etapas = [], ch = 0, termStart, termEnd, feria
     }));
     const horas = (r) => horasDaEtapa(r, maxPorLetra);
     let ultimoCampo = -1;
-    R.forEach((r, k) => { if (r.tipo === 'campo') ultimoCampo = k; });
+    if (!diasFixos) R.forEach((r, k) => { if (r.tipo === 'campo') ultimoCampo = k; });
 
     const inicioDe = (k) => {
         const r = R[k];
@@ -375,7 +390,7 @@ export function expressaoSigaaDaEtapa(etapa, maxPorLetra) {
     const aulasDe = (h) => Array.from({ length: h }, (_, i) => i + 1).join('');
     const dias = semana.filter((d) => d !== 6).map((d) => d + 1).join('');
     const partes = dias
-        ? horasPorTurno(etapa.turno, etapa.horasDia, maxPorLetra).map(([l, h]) => dias + l + aulasDe(h))
+        ? horasPorTurno(etapa.turno, etapa.horasDia, maxPorLetra, etapa.horasPrimeiroTurno).map(([l, h]) => dias + l + aulasDe(h))
         : [];
     if (semana.includes(6)) partes.push('7M' + aulasDe(horasNoSabado(etapa.horasDia, maxPorLetra)));
     return partes.join(' ');
@@ -390,7 +405,7 @@ export function faixasDoEstagio(etapasCalculadas = [], slotsPorLetra = {}, feria
     const maxPorLetra = Object.fromEntries(Object.entries(slotsPorLetra).map(([l, lista]) => [l, (lista || []).length]));
     const comAula = etapasCalculadas.filter((e) => (e.aulas || []).length);
     return comAula.map((e, idx) => {
-        const slots = horasPorTurno(e.turno, e.horasDia, maxPorLetra)
+        const slots = horasPorTurno(e.turno, e.horasDia, maxPorLetra, e.horasPrimeiroTurno)
             .flatMap(([l, h]) => (slotsPorLetra[l] || []).slice(0, h));
         const diasSemana = [...new Set(e.aulas.map(weekdayOf))].sort();
         // Sabado: as primeiras aulas da manha (ver HORAS_SABADO).

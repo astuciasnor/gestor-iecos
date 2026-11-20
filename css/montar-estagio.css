@@ -42,8 +42,11 @@
 .me-caixa {
     display: flex;
     flex-direction: column;
-    width: min(1100px, 100%);   /* 19/11/2026: +10% na largura */
-    max-height: 96vh;           /* e um pouco mais de altura */
+    /* 20/11/2026: tudo 5% maior (fontes junto) e a janela com 1210 px na tela.
+       As medidas de tela sao divididas pelo zoom para caber na janela. */
+    zoom: 1.05;
+    width: min(1152px, calc((100vw - 32px) / 1.05));
+    max-height: calc(96vh / 1.05);
     border-radius: 12px;
     background: #FFFFFF;
     box-shadow: 0 12px 40px rgba(0, 0, 0, .35);
@@ -59,7 +62,8 @@
     border-bottom: 1px solid #DCE5EA;
 }
 .me-cab h3 { margin: 0; font-size: 17px; color: #0F766E; }
-.me-sub { display: block; font-size: 12.5px; color: #64748B; }
+.me-sub { display: block; margin-top: 6px; font-size: 12.5px; color: #64748B; }
+.me-sub b { color: #0F172A; font-weight: 800; }
 .me-passos { display: flex; gap: 4px; margin: 0 0 0 auto; padding: 0; list-style: none; }
 .me-passos button {
     display: flex; align-items: center; gap: 6px;
@@ -78,7 +82,7 @@
 }
 .me-fechar:hover { background: #F4F7F9; color: #0F172A; }
 
-.me-corpo { display: grid; grid-auto-rows: max-content; gap: 14px; align-content: start; min-height: 336px; padding: 16px 18px; overflow-y: auto; }
+.me-corpo { display: grid; grid-auto-rows: max-content; gap: 14px; align-content: start; min-height: 370px; padding: 16px 18px; overflow-y: auto; }
 .me-rodape {
     display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px;
     padding: 12px 18px; border-top: 1px solid #DCE5EA; background: #F4F7F9;
@@ -150,14 +154,6 @@
 .me-aba[aria-selected="true"] { border-color: var(--c); background: var(--cs); }
 .me-painel { display: grid; gap: 12px; padding: 14px; border: 1px solid var(--c); border-radius: 10px; }
 .me-mesbar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; font-size: 13px; }
-.me-mesbar b { min-width: 120px; font-size: 15px; }
-.me-seta {
-    display: grid; place-items: center; width: 28px; height: 28px;
-    border: 1px solid #DCE5EA; border-radius: 6px; background: #FFFFFF; font-weight: 700; cursor: pointer;
-}
-.me-seta:disabled { opacity: .3; cursor: not-allowed; }
-.me-dias-rolagem { overflow-x: auto; padding-bottom: 4px; }
-.me-dias { display: flex; gap: 2px; min-width: max-content; }
 .me-dia {
     display: grid; place-items: center; align-content: center;
     width: 26px; height: 40px; padding: 0;
@@ -166,7 +162,6 @@
 }
 .me-dia span { font-size: 9.5px; line-height: 1.1; color: #64748B; }
 .me-dia b { font-size: 12.5px; line-height: 1.2; }
-.me-dia--seg { margin-left: 6px; }
 .me-dia--meu, .me-dia--outro { border-color: var(--c); background: var(--c); }
 .me-dia--meu b, .me-dia--meu span, .me-dia--outro b, .me-dia--outro span { color: #FFFFFF; }
 .me-dia--outro { opacity: .45; }
@@ -183,30 +178,7 @@
     background: #FFFFFF; color: #64748B; font: 600 12px Inter, system-ui, sans-serif; cursor: pointer;
 }
 .me-chip[aria-pressed="true"] { border-color: var(--c); background: var(--c); color: #FFFFFF; }
-.me-resumo { font-size: 15px; font-weight: 600; }
 
-.me-regua { overflow-x: auto; overflow-y: hidden; }
-.me-regua-int { min-width: 700px; }
-.me-meses { position: relative; height: 18px; margin-left: 110px; }
-.me-meses span { position: absolute; transform: translateX(4px); font-size: 10.5px; font-weight: 700; letter-spacing: .06em; color: #64748B; }
-.me-faixa-regua { display: flex; margin-top: 4px; }
-.me-faixa-rot { display: flex; flex-direction: column; justify-content: center; width: 110px; flex: none; padding-right: 8px; font-size: 12px; font-weight: 700; }
-.me-faixa-rot small { font-size: 10.5px; font-weight: 600; color: #B45309; }
-.me-trilho { position: relative; flex: 1; height: 32px; border-radius: 5px; background: #F4F7F9; }
-.me-faixa-regua--turma .me-trilho { background: #FEF3E2; }
-.me-mesl { position: absolute; top: 0; bottom: 0; width: 1px; background: #DCE5EA; }
-.me-bloco { position: absolute; top: 4px; height: 24px; border: 1px solid var(--c); border-radius: 4px; background: var(--cs); }
-.me-bloco span { position: absolute; top: 3px; left: 4px; font-size: 10px; font-weight: 700; color: var(--c); }
-.me-aula { position: absolute; top: 8px; width: 2px; height: 16px; border-radius: 1px; background: var(--c); transform: translateX(-1px); }
-
-.me-placar { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border: 1px solid #DCE5EA; border-radius: 8px; overflow: hidden; }
-.me-placar div { display: grid; padding: 8px 14px; border-right: 1px solid #DCE5EA; }
-.me-placar div:last-child { border-right: 0; }
-.me-placar small { font-size: 10.5px; font-weight: 600; letter-spacing: .07em; text-transform: uppercase; color: #64748B; }
-.me-placar b { font-size: 19px; font-variant-numeric: tabular-nums; }
-.me-placar--ok { background: #E3F5E8; } .me-placar--ok b { color: #15803D; }
-.me-placar--falta { background: #FCE9E9; } .me-placar--falta b { color: #B91C1C; }
-.me-avisos { display: grid; gap: 6px; margin-top: 8px; }
 .me-aviso { padding: 7px 12px; border-radius: 6px; font-size: 12.5px; }
 .me-aviso--erro { background: #FCE9E9; color: #B91C1C; }
 .me-aviso--ok { background: #E3F5E8; color: #15803D; }
@@ -225,10 +197,6 @@
 /* Coluna Dias e tabela de totais (18/11/2026) */
 .me-erro { color: #B91C1C; }
 .me-dado { color: #0F172A; }
-.me-placar-area { display: grid; grid-template-columns: minmax(0, 1fr) minmax(240px, 300px); gap: 14px; align-items: start; }
-@media (max-width: 760px) { .me-placar-area { grid-template-columns: 1fr; } }
-.me-placar-col { display: grid; gap: 8px; min-width: 0; }
-.me-placar-col .me-avisos { margin-top: 0; }
 .me-totais { width: 100%; border-collapse: collapse; border: 1px solid #DCE5EA; border-radius: 8px; overflow: hidden; font-size: 12.5px; }
 .me-totais th, .me-totais td { padding: 5px 10px; border-bottom: 1px solid #E5ECF0; text-align: left; white-space: nowrap; }
 .me-totais th { background: #F4F7F9; font-size: 10.5px; font-weight: 600; letter-spacing: .07em; text-transform: uppercase; color: #64748B; }
@@ -238,10 +206,6 @@
 /* Dia em que o estagio em campo comeca (clique nos quadradinhos) */
 .me-dia--inicio { box-shadow: 0 0 0 2px #FFFFFF, 0 0 0 4px var(--c); }
 .me-pendencias { margin: 4px 0 0; padding-left: 18px; }
-/* Regua: semanas e legenda */
-.me-semanal { position: absolute; top: 6px; bottom: 6px; width: 1px; background: #E2E8F0; }
-.me-aula { pointer-events: auto; cursor: default; }
-.me-regua-legenda { margin: 6px 0 0 110px; font-size: 11.5px; color: #64748B; }
 
 /* CH do orientador (19/11/2026): linha abaixo das etapas */
 .me-orientador { margin-top: 12px; flex-wrap: wrap; }
@@ -259,23 +223,48 @@
 }
 .cd-ch-orientador--falta input { border-color: #D97706; background: #FFFBEB; }
 
-/* Opcoes do estagio em campo no passo 1 (19/11/2026) */
-.me-opcoes { margin-top: 10px; font-size: 13px; color: #334155; }
-.me-opcoes:empty { display: none; }
-.me-opcoes-nao { color: #B45309; font-weight: 600; }
-.me-opcoes-lista { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; margin-top: 6px; }
-.me-opcoes-lista > span { font-size: 12.5px; color: #64748B; }
+/* Passo 1: soma das etapas e opcoes que fecham exato (cartoes) - 20/11/2026 */
+.me-opcoes { display: grid; gap: 8px; margin-top: 10px; color: #334155; }
+.me-soma { font-size: 14px; font-weight: 600; }
+.me-soma--ok { color: #15803D; }
+.me-soma--erro { color: #B91C1C; }
+.me-opcoes-titulo { font-size: 14px; font-weight: 800; color: #15803D; }
+.me-opcoes-lista { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 10px; }
 .me-opcao {
-    display: inline-flex; flex-direction: column; align-items: flex-start; gap: 1px;
-    padding: 5px 10px; border: 1px solid #1E8A5A; border-radius: 8px;
-    background: #F0FAF4; color: #14532D; font: 600 12.5px Inter, system-ui, sans-serif; cursor: pointer;
+    position: relative; display: grid; gap: 4px; padding: 10px 14px 10px 12px;
+    border: 1.5px solid #1E8A5A; border-radius: 12px; background: #F0FAF4;
+    color: #14532D; font: 600 12.5px Inter, system-ui, sans-serif; text-align: left; cursor: pointer;
 }
-.me-opcao small { font-weight: 500; font-size: 11px; color: #3F6B52; }
+.me-opcao ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 3px; }
+.me-opcao li { white-space: nowrap; }
+.me-opcao li::before { content: "- "; }
+.me-opcao li span { display: inline-block; min-width: 86px; font-weight: 700; }
+.me-opcao li:last-child b { text-decoration: underline; text-underline-offset: 3px; }
+.me-opcao-total { justify-self: end; padding-top: 2px; border-top: 2px solid #1E8A5A; font-weight: 800; color: #14532D; }
 .me-opcao:hover { background: #DCF1E5; }
 .me-opcao:focus-visible { outline: 3px solid rgba(30, 138, 90, .35); outline-offset: 2px; }
 
-/* Passo 2: quanto falta na etapa (19/11/2026) */
-.me-falta { padding: 5px 12px; border-radius: 999px; font-size: 15px; font-weight: 700; }
-.me-falta:empty { display: none; }
-.me-falta--erro { background: #FDECEC; color: #B91C1C; }
-.me-falta--ok { background: #DCF1E5; color: #15803D; }
+/* Passo 2 (20/11/2026): abas com horas previstas/faltantes, meses um abaixo do outro */
+.me-aba { grid-template-columns: auto auto; align-items: center; column-gap: 14px; }
+.me-aba-nome { display: grid; gap: 1px; font-size: 13.5px; }
+.me-aba-horas { display: flex; gap: 0; border-left: 1px solid #DCE5EA; }
+.me-aba-horas > span { display: grid; padding: 0 10px; border-right: 1px solid #DCE5EA; text-align: center; color: #0F172A; }
+.me-aba-horas > span:last-child { border-right: 0; }
+.me-aba-horas small { font-size: 10px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: #64748B; }
+.me-aba-horas b { font-size: 14px; font-variant-numeric: tabular-nums; }
+.me-aba-horas .me-erro b { color: #B91C1C; }
+.me-aba-horas .me-ok b { color: #15803D; }
+.me-instrucao { font-size: 14px; color: #334155; }
+.me-turnos { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; font-size: 14px; }
+.me-turnos label { display: flex; align-items: center; gap: 6px; color: #334155; font-weight: 600; }
+.me-turnos input[readonly] { background: #F4F7F9; color: #334155; }
+.me-erros-etapa { display: grid; gap: 6px; }
+.me-erros-etapa:empty { display: none; }
+.me-cal { display: grid; gap: 4px; overflow-x: auto; padding-bottom: 4px; }
+.me-cal-linha { display: grid; grid-template-columns: 118px max-content; align-items: center; }
+.me-cal-mes { font-size: 13.5px; font-weight: 700; color: #0F172A; }
+.me-cal-dias { display: grid; grid-template-columns: repeat(31, 28px); gap: 3px; }
+.me-cal .me-dia { width: 28px; height: 38px; }
+.me-dia-vazio { width: 28px; height: 38px; }
+.me-totais-area { display: flex; justify-content: flex-end; }
+.me-totais-area .me-totais { width: auto; min-width: 320px; }

@@ -41,8 +41,9 @@ window.__t = {
   qa(sel) { return [...(this.modal()?.querySelectorAll(sel) || [])]; },
   async clicar(sel) { const b = this.q(sel); if (!b) return false; b.click(); await this.wait(250); return true; },
   // Marca n dias seguidos (seg, ter, qua...) a partir da primeira segunda livre do mes visto.
-  async marcarDiasSeguidos(n) {
-    const livres = this.qa('.me-dia:not(:disabled)');
+  async marcarDiasSeguidos(n, doFim = false) {
+    let livres = this.qa('.me-dia:not(:disabled)');
+    if (doFim) livres = livres.slice(-40);
     const iniIdx = livres.findIndex((b, i) => {
       const d = new Date(b.dataset.dia + 'T12:00:00');
       if (d.getDay() !== 1) return false;
@@ -58,8 +59,9 @@ window.__t = {
     for (const d of dias) { this.q('[data-dia="' + d + '"]').click(); await this.wait(200); }
     return dias.join(', ');
   },
-  placar() { return this.qa('.me-placar b').map(b => b.textContent).join(' | '); },
-  fechou() { return !!this.q('.me-placar--ok'); },
+  placar() { return this.q('.me-totais tfoot')?.textContent.replace(/\\s+/g, ' ').trim() || ''; },
+  fechou() { return !!this.q('.me-totais tfoot .me-ok'); },
+  abas() { return this.qa('.me-aba').map(b => b.textContent.replace(/\\s+/g, ' ').trim()).join(' || '); },
   faixas() {
     return [1, 2, 3, 4].map(i => {
       const ini = document.getElementById('inp-data-inicio-f' + i).value || '-';
@@ -115,37 +117,34 @@ try {
   await foto('1-etapas');
 
 
+  // Passo 1 (20/11/2026): a soma tem que fechar para ir as Datas; opcoes em cartoes.
+  await evaluate(`(async () => { const i = __t.q('[data-etapa="1"] [data-campo="horasDia"]'); i.value = '4'; __t.fire(i, 'input'); await __t.wait(300); })()`);
+  const soma = await evaluate("__t.q('.me-soma').textContent");
+  confere('passo 1 sem fechar: soma em vermelho e Proximo travado', /faltam|passou/.test(soma) && await evaluate("__t.q('[data-ir=\"2\"]').disabled"), soma);
+  const cartoes = await evaluate("__t.qa('.me-opcao').length");
+  confere('passo 1 mostra cartoes com opcoes que fecham', cartoes > 0, cartoes + ' cartoes');
+  console.log('  1a opcao: ' + await evaluate("__t.q('.me-opcao').textContent.replace(/\\s+/g, ' ').trim()"));
+  await foto('1b-opcoes');
+  await evaluate("__t.q('.me-opcao').click()"); await sleep(300);
+  const soma2 = await evaluate("__t.q('.me-soma').textContent");
+  confere('clique na opcao fecha a soma', /fecha exato/.test(soma2) && !(await evaluate("__t.q('[data-ir=\"2\"]').disabled")), soma2);
+
   // Passo 3 antes de marcar os dias: diz exatamente o que falta
   await evaluate("__t.clicar('[data-passo=\"3\"]')");
   const pend = await evaluate("__t.qa('.me-pendencias li').map(li => li.textContent).join(' | ')");
   confere('passo 3 lista o que falta resolver', /marque os dias do encontro/.test(pend), pend);
 
-  // Passo 2: encontro 1 (3 dias no 1o mes) e encontro 3 (3 dias no ultimo mes)
+  // Passo 2: meses um abaixo do outro, sem regua e sem placar
   await evaluate("__t.clicar('[data-ir=\"2\"]')");
-  console.log('  etapa 1:', await evaluate('__t.marcarDiasSeguidos(3)'));
+  const meses = await evaluate("__t.qa('.me-cal-linha').length");
+  confere('datas: um mes por linha, sem regua nem placar', meses >= 4 && !(await evaluate("!!__t.q('.me-regua') || !!__t.q('.me-placar')")), meses + ' meses');
+  confere('datas: sem campos de dias e horas (so no passo 1)', !(await evaluate("!!__t.q('.me-painel [data-campo=\"diasPlanejados\"], .me-painel [data-campo=\"horasDia\"]')")));
+  const ndias1 = await evaluate("Number(document.querySelector('#montar-estagio-modal [data-aba=\"0\"] small').textContent.match(/(\\d+) dias/)[1])");
+  console.log('  etapa 1: ' + await evaluate(`__t.marcarDiasSeguidos(${ndias1})`));
   await evaluate("__t.clicar('[data-aba=\"2\"]')");
-  // ultimo mes pode ser curto (PL acaba no meio): volta um mes se nao der
-  let r3 = await evaluate('__t.marcarDiasSeguidos(3)');
-  if (r3.startsWith('sem')) { await evaluate("__t.clicar('[data-mes-delta=\"-1\"]')"); r3 = await evaluate('__t.marcarDiasSeguidos(3)'); }
-  console.log('  etapa 3:', r3);
-  // Campo (etapa 2): procura dias da semana e horas que fechem a CH exata
-  await evaluate("__t.clicar('[data-aba=\"1\"]')");
-  const ajuste = await evaluate(`(async () => {
-    const combos = [[1, 3], [2, 4], [1, 3, 5], [1, 2, 3, 4, 5]];
-    for (const dias of combos) {
-      for (const x of [1, 2, 3, 4, 5, 6]) {
-        const chip = __t.q('[data-semana="' + x + '"]');
-        if ((chip.getAttribute('aria-pressed') === 'true') !== dias.includes(x)) { chip.click(); await __t.wait(150); }
-      }
-      const inp = __t.q('.me-campos input[type=number]');
-      for (let h = Number(inp.max); h >= 1; h--) {
-        inp.value = String(h); __t.fire(inp, 'input'); await __t.wait(120);
-        if (__t.fechou()) return 'fechou com ' + dias.join('/') + ' x ' + h + ' h';
-      }
-    }
-    return 'nao fechou: ' + __t.placar();
-  })()`);
-  console.log('  campo:', ajuste);
+  const ndias3 = await evaluate("Number(document.querySelector('#montar-estagio-modal [data-aba=\"2\"] small').textContent.match(/(\\d+) dias/)[1])");
+  console.log('  etapa 3: ' + await evaluate(`__t.marcarDiasSeguidos(${ndias3}, true)`));
+  console.log('  abas: ' + await evaluate('__t.abas()'));
   confere('a CH fecha exata', await evaluate('__t.fechou()'), await evaluate('__t.placar()'));
   // O campo comeca 3 semanas depois do encontro: a data digitada fica e a CH ainda fecha
   await evaluate("__t.clicar('[data-aba=\"1\"]')");
@@ -154,16 +153,14 @@ try {
     const ini = new Date(inp.min + 'T12:00:00'); ini.setDate(ini.getDate() + 21);
     const iso = ini.toISOString().slice(0, 10);
     inp.value = iso; __t.fire(inp, 'input', 'change'); await __t.wait(400);
-    return iso + ' | campo fica: ' + __t.q('[data-campo="inicio"]').value + ' | ' + __t.q('.me-resumo').textContent.trim();
+    return iso + ' | campo fica: ' + __t.q('[data-campo="inicio"]').value + ' | termina ' + __t.q('.me-termina').textContent;
   })()`);
   console.log('  ' + comeco);
   const [quis] = comeco.split(' ');
   confere('a data de comeco digitada nao volta sozinha', comeco.includes('campo fica: ' + quis), comeco);
-  // Tambem pelo clique: volta um mes e clica num dia livre (depois do minimo)
+  // Tambem pelo clique: clica num dia livre depois do minimo
   const clique = await evaluate(`(async () => {
-    const inp = __t.q('[data-campo="inicio"]');
-    const minimo = inp.min;
-    __t.q('[data-mes-delta="-1"]')?.click(); await __t.wait(300);
+    const minimo = __t.q('[data-campo="inicio"]').min;
     const livre = __t.qa('.me-dia:not(:disabled)').map(b => b.dataset.dia).find(d => d > minimo);
     if (!livre) return 'sem dia livre';
     __t.q('[data-dia="' + livre + '"]').click(); await __t.wait(400);
@@ -171,6 +168,7 @@ try {
   })()`);
   const [diaClicado, , ficouClique] = clique.split(' ');
   confere('clique num dia define o Comeca do campo', diaClicado === ficouClique, clique);
+  confere('aba do campo: faltam 0 h', /Faltam ?0 h/.test(await evaluate('__t.abas()')), await evaluate('__t.abas()'));
   await foto('2-datas');
 
   await evaluate("__t.clicar('[data-ir=\"3\"]')");

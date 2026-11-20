@@ -247,7 +247,7 @@ test('opcoes do campo: ja fecha exato, sem campo, e encontros ja somando a CH', 
     const { opcoesDoCampo } = await import('../js/estagio.mjs');
     const max = { M: 5, T: 5, N: 3 };
     const enc = (h, d) => ({ tipo: 'encontro', turno: 'Manhã', horasDia: h, diasPlanejados: d });
-    const campo = (h) => ({ tipo: 'campo', turno: 'Noite', horasDia: h, diasPlanejados: 10 });
+    const campo = (h) => ({ tipo: 'campo', turno: 'Noite', horasDia: h, diasPlanejados: 25 });
     // Sandra: 105 h, 3+3 dias de 5 h, campo 3 h/dia -> 75 h = 25 dias exato
     const r = opcoesDoCampo({ etapas: [enc(5, 3), campo(3), enc(5, 3)], ch: 105, maxPorLetra: max });
     assert.equal(r.precisa, 75);
@@ -273,4 +273,25 @@ test('falta da etapa: encontro, campo com dias e campo calculado', async () => {
     assert.equal(faltaDaEtapa(campo({ diasPlanejados: 5 })).texto, 'Faltam 3 dias: não cabem antes da próxima etapa');
     assert.equal(faltaDaEtapa(campo({ calculado: true, precisa: 6 })).ok, true);
     assert.equal(faltaDaEtapa(campo({ calculado: true, precisa: 9 })).texto, 'Faltam 3 h: não cabe antes da próxima etapa');
+});
+
+// Passo 1 fixa os dias de todas as etapas; divisao das horas entre 2 turnos (19/11/2026).
+test('divisao das horas entre os 2 turnos, soma planejada e dias fixos do campo', async () => {
+    const { horasPorTurno, somaPlanejada, calcularEstagio, expressaoSigaaDaEtapa } = await import('../js/estagio.mjs');
+    const max = { M: 5, T: 5, N: 3 };
+    assert.deepEqual(horasPorTurno('Manhã+Tarde', 6, max), [['M', 3], ['T', 3]]);
+    assert.deepEqual(horasPorTurno('Manhã+Tarde', 6, max, 4), [['M', 4], ['T', 2]]);
+    assert.deepEqual(horasPorTurno('Manhã+Tarde', 8, max, 2), [['M', 3], ['T', 5]]);   // tarde no maximo: manha sobe
+    assert.deepEqual(horasPorTurno('Tarde+Noite', 8, max, 6), [['T', 5], ['N', 3]]);  // tarde no maximo
+    assert.deepEqual(horasPorTurno('Noite', 3, max, 2), [['N', 3]]);                  // 1 turno: ignora
+    assert.equal(somaPlanejada([{ diasPlanejados: 3, horasDia: 4 }, { diasPlanejados: 15, horasDia: 4 }, { diasPlanejados: 3, horasDia: 4 }]), 84);
+    const etapas = [
+        { tipo: 'encontro', turno: 'Tarde', horasDia: 5, diasPlanejados: 2, dias: ['2027-03-15', '2027-03-16'] },
+        { tipo: 'campo', turno: 'Manhã+Tarde', horasDia: 6, horasPrimeiroTurno: 4, diasPlanejados: 5, diasSemana: [1, 3], mes: '2027-03' }
+    ];
+    const r = calcularEstagio({ etapas, ch: 40, termStart: '2027-03-15', termEnd: '2027-07-14', feriados: new Set(), maxPorLetra: max, diasFixos: true });
+    assert.equal(r.etapas[1].calculado, false);
+    assert.equal(r.etapas[1].aulas.length, 5);
+    assert.equal(r.alocada, 40);
+    assert.equal(expressaoSigaaDaEtapa(r.etapas[1], max), '24M1234 24T12');
 });
