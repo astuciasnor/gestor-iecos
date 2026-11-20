@@ -1,21 +1,21 @@
-import { UNIDADE_PADRAO, unidadeDoCurso } from './unidades.mjs?v=202611192241';
-import { escapeHtml as esc } from './texto.mjs?v=202611192241';
+import { UNIDADE_PADRAO, unidadeDoCurso } from './unidades.mjs?v=202611200824';
+import { escapeHtml as esc } from './texto.mjs?v=202611200824';
 // Menu Indicadores (so leitura: nada e gravado).
 // Sub-aba "Carga por docente": tabela com a CH de cada docente por curso e por PL,
 // do ano inteiro ou de um PL. As contas estao em indicadores.mjs.
 // Sub-aba "Dias do docente": quadro de um docente, uma linha por componente e um
 // quadradinho por dia do PL, com os dias de 2+ componentes (dias_docente.mjs).
-import { store } from './store.js?v=202611192241';
-import { getCursoSiglaDaTurma, getDisciplinaCHGlobal } from './curso_turma_helpers.js?v=202611192241';
-import { formatDateBR } from './date_utils_ui.js?v=202611192241';
-import { UNIDADES } from './docente_nomes.mjs?v=202611192241';
-import { cargaPorDocente, ordenarLinhas, SEM_DOCENTE } from './indicadores.mjs?v=202611192241';
-import { diasDoDocente } from './dias_docente.mjs?v=202611192241';
-import { getCalendarEvents } from './calendar.js?v=202611192241';
-import { withPlanContext } from './calendarios_ui.js?v=202611192241';
-import { getTurmaLabel } from './curso_turma_helpers.js?v=202611192241';
-import { feriadosDaTurma } from './feriados.mjs?v=202611192241';
-import { vividHexColor } from './color_utils.js?v=202611192241';
+import { store } from './store.js?v=202611200824';
+import { getCursoSiglaDaTurma, getDisciplinaCHGlobal } from './curso_turma_helpers.js?v=202611200824';
+import { formatDateBR } from './date_utils_ui.js?v=202611200824';
+import { UNIDADES } from './docente_nomes.mjs?v=202611200824';
+import { cargaPorDocente, ordenarLinhas, SEM_DOCENTE } from './indicadores.mjs?v=202611200824';
+import { diasDoDocente } from './dias_docente.mjs?v=202611200824';
+import { getCalendarEvents } from './calendar.js?v=202611200824';
+import { withPlanContext } from './calendarios_ui.js?v=202611200824';
+import { getTurmaLabel } from './curso_turma_helpers.js?v=202611200824';
+import { feriadosDaTurma } from './feriados.mjs?v=202611200824';
+import { vividHexColor } from './color_utils.js?v=202611200824';
 
 const VALIDADE_MS = 2 * 60 * 1000; // depois disso, abrir o menu busca de novo
 

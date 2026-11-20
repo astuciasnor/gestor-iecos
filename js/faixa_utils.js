@@ -1,12 +1,12 @@
-import { store } from './store.js?v=202611192241';
-import { getCalendarEvents } from './calendar.js?v=202611192241';
-import { mapSlotToTurno } from './turns.js?v=202611192241';
-import { addDaysISO, timeToMinutes, toISODate } from './date_utils_ui.js?v=202611192241';
-import { normalizeConflictSlotLabel, getNativeTurnoValueForAllocation, getQuadroTodosRegimes } from './turno_helpers.js?v=202611192241';
-import { aulaContaComoChoque } from './estagio.mjs?v=202611192241';
-import { isPriorityRegularAllocation } from './allocation_helpers.js?v=202611192241';
-import { datasFeriadoDaTurma } from './feriados.mjs?v=202611192241';
-import { computeRemainingFractionalHours, generateAllocationOccurrences, validateOccurrenceWithinSemesterBounds } from './academic_rules.mjs?v=202611192241';
+import { store } from './store.js?v=202611200824';
+import { getCalendarEvents } from './calendar.js?v=202611200824';
+import { mapSlotToTurno } from './turns.js?v=202611200824';
+import { addDaysISO, timeToMinutes, toISODate } from './date_utils_ui.js?v=202611200824';
+import { normalizeConflictSlotLabel, getNativeTurnoValueForAllocation, getQuadroTodosRegimes } from './turno_helpers.js?v=202611200824';
+import { aulaContaComoChoque } from './estagio.mjs?v=202611200824';
+import { isPriorityRegularAllocation } from './allocation_helpers.js?v=202611200824';
+import { datasFeriadoDaTurma } from './feriados.mjs?v=202611200824';
+import { computeRemainingFractionalHours, generateAllocationOccurrences, validateOccurrenceWithinSemesterBounds } from './academic_rules.mjs?v=202611200824';
 
 // Horario da componente em edicao que nao gera choque: estagio fora do turno
 // da turma (js/estagio.mjs). Vale para a turma e para o professor.
