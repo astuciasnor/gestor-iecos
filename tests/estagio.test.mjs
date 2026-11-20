@@ -218,3 +218,43 @@ test('CH do orientador: vale so em estagio, entre 1 h e a CH toda', async () => 
     assert.equal(chDoOrientador({ disciplina: 'ECOLOGIA', chOrientador: 30 }, 60), 0); // nao e estagio
     assert.equal(chDoOrientador(est(45)), 45);       // sem CH total conhecida
 });
+
+// Opcoes do estagio em campo no passo 1 (pedido de 19/11/2026).
+test('opcoes do campo: caso EP 90 h, encontros 2+2 dias de 4 h, campo 8 h/dia', async () => {
+    const { opcoesDoCampo } = await import('../js/estagio.mjs');
+    const max = { M: 5, T: 5, N: 3 };
+    const etapas = [
+        { tipo: 'encontro', turno: 'Tarde', horasDia: 4, diasPlanejados: 2 },
+        { tipo: 'campo', turno: 'Manhã+Tarde', horasDia: 8, diasPlanejados: 10 },
+        { tipo: 'encontro', turno: 'Tarde', horasDia: 4, diasPlanejados: 2 }
+    ];
+    const r = opcoesDoCampo({ etapas, ch: 90, maxPorLetra: max });
+    assert.equal(r.etapa, 1);
+    assert.equal(r.precisa, 74);           // 90 - 16
+    assert.equal(r.dias, 10);              // 74 / 8 -> cerca de 10 dias
+    assert.equal(r.exato, false);
+    assert.ok(r.opcoes.length > 0 && r.opcoes.length <= 4);
+    // Toda opcao fecha exato
+    r.opcoes.forEach((o) => {
+        const enc = o.horasEncontro ?? 4;
+        assert.equal(4 * enc + o.horasDia * o.dias, 90, JSON.stringify(o));
+    });
+    // A primeira e a mais perto de 8 h/dia: encontros de 5 h e campo 7 h x 10 dias
+    assert.deepEqual(r.opcoes[0], { horasDia: 7, dias: 10, horasEncontro: 5 });
+});
+
+test('opcoes do campo: ja fecha exato, sem campo, e encontros ja somando a CH', async () => {
+    const { opcoesDoCampo } = await import('../js/estagio.mjs');
+    const max = { M: 5, T: 5, N: 3 };
+    const enc = (h, d) => ({ tipo: 'encontro', turno: 'Manhã', horasDia: h, diasPlanejados: d });
+    const campo = (h) => ({ tipo: 'campo', turno: 'Noite', horasDia: h, diasPlanejados: 10 });
+    // Sandra: 105 h, 3+3 dias de 5 h, campo 3 h/dia -> 75 h = 25 dias exato
+    const r = opcoesDoCampo({ etapas: [enc(5, 3), campo(3), enc(5, 3)], ch: 105, maxPorLetra: max });
+    assert.equal(r.precisa, 75);
+    assert.equal(r.exato, true);
+    assert.equal(r.dias, 25);
+    assert.ok(!r.opcoes.some((o) => o.horasDia === 3 && o.horasEncontro === null)); // a atual nao repete
+    assert.equal(opcoesDoCampo({ etapas: [enc(5, 3)], ch: 15, maxPorLetra: max }), null);
+    const cheio = opcoesDoCampo({ etapas: [enc(5, 10), campo(3), enc(5, 10)], ch: 90, maxPorLetra: max });
+    assert.ok(cheio.precisa <= 0);
+});

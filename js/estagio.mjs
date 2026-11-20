@@ -143,6 +143,62 @@ export function horasDaEtapa(etapa, maxPorLetra = null) {
     return (etapa.aulas || []).reduce((s, d) => s + horasNoDia(etapa, d, maxPorLetra), 0);
 }
 
+// OPCOES DO ESTAGIO EM CAMPO (pedido de 19/11/2026). No passo 1 da janela, com
+// os encontros planejados (dias x horas/dia), diz quanto falta para o ULTIMO
+// estagio em campo e quais combinacoes de horas/dia x dias fecham a CH exata.
+// Usa o PLANEJADO (coluna Dias), nao os dias ja marcados; sabado e feriado so
+// entram no passo 2 (por isso a tela mostra "cerca de").
+// Se todos os encontros tem as mesmas horas/dia, tambem sugere mudar essas horas
+// (ex.: encontros de 4 h -> 5 h) quando so assim a conta fecha.
+// Devolve null sem estagio em campo. Senao:
+//   { etapa, precisa, horasDia, dias, exato,
+//     opcoes: [{ horasDia, dias, horasEncontro (null = nao muda os encontros) }] }
+export function opcoesDoCampo({ etapas = [], ch = 0, maxPorLetra = {}, limite = 4 }) {
+    let k = -1;
+    etapas.forEach((e, i) => { if (e.tipo === 'campo') k = i; });
+    if (k < 0 || !(ch > 0)) return null;
+    const num = (v) => Number(v) || 0;
+    const encontros = etapas.filter((e) => e.tipo === 'encontro');
+    const outrosCampos = etapas.reduce((s, e, i) => s + (e.tipo === 'campo' && i !== k ? num(e.diasPlanejados) * num(e.horasDia) : 0), 0);
+    const diasEncontro = encontros.reduce((s, e) => s + num(e.diasPlanejados), 0);
+    const horasEncontros = encontros.reduce((s, e) => s + num(e.diasPlanejados) * num(e.horasDia), 0);
+    const campo = etapas[k];
+    const c0 = num(campo.horasDia);
+    const precisa = ch - horasEncontros - outrosCampos;
+    const e0 = encontros.length ? num(encontros[0].horasDia) : 0;
+    const mesmaHora = encontros.length > 0 && encontros.every((e) => num(e.horasDia) === e0);
+    const maxCampo = maxHorasDia(campo.turno, maxPorLetra);
+    const maxEncontro = encontros.length ? Math.min(...encontros.map((e) => maxHorasDia(e.turno, maxPorLetra))) : 0;
+
+    const candidatas = [];
+    const horasDosEncontros = mesmaHora ? Array.from({ length: maxEncontro }, (_, i) => i + 1) : [e0];
+    horasDosEncontros.forEach((e) => {
+        const p = mesmaHora ? ch - diasEncontro * e - outrosCampos : precisa;
+        if (p <= 0) return;
+        for (let c = 1; c <= maxCampo; c++) {
+            if (p % c || p / c > 120) continue;
+            const muda = mesmaHora && e !== e0;
+            // Mais perto do que o coordenador ja escolheu; mexer nos encontros pesa mais.
+            const distancia = Math.abs(c - c0) + (muda ? 1.5 * Math.abs(e - e0) : 0) + (c === 1 ? 5 : 0);
+            candidatas.push({ horasDia: c, dias: p / c, horasEncontro: muda ? e : null, distancia });
+        }
+    });
+    const exato = precisa > 0 && c0 > 0 && precisa % c0 === 0;
+    const opcoes = candidatas
+        .filter((o) => !(exato && o.horasEncontro === null && o.horasDia === c0))
+        .sort((a, b) => a.distancia - b.distancia || a.dias - b.dias)
+        .slice(0, limite)
+        .map(({ horasDia, dias, horasEncontro }) => ({ horasDia, dias, horasEncontro }));
+    return {
+        etapa: k,
+        precisa,
+        horasDia: c0,
+        dias: precisa > 0 && c0 > 0 ? Math.ceil(precisa / c0) : 0,
+        exato,
+        opcoes
+    };
+}
+
 // Dias de um encontro que faltam para repetir o mesmo padrao semanal entre o
 // primeiro e o ultimo dia (a faixa repete os dias da semana nesse intervalo).
 export function diasQueFaltamNoPadrao(dias = [], feriados = new Set()) {

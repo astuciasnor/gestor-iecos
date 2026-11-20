@@ -42,8 +42,11 @@
 .me-caixa {
     display: flex;
     flex-direction: column;
-    width: min(1000px, 100%);
-    max-height: 92vh;
+    /* 19/11/2026: tudo 20% maior (fontes, campos, espacos), na mesma proporcao.
+       As medidas de tela sao divididas pelo zoom para caber na janela. */
+    zoom: 1.2;
+    width: min(1000px, calc((100vw - 32px) / 1.2));
+    max-height: calc(92vh / 1.2);
     border-radius: 12px;
     background: #FFFFFF;
     box-shadow: 0 12px 40px rgba(0, 0, 0, .35);
@@ -78,7 +81,7 @@
 }
 .me-fechar:hover { background: #F4F7F9; color: #0F172A; }
 
-.me-corpo { display: grid; gap: 14px; align-content: start; min-height: 320px; padding: 16px 18px; overflow-y: auto; }
+.me-corpo { display: grid; grid-auto-rows: max-content; gap: 14px; align-content: start; min-height: 320px; padding: 16px 18px; overflow-y: auto; }
 .me-rodape {
     display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px;
     padding: 12px 18px; border-top: 1px solid #DCE5EA; background: #F4F7F9;
@@ -256,3 +259,18 @@
     font-size: 12px; text-align: center;
 }
 .cd-ch-orientador--falta input { border-color: #D97706; background: #FFFBEB; }
+
+/* Opcoes do estagio em campo no passo 1 (19/11/2026) */
+.me-opcoes { margin-top: 10px; font-size: 13px; color: #334155; }
+.me-opcoes:empty { display: none; }
+.me-opcoes-nao { color: #B45309; font-weight: 600; }
+.me-opcoes-lista { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; margin-top: 6px; }
+.me-opcoes-lista > span { font-size: 12.5px; color: #64748B; }
+.me-opcao {
+    display: inline-flex; flex-direction: column; align-items: flex-start; gap: 1px;
+    padding: 5px 10px; border: 1px solid #1E8A5A; border-radius: 8px;
+    background: #F0FAF4; color: #14532D; font: 600 12.5px Inter, system-ui, sans-serif; cursor: pointer;
+}
+.me-opcao small { font-weight: 500; font-size: 11px; color: #3F6B52; }
+.me-opcao:hover { background: #DCF1E5; }
+.me-opcao:focus-visible { outline: 3px solid rgba(30, 138, 90, .35); outline-offset: 2px; }
