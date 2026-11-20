@@ -1,8 +1,8 @@
 // normalizeConflictSlotLabel mora em js/horarios.mjs; e usada aqui e segue exportada daqui.
-import { normalizeConflictSlotLabel } from './horarios.mjs?v=202611192226';
+import { normalizeConflictSlotLabel } from './horarios.mjs?v=202611192241';
 export { normalizeConflictSlotLabel };
-import { store } from './store.js?v=202611192226';
-import { normalizeTurnoKey, getTurnoLetter, mapSlotToTurno, turnoDaTurmaInclui } from './turns.js?v=202611192226';
+import { store } from './store.js?v=202611192241';
+import { normalizeTurnoKey, getTurnoLetter, mapSlotToTurno, turnoDaTurmaInclui } from './turns.js?v=202611192241';
 
 export function normalizeTurnoOfertaKey(value) {
     return normalizeTurnoKey(value);
