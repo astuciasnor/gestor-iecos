@@ -1,18 +1,18 @@
 // Lista de Ofertas: a tabela da aba "Lista de Ofertas" (ofertas da turma, Copiar
 // SIGAA, Editar, Substituir, Trocar e Excluir). Saiu do ui.js em 13/11/2026 sem
 // mudar nada; as funcoes do editor que ela usa chegam por ligarListaOfertas (ver ui.js).
-import { isPendingAllocation } from './allocation_helpers.js?v=202611201529';
-import { refreshTeacherConflictsUI } from './conflitos_ui.js?v=202611201529';
-import { getDisciplinaInfo, getTurmaLabel } from './curso_turma_helpers.js?v=202611201529';
-import { formatDateBR } from './date_utils_ui.js?v=202611201529';
-import { buildCanonicalOfferProjection } from './execution_engine.js?v=202611201529';
-import { getNormalizedIntensiveFaixas } from './faixa_utils.js?v=202611201529';
-import { isPendenteJaAlocada } from './pendentes.mjs?v=202611201529';
-import { buildScopedSigaaAllocationFromOfferFaixa, buildSigaaHorarioResumo, getSigaaCode } from './sigaa_metadata.js?v=202611201529';
-import { store } from './store.js?v=202611201529';
-import { numeroDaSubturma } from './subturmas.mjs?v=202611201529';
-import { copyTextToClipboard, flashButtonCopyState } from './ui_feedback.js?v=202611201529';
-import { weeklyState } from './weekly_state.js?v=202611201529';
+import { isPendingAllocation } from './allocation_helpers.js?v=202611201540';
+import { refreshTeacherConflictsUI } from './conflitos_ui.js?v=202611201540';
+import { getDisciplinaInfo, getTurmaLabel } from './curso_turma_helpers.js?v=202611201540';
+import { formatDateBR } from './date_utils_ui.js?v=202611201540';
+import { buildCanonicalOfferProjection } from './execution_engine.js?v=202611201540';
+import { getNormalizedIntensiveFaixas } from './faixa_utils.js?v=202611201540';
+import { isPendenteJaAlocada } from './pendentes.mjs?v=202611201540';
+import { buildScopedSigaaAllocationFromOfferFaixa, buildSigaaHorarioResumo, getSigaaCode } from './sigaa_metadata.js?v=202611201540';
+import { store } from './store.js?v=202611201540';
+import { numeroDaSubturma } from './subturmas.mjs?v=202611201540';
+import { copyTextToClipboard, flashButtonCopyState } from './ui_feedback.js?v=202611201540';
+import { weeklyState } from './weekly_state.js?v=202611201540';
 
 // Funcoes do ui.js (editor, grade, desfazer, troca...) que a lista chama.
 let ligacoes = {};
