@@ -1,22 +1,22 @@
-import { UNIDADE_PADRAO, unidadeDoCurso } from './unidades.mjs?v=202611201546';
-import { escapeHtml as esc } from './texto.mjs?v=202611201546';
+import { UNIDADE_PADRAO, unidadeDoCurso } from './unidades.mjs?v=202611201709';
+import { escapeHtml as esc } from './texto.mjs?v=202611201709';
 // Menu Indicadores (so leitura: nada e gravado).
 // Sub-aba "Carga por docente": tabela com a CH de cada docente por curso e por PL,
 // do ano inteiro ou de um PL. As contas estao em indicadores.mjs.
 // Sub-aba "Dias do docente": quadro de um docente, uma linha por componente e um
 // quadradinho por dia do PL, com os dias de 2+ componentes (dias_docente.mjs).
-import { store } from './store.js?v=202611201546';
-import { getCursoSiglaDaTurma, getDisciplinaCHGlobal } from './curso_turma_helpers.js?v=202611201546';
-import { formatDateBR } from './date_utils_ui.js?v=202611201546';
-import { UNIDADES } from './docente_nomes.mjs?v=202611201546';
-import { cargaPorDocente, ordenarLinhas, SEM_DOCENTE } from './indicadores.mjs?v=202611201546';
-import { diasDoDocente } from './dias_docente.mjs?v=202611201546';
-import { getCalendarEvents } from './calendar.js?v=202611201546';
-import { withPlanContext } from './calendarios_ui.js?v=202611201546';
-import { getTurmaLabel } from './curso_turma_helpers.js?v=202611201546';
-import { feriadosDaTurma } from './feriados.mjs?v=202611201546';
-import { vividHexColor } from './color_utils.js?v=202611201546';
-import { chDoOrientador } from './estagio.mjs?v=202611201546';
+import { store } from './store.js?v=202611201709';
+import { getCursoSiglaDaTurma, getDisciplinaCHGlobal } from './curso_turma_helpers.js?v=202611201709';
+import { formatDateBR } from './date_utils_ui.js?v=202611201709';
+import { UNIDADES } from './docente_nomes.mjs?v=202611201709';
+import { cargaPorDocente, ordenarLinhas, SEM_DOCENTE } from './indicadores.mjs?v=202611201709';
+import { diasDoDocente } from './dias_docente.mjs?v=202611201709';
+import { getCalendarEvents } from './calendar.js?v=202611201709';
+import { withPlanContext } from './calendarios_ui.js?v=202611201709';
+import { getTurmaLabel } from './curso_turma_helpers.js?v=202611201709';
+import { feriadosDaTurma } from './feriados.mjs?v=202611201709';
+import { vividHexColor, hexToRgb, rgbToHsl, hslToRgb } from './color_utils.js?v=202611201709';
+import { chDoOrientador } from './estagio.mjs?v=202611201709';
 
 const VALIDADE_MS = 2 * 60 * 1000; // depois disso, abrir o menu busca de novo
 
@@ -410,6 +410,12 @@ function desenharDias(alvo, resumo) {
         });
         return [...porComp.values()].reduce((n, c) => n + (c.orientador || c.aulas), 0);
     };
+    // De qual PL e cada componente: os PLs se sobrepoem (PL3 comeca antes do fim
+    // do PL2 e o PL4 antes do fim do PL3), entao o quadro de um PL pode mostrar
+    // componentes de outro - essa linha fica fraca e listrada (20/11/2026).
+    const plDaKey = new Map();
+    entries.forEach((e) => { if (!plDaKey.has(e.key)) plDaKey.set(e.key, e.plano); });
+    const periodoDoPlano = new Map(planos.map(({ meta }) => [meta.key, meta.periodo]));
     let carregadosTotal = 0;
     const blocos = mostrar.map(({ meta }) => {
         const r = diasDoDocente({ termStart: meta.termStart, termEnd: meta.termEnd, entries, feriados });
@@ -420,7 +426,11 @@ function desenharDias(alvo, resumo) {
             return `<section class="dd-quadro is-vazio"><div class="dd-head"><b class="dd-pl">${esc(titulo)}</b><span class="dd-datas">${esc(datas)}</span><span class="dd-sem">Sem aulas neste período</span></div></section>`;
         }
         const indice = quadrosDias.push({ r, rotulos, nomeFeriado }) - 1;
-        return quadroDiasHtml(indice, titulo, datas, r, rotulos, chDoPL(meta.key), aulasDoPL(meta.key));
+        const outroPL = (key) => {
+            const plano = plDaKey.get(key);
+            return plano && plano !== meta.key ? (periodoDoPlano.get(plano) || '') : '';
+        };
+        return quadroDiasHtml(indice, titulo, datas, r, rotulos, chDoPL(meta.key), aulasDoPL(meta.key), outroPL);
     }).join('');
 
     if (resumo) {
@@ -436,13 +446,25 @@ function desenharDias(alvo, resumo) {
     alvo.innerHTML = blocos || '<p class="ind-vazio">Nenhum período letivo neste ano.</p>';
 }
 
+// No quadro Dias do docente o vermelho e o alerta de "2 ou mais componentes".
+// Componente de cor vermelha (ex.: Bioquimica rosa #ffc2c2 vira #ff4f4f no tom
+// forte) e desenhada em rosa aqui, para nao parecer alerta (20/11/2026).
+// So neste quadro: a cor da componente nas outras telas nao muda.
+function semVermelhoDeAlerta(hex) {
+    const { r, g, b } = hexToRgb(hex);
+    const { h, s, l } = rgbToHsl(r, g, b);
+    if (s < 0.08 || (h >= 0.04 && h <= 0.96)) return hex;
+    const out = hslToRgb(0.94, s, l);
+    return `#${[out.r, out.g, out.b].map((v) => Math.max(0, Math.min(255, Math.round(v))).toString(16).padStart(2, '0')).join('')}`;
+}
+
 // Uma coluna por dia do PL (domingo e uma coluna fina); linha 1 = meses,
 // 2 = numero das segundas, 3 = letra do dia, 4 = "Dia a dia", depois as componentes.
-function quadroDiasHtml(indice, titulo, datas, r, rotulos, ch, aulas = ch) {
+function quadroDiasHtml(indice, titulo, datas, r, rotulos, ch, aulas = ch, outroPL = () => '') {
     const col = (k) => k + 2;
     const colunas = r.datas.map((d) => (d.weekday === 0 ? '4.75px' : 'minmax(5.7px, 1fr)')).join(' ');
     const pos = (k, linha) => `grid-column:${col(k)};grid-row:${linha}`;
-    const corDe = (comp) => vividHexColor(comp?.cor || '', '#7fa892');
+    const corDe = (comp) => semVermelhoDeAlerta(vividHexColor(comp?.cor || '', '#7fa892'));
     let html = '';
 
     // Meses
@@ -466,9 +488,11 @@ function quadroDiasHtml(indice, titulo, datas, r, rotulos, ch, aulas = ch) {
 
     const celula = (d, k, linha, classe, cor) => {
         if (d.weekday === 0) return `<span class="dd-d dd-dom" style="${pos(k, linha)}"></span>`;
-        const mesPar = Number(d.date.slice(5, 7)) % 2 === 0 ? ' dd-par' : '';
+        // Primeiro dia do mes (2 se o dia 1 cai no domingo): linha mais forte a
+        // esquerda separa os meses (antes era fundo cinza nos meses pares - confundia).
+        const iniMes = k > 0 && (d.date.endsWith('-01') || (d.date.endsWith('-02') && d.weekday === 1)) ? ' dd-mes-ini' : '';
         const fer = d.feriado && !classe.includes('dd-on') && !classe.includes('dd-n2') ? ' dd-fer' : '';
-        return `<span class="dd-d${mesPar}${fer}${classe}" data-dd-date="${d.date}" style="${pos(k, linha)}${cor ? `;--dd-c:${cor}` : ''}"></span>`;
+        return `<span class="dd-d${iniMes}${fer}${classe}" data-dd-date="${d.date}" style="${pos(k, linha)}${cor ? `;--dd-c:${cor}` : ''}"></span>`;
     };
 
     // Dia a dia (todas as componentes juntas)
@@ -488,13 +512,16 @@ function quadroDiasHtml(indice, titulo, datas, r, rotulos, ch, aulas = ch) {
         const linha = 6 + n;
         const turma = rotulos.get(comp.key) || comp.turmaId;
         const sub = [turma, `${comp.turnos} ${comp.horario}`.trim(), comp.weekdays, `${fmtCH(comp.aulas)}h`].filter(Boolean).join(' · ');
-        html += `<span class="dd-rot" style="grid-row:${linha}" title="${esc(`${comp.disciplina}\n${sub}`)}"><span class="dd-rot-nome">${esc(comp.disciplina)}</span><span class="dd-rot-sub">${esc(sub)}</span></span>`;
+        // Componente de outro PL: cor fraca e listrada (nome tambem mais apagado).
+        const pl = outroPL(comp.key);
+        const dica = pl ? `${comp.disciplina} (componente do ${pl})\n${sub}` : `${comp.disciplina}\n${sub}`;
+        html += `<span class="dd-rot${pl ? ' dd-rot-outro' : ''}" style="grid-row:${linha}" title="${esc(dica)}"><span class="dd-rot-nome">${esc(comp.disciplina)}</span><span class="dd-rot-sub">${esc(sub)}</span></span>`;
         const cor = corDe(comp);
         r.datas.forEach((d, k) => {
             if (!comp.porData[d.date]) { html += celula(d, k, linha, '', ''); return; }
             // Estagio em campo: os alunos no campo, sem o docente (cinza, nao pesa o dia).
             if (comp.porData[d.date].campo) { html += celula(d, k, linha, ' dd-campo', ''); return; }
-            html += celula(d, k, linha, ` dd-on${carregado.has(d.date) ? ' dd-dupla' : ''}`, cor);
+            html += celula(d, k, linha, ` dd-on${pl ? ' dd-outro' : ''}${carregado.has(d.date) ? ' dd-dupla' : ''}`, cor);
         });
     });
 
@@ -515,6 +542,7 @@ function quadroDiasHtml(indice, titulo, datas, r, rotulos, ch, aulas = ch) {
                 <span><i style="background:#6aaee8;box-shadow:inset 0 -4px 0 #d61f1f,inset 0 -5px 0 #fff"></i>aula num dia carregado</span>
                 <span><i style="background:repeating-linear-gradient(135deg,#b9c6bd 0 2px,transparent 2px 4px)"></i>feriado</span>
                 ${r.datas.some((d) => d.emCampo.length) ? '<span><i class="dd-leg-campo"></i>estágio em campo (alunos no campo; não pesa o dia do docente)</span>' : ''}
+                ${r.componentes.some((c) => outroPL(c.key)) ? '<span><i class="dd-leg-outro" style="--dd-c:#6aaee8"></i>aula de outro PL (nas datas deste)</span>' : ''}
                 <span>coluna fina = domingo</span>
             </div>
             <div class="dd-info" aria-live="polite">Passe o mouse num dia para ver as aulas dele.</div>

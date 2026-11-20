@@ -4282,6 +4282,14 @@ body:has(#tab-weekly.active) .top-bar .btn-print { display: none; }
 .dd-rot { padding-right: 12px; min-width: 0; line-height: 1.2; }
 .dd-rot-nome { display: block; font-weight: 800; font-size: 0.74rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .dd-rot-sub { display: block; font-size: 0.68rem; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* Componente de outro PL que cai nas datas deste (PLs sobrepostos): cor fraca
+   com listras brancas por cima (o feriado e listra cinza em quadrado vazio). */
+.dd-rot-outro .dd-rot-nome, .dd-rot-outro .dd-rot-sub { opacity: 0.55; }
+/* .dd-grade na frente: sem ela o .dd-on (mais abaixo) apagava as listras. */
+.dd-grade .dd-d.dd-outro, .dd-legenda .dd-leg-outro {
+    background: repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.88) 0 2px, rgba(255, 255, 255, 0.62) 2px 4px), var(--dd-c);
+    border-color: color-mix(in srgb, var(--dd-c) 55%, #fff);
+}
 .dd-mes {
     align-self: stretch; padding-left: 4px; border-left: 2px dotted #2e7d4f; overflow: hidden; white-space: nowrap;
     font-size: 0.7rem; font-weight: 800; color: var(--text-muted);
@@ -4299,7 +4307,8 @@ body:has(#tab-weekly.active) .top-bar .btn-print { display: none; }
 .dd-ch-total { color: #173728; }
 .dd-ch-pls { color: var(--text-muted); font-size: 0.8rem; }
 .dd-d { display: block; min-width: 0; height: 16px; border: 1px solid #d5e0da; border-radius: 2px; background: #fff; cursor: pointer; }
-.dd-d.dd-par { background: #edf3ef; }
+/* Comeco de cada mes: linha verde a esquerda (continua a linha do nome do mes). */
+.dd-grade .dd-d.dd-mes-ini { border-left: 2px solid #2e7d4f; }
 .dd-d.dd-dom { background: transparent; border-color: transparent; cursor: default; }
 .dd-d.dd-fer { background: repeating-linear-gradient(135deg, #b9c6bd 0 2px, transparent 2px 4px); border-color: #b9c6bd; }
 .dd-d.dd-on { background: var(--dd-c); border-color: rgba(23, 55, 40, 0.3); }
