@@ -199,6 +199,34 @@ export function opcoesDoCampo({ etapas = [], ch = 0, maxPorLetra = {}, limite = 
     };
 }
 
+// QUANTO FALTA NA ETAPA (passo 2, pedido de 19/11/2026): um aviso curto ao lado
+// de Dias/Horas: vermelho enquanto falta, verde com "Falta 0 dias".
+// etapa: uma etapa ja calculada por calcularEstagio (com aulas, calculado, precisa).
+// Devolve { ok, texto }.
+export function faltaDaEtapa(etapa, maxPorLetra = null) {
+    const n = (v) => Number(v) || 0;
+    const dias = (q) => `${q} ${q === 1 ? 'dia' : 'dias'}`;
+    const marcados = (etapa?.aulas || []).length;
+    if (etapa?.tipo === 'campo') {
+        if (!(etapa.diasSemana || []).length) return { ok: false, texto: 'Escolha os dias da semana' };
+        if (etapa.calculado) {
+            const tem = horasDaEtapa(etapa, maxPorLetra);
+            if (n(etapa.precisa) <= 0) return { ok: false, texto: 'Os encontros já somam a CH toda' };
+            if (tem < etapa.precisa) return { ok: false, texto: `Faltam ${etapa.precisa - tem} h: não cabe antes da próxima etapa` };
+            if (tem > etapa.precisa) return { ok: false, texto: `Sobra ${tem - etapa.precisa} h no último dia` };
+            return { ok: true, texto: 'Falta 0 dias ✔' };
+        }
+        const falta = n(etapa.diasPlanejados) - marcados;
+        return falta > 0
+            ? { ok: false, texto: `Faltam ${dias(falta)}: não cabem antes da próxima etapa` }
+            : { ok: true, texto: 'Falta 0 dias ✔' };
+    }
+    const falta = n(etapa?.diasPlanejados) - marcados;
+    if (falta > 0) return { ok: false, texto: `Falta selecionar ${dias(falta)}` };
+    if (falta < 0) return { ok: false, texto: `Passou ${dias(-falta)}: desmarque` };
+    return { ok: true, texto: 'Falta 0 dias ✔' };
+}
+
 // Dias de um encontro que faltam para repetir o mesmo padrao semanal entre o
 // primeiro e o ultimo dia (a faixa repete os dias da semana nesse intervalo).
 export function diasQueFaltamNoPadrao(dias = [], feriados = new Set()) {

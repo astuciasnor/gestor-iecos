@@ -258,3 +258,19 @@ test('opcoes do campo: ja fecha exato, sem campo, e encontros ja somando a CH', 
     const cheio = opcoesDoCampo({ etapas: [enc(5, 10), campo(3), enc(5, 10)], ch: 90, maxPorLetra: max });
     assert.ok(cheio.precisa <= 0);
 });
+
+// Aviso "Falta selecionar N dias" do passo 2 (pedido de 19/11/2026).
+test('falta da etapa: encontro, campo com dias e campo calculado', async () => {
+    const { faltaDaEtapa } = await import('../js/estagio.mjs');
+    const enc = (planejados, marcados) => ({ tipo: 'encontro', diasPlanejados: planejados, horasDia: 4, aulas: ['2027-08-02', '2027-08-03', '2027-08-04'].slice(0, marcados) });
+    assert.deepEqual(faltaDaEtapa(enc(3, 1)), { ok: false, texto: 'Falta selecionar 2 dias' });
+    assert.deepEqual(faltaDaEtapa(enc(3, 2)), { ok: false, texto: 'Falta selecionar 1 dia' });
+    assert.deepEqual(faltaDaEtapa(enc(3, 3)), { ok: true, texto: 'Falta 0 dias ✔' });
+    assert.deepEqual(faltaDaEtapa(enc(2, 3)), { ok: false, texto: 'Passou 1 dia: desmarque' });
+    const campo = (extra) => ({ tipo: 'campo', diasSemana: [1, 3], horasDia: 3, aulas: ['2027-08-02', '2027-08-04'], ...extra });
+    assert.equal(faltaDaEtapa(campo({ diasSemana: [] })).texto, 'Escolha os dias da semana');
+    assert.equal(faltaDaEtapa(campo({ diasPlanejados: 2 })).ok, true);
+    assert.equal(faltaDaEtapa(campo({ diasPlanejados: 5 })).texto, 'Faltam 3 dias: não cabem antes da próxima etapa');
+    assert.equal(faltaDaEtapa(campo({ calculado: true, precisa: 6 })).ok, true);
+    assert.equal(faltaDaEtapa(campo({ calculado: true, precisa: 9 })).texto, 'Faltam 3 h: não cabe antes da próxima etapa');
+});

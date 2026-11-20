@@ -42,8 +42,8 @@
 .me-caixa {
     display: flex;
     flex-direction: column;
-    width: min(1000px, 100%);
-    max-height: 92vh;
+    width: min(1100px, 100%);   /* 19/11/2026: +10% na largura */
+    max-height: 96vh;           /* e um pouco mais de altura */
     border-radius: 12px;
     background: #FFFFFF;
     box-shadow: 0 12px 40px rgba(0, 0, 0, .35);
@@ -78,7 +78,7 @@
 }
 .me-fechar:hover { background: #F4F7F9; color: #0F172A; }
 
-.me-corpo { display: grid; grid-auto-rows: max-content; gap: 14px; align-content: start; min-height: 320px; padding: 16px 18px; overflow-y: auto; }
+.me-corpo { display: grid; grid-auto-rows: max-content; gap: 14px; align-content: start; min-height: 336px; padding: 16px 18px; overflow-y: auto; }
 .me-rodape {
     display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px;
     padding: 12px 18px; border-top: 1px solid #DCE5EA; background: #F4F7F9;
@@ -173,7 +173,9 @@
 .me-dia--feriado { border: 1px dashed #B03A5B; }
 .me-dia--apagado { opacity: .3; }
 .me-dia:disabled { cursor: default; }
-.me-campos { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; font-size: 13px; }
+.me-campos { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; font-size: 15px; }
+.me-campos .me-rotulo { font-size: 15px; }
+.me-campos input { font-size: 15px; }
 .me-campos label { display: flex; align-items: center; gap: 8px; color: #64748B; }
 .me-chips { display: flex; flex-wrap: wrap; gap: 4px; }
 .me-chip {
@@ -181,7 +183,7 @@
     background: #FFFFFF; color: #64748B; font: 600 12px Inter, system-ui, sans-serif; cursor: pointer;
 }
 .me-chip[aria-pressed="true"] { border-color: var(--c); background: var(--c); color: #FFFFFF; }
-.me-resumo { font-size: 13px; font-weight: 600; }
+.me-resumo { font-size: 15px; font-weight: 600; }
 
 .me-regua { overflow-x: auto; overflow-y: hidden; }
 .me-regua-int { min-width: 700px; }
@@ -271,3 +273,9 @@
 .me-opcao small { font-weight: 500; font-size: 11px; color: #3F6B52; }
 .me-opcao:hover { background: #DCF1E5; }
 .me-opcao:focus-visible { outline: 3px solid rgba(30, 138, 90, .35); outline-offset: 2px; }
+
+/* Passo 2: quanto falta na etapa (19/11/2026) */
+.me-falta { padding: 5px 12px; border-radius: 999px; font-size: 15px; font-weight: 700; }
+.me-falta:empty { display: none; }
+.me-falta--erro { background: #FDECEC; color: #B91C1C; }
+.me-falta--ok { background: #DCF1E5; color: #15803D; }

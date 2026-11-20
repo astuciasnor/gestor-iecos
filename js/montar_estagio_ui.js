@@ -8,7 +8,7 @@
 // As contas ficam em js/estagio.mjs (testadas); aqui so a tela.
 import {
     calcularEstagio, faixasDoEstagio, expressaoSigaaDaEtapa, letrasDoTurno, turnoQueMostra,
-    choqueDaEtapa, maxHorasDia, limitesDoMes, horasDaEtapa, horasNoSabado, opcoesDoCampo
+    choqueDaEtapa, maxHorasDia, limitesDoMes, horasDaEtapa, horasNoSabado, opcoesDoCampo, faltaDaEtapa
 } from './estagio.mjs?v=202611192226';
 import { addDaysISO, weekdayOf } from './datas.mjs?v=202611192226';
 import { MAX_FAIXAS } from './faixas.mjs?v=202611192226';
@@ -310,6 +310,13 @@ function preencherInfoEtapa(r) {
     }
     const termina = modal.querySelector('.me-termina');
     if (termina) termina.textContent = calc.aulas.length ? fmt(calc.aulas[calc.aulas.length - 1]) : '—';
+    // "Falta selecionar N dias" (vermelho) ate completar: "Falta 0 dias" (verde).
+    const falta = modal.querySelector('.me-falta');
+    if (falta) {
+        const f = faltaDaEtapa(calc, estado.maxPorLetra);
+        falta.textContent = f.texto;
+        falta.className = `me-falta ${f.ok ? 'me-falta--ok' : 'me-falta--erro'}`;
+    }
 }
 
 function htmlPasso2(r) {
@@ -332,11 +339,13 @@ function htmlPasso2(r) {
                 : inputDias}
             ${inputHoras}
             <span class="me-rotulo">Termina: <b class="me-dado me-termina"></b></span>
+            <span class="me-falta" role="status"></span>
         </div>` : `
         <div class="me-campos me-cor-${k + 1}">
             ${inputDias}
             <span class="me-rotulo">Marcados: <b class="me-marcados"></b></span>
             ${inputHoras}
+            <span class="me-falta" role="status"></span>
         </div>`;
     return `
         ${htmlAbas(r)}
