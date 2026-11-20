@@ -1,6 +1,6 @@
 {
   "meta": {
-    "generated_at": "2026-11-20T11:53:07",
+    "generated_at": "2026-11-20T15:46:28",
     "source_file": "planilha_base.xlsx"
   },
   "docentes": [
@@ -3093,7 +3093,8 @@
       "turno": "Manhã",
       "turma_id": "EP2022",
       "turma_label": "EP2022",
-      "periodos": "pares"
+      "periodos": "pares",
+      "campus": "Bragança"
     },
     {
       "sigla": "EP",
@@ -3101,7 +3102,8 @@
       "turno": "Tarde",
       "turma_id": "EP2023",
       "turma_label": "EP2023",
-      "periodos": "pares"
+      "periodos": "pares",
+      "campus": "Bragança"
     },
     {
       "sigla": "EP",
@@ -3109,7 +3111,8 @@
       "turno": "Manhã",
       "turma_id": "EP2024",
       "turma_label": "EP2024",
-      "periodos": "pares"
+      "periodos": "pares",
+      "campus": "Bragança"
     },
     {
       "sigla": "EP",
@@ -3117,7 +3120,8 @@
       "turno": "Tarde",
       "turma_id": "EP2025",
       "turma_label": "EP2025",
-      "periodos": "pares"
+      "periodos": "pares",
+      "campus": "Bragança"
     },
     {
       "sigla": "EP",
@@ -3125,7 +3129,8 @@
       "turno": "Manhã",
       "turma_id": "EP2026",
       "turma_label": "EP2026",
-      "periodos": "pares"
+      "periodos": "pares",
+      "campus": "Bragança"
     },
     {
       "sigla": "EP",
@@ -3133,7 +3138,8 @@
       "turno": "Tarde",
       "turma_id": "EP2027",
       "turma_label": "EP2027",
-      "periodos": "pares"
+      "periodos": "pares",
+      "campus": "Bragança"
     },
     {
       "sigla": "EP",
@@ -3141,7 +3147,8 @@
       "turno": "Manhã+Tarde",
       "turma_id": "EP2027C",
       "turma_label": "EP2027C",
-      "periodos": "impares"
+      "periodos": "impares",
+      "campus": "Cametá"
     },
     {
       "sigla": "CB",
@@ -3149,7 +3156,8 @@
       "turno": "Manhã",
       "turma_id": "CB2022",
       "turma_label": "CB2022",
-      "periodos": "pares"
+      "periodos": "pares",
+      "campus": "Bragança"
     },
     {
       "sigla": "CB",
@@ -3157,7 +3165,8 @@
       "turno": "Tarde",
       "turma_id": "CB2023",
       "turma_label": "CB2023",
-      "periodos": "pares"
+      "periodos": "pares",
+      "campus": "Bragança"
     },
     {
       "sigla": "CB",
@@ -3165,7 +3174,8 @@
       "turno": "Manhã",
       "turma_id": "CB2024",
       "turma_label": "CB2024",
-      "periodos": "pares"
+      "periodos": "pares",
+      "campus": "Bragança"
     },
     {
       "sigla": "CB",
@@ -3173,7 +3183,8 @@
       "turno": "Tarde",
       "turma_id": "CB2025",
       "turma_label": "CB2025",
-      "periodos": "pares"
+      "periodos": "pares",
+      "campus": "Bragança"
     },
     {
       "sigla": "CB",
@@ -3181,7 +3192,8 @@
       "turno": "Manhã",
       "turma_id": "CB2026",
       "turma_label": "CB2026",
-      "periodos": "pares"
+      "periodos": "pares",
+      "campus": "Bragança"
     },
     {
       "sigla": "CB",
@@ -3189,7 +3201,8 @@
       "turno": "Tarde",
       "turma_id": "CB2027",
       "turma_label": "CB2027",
-      "periodos": "pares"
+      "periodos": "pares",
+      "campus": "Bragança"
     },
     {
       "sigla": "CN",
@@ -3197,7 +3210,8 @@
       "turno": "Tarde",
       "turma_id": "CN2022",
       "turma_label": "CN2022",
-      "periodos": "pares"
+      "periodos": "pares",
+      "campus": "Bragança"
     },
     {
       "sigla": "CN",
@@ -3205,7 +3219,8 @@
       "turno": "Manhã",
       "turma_id": "CN2023",
       "turma_label": "CN2023",
-      "periodos": "pares"
+      "periodos": "pares",
+      "campus": "Bragança"
     },
     {
       "sigla": "CN",
@@ -3213,7 +3228,8 @@
       "turno": "Tarde",
       "turma_id": "CN2024",
       "turma_label": "CN2024",
-      "periodos": "pares"
+      "periodos": "pares",
+      "campus": "Bragança"
     },
     {
       "sigla": "CN",
@@ -3221,7 +3237,8 @@
       "turno": "Manhã",
       "turma_id": "CN2025",
       "turma_label": "CN2025",
-      "periodos": "pares"
+      "periodos": "pares",
+      "campus": "Bragança"
     },
     {
       "sigla": "CN",
@@ -3229,7 +3246,8 @@
       "turno": "Tarde",
       "turma_id": "CN2026",
       "turma_label": "CN2026",
-      "periodos": "pares"
+      "periodos": "pares",
+      "campus": "Bragança"
     },
     {
       "sigla": "CN",
@@ -3237,7 +3255,8 @@
       "turno": "Manhã",
       "turma_id": "CN2027",
       "turma_label": "CN2027",
-      "periodos": "pares"
+      "periodos": "pares",
+      "campus": "Bragança"
     },
     {
       "sigla": "MT",
@@ -3245,7 +3264,8 @@
       "turno": "Manhã",
       "turma_id": "MT2022",
       "turma_label": "MT2022",
-      "periodos": "pares"
+      "periodos": "pares",
+      "campus": "Bragança"
     },
     {
       "sigla": "MT",
@@ -3253,7 +3273,8 @@
       "turno": "Tarde",
       "turma_id": "MT2023",
       "turma_label": "MT2023",
-      "periodos": "pares"
+      "periodos": "pares",
+      "campus": "Bragança"
     },
     {
       "sigla": "MT",
@@ -3261,7 +3282,8 @@
       "turno": "Tarde",
       "turma_id": "MT2024",
       "turma_label": "MT2024",
-      "periodos": "pares"
+      "periodos": "pares",
+      "campus": "Bragança"
     },
     {
       "sigla": "MT",
@@ -3269,7 +3291,8 @@
       "turno": "noite",
       "turma_id": "MT2025",
       "turma_label": "MT2025",
-      "periodos": "pares"
+      "periodos": "pares",
+      "campus": "Bragança"
     },
     {
       "sigla": "MT",
@@ -3277,7 +3300,8 @@
       "turno": "tarde",
       "turma_id": "MT2026",
       "turma_label": "MT2026",
-      "periodos": "pares"
+      "periodos": "pares",
+      "campus": "Bragança"
     },
     {
       "sigla": "MT",
@@ -3285,7 +3309,8 @@
       "turno": "Noite",
       "turma_id": "MT2027",
       "turma_label": "MT2027",
-      "periodos": "pares"
+      "periodos": "pares",
+      "campus": "Bragança"
     }
   ],
   "horarios": [
@@ -3661,7 +3686,34 @@
       "data": "2026-07-08",
       "feriado": "Fundação de Bragança",
       "dia": "Quarta-feira",
-      "tipo": "Municipal"
+      "tipo": "Municipal",
+      "campus": "Bragança",
+      "turmas": [
+        "EP2022",
+        "EP2023",
+        "EP2024",
+        "EP2025",
+        "EP2026",
+        "EP2027",
+        "CB2022",
+        "CB2023",
+        "CB2024",
+        "CB2025",
+        "CB2026",
+        "CB2027",
+        "CN2022",
+        "CN2023",
+        "CN2024",
+        "CN2025",
+        "CN2026",
+        "CN2027",
+        "MT2022",
+        "MT2023",
+        "MT2024",
+        "MT2025",
+        "MT2026",
+        "MT2027"
+      ]
     },
     {
       "data": "2026-08-15",
@@ -3709,7 +3761,34 @@
       "data": "2026-12-26",
       "feriado": "Dia de São Benedito",
       "dia": "Sábado",
-      "tipo": "Municipal"
+      "tipo": "Municipal",
+      "campus": "Bragança",
+      "turmas": [
+        "EP2022",
+        "EP2023",
+        "EP2024",
+        "EP2025",
+        "EP2026",
+        "EP2027",
+        "CB2022",
+        "CB2023",
+        "CB2024",
+        "CB2025",
+        "CB2026",
+        "CB2027",
+        "CN2022",
+        "CN2023",
+        "CN2024",
+        "CN2025",
+        "CN2026",
+        "CN2027",
+        "MT2022",
+        "MT2023",
+        "MT2024",
+        "MT2025",
+        "MT2026",
+        "MT2027"
+      ]
     },
     {
       "data": "2027-01-01",
@@ -3751,7 +3830,34 @@
       "data": "2027-07-08",
       "feriado": "Fundação de Bragança",
       "dia": "Quinta-feira",
-      "tipo": "Municipal"
+      "tipo": "Municipal",
+      "campus": "Bragança",
+      "turmas": [
+        "EP2022",
+        "EP2023",
+        "EP2024",
+        "EP2025",
+        "EP2026",
+        "EP2027",
+        "CB2022",
+        "CB2023",
+        "CB2024",
+        "CB2025",
+        "CB2026",
+        "CB2027",
+        "CN2022",
+        "CN2023",
+        "CN2024",
+        "CN2025",
+        "CN2026",
+        "CN2027",
+        "MT2022",
+        "MT2023",
+        "MT2024",
+        "MT2025",
+        "MT2026",
+        "MT2027"
+      ]
     },
     {
       "data": "2027-08-15",
@@ -3769,7 +3875,34 @@
       "data": "2027-10-07",
       "feriado": "N. Sra. do Rosário (Padroeira)",
       "dia": "Quinta-feira",
-      "tipo": "Municipal"
+      "tipo": "Municipal",
+      "campus": "Bragança",
+      "turmas": [
+        "EP2022",
+        "EP2023",
+        "EP2024",
+        "EP2025",
+        "EP2026",
+        "EP2027",
+        "CB2022",
+        "CB2023",
+        "CB2024",
+        "CB2025",
+        "CB2026",
+        "CB2027",
+        "CN2022",
+        "CN2023",
+        "CN2024",
+        "CN2025",
+        "CN2026",
+        "CN2027",
+        "MT2022",
+        "MT2023",
+        "MT2024",
+        "MT2025",
+        "MT2026",
+        "MT2027"
+      ]
     },
     {
       "data": "2027-10-12",
@@ -3805,7 +3938,34 @@
       "data": "2027-12-26",
       "feriado": "Dia de São Benedito",
       "dia": "Domingo",
-      "tipo": "Municipal"
+      "tipo": "Municipal",
+      "campus": "Bragança",
+      "turmas": [
+        "EP2022",
+        "EP2023",
+        "EP2024",
+        "EP2025",
+        "EP2026",
+        "EP2027",
+        "CB2022",
+        "CB2023",
+        "CB2024",
+        "CB2025",
+        "CB2026",
+        "CB2027",
+        "CN2022",
+        "CN2023",
+        "CN2024",
+        "CN2025",
+        "CN2026",
+        "CN2027",
+        "MT2022",
+        "MT2023",
+        "MT2024",
+        "MT2025",
+        "MT2026",
+        "MT2027"
+      ]
     },
     {
       "data": "2026-11-30",
@@ -3887,6 +4047,254 @@
         "CB2027",
         "CN2027"
       ]
+    },
+    {
+      "data": "2027-10-28",
+      "feriado": "Dia do Servidor Público",
+      "dia": "Quinta-feira",
+      "tipo": "Nacional"
+    },
+    {
+      "data": "2028-01-01",
+      "feriado": "Confraternização Universal",
+      "dia": "Sábado",
+      "tipo": "Nacional"
+    },
+    {
+      "data": "2027-12-08",
+      "feriado": "N. Sra. da Conceição",
+      "dia": "Quarta-feira",
+      "tipo": "Municipal",
+      "campus": "Abaetetuba",
+      "turmas": []
+    },
+    {
+      "data": "2027-01-20",
+      "feriado": "São Sebastião",
+      "dia": "Quarta-feira",
+      "tipo": "Municipal",
+      "campus": "Altamira",
+      "turmas": []
+    },
+    {
+      "data": "2027-11-06",
+      "feriado": "Aniversário de Altamira",
+      "dia": "Sábado",
+      "tipo": "Municipal (ponto facultativo)",
+      "campus": "Altamira",
+      "turmas": []
+    },
+    {
+      "data": "2027-01-03",
+      "feriado": "Aniversário de Ananindeua",
+      "dia": "Domingo",
+      "tipo": "Municipal (ponto facultativo)",
+      "campus": "Ananindeua",
+      "turmas": []
+    },
+    {
+      "data": "2027-11-27",
+      "feriado": "N. Sra. das Graças",
+      "dia": "Sábado",
+      "tipo": "Municipal (ponto facultativo)",
+      "campus": "Ananindeua",
+      "turmas": []
+    },
+    {
+      "data": "2027-12-08",
+      "feriado": "N. Sra. da Conceição",
+      "dia": "Quarta-feira",
+      "tipo": "Municipal",
+      "campus": "Ananindeua",
+      "turmas": []
+    },
+    {
+      "data": "2027-01-12",
+      "feriado": "Aniversário de Belém",
+      "dia": "Terça-feira",
+      "tipo": "Municipal (ponto facultativo)",
+      "campus": "Belém",
+      "turmas": []
+    },
+    {
+      "data": "2027-12-08",
+      "feriado": "N. Sra. da Conceição",
+      "dia": "Quarta-feira",
+      "tipo": "Municipal",
+      "campus": "Belém",
+      "turmas": []
+    },
+    {
+      "data": "2027-01-20",
+      "feriado": "São Sebastião",
+      "dia": "Quarta-feira",
+      "tipo": "Municipal",
+      "campus": "Breves",
+      "turmas": []
+    },
+    {
+      "data": "2027-07-26",
+      "feriado": "N. Sra. Santana",
+      "dia": "Segunda-feira",
+      "tipo": "Municipal",
+      "campus": "Breves",
+      "turmas": []
+    },
+    {
+      "data": "2027-11-30",
+      "feriado": "Aniversário de Breves",
+      "dia": "Terça-feira",
+      "tipo": "Municipal (ponto facultativo)",
+      "campus": "Breves",
+      "turmas": []
+    },
+    {
+      "data": "2027-06-24",
+      "feriado": "São João (Padroeiro)",
+      "dia": "Quinta-feira",
+      "tipo": "Municipal",
+      "campus": "Cametá",
+      "turmas": [
+        "EP2027C"
+      ]
+    },
+    {
+      "data": "2027-12-24",
+      "feriado": "Aniversário de Cametá",
+      "dia": "Sexta-feira",
+      "tipo": "Municipal (ponto facultativo)",
+      "campus": "Cametá",
+      "turmas": [
+        "EP2027C"
+      ]
+    },
+    {
+      "data": "2027-10-04",
+      "feriado": "São Francisco de Assis",
+      "dia": "Segunda-feira",
+      "tipo": "Municipal",
+      "campus": "Capanema",
+      "turmas": []
+    },
+    {
+      "data": "2027-11-05",
+      "feriado": "Aniversário de Capanema",
+      "dia": "Sexta-feira",
+      "tipo": "Municipal (ponto facultativo)",
+      "campus": "Capanema",
+      "turmas": []
+    },
+    {
+      "data": "2027-12-08",
+      "feriado": "N. Sra. do Perpétuo Socorro",
+      "dia": "Quarta-feira",
+      "tipo": "Municipal",
+      "campus": "Capanema",
+      "turmas": []
+    },
+    {
+      "data": "2027-01-28",
+      "feriado": "Aniversário de Castanhal",
+      "dia": "Quinta-feira",
+      "tipo": "Municipal (ponto facultativo)",
+      "campus": "Castanhal",
+      "turmas": []
+    },
+    {
+      "data": "2027-03-19",
+      "feriado": "São José (Padroeiro)",
+      "dia": "Sexta-feira",
+      "tipo": "Municipal",
+      "campus": "Castanhal",
+      "turmas": []
+    },
+    {
+      "data": "2027-12-08",
+      "feriado": "N. Sra. da Conceição",
+      "dia": "Quarta-feira",
+      "tipo": "Municipal",
+      "campus": "Castanhal",
+      "turmas": []
+    },
+    {
+      "data": "2027-09-08",
+      "feriado": "N. Sra. do Socorro (Padroeira)",
+      "dia": "Quarta-feira",
+      "tipo": "Municipal",
+      "campus": "Salinópolis",
+      "turmas": []
+    },
+    {
+      "data": "2027-10-22",
+      "feriado": "Aniversário de Salinópolis",
+      "dia": "Sexta-feira",
+      "tipo": "Municipal (ponto facultativo)",
+      "campus": "Salinópolis",
+      "turmas": []
+    },
+    {
+      "data": "2027-01-20",
+      "feriado": "Aniversário de Soure",
+      "dia": "Quarta-feira",
+      "tipo": "Municipal (ponto facultativo)",
+      "campus": "Soure",
+      "turmas": []
+    },
+    {
+      "data": "2027-06-29",
+      "feriado": "São Pedro (Padroeiro)",
+      "dia": "Terça-feira",
+      "tipo": "Municipal",
+      "campus": "Soure",
+      "turmas": []
+    },
+    {
+      "data": "2027-11-30",
+      "feriado": "Dia do Evangélico",
+      "dia": "Terça-feira",
+      "tipo": "Municipal",
+      "campus": "Soure",
+      "turmas": []
+    },
+    {
+      "data": "2027-12-08",
+      "feriado": "Imaculada Conceição",
+      "dia": "Quarta-feira",
+      "tipo": "Municipal (ponto facultativo)",
+      "campus": "Soure",
+      "turmas": []
+    },
+    {
+      "data": "2027-03-19",
+      "feriado": "São José (Padroeiro)",
+      "dia": "Sexta-feira",
+      "tipo": "Municipal",
+      "campus": "Tucuruí",
+      "turmas": []
+    },
+    {
+      "data": "2027-10-31",
+      "feriado": "Dia da Consciência Evangélica",
+      "dia": "Domingo",
+      "tipo": "Municipal",
+      "campus": "Tucuruí",
+      "turmas": []
+    },
+    {
+      "data": "2027-12-08",
+      "feriado": "N. Sra. da Conceição",
+      "dia": "Quarta-feira",
+      "tipo": "Municipal",
+      "campus": "Tucuruí",
+      "turmas": []
+    },
+    {
+      "data": "2027-12-31",
+      "feriado": "Aniversário de Tucuruí",
+      "dia": "Sexta-feira",
+      "tipo": "Municipal (ponto facultativo)",
+      "campus": "Tucuruí",
+      "turmas": []
     }
   ],
   "periodos_letivos": [

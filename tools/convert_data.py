@@ -17,6 +17,7 @@ componentes:
 turmas:
   sigla | ano | turno | turma_id (opcional; padrao sigla+ano, ex.: EP2027C)
   | periodos (opcional; "impares" = so PL1/PL3, padrao "pares")
+  | campus (opcional; padrao Bragança - ver CAMPUS_PADRAO)
 
 cursos:
   sigla | curso | regime (opcional) | unidade (opcional; IECOS, CBRAG...;
@@ -28,6 +29,8 @@ horarios:
 feriados:
   data | feriado | dia | tipo | turmas (opcional; ex.: "EP2027, CB2027" = so
   essas turmas, como Recepcao Calouros; vazio = todas as turmas)
+  | campus (opcional; ex.: "Cametá" = feriado municipal so das turmas desse
+  campus; vazio = todos os campi)
 
 periodos_letivos:
   ano | periodo_letivo | inicio | fim
@@ -58,6 +61,10 @@ from openpyxl.utils.datetime import from_excel
 # Unidade de cada curso quando a aba cursos nao tem a coluna "unidade".
 # Matematica (FAMAT) e do Campus Braganca (CBRAG); os demais, do IECOS.
 UNIDADE_PADRAO = {"MT": "CBRAG"}
+
+# Campus da turma quando a coluna "campus" da aba turmas esta vazia.
+# Tem que ser igual a CAMPUS_PADRAO de js/feriados.mjs.
+CAMPUS_PADRAO = "Bragança"
 
 def norm_key(value: Any) -> str:
     if value is None:
@@ -272,6 +279,8 @@ def build_json_from_excel(xlsx_path: Path) -> Dict[str, Any]:
                 "turma_label": turma_id,
                 # "impares": turma so tem aulas em PL1/PL3 (blocos contados nesses periodos)
                 "periodos": to_str(row.get("periodos")).lower() or "pares",
+                # Campus onde a turma tem aula: decide os feriados municipais.
+                "campus": to_str(row.get("campus")) or CAMPUS_PADRAO,
             }
         )
     data["turmas"] = turmas_out
@@ -327,7 +336,17 @@ def build_json_from_excel(xlsx_path: Path) -> Dict[str, Any]:
         }
         # Coluna opcional "turmas": bloqueio so dessas turmas (ver js/feriados.mjs).
         turmas = [t.strip() for t in re.split(r"[,;]", to_str(row.get("turmas"))) if t.strip()]
-        if turmas:
+        # Coluna opcional "campus": feriado municipal, so das turmas desse campus.
+        # A lista "turmas" e montada aqui (turmas da aba turmas com esse campus);
+        # campus sem turma nenhuma fica com lista vazia e nao bloqueia ninguem.
+        campus = to_str(row.get("campus"))
+        if campus:
+            item["campus"] = campus
+            do_campus = [t["turma_id"] for t in turmas_out
+                         if norm_key(t["campus"]) == norm_key(campus)]
+            turmas = [t for t in do_campus if not turmas or t in turmas]
+            item["turmas"] = turmas
+        elif turmas:
             item["turmas"] = turmas
         feriados_out.append(item)
     data["feriados"] = feriados_out

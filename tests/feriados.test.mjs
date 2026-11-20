@@ -35,3 +35,26 @@ test('lista vazia ou ausente nao quebra', () => {
   assert.equal(datasFeriadoDaTurma(undefined, 'EP2027').size, 0);
   assert.equal(datasFeriadoDaTurma([], '').size, 0);
 });
+
+// Feriado municipal por campus (convert_data.py ja preenche "turmas").
+const municipais = [
+  { data: '2027-07-08', feriado: 'Aniversário de Bragança', campus: 'Bragança', turmas: ['EP2027', 'CB2027'] },
+  { data: '2027-06-24', feriado: 'São João', campus: 'Cametá', turmas: ['EP2027C'] },
+  { data: '2027-01-20', feriado: 'São Sebastião', campus: 'Altamira', turmas: [] }
+];
+
+test('feriado de Braganca nao vale para a turma de Cameta, e vice-versa', () => {
+  assert.equal(feriadoValeParaTurma(municipais[0], 'EP2027'), true);
+  assert.equal(feriadoValeParaTurma(municipais[0], 'EP2027C'), false);
+  assert.equal(feriadoValeParaTurma(municipais[1], 'EP2027C'), true);
+  assert.equal(feriadoValeParaTurma(municipais[1], 'EP2027'), false);
+});
+
+test('campus sem turma nao bloqueia ninguem', () => {
+  assert.equal(feriadoValeParaTurma(municipais[2], 'EP2027'), false);
+  assert.equal(feriadoValeParaTurma(municipais[2], ''), false);
+});
+
+test('tela sem turma ve os municipais de Braganca (sede), nao os de outros campi', () => {
+  assert.deepEqual([...datasFeriadoDaTurma(municipais, '')], ['2027-07-08']);
+});
