@@ -1,21 +1,37 @@
-import { store } from './store.js?v=202611200824';
-import { getCalendarEvents } from './calendar.js?v=202611200824';
-import { mapSlotToTurno } from './turns.js?v=202611200824';
-import { addDaysISO, timeToMinutes, toISODate } from './date_utils_ui.js?v=202611200824';
-import { normalizeConflictSlotLabel, getNativeTurnoValueForAllocation, getQuadroTodosRegimes } from './turno_helpers.js?v=202611200824';
-import { aulaContaComoChoque } from './estagio.mjs?v=202611200824';
-import { isPriorityRegularAllocation } from './allocation_helpers.js?v=202611200824';
-import { datasFeriadoDaTurma } from './feriados.mjs?v=202611200824';
-import { computeRemainingFractionalHours, generateAllocationOccurrences, validateOccurrenceWithinSemesterBounds } from './academic_rules.mjs?v=202611200824';
+import { store } from './store.js?v=202611201339';
+import { getCalendarEvents } from './calendar.js?v=202611201339';
+import { mapSlotToTurno } from './turns.js?v=202611201339';
+import { addDaysISO, timeToMinutes, toISODate } from './date_utils_ui.js?v=202611201339';
+import { normalizeConflictSlotLabel, getNativeTurnoValueForAllocation, getQuadroTodosRegimes } from './turno_helpers.js?v=202611201339';
+import { estagioContaChoque } from './estagio.mjs?v=202611201339';
+import { isPriorityRegularAllocation } from './allocation_helpers.js?v=202611201339';
+import { datasFeriadoDaTurma } from './feriados.mjs?v=202611201339';
+import { computeRemainingFractionalHours, generateAllocationOccurrences, validateOccurrenceWithinSemesterBounds } from './academic_rules.mjs?v=202611201339';
 
-// Horario da componente em edicao que nao gera choque: estagio fora do turno
-// da turma (js/estagio.mjs). Vale para a turma e para o professor.
-export function candidatoSemChoque(candidateAlloc, horario) {
-    return !aulaContaComoChoque(
-        { disciplina: candidateAlloc?.disciplina, horario },
-        getNativeTurnoValueForAllocation(candidateAlloc),
-        getQuadroTodosRegimes()
-    );
+// Horario da componente em edicao que nao gera choque (estagio, js/estagio.mjs).
+// date: dia da aula, para achar a faixa (campo/encontro). candidatoSemChoque
+// vale para a turma; candidatoSemChoqueDocente para o professor.
+function regraDoCandidato(candidateAlloc, horario, date) {
+    let faixa = null;
+    if (date) {
+        getNormalizedIntensiveFaixas(candidateAlloc).forEach((f) => {
+            if (f.inicio <= date && (!f.fim || date <= f.fim)) faixa = f;
+        });
+    }
+    return {
+        disciplina: candidateAlloc?.disciplina,
+        horario,
+        tipo: faixa?.estagio || '',
+        slotsDaFaixa: faixa?.slots || [],
+        turnoDaTurma: getNativeTurnoValueForAllocation(candidateAlloc),
+        horariosPorTurno: getQuadroTodosRegimes()
+    };
+}
+export function candidatoSemChoque(candidateAlloc, horario, date = '') {
+    return !estagioContaChoque(regraDoCandidato(candidateAlloc, horario, date), 'turma');
+}
+export function candidatoSemChoqueDocente(candidateAlloc, horario, date = '') {
+    return !estagioContaChoque(regraDoCandidato(candidateAlloc, horario, date), 'docente');
 }
 
 export function shouldIgnoreTurmaEventForCandidate(event, candidateAlloc) {
@@ -73,6 +89,8 @@ export function normalizeDrawnSlotsByDay(raw) {
     return map;
 }
 
+const TIPOS_ESTAGIO = ['campo', 'encontro'];
+
 export function normalizeFaixaEntry(faixa) {
     if (!faixa || !faixa.inicio) return null;
     const drawn = normalizeDrawnSlotsByDay(faixa.drawnSlotsByDay || {});
@@ -94,7 +112,10 @@ export function normalizeFaixaEntry(faixa) {
         fim: faixa.fim || null,
         dias,
         slots,
-        drawnSlotsByDay: drawn
+        drawnSlotsByDay: drawn,
+        // Estagio montado pela janela Montar estagio (20/11/2026): 'campo' ou
+        // 'encontro'. Faixa feita a mao nao tem (regra do turno, js/estagio.mjs).
+        ...(TIPOS_ESTAGIO.includes(faixa.estagio) ? { estagio: faixa.estagio } : {})
     };
 }
 

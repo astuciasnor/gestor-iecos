@@ -115,12 +115,15 @@ try {
   const notaOri = await evaluate("__t.q('#me-orientador-nota').textContent");
   confere('CH do orientador 45 h na janela', /conta 45 h/.test(notaOri), notaOri);
   await foto('1-etapas');
+  // Regras para Estagio (20/11/2026): comeca com encontro, campo, encontro
+  const tipos = await evaluate("__t.qa('.me-etapa:not(.me-etapa--cab) [data-campo=\"tipo\"]').map(s => s.value).join(',')");
+  confere('comeca com 3 etapas: encontro, campo, encontro', tipos === 'encontro,campo,encontro', tipos);
 
 
   // Passo 1 (20/11/2026): a soma tem que fechar para ir as Datas; opcoes em cartoes.
   await evaluate(`(async () => { const i = __t.q('[data-etapa="1"] [data-campo="horasDia"]'); i.value = '4'; __t.fire(i, 'input'); await __t.wait(300); })()`);
   const soma = await evaluate("__t.q('.me-soma').textContent");
-  confere('passo 1 sem fechar: soma em vermelho e Proximo travado', /faltam|passou/.test(soma) && await evaluate("__t.q('[data-ir=\"2\"]').disabled"), soma);
+  confere('passo 1 sem fechar: soma em vermelho e Proximo travado', /NÃO BATE COM A CARGA HORÁRIA. ESCOLHA UMA DAS SUGESTÕES/.test(soma) && await evaluate("__t.q('[data-ir=\"2\"]').disabled"), soma);
   const cartoes = await evaluate("__t.qa('.me-opcao').length");
   confere('passo 1 mostra cartoes com opcoes que fecham', cartoes > 0, cartoes + ' cartoes');
   console.log('  1a opcao: ' + await evaluate("__t.q('.me-opcao').textContent.replace(/\\s+/g, ' ').trim()"));
@@ -145,7 +148,8 @@ try {
   const ndias3 = await evaluate("Number(document.querySelector('#montar-estagio-modal [data-aba=\"2\"] small').textContent.match(/(\\d+) dias/)[1])");
   console.log('  etapa 3: ' + await evaluate(`__t.marcarDiasSeguidos(${ndias3}, true)`));
   console.log('  abas: ' + await evaluate('__t.abas()'));
-  confere('a CH fecha exata', await evaluate('__t.fechou()'), await evaluate('__t.placar()'));
+  // Campo sem dia de comeco escolhido: nao aparece marcado e a CH ainda nao fecha (20/11/2026)
+  confere('campo sem escolha: nao aparece e a CH nao fecha', !(await evaluate('__t.fechou()')) && (await evaluate("__t.qa('.me-dia--outro.me-cor-2').length")) === 0, await evaluate('__t.abas()'));
   // O campo comeca 3 semanas depois do encontro: a data digitada fica e a CH ainda fecha
   await evaluate("__t.clicar('[data-aba=\"1\"]')");
   const comeco = await evaluate(`(async () => {
@@ -169,6 +173,12 @@ try {
   const [diaClicado, , ficouClique] = clique.split(' ');
   confere('clique num dia define o Comeca do campo', diaClicado === ficouClique, clique);
   confere('aba do campo: faltam 0 h', /Faltam ?0 h/.test(await evaluate('__t.abas()')), await evaluate('__t.abas()'));
+  confere('a CH fecha exata', await evaluate('__t.fechou()'), await evaluate('__t.placar()'));
+  // Vendo o encontro F3, os dias do campo (F2) aparecem em tom claro (20/11/2026)
+  await evaluate("__t.clicar('[data-aba=\"2\"]')");
+  const campoVisto = await evaluate("__t.qa('.me-dia--outro.me-cor-2').length");
+  confere('vendo a F3, os dias do campo F2 aparecem', campoVisto > 0, campoVisto + ' dias');
+  await foto('2b-encontro-f3');
   await foto('2-datas');
 
   await evaluate("__t.clicar('[data-ir=\"3\"]')");
@@ -194,11 +204,12 @@ try {
     for (const key of Object.keys(localStorage).filter(k => k.startsWith('academic_plan_v1::'))) {
       const lista = JSON.parse(localStorage.getItem(key) || '[]');
       const a = lista.find(x => x.modo === 'faixas' && /EST[AÁ]GIO/i.test(x.disciplina) && x.docente === 'Ana Garcês');
-      if (a) return 'chOrientador=' + a.chOrientador + ' ch=' + a.ch + ' docente=' + a.docente;
+      if (a) return 'chOrientador=' + a.chOrientador + ' ch=' + a.ch + ' docente=' + a.docente + ' faixas=' + (a.faixas || []).map(f => f.estagio || 'sem marca').join(',');
     }
     return 'nao achei | ' + (document.getElementById('status-msg')?.textContent || '') + ' | ' + [...document.querySelectorAll('.toast, .toast-warning, [class*=toast]')].map(t => t.textContent.trim()).join(' / ').slice(0, 300);
   })()`);
   confere('alocacao salva com chOrientador 45', /chOrientador=45 /.test(gravado), gravado);
+  confere('faixa do campo salva com a marca campo', /faixas=encontro,campo,encontro$/.test(gravado), gravado);
   // Trocar de componente esvazia a caixinha (o valor e so da componente aberta).
   await evaluate(`(async () => { __t.setVal('inp-disciplina', ''); await __t.wait(600); })()`);
   confere('caixinha some sem componente', await evaluate("document.getElementById('box-ch-orientador').classList.contains('hidden')"));

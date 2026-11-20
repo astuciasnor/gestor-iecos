@@ -1,5 +1,5 @@
-import { addDaysISO, weekdayOf } from './datas.mjs?v=202611200824';
-import { formatWeekdays, summarizeHorarios } from './resumo_docente.mjs?v=202611200824';
+import { addDaysISO, weekdayOf } from './datas.mjs?v=202611201339';
+import { formatWeekdays, summarizeHorarios } from './resumo_docente.mjs?v=202611201339';
 // Indicadores > Dias do docente: em quais dias do PL o professor tem aula e de
 // quais componentes. "Dia carregado" = 2 ou mais componentes diferentes no mesmo
 // dia (manha + tarde, manha + noite...). Nao e choque de horario: e um dia pesado.
@@ -9,7 +9,9 @@ import { formatWeekdays, summarizeHorarios } from './resumo_docente.mjs?v=202611
 
 // entries: uma por aula do docente, ja calculada pelo calendario (feriados e
 // divisao entre docentes aplicados):
-//   { date, key, disciplina, turmaId, subGrupo, cor, aulas, horario }
+//   { date, key, disciplina, turmaId, subGrupo, cor, aulas, horario, campo }
+// campo: aula de estagio em campo (20/11/2026). Os alunos estao no campo, sem o
+// docente: aparece, mas nao conta para o dia carregado (vai em emCampo).
 // feriados: datas (iso) sem aula para todas as turmas.
 export function diasDoDocente({ termStart, termEnd, entries = [], feriados = [] }) {
     if (!termStart || !termEnd || termStart > termEnd) return { datas: [], componentes: [], carregados: 0 };
@@ -32,8 +34,9 @@ export function diasDoDocente({ termStart, termEnd, entries = [], feriados = [] 
         const comp = porKey.get(entry.key);
         const aulas = Number(entry.aulas) || 1;
         comp.aulas += aulas;
-        const dia = comp.dias.get(entry.date) || { aulas: 0, horarios: [] };
+        const dia = comp.dias.get(entry.date) || { aulas: 0, horarios: [], campo: true };
         dia.aulas += aulas;
+        dia.campo = dia.campo && !!entry.campo; // campo so se todas as aulas do dia sao de campo
         if (entry.horario) dia.horarios.push(entry.horario);
         comp.dias.set(entry.date, dia);
     });
@@ -44,7 +47,7 @@ export function diasDoDocente({ termStart, termEnd, entries = [], feriados = [] 
         datasOrdenadas.forEach((date) => {
             const dia = comp.dias.get(date);
             const h = summarizeHorarios(dia.horarios);
-            porData[date] = { aulas: dia.aulas, horario: h.range, turnos: h.turnos };
+            porData[date] = { aulas: dia.aulas, horario: h.range, turnos: h.turnos, ...(dia.campo ? { campo: true } : {}) };
         });
         const geral = summarizeHorarios([...comp.dias.values()].flatMap((d) => d.horarios));
         return {
@@ -69,10 +72,11 @@ export function diasDoDocente({ termStart, termEnd, entries = [], feriados = [] 
     const datas = [];
     let carregados = 0;
     for (let date = termStart; date <= termEnd; date = addDaysISO(date, 1)) {
-        const keys = componentes.filter((c) => c.porData[date]).map((c) => c.key);
+        const keys = componentes.filter((c) => c.porData[date] && !c.porData[date].campo).map((c) => c.key);
+        const emCampo = componentes.filter((c) => c.porData[date]?.campo).map((c) => c.key);
         const carregado = keys.length >= 2;
         if (carregado) carregados += 1;
-        datas.push({ date, weekday: weekdayOf(date), feriado: feriadoSet.has(date), componentes: keys, carregado });
+        datas.push({ date, weekday: weekdayOf(date), feriado: feriadoSet.has(date), componentes: keys, emCampo, carregado });
     }
 
     return { datas, componentes, carregados };

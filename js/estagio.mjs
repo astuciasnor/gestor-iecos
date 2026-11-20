@@ -8,8 +8,8 @@
 //   professor fica livre para dar outras aulas nesse horario.
 // As demais componentes nao mudam: sempre contam como choque.
 
-import { normalizeTurnoKey, turnoDaTurmaInclui } from './turns.js?v=202611200824';
-import { addDaysISO, weekdayOf } from './datas.mjs?v=202611200824';
+import { normalizeTurnoKey, turnoDaTurmaInclui } from './turns.js?v=202611201339';
+import { addDaysISO, weekdayOf } from './datas.mjs?v=202611201339';
 
 // "CBBR049 ESTAGIO III", "Estágio Supervisionado I" -> true.
 export function ehEstagio(nomeComponente) {
@@ -69,6 +69,30 @@ export function aulaContaComoChoque(aula, turnoDaTurma, horariosPorTurno = null)
     const turno = turnoDoHorario(aula?.horario, horariosPorTurno);
     if (!turno) return true;
     return turnoDaTurmaInclui(turnoDaTurma, turno);
+}
+
+// Regras de choque do estagio (decididas em 20/11/2026). A faixa feita pela
+// janela Montar estagio diz o tipo; faixa feita a mao nao diz (tipo '').
+//   encontro: sempre conta, para a turma e para o docente, em qualquer turno;
+//   campo:    nunca conta para o docente (os alunos estao no campo, sem ele);
+//             para a turma, se a faixa usa o turno da turma, conta em todas as
+//             aulas dela (a turma fica impedida o dia inteiro); se e so no
+//             contraturno, nao conta (a turma pode ter aula no turno dela);
+//   sem tipo: a regra de antes, pelo turno (aulaContaComoChoque).
+// quem: 'turma' ou 'docente'. Componente que nao e estagio: sempre conta.
+export function estagioContaChoque({ disciplina, horario, tipo = '', slotsDaFaixa = [], turnoDaTurma = '', horariosPorTurno = null } = {}, quem = 'turma') {
+    if (!ehEstagio(disciplina)) return true;
+    if (tipo === 'encontro') return true;
+    if (tipo === 'campo') {
+        if (quem === 'docente') return false;
+        if (!String(turnoDaTurma || '').trim()) return true;
+        const slots = slotsDaFaixa.length ? slotsDaFaixa : [horario];
+        return slots.some((s) => {
+            const turno = turnoDoHorario(s, horariosPorTurno);
+            return !turno || turnoDaTurmaInclui(turnoDaTurma, turno);
+        });
+    }
+    return aulaContaComoChoque({ disciplina, horario }, turnoDaTurma, horariosPorTurno);
 }
 
 // ===========================================================================
@@ -414,14 +438,15 @@ export function faixasDoEstagio(etapasCalculadas = [], slotsPorLetra = {}, feria
         const inicio = e.aulas[0];
         const ultimaAula = e.aulas[e.aulas.length - 1];
         const proxima = comAula[idx + 1];
-        if (!proxima) return { inicio, fim: '', pausa: false, pattern };
+        const estagio = e.tipo === 'campo' ? 'campo' : 'encontro'; // marca da faixa (regras de choque)
+        if (!proxima) return { inicio, fim: '', pausa: false, pattern, estagio };
         const vespera = addDaysISO(proxima.aulas[0], -1);
         let temDiaVazio = false;
         for (let d = addDaysISO(ultimaAula, 1); d && d <= vespera; d = addDaysISO(d, 1)) {
             if (diasSemana.includes(weekdayOf(d)) && diaLetivo(d, feriados)) { temDiaVazio = true; break; }
         }
         return temDiaVazio
-            ? { inicio, fim: ultimaAula, pausa: true, pattern }
-            : { inicio, fim: vespera, pausa: false, pattern };
+            ? { inicio, fim: ultimaAula, pausa: true, pattern, estagio }
+            : { inicio, fim: vespera, pausa: false, pattern, estagio };
     });
 }

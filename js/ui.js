@@ -1,41 +1,41 @@
-import { UNIDADE_PADRAO, unidadeDoCurso } from './unidades.mjs?v=202611200824';
-import { getLocalTodayIso } from './datas.mjs?v=202611200824';
-import { store } from './store.js?v=202611200824';
-import { MAX_FAIXAS, NUMEROS_FAIXAS, idsDatasFaixas } from './faixas.mjs?v=202611200824';
-import { ehEstagio, letrasDoTurno } from './estagio.mjs?v=202611200824';
-import { abrirMontarEstagio } from './montar_estagio_ui.js?v=202611200824';
-import { escapeTrocaHtml, contarHorasExecutadas, sugerirInicioSemChoque, fraseComeceEm, cursoDaTurma, sugerirComoResolverChoque, abrirTrocaDeOrdem, ligarTroca } from './troca_ui.js?v=202611200824';
-import { cadastrosDocentes, findNewDocenteNames, getCadastroDocente, refreshAvisoDocenteNovo, coletarCadastrosDocentes, setupAvisoDocenteNovo, ligarCadastroDocente } from './cadastro_docente_ui.js?v=202611200824';
-import { renderOfertasList, ligarListaOfertas } from './lista_ofertas_ui.js?v=202611200824';
-import { arrastoAtivo, esquecerAncora, endDrawingDrag, setDrawingCellSelection, marcarAncoraNaGrade, ligarSelecaoDaGrade } from './grade_selecao.js?v=202611200824';
-import { stableStringify } from './sync_diff.mjs?v=202611200824';
-import { getTurnoLetter, mapSlotToTurno, turnoDaTurmaInclui } from './turns.js?v=202611200824';
-import { normalizePeriodo as normalizePeriodoLetivoCode } from './plan_storage.js?v=202611200824';
-import { getCalendarEvents } from './calendar.js?v=202611200824';
-import { isDateOverlap } from './utils.js?v=202611200824';
-import { weeklyState } from './weekly_state.js?v=202611200824';
-import { findPendentesCobertas, isPendenteJaAlocada } from './pendentes.mjs?v=202611200824';
+import { UNIDADE_PADRAO, unidadeDoCurso } from './unidades.mjs?v=202611201339';
+import { getLocalTodayIso } from './datas.mjs?v=202611201339';
+import { store } from './store.js?v=202611201339';
+import { MAX_FAIXAS, NUMEROS_FAIXAS, idsDatasFaixas } from './faixas.mjs?v=202611201339';
+import { ehEstagio, letrasDoTurno } from './estagio.mjs?v=202611201339';
+import { abrirMontarEstagio } from './montar_estagio_ui.js?v=202611201339';
+import { escapeTrocaHtml, contarHorasExecutadas, sugerirInicioSemChoque, fraseComeceEm, cursoDaTurma, sugerirComoResolverChoque, abrirTrocaDeOrdem, ligarTroca } from './troca_ui.js?v=202611201339';
+import { cadastrosDocentes, findNewDocenteNames, getCadastroDocente, refreshAvisoDocenteNovo, coletarCadastrosDocentes, setupAvisoDocenteNovo, ligarCadastroDocente } from './cadastro_docente_ui.js?v=202611201339';
+import { renderOfertasList, ligarListaOfertas } from './lista_ofertas_ui.js?v=202611201339';
+import { arrastoAtivo, esquecerAncora, endDrawingDrag, setDrawingCellSelection, marcarAncoraNaGrade, ligarSelecaoDaGrade } from './grade_selecao.js?v=202611201339';
+import { stableStringify } from './sync_diff.mjs?v=202611201339';
+import { getTurnoLetter, mapSlotToTurno, turnoDaTurmaInclui } from './turns.js?v=202611201339';
+import { normalizePeriodo as normalizePeriodoLetivoCode } from './plan_storage.js?v=202611201339';
+import { getCalendarEvents } from './calendar.js?v=202611201339';
+import { isDateOverlap } from './utils.js?v=202611201339';
+import { weeklyState } from './weekly_state.js?v=202611201339';
+import { findPendentesCobertas, isPendenteJaAlocada } from './pendentes.mjs?v=202611201339';
 
-import { datasFeriadoDaTurma, feriadosDaTurma } from './feriados.mjs?v=202611200824';
-import { closeFaixaEnds, isPauseEnd, listFaixaPauses } from './pausa_faixas.mjs?v=202611200824';
-import { numeroDaSubturma, isTurmaInteira, proximaSubturma, codigoT01Como, saoSubturmasDiferentes, sufixoSubturma, semSubturma, subturmaFicouSozinha } from './subturmas.mjs?v=202611200824';
-import { abrirMiniCalendario, fecharMiniCalendario, miniCalendarioAberto } from './mini_calendario.mjs?v=202611200824';
-import { buildCanonicalOfferProjection } from './execution_engine.js?v=202611200824';
+import { datasFeriadoDaTurma, feriadosDaTurma } from './feriados.mjs?v=202611201339';
+import { closeFaixaEnds, isPauseEnd, listFaixaPauses } from './pausa_faixas.mjs?v=202611201339';
+import { numeroDaSubturma, isTurmaInteira, proximaSubturma, codigoT01Como, saoSubturmasDiferentes, sufixoSubturma, semSubturma, subturmaFicouSozinha } from './subturmas.mjs?v=202611201339';
+import { abrirMiniCalendario, fecharMiniCalendario, miniCalendarioAberto } from './mini_calendario.mjs?v=202611201339';
+import { buildCanonicalOfferProjection } from './execution_engine.js?v=202611201339';
 import {
     buildSigaaMetadataPayload,
     validateSigaaMetadataPayload,
     getSigaaCode,
     buildScopedSigaaAllocationFromOfferFaixa,
     buildSigaaHorarioResumo
-} from './sigaa_metadata.js?v=202611200824';
-import { parseBackupDataFile, extractImportPlanMeta } from './serialization.js?v=202611200824';
+} from './sigaa_metadata.js?v=202611201339';
+import { parseBackupDataFile, extractImportPlanMeta } from './serialization.js?v=202611201339';
 import {
     showToastWarning,
     showPersistentStatusMessage,
     copyTextToClipboard,
     flashButtonCopyState,
     setupCopyActionButtons
-} from './ui_feedback.js?v=202611200824';
+} from './ui_feedback.js?v=202611201339';
 import {
     normalizeHexColor,
     adjustHexColor,
@@ -44,7 +44,7 @@ import {
     tonsDaCor,
     aplicarTonsBloco,
     PALETA_CORES
-} from './color_utils.js?v=202611200824';
+} from './color_utils.js?v=202611201339';
 import {
     isFaixaAllocation,
     isPriorityRegularAllocation,
@@ -53,8 +53,8 @@ import {
     normalizeTeacherNameForMatch,
     getDocenteShortLabel,
     getAllocationTeachersForConflict
-} from './allocation_helpers.js?v=202611200824';
-import { setupSeletorCor } from './seletor_cor.js?v=202611200824';
+} from './allocation_helpers.js?v=202611201339';
+import { setupSeletorCor } from './seletor_cor.js?v=202611201339';
 
 import {
     UNIDADES,
@@ -62,11 +62,11 @@ import {
     acharNomeConhecido,
     filtrarDocentes,
     umNomePorPessoa
-} from './docente_nomes.mjs?v=202611200824';
+} from './docente_nomes.mjs?v=202611201339';
 import {
     fetchAllocationsForPlans
-} from './sync_remoto.js?v=202611200824';
-import { resolveBackendMode } from './backend_config.js?v=202611200824';
+} from './sync_remoto.js?v=202611201339';
+import { resolveBackendMode } from './backend_config.js?v=202611201339';
 import {
     normalizeConflictSlotLabel,
     getAvailableTurnoOfertaOptions,
@@ -76,7 +76,7 @@ import {
     buildHorariosForUI,
     getShiftChangeMeta,
     getNativeTurnoValueForAllocation
-} from './turno_helpers.js?v=202611200824';
+} from './turno_helpers.js?v=202611201339';
 import {
     getDisciplinaCHGlobal,
     derivarBloco,
@@ -86,7 +86,7 @@ import {
     getDisciplinaInfo,
     getCursoSiglaDaTurma,
     getPrintAcademicMetaLine
-} from './curso_turma_helpers.js?v=202611200824';
+} from './curso_turma_helpers.js?v=202611201339';
 import {
     renderMonthlyCalendar,
     renderTeacherCalendar,
@@ -94,17 +94,18 @@ import {
     clearTeacherRangeCache,
     setTeacherPeriod,
     getTeacherPeriod
-} from './calendarios_ui.js?v=202611200824';
-import { setupIndicadores, renderIndicadores, setIndicadoresLigacoes } from './indicadores_ui.js?v=202611200824';
+} from './calendarios_ui.js?v=202611201339';
+import { setupIndicadores, renderIndicadores, setIndicadoresLigacoes } from './indicadores_ui.js?v=202611201339';
 import {
     refreshTeacherConflictsUI,
     setCrossPlanLoader,
     setResolverDeChoque,
     acharChoqueComOutroPL
-} from './conflitos_ui.js?v=202611200824';
+} from './conflitos_ui.js?v=202611201339';
 import {
     shouldIgnoreTurmaEventForCandidate,
     candidatoSemChoque,
+    candidatoSemChoqueDocente,
     normalizeDrawnSlotsByDay,
     normalizeFaixaEntry,
     getNormalizedIntensiveFaixas,
@@ -116,7 +117,7 @@ import {
     resolveEditableFaixasFromStoredExecution,
     alignFaixasToExecutionEnd,
     buildFinalAdjustmentFaixaSuggestion
-} from './faixa_utils.js?v=202611200824';
+} from './faixa_utils.js?v=202611201339';
 import {
     timeToMinutes,
     shiftISODate,
@@ -130,14 +131,14 @@ import {
     isDateInsideRange,
     formatDateBRShortYear,
     formatDateBR
-} from './date_utils_ui.js?v=202611200824';
+} from './date_utils_ui.js?v=202611201339';
 import {
     initializeWeeklyScheduleForTurma,
     reconcileTurmaSelectionAfterPLChange,
     resetWeeklyViewOnTurmaChange,
     resolveActiveAcademicPeriod,
     slotLabelsOverlap
-} from './academic_rules.mjs?v=202611200824';
+} from './academic_rules.mjs?v=202611201339';
 
 const gridContainer = document.getElementById('weekly-grid');
 const selCurso = document.getElementById('sel-curso');
@@ -2267,7 +2268,7 @@ function collapseFaixasForNewComponent(options = {}) {
         const el = document.getElementById(id);
         if (el) el.value = '';
     });
-    for (let i = 1; i <= MAX_FAIXAS; i++) setFaixaFimPausaMark(i, false);
+    for (let i = 1; i <= MAX_FAIXAS; i++) { setFaixaFimPausaMark(i, false); setFaixaEstagio(i, ''); }
 
     for (let i = 1; i <= MAX_FAIXAS; i++) faixasPatterns[i] = [];
     activeFaixaIndex = 1;
@@ -2294,6 +2295,7 @@ function clearFaixaState(faixaNum, options = {}) {
     if (iniEl) iniEl.value = '';
     if (fimEl) fimEl.value = '';
     setFaixaFimPausaMark(faixaNum, false);
+    setFaixaEstagio(faixaNum, '');
 
     faixasPatterns[faixaNum] = [];
     if (pendingFaixaStartPick === faixaNum || (faixaNum >= 2 && pendingFaixaStartPick > faixaNum)) {
@@ -2374,7 +2376,7 @@ function executeFaixaQuickAction(faixaNum) {
                 const el = document.getElementById(id);
                 if (el) el.value = '';
             });
-        for (let i = 1; i <= MAX_FAIXAS; i++) setFaixaFimPausaMark(i, false);
+        for (let i = 1; i <= MAX_FAIXAS; i++) { setFaixaFimPausaMark(i, false); setFaixaEstagio(i, ''); }
 
         for (let i = 1; i <= MAX_FAIXAS; i++) faixasPatterns[i] = [];
         activeFaixaIndex = 1;
@@ -2918,7 +2920,7 @@ function buildIntensiveTeacherConflictEntries(intense, teacherName) {
 
                 const resolvedTeacher = resolveTeacherForAllocationHour(intense, currentHour);
                 if (normalizeTeacherNameForMatch(resolvedTeacher) !== normalizedTeacher) continue;
-                if (candidatoSemChoque(intense, slot)) continue; // estagio fora do turno
+                if (candidatoSemChoqueDocente(intense, slot, currentDate)) continue; // estagio que nao pesa o docente
 
                 entries.push({
                     date: currentDate,
@@ -2968,7 +2970,7 @@ function buildIntensiveTeacherConflictEntries(intense, teacherName) {
             currentHour += 1;
             const resolvedTeacher = resolveTeacherForAllocationHour(intense, currentHour);
             if (normalizeTeacherNameForMatch(resolvedTeacher) !== normalizedTeacher) continue;
-            if (candidatoSemChoque(intense, slot)) continue; // estagio fora do turno
+            if (candidatoSemChoqueDocente(intense, slot, currentDate)) continue; // estagio que nao pesa o docente
 
             entries.push({
                 date: currentDate,
@@ -3001,7 +3003,7 @@ function findConfirmedTeacherConflictForCandidate(candidateAlloc, teacherNames =
 
         Object.entries(existingEventsByDate || {}).forEach(([dateStr, events]) => {
             (events || []).forEach((event) => {
-                if (!event || event.semChoque || ficaComATurma(event)) return;
+                if (!event || event.semChoqueDocente || ficaComATurma(event)) return;
                 const slot = normalizeConflictSlotLabel(event.horario || '');
                 if (!slot) return;
                 if (!existingByDate.has(dateStr)) existingByDate.set(dateStr, []);
@@ -3051,7 +3053,7 @@ function findTurmaConflictForCandidateExecution(candidateAlloc, execution = {}) 
     for (const dateStr of usedDates) {
         const slots = getExecutionSlotsForDate(execution, dateStr);
         for (const slot of slots) {
-            if (candidatoSemChoque(candidateAlloc, slot)) continue; // estagio fora do turno
+            if (candidatoSemChoque(candidateAlloc, slot, dateStr)) continue; // estagio que nao ocupa a turma
             const key = `${dateStr}|${normalizeConflictSlotLabel(slot)}`;
             const event = existingByKey.get(key);
             if (!event) continue;
@@ -3360,6 +3362,19 @@ function valorDoCampo(id) {
 
 function isFaixaFimMarcadoComoPausa(faixaNum) {
     return document.getElementById(`inp-data-fim-f${faixaNum}`)?.dataset.pausa === '1';
+}
+
+// Estagio (20/11/2026): a faixa veio da janela Montar estagio como 'campo' ou
+// 'encontro' (regras de choque em js/estagio.mjs). A marca fica no Inicio da
+// faixa e vai junto ao salvar. Faixa feita a mao: sem marca.
+function getFaixaEstagio(faixaNum) {
+    return document.getElementById(`inp-data-inicio-f${faixaNum}`)?.dataset.estagio || '';
+}
+function setFaixaEstagio(faixaNum, tipo) {
+    const iniEl = document.getElementById(`inp-data-inicio-f${faixaNum}`);
+    if (!iniEl) return;
+    if (tipo === 'campo' || tipo === 'encontro') iniEl.dataset.estagio = tipo;
+    else delete iniEl.dataset.estagio;
 }
 
 function setFaixaFimPausaMark(faixaNum, on) {
@@ -3676,6 +3691,7 @@ function aplicarFaixasDoEstagio({ faixas = [], turnoOferta = '', chOrientador = 
         if (fimEl) fimEl.value = faixa.fim || '';
         faixasPatterns[i] = normalizeFaixaPattern(faixa.pattern);
         setFaixaFimPausaMark(i, !!faixa.pausa);
+        setFaixaEstagio(i, faixa.estagio);
     });
     setComponentStartSelectionMode('manual');
     applyFaixaDateAutofill();
@@ -3878,7 +3894,7 @@ function hydrateFaixa1FromComponente(allocation) {
     const fim = document.getElementById('inp-data-fim-f1');
     if (ini && allocation.dataInicio) ini.value = allocation.dataInicio;
     if (fim && allocation.dataFim) fim.value = allocation.dataFim;
-    for (let i = 1; i <= MAX_FAIXAS; i++) setFaixaFimPausaMark(i, false);
+    for (let i = 1; i <= MAX_FAIXAS; i++) { setFaixaFimPausaMark(i, false); setFaixaEstagio(i, ''); }
 
     setFaixaStatus(1, faixasPatterns[1].length);
     applyFaixaDateAutofill();
@@ -3905,6 +3921,7 @@ function hydrateFaixasFromComponente(allocation, options = {}) {
         const fim = document.getElementById(`inp-data-fim-f${i}`);
         if (ini) ini.value = '';
         if (fim) fim.value = '';
+        setFaixaEstagio(i, '');
     }
 
     faixas.slice(0, MAX_FAIXAS).forEach((faixa, idx) => {
@@ -3913,6 +3930,7 @@ function hydrateFaixasFromComponente(allocation, options = {}) {
         const fim = document.getElementById(`inp-data-fim-f${i}`);
         if (ini) ini.value = faixa.inicio || '';
         if (fim) fim.value = faixa.fim || '';
+        setFaixaEstagio(i, faixa.estagio);
 
         const pattern = [];
         Object.keys(faixa.drawnSlotsByDay || {}).forEach((dayKey) => {
@@ -4513,7 +4531,7 @@ function collectIntensiveFaixasFromPatternMap(patternsMap = {}, fallbackInicio) 
         });
         drawnSlotsByDay = normalizeDrawnSlotsByDay(drawnSlotsByDay);
 
-        const normFaixa = normalizeFaixaEntry({ inicio, fim, drawnSlotsByDay });
+        const normFaixa = normalizeFaixaEntry({ inicio, fim, drawnSlotsByDay, estagio: getFaixaEstagio(i) });
         if (!normFaixa) {
             throw new Error(`Desenhe horarios validos para a Faixa ${i}.`);
         }
@@ -5796,6 +5814,7 @@ function limparDatasDasFaixas() {
             if (el) el.value = '';
         });
         setFaixaFimPausaMark(i, false);
+        setFaixaEstagio(i, '');
     }
     ultimaComponenteSalva = null;
     refreshAllCompactFaixaDateDisplays();

@@ -4307,7 +4307,10 @@ body:has(#tab-weekly.active) .top-bar .btn-print { display: none; }
 /* O filete branco separa a faixa vermelha de uma componente que ja e vermelha. */
 .dd-d.dd-dupla { box-shadow: inset 0 -5px 0 #d61f1f, inset 0 -7px 0 #fff; }
 /* Dia a dia: so tres estados (sem aula, 1 componente, 2 ou mais). */
+.dd-ch.dd-ch-orientador { background: #FDECEC; color: #B42318; }
 .dd-d.dd-um { background: #8fbfa2; border-color: rgba(23, 55, 40, 0.3); }
+/* Estagio em campo (20/11/2026): alunos no campo, sem o docente - cinza, nao pesa o dia */
+.dd-d.dd-campo, .dd-leg-campo { background: repeating-linear-gradient(90deg, #cfd8d3 0 3px, #e4eae6 3px 6px); border-color: #b9c6bd; }
 .dd-legenda { display: flex; flex-wrap: wrap; gap: 4px 16px; margin-top: 6px; font-size: 0.74rem; color: var(--text-muted); }
 .dd-legenda i { display: inline-block; width: 11px; height: 11px; margin-right: 5px; vertical-align: -1px; border: 1px solid #d5e0da; border-radius: 2px; }
 .dd-d.dd-n2 { background: #d61f1f; border-color: #d61f1f; }

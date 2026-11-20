@@ -1,5 +1,5 @@
-import { normalizeConflictSlotLabel } from './horarios.mjs?v=202611200824';
-import { sortUniqueIsoDates, normalizeShiftKey, slotLabelsOverlap } from './academic_rules.mjs?v=202611200824';
+import { normalizeConflictSlotLabel } from './horarios.mjs?v=202611201339';
+import { sortUniqueIsoDates, normalizeShiftKey, slotLabelsOverlap } from './academic_rules.mjs?v=202611201339';
 
 function addPairConflictEntry(targetMap, key, entry) {
   if (!targetMap.has(key)) {
@@ -32,8 +32,8 @@ export function detectTeacherConflicts({
   Object.entries(eventsByDate || {}).forEach(([dateStr, events]) => {
     const dayEvents = (Array.isArray(events) ? events : [])
       .map((event) => ({ event, slot: normalizeConflictSlotLabel(event?.horario || '') }))
-      // semChoque: estagio fora do turno da turma (marcado em js/calendar.js).
-      .filter((item) => item.slot && !item.event?.semChoque);
+      // semChoqueDocente: estagio que nao pesa o professor (js/calendar.js).
+      .filter((item) => item.slot && !item.event?.semChoqueDocente);
 
     for (let i = 0; i < dayEvents.length; i++) {
       for (let j = i + 1; j < dayEvents.length; j++) {

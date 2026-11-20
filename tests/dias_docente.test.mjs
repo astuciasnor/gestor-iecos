@@ -89,3 +89,23 @@ test('aulas fora do PL ficam de fora; feriado marcado; componentes em ordem de i
 test('PL invalido devolve vazio', () => {
     assert.deepEqual(diasDoDocente({ termStart: '2027-04-01', termEnd: '2027-03-01' }), { datas: [], componentes: [], carregados: 0 });
 });
+
+test('estagio em campo aparece, mas nao faz o dia carregado (20/11/2026)', () => {
+    const r = diasDoDocente({
+        termStart: '2027-03-15',
+        termEnd: '2027-03-21',
+        entries: [
+            aula('2027-03-15', 'EP2024|ESTATISTICA', '08:00 - 08:50'),
+            aula('2027-03-15', 'EP2025|ESTAGIO', '14:00 - 14:50', { campo: true }),
+            aula('2027-03-16', 'EP2025|ESTAGIO', '14:00 - 14:50')
+        ]
+    });
+    const seg = r.datas.find((d) => d.date === '2027-03-15');
+    assert.equal(seg.carregado, false);
+    assert.deepEqual(seg.componentes, ['EP2024|ESTATISTICA']);
+    assert.deepEqual(seg.emCampo, ['EP2025|ESTAGIO']);
+    const estagio = r.componentes.find((c) => c.key === 'EP2025|ESTAGIO');
+    assert.equal(estagio.porData['2027-03-15'].campo, true);
+    assert.ok(!estagio.porData['2027-03-16'].campo); // encontro conta normal
+    assert.equal(r.carregados, 0);
+});

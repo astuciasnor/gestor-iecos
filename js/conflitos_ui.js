@@ -1,18 +1,18 @@
-import { store } from './store.js?v=202611200824';
-import { getCalendarEvents } from './calendar.js?v=202611200824';
-import { timeToMinutes } from './date_utils_ui.js?v=202611200824';
+import { store } from './store.js?v=202611201339';
+import { getCalendarEvents } from './calendar.js?v=202611201339';
+import { timeToMinutes } from './date_utils_ui.js?v=202611201339';
 import {
     isPendingAllocation,
     getAllocationTeachersForConflict,
     normalizeTeacherNameForMatch
-} from './allocation_helpers.js?v=202611200824';
-import { normalizeConflictSlotLabel } from './turno_helpers.js?v=202611200824';
-import { slotLabelsOverlap } from './academic_rules.mjs?v=202611200824';
-import { getTurmaLabel } from './curso_turma_helpers.js?v=202611200824';
-import { renderTeacherCalendar, withPlanContext } from './calendarios_ui.js?v=202611200824';
-import { showToastWarning } from './ui_feedback.js?v=202611200824';
-import { saoSubturmasDiferentes } from './subturmas.mjs?v=202611200824';
-import { umNomePorPessoa } from './docente_nomes.mjs?v=202611200824';
+} from './allocation_helpers.js?v=202611201339';
+import { normalizeConflictSlotLabel } from './turno_helpers.js?v=202611201339';
+import { slotLabelsOverlap } from './academic_rules.mjs?v=202611201339';
+import { getTurmaLabel } from './curso_turma_helpers.js?v=202611201339';
+import { renderTeacherCalendar, withPlanContext } from './calendarios_ui.js?v=202611201339';
+import { showToastWarning } from './ui_feedback.js?v=202611201339';
+import { saoSubturmasDiferentes } from './subturmas.mjs?v=202611201339';
+import { umNomePorPessoa } from './docente_nomes.mjs?v=202611201339';
 
 // Ref DOM de nivel de modulo (modulo deferred, DOM pronto).
 const selViewDocente = document.getElementById('sel-view-docente');
@@ -78,7 +78,7 @@ export function detectGlobalTeacherConflictsStable() {
 
             (events || []).forEach((event) => {
                 const slotKey = normalizeConflictSlotLabel(event?.horario || '');
-                if (!slotKey || event?.semChoque) return; // estagio fora do turno: sem choque
+                if (!slotKey || event?.semChoqueDocente) return; // estagio que nao pesa o docente
 
                 const identity = getTeacherEventIdentity(event, slotKey);
                 if (!items.some((item) => item.identity === identity)) {
@@ -256,10 +256,10 @@ function detectCrossPlanConflicts() {
                 const listaB = eventosOutro?.[data] || [];
                 if (!listaB.length) return;
                 (listaA || []).forEach((a) => {
-                    const slotA = a && a.type !== 'holiday' && !a.semChoque ? normalizeConflictSlotLabel(a.horario || '') : '';
+                    const slotA = a && a.type !== 'holiday' && !a.semChoqueDocente ? normalizeConflictSlotLabel(a.horario || '') : '';
                     if (!slotA) return;
                     listaB.forEach((b) => {
-                        const slotB = b && b.type !== 'holiday' && !b.semChoque ? normalizeConflictSlotLabel(b.horario || '') : '';
+                        const slotB = b && b.type !== 'holiday' && !b.semChoqueDocente ? normalizeConflictSlotLabel(b.horario || '') : '';
                         if (!slotB || !slotLabelsOverlap(slotA, slotB)) return;
                         const discA = `${getTurmaLabel(a.turmaId, a.subGrupo)} - ${a.disciplina} (${rotuloAtivo})`;
                         const discB = `${b.rotuloTurma || getTurmaLabel(b.turmaId, b.subGrupo)} - ${b.disciplina} (${rotuloOutro})`;
@@ -326,10 +326,10 @@ export function acharChoqueComOutroPL(alloc) {
                 const outras = deles?.[data] || [];
                 if (!outras.length) continue;
                 for (const a of (lista || [])) {
-                    if (!a || a.type === 'holiday' || a.semChoque || !ehEstaOferta(a)) continue;
+                    if (!a || a.type === 'holiday' || a.semChoqueDocente || !ehEstaOferta(a)) continue;
                     const slotA = normalizeConflictSlotLabel(a.horario || '');
                     if (!slotA) continue;
-                    const b = outras.find((ev) => ev && ev.type !== 'holiday' && !ev.semChoque
+                    const b = outras.find((ev) => ev && ev.type !== 'holiday' && !ev.semChoqueDocente
                         && slotLabelsOverlap(slotA, normalizeConflictSlotLabel(ev.horario || '')));
                     if (b) {
                         return { professor, data, horario: slotA, disciplina: b.disciplina, turma: b.rotuloTurma, plano: planLabel(meta) };

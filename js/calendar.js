@@ -1,14 +1,14 @@
-import { addDaysISO } from './datas.mjs?v=202611200824';
-import { timeToMinutesSafe, normalizeDayList, normalizeSlotList, normalizeDrawnSlotsByDay, buildDrawnSlotsByDay } from './horarios.mjs?v=202611200824';
-import { normalizeKeyPart, normalizeKeyPart as normalizeTeacherKey } from './texto.mjs?v=202611200824';
-import { getNativeTurnoValueForAllocation, getQuadroTodosRegimes } from './turno_helpers.js?v=202611200824';
-import { store } from './store.js?v=202611200824';
-import { getDaysArray, toLocalDateString } from './utils.js?v=202611200824';
-import { mapSlotToTurno, turnoDaTurmaInclui } from './turns.js?v=202611200824';
-import { slotLabelsOverlap } from './academic_rules.mjs?v=202611200824';
-import { mesmoDocente } from './docente_nomes.mjs?v=202611200824';
-import { datasFeriadoDaTurma, feriadosDaTurma } from './feriados.mjs?v=202611200824';
-import { aulaContaComoChoque } from './estagio.mjs?v=202611200824';
+import { addDaysISO } from './datas.mjs?v=202611201339';
+import { timeToMinutesSafe, normalizeDayList, normalizeSlotList, normalizeDrawnSlotsByDay, buildDrawnSlotsByDay } from './horarios.mjs?v=202611201339';
+import { normalizeKeyPart, normalizeKeyPart as normalizeTeacherKey } from './texto.mjs?v=202611201339';
+import { getNativeTurnoValueForAllocation, getQuadroTodosRegimes } from './turno_helpers.js?v=202611201339';
+import { store } from './store.js?v=202611201339';
+import { getDaysArray, toLocalDateString } from './utils.js?v=202611201339';
+import { mapSlotToTurno, turnoDaTurmaInclui } from './turns.js?v=202611201339';
+import { slotLabelsOverlap } from './academic_rules.mjs?v=202611201339';
+import { mesmoDocente } from './docente_nomes.mjs?v=202611201339';
+import { datasFeriadoDaTurma, feriadosDaTurma } from './feriados.mjs?v=202611201339';
+import { estagioContaChoque, ehEstagio } from './estagio.mjs?v=202611201339';
 
 function normalizeCalendarSlotKey(value) {
   const match = String(value || '').match(/\d{1,2}:\d{2}/);
@@ -59,13 +59,14 @@ function markEventConflict({ event, slotKey }, other) {
   }
 }
 
-function markCalendarVisualConflicts(events = []) {
+function markCalendarVisualConflicts(events = [], doDocente = false) {
   const items = [];
 
   (events || []).forEach((event) => {
     const slotKey = normalizeCalendarSlotKey(event?.horario || '');
     if (!slotKey) return;
-    if (event?.semChoque) return; // estagio fora do turno da turma (js/estagio.mjs)
+    // Estagio que nao gera choque (js/estagio.mjs): na agenda do docente vale a regra do docente.
+    if (doDocente ? event?.semChoqueDocente : event?.semChoque) return;
 
     const identity = getCalendarConflictIdentity(event, slotKey);
     if (!items.some((item) => item.identity === identity)) {
@@ -136,7 +137,8 @@ function normalizeDeclaredFaixas(allocation, defaultStart = '', defaultEnd = '')
       fim: String(faixa?.fim || '').trim(),
       dias,
       slots,
-      drawnSlotsByDay
+      drawnSlotsByDay,
+      ...(['campo', 'encontro'].includes(faixa?.estagio) ? { estagio: faixa.estagio } : {})
     });
   });
 
@@ -213,6 +215,38 @@ function resolveSlotsForDate(faixas = [], dateStr = '', dayOfWeek = 0) {
   }
 
   return [];
+}
+
+// Faixa que vale no dia (mesma busca de resolveSlotsForDate). Serve para saber
+// se a aula de estagio e de campo ou de encontro (20/11/2026).
+function faixaNoDia(faixas = [], dateStr = '') {
+  for (let index = faixas.length - 1; index >= 0; index -= 1) {
+    const faixa = faixas[index];
+    if (!faixa || dateStr < faixa.inicio) continue;
+    if (faixa.fim && dateStr > faixa.fim) continue;
+    return faixa;
+  }
+  return null;
+}
+
+// Choque das aulas de estagio no dia: para a turma e para o docente.
+function regrasDoEstagioNoDia(allocation, faixas, dateStr, horario) {
+  const disciplina = allocation?.disciplina;
+  if (!ehEstagio(disciplina)) return { semChoque: false, semChoqueDocente: false, estagioCampo: false };
+  const faixa = faixaNoDia(faixas, dateStr);
+  const base = {
+    disciplina,
+    horario,
+    tipo: faixa?.estagio || '',
+    slotsDaFaixa: faixa?.slots || [],
+    turnoDaTurma: getNativeTurnoValueForAllocation(allocation),
+    horariosPorTurno: getQuadroTodosRegimes()
+  };
+  return {
+    semChoque: !estagioContaChoque(base, 'turma'),
+    semChoqueDocente: !estagioContaChoque(base, 'docente'),
+    estagioCampo: base.tipo === 'campo'
+  };
 }
 
 function buildCandidateSlotsByDate(allocation, computationDays = [], feriadosSet = new Set(), defaultStart = '', defaultEnd = '') {
@@ -470,16 +504,13 @@ export function getCalendarEvents(turmaId, startDate, endDate, docenteFilter = n
         horariosUltimoDia: Array.isArray(derivedMeta.horariosUltimoDia) ? derivedMeta.horariosUltimoDia.slice() : [],
         offerKey: descriptor.offerKey,
         occurrenceIndex: occurrence.occurrenceIndex,
-        // Estagio fora do turno da turma nao gera choque com nada (js/estagio.mjs).
-        semChoque: !aulaContaComoChoque(
-          { disciplina: allocation?.disciplina, horario: occurrence.horario },
-          getNativeTurnoValueForAllocation(allocation),
-          getQuadroTodosRegimes()
-        )
+        // Estagio (js/estagio.mjs, regras de 20/11/2026): semChoque vale para a
+        // turma, semChoqueDocente para o professor. Campo nunca pesa o docente.
+        ...regrasDoEstagioNoDia(allocation, descriptor.faixas, dateStr, occurrence.horario)
       });
     });
 
-    markCalendarVisualConflicts(events);
+    markCalendarVisualConflicts(events, !!docenteFilter);
     events.sort((left, right) => normalizeCalendarSlotKey(left?.horario || '').localeCompare(normalizeCalendarSlotKey(right?.horario || '')));
     calendarData[dateStr] = events;
   });

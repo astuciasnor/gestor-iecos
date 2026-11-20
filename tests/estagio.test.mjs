@@ -50,7 +50,7 @@ test('sem turno da turma ou sem horario: conta (lado seguro)', () => {
 });
 
 // ---------------------------------------------------------------- Montar estagio
-import { calcularEstagio, faixasDoEstagio, expressaoSigaaDaEtapa, horasPorTurno, turnoQueMostra, choqueDaEtapa, diasQueFaltamNoPadrao } from '../js/estagio.mjs';
+import { calcularEstagio, estagioContaChoque, faixasDoEstagio, expressaoSigaaDaEtapa, horasPorTurno, turnoQueMostra, choqueDaEtapa, diasQueFaltamNoPadrao } from '../js/estagio.mjs';
 
 const PL2 = { termStart: '2027-03-15', termEnd: '2027-07-14' };
 const FERIADOS = new Set(['2027-03-26', '2027-04-21', '2027-05-01', '2027-06-03']);
@@ -89,6 +89,41 @@ test('caso Sandra vira 3 faixas: sem pausa depois do encontro, pausa antes do fe
     assert.deepEqual(f[1].pattern.map((p) => p.slot).slice(0, 3), SLOTS.N.slice(0, 3));
     assert.equal(expressaoSigaaDaEtapa(r.etapas[1], MAX), '24N123');
     assert.equal(expressaoSigaaDaEtapa(r.etapas[0], MAX), '234M12345');
+});
+
+test('faixas do estagio dizem qual e campo (20/11/2026)', () => {
+    const r = calcularEstagio({ etapas: sandra(), ch: 105, ...PL2, feriados: FERIADOS });
+    const f = faixasDoEstagio(r.etapas, SLOTS, FERIADOS);
+    assert.deepEqual(f.map((x) => x.estagio), r.etapas.filter((e) => e.aulas.length).map((e) => e.tipo));
+    assert.equal(f[1].estagio, 'campo');
+    assert.equal(f[0].estagio, 'encontro');
+});
+
+test('regras de choque do estagio: encontro, campo e faixa feita a mao (20/11/2026)', () => {
+    const Q = { 'Manhã': ['M1 08:00 - 08:50'], 'Tarde': ['T1 14:00 - 14:50'], 'Noite': ['N1 18:00 - 18:50'] };
+    const base = { disciplina: 'ESTAGIO SUPERVISIONADO I', turnoDaTurma: 'Manhã', horariosPorTurno: Q };
+    const manha = 'M1 08:00 - 08:50';
+    const tarde = 'T1 14:00 - 14:50';
+    // Encontro: conta sempre, em qualquer turno, para a turma e o docente
+    for (const horario of [manha, tarde]) {
+        const e = { ...base, horario, tipo: 'encontro' };
+        assert.equal(estagioContaChoque(e, 'turma'), true);
+        assert.equal(estagioContaChoque(e, 'docente'), true);
+    }
+    // Campo: nunca para o docente
+    assert.equal(estagioContaChoque({ ...base, horario: manha, tipo: 'campo', slotsDaFaixa: [manha] }, 'docente'), false);
+    // Campo de manha e tarde (turma da Manha): a turma fica impedida o dia inteiro
+    const campoMT = { ...base, tipo: 'campo', slotsDaFaixa: [manha, tarde] };
+    assert.equal(estagioContaChoque({ ...campoMT, horario: tarde }, 'turma'), true);
+    assert.equal(estagioContaChoque({ ...campoMT, horario: manha }, 'turma'), true);
+    // Campo so no contraturno: a turma esta livre no turno dela
+    assert.equal(estagioContaChoque({ ...base, horario: tarde, tipo: 'campo', slotsDaFaixa: [tarde] }, 'turma'), false);
+    // Faixa feita a mao (sem tipo): a regra de antes, pelo turno, para os dois
+    assert.equal(estagioContaChoque({ ...base, horario: tarde }, 'turma'), false);
+    assert.equal(estagioContaChoque({ ...base, horario: tarde }, 'docente'), false);
+    assert.equal(estagioContaChoque({ ...base, horario: manha }, 'docente'), true);
+    // Componente que nao e estagio: sempre conta
+    assert.equal(estagioContaChoque({ ...base, disciplina: 'ECOLOGIA', horario: tarde, tipo: 'campo' }, 'docente'), true);
 });
 
 test('manhã e noite no mesmo PL (4 etapas, turma da Tarde)', () => {

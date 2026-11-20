@@ -1,20 +1,20 @@
-import { escapeHtml as escapeTrocaHtml } from './texto.mjs?v=202611200824';
+import { escapeHtml as escapeTrocaHtml } from './texto.mjs?v=202611201339';
 // Botao "Trocar" da Lista de Ofertas (janela, calculo das novas posicoes e
 // gravacao) e o "Como resolver?" do Calendario Docente. Saiu do ui.js em
 // 14/11/2026 sem mudar nada; as funcoes do editor que ele usa chegam por
 // ligarTroca (ver ui.js). Quem pode trocar com quem: troca_ordem.mjs.
-import { slotLabelsOverlap } from './academic_rules.mjs?v=202611200824';
-import { getAllocationTeachersForConflict, isFaixaAllocation } from './allocation_helpers.js?v=202611200824';
-import { getCalendarEvents } from './calendar.js?v=202611200824';
-import { getCursoSiglaDaTurma, getDisciplinaInfo, getTurmaLabel } from './curso_turma_helpers.js?v=202611200824';
-import { addDaysISO, formatDateBR } from './date_utils_ui.js?v=202611200824';
-import { alignFaixasToExecutionEnd, buildFinalAdjustmentFaixaSuggestion, computeIntensiveExecution, getNormalizedIntensiveFaixas, normalizeFaixaEntry, shouldIgnoreTurmaEventForCandidate, candidatoSemChoque } from './faixa_utils.js?v=202611200824';
-import { datasFeriadoDaTurma } from './feriados.mjs?v=202611200824';
-import { store } from './store.js?v=202611200824';
-import { saoSubturmasDiferentes } from './subturmas.mjs?v=202611200824';
-import { classifySwap } from './troca_ordem.mjs?v=202611200824';
-import { normalizeConflictSlotLabel } from './turno_helpers.js?v=202611200824';
-import { showToastWarning } from './ui_feedback.js?v=202611200824';
+import { slotLabelsOverlap } from './academic_rules.mjs?v=202611201339';
+import { getAllocationTeachersForConflict, isFaixaAllocation } from './allocation_helpers.js?v=202611201339';
+import { getCalendarEvents } from './calendar.js?v=202611201339';
+import { getCursoSiglaDaTurma, getDisciplinaInfo, getTurmaLabel } from './curso_turma_helpers.js?v=202611201339';
+import { addDaysISO, formatDateBR } from './date_utils_ui.js?v=202611201339';
+import { alignFaixasToExecutionEnd, buildFinalAdjustmentFaixaSuggestion, computeIntensiveExecution, getNormalizedIntensiveFaixas, normalizeFaixaEntry, shouldIgnoreTurmaEventForCandidate, candidatoSemChoque } from './faixa_utils.js?v=202611201339';
+import { datasFeriadoDaTurma } from './feriados.mjs?v=202611201339';
+import { store } from './store.js?v=202611201339';
+import { saoSubturmasDiferentes } from './subturmas.mjs?v=202611201339';
+import { classifySwap } from './troca_ordem.mjs?v=202611201339';
+import { normalizeConflictSlotLabel } from './turno_helpers.js?v=202611201339';
+import { showToastWarning } from './ui_feedback.js?v=202611201339';
 
 // Do ui.js: editor, conflitos de professor, desfazer e recalculo das datas.
 let ligacoes = {};
@@ -114,7 +114,7 @@ export function sugerirInicioSemChoque(candidato, professores = []) {
         const porData = new Map();
         Object.entries(getCalendarEvents(null, inicioBusca, fimPL, nome) || {}).forEach(([data, lista]) => {
             (lista || []).forEach((ev) => {
-                if (!ev || ev.semChoque || String(ev.turmaId) === String(candidato.turmaId)) return;
+                if (!ev || ev.semChoqueDocente || String(ev.turmaId) === String(candidato.turmaId)) return;
                 const slot = normalizeConflictSlotLabel(ev.horario || '');
                 if (!slot) return;
                 if (!porData.has(data)) porData.set(data, []);
@@ -134,7 +134,7 @@ export function sugerirInicioSemChoque(candidato, professores = []) {
         if (calc.posicao.dataInicio !== dia) continue;
         const nova = { ...candidato, ...calc.posicao };
         const chocaNaTurma = Object.entries(nova.executionByDate || {}).some(([data, slots]) =>
-            (slots || []).some((s) => !candidatoSemChoque(candidato, s)
+            (slots || []).some((s) => !candidatoSemChoque(nova, s, data)
                 && turmaOcupada.has(`${data}|${normalizeConflictSlotLabel(s)}`)));
         if (chocaNaTurma) continue;
         const chocaProfessor = agendas.some(({ nome, porData }) =>
@@ -159,7 +159,7 @@ function acharChoqueNaTurma(candidato) {
     }));
     for (const [data, slots] of Object.entries(candidato.executionByDate || {})) {
         for (const slot of (slots || [])) {
-            if (candidatoSemChoque(candidato, slot)) continue; // estagio fora do turno
+            if (candidatoSemChoque(candidato, slot, data)) continue; // estagio que nao ocupa a turma
             const ev = ocupados.get(`${data}|${normalizeConflictSlotLabel(slot)}`);
             if (ev) return { date: data, horario: slot, disciplina: ev.disciplina || '' };
         }
