@@ -628,19 +628,14 @@ aside.sidebar #active-plan-status {
     overflow: hidden;
 }
 
-/* Publicar Online com "Com a Administração" dentro do botao, em segunda
-   linha menor (so o administrador publica). */
+/* Publicar Online: so o texto (a legenda "Com a Administração" saiu em
+   20/11/2026: os coordenadores tambem publicam). */
 .sidebar .btn-publicar .publicar-textos {
     display: flex;
     flex-direction: column;
     align-items: center;
     min-width: 0;
     line-height: 1.1;
-}
-.sidebar .btn-publicar .publicar-legenda {
-    font-size: 0.48rem;                  /* 20% menor (pedido de 14/11) */
-    font-weight: 500;
-    color: #ffffff;
 }
 
 /* Icones decorativos (globo, lixeira) saem para caber tudo numa linha */

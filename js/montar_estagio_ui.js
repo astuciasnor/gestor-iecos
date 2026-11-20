@@ -259,7 +259,8 @@ function htmlOpcoesCampo() {
     const temSugestoes = !!o?.opcoes.length;
     const status = soma === ch
         ? `<div class="me-soma me-soma--ok">Soma das etapas: <b>${soma} h</b> de ${ch} h · fecha exato ✔</div>`
-        : `<div class="me-soma me-soma--erro me-soma--alerta">SOMA DAS ETAPAS NÃO BATE COM A CARGA HORÁRIA.${temSugestoes ? ' ESCOLHA UMA DAS SUGESTÕES ABAIXO:' : ''}</div>`;
+        // Os dois numeros em destaque (pedido de 20/11/2026): a soma em vermelho, a CH prevista em verde.
+        : `<div class="me-soma me-soma--erro me-soma--alerta">SOMA DAS ETAPAS <span class="me-soma-valor me-soma-valor--soma">${soma} h</span> NÃO BATE COM A CARGA HORÁRIA PREVISTA <span class="me-soma-valor me-soma-valor--ch">${ch} h</span>.${temSugestoes ? ' ESCOLHA UMA DAS SUGESTÕES ABAIXO:' : ''}</div>`;
     if (!o) return status;
     if (o.precisa <= 0 && !o.opcoes.length) return `${status}<div class="me-aviso me-aviso--erro">Os encontros já somam a CH toda: o estágio em campo ficaria sem horas. Diminua os dias ou as horas dos encontros.</div>`;
     if (!o.opcoes.length) return status;

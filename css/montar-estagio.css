@@ -234,7 +234,14 @@
 .me-soma { font-size: 14px; font-weight: 600; }
 .me-soma--ok { color: #15803D; }
 .me-soma--erro { color: #B91C1C; }
-.me-soma--alerta { font-weight: 800; letter-spacing: .02em; }
+.me-soma--alerta { font-weight: 800; letter-spacing: .02em; line-height: 1.7; }
+/* Soma e CH prevista dentro da frase (20/11/2026): etiqueta sublinhada, cor propria */
+.me-soma-valor {
+    display: inline-block; padding: 0 7px; border-radius: 6px; font-size: 15px; letter-spacing: 0;
+    text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 3px; white-space: nowrap;
+}
+.me-soma-valor--soma { background: #FEE2E2; color: #991B1B; border: 1px solid #FCA5A5; }
+.me-soma-valor--ch { background: #DCFCE7; color: #15803D; border: 1px solid #86EFAC; }
 .me-opcoes-titulo { font-size: 14px; font-weight: 800; color: #15803D; }
 .me-opcoes-lista { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 10px; }
 .me-opcao {

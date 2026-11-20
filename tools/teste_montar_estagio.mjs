@@ -123,7 +123,7 @@ try {
   // Passo 1 (20/11/2026): a soma tem que fechar para ir as Datas; opcoes em cartoes.
   await evaluate(`(async () => { const i = __t.q('[data-etapa="1"] [data-campo="horasDia"]'); i.value = '4'; __t.fire(i, 'input'); await __t.wait(300); })()`);
   const soma = await evaluate("__t.q('.me-soma').textContent");
-  confere('passo 1 sem fechar: soma em vermelho e Proximo travado', /NÃO BATE COM A CARGA HORÁRIA. ESCOLHA UMA DAS SUGESTÕES/.test(soma) && await evaluate("__t.q('[data-ir=\"2\"]').disabled"), soma);
+  confere('passo 1 sem fechar: soma em vermelho e Proximo travado', /SOMA DAS ETAPAS \d+ h NÃO BATE COM A CARGA HORÁRIA PREVISTA \d+ h\. ESCOLHA UMA DAS SUGESTÕES/.test(soma) && await evaluate("__t.q('[data-ir=\"2\"]').disabled"), soma);
   const cartoes = await evaluate("__t.qa('.me-opcao').length");
   confere('passo 1 mostra cartoes com opcoes que fecham', cartoes > 0, cartoes + ' cartoes');
   console.log('  1a opcao: ' + await evaluate("__t.q('.me-opcao').textContent.replace(/\\s+/g, ' ').trim()"));
