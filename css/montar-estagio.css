@@ -42,11 +42,8 @@
 .me-caixa {
     display: flex;
     flex-direction: column;
-    /* 19/11/2026: tudo 20% maior (fontes, campos, espacos), na mesma proporcao.
-       As medidas de tela sao divididas pelo zoom para caber na janela. */
-    zoom: 1.2;
-    width: min(1000px, calc((100vw - 32px) / 1.2));
-    max-height: calc(92vh / 1.2);
+    width: min(1000px, 100%);
+    max-height: 92vh;
     border-radius: 12px;
     background: #FFFFFF;
     box-shadow: 0 12px 40px rgba(0, 0, 0, .35);
