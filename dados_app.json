@@ -1,6 +1,6 @@
 {
   "meta": {
-    "generated_at": "2026-11-19T17:02:41",
+    "generated_at": "2026-11-20T11:53:07",
     "source_file": "planilha_base.xlsx"
   },
   "docentes": [
@@ -2406,7 +2406,7 @@
       "periodo": "V",
       "codigo": "CNBR036",
       "cor": "#fffcf1",
-      "componente": "ESTAGIO DOCENTE EM ESPACOS FORMAIS E NAO- https://sigaa.ufpa.br/sigaa/graduacao/curriculo/lista.jsf# FORMAIS",
+      "componente": "ESTAGIO DOCENTE EM ESPACOS FORMAIS E NAO-FORMAIS",
       "abreviacao": "Estag Docen Espaços",
       "ch": 90
     },

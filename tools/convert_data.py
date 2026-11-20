@@ -73,6 +73,20 @@ def to_str(value: Any) -> str:
     return "" if value is None else str(value).strip()
 
 
+def nome_componente_limpo(value: Any) -> str:
+    # Nome copiado da pagina do SIGAA pode trazer um link junto
+    # ("... E NAO- https://sigaa.ufpa.br/...lista.jsf# FORMAIS"): tira o link,
+    # junta o hifen que ficou solto ("NAO- FORMAIS" -> "NAO-FORMAIS") e
+    # deixa um espaco so entre as palavras. Avisa quando mudou algo.
+    original = to_str(value)
+    nome = re.sub(r"https?://\S+|www\.\S+", " ", original)
+    nome = re.sub(r"(\w)-\s+(\w)", r"\1-\2", nome)
+    nome = re.sub(r"\s+", " ", nome).strip()
+    if nome != original:
+        print(f"AVISO: nome de componente corrigido: {original!r} -> {nome!r}")
+    return nome
+
+
 def to_int(value: Any) -> int:
     if value is None or value == "":
         return 0
@@ -234,7 +248,7 @@ def build_json_from_excel(xlsx_path: Path) -> Dict[str, Any]:
             "periodo": to_str(row.get("periodo")),
             "codigo": to_str(row.get("codigo")),
             "cor": to_str(row.get("cor")),
-            "componente": to_str(row.get("componente")),
+            "componente": nome_componente_limpo(row.get("componente")),
             "abreviacao": to_str(row.get("abreviacao")),
             "ch": to_int(row.get("ch")),
         }
