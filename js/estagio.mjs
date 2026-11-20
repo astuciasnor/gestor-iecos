@@ -8,8 +8,8 @@
 //   professor fica livre para dar outras aulas nesse horario.
 // As demais componentes nao mudam: sempre contam como choque.
 
-import { normalizeTurnoKey, turnoDaTurmaInclui } from './turns.js?v=202611201738';
-import { addDaysISO, weekdayOf } from './datas.mjs?v=202611201738';
+import { normalizeTurnoKey, turnoDaTurmaInclui } from './turns.js?v=202611201748';
+import { addDaysISO, weekdayOf } from './datas.mjs?v=202611201748';
 
 // "CBBR049 ESTAGIO III", "Estágio Supervisionado I" -> true.
 export function ehEstagio(nomeComponente) {

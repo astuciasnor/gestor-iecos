@@ -1,22 +1,22 @@
-import { UNIDADE_PADRAO, unidadeDoCurso } from './unidades.mjs?v=202611201738';
-import { escapeHtml as esc } from './texto.mjs?v=202611201738';
+import { UNIDADE_PADRAO, unidadeDoCurso } from './unidades.mjs?v=202611201748';
+import { escapeHtml as esc } from './texto.mjs?v=202611201748';
 // Menu Indicadores (so leitura: nada e gravado).
 // Sub-aba "Carga por docente": tabela com a CH de cada docente por curso e por PL,
 // do ano inteiro ou de um PL. As contas estao em indicadores.mjs.
 // Sub-aba "Dias do docente": quadro de um docente, uma linha por componente e um
 // quadradinho por dia do PL, com os dias de 2+ componentes (dias_docente.mjs).
-import { store } from './store.js?v=202611201738';
-import { getCursoSiglaDaTurma, getDisciplinaCHGlobal } from './curso_turma_helpers.js?v=202611201738';
-import { formatDateBR } from './date_utils_ui.js?v=202611201738';
-import { UNIDADES } from './docente_nomes.mjs?v=202611201738';
-import { cargaPorDocente, ordenarLinhas, SEM_DOCENTE } from './indicadores.mjs?v=202611201738';
-import { diasDoDocente } from './dias_docente.mjs?v=202611201738';
-import { getCalendarEvents } from './calendar.js?v=202611201738';
-import { withPlanContext } from './calendarios_ui.js?v=202611201738';
-import { getTurmaLabel } from './curso_turma_helpers.js?v=202611201738';
-import { feriadosDaTurma } from './feriados.mjs?v=202611201738';
-import { fmtCH, quadroDiasHtml, quadroVazioHtml, focarDiaDoQuadro } from './quadro_dias.mjs?v=202611201738';
-import { chOrientadorDaOferta } from './estagio.mjs?v=202611201738';
+import { store } from './store.js?v=202611201748';
+import { getCursoSiglaDaTurma, getDisciplinaCHGlobal } from './curso_turma_helpers.js?v=202611201748';
+import { formatDateBR } from './date_utils_ui.js?v=202611201748';
+import { UNIDADES } from './docente_nomes.mjs?v=202611201748';
+import { cargaPorDocente, ordenarLinhas, SEM_DOCENTE } from './indicadores.mjs?v=202611201748';
+import { diasDoDocente } from './dias_docente.mjs?v=202611201748';
+import { getCalendarEvents } from './calendar.js?v=202611201748';
+import { withPlanContext } from './calendarios_ui.js?v=202611201748';
+import { getTurmaLabel } from './curso_turma_helpers.js?v=202611201748';
+import { feriadosDaTurma } from './feriados.mjs?v=202611201748';
+import { fmtCH, quadroDiasHtml, quadroVazioHtml, focarDiaDoQuadro } from './quadro_dias.mjs?v=202611201748';
+import { chOrientadorDaOferta } from './estagio.mjs?v=202611201748';
 
 const VALIDADE_MS = 2 * 60 * 1000; // depois disso, abrir o menu busca de novo
 
