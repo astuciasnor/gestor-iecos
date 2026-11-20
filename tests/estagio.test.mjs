@@ -240,20 +240,6 @@ test('CH do orientador: vale so em estagio, entre 1 h e a CH toda', () => {
     assert.equal(chDoOrientador(est(45)), 45);       // sem CH total conhecida
 });
 
-// CH do orientador (reuniao de 19/11/2026): so conta para o docente, so no estagio.
-test('CH do orientador: vale so em estagio, entre 1 h e a CH toda', async () => {
-    const { chDoOrientador } = await import('../js/estagio.mjs');
-    const est = (v) => ({ disciplina: 'ESTAGIO SUPERVISIONADO OBRIGATORIO DE AQUICULTURA', chOrientador: v });
-    assert.equal(chDoOrientador(est(45), 90), 45);
-    assert.equal(chDoOrientador(est('45'), 90), 45);
-    assert.equal(chDoOrientador(est(90), 90), 90);
-    assert.equal(chDoOrientador(est(120), 90), 0);   // maior que a CH: ignora
-    assert.equal(chDoOrientador(est(0), 90), 0);
-    assert.equal(chDoOrientador(est(undefined), 90), 0);
-    assert.equal(chDoOrientador({ disciplina: 'ECOLOGIA', chOrientador: 30 }, 60), 0); // nao e estagio
-    assert.equal(chDoOrientador(est(45)), 45);       // sem CH total conhecida
-});
-
 // Opcoes do estagio em campo no passo 1 (pedido de 19/11/2026).
 test('opcoes do campo: caso EP 90 h, encontros 2+2 dias de 4 h, campo 8 h/dia', async () => {
     const { opcoesDoCampo } = await import('../js/estagio.mjs');
@@ -329,4 +315,14 @@ test('divisao das horas entre os 2 turnos, soma planejada e dias fixos do campo'
     assert.equal(r.etapas[1].aulas.length, 5);
     assert.equal(r.alocada, 40);
     assert.equal(expressaoSigaaDaEtapa(r.etapas[1], max), '24M1234 24T12');
+});
+
+import { chOrientadorDaOferta } from '../js/estagio.mjs';
+
+test('CH do orientador da oferta: so com docente unico, a primeira alocacao que tem', () => {
+    const est = (v) => ({ disciplina: 'ESTAGIO SUPERVISIONADO', chOrientador: v });
+    assert.equal(chOrientadorDaOferta([est(0), est(45)], 90), 45);
+    assert.equal(chOrientadorDaOferta([est(45)], 90, true), 0);         // dividida: vale a parte de cada um
+    assert.equal(chOrientadorDaOferta([], 90), 0);
+    assert.equal(chOrientadorDaOferta([{ disciplina: 'BIOQUIMICA', chOrientador: 45 }], 90), 0);
 });

@@ -1,41 +1,38 @@
-import { UNIDADE_PADRAO, unidadeDoCurso } from './unidades.mjs?v=202611201709';
-import { getLocalTodayIso } from './datas.mjs?v=202611201709';
-import { store } from './store.js?v=202611201709';
-import { MAX_FAIXAS, NUMEROS_FAIXAS, idsDatasFaixas } from './faixas.mjs?v=202611201709';
-import { ehEstagio, letrasDoTurno } from './estagio.mjs?v=202611201709';
-import { abrirMontarEstagio } from './montar_estagio_ui.js?v=202611201709';
-import { escapeTrocaHtml, contarHorasExecutadas, sugerirInicioSemChoque, fraseComeceEm, cursoDaTurma, sugerirComoResolverChoque, abrirTrocaDeOrdem, ligarTroca } from './troca_ui.js?v=202611201709';
-import { cadastrosDocentes, findNewDocenteNames, getCadastroDocente, refreshAvisoDocenteNovo, coletarCadastrosDocentes, setupAvisoDocenteNovo, ligarCadastroDocente } from './cadastro_docente_ui.js?v=202611201709';
-import { renderOfertasList, ligarListaOfertas } from './lista_ofertas_ui.js?v=202611201709';
-import { arrastoAtivo, esquecerAncora, endDrawingDrag, setDrawingCellSelection, marcarAncoraNaGrade, ligarSelecaoDaGrade } from './grade_selecao.js?v=202611201709';
-import { stableStringify } from './sync_diff.mjs?v=202611201709';
-import { getTurnoLetter, mapSlotToTurno, turnoDaTurmaInclui } from './turns.js?v=202611201709';
-import { normalizePeriodo as normalizePeriodoLetivoCode } from './plan_storage.js?v=202611201709';
-import { getCalendarEvents } from './calendar.js?v=202611201709';
-import { isDateOverlap } from './utils.js?v=202611201709';
-import { weeklyState } from './weekly_state.js?v=202611201709';
-import { findPendentesCobertas, isPendenteJaAlocada } from './pendentes.mjs?v=202611201709';
+import { UNIDADE_PADRAO, unidadeDoCurso } from './unidades.mjs?v=202611201756';
+import { getLocalTodayIso } from './datas.mjs?v=202611201756';
+import { store } from './store.js?v=202611201756';
+import { MAX_FAIXAS, NUMEROS_FAIXAS, idsDatasFaixas } from './faixas.mjs?v=202611201756';
+import { ehEstagio, letrasDoTurno } from './estagio.mjs?v=202611201756';
+import { abrirMontarEstagio } from './montar_estagio_ui.js?v=202611201756';
+import { escapeTrocaHtml, contarHorasExecutadas, sugerirInicioSemChoque, fraseComeceEm, cursoDaTurma, sugerirComoResolverChoque, abrirTrocaDeOrdem, ligarTroca } from './troca_ui.js?v=202611201756';
+import { cadastrosDocentes, findNewDocenteNames, getCadastroDocente, refreshAvisoDocenteNovo, coletarCadastrosDocentes, setupAvisoDocenteNovo, ligarCadastroDocente } from './cadastro_docente_ui.js?v=202611201756';
+import { renderOfertasList, ligarListaOfertas } from './lista_ofertas_ui.js?v=202611201756';
+import { ligarImportacao, ligarImportacaoJson, handleImportBloco, updateImportBlocoButtonState } from './importacao_ui.js?v=202611201756';
+import { arrastoAtivo, esquecerAncora, endDrawingDrag, setDrawingCellSelection, marcarAncoraNaGrade, ligarSelecaoDaGrade } from './grade_selecao.js?v=202611201756';
+import { stableStringify } from './sync_diff.mjs?v=202611201756';
+import { getTurnoLetter, mapSlotToTurno, turnoDaTurmaInclui } from './turns.js?v=202611201756';
+import { normalizePeriodo as normalizePeriodoLetivoCode } from './plan_storage.js?v=202611201756';
+import { getCalendarEvents } from './calendar.js?v=202611201756';
+import { isDateOverlap } from './utils.js?v=202611201756';
+import { weeklyState } from './weekly_state.js?v=202611201756';
+import { findPendentesCobertas, isPendenteJaAlocada } from './pendentes.mjs?v=202611201756';
 
-import { datasFeriadoDaTurma, feriadosDaTurma } from './feriados.mjs?v=202611201709';
-import { closeFaixaEnds, isPauseEnd, listFaixaPauses } from './pausa_faixas.mjs?v=202611201709';
-import { numeroDaSubturma, isTurmaInteira, proximaSubturma, codigoT01Como, saoSubturmasDiferentes, sufixoSubturma, semSubturma, subturmaFicouSozinha } from './subturmas.mjs?v=202611201709';
-import { abrirMiniCalendario, fecharMiniCalendario, miniCalendarioAberto } from './mini_calendario.mjs?v=202611201709';
-import { buildCanonicalOfferProjection } from './execution_engine.js?v=202611201709';
+import { datasFeriadoDaTurma, feriadosDaTurma } from './feriados.mjs?v=202611201756';
+import { closeFaixaEnds, isPauseEnd, listFaixaPauses } from './pausa_faixas.mjs?v=202611201756';
+import { numeroDaSubturma, isTurmaInteira, proximaSubturma, codigoT01Como, saoSubturmasDiferentes, sufixoSubturma, semSubturma, subturmaFicouSozinha } from './subturmas.mjs?v=202611201756';
+import { abrirMiniCalendario, fecharMiniCalendario, miniCalendarioAberto } from './mini_calendario.mjs?v=202611201756';
 import {
-    buildSigaaMetadataPayload,
-    validateSigaaMetadataPayload,
     getSigaaCode,
     buildScopedSigaaAllocationFromOfferFaixa,
     buildSigaaHorarioResumo
-} from './sigaa_metadata.js?v=202611201709';
-import { parseBackupDataFile, extractImportPlanMeta } from './serialization.js?v=202611201709';
+} from './sigaa_metadata.js?v=202611201756';
 import {
     showToastWarning,
     showPersistentStatusMessage,
     copyTextToClipboard,
     flashButtonCopyState,
     setupCopyActionButtons
-} from './ui_feedback.js?v=202611201709';
+} from './ui_feedback.js?v=202611201756';
 import {
     normalizeHexColor,
     adjustHexColor,
@@ -44,7 +41,7 @@ import {
     tonsDaCor,
     aplicarTonsBloco,
     PALETA_CORES
-} from './color_utils.js?v=202611201709';
+} from './color_utils.js?v=202611201756';
 import {
     isFaixaAllocation,
     isPriorityRegularAllocation,
@@ -53,8 +50,8 @@ import {
     normalizeTeacherNameForMatch,
     getDocenteShortLabel,
     getAllocationTeachersForConflict
-} from './allocation_helpers.js?v=202611201709';
-import { setupSeletorCor } from './seletor_cor.js?v=202611201709';
+} from './allocation_helpers.js?v=202611201756';
+import { setupSeletorCor } from './seletor_cor.js?v=202611201756';
 
 import {
     UNIDADES,
@@ -62,11 +59,11 @@ import {
     acharNomeConhecido,
     filtrarDocentes,
     umNomePorPessoa
-} from './docente_nomes.mjs?v=202611201709';
+} from './docente_nomes.mjs?v=202611201756';
 import {
     fetchAllocationsForPlans
-} from './sync_remoto.js?v=202611201709';
-import { resolveBackendMode } from './backend_config.js?v=202611201709';
+} from './sync_remoto.js?v=202611201756';
+import { resolveBackendMode } from './backend_config.js?v=202611201756';
 import {
     normalizeConflictSlotLabel,
     getAvailableTurnoOfertaOptions,
@@ -76,7 +73,7 @@ import {
     buildHorariosForUI,
     getShiftChangeMeta,
     getNativeTurnoValueForAllocation
-} from './turno_helpers.js?v=202611201709';
+} from './turno_helpers.js?v=202611201756';
 import {
     getDisciplinaCHGlobal,
     derivarBloco,
@@ -86,7 +83,7 @@ import {
     getDisciplinaInfo,
     getCursoSiglaDaTurma,
     getPrintAcademicMetaLine
-} from './curso_turma_helpers.js?v=202611201709';
+} from './curso_turma_helpers.js?v=202611201756';
 import {
     renderMonthlyCalendar,
     renderTeacherCalendar,
@@ -94,14 +91,14 @@ import {
     clearTeacherRangeCache,
     setTeacherPeriod,
     getTeacherPeriod
-} from './calendarios_ui.js?v=202611201709';
-import { setupIndicadores, renderIndicadores, setIndicadoresLigacoes } from './indicadores_ui.js?v=202611201709';
+} from './calendarios_ui.js?v=202611201756';
+import { setupIndicadores, renderIndicadores, setIndicadoresLigacoes } from './indicadores_ui.js?v=202611201756';
 import {
     refreshTeacherConflictsUI,
     setCrossPlanLoader,
     setResolverDeChoque,
     acharChoqueComOutroPL
-} from './conflitos_ui.js?v=202611201709';
+} from './conflitos_ui.js?v=202611201756';
 import {
     shouldIgnoreTurmaEventForCandidate,
     candidatoSemChoque,
@@ -117,7 +114,7 @@ import {
     resolveEditableFaixasFromStoredExecution,
     alignFaixasToExecutionEnd,
     buildFinalAdjustmentFaixaSuggestion
-} from './faixa_utils.js?v=202611201709';
+} from './faixa_utils.js?v=202611201756';
 import {
     timeToMinutes,
     shiftISODate,
@@ -131,14 +128,14 @@ import {
     isDateInsideRange,
     formatDateBRShortYear,
     formatDateBR
-} from './date_utils_ui.js?v=202611201709';
+} from './date_utils_ui.js?v=202611201756';
 import {
     initializeWeeklyScheduleForTurma,
     reconcileTurmaSelectionAfterPLChange,
     resetWeeklyViewOnTurmaChange,
     resolveActiveAcademicPeriod,
     slotLabelsOverlap
-} from './academic_rules.mjs?v=202611201709';
+} from './academic_rules.mjs?v=202611201756';
 
 const gridContainer = document.getElementById('weekly-grid');
 const selCurso = document.getElementById('sel-curso');
@@ -163,8 +160,6 @@ const inputConfig = {
     fim: document.getElementById('inp-data-fim')
 };
 
-let tempImportData = null;
-let tempImportPlanMeta = null;
 let activeFaixaIndex = 1;
 // faixasPatterns agora vive em weeklyState (storage centralizado). Alias LOCAL
 // para o mesmo objeto — mutacoes in-place (faixasPatterns[i]=...) valem no
@@ -5197,121 +5192,6 @@ function initPeriodoLetivoETurno() {
     }
 }
 
-// ==== IMPORTAÇÃO DE BLOCO ====
-function normalizePeriodoToNumber(value) {
-    const raw = String(value || '').trim().toUpperCase();
-    if (!raw) return '';
-
-    const numMatch = raw.match(/\d{1,2}/);
-    if (numMatch) return String(parseInt(numMatch[0], 10));
-
-    const romanMap = {
-        I: '1',
-        II: '2',
-        III: '3',
-        IV: '4',
-        V: '5',
-        VI: '6',
-        VII: '7',
-        VIII: '8',
-        IX: '9',
-        X: '10'
-    };
-
-    const romanOnly = raw.replace(/[^IVX]/g, '');
-    if (romanOnly && romanMap[romanOnly]) return romanMap[romanOnly];
-
-    return '';
-}
-
-function handleImportBloco() {
-    if (!store.selectedCurso || !store.selectedTurma) {
-        showToastWarning('Selecione um Curso e uma Turma primeiro.', 'warning', 2600);
-        return;
-    }
-    if (bloquearSeSomenteLeitura()) return;
-
-    const comps = store.rawData?.componentes?.filter(c => c.sigla === store.selectedCurso) || [];
-    if (comps.length === 0) {
-        showToastWarning('Nenhum componente encontrado para este curso no arquivo mestre.', 'warning', 2800);
-        return;
-    }
-
-    const periodosDisponiveisNoCurso = [...new Set(comps
-        .map(c => normalizePeriodoToNumber(c.periodo))
-        .filter(Boolean))]
-        .sort((a, b) => parseInt(a, 10) - parseInt(b, 10));
-
-    if (periodosDisponiveisNoCurso.length === 0) {
-        showToastWarning('Os componentes deste curso nao possuem periodos validos cadastrados.', 'warning', 3000);
-        return;
-    }
-
-    const opcoesDisponiveis = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10'];
-    const p = prompt(
-        'INICIANDO IMPORTACAO RAPIDA\n' +
-        'Turma alvo: ' + getTurmaLabel(store.selectedTurma) + '\n\n' +
-        'Digite o NUMERO DO PERIODO que deseja importar:\n' +
-        '(Opcoes disponiveis: ' + opcoesDisponiveis.join(', ') + ')\n' +
-        'Periodos encontrados neste curso: ' + periodosDisponiveisNoCurso.join(', ')
-    );
-
-    if (!p) return;
-
-    const periodoSelecionadoNum = normalizePeriodoToNumber(p);
-    if (!periodoSelecionadoNum || !opcoesDisponiveis.includes(periodoSelecionadoNum)) {
-        showToastWarning('Periodo invalido. Use uma das opcoes: 1, 2, 3, 4, 5, 6, 7, 8, 9, 10.', 'warning', 3200);
-        return;
-    }
-
-    const compsToImport = comps.filter(c => normalizePeriodoToNumber(c.periodo) === periodoSelecionadoNum);
-    if (compsToImport.length === 0) {
-        showToastWarning(`Nenhuma disciplina encontrada no periodo "${periodoSelecionadoNum}".`, 'warning', 3000);
-        return;
-    }
-
-    const blocoId = `BL${periodoSelecionadoNum}`;
-    let addedCount = 0;
-
-    compsToImport.forEach(c => {
-        const exists = store.allocations.some(a =>
-            String(a.turmaId) === String(store.selectedTurma) && a.disciplina === c.componente
-        );
-        if (exists) return;
-
-        store.addAllocation({
-            turmaId: store.selectedTurma,
-            disciplina: c.componente,
-            docente: 'A definir',
-            modo: 'pendente',
-            importado: true,
-            cor: c.cor || '#bdc3c7',
-            dataInicio: store.settings.termStart,
-            dataFim: store.settings.termEnd,
-            subGrupo: blocoId
-        });
-        addedCount++;
-    });
-
-    if (addedCount > 0) {
-        const turmaNome = getTurmaLabel(store.selectedTurma, blocoId);
-        showToastWarning(`Sucesso! ${addedCount} disciplinas importadas como ${turmaNome}. Va em "Lista de Ofertas" para alocar na grade.`, 'success');
-        store.saveAllocations();
-        renderOfertasList();
-        switchTab('list');
-    } else {
-        showToastWarning('Todas as disciplinas deste bloco ja estao na grade (ou pendentes) para esta turma.', 'warning', 3200);
-    }
-}
-
-function updateImportBlocoButtonState() {
-    const btnImportBloco = document.getElementById('btn-import-bloco');
-    if (!btnImportBloco) return;
-
-    btnImportBloco.innerHTML = 'Inser&ccedil;&atilde;o por Bloco (PPC)';
-    btnImportBloco.disabled = !(store.selectedCurso && store.selectedTurma);
-}
-
 export function initUI() {
     setupCompactFaixaDateFields();
     setupFaixaControls();
@@ -5594,130 +5474,6 @@ function ligarFiltroDocente() {
 }
 
 // Importar JSON: arquivo e a janela Substituir / Mesclar / Cancelar.
-function ligarImportacaoJson() {
-    const inpImport = sanitizeImportInputElement();
-    if (inpImport) {
-        // Neutraliza handlers legados e impede bind duplicado no input de importacao.
-        inpImport.onchange = null;
-        if (inpImport.dataset.importBound !== '1') {
-            inpImport.dataset.importBound = '1';
-            inpImport.addEventListener('change', handleFileSelect);
-        }
-    }
-
-    const btnReplace = document.getElementById('btn-modal-replace');
-    if (btnReplace) {
-        btnReplace.addEventListener('click', () => {
-            if (tempImportData) {
-                if (tempImportPlanMeta?.key) {
-                    applyPlanContextToUI(tempImportPlanMeta, { resetDraftOnChange: true });
-                }
-                store.replaceAllocations(markAllocationsAsImported(tempImportData));
-                syncAllRegularDates();
-                syncAllIntensiveDates();
-                populateDocentes();
-                rerenderPlanBoundViews();
-                const planLabel = tempImportPlanMeta?.key ? ` no plano ${getPlanDisplayLabel(tempImportPlanMeta)}` : '';
-                showToastWarning(`Dados importados${planLabel} com datas recalculadas com sucesso.`, 'success', 2200);
-            }
-            closeModal();
-        });
-    }
-
-    const btnMerge = document.getElementById('btn-modal-merge');
-    if (btnMerge) {
-        btnMerge.addEventListener('click', () => {
-            if (tempImportData) {
-                if (tempImportPlanMeta?.key && tempImportPlanMeta.key !== store.getActivePlanMeta().key) {
-                    const shouldSwitch = confirm(
-                        `O arquivo pertence ao plano ${getPlanDisplayLabel(tempImportPlanMeta)}.\n\n` +
-                        `Deseja trocar para esse plano antes de mesclar as alocacoes?`
-                    );
-                    if (!shouldSwitch) return;
-                    applyPlanContextToUI(tempImportPlanMeta, { resetDraftOnChange: true });
-                }
-                const { addedCount, updatedCount } = store.mergeAllocations(markAllocationsAsImported(tempImportData));
-                syncAllRegularDates();
-                syncAllIntensiveDates();
-                populateDocentes();
-                showToastWarning(`Mesclagem concluida! ${addedCount} nova(s) e ${updatedCount} atualizada(s), com datas corrigidas.`, 'success', 3500);
-                rerenderPlanBoundViews();
-            }
-            closeModal();
-        });
-    }
-
-    const btnCancel = document.getElementById('btn-modal-cancel');
-    if (btnCancel) {
-        btnCancel.addEventListener('click', () => {
-            tempImportData = null;
-            tempImportPlanMeta = null;
-            if (inpImport) inpImport.value = '';
-            closeModal();
-        });
-    }
-}
-
-// Marca alocacoes vindas de arquivo importado para que sobreposicoes sejam
-// permitidas e destacadas na aba Calendario Docente.
-function markAllocationsAsImported(list) {
-    if (!Array.isArray(list)) return [];
-    return list.map((alloc) => (alloc && typeof alloc === 'object' ? { ...alloc, importado: true } : alloc));
-}
-
-function handleFileSelect(event) {
-    if (typeof event.stopImmediatePropagation === 'function') {
-        event.stopImmediatePropagation();
-    }
-    const file = event.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = function (e) {
-        const result = parseBackupDataFile(e.target.result);
-        
-        if (!result.success) {
-            showToastWarning(result.error || 'Arquivo inválido. O formato não é suportado.', 'error', 3000);
-            tempImportData = null;
-            tempImportPlanMeta = null;
-            event.target.value = '';
-            return;
-        }
-
-        tempImportData = result.allocations;
-        tempImportPlanMeta = extractImportPlanMeta(result.parsed, resolveOfficialPeriodoLetivoPlan);
-        
-        if (tempImportPlanMeta?.key) {
-            showToastWarning(`Arquivo reconhecido para o plano ${getPlanDisplayLabel(tempImportPlanMeta)}.`, 'success', 2400);
-        }
-        
-        const modal = document.getElementById('import-modal');
-        if (modal) modal.style.display = 'flex';
-    };
-    reader.readAsText(file);
-}
-
-function closeModal() {
-    const modal = document.getElementById('import-modal');
-    if (modal) modal.style.display = 'none';
-    tempImportData = null;
-    tempImportPlanMeta = null;
-    const inp = document.getElementById('inp-import');
-    if (inp) inp.value = '';
-}
-
-function sanitizeImportInputElement() {
-    const current = document.getElementById('inp-import');
-    if (!current) return null;
-    if (current.dataset.importSanitized === '1') return current;
-
-    const clone = current.cloneNode(true);
-    clone.value = '';
-    clone.onchange = null;
-    clone.dataset.importSanitized = '1';
-    current.replaceWith(clone);
-    return clone;
-}
-
 function getLatestAllocationEndForTurma(turmaId) {
     if (!turmaId || !Array.isArray(store.allocations)) return '';
 
@@ -7853,64 +7609,18 @@ ligarListaOfertas({
     abrirTrocaDeOrdem
 });
 
-function getActiveExportPlanContext() {
-    const activePlan = store.getActivePlanMeta();
-    const plan = activePlan?.key ? activePlan : null;
-    const termStart = plan?.termStart || store.settings.termStart || (calStart ? calStart.value : '2025-01-01');
-    const termEnd = plan?.termEnd || store.settings.termEnd || (calEnd ? calEnd.value : '2025-12-31');
-    const periodoLetivo = plan?.periodo || store.settings.periodo || '';
-    return { plan, termStart, termEnd, periodoLetivo };
-}
-
-export function exportSigaaMetadataJSON() {
-    const planContext = getActiveExportPlanContext();
-    const turmaAllocations = store.allocations.filter((alloc) => String(alloc?.turmaId || '') === String(store.selectedTurma || ''));
-    const offerProjection = buildCanonicalOfferProjection({
-        allocations: turmaAllocations,
-        startDate: planContext.termStart,
-        endDate: planContext.termEnd
-    });
-    
-    const dataContext = {
-        store,
-        planContext,
-        turmaId: String(store.selectedTurma || ''),
-        unifiedExec: offerProjection,
-        offerProjection
-    };
-    
-    const contextMap = {
-        getDisciplinaInfo,
-        formatDateBR
-    };
-
-    const payload = buildSigaaMetadataPayload(dataContext, contextMap);
-    if (!payload) {
-        showToastWarning('Selecione uma turma antes de exportar os metadados SIGAA.', 'warning', 2600);
-        return;
-    }
-
-    const issues = validateSigaaMetadataPayload(payload);
-    if (issues.length) {
-        showToastWarning(
-            'Exportacao SIGAA cancelada por inconsistencias:<br>- ' + issues.join('<br>- '),
-            'error',
-            5600
-        );
-        return;
-    }
-
-    const ano = (payload.termStart || '').split('-')[0] || '0000';
-    const periodo = payload.periodoLetivo || 'P';
-    const fileName = `sigaa_metadata_${payload.cursoSigla || 'CURSO'}_${payload.turmaId}_${ano}_${periodo}.json`;
-    const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(payload, null, 2));
-    const a = document.createElement('a');
-    a.setAttribute('href', dataStr);
-    a.setAttribute('download', fileName);
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-}
+// Importacao (js/importacao_ui.js): as funcoes do ui.js que ela chama.
+ligarImportacao({
+    bloquearSeSomenteLeitura,
+    switchTab,
+    applyPlanContextToUI,
+    syncAllRegularDates,
+    syncAllIntensiveDates,
+    populateDocentes,
+    rerenderPlanBoundViews,
+    getPlanDisplayLabel,
+    resolveOfficialPeriodoLetivoPlan
+});
 
 function switchTab(tabId) {
     document.querySelectorAll('.tab-content').forEach((c) => c.classList.remove('active'));

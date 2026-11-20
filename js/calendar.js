@@ -1,14 +1,14 @@
-import { addDaysISO } from './datas.mjs?v=202611201709';
-import { timeToMinutesSafe, normalizeDayList, normalizeSlotList, normalizeDrawnSlotsByDay, buildDrawnSlotsByDay } from './horarios.mjs?v=202611201709';
-import { normalizeKeyPart, normalizeKeyPart as normalizeTeacherKey } from './texto.mjs?v=202611201709';
-import { getNativeTurnoValueForAllocation, getQuadroTodosRegimes } from './turno_helpers.js?v=202611201709';
-import { store } from './store.js?v=202611201709';
-import { getDaysArray, toLocalDateString } from './utils.js?v=202611201709';
-import { mapSlotToTurno, turnoDaTurmaInclui } from './turns.js?v=202611201709';
-import { slotLabelsOverlap } from './academic_rules.mjs?v=202611201709';
-import { mesmoDocente } from './docente_nomes.mjs?v=202611201709';
-import { datasFeriadoDaTurma, feriadosDaTurma } from './feriados.mjs?v=202611201709';
-import { estagioContaChoque, ehEstagio } from './estagio.mjs?v=202611201709';
+import { addDaysISO } from './datas.mjs?v=202611201756';
+import { timeToMinutesSafe, normalizeDayList, normalizeSlotList, normalizeDrawnSlotsByDay, buildDrawnSlotsByDay } from './horarios.mjs?v=202611201756';
+import { normalizeKeyPart, normalizeKeyPart as normalizeTeacherKey } from './texto.mjs?v=202611201756';
+import { getNativeTurnoValueForAllocation, getQuadroTodosRegimes } from './turno_helpers.js?v=202611201756';
+import { store } from './store.js?v=202611201756';
+import { getDaysArray, toLocalDateString } from './utils.js?v=202611201756';
+import { mapSlotToTurno, turnoDaTurmaInclui } from './turns.js?v=202611201756';
+import { slotLabelsOverlap } from './academic_rules.mjs?v=202611201756';
+import { mesmoDocente } from './docente_nomes.mjs?v=202611201756';
+import { datasFeriadoDaTurma, feriadosDaTurma } from './feriados.mjs?v=202611201756';
+import { estagioContaChoque, ehEstagio } from './estagio.mjs?v=202611201756';
 
 function normalizeCalendarSlotKey(value) {
   const match = String(value || '').match(/\d{1,2}:\d{2}/);
@@ -230,7 +230,10 @@ function faixaNoDia(faixas = [], dateStr = '') {
 }
 
 // Choque das aulas de estagio no dia: para a turma e para o docente.
-function regrasDoEstagioNoDia(allocation, faixas, dateStr, horario) {
+// faixas: as faixas normalizadas da alocacao (com a marca campo/encontro).
+// Unica fonte da regra: o calendario e a componente em edicao
+// (candidatoSemChoque, js/faixa_utils.js) usam esta mesma funcao.
+export function regrasDoEstagioNoDia(allocation, faixas, dateStr, horario) {
   const disciplina = allocation?.disciplina;
   if (!ehEstagio(disciplina)) return { semChoque: false, semChoqueDocente: false, estagioCampo: false };
   const faixa = faixaNoDia(faixas, dateStr);

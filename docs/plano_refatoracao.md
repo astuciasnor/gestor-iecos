@@ -155,7 +155,8 @@ turmas antes e depois (tem que dar identico).
       conflitos do candidato) e e chamada de 9 lugares. Fazer depois da virada,
       recebendo essas funcoes num objeto de contexto (`initOfertasUI({...})`),
       ja que modulo novo nao importa de `ui.js`.
-- [ ] Exportacoes e importacao (botoes da aba Exportar) -> `exportacoes_ui.js`.
+- [x] Importacao (JSON e Insercao por Bloco) -> `importacao_ui.js` e exportacao
+      JSON SIGAA -> `exportacoes_ui.js` (20/11/2026).
 - [ ] Sugestao de inicio e aviso de dia livre -> modulo proprio, com testes.
 - [ ] Por ultimo, a grade da aba Alocar Componentes (concentra o estado de
       `weekly_state.js`; so mexer com testes cobrindo o fluxo de faixas).
@@ -214,3 +215,25 @@ Para quando o Cardume tiver muitas unidades e cursos (decisao do usuario):
       ("Escolha a unidade (IECOS ou CBRAG)").
 - [ ] Listas de reserva `['EP', 'CB', 'CN']` (main.js, serialization.js) so
       valem sem cursos cadastrados; podem sair.
+
+## 20/11/2026 (branch `refatoracao-moderada`, juntada na main)
+
+Mesma regra: nada muda na tela. Conferencia de cada passo contra o main de
+antes: `npm test`, `npm run smoke`, `foto_telas` (HTML), `foto_estilos`,
+`teste_salvar` e `teste_troca` com `--comparar`, HTML do quadro Dias do docente
+de todos os docentes (2026 e 2027), `teste_montar_estagio`; no fim, os outros
+testes de navegador de `tools/`. Tudo igual em todos os passos.
+
+- Passo 1: juntada a `refatoracao-leve-semana` (estagio: `regrasDoEstagioNoDia`
+  tambem no editor; `chOrientadorDaOferta` num lugar so).
+- Passo 2: `js/quadro_dias.mjs` - desenho do quadro Dias do docente (sem store
+  nem DOM global), com `tests/quadro_dias.test.mjs`. Refaz a parte 1 da branch
+  `dias-docente-publico` sobre o codigo atual (a branch foi apagada; as partes
+  2-4, quadro na agenda publica, ficam para quando forem pedidas).
+- Passo 3: `js/importacao_ui.js` - importacao JSON (Substituir/Mesclar) e
+  Insercao por Bloco; recebe as funcoes do ui.js por `ligarImportacao({...})`.
+  Conferida com um teste de navegador (arquivo, cancelar, mesclar, substituir,
+  arquivo ruim, bloco valido/repetido/invalido).
+- Passo 4: `js/exportacoes_ui.js` - exportacao JSON SIGAA; conferida com o
+  arquivo de todas as turmas.
+- `ui.js`: 8.007 -> 7.717 linhas; `indicadores_ui.js`: 580 -> 438.
