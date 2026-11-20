@@ -242,6 +242,8 @@
 }
 .me-soma-valor--soma { background: #FEE2E2; color: #991B1B; border: 1px solid #FCA5A5; }
 .me-soma-valor--ch { background: #DCFCE7; color: #15803D; border: 1px solid #86EFAC; }
+/* Aviso do campo em turno + contraturno (20/11/2026), acima da soma */
+.me-aviso-contraturno { margin-top: 12px; font-size: 14px; font-weight: 800; letter-spacing: .02em; color: #1D4ED8; }
 .me-opcoes-titulo { font-size: 14px; font-weight: 800; color: #15803D; }
 .me-opcoes-lista { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 10px; }
 .me-opcao {

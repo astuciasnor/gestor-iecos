@@ -124,6 +124,29 @@ try {
   await evaluate(`(async () => { const i = __t.q('[data-etapa="1"] [data-campo="horasDia"]'); i.value = '4'; __t.fire(i, 'input'); await __t.wait(300); })()`);
   const soma = await evaluate("__t.q('.me-soma').textContent");
   confere('passo 1 sem fechar: soma em vermelho e Proximo travado', /SOMA DAS ETAPAS \d+ h NÃO BATE COM A CARGA HORÁRIA PREVISTA \d+ h\. ESCOLHA UMA DAS SUGESTÕES/.test(soma) && await evaluate("__t.q('[data-ir=\"2\"]').disabled"), soma);
+  // Aviso do campo em turno + contraturno (20/11/2026): aparece com "choque em parte" e some ao voltar.
+  const contra = JSON.parse(await evaluate(`(async () => {
+    // A linha e redesenhada a cada troca: busca o seletor de novo.
+    const sel = () => __t.q('[data-etapa="1"] [data-campo="turno"]');
+    const trocar = async (v) => { const s = sel(); s.value = v; __t.fire(s, 'change'); await __t.wait(250); };
+    const antes = sel().value;
+    const valores = [...sel().options].map((o) => o.value);
+    const avisoAntes = !!__t.q('.me-aviso-contraturno');
+    let texto = '';
+    for (const v of valores) {
+      await trocar(v);
+      if (__t.q('[data-etapa="1"] .me-choque--parte')) { texto = __t.q('.me-aviso-contraturno')?.textContent || '(sem aviso)'; break; }
+    }
+    window.__turnoAntes = antes;
+    return JSON.stringify({ avisoAntes, texto });
+  })()`));
+  await foto('1c-contraturno');
+  contra.avisoDepois = await evaluate(`(async () => {
+    const s = __t.q('[data-etapa="1"] [data-campo="turno"]'); s.value = window.__turnoAntes; __t.fire(s, 'change'); await __t.wait(250);
+    return !!__t.q('.me-aviso-contraturno');
+  })()`);
+  confere('campo em turno + contraturno mostra o aviso e ele some ao voltar',
+    !contra.avisoAntes && /CONFIRME SE O ESTÁGIO DE CAMPO \(ETAPA 2\) VAI SER EM DOIS TURNOS/.test(contra.texto) && !contra.avisoDepois, contra.texto || 'nenhum turno deu choque em parte');
   const cartoes = await evaluate("__t.qa('.me-opcao').length");
   confere('passo 1 mostra cartoes com opcoes que fecham', cartoes > 0, cartoes + ' cartoes');
   console.log('  1a opcao: ' + await evaluate("__t.q('.me-opcao').textContent.replace(/\\s+/g, ' ').trim()"));

@@ -178,6 +178,8 @@ function atualizarResultados() {
         });
         const box = modal.querySelector('#me-opcoes');
         if (box) box.innerHTML = htmlOpcoesCampo();
+        const aviso = modal.querySelector('#me-aviso-campo');
+        if (aviso) aviso.innerHTML = htmlAvisoContraturno();
     }
     atualizarRodape(r);
 }
@@ -205,6 +207,17 @@ const htmlChoque = (turno) => {
 };
 const opcoes = (lista, atual) => lista.map(([v, t]) => `<option value="${esc(v)}" ${String(v) === String(atual) ? 'selected' : ''}>${esc(t)}</option>`).join('');
 
+// Aviso (pedido de 20/11/2026): estagio em campo com um turno da turma e um
+// contraturno ("choque em parte") - o coordenador confirma que e isso mesmo.
+function htmlAvisoContraturno() {
+    const etapas = estado.etapas.slice(0, estado.n)
+        .map((e, k) => (e.tipo === 'campo' && choqueDaEtapa(e.turno, estado.ctx.turnoTurma) === 'parte' ? k + 1 : 0))
+        .filter(Boolean);
+    if (!etapas.length) return '';
+    const quais = etapas.length === 1 ? `ETAPA ${etapas[0]}` : `ETAPAS ${etapas.join(' E ')}`;
+    return `<div class="me-aviso-contraturno" role="note">CONFIRME SE O ESTÁGIO DE CAMPO (${quais}) VAI SER EM DOIS TURNOS: TURNO + CONTRATURNO.</div>`;
+}
+
 function htmlPasso1() {
     const { etapas, n, turnosPossiveis, meses, maxPorLetra } = estado;
     const linhas = etapas.slice(0, n).map((e, k) => `
@@ -227,6 +240,7 @@ function htmlPasso1() {
             <div class="me-etapa me-etapa--cab"><span></span><span>O que é</span><span>Turno</span><span>Mês</span><span>Dias</span><span>Horas</span><span>Choque</span></div>
             ${linhas}
         </div>
+        <div id="me-aviso-campo">${htmlAvisoContraturno()}</div>
         <div class="me-opcoes" id="me-opcoes">${htmlOpcoesCampo()}</div>
         <div class="me-linha-topo me-orientador">
             <label class="me-rotulo" for="me-ch-orientador">CH do orientador</label>
