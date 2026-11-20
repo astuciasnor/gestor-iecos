@@ -1,5 +1,5 @@
-import { addDaysISO, weekdayOf } from './datas.mjs?v=202611201727';
-import { formatWeekdays, summarizeHorarios } from './resumo_docente.mjs?v=202611201727';
+import { addDaysISO, weekdayOf } from './datas.mjs?v=202611201738';
+import { formatWeekdays, summarizeHorarios } from './resumo_docente.mjs?v=202611201738';
 // Indicadores > Dias do docente: em quais dias do PL o professor tem aula e de
 // quais componentes. "Dia carregado" = 2 ou mais componentes diferentes no mesmo
 // dia (manha + tarde, manha + noite...). Nao e choque de horario: e um dia pesado.
