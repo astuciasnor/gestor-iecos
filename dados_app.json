@@ -1,6 +1,6 @@
 {
   "meta": {
-    "generated_at": "2026-11-20T15:46:28",
+    "generated_at": "2026-11-20T16:18:33",
     "source_file": "planilha_base.xlsx"
   },
   "docentes": [
@@ -4047,12 +4047,6 @@
         "CB2027",
         "CN2027"
       ]
-    },
-    {
-      "data": "2027-10-28",
-      "feriado": "Dia do Servidor Público",
-      "dia": "Quinta-feira",
-      "tipo": "Nacional"
     },
     {
       "data": "2028-01-01",
