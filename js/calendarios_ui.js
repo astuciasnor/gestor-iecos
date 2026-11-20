@@ -1,5 +1,5 @@
 import { escapeHtml } from './texto.mjs?v=202611201339';
-import { chDoOrientador } from './estagio.mjs?v=202611201339';
+import { chOrientadorDaOferta } from './estagio.mjs?v=202611201339';
 import { store } from './store.js?v=202611201339';
 import { getCalendarEvents } from './calendar.js?v=202611201339';
 import { buildTeacherExecutionSnapshot, buildCanonicalOfferProjection } from './execution_engine.js?v=202611201339';
@@ -1024,9 +1024,11 @@ function collectDocenteResumeComponents(docenteName, start, end) {
         // ele; docente unico responde pela CH toda, ou, no estagio, pela CH do
         // orientador informada no "Montar estagio" (js/estagio.mjs).
         const compartilhada = docentesOferta.length > 1;
-        const chOrientador = compartilhada ? 0 : allocations
-            .filter((a) => (offerGroup?.allocationIds || []).includes(a.id))
-            .reduce((v, a) => v || chDoOrientador(a, curricularCH), 0);
+        const chOrientador = chOrientadorDaOferta(
+            allocations.filter((a) => (offerGroup?.allocationIds || []).includes(a.id)),
+            curricularCH,
+            compartilhada
+        );
         const chDocente = compartilhada
             ? (toCH(declaredDocente?.ch) || toCH(segment?.ch))
             : (chOrientador || curricularCH);

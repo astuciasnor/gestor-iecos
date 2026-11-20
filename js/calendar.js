@@ -230,7 +230,10 @@ function faixaNoDia(faixas = [], dateStr = '') {
 }
 
 // Choque das aulas de estagio no dia: para a turma e para o docente.
-function regrasDoEstagioNoDia(allocation, faixas, dateStr, horario) {
+// faixas: as faixas normalizadas da alocacao (com a marca campo/encontro).
+// Unica fonte da regra: o calendario e a componente em edicao
+// (candidatoSemChoque, js/faixa_utils.js) usam esta mesma funcao.
+export function regrasDoEstagioNoDia(allocation, faixas, dateStr, horario) {
   const disciplina = allocation?.disciplina;
   if (!ehEstagio(disciplina)) return { semChoque: false, semChoqueDocente: false, estagioCampo: false };
   const faixa = faixaNoDia(faixas, dateStr);

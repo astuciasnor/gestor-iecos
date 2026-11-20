@@ -34,6 +34,18 @@ export function chDoOrientador(alloc, chTotal = 0) {
     return total > 0 && v > total ? 0 : v;
 }
 
+// CH do orientador de uma oferta (todas as alocacoes dela). So vale com docente
+// unico: componente dividida entre docentes conta a parte declarada de cada um.
+// Usada na agenda do docente (js/calendarios_ui.js) e no Dias do docente.
+export function chOrientadorDaOferta(allocs = [], chTotal = 0, dividida = false) {
+    if (dividida) return 0;
+    for (const alloc of allocs) {
+        const v = chDoOrientador(alloc, chTotal);
+        if (v) return v;
+    }
+    return 0;
+}
+
 // "14:00 - 14:50" -> 840. Sem hora -> NaN.
 function minutosDoInicio(horario) {
     const m = String(horario || '').match(/(\d{1,2}):(\d{2})/);

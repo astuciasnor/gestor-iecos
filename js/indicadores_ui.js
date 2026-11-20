@@ -16,7 +16,7 @@ import { withPlanContext } from './calendarios_ui.js?v=202611201339';
 import { getTurmaLabel } from './curso_turma_helpers.js?v=202611201339';
 import { feriadosDaTurma } from './feriados.mjs?v=202611201339';
 import { vividHexColor } from './color_utils.js?v=202611201339';
-import { chDoOrientador } from './estagio.mjs?v=202611201339';
+import { chOrientadorDaOferta } from './estagio.mjs?v=202611201339';
 
 const VALIDADE_MS = 2 * 60 * 1000; // depois disso, abrir o menu busca de novo
 
@@ -364,8 +364,8 @@ function aulasDoDocente(nome, planos) {
                     entries.push({ date, key, disciplina, turmaId: ev.turmaId, subGrupo: ev.subGrupo, cor: ev.cor, aulas: 1, horario: ev.horario, plano: meta.key, campo: !!ev.estagioCampo,
                         // Estagio com CH do orientador (Montar estagio): e essa CH que conta
                         // para o docente, nao as horas de aula. Docente unico apenas.
-                        chOrientador: Array.isArray(ev.docentes) && ev.docentes.length > 1 ? 0
-                            : chDoOrientador(ev, Number(getDisciplinaCHGlobal(disciplina, ev.turmaId)) || Number(ev.ch) || 0) });
+                        chOrientador: chOrientadorDaOferta([ev], Number(getDisciplinaCHGlobal(disciplina, ev.turmaId)) || Number(ev.ch) || 0,
+                            Array.isArray(ev.docentes) && ev.docentes.length > 1) });
                 });
             });
         });
