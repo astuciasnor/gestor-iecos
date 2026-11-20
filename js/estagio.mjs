@@ -8,8 +8,8 @@
 //   professor fica livre para dar outras aulas nesse horario.
 // As demais componentes nao mudam: sempre contam como choque.
 
-import { normalizeTurnoKey, turnoDaTurmaInclui } from './turns.js?v=202611201709';
-import { addDaysISO, weekdayOf } from './datas.mjs?v=202611201709';
+import { normalizeTurnoKey, turnoDaTurmaInclui } from './turns.js?v=202611201727';
+import { addDaysISO, weekdayOf } from './datas.mjs?v=202611201727';
 
 // "CBBR049 ESTAGIO III", "Estágio Supervisionado I" -> true.
 export function ehEstagio(nomeComponente) {
@@ -32,6 +32,18 @@ export function chDoOrientador(alloc, chTotal = 0) {
     if (!Number.isFinite(v) || v <= 0) return 0;
     const total = Number(chTotal) || 0;
     return total > 0 && v > total ? 0 : v;
+}
+
+// CH do orientador de uma oferta (todas as alocacoes dela). So vale com docente
+// unico: componente dividida entre docentes conta a parte declarada de cada um.
+// Usada na agenda do docente (js/calendarios_ui.js) e no Dias do docente.
+export function chOrientadorDaOferta(allocs = [], chTotal = 0, dividida = false) {
+    if (dividida) return 0;
+    for (const alloc of allocs) {
+        const v = chDoOrientador(alloc, chTotal);
+        if (v) return v;
+    }
+    return 0;
 }
 
 // "14:00 - 14:50" -> 840. Sem hora -> NaN.

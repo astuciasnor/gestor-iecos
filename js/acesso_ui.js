@@ -1,9 +1,9 @@
-import { escapeHtml } from './texto.mjs?v=202611201709';
+import { escapeHtml } from './texto.mjs?v=202611201727';
 // Tela de acesso e barra de status da sincronizacao.
 // Modo local: senha unica, como antes. Modos supabase e ufpa: e-mail e senha de
 // cada coordenador, e as alocacoes passam a ser compartilhadas pelo servidor.
-import { resolveBackendMode } from './backend_config.js?v=202611201709';
-import * as remoto from './sync_remoto.js?v=202611201709';
+import { resolveBackendMode } from './backend_config.js?v=202611201727';
+import * as remoto from './sync_remoto.js?v=202611201727';
 
 const LOCAL_PASSWORD = 'ufpa2026';
 
@@ -216,7 +216,7 @@ function mostrarAvisoPublicar(resp) {
 // coordenadores esperando conferencia (a lista fica em "Usuarios e backup").
 async function avisarDocentesNovos(showToast) {
   try {
-    const { buscarDocentesParaConferir } = await import('./admin_ui.js?v=202611201709');
+    const { buscarDocentesParaConferir } = await import('./admin_ui.js?v=202611201727');
     // Conta a lista inteira do painel (vaga revisada tambem, ate virar nome).
     const total = (await buscarDocentesParaConferir()).length;
     marcarDocentesNovos(total);
@@ -376,7 +376,7 @@ function montarBarraStatus(perfil, user, showToast) {
       el('btn-sync-mensagens').setAttribute('aria-expanded', String(!caixa.hidden));
     };
     el('btn-sync-admin').onclick = async () => {
-      const { abrirAdministracao } = await import('./admin_ui.js?v=202611201709');
+      const { abrirAdministracao } = await import('./admin_ui.js?v=202611201727');
       abrirAdministracao({ tools: admin, meuId: user?.id || '', showToast, aoContarDocentes: marcarDocentesNovos });
     };
   }

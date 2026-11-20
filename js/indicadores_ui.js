@@ -1,22 +1,22 @@
-import { UNIDADE_PADRAO, unidadeDoCurso } from './unidades.mjs?v=202611201709';
-import { escapeHtml as esc } from './texto.mjs?v=202611201709';
+import { UNIDADE_PADRAO, unidadeDoCurso } from './unidades.mjs?v=202611201727';
+import { escapeHtml as esc } from './texto.mjs?v=202611201727';
 // Menu Indicadores (so leitura: nada e gravado).
 // Sub-aba "Carga por docente": tabela com a CH de cada docente por curso e por PL,
 // do ano inteiro ou de um PL. As contas estao em indicadores.mjs.
 // Sub-aba "Dias do docente": quadro de um docente, uma linha por componente e um
 // quadradinho por dia do PL, com os dias de 2+ componentes (dias_docente.mjs).
-import { store } from './store.js?v=202611201709';
-import { getCursoSiglaDaTurma, getDisciplinaCHGlobal } from './curso_turma_helpers.js?v=202611201709';
-import { formatDateBR } from './date_utils_ui.js?v=202611201709';
-import { UNIDADES } from './docente_nomes.mjs?v=202611201709';
-import { cargaPorDocente, ordenarLinhas, SEM_DOCENTE } from './indicadores.mjs?v=202611201709';
-import { diasDoDocente } from './dias_docente.mjs?v=202611201709';
-import { getCalendarEvents } from './calendar.js?v=202611201709';
-import { withPlanContext } from './calendarios_ui.js?v=202611201709';
-import { getTurmaLabel } from './curso_turma_helpers.js?v=202611201709';
-import { feriadosDaTurma } from './feriados.mjs?v=202611201709';
-import { vividHexColor, hexToRgb, rgbToHsl, hslToRgb } from './color_utils.js?v=202611201709';
-import { chDoOrientador } from './estagio.mjs?v=202611201709';
+import { store } from './store.js?v=202611201727';
+import { getCursoSiglaDaTurma, getDisciplinaCHGlobal } from './curso_turma_helpers.js?v=202611201727';
+import { formatDateBR } from './date_utils_ui.js?v=202611201727';
+import { UNIDADES } from './docente_nomes.mjs?v=202611201727';
+import { cargaPorDocente, ordenarLinhas, SEM_DOCENTE } from './indicadores.mjs?v=202611201727';
+import { diasDoDocente } from './dias_docente.mjs?v=202611201727';
+import { getCalendarEvents } from './calendar.js?v=202611201727';
+import { withPlanContext } from './calendarios_ui.js?v=202611201727';
+import { getTurmaLabel } from './curso_turma_helpers.js?v=202611201727';
+import { feriadosDaTurma } from './feriados.mjs?v=202611201727';
+import { vividHexColor, hexToRgb, rgbToHsl, hslToRgb } from './color_utils.js?v=202611201727';
+import { chOrientadorDaOferta } from './estagio.mjs?v=202611201727';
 
 const VALIDADE_MS = 2 * 60 * 1000; // depois disso, abrir o menu busca de novo
 
@@ -364,8 +364,8 @@ function aulasDoDocente(nome, planos) {
                     entries.push({ date, key, disciplina, turmaId: ev.turmaId, subGrupo: ev.subGrupo, cor: ev.cor, aulas: 1, horario: ev.horario, plano: meta.key, campo: !!ev.estagioCampo,
                         // Estagio com CH do orientador (Montar estagio): e essa CH que conta
                         // para o docente, nao as horas de aula. Docente unico apenas.
-                        chOrientador: Array.isArray(ev.docentes) && ev.docentes.length > 1 ? 0
-                            : chDoOrientador(ev, Number(getDisciplinaCHGlobal(disciplina, ev.turmaId)) || Number(ev.ch) || 0) });
+                        chOrientador: chOrientadorDaOferta([ev], Number(getDisciplinaCHGlobal(disciplina, ev.turmaId)) || Number(ev.ch) || 0,
+                            Array.isArray(ev.docentes) && ev.docentes.length > 1) });
                 });
             });
         });

@@ -1,13 +1,13 @@
-import { escapeHtml } from './texto.mjs?v=202611201709';
-import { chDoOrientador } from './estagio.mjs?v=202611201709';
-import { store } from './store.js?v=202611201709';
-import { getCalendarEvents } from './calendar.js?v=202611201709';
-import { buildTeacherExecutionSnapshot, buildCanonicalOfferProjection } from './execution_engine.js?v=202611201709';
-import { detectTeacherConflicts } from './conflicts.js?v=202611201709';
-import { getHorariosByTurno, normalizeTurnoKey, getTurnoLetter, mapSlotToTurno } from './turns.js?v=202611201709';
-import { vividHexColor } from './color_utils.js?v=202611201709';
-import { addDaysISO, formatDateBR, timeToMinutes, shortDayName } from './date_utils_ui.js?v=202611201709';
-import { nomeComSubturma, sufixoSubturma } from './subturmas.mjs?v=202611201709';
+import { escapeHtml } from './texto.mjs?v=202611201727';
+import { chOrientadorDaOferta } from './estagio.mjs?v=202611201727';
+import { store } from './store.js?v=202611201727';
+import { getCalendarEvents } from './calendar.js?v=202611201727';
+import { buildTeacherExecutionSnapshot, buildCanonicalOfferProjection } from './execution_engine.js?v=202611201727';
+import { detectTeacherConflicts } from './conflicts.js?v=202611201727';
+import { getHorariosByTurno, normalizeTurnoKey, getTurnoLetter, mapSlotToTurno } from './turns.js?v=202611201727';
+import { vividHexColor } from './color_utils.js?v=202611201727';
+import { addDaysISO, formatDateBR, timeToMinutes, shortDayName } from './date_utils_ui.js?v=202611201727';
+import { nomeComSubturma, sufixoSubturma } from './subturmas.mjs?v=202611201727';
 import {
     isFaixaAllocation,
     isScheduledRegularAllocation,
@@ -15,7 +15,7 @@ import {
     teacherNamesMatch,
     getDocenteShortLabel,
     calculateTeacherTotalCH
-} from './allocation_helpers.js?v=202611201709';
+} from './allocation_helpers.js?v=202611201727';
 import {
     normalizeTurnoOfertaKey,
     formatTurnoOfertaLabel,
@@ -25,7 +25,7 @@ import {
     buildHorariosForUI,
     getShiftChangeMeta,
     getCalendarShiftBadgeHTML
-} from './turno_helpers.js?v=202611201709';
+} from './turno_helpers.js?v=202611201727';
 import {
     getDisciplinaCHGlobal,
     getTurmaLabel,
@@ -33,11 +33,11 @@ import {
     getDisciplinaInfo,
     getCursoSiglaDaTurma,
     getPrintAcademicMetaLine
-} from './curso_turma_helpers.js?v=202611201709';
+} from './curso_turma_helpers.js?v=202611201727';
 import {
     getGanttTurnoConfigs,
     resolveTeacherShiftForSlot
-} from './turnos_docente.js?v=202611201709';
+} from './turnos_docente.js?v=202611201727';
 
 // Referencias DOM de nivel de modulo (espelham as de ui.js; modulo deferred, DOM pronto).
 const selViewDocente = document.getElementById('sel-view-docente');
@@ -1024,9 +1024,11 @@ function collectDocenteResumeComponents(docenteName, start, end) {
         // ele; docente unico responde pela CH toda, ou, no estagio, pela CH do
         // orientador informada no "Montar estagio" (js/estagio.mjs).
         const compartilhada = docentesOferta.length > 1;
-        const chOrientador = compartilhada ? 0 : allocations
-            .filter((a) => (offerGroup?.allocationIds || []).includes(a.id))
-            .reduce((v, a) => v || chDoOrientador(a, curricularCH), 0);
+        const chOrientador = chOrientadorDaOferta(
+            allocations.filter((a) => (offerGroup?.allocationIds || []).includes(a.id)),
+            curricularCH,
+            compartilhada
+        );
         const chDocente = compartilhada
             ? (toCH(declaredDocente?.ch) || toCH(segment?.ch))
             : (chOrientador || curricularCH);
