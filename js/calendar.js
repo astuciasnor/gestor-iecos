@@ -1,14 +1,14 @@
-import { addDaysISO } from './datas.mjs?v=202611192216';
-import { timeToMinutesSafe, normalizeDayList, normalizeSlotList, normalizeDrawnSlotsByDay, buildDrawnSlotsByDay } from './horarios.mjs?v=202611192216';
-import { normalizeKeyPart, normalizeKeyPart as normalizeTeacherKey } from './texto.mjs?v=202611192216';
-import { getNativeTurnoValueForAllocation, getQuadroTodosRegimes } from './turno_helpers.js?v=202611192216';
-import { store } from './store.js?v=202611192216';
-import { getDaysArray, toLocalDateString } from './utils.js?v=202611192216';
-import { mapSlotToTurno, turnoDaTurmaInclui } from './turns.js?v=202611192216';
-import { slotLabelsOverlap } from './academic_rules.mjs?v=202611192216';
-import { mesmoDocente } from './docente_nomes.mjs?v=202611192216';
-import { datasFeriadoDaTurma, feriadosDaTurma } from './feriados.mjs?v=202611192216';
-import { aulaContaComoChoque } from './estagio.mjs?v=202611192216';
+import { addDaysISO } from './datas.mjs?v=202611192226';
+import { timeToMinutesSafe, normalizeDayList, normalizeSlotList, normalizeDrawnSlotsByDay, buildDrawnSlotsByDay } from './horarios.mjs?v=202611192226';
+import { normalizeKeyPart, normalizeKeyPart as normalizeTeacherKey } from './texto.mjs?v=202611192226';
+import { getNativeTurnoValueForAllocation, getQuadroTodosRegimes } from './turno_helpers.js?v=202611192226';
+import { store } from './store.js?v=202611192226';
+import { getDaysArray, toLocalDateString } from './utils.js?v=202611192226';
+import { mapSlotToTurno, turnoDaTurmaInclui } from './turns.js?v=202611192226';
+import { slotLabelsOverlap } from './academic_rules.mjs?v=202611192226';
+import { mesmoDocente } from './docente_nomes.mjs?v=202611192226';
+import { datasFeriadoDaTurma, feriadosDaTurma } from './feriados.mjs?v=202611192226';
+import { aulaContaComoChoque } from './estagio.mjs?v=202611192226';
 
 function normalizeCalendarSlotKey(value) {
   const match = String(value || '').match(/\d{1,2}:\d{2}/);

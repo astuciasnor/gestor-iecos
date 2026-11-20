@@ -1,4 +1,4 @@
-import { isoToUtc, weekdayOf } from './datas.mjs?v=202611192216';
+import { isoToUtc, weekdayOf } from './datas.mjs?v=202611192226';
 // Resumo do ano do docente (agenda publica): para cada periodo letivo, as
 // componentes do professor e em quais semanas do PL ele tem aula.
 // Funcoes puras (sem DOM nem store), testadas em tests/resumo_docente.test.mjs.
