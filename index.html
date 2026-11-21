@@ -10,14 +10,14 @@
         // Vai para o aviso antes de carregar o programa. A agenda publica nao passa por aqui.
         if (/\.github\.io$/i.test(location.hostname)) location.replace('mudou.html');
     </script>
-    <link rel="stylesheet" href="css/style.css?v=202611210933">
+    <link rel="stylesheet" href="css/style.css?v=202611211033">
     <!-- Redesenho da aba Alocar Componentes (por partes); carrega depois do style.css -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
-    <link rel="stylesheet" href="css/alocar-componentes.css?v=202611210933">
-    <link rel="stylesheet" href="css/ajuda.css?v=202611210933">
-    <link rel="stylesheet" href="css/montar-estagio.css?v=202611210933">
+    <link rel="stylesheet" href="css/alocar-componentes.css?v=202611211033">
+    <link rel="stylesheet" href="css/ajuda.css?v=202611211033">
+    <link rel="stylesheet" href="css/montar-estagio.css?v=202611211033">
 
     <style>
         :root {
@@ -349,7 +349,7 @@
         }
     </style>
     <!-- Visual da barra lateral: depois de todos os estilos, so vale dentro de .sidebar -->
-    <link rel="stylesheet" href="css/sidebar.css?v=202611210933">
+    <link rel="stylesheet" href="css/sidebar.css?v=202611211033">
 </head>
 
 <body>
@@ -1578,6 +1578,16 @@
                                 </ul>
                             </article>
 
+                            <article class="aj-cartao aj-cartao--largo">
+                                <h3><span aria-hidden="true">🛟</span> Cópia de segurança do servidor (só administrador)</h3>
+                                <ul class="aj-lista aj-lista--2col">
+                                    <li><b>Baixar:</b> barra lateral › <b>Usuários e backup</b> › <b>⬇ Baixar backup</b>. Vem um arquivo <code>cardume_backup_AAAA-MM-DD_HHMM.sql</code> na pasta Downloads. Guarde em <b>G:\Meu Drive\Cardume - Administração\backups</b>. Ele tem as senhas (embaralhadas) dos usuários: não envie a ninguém.</li>
+                                    <li><b>Restaurar:</b> abra <b>cardume.iecos.ufpa.br/phpmyadmin</b> (não precisa de VPN) e entre com o usuário e a senha do <b>banco de dados</b> (estão no cofre). Clique no banco <b>cardume_iecos</b> na coluna da esquerda › aba <b>Importar</b> › <b>Escolher arquivo</b> › o <code>.sql</code> › botão <b>Importar</b> no fim da página.</li>
+                                    <li><b>Cuidado:</b> restaurar <b>substitui tudo</b> (usuários, alocações e agenda publicada) pelo que havia na hora da cópia. O que foi feito depois se perde e todos entram de novo. O histórico de alterações fica.</li>
+                                    <li><b>Antes de restaurar</b>, baixe uma cópia nova (para poder voltar). Se o problema for só uma componente apagada ou errada, não restaure o banco todo: dá para recuperar só ela pelo histórico.</li>
+                                </ul>
+                            </article>
+
                             <article class="aj-cartao">
                                 <h3><span aria-hidden="true">🖨️</span> Imprimir e PDF</h3>
                                 <ul class="aj-lista">
@@ -1592,7 +1602,7 @@
         </main>
     </div>
 
-    <script type="module" src="js/main.js?v=202611210933"></script>
+    <script type="module" src="js/main.js?v=202611211033"></script>
 </body>
 
 </html>
