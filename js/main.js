@@ -1,18 +1,18 @@
-import { getLocalTodayIso } from './datas.mjs?v=202611211033';
-import { store } from './store.js?v=202611211033';
-import { initUI, showToastWarning, refreshAfterRemoteChange } from './ui.js?v=202611211033';
-import { exportSigaaMetadataJSON } from './exportacoes_ui.js?v=202611211033';
-import { iniciarAcesso, isOnlineMode } from './acesso_ui.js?v=202611211033';
-import { setupAjuda } from './ajuda_ui.js?v=202611211033';
-import { fetchAllocationsForPlans, canPublishToServer, publishAgenda, getPerfil } from './sync_remoto.js?v=202611211033';
-import { filterExportableAllocations } from './academic_rules.mjs?v=202611211033';
+import { getLocalTodayIso } from './datas.mjs?v=202611211609';
+import { store } from './store.js?v=202611211609';
+import { initUI, showToastWarning, refreshAfterRemoteChange } from './ui.js?v=202611211609';
+import { exportSigaaMetadataJSON } from './exportacoes_ui.js?v=202611211609';
+import { iniciarAcesso, isOnlineMode } from './acesso_ui.js?v=202611211609';
+import { setupAjuda } from './ajuda_ui.js?v=202611211609';
+import { fetchAllocationsForPlans, canPublishToServer, publishAgenda, getPerfil } from './sync_remoto.js?v=202611211609';
+import { filterExportableAllocations } from './academic_rules.mjs?v=202611211609';
 import {
   buildPlanScopedPayload,
   buildTurmaParaCursoMap,
   collectAllocationsByCurso,
   buildTodosCursosExportSnapshot,
   buildPublicExportPayload
-} from './serialization.js?v=202611211033';
+} from './serialization.js?v=202611211609';
 
 // Cursos exportaveis: os cadastrados na aba cursos da planilha (dados_app.json).
 function getExportCursosUnidade() {
