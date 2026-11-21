@@ -2,7 +2,7 @@
 //  - a sub-aba aparece, mostra a escolha do docente e esconde a tabela de carga;
 //  - passa por todos os docentes do ano e anota quantos dias carregados cada um tem;
 //  - abre o docente com mais dias carregados e confere o quadro (linhas, colunas, vermelho);
-//  - passar o mouse num dia carregado escreve "N componentes no mesmo dia";
+//  - passar o mouse num dia carregado escreve "N componentes" (caixa no cabecalho do PL);
 //  - foto da tela em <pasta temporaria>/dias_docente.png.
 // Dados: alocacoes_publicas.json (o que esta publicado). Nada e gravado no projeto.
 //
@@ -138,7 +138,7 @@ try {
     confere('digitar so o primeiro nome, minusculo, completa o nome', quadro.completou === alvo, quadro.completou);
     confere('em tela de 1536 px nenhum PL rola para o lado', String(quadro.rolaParaOLado).split(',').every((n) => Number(n) <= 0), `sobra por PL: ${quadro.rolaParaOLado}`);
     if (comCarga.length) {
-        confere('dia vermelho mostra "componentes no mesmo dia"', /componentes no mesmo dia/.test(quadro.info), quadro.info.slice(0, 160));
+        confere('dia vermelho mostra "N componentes"', /[0-9] componentes/.test(quadro.info), quadro.info.slice(0, 160));
         confere('passar o mouse acende a coluna', quadro.focados >= 3, `${quadro.focados} elementos`);
     }
 

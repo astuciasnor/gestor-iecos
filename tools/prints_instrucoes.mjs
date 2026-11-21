@@ -5,8 +5,9 @@
 //
 // Uso (na raiz do projeto):   node tools/prints_instrucoes.mjs
 // Rode de novo sempre que a aparencia dessas partes mudar.
-// Saida: img/instrucoes/passo-1.png ... passo-8.png, estagio-turno.png e
-// aproveitamento.png (nada mais e gravado). passo-7 (pausa) aparece em Casos especiais.
+// Saida: img/instrucoes/passo-1.png ... passo-8.png, estagio-turno.png,
+// aproveitamento.png e, do Montar estagio, estagio-botao.png e estagio-1-etapas,
+// -2-datas e -3-faixas.png, e dias-docente.png (Indicadores) (nada mais e gravado). passo-7 (pausa) aparece em Casos especiais.
 // Na Ajuda (index.html) cada imagem aparece no tamanho do recorte (o print sai em escala 2, fica nitido):
 // ao gerar de novo, ajuste width/height das <img class="aj-print"> se o recorte mudar.
 import fs from 'node:fs';
@@ -22,12 +23,12 @@ const FOLGA = 6; // px de margem em volta de cada recorte
 // Antes de medir, rola o primeiro elemento para o meio da tela (ex.: o campo
 // Docente fica abaixo da dobra na barra lateral). O recorte usa coordenadas da
 // pagina, por isso soma a rolagem da janela.
-const uniao = (seletores) => `(() => {
+const uniao = (seletores, folga = FOLGA) => `(() => {
   document.querySelector(${JSON.stringify(seletores[0])})?.scrollIntoView({ block: 'center', inline: 'nearest' });
   const rs = ${JSON.stringify(seletores)}.map((s) => document.querySelector(s)?.getBoundingClientRect()).filter(Boolean);
   if (!rs.length) return null;
-  const x = Math.min(...rs.map((r) => r.left)) - ${FOLGA} + window.scrollX, y = Math.min(...rs.map((r) => r.top)) - ${FOLGA} + window.scrollY;
-  const w = Math.max(...rs.map((r) => r.right)) + ${FOLGA} + window.scrollX - x, h = Math.max(...rs.map((r) => r.bottom)) + ${FOLGA} + window.scrollY - y;
+  const x = Math.min(...rs.map((r) => r.left)) - ${folga} + window.scrollX, y = Math.min(...rs.map((r) => r.top)) - ${folga} + window.scrollY;
+  const w = Math.max(...rs.map((r) => r.right)) + ${folga} + window.scrollX - x, h = Math.max(...rs.map((r) => r.bottom)) + ${folga} + window.scrollY - y;
   return { x: Math.max(0, x), y: Math.max(0, y), width: w, height: h };
 })()`;
 
@@ -44,10 +45,11 @@ async function main() {
   const { send, evaluate, waitFor } = cdp(ws, errors);
 
   // Recorta a uniao dos seletores e grava em img/instrucoes/<nome>.png
-  const recortar = async (nome, seletores) => {
+  // folga 0 na janela Montar estagio: sem pegar o fundo escuro em volta dela.
+  const recortar = async (nome, seletores, folga = FOLGA) => {
     await evaluate("(() => { const f = document.getElementById('feedback-msg'); if (f) f.style.display = 'none'; })()");
     await sleep(150);
-    const clip = await evaluate(uniao(seletores));
+    const clip = await evaluate(uniao(seletores, folga));
     if (!clip) throw new Error(`${nome}: nada encontrado para ${seletores.join(', ')}`);
     const r = await send('Page.captureScreenshot', { format: 'png', clip: { ...clip, scale: 1 } });
     fs.writeFileSync(path.join(SAIDA, `${nome}.png`), Buffer.from(r.result.data, 'base64'));
@@ -159,6 +161,114 @@ async function main() {
     })()`);
     await sleep(300);
     await recortar('aproveitamento', ['#cd-aproveitamento']);
+
+    // Casos especiais > Estagio (20/11/2026): o botao Montar estagio no cartao de faixas
+    // e as 3 telas da janela (Etapas com a soma ainda sem fechar, Datas e Faixas).
+    // Mesmo caminho do tools/teste_montar_estagio.mjs, com a pagina aberta de novo.
+    await send('Page.navigate', { url: `${baseUrl}/index.html?backend=local` });
+    if (!(await waitFor("document.querySelectorAll('#sel-curso option').length > 0", 15000))) throw new Error('o app nao abriu (estagio)');
+    await sleep(1200);
+    const estagio = await evaluate(`(async () => {
+      const wait = (ms) => new Promise(r => setTimeout(r, ms));
+      const fire = (el, ...evs) => evs.forEach(e => el.dispatchEvent(new Event(e, { bubbles: true })));
+      window.__me = {
+        wait, fire,
+        q: (sel) => document.querySelector('#montar-estagio-modal ' + sel),
+        qa: (sel) => [...document.querySelectorAll('#montar-estagio-modal ' + sel)],
+        // n dias seguidos (seg, ter...) a partir da primeira segunda livre (ou das ultimas semanas)
+        async marcar(n, doFim) {
+          let livres = this.qa('.me-dia:not(:disabled)');
+          if (doFim) livres = livres.slice(-40);
+          const i0 = livres.findIndex((b, i) => {
+            const d = new Date(b.dataset.dia + 'T12:00:00');
+            if (d.getDay() !== 1) return false;
+            for (let k = 0; k < n; k++) { const x = livres[i + k]; if (!x || (new Date(x.dataset.dia + 'T12:00:00') - d) / 864e5 !== k) return false; }
+            return true;
+          });
+          for (const b of livres.slice(i0, i0 + n)) { this.q('[data-dia="' + b.dataset.dia + '"]').click(); await wait(200); }
+        }
+      };
+      const curso = document.getElementById('sel-curso'), turma = document.getElementById('sel-turma');
+      const estagios = () => [...document.querySelectorAll('#list-disciplinas option')].map(o => o.value).filter(v => /EST[AÁ]GIO/i.test(v));
+      const cursos = [...curso.options].filter(o => o.value).sort((a, b) => /bio/i.test(b.textContent) - /bio/i.test(a.textContent));
+      for (const c of cursos) {
+        curso.value = c.value; fire(curso, 'change'); await wait(600);
+        const turmas = [...turma.options].filter(o => o.value).sort((a, b) => b.value.startsWith('CB2024') - a.value.startsWith('CB2024'));
+        for (const t of turmas) {
+          turma.value = t.value; fire(turma, 'change'); await wait(700);
+          const lista = estagios();
+          if (lista.length) {
+            const d = document.getElementById('inp-disciplina'); d.value = lista[0]; fire(d, 'input', 'change'); await wait(900);
+            return t.textContent.trim() + ' / ' + lista[0];
+          }
+        }
+      }
+      return '';
+    })()`);
+    if (!estagio) console.log('aviso: nenhuma turma com estagio; prints do estagio nao gerados');
+    else {
+      console.log(`estagio: ${estagio}`);
+      await recortar('estagio-botao', ['#btn-montar-estagio', '#box-ch-orientador']);
+      await evaluate("document.getElementById('btn-montar-estagio').click()");
+      await waitFor('!!document.getElementById("montar-estagio-modal")', 3000);
+      // Passo 1: CH do orientador 45 h e a soma sem fechar (vermelha), com os cartoes de opcoes
+      await evaluate(`(async () => {
+        const o = __me.q('#me-ch-orientador'); o.value = '45'; __me.fire(o, 'input');
+        const h = __me.q('[data-etapa="1"] [data-campo="horasDia"]'); h.value = '4'; __me.fire(h, 'input'); await __me.wait(400);
+      })()`);
+      await recortar('estagio-1-etapas', ['#montar-estagio-modal .me-caixa'], 0);
+      // Fecha a conta com a 1a opcao, marca os encontros e escolhe o comeco do campo
+      await evaluate(`(async () => {
+        __me.q('.me-opcao').click(); await __me.wait(300);
+        __me.q('[data-ir="2"]').click(); await __me.wait(300);
+        await __me.marcar(Number(__me.q('[data-aba="0"] small').textContent.match(/(\\d+) dias/)[1]));
+        __me.q('[data-aba="2"]').click(); await __me.wait(250);
+        await __me.marcar(Number(__me.q('[data-aba="2"] small').textContent.match(/(\\d+) dias/)[1]), true);
+        __me.q('[data-aba="1"]').click(); await __me.wait(250);
+        const inp = __me.q('[data-campo="inicio"]');
+        const ini = new Date(inp.min + 'T12:00:00'); ini.setDate(ini.getDate() + 7);
+        inp.value = ini.toISOString().slice(0, 10); __me.fire(inp, 'input', 'change'); await __me.wait(400);
+      })()`);
+      await recortar('estagio-2-datas', ['#montar-estagio-modal .me-caixa'], 0);
+      await evaluate("(async () => { __me.q('[data-ir=\"3\"]').click(); await __me.wait(400); })()");
+      await recortar('estagio-3-faixas', ['#montar-estagio-modal .me-caixa'], 0);
+      await evaluate("document.querySelector('#montar-estagio-modal .me-fechar')?.click()");
+    }
+
+    // Docentes > Indicadores (20/11/2026): quadro Dias do docente de um PL com dia
+    // carregado (o docente com mais dias carregados no ano do PL aberto). Tela de
+    // 1600 px: o quadro cabe sem rolar para o lado (a 1400 px ele rola).
+    await send('Emulation.setDeviceMetricsOverride', { width: 1600, height: 1000, deviceScaleFactor: 2, mobile: false });
+    await send('Page.navigate', { url: `${baseUrl}/index.html?backend=local` });
+    if (!(await waitFor("document.querySelectorAll('#sel-curso option').length > 0", 15000))) throw new Error('o app nao abriu (indicadores)');
+    await sleep(1200);
+    const docenteDias = await evaluate(`(async () => {
+      const wait = (ms) => new Promise(r => setTimeout(r, ms));
+      document.getElementById('tabbtn-indicadores').click(); await wait(1500);
+      document.querySelector('.ind-subaba[data-subaba="dias"]').click(); await wait(500);
+      const inp = document.getElementById('inp-docente-dias');
+      const nomes = [...document.querySelectorAll('#list-view-docentes option')].map(o => o.value).filter(Boolean);
+      let melhor = '', max = 0;
+      for (const n of nomes) {
+        inp.value = n; inp.dispatchEvent(new Event('change'));
+        const m = document.getElementById('ind-resumo').textContent.match(/(\\d+) dias? com 2/);
+        if (m && Number(m[1]) > max) { max = Number(m[1]); melhor = n; }
+      }
+      if (!melhor) return '';
+      inp.value = melhor; inp.dispatchEvent(new Event('change')); await wait(300);
+      document.querySelectorAll('.sug-docente').forEach(l => { l.hidden = true; });
+      inp.blur();
+      // Aponta um dia vermelho: a faixa escura do quadro diz o que ha no dia
+      const q = document.querySelector('.dd-d.dd-n2')?.closest('.dd-quadro');
+      q?.querySelector('.dd-d.dd-n2')?.dispatchEvent(new MouseEvent('mouseover', { bubbles: true }));
+      if (q) q.id = 'print-dias-docente';
+      return melhor + ' (' + max + ' dias carregados)';
+    })()`);
+    if (!docenteDias) console.log('aviso: nenhum docente com dia carregado; dias-docente.png nao gerado');
+    else {
+      console.log(`dias do docente: ${docenteDias}`);
+      await recortar('dias-docente', ['#print-dias-docente']);
+    }
 
     if (errors.length) console.log(`erros no navegador: ${errors.join(' | ')}`);
   } finally {

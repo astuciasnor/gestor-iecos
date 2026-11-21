@@ -1,22 +1,22 @@
-import { UNIDADE_PADRAO, unidadeDoCurso } from './unidades.mjs?v=202611201756';
-import { escapeHtml as esc } from './texto.mjs?v=202611201756';
+import { UNIDADE_PADRAO, unidadeDoCurso } from './unidades.mjs?v=202611210907';
+import { escapeHtml as esc } from './texto.mjs?v=202611210907';
 // Menu Indicadores (so leitura: nada e gravado).
 // Sub-aba "Carga por docente": tabela com a CH de cada docente por curso e por PL,
 // do ano inteiro ou de um PL. As contas estao em indicadores.mjs.
 // Sub-aba "Dias do docente": quadro de um docente, uma linha por componente e um
 // quadradinho por dia do PL, com os dias de 2+ componentes (dias_docente.mjs).
-import { store } from './store.js?v=202611201756';
-import { getCursoSiglaDaTurma, getDisciplinaCHGlobal } from './curso_turma_helpers.js?v=202611201756';
-import { formatDateBR } from './date_utils_ui.js?v=202611201756';
-import { UNIDADES } from './docente_nomes.mjs?v=202611201756';
-import { cargaPorDocente, ordenarLinhas, SEM_DOCENTE } from './indicadores.mjs?v=202611201756';
-import { diasDoDocente } from './dias_docente.mjs?v=202611201756';
-import { getCalendarEvents } from './calendar.js?v=202611201756';
-import { withPlanContext } from './calendarios_ui.js?v=202611201756';
-import { getTurmaLabel } from './curso_turma_helpers.js?v=202611201756';
-import { feriadosDaTurma } from './feriados.mjs?v=202611201756';
-import { fmtCH, quadroDiasHtml, quadroVazioHtml, focarDiaDoQuadro } from './quadro_dias.mjs?v=202611201756';
-import { chOrientadorDaOferta } from './estagio.mjs?v=202611201756';
+import { store } from './store.js?v=202611210907';
+import { getCursoSiglaDaTurma, getDisciplinaCHGlobal } from './curso_turma_helpers.js?v=202611210907';
+import { formatDateBR } from './date_utils_ui.js?v=202611210907';
+import { UNIDADES } from './docente_nomes.mjs?v=202611210907';
+import { cargaPorDocente, ordenarLinhas, SEM_DOCENTE } from './indicadores.mjs?v=202611210907';
+import { diasDoDocente } from './dias_docente.mjs?v=202611210907';
+import { getCalendarEvents } from './calendar.js?v=202611210907';
+import { withPlanContext } from './calendarios_ui.js?v=202611210907';
+import { getTurmaLabel } from './curso_turma_helpers.js?v=202611210907';
+import { feriadosDaTurma } from './feriados.mjs?v=202611210907';
+import { fmtCH, quadroDiasHtml, quadroVazioHtml, focarDiaDoQuadro, DICA_MOUSE } from './quadro_dias.mjs?v=202611210907';
+import { chOrientadorDaOferta } from './estagio.mjs?v=202611210907';
 
 const VALIDADE_MS = 2 * 60 * 1000; // depois disso, abrir o menu busca de novo
 
@@ -351,10 +351,12 @@ function aulasDoDocente(nome, planos) {
                     // O rotulo da turma depende do PL (bloco): calcula dentro dele.
                     if (!rotulos.has(key)) rotulos.set(key, getTurmaLabel(ev.turmaId, ev.subGrupo));
                     // plano: de qual PL veio a aula (a CH de cada PL conta so as dele).
+                    const chComponente = Number(getDisciplinaCHGlobal(disciplina, ev.turmaId)) || Number(ev.ch) || 0;
                     entries.push({ date, key, disciplina, turmaId: ev.turmaId, subGrupo: ev.subGrupo, cor: ev.cor, aulas: 1, horario: ev.horario, plano: meta.key, campo: !!ev.estagioCampo,
+                        chComponente,
                         // Estagio com CH do orientador (Montar estagio): e essa CH que conta
                         // para o docente, nao as horas de aula. Docente unico apenas.
-                        chOrientador: chOrientadorDaOferta([ev], Number(getDisciplinaCHGlobal(disciplina, ev.turmaId)) || Number(ev.ch) || 0,
+                        chOrientador: chOrientadorDaOferta([ev], chComponente,
                             Array.isArray(ev.docentes) && ev.docentes.length > 1) });
                 });
             });
@@ -406,6 +408,20 @@ function desenharDias(alvo, resumo) {
     const plDaKey = new Map();
     entries.forEach((e) => { if (!plDaKey.has(e.key)) plDaKey.set(e.key, e.plano); });
     const periodoDoPlano = new Map(planos.map(({ meta }) => [meta.key, meta.periodo]));
+    // CH ao lado de cada componente (21/11/2026): do docente (todas as aulas dele
+    // nela, ou a CH do orientador no estagio) / da componente.
+    const chPorKey = new Map();
+    entries.forEach((e) => {
+        const c = chPorKey.get(e.key) || { aulas: 0, orientador: 0, total: 0 };
+        c.aulas += e.aulas;
+        c.orientador = c.orientador || e.chOrientador || 0;
+        c.total = c.total || e.chComponente || 0;
+        chPorKey.set(e.key, c);
+    });
+    const chComp = (comp) => {
+        const c = chPorKey.get(comp.key) || { aulas: comp.aulas, orientador: 0, total: 0 };
+        return { docente: c.orientador || c.aulas, total: c.total };
+    };
     let carregadosTotal = 0;
     const blocos = mostrar.map(({ meta }) => {
         const r = diasDoDocente({ termStart: meta.termStart, termEnd: meta.termEnd, entries, feriados });
@@ -420,7 +436,7 @@ function desenharDias(alvo, resumo) {
             const plano = plDaKey.get(key);
             return plano && plano !== meta.key ? (periodoDoPlano.get(plano) || '') : '';
         };
-        return quadroDiasHtml(indice, titulo, datas, r, rotulos, chDoPL(meta.key), { aulas: aulasDoPL(meta.key), outroPL });
+        return quadroDiasHtml(indice, titulo, datas, r, rotulos, chDoPL(meta.key), { aulas: aulasDoPL(meta.key), outroPL, chComp });
     }).join('');
 
     if (resumo) {
@@ -431,7 +447,7 @@ function desenharDias(alvo, resumo) {
         const ch = estado.periodo === 'ano'
             ? `<b class="dd-ch-total">${fmtCH(planos.reduce((n, { meta }) => n + chDoPL(meta.key), 0)) || 0}h no ano</b> <span class="dd-ch-pls">(${planos.map(({ meta }) => `${esc(meta.periodo)} ${fmtCH(chDoPL(meta.key)) || 0}h`).join(' · ')})</span>`
             : `<b class="dd-ch-total">${fmtCH(chDoPL(estado.periodo)) || 0}h no PL</b>`;
-        resumo.innerHTML = `<b>${esc(estado.docente)}</b> &nbsp;|&nbsp; ${esc(rotuloPeriodo)} &nbsp;|&nbsp; ${ch} &nbsp;|&nbsp; ${carga}${estado.carregando ? ' &nbsp;|&nbsp; atualizando…' : ''}`;
+        resumo.innerHTML = `<b>${esc(estado.docente)}</b> &nbsp;|&nbsp; ${esc(rotuloPeriodo)} &nbsp;|&nbsp; ${ch} &nbsp;|&nbsp; ${carga}${estado.carregando ? ' &nbsp;|&nbsp; atualizando…' : ''}${blocos.includes('data-dd-quadro') ? ` &nbsp;|&nbsp; <span class="ind-dica-mouse">${DICA_MOUSE}</span>` : ''}`;
     }
     alvo.innerHTML = blocos || '<p class="ind-vazio">Nenhum período letivo neste ano.</p>';
 }

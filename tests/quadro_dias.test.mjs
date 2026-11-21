@@ -35,15 +35,16 @@ test('quadro: uma coluna por dia, Dia a dia vermelho no dia carregado, CH e dica
     assert.equal((html.match(/dd-resumo dd-n2/g) || []).length, 1);
     assert.equal((html.match(/dd-on/g) || []).length, 3);
     assert.match(html, /<span class="dd-ch"[^>]*>3h<\/span>/);
-    assert.match(html, /1 dia com 2 ou mais componentes/);
-    assert.ok(html.includes(DICA_MOUSE));
+    assert.match(html, /1 dia com 2\+ componentes/);
+    assert.match(html, /<span class="dd-info" aria-live="polite"><\/span>/, 'caixa do dia vazia no cabecalho');
+    assert.ok(!html.includes(DICA_MOUSE), 'a dica fica uma vez so, fora do quadro');
+    assert.ok(!html.includes('dd-legenda'), 'sem legenda');
     assert.ok(!html.includes('<B>'), 'nome da componente escapado');
 });
 
 test('quadro: dica trocavel (celular)', () => {
     const html = quadroDiasHtml(0, 'PL', 'datas', r, rotulos, 3, { dica: 'Toque num dia para ver as aulas dele.' });
     assert.ok(html.includes('Toque num dia'));
-    assert.ok(!html.includes(DICA_MOUSE));
 });
 
 test('quadro vazio: aviso padrao e aviso proprio', () => {
@@ -52,21 +53,28 @@ test('quadro vazio: aviso padrao e aviso proprio', () => {
 });
 
 test('texto do dia: carregado, comum, feriado, sem aula', () => {
-    assert.match(textoDoDia(quadro, '2027-03-15'), /^seg 15\/03: <b>2 componentes no mesmo dia<\/b> · manhã 08:00–08:50: ESTATISTICA \(EP2024\) · tarde 14:00–14:50: ECOLOGIA &lt;B&gt; \(EP2025\)$/);
-    assert.equal(textoDoDia(quadro, '2027-03-16'), 'ter 16/03: manhã 08:00–08:50: ESTATISTICA (EP2024)');
+    assert.match(textoDoDia(quadro, '2027-03-15'), /^seg 15\/03 · <b>2 componentes<\/b> · 08:00–08:50 ESTATISTICA \(EP2024\) · 14:00–14:50 ECOLOGIA &lt;B&gt; \(EP2025\)$/);
+    assert.equal(textoDoDia(quadro, '2027-03-16'), 'ter 16/03 · 08:00–08:50 ESTATISTICA (EP2024)');
     assert.equal(textoDoDia(quadro, '2027-03-19'), 'sex 19/03: feriado (Dia de São José).');
     assert.equal(textoDoDia(quadro, '2027-03-17'), 'qua 17/03: sem aula.');
     assert.equal(textoDoDia(quadro, '2027-04-01'), '');
 });
 
-test('outro PL: celulas fracas e listradas, nome apagado e item na legenda', () => {
+test('outro PL: celulas fracas e listradas, nome apagado', () => {
     const outroPL = (key) => (key === 'EP2025|ECOLOGIA <B>' ? 'PL2' : '');
     const html = quadroDiasHtml(0, 'PL3', 'datas', r, rotulos, 3, { outroPL });
     assert.equal((html.match(/dd-on dd-outro/g) || []).length, 1, 'so a aula da Ecologia');
     assert.equal((html.match(/dd-rot dd-rot-outro/g) || []).length, 1);
     assert.match(html, /componente do PL2/);
-    assert.match(html, /aula de outro PL/);
-    assert.ok(!quadroDiasHtml(0, 'PL3', 'datas', r, rotulos, 3).includes('aula de outro PL'), 'sem outro PL, sem item na legenda');
+});
+
+test('CH ao lado da componente: do docente / da componente; igual = so um numero', () => {
+    const chComp = (comp) => (comp.key.startsWith('EP2024') ? { docente: 60, total: 90 } : { docente: 30, total: 30 });
+    const html = quadroDiasHtml(0, 'PL', 'datas', r, rotulos, 3, { chComp });
+    assert.match(html, /<b class="dd-rot-ch">60\/90h<\/b> · EP2024/);
+    assert.match(html, /<b class="dd-rot-ch">30h<\/b> · EP2025/);
+    assert.match(html, /CH do docente: 60 h de 90 h da componente/);
+    assert.match(quadroDiasHtml(0, 'PL', 'datas', r, rotulos, 3), /<b class="dd-rot-ch">2h<\/b>/, 'sem chComp: horas de aula');
 });
 
 test('CH do orientador diferente das horas de aula: mostra as duas', () => {

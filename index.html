@@ -10,14 +10,14 @@
         // Vai para o aviso antes de carregar o programa. A agenda publica nao passa por aqui.
         if (/\.github\.io$/i.test(location.hostname)) location.replace('mudou.html');
     </script>
-    <link rel="stylesheet" href="css/style.css?v=202611201756">
+    <link rel="stylesheet" href="css/style.css?v=202611210907">
     <!-- Redesenho da aba Alocar Componentes (por partes); carrega depois do style.css -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
-    <link rel="stylesheet" href="css/alocar-componentes.css?v=202611201756">
-    <link rel="stylesheet" href="css/ajuda.css?v=202611201756">
-    <link rel="stylesheet" href="css/montar-estagio.css?v=202611201756">
+    <link rel="stylesheet" href="css/alocar-componentes.css?v=202611210907">
+    <link rel="stylesheet" href="css/ajuda.css?v=202611210907">
+    <link rel="stylesheet" href="css/montar-estagio.css?v=202611210907">
 
     <style>
         :root {
@@ -349,7 +349,7 @@
         }
     </style>
     <!-- Visual da barra lateral: depois de todos os estilos, so vale dentro de .sidebar -->
-    <link rel="stylesheet" href="css/sidebar.css?v=202611201756">
+    <link rel="stylesheet" href="css/sidebar.css?v=202611210907">
 </head>
 
 <body>
@@ -1078,12 +1078,14 @@
                     Componentes pendentes (ainda sem horário) não entram.
                     Clique no nome para ver a agenda do docente no mesmo período.
                 </p>
-                <p class="ind-nota hidden" id="ind-nota-dias">
-                    Cada linha é uma componente do docente e cada quadradinho é um dia do período letivo; o mesmo dia fica alinhado na vertical.
-                    <b>Dia carregado</b> (vermelho) = duas ou mais componentes diferentes no mesmo dia, por exemplo uma de manhã e outra à tarde.
-                    Não é choque de horário: é só um dia pesado para o docente. T01 e T02 da mesma componente contam como duas.
-                    Entram as componentes do docente em todas as unidades, inclusive o que ainda não foi publicado.
-                </p>
+                <ul class="ind-nota ind-nota-lista hidden" id="ind-nota-dias">
+                    <li>Cada linha é uma componente do docente e cada quadradinho é um dia do período letivo; o mesmo dia fica alinhado na vertical.</li>
+                    <li><b>Dia carregado</b> (vermelho) = duas ou mais componentes diferentes no mesmo dia, por exemplo uma de manhã e outra à tarde.</li>
+                    <li>Não é choque de horário: é só um dia pesado para o docente.</li>
+                    <li>T01 e T02 da mesma componente contam como duas.</li>
+                    <li>Ao lado de cada componente: <b>CH do docente / CH da componente</b> (ex.: 60/90h quando a componente é dividida ou é estágio com CH do orientador).</li>
+                    <li>Entram as componentes do docente em todas as unidades, inclusive o que ainda não foi publicado.</li>
+                </ul>
             </section>
 
             <section id="tab-list" class="tab-content" role="tabpanel" aria-labelledby="tabbtn-list">
@@ -1129,7 +1131,7 @@
                             <h2 class="aj-titulo">Ajuda do Cardume</h2>
                             <p class="aj-sub">Escolha um tema. Cada um vai direto ao ponto, com o que se usa no dia a dia.</p>
                         </div>
-                        <span class="aj-data">Atualizada em 14/11/2026</span>
+                        <span class="aj-data">Atualizada em 20/11/2026</span>
                     </header>
 
                     <nav class="aj-temas" role="tablist" aria-label="Temas da ajuda">
@@ -1146,7 +1148,7 @@
                             <span class="aj-tema-icone" aria-hidden="true">🔍</span><span class="aj-tema-txt"><b>Revisão</b><small>lista e choques</small></span>
                         </button>
                         <button type="button" class="aj-tema" role="tab" id="aj-tab-docentes" data-aj-tema="docentes" aria-controls="aj-docentes" aria-selected="false" tabindex="-1">
-                            <span class="aj-tema-icone" aria-hidden="true">👩‍🏫</span><span class="aj-tema-txt"><b>Docentes</b><small>CH do ano</small></span>
+                            <span class="aj-tema-icone" aria-hidden="true">👩‍🏫</span><span class="aj-tema-txt"><b>Docentes</b><small>CH e indicadores</small></span>
                         </button>
                         <button type="button" class="aj-tema" role="tab" id="aj-tab-publicacao" data-aj-tema="publicacao" aria-controls="aj-publicacao" aria-selected="false" tabindex="-1">
                             <span class="aj-tema-icone" aria-hidden="true">🌐</span><span class="aj-tema-txt"><b>Publicação</b><small>agenda online</small></span>
@@ -1164,7 +1166,7 @@
                         <button type="button" class="aj-caso" data-aj-alvo="aj-caso-pausa"><span aria-hidden="true">⏸️</span><span><b>Pausa</b><small>para uns dias e volta depois</small></span></button>
                         <button type="button" class="aj-caso" data-aj-alvo="aj-caso-livres"><span aria-hidden="true">↩️</span><span><b>Dias livres</b><small>sobraram dias antes de outra</small></span></button>
                         <button type="button" class="aj-caso" data-aj-alvo="aj-caso-turnos"><span aria-hidden="true">📅</span><span><b>Turnos e sábado</b><small>dois turnos, sábado, feriado</small></span></button>
-                        <button type="button" class="aj-caso" data-aj-alvo="aj-caso-estagio"><span aria-hidden="true">🎓</span><span><b>Estágio</b><small>turno e contraturno</small></span></button>
+                        <button type="button" class="aj-caso" data-aj-alvo="aj-caso-estagio"><span aria-hidden="true">🎓</span><span><b>Estágio</b><small>Montar estágio e regras</small></span></button>
                         <button type="button" class="aj-caso" data-aj-alvo="aj-caso-extra"><span aria-hidden="true">👯</span><span><b>Turma extra</b><small>dois grupos: T01 e T02</small></span></button>
                         <button type="button" class="aj-caso" data-aj-alvo="aj-caso-ordem"><span aria-hidden="true">🔁</span><span><b>Trocar a ordem</b><small>quando é mais simples</small></span></button>
                     </nav>
@@ -1195,6 +1197,7 @@
                                     <li><span class="aj-chip">Calendário da Turma</span> o período mês a mês, com a CH</li>
                                     <li><span class="aj-chip">Calendário Docente</span> carga horária e choques de cada professor</li>
                                     <li><span class="aj-chip">Agenda Pública</span> o que alunos e professores veem</li>
+                                    <li><span class="aj-chip">Indicadores</span> CH de cada docente e os dias de aula dele</li>
                                 </ul>
                             </article>
 
@@ -1258,6 +1261,7 @@
                                     <li>Mais de um professor? Marque <b>Múltiplos?</b> e dê a cada um a sua parte da CH.</li>
                                     <li>Nome que não está na lista: aparece o aviso e o botão <b>Cadastrar Docente Novo…</b>. Use o nome completo, igual ao SIGAA, sem abreviar.</li>
                                     <li>O administrador confere os nomes novos depois.</li>
+                                    <li><b>Docente ainda sem nome</b> (a contratar, substituto)? Use <b>Cadastrar Vaga…</b>: vira <em>Vaga1 FACIN</em>, numerada por faculdade, e conta choque como um professor. Quando souber o nome, troque em <b>Editar</b>.</li>
                                     <li><b>Com ou sem acento</b>: digite <em>Zelia</em> ou <em>Fabio</em> e o Cardume acha <b>Zélia</b> ou <b>Fábio</b>. Ao sair do campo, o nome fica igual ao da lista.</li>
                                 </ul>
                             </article>
@@ -1265,7 +1269,7 @@
                             <article class="aj-cartao">
                                 <h3><span aria-hidden="true">📦</span> Bloco inteiro</h3>
                                 <ul class="aj-lista">
-                                    <li><b>Importar Componentes do Bloco</b> traz todas as componentes do bloco como <b>pendentes</b>.</li>
+                                    <li><b>Inserção por Bloco (PPC)</b>, na barra lateral, pergunta o período do curso (1 a 10) e traz todas as componentes dele como <b>pendentes</b>.</li>
                                     <li>Complete cada uma na <b>Lista de Ofertas</b> › <b>Editar</b>: docente, datas e horário.</li>
                                 </ul>
                             </article>
@@ -1293,7 +1297,7 @@
                                     <li><button type="button" class="aj-caso-link" data-aj-alvo="aj-caso-pausa">Pausa</button>: a componente para uns dias e volta depois (ex.: revezar com outra).</li>
                                     <li><button type="button" class="aj-caso-link" data-aj-alvo="aj-caso-livres">Dias livres</button>: sobraram dias antes de outra componente começar.</li>
                                     <li><button type="button" class="aj-caso-link" data-aj-alvo="aj-caso-turnos">Turnos e sábado</button>: dois turnos, sábado em turma da tarde ou noite, feriados e eventos.</li>
-                                    <li><button type="button" class="aj-caso-link" data-aj-alvo="aj-caso-estagio">Estágio</button>: parte no turno da turma, parte no contraturno.</li>
+                                    <li><button type="button" class="aj-caso-link" data-aj-alvo="aj-caso-estagio">Estágio</button>: a janela Montar estágio (encontros e estágio em campo) e as <button type="button" class="aj-caso-link" data-aj-alvo="aj-caso-estagio-regras">regras</button> de choque e de CH do orientador.</li>
                                     <li><button type="button" class="aj-caso-link" data-aj-alvo="aj-caso-extra">Turma extra</button>: a turma dividida em dois grupos, T01 e T02.</li>
                                     <li><button type="button" class="aj-caso-link" data-aj-alvo="aj-caso-ordem">Trocar a ordem</button>: quando mudar a ordem das componentes é mais simples que fazer pausas.</li>
                                 </ul>
@@ -1326,34 +1330,24 @@
                                 </ul>
                             </article>
 
+                            <article class="aj-cartao aj-cartao--destaque aj-cartao--largo" id="aj-caso-ordem">
+                                <h3><span aria-hidden="true">🔁</span> Quando é melhor trocar a ordem</h3>
+                                <ul class="aj-lista aj-lista--2col">
+                                    <li>Cada componente aceita até <b>3 pausas</b>, e o aproveitamento de dias livres usa <b>2 faixas</b>.</li>
+                                    <li>Precisa de mais buracos, ou está caçando dias soltos para encaixar uma componente? Mude a ordem das componentes em <b>Lista de Ofertas › Trocar</b>.</li>
+                                    <li>O planejamento fica mais fácil de ler para você, para os alunos e para os professores.</li>
+                                    <li>Como funciona a troca: veja <button type="button" class="aj-ir" data-aj-ir="revisao">Revisão › Lista de Ofertas</button>.</li>
+                                </ul>
+                            </article>
+
                             <article class="aj-cartao" id="aj-caso-turnos">
                                 <h3><span aria-hidden="true">📅</span> Turnos, sábado e feriados</h3>
                                 <ul class="aj-lista">
-                                    <li><b>Dois turnos</b>: no <b>Turno</b> da barra lateral, escolha a combinação (ex.: <b>Manhã e Noite</b>). A grade mostra os dois turnos, e a componente é salva com os dois. Para estágio, veja o cartão <button type="button" class="aj-caso-link" data-aj-alvo="aj-caso-estagio">Estágio</button>, ao lado.</li>
+                                    <li><b>Dois turnos</b>: no <b>Turno</b> da barra lateral, escolha a combinação (ex.: <b>Manhã e Noite</b>). A grade mostra os dois turnos, e a componente é salva com os dois. Para estágio, veja <button type="button" class="aj-caso-link" data-aj-alvo="aj-caso-estagio">Estágio</button>, mais abaixo.</li>
                                     <li><b>Sábado</b>: numa turma da tarde ou da noite, ao marcar o primeiro horário de sábado da componente, o Cardume pergunta: <b>Passar para a manhã</b> ou <b>Manter à tarde</b> (Esc também mantém). Turma da manhã não recebe pergunta. Cada horário de sábado mostra o aviso <b>⚠ Manhã</b> e um botão pequeno (ex.: <b>Sábado → manhã</b>); clique nele para trocar.</li>
                                     <li>Aula fora do turno da turma ganha o aviso <b>Atenção Turno</b> nos calendários e na agenda.</li>
                                     <li><b>Feriado</b>: a coluna do dia fica listrada, com um cartão rosa e o nome do feriado. Nesse dia não há aula.</li>
                                     <li><b>Evento só de algumas turmas</b> (ex.: Recepção Calouros): aparece igual ao feriado, mas só nas turmas escolhidas; as outras seguem normais. Quem decide os dias é a unidade acadêmica; o administrador cadastra. As aulas desses dias não são repostas sozinhas: use <b>Editar</b> para ajustar as componentes.</li>
-                                </ul>
-                            </article>
-
-                            <article class="aj-cartao" id="aj-caso-estagio">
-                                <h3><span aria-hidden="true">🎓</span> Estágio: turno e contraturno</h3>
-                                <ul class="aj-lista">
-                                    <li><b>Jeito rápido:</b> escolha a componente de estágio e clique em <b>Montar estágio</b>, no cartão de faixas. Em 3 passos você lança o plano do orientador: até 4 etapas (<b>encontro</b> com o orientador ou <b>estágio em campo</b>), os dias de cada uma e as horas. A janela já começa com a organização mais comum: encontro de orientação no início, estágio em campo e encontro no final, no horário da turma. Encontros a mais são possíveis, mas cada um é carga a mais para o orientador. No <b>passo 1</b> você fecha a conta: a soma das etapas aparece em vermelho até bater a CH, e abaixo vêm cartões com opções de <b>dias × horas por dia</b> que fecham exato (um clique escolhe). Só com a conta fechada a janela deixa ir às Datas; para mudar dias ou horas, volte ao passo 1. No <b>passo 2</b> os meses do período ficam um abaixo do outro: no encontro, clique nos dias; no estágio em campo, escolha os dias da semana e clique no dia em que começa. Cada aba mostra as horas previstas e quantas faltam. Etapa com 2 turnos (ex.: Manhã e Tarde) tem as horas de cada turno, iguais em todos os dias (ex.: 6 h = 4 de manhã + 2 à tarde). Depois é só conferir e salvar.</li>
-                                    <li><b>Encontro e campo:</b> as faixas feitas pelo Montar estágio ficam marcadas como encontro ou campo. <b>Encontro</b> dá choque como aula normal, em qualquer turno: o Cardume avisa se o orientador já tem aula em outra turma no mesmo horário. <b>Campo</b> nunca dá choque para o docente (os alunos estão no campo, sem ele) e, em Indicadores &gt; Dias do docente, aparece em cinza. Para a turma: campo que usa o turno da turma deixa a turma impedida o dia inteiro; campo só no contraturno deixa a turma livre para outras componentes no turno dela. Faixas de estágio feitas à mão seguem a regra antiga, pelo turno.</li>
-                                    <li><b>CH do orientador:</b> se só parte do estágio conta para o docente (ex.: 45 h de 90 h), escreva no campo <b>Orientador</b>, ao lado do botão (ou no passo 1 da janela). Essa CH vale na soma do docente (Indicadores e Calendário Docente). As aulas, os choques e o SIGAA continuam com a CH toda. Vazio (caixa laranja): o docente conta a CH toda.</li>
-                                    <li><b>Choque:</b> no estágio, só conta o horário dentro do turno da turma (encontro). O estágio em campo, fora do turno, não gera choque para o professor nem para a turma.</li>
-                                    <li><b>Sábado:</b> no estágio, é sempre de manhã, a partir da 1ª aula (8h), com até 5 aulas, qualquer que seja o turno da etapa.</li>
-                                    <li><b>À mão</b>, como abaixo, também funciona.</li>
-                                    <li><b>Exemplo</b> (105h, turma da manhã): orientação de manhã (15 a 17/03), estágio à noite (segunda e quarta, 3 aulas) e fechamento de manhã (28 a 30/06).</li>
-                                    <li><b>Antes de tudo:</b> no <b>Turno</b> da barra lateral, escolha a combinação com o contraturno, aqui <b>Manhã e Noite</b>. Assim você desenha as 3 faixas sem trocar de turno.<img class="aj-print" src="img/instrucoes/estagio-turno.png" width="330" height="44" alt="Campo Turno com Manhã e Noite escolhido" loading="lazy"></li>
-                                    <li><b>Faixa 1:</b> manhãs de segunda a quarta na semana de 15/03; <b>Fim</b> 17/03 (15h).</li>
-                                    <li><b>Faixa 2:</b> clique no número <b>2</b> e no primeiro horário da noite de 22/03; segunda e quarta, 3 aulas; <b>Fim</b> 16/06 (75h).</li>
-                                    <li><b>Faixa 3:</b> clique no número <b>3</b> e no primeiro horário da manhã de 28/06; segunda a quarta (15h). Salve.</li>
-                                    <li><b>A conta fecha:</b> 15 + 75 + 15 = 105h. Sem o Fim da Faixa 2, ela gasta as horas da Faixa 3, e a Faixa 3 some. Os dias entre as faixas viram <b>pausa</b> e dão folga para feriado.</li>
-                                    <li><b>Estágio em bloco</b> (dias seguidos): Turno <b>Manhã e Tarde</b>, os dois turnos nos mesmos dias.</li>
-                                    <li>É uma <b>proposta</b>: o importante é registrar o encontro inicial, o final e a carga horária.</li>
                                 </ul>
                             </article>
 
@@ -1369,13 +1363,35 @@
                                 </ul>
                             </article>
 
-                            <article class="aj-cartao aj-cartao--destaque" id="aj-caso-ordem">
-                                <h3><span aria-hidden="true">🔁</span> Quando é melhor trocar a ordem</h3>
+                            <article class="aj-cartao aj-cartao--largo" id="aj-caso-estagio">
+                                <h3><span aria-hidden="true">🎓</span> Estágio (1 de 2): a janela Montar estágio</h3>
+                                <p>O jeito mais rápido de lançar o plano do orientador. O estágio tem até <b>4 etapas</b>, e cada etapa vira uma faixa: <b>encontro com orientador</b> (dias com a turma e o orientador) ou <b>estágio em campo</b> (escola, laboratório, empresa, fazenda). Regras de choque, CH do orientador e o jeito à mão: <button type="button" class="aj-caso-link" data-aj-alvo="aj-caso-estagio-regras">Estágio (2 de 2)</button>.</p>
                                 <ul class="aj-lista">
-                                    <li>Cada componente aceita até <b>3 pausas</b>, e o aproveitamento de dias livres usa <b>2 faixas</b>.</li>
-                                    <li>Precisa de mais buracos, ou está caçando dias soltos para encaixar uma componente? Mude a ordem das componentes em <b>Lista de Ofertas › Trocar</b>.</li>
-                                    <li>O planejamento fica mais fácil de ler para você, para os alunos e para os professores.</li>
-                                    <li>Como funciona a troca: veja <button type="button" class="aj-ir" data-aj-ir="revisao">Revisão › Lista de Ofertas</button>.</li>
+                                    <li><b>Abrir:</b> escolha a componente de estágio no campo Disciplina. No cartão de faixas aparecem o botão <b>Montar estágio</b> e o campo <b>Orientador</b>.<img class="aj-print" src="img/instrucoes/estagio-botao.png" width="301" height="40" alt="Botão Montar estágio e campo Orientador no cartão de faixas" loading="lazy"></li>
+                                    <li><b>1. Etapas.</b> A janela já começa com o mais comum: encontro no início, estágio em campo e encontro no final, no horário da turma. Em cada etapa escolha o que é, o turno, o mês, os dias e as horas por dia; a coluna <b>Choque</b> mostra se ela conta choque. A soma fica <b>em vermelho</b> até bater com a CH, e os cartões verdes trazem combinações de <b>dias × horas</b> que fecham exato: um clique escolhe. Só com a conta fechada o botão <b>Próximo: datas</b> funciona. A <b>CH do orientador</b> também pode ser escrita aqui.<img class="aj-print" src="img/instrucoes/estagio-1-etapas.png" width="1000" height="550" alt="Passo 1 da janela Montar estágio: três etapas, soma em vermelho e cartões com opções que fecham a CH" loading="lazy"></li>
+                                    <li>Estágio em campo com um turno da turma e um contraturno (ex.: Manhã e Noite)? Aparece em azul <b>Confirme se o estágio de campo vai ser em dois turnos</b>: confira se é isso mesmo.</li>
+                                    <li><b>2. Datas.</b> Uma aba por etapa, com as horas previstas e quanto falta. <b>Encontro</b>: clique nos dias. <b>Estágio em campo</b>: escolha os dias da semana e clique no dia em que começa; o fim sai sozinho. Os meses ficam um abaixo do outro; a borda tracejada vermelha é feriado. Etapa com 2 turnos (ex.: Manhã e Tarde) tem as horas de cada turno, iguais em todos os dias (ex.: 6 h = 4 de manhã + 2 à tarde).<img class="aj-print" src="img/instrucoes/estagio-2-datas.png" width="1000" height="621" alt="Passo 2 da janela Montar estágio: abas das etapas, dias da semana do estágio em campo e os meses com os dias marcados" loading="lazy"></li>
+                                    <li><b>3. Faixas.</b> Confira cada faixa: etapa, datas, horário do SIGAA, CH e choque. Os dias entre as etapas viram <b>pausa sem aula</b>. Clique em <b>Aplicar nas faixas</b>: as faixas vão para o cartão e o Turno da barra lateral passa a mostrar todos os turnos usados. Confira na grade e clique em <b>Salvar Componente</b>.<img class="aj-print" src="img/instrucoes/estagio-3-faixas.png" width="1000" height="432" alt="Passo 3 da janela Montar estágio: tabela das faixas com pausas e o botão Aplicar nas faixas" loading="lazy"></li>
+                                    <li>Para mudar dias ou horas, volte ao passo 1 (<b>‹ Etapas</b>). Encontros a mais são possíveis, mas cada um é carga a mais para o orientador. É uma <b>proposta</b>: o importante é registrar o encontro inicial, o final e a carga horária.</li>
+                                </ul>
+                            </article>
+
+                            <article class="aj-cartao aj-cartao--largo" id="aj-caso-estagio-regras">
+                                <h3><span aria-hidden="true">📏</span> Estágio (2 de 2): choque, CH do orientador e à mão</h3>
+                                <ul class="aj-lista aj-lista--2col">
+                                    <li><b>Encontro</b> conta choque como aula normal, em qualquer turno: o Cardume avisa se o orientador já tem aula em outra turma no mesmo horário.</li>
+                                    <li><b>Estágio em campo</b> nunca dá choque para o docente (os alunos estão no campo, sem ele). Em Indicadores › Dias do docente aparece em cinza e não pesa o dia.</li>
+                                    <li><b>Para a turma:</b> campo que usa o turno da turma deixa a turma ocupada o dia inteiro; campo só no contraturno deixa a turma livre para outras componentes no turno dela.</li>
+                                    <li><b>CH do orientador:</b> se só parte do estágio conta para o docente (ex.: 45 h de 90 h), escreva no campo <b>Orientador</b>, ao lado do botão (ou no passo 1 da janela). Vale na soma do docente (Indicadores e Calendário Docente); aulas, choques e SIGAA continuam com a CH toda. Vazio (caixa laranja): conta a CH toda.</li>
+                                    <li><b>Sábado:</b> no estágio, é sempre de manhã, a partir da 1ª aula (8h), com até 5 aulas, qualquer que seja o turno da etapa.</li>
+                                    <li><b>À mão</b> (sem a janela) também funciona, com faixas comuns. Elas seguem a regra pelo turno: dentro do turno da turma conta choque; fora dele, não.</li>
+                                    <li><b>Exemplo à mão</b> (105 h, turma da manhã): orientação de manhã (15 a 17/03), estágio à noite (segunda e quarta, 3 aulas) e fechamento de manhã (28 a 30/06).</li>
+                                    <li><b>Antes de tudo:</b> no <b>Turno</b> da barra lateral, escolha a combinação com o contraturno, aqui <b>Manhã e Noite</b>. Assim você desenha as 3 faixas sem trocar de turno.<img class="aj-print" src="img/instrucoes/estagio-turno.png" width="330" height="44" alt="Campo Turno com Manhã e Noite escolhido" loading="lazy"></li>
+                                    <li><b>Faixa 1:</b> manhãs de segunda a quarta na semana de 15/03; <b>Fim</b> 17/03 (15h).</li>
+                                    <li><b>Faixa 2:</b> clique no número <b>2</b> e no primeiro horário da noite de 22/03; segunda e quarta, 3 aulas; <b>Fim</b> 16/06 (75h).</li>
+                                    <li><b>Faixa 3:</b> clique no número <b>3</b> e no primeiro horário da manhã de 28/06; segunda a quarta (15h). Salve.</li>
+                                    <li><b>A conta fecha:</b> 15 + 75 + 15 = 105h. Sem o Fim da Faixa 2, ela gasta as horas da Faixa 3, e a Faixa 3 some. Os dias entre as faixas viram <b>pausa</b> e dão folga para feriado.</li>
+                                    <li><b>Estágio em bloco</b> (dias seguidos): Turno <b>Manhã e Tarde</b>, os dois turnos nos mesmos dias.</li>
                                 </ul>
                             </article>
                         </div>
@@ -1429,7 +1445,7 @@
 
                     <!-- ===== 5. DOCENTES ===== -->
                     <div class="aj-painel" id="aj-docentes" data-aj-painel="docentes" role="tabpanel" aria-labelledby="aj-tab-docentes" hidden>
-                        <p class="aj-lead">O <b>Calendário Docente</b> confere a carga horária e os choques de um professor, com tudo o que está sendo alocado agora.</p>
+                        <p class="aj-lead">O <b>Calendário Docente</b> confere a carga horária e os choques de um professor. O menu <b>Indicadores</b> mostra a CH de todos os docentes e os dias de aula de cada um. Os dois contam tudo o que está no Cardume, inclusive o que ainda não foi publicado.</p>
 
                         <div class="aj-grade">
                             <article class="aj-cartao">
@@ -1458,6 +1474,27 @@
                                     <li>No <b>Ano inteiro</b> entram também os choques entre PLs diferentes (ex.: PL2 e PL3 no mesmo mês).</li>
                                     <li>Em cada choque do alerta, o botão <b>Como resolver?</b> sugere a saída mais simples.</li>
                                 </ul>
+                            </article>
+
+                            <article class="aj-cartao">
+                                <h3><span aria-hidden="true">📈</span> Indicadores › Carga por docente</h3>
+                                <ul class="aj-lista">
+                                    <li>Uma tabela com a CH de cada docente, por curso e por PL. Escolha a <b>Unidade</b>, o ano e <b>Ano inteiro</b> ou um PL.</li>
+                                    <li>Componente dividida: conta a parte de cada um (ex.: 30 de 90 h). Estágio com <b>CH do orientador</b>: conta essa CH. Pendentes (sem horário) não entram.</li>
+                                    <li>Clique no nome para abrir a agenda do docente no mesmo período.</li>
+                                    <li>No resumo, à parte: <b>vagas</b>, <b>sem docente</b> e o aviso <span class="aj-tag aj-tag--alerta">⚠ nome improvisado</span> (troque por uma vaga em <b>Editar</b>).</li>
+                                </ul>
+                            </article>
+
+                            <article class="aj-cartao aj-cartao--largo">
+                                <h3><span aria-hidden="true">🗓️</span> Indicadores › Dias do docente</h3>
+                                <ul class="aj-lista aj-lista--2col">
+                                    <li>Digite o nome do docente: cada linha é uma componente dele e cada quadradinho é um dia do PL; o mesmo dia fica alinhado na vertical. Uma linha verde marca o começo de cada mês.</li>
+                                    <li><b>Dia a dia</b>: verde = 1 componente no dia; <b>vermelho = dia carregado</b>, com 2 ou mais componentes (ex.: uma de manhã e outra à tarde). Não é choque: é um dia pesado para o docente.</li>
+                                    <li>Passe o mouse num dia: a caixa no cabeçalho do PL diz as aulas daquele dia. Componente com <b>risco vermelho embaixo</b> = aula num dia carregado; <b>listra cinza</b> = feriado; a <b>coluna fina</b> é o domingo.</li>
+                                    <li>Os PLs se sobrepõem (o PL3 começa antes do fim do PL2). Componente de <b>outro PL</b> que cai nas datas deste aparece <b>fraca e listrada</b>, com o nome apagado. <b>Estágio em campo</b> aparece em cinza e não pesa o dia.</li>
+                                </ul>
+                                <img class="aj-print" src="img/instrucoes/dias-docente.png" width="1000" height="302" alt="Quadro Dias do docente: linha Dia a dia com dias vermelhos e uma linha por componente" loading="lazy">
                             </article>
                         </div>
                     </div>
@@ -1544,7 +1581,7 @@
         </main>
     </div>
 
-    <script type="module" src="js/main.js?v=202611201756"></script>
+    <script type="module" src="js/main.js?v=202611210907"></script>
 </body>
 
 </html>

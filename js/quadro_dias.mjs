@@ -1,5 +1,5 @@
-import { escapeHtml as esc } from './texto.mjs?v=202611201756';
-import { vividHexColor, hexToRgb, rgbToHsl, hslToRgb } from './color_utils.js?v=202611201756';
+import { escapeHtml as esc } from './texto.mjs?v=202611210907';
+import { vividHexColor, hexToRgb, rgbToHsl, hslToRgb } from './color_utils.js?v=202611210907';
 // Desenho do quadro "Dias do docente": uma coluna por dia do PL, a linha
 // "Dia a dia" (verde = 1 componente, vermelho = 2 ou mais) e uma linha por
 // componente. Usado em Indicadores > Dias do docente; sem store e sem DOM
@@ -12,7 +12,7 @@ const LETRA_DIA = ['', 'S', 'T', 'Q', 'Q', 'S', 'S'];
 const MES_CURTO = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
 const ddmm = (iso) => `${iso.slice(8, 10)}/${iso.slice(5, 7)}`;
 
-export const DICA_MOUSE = 'Passe o mouse num dia para ver as aulas dele.';
+export const DICA_MOUSE = 'Passe o mouse num dia para ver as aulas.';
 
 // Carga horaria: inteiro com separador de milhar; fracao com 1 casa. Zero = ''.
 export function fmtCH(n) {
@@ -41,8 +41,12 @@ export function semVermelhoDeAlerta(hex) {
 // 2 = numero das segundas, 3 = letra do dia, 4 = "Dia a dia", depois as componentes.
 // indice: posicao do quadro na lista guardada por quem desenha (ver focarDiaDoQuadro).
 // aulas: horas de aula (difere de ch no estagio com CH do orientador); outroPL(key):
-// nome do PL de origem quando a componente e de outro PL; dica: texto da faixa de info.
-export function quadroDiasHtml(indice, titulo, datas, r, rotulos, ch, { aulas = ch, outroPL = () => '', dica = DICA_MOUSE } = {}) {
+// nome do PL de origem quando a componente e de outro PL; dica: texto inicial da
+// caixa do dia, no cabecalho do PL (vazia = escondida; o Indicadores poe a dica
+// uma vez so, na linha do docente). Sem legenda: as cores estao na Ajuda (21/11/2026).
+// chComp(comp): { docente, total } = CH do docente na componente e CH da componente
+// (sem ela: as horas de aula do quadro, sem total).
+export function quadroDiasHtml(indice, titulo, datas, r, rotulos, ch, { aulas = ch, outroPL = () => '', dica = '', chComp = (comp) => ({ docente: comp.aulas, total: 0 }) } = {}) {
     const col = (k) => k + 2;
     const colunas = r.datas.map((d) => (d.weekday === 0 ? '4.75px' : 'minmax(5.7px, 1fr)')).join(' ');
     const pos = (k, linha) => `grid-column:${col(k)};grid-row:${linha}`;
@@ -93,11 +97,15 @@ export function quadroDiasHtml(indice, titulo, datas, r, rotulos, ch, { aulas = 
     r.componentes.forEach((comp, n) => {
         const linha = 6 + n;
         const turma = rotulos.get(comp.key) || comp.turmaId;
-        const sub = [turma, `${comp.turnos} ${comp.horario}`.trim(), comp.weekdays, `${fmtCH(comp.aulas)}h`].filter(Boolean).join(' · ');
+        // CH primeiro (nao some nas reticencias): do docente / da componente (21/11/2026).
+        const c = chComp(comp);
+        const chTxt = c.total && c.total !== c.docente ? `${fmtCH(c.docente) || 0}/${fmtCH(c.total)}h` : `${fmtCH(c.docente) || 0}h`;
+        const sub = [turma, `${comp.turnos} ${comp.horario}`.trim(), comp.weekdays].filter(Boolean).join(' · ');
         // Componente de outro PL: cor fraca e listrada (nome tambem mais apagado).
         const pl = outroPL(comp.key);
-        const dica = pl ? `${comp.disciplina} (componente do ${pl})\n${sub}` : `${comp.disciplina}\n${sub}`;
-        html += `<span class="dd-rot${pl ? ' dd-rot-outro' : ''}" style="grid-row:${linha}" title="${esc(dica)}"><span class="dd-rot-nome">${esc(comp.disciplina)}</span><span class="dd-rot-sub">${esc(sub)}</span></span>`;
+        const chDica = c.total ? `CH do docente: ${fmtCH(c.docente) || 0} h de ${fmtCH(c.total)} h da componente` : `CH do docente: ${fmtCH(c.docente) || 0} h`;
+        const dica = `${comp.disciplina}${pl ? ` (componente do ${pl})` : ''}\n${chDica}\n${sub}`;
+        html += `<span class="dd-rot${pl ? ' dd-rot-outro' : ''}" style="grid-row:${linha}" title="${esc(dica)}"><span class="dd-rot-nome">${esc(comp.disciplina)}</span><span class="dd-rot-sub"><b class="dd-rot-ch">${chTxt}</b> · ${esc(sub)}</span></span>`;
         const cor = corDe(comp);
         r.datas.forEach((d, k) => {
             if (!comp.porData[d.date]) { html += celula(d, k, linha, '', ''); return; }
@@ -115,19 +123,9 @@ export function quadroDiasHtml(indice, titulo, datas, r, rotulos, ch, { aulas = 
                 ${ch === aulas
                     ? `<span class="dd-ch" title="Carga horária do docente neste PL">${fmtCH(ch) || 0}h</span>`
                     : `<span class="dd-ch dd-ch-orientador" title="Carga horária do docente neste PL: ${fmtCH(ch)} h (o estágio conta a CH do orientador). Horas de aula no calendário: ${fmtCH(aulas)} h.">${fmtCH(ch) || 0}/${fmtCH(aulas) || 0}h</span>`}
-                ${r.carregados ? `<span class="dd-alerta">${r.carregados} dia${r.carregados === 1 ? '' : 's'} com 2 ou mais componentes</span>` : '<span class="dd-sem">nenhum dia com 2 componentes</span>'}
+                <span class="dd-info" aria-live="polite">${esc(dica)}</span>
+                ${r.carregados ? `<span class="dd-alerta" title="Dias com 2 ou mais componentes (vermelho no Dia a dia)">${r.carregados} dia${r.carregados === 1 ? '' : 's'} com 2+ componentes</span>` : '<span class="dd-sem">nenhum dia com 2 componentes</span>'}
             </div>
-            <div class="dd-legenda">
-                <span><i class="dd-leg-baixo" style="background:#8fbfa2"></i>Dia a dia: 1 componente</span>
-                <span><i class="dd-leg-baixo" style="background:#d61f1f;border-color:#d61f1f"></i>Dia a dia: 2 ou mais componentes</span>
-                <span><i style="background:#6aaee8"></i>aula (cor da componente)</span>
-                <span><i style="background:#6aaee8;box-shadow:inset 0 -4px 0 #d61f1f,inset 0 -5px 0 #fff"></i>aula num dia carregado</span>
-                <span><i style="background:repeating-linear-gradient(135deg,#b9c6bd 0 2px,transparent 2px 4px)"></i>feriado</span>
-                ${r.datas.some((d) => d.emCampo.length) ? '<span><i class="dd-leg-campo"></i>estágio em campo (alunos no campo; não pesa o dia do docente)</span>' : ''}
-                ${r.componentes.some((c) => outroPL(c.key)) ? '<span><i class="dd-leg-outro" style="--dd-c:#6aaee8"></i>aula de outro PL (nas datas deste)</span>' : ''}
-                <span>coluna fina = domingo</span>
-            </div>
-            <div class="dd-info" aria-live="polite">${esc(dica)}</div>
             <div class="dd-rolagem"><div class="dd-grade" style="grid-template-columns:minmax(152px, 208px) ${colunas}">${html}</div></div>
         </section>`;
 }
@@ -142,12 +140,13 @@ export function textoDoDia(quadro, date) {
     const item = (key, campo) => {
         const comp = r.componentes.find((c) => c.key === key);
         const d = comp.porData[date];
-        return `${campo ? 'estágio em campo, ' : ''}${esc(`${d.turnos} ${d.horario}`.trim())}: ${esc(comp.disciplina)} (${esc(rotulos.get(key) || comp.turmaId)})`;
+        // Curto (cabe na caixa do cabecalho): o horario ja diz o turno.
+        return `${campo ? 'estágio em campo, ' : ''}${esc(d.horario || d.turnos)} ${esc(comp.disciplina)} (${esc(rotulos.get(key) || comp.turmaId)})`;
     };
     const lista = [...dia.componentes.map((key) => item(key, false)), ...dia.emCampo.map((key) => item(key, true))].join(' · ');
     return dia.carregado
-        ? `${esc(nome)}: <b>${dia.componentes.length} componentes no mesmo dia</b> · ${lista}`
-        : `${esc(nome)}: ${lista}`;
+        ? `${esc(nome)} · <b>${dia.componentes.length} componentes</b> · ${lista}`
+        : `${esc(nome)} · ${lista}`;
 }
 
 // quadros: a lista guardada por quem desenhou ({ r, rotulos, nomeFeriado } por indice).
@@ -159,5 +158,5 @@ export function focarDiaDoQuadro(cel, quadros) {
     secao.querySelectorAll('.is-foco').forEach((el) => el.classList.remove('is-foco'));
     secao.querySelectorAll(`[data-dd-date="${date}"], [data-dd-h="${date}"]`).forEach((el) => el.classList.add('is-foco'));
     const info = secao.querySelector('.dd-info');
-    if (info) info.innerHTML = textoDoDia(quadro, date);
+    if (info) { info.innerHTML = textoDoDia(quadro, date); info.title = info.textContent; }
 }
