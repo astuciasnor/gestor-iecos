@@ -1,5 +1,5 @@
 // Teste de ponta a ponta das 4 FAIXAS (usa a tela como o usuario):
-//  - a linha da Faixa 4 fica escondida ate a Faixa 3 comecar (o cartao nao cresce);
+//  - a linha da Faixa 4 fica sempre a vista (21/11/2026);
 //  - F1 15/03 seg/ter, F2 22/03 qua/qui, F3 29/03 sex, F4 05/04 seg a qui
 //    (sempre as 2 primeiras aulas da tarde);
 //  - salva e confere na grade, semana a semana, que cada aula ficou no lugar certo;
@@ -116,13 +116,13 @@ try {
   console.log('Componente:', escolha);
 
   await passo('seleciona', `(async () => { __t.setVal('inp-disciplina', ${JSON.stringify(escolha.A)}); await __t.wait(900); __t.setVal('inp-docente', ${JSON.stringify(escolha.d)}); await __t.wait(500); return __t.status(); })()`);
-  confere('linha da Faixa 4 escondida no comeco', !(await evaluate('__t.linha4Visivel()')));
+  confere('linha da Faixa 4 visivel desde o comeco', await evaluate('__t.linha4Visivel()'));
 
   await passo('F1 = 15/03, seg/ter', `(async () => { __t.setVal('inp-data-inicio-f1', '2027-03-15'); await __t.wait(700); await __t.irPara('2027-03-15'); return await __t.soEstes([1, 2]); })()`);
   await passo('F2 = 22/03, qua/qui', `(async () => { __t.setVal('inp-data-inicio-f2', '2027-03-22'); await __t.wait(800); await __t.irPara('2027-03-22'); return await __t.soEstes([3, 4]); })()`);
-  confere('linha da Faixa 4 ainda escondida (F3 sem inicio)', !(await evaluate('__t.linha4Visivel()')));
+  confere('linha da Faixa 4 visivel (F3 sem inicio)', await evaluate('__t.linha4Visivel()'));
   await passo('F3 = 29/03, sex', `(async () => { __t.setVal('inp-data-inicio-f3', '2027-03-29'); await __t.wait(800); await __t.irPara('2027-03-29'); return await __t.soEstes([5]); })()`);
-  confere('linha da Faixa 4 aparece quando a F3 comeca', await evaluate('__t.linha4Visivel()'));
+  confere('linha da Faixa 4 visivel quando a F3 comeca', await evaluate('__t.linha4Visivel()'));
   await passo('F4 = 05/04, seg a qui', `(async () => { __t.setVal('inp-data-inicio-f4', '2027-04-05'); await __t.wait(800); await __t.irPara('2027-04-05'); return await __t.soEstes([1, 2, 3, 4]); })()`);
   const antes = await passo('faixas antes de salvar', '__t.faixas()');
   confere('Fim de cada faixa = vespera da seguinte', /F1 2027-03-15\.\.2027-03-21/.test(antes) && /F2 2027-03-22\.\.2027-03-28/.test(antes) && /F3 2027-03-29\.\.2027-04-04/.test(antes), antes);
@@ -171,7 +171,7 @@ try {
     })()`);
     const depois = await evaluate('__t.faixas()');
     confere('remover a F3 apaga a 3 e a 4', /F3 -\.\.-/.test(depois) && /F4 -\.\.-/.test(depois), depois);
-    confere('linha da Faixa 4 some de novo', !(await evaluate('__t.linha4Visivel()')));
+    confere('linha da Faixa 4 continua visivel', await evaluate('__t.linha4Visivel()'));
   } else {
     console.log('  (aviso) nao consegui reabrir pela grade; edicao e remocao nao foram testadas aqui');
   }

@@ -758,7 +758,7 @@
                                 </label>
                                 <div class="cd-etiquetas" aria-label="Legenda das faixas">
                                     <span class="cd-etiqueta cd-etiqueta--f1"><span class="cd-ponto"></span>Faixa 1 &middot; data inicial</span>
-                                    <span class="cd-etiqueta cd-etiqueta--fx"><span class="cd-ponto"></span>Faixas 2 a 4 &middot; opcionais</span>
+                                    <span class="cd-etiqueta cd-etiqueta--fx"><span class="cd-ponto"></span><span id="faixas-opcionais-texto">Faixas 2 a 4 &middot; opcionais</span></span>
                                     <span class="cd-etiqueta cd-etiqueta--pausa"><span class="cd-ponto"></span>Pausa &middot; sem aula</span>
                                 </div>
                             </div></div>
@@ -859,9 +859,9 @@
                                         <tr id="faixa-pausa-3" class="faixa-pausa-row hidden">
                                             <td colspan="5"><div class="faixa-pausa-faixa"><svg class="cd-icone" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1"></rect><rect x="14" y="5" width="4" height="14" rx="1"></rect></svg><b>Pausa sem aula</b> &middot; <span class="faixa-pausa-texto"></span></div></td>
                                         </tr>
-                                        <tr id="faixa-4" class="faixa-item hidden">
+                                        <tr id="faixa-4" class="faixa-item">
                                             <td class="faixa-num">
-                                                <span class="faixa-pill"><span class="faixa-num-value">Faixa&nbsp;4</span><span class="faixa-info" role="button" tabindex="0" aria-label="Sobre a Faixa 4" title="Opcional. Aparece quando a Faixa 3 ja comecou e funciona como as outras: nasce ao redesenhar numa semana posterior da Faixa 3 ou pelo clique no numero da faixa. Util no estagio (manha num periodo, noite noutro).">i</span></span>
+                                                <span class="faixa-pill"><span class="faixa-num-value">Faixa&nbsp;4</span><span class="faixa-info" role="button" tabindex="0" aria-label="Sobre a Faixa 4" title="Opcional e funciona como as outras: nasce ao redesenhar numa semana posterior da Faixa 3 ou pelo clique no numero da faixa. Util no estagio (manha num periodo, noite noutro).">i</span></span>
                                                 <button type="button" class="faixa-quick-action-trigger faixa-quick-action-remove" data-faixa-action="4" aria-label="Remover faixa 4" title="Remover faixa 4">&#10005;</button>
                                                 <button type="button" class="faixa-quick-action-confirm" data-faixa-confirm="4">Confirmar</button>
                                             </td>
@@ -881,6 +881,32 @@
                                             </td>
                                             <td id="faixa-padrao-f4" class="faixa-padrao-cell"></td>
                                             <td id="faixa-ch-f4" class="faixa-ch-cell">0 h</td>
+                                        </tr>
+                                        <tr id="faixa-pausa-4" class="faixa-pausa-row hidden">
+                                            <td colspan="5"><div class="faixa-pausa-faixa"><svg class="cd-icone" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1"></rect><rect x="14" y="5" width="4" height="14" rx="1"></rect></svg><b>Pausa sem aula</b> &middot; <span class="faixa-pausa-texto"></span></div></td>
+                                        </tr>
+                                        <tr id="faixa-5" class="faixa-item hidden">
+                                            <td class="faixa-num">
+                                                <span class="faixa-pill"><span class="faixa-num-value">Faixa&nbsp;5</span><span class="faixa-info" role="button" tabindex="0" aria-label="Sobre a Faixa 5" title="So no estagio. Aparece quando a Faixa 4 ja comecou (ou quando o Montar estagio usa 5 etapas). As demais componentes param na Faixa 4.">i</span></span>
+                                                <button type="button" class="faixa-quick-action-trigger faixa-quick-action-remove" data-faixa-action="5" aria-label="Remover faixa 5" title="Remover faixa 5">&#10005;</button>
+                                                <button type="button" class="faixa-quick-action-confirm" data-faixa-confirm="5">Confirmar</button>
+                                            </td>
+                                            <td>
+                                                <div class="faixa-date-compact">
+                                                    <input type="date" id="inp-data-inicio-f5" class="inp-data-inicio faixa-date-native" aria-label="Inicio da faixa 5">
+                                                    <span class="faixa-date-display is-placeholder" data-date-display-for="inp-data-inicio-f5">A definir</span>
+                                                    <button type="button" class="faixa-date-trigger" data-date-target="inp-data-inicio-f5" aria-label="Selecionar data de inicio da faixa 5" title="Selecionar data">&#128197;</button>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div class="faixa-date-compact">
+                                                    <input type="date" id="inp-data-fim-f5" class="inp-data-fim faixa-date-native" aria-label="Fim da faixa 5">
+                                                    <span class="faixa-date-display is-placeholder" data-date-display-for="inp-data-fim-f5">A definir</span>
+                                                    <button type="button" class="faixa-date-trigger" data-date-target="inp-data-fim-f5" aria-label="Selecionar data de fim da faixa 5" title="Selecionar data">&#128197;</button>
+                                                </div>
+                                            </td>
+                                            <td id="faixa-padrao-f5" class="faixa-padrao-cell"></td>
+                                            <td id="faixa-ch-f5" class="faixa-ch-cell">0 h</td>
                                         </tr>
                                     </tbody>
                                 </table>
@@ -910,6 +936,7 @@
                                 <span id="status-draw-f2"></span>
                                 <span id="status-draw-f3"></span>
                                 <span id="status-draw-f4"></span>
+                                <span id="status-draw-f5"></span>
                             </div>
                         </div>
 
@@ -1247,7 +1274,7 @@
                             <article class="aj-cartao">
                                 <h3><span aria-hidden="true">📐</span> Faixas</h3>
                                 <ul class="aj-lista">
-                                    <li>Faixa é o <b>horário semanal válido num intervalo de datas</b>. Cada componente tem até 4.</li>
+                                    <li>Faixa é o <b>horário semanal válido num intervalo de datas</b>. Cada componente tem até 4 (o estágio, até 5).</li>
                                     <li>A nova faixa substitui a anterior a partir do seu Início. O Fim da anterior se ajusta sozinho.</li>
                                     <li>Ao criar uma faixa sozinho, o Cardume avisa (<em>“Criei a Faixa 2”</em>) e oferece <b>Desfazer</b>.</li>
                                     <li>O <b>i</b> ao lado de cada faixa explica o que fazer. <b>↺</b> zera a Faixa 1; <b>✕</b> remove a Faixa 2, 3 ou 4 (e as seguintes).</li>

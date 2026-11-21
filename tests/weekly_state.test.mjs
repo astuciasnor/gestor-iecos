@@ -36,10 +36,10 @@ test('faixasPatterns com faixa nao-array e detectado', () => {
 
 test('faixasPatterns com chave inesperada e detectado', () => {
   restoreCleanState();
-  weeklyState.faixasPatterns[5] = []; // ha 4 faixas (js/faixas.mjs): a 5 e inesperada
+  weeklyState.faixasPatterns[6] = []; // ha 5 faixas (js/faixas.mjs): a 6 e inesperada
   const problems = weeklyState.checkInvariants('teste');
   assert.ok(problems.some((p) => p.includes('chaves inesperadas')));
-  delete weeklyState.faixasPatterns[5];
+  delete weeklyState.faixasPatterns[6];
 });
 
 test('editingComponentOriginalStart sem IDs originais e detectado (desync)', () => {
@@ -89,7 +89,7 @@ test('resetEditing zera os campos e mantem invariantes limpos', () => {
   assert.deepEqual(weeklyState.checkInvariants('teste'), []);
 });
 
-test('clearFaixasPatterns limpa as 4 faixas preservando o objeto', () => {
+test('clearFaixasPatterns limpa as faixas preservando o objeto', () => {
   restoreCleanState();
   const ref = weeklyState.faixasPatterns;
   weeklyState.faixasPatterns[1] = [{ dia: 1, slot: 'M1' }];

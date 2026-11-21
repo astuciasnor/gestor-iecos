@@ -65,7 +65,8 @@ export function abrirMontarEstagio(ctx) {
         novaEtapa('encontro', turnoTurma, meses[0]),
         novaEtapa('campo', contraturno, meses[0]),
         novaEtapa('encontro', turnoTurma, meses[meses.length - 1]),
-        novaEtapa('campo', contraturno, meses[Math.min(1, meses.length - 1)])
+        novaEtapa('campo', contraturno, meses[Math.min(1, meses.length - 1)]),
+        novaEtapa('encontro', turnoTurma, meses[meses.length - 1])
     ];
     estado = { ctx, maxPorLetra, turnosPossiveis, meses, etapas, n: 3, passo: 1, ativo: 0, feriadosSet: new Set(ctx.feriados.keys()), chOrientador: Number(ctx.chOrientador) || 0 };
 
@@ -233,7 +234,7 @@ function htmlPasso1() {
     return `
         <div class="me-linha-topo">
             <span class="me-rotulo">Quantas etapas?</span>
-            <span class="me-seg">${[1, 2, 3, 4].slice(0, MAX_FAIXAS).map((q) => `<button type="button" data-n="${q}" aria-pressed="${q === n}">${q}</button>`).join('')}</span>
+            <span class="me-seg">${Array.from({ length: MAX_FAIXAS }, (_, i) => i + 1).map((q) => `<button type="button" data-n="${q}" aria-pressed="${q === n}">${q}</button>`).join('')}</span>
             <span class="me-nota">Cada etapa vira uma faixa. Encontro: dias com a turma e o orientador. Campo: escola, laboratório, empresa, fazenda.</span>
         </div>
         <div class="me-etapas">

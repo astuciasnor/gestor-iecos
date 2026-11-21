@@ -1,7 +1,7 @@
 import { UNIDADE_PADRAO, unidadeDoCurso } from './unidades.mjs?v=202611211033';
 import { getLocalTodayIso } from './datas.mjs?v=202611211033';
 import { store } from './store.js?v=202611211033';
-import { MAX_FAIXAS, NUMEROS_FAIXAS, idsDatasFaixas } from './faixas.mjs?v=202611211033';
+import { MAX_FAIXAS, MAX_FAIXAS_COMUM, NUMEROS_FAIXAS, idsDatasFaixas, limiteDeFaixas } from './faixas.mjs?v=202611211033';
 import { ehEstagio, letrasDoTurno } from './estagio.mjs?v=202611211033';
 import { abrirMontarEstagio } from './montar_estagio_ui.js?v=202611211033';
 import { escapeTrocaHtml, contarHorasExecutadas, sugerirInicioSemChoque, fraseComeceEm, cursoDaTurma, sugerirComoResolverChoque, abrirTrocaDeOrdem, ligarTroca } from './troca_ui.js?v=202611211033';
@@ -1095,6 +1095,10 @@ function setPendingFaixaStartPick(faixaIndex, options = {}) {
     const { quiet = false } = options;
     const idx = parseInt(faixaIndex, 10);
     if (Number.isNaN(idx) || idx < 2 || idx > MAX_FAIXAS) return false;
+    if (idx > limiteFaixasDaComponente()) {
+        showToastWarning(`A Faixa ${idx} e so para estagio. As demais componentes vao ate a Faixa ${limiteFaixasDaComponente()}.`, 'warning', 3200);
+        return false;
+    }
 
     // Cada faixa so comeca depois que a anterior tem inicio.
     if (!document.getElementById(`inp-data-inicio-f${idx - 1}`)?.value) {
@@ -1746,8 +1750,9 @@ function applyDrawnCellChange({ faixaIndex, date, dia, slot, select }) {
         return { applied: true, structural: false, faixa: k };
     }
 
-    if (k >= MAX_FAIXAS) {
-        showToastWarning(`A Faixa ${MAX_FAIXAS} e a ultima. Para mudar o horario a partir desta semana, redesenhe numa semana da Faixa ${MAX_FAIXAS - 1}: as faixas recomecam dali.`, 'error', 5600);
+    const limite = limiteFaixasDaComponente();
+    if (k >= limite) {
+        showToastWarning(`A Faixa ${limite} e a ultima. Para mudar o horario a partir desta semana, redesenhe numa semana da Faixa ${limite - 1}: as faixas recomecam dali.`, 'error', 5600);
         return { applied: false };
     }
 
@@ -2014,10 +2019,18 @@ function getWeeklyFaixasTitleDisciplinaAtiva() {
     return '';
 }
 
+// Quantas faixas a componente do cartao pode ter: 5 no estagio, 4 nas demais.
+function limiteFaixasDaComponente() {
+    return limiteDeFaixas(ehEstagio(getWeeklyFaixasTitleDisciplinaAtiva()));
+}
+
 function updateWeeklyFaixasTitleDisciplina() {
     // Botao "Montar estagio": so com turma e componente de estagio escolhidas.
     const semEstagio = !store.selectedTurma || !ehEstagio(getWeeklyFaixasTitleDisciplinaAtiva());
     document.getElementById('btn-montar-estagio')?.classList.toggle('hidden', semEstagio);
+    // Legenda "Faixas 2 a N · opcionais": 5 no estagio, 4 nas demais.
+    const opcionais = document.getElementById('faixas-opcionais-texto');
+    if (opcionais) opcionais.textContent = `Faixas 2 a ${limiteDeFaixas(!semEstagio)} · opcionais`;
     atualizarCaixaChOrientador(semEstagio);
     const prefixEl = document.getElementById('weekly-faixas-title-prefix');
     const discEl = document.getElementById('weekly-faixas-title-disc');
@@ -3474,10 +3487,13 @@ function applyFaixaDateAutofill(options = {}) {
         }
     }
 
-    // A ultima linha so aparece quando a anterior ja comecou: o cartao nao cresce
-    // para quem usa ate 3 faixas.
-    document.getElementById(`faixa-${MAX_FAIXAS}`)
-        ?.classList.toggle('hidden', !temInicio(MAX_FAIXAS - 1) && !temInicio(MAX_FAIXAS));
+    // As 4 faixas comuns ficam sempre a vista (21/11/2026). A 5 so existe no estagio
+    // (limiteFaixasDaComponente) e aparece quando a Faixa 4 ja comecou.
+    const limite = limiteFaixasDaComponente();
+    for (let i = MAX_FAIXAS_COMUM + 1; i <= MAX_FAIXAS; i++) {
+        document.getElementById(`faixa-${i}`)
+            ?.classList.toggle('hidden', !temInicio(i) && !(i <= limite && temInicio(i - 1)));
+    }
 
     syncFaixaStartSnapshots();
     refreshAllCompactFaixaDateDisplays();
@@ -4400,7 +4416,7 @@ function computeWeeklyStatus() {
             // Com o chip de encaixe (data \u00B7 horario) nao ha dica: o chip ja diz onde comecar.
             hint: chip
                 ? ''
-                : 'Clique/arraste nos horarios vagos e clique em "Salvar Componente". Faixas 2 a 4 sao opcionais, para mudancas de horario no periodo.',
+                : 'Clique/arraste nos horarios vagos e clique em "Salvar Componente". Faixas 2 a 4 (no estagio, 2 a 5) sao opcionais, para mudancas de horario no periodo.',
             chip
         };
     }
