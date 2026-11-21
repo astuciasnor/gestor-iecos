@@ -9,12 +9,12 @@
 // cluster de EDICAO (5 campos + reset atomico). drawingFaixaIndex, faixasPatterns
 // e weeklyViewState continuam em ui.js por enquanto (migracao incremental).
 //
-// Uso em ui.js: `import { weeklyState } from './weekly_state.js?v=202611210907';` e acessar
+// Uso em ui.js: `import { weeklyState } from './weekly_state.js?v=202611210933';` e acessar
 // `weeklyState.editingDisciplinaDraft` etc. (mutacao de PROPRIEDADE do objeto —
 // nao da para reatribuir um binding de import, por isso o estado vive num objeto).
 // ---------------------------------------------------------------------------
 
-import { NUMEROS_FAIXAS } from './faixas.mjs?v=202611210907';
+import { NUMEROS_FAIXAS } from './faixas.mjs?v=202611210933';
 
 export const weeklyState = {
     // Rascunho da disciplina carregada no editor (nome normalizado, sem "(60h)").

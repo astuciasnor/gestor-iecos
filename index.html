@@ -10,14 +10,14 @@
         // Vai para o aviso antes de carregar o programa. A agenda publica nao passa por aqui.
         if (/\.github\.io$/i.test(location.hostname)) location.replace('mudou.html');
     </script>
-    <link rel="stylesheet" href="css/style.css?v=202611210907">
+    <link rel="stylesheet" href="css/style.css?v=202611210933">
     <!-- Redesenho da aba Alocar Componentes (por partes); carrega depois do style.css -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
-    <link rel="stylesheet" href="css/alocar-componentes.css?v=202611210907">
-    <link rel="stylesheet" href="css/ajuda.css?v=202611210907">
-    <link rel="stylesheet" href="css/montar-estagio.css?v=202611210907">
+    <link rel="stylesheet" href="css/alocar-componentes.css?v=202611210933">
+    <link rel="stylesheet" href="css/ajuda.css?v=202611210933">
+    <link rel="stylesheet" href="css/montar-estagio.css?v=202611210933">
 
     <style>
         :root {
@@ -349,7 +349,7 @@
         }
     </style>
     <!-- Visual da barra lateral: depois de todos os estilos, so vale dentro de .sidebar -->
-    <link rel="stylesheet" href="css/sidebar.css?v=202611210907">
+    <link rel="stylesheet" href="css/sidebar.css?v=202611210933">
 </head>
 
 <body>
@@ -1080,8 +1080,8 @@
                 </p>
                 <ul class="ind-nota ind-nota-lista hidden" id="ind-nota-dias">
                     <li>Cada linha é uma componente do docente e cada quadradinho é um dia do período letivo; o mesmo dia fica alinhado na vertical.</li>
-                    <li><b>Dia carregado</b> (vermelho) = duas ou mais componentes diferentes no mesmo dia, por exemplo uma de manhã e outra à tarde.</li>
-                    <li>Não é choque de horário: é só um dia pesado para o docente.</li>
+                    <li><b>Sobrecarga</b> (dia carregado, vermelho) = duas ou mais componentes diferentes no mesmo dia, por exemplo uma de manhã e outra à tarde.</li>
+                    <li>Não é choque de horário: é só um dia pesado para o docente. Estágio em campo não pesa o dia.</li>
                     <li>T01 e T02 da mesma componente contam como duas.</li>
                     <li>Ao lado de cada componente: <b>CH do docente / CH da componente</b> (ex.: 60/90h quando a componente é dividida ou é estágio com CH do orientador).</li>
                     <li>Entram as componentes do docente em todas as unidades, inclusive o que ainda não foi publicado.</li>
@@ -1448,6 +1448,17 @@
                         <p class="aj-lead">O <b>Calendário Docente</b> confere a carga horária e os choques de um professor. O menu <b>Indicadores</b> mostra a CH de todos os docentes e os dias de aula de cada um. Os dois contam tudo o que está no Cardume, inclusive o que ainda não foi publicado.</p>
 
                         <div class="aj-grade">
+                            <article class="aj-cartao aj-cartao--largo">
+                                <h3><span aria-hidden="true">⚖️</span> Choque não é sobrecarga: quatro ideias</h3>
+                                <ul class="aj-lista aj-lista--2col">
+                                    <li><b>Choque do professor</b>: o mesmo docente em dois lugares <b>no mesmo dia e horário</b>. Barra o salvamento. Encontro de estágio conta; <b>estágio em campo nunca conta</b>, porque os alunos estão na escola, sem o orientador.</li>
+                                    <li><b>Choque da turma</b>: os mesmos alunos com duas componentes <b>no mesmo dia e horário</b>. Barra o salvamento. Estágio em campo <b>no turno da turma</b> ocupa a turma o dia inteiro; <b>no contraturno</b>, deixa a turma livre no turno dela.</li>
+                                    <li><b>Sobrecarga</b> (dia carregado): o docente com <b>2 ou mais componentes no mesmo dia</b>, em horários diferentes (ex.: uma de manhã e outra à tarde). <b>Não é choque</b> e não barra nada: é um aviso para equilibrar a semana dele. Aparece em vermelho em <b>Indicadores › Dias do docente</b>. Estágio em campo não pesa o dia.</li>
+                                    <li><b>CH atribuída</b>: as horas que contam para o docente. Componente toda = a CH dela (<code>60h</code>); dividida = a parte dele (<code>30/90h</code>); estágio com <b>CH do orientador</b> = essa CH (<code>45/90h</code>). Vale no Calendário Docente e nos Indicadores; aulas, choques e SIGAA usam a CH toda.</li>
+                                    <li><b>Estágio lançado antes de 20/11/2026</b> (faixas sem a marca de encontro ou campo) segue a regra antiga, pelo turno, e pode aparecer como sobrecarga. Para corrigir: abra a componente, refaça as etapas em <b>Montar estágio</b>, escreva a CH do orientador e salve.</li>
+                                </ul>
+                            </article>
+
                             <article class="aj-cartao">
                                 <h3><span aria-hidden="true">📆</span> Escolha o período</h3>
                                 <ul class="aj-lista">
@@ -1490,7 +1501,7 @@
                                 <h3><span aria-hidden="true">🗓️</span> Indicadores › Dias do docente</h3>
                                 <ul class="aj-lista aj-lista--2col">
                                     <li>Digite o nome do docente: cada linha é uma componente dele e cada quadradinho é um dia do PL; o mesmo dia fica alinhado na vertical. Uma linha verde marca o começo de cada mês.</li>
-                                    <li><b>Dia a dia</b>: verde = 1 componente no dia; <b>vermelho = dia carregado</b>, com 2 ou mais componentes (ex.: uma de manhã e outra à tarde). Não é choque: é um dia pesado para o docente.</li>
+                                    <li><b>Dia a dia</b>: verde = 1 componente no dia; <b>vermelho = sobrecarga</b> (dia carregado), com 2 ou mais componentes (ex.: uma de manhã e outra à tarde). Não é choque: é um dia pesado para o docente.</li>
                                     <li>Passe o mouse num dia: a caixa no cabeçalho do PL diz as aulas daquele dia. Componente com <b>risco vermelho embaixo</b> = aula num dia carregado; <b>listra cinza</b> = feriado; a <b>coluna fina</b> é o domingo.</li>
                                     <li>Os PLs se sobrepõem (o PL3 começa antes do fim do PL2). Componente de <b>outro PL</b> que cai nas datas deste aparece <b>fraca e listrada</b>, com o nome apagado. <b>Estágio em campo</b> aparece em cinza e não pesa o dia.</li>
                                 </ul>
@@ -1581,7 +1592,7 @@
         </main>
     </div>
 
-    <script type="module" src="js/main.js?v=202611210907"></script>
+    <script type="module" src="js/main.js?v=202611210933"></script>
 </body>
 
 </html>
