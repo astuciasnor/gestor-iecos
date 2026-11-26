@@ -1,18 +1,19 @@
 // Lista de Ofertas: a tabela da aba "Lista de Ofertas" (ofertas da turma, Copiar
 // SIGAA, Editar, Substituir, Trocar e Excluir). Saiu do ui.js em 13/11/2026 sem
 // mudar nada; as funcoes do editor que ela usa chegam por ligarListaOfertas (ver ui.js).
-import { isPendingAllocation } from './allocation_helpers.js?v=202611211609';
-import { refreshTeacherConflictsUI } from './conflitos_ui.js?v=202611211609';
-import { getDisciplinaInfo, getTurmaLabel } from './curso_turma_helpers.js?v=202611211609';
-import { formatDateBR } from './date_utils_ui.js?v=202611211609';
-import { buildCanonicalOfferProjection } from './execution_engine.js?v=202611211609';
-import { getNormalizedIntensiveFaixas } from './faixa_utils.js?v=202611211609';
-import { isPendenteJaAlocada } from './pendentes.mjs?v=202611211609';
-import { buildScopedSigaaAllocationFromOfferFaixa, buildSigaaHorarioResumo, getSigaaCode } from './sigaa_metadata.js?v=202611211609';
-import { store } from './store.js?v=202611211609';
-import { numeroDaSubturma } from './subturmas.mjs?v=202611211609';
-import { copyTextToClipboard, flashButtonCopyState } from './ui_feedback.js?v=202611211609';
-import { weeklyState } from './weekly_state.js?v=202611211609';
+import { isPendingAllocation } from './allocation_helpers.js?v=202611261735';
+import { refreshTeacherConflictsUI } from './conflitos_ui.js?v=202611261735';
+import { getDisciplinaInfo, getTurmaLabel } from './curso_turma_helpers.js?v=202611261735';
+import { formatDateBR } from './date_utils_ui.js?v=202611261735';
+import { buildCanonicalOfferProjection } from './execution_engine.js?v=202611261735';
+import { getNormalizedIntensiveFaixas } from './faixa_utils.js?v=202611261735';
+import { chaveComponente, chaveSubturma } from './indicadores.mjs?v=202611261735';
+import { isPendenteJaAlocada } from './pendentes.mjs?v=202611261735';
+import { buildScopedSigaaAllocationFromOfferFaixa, buildSigaaHorarioResumo, getSigaaCode } from './sigaa_metadata.js?v=202611261735';
+import { store } from './store.js?v=202611261735';
+import { numeroDaSubturma } from './subturmas.mjs?v=202611261735';
+import { copyTextToClipboard, flashButtonCopyState } from './ui_feedback.js?v=202611261735';
+import { weeklyState } from './weekly_state.js?v=202611261735';
 
 // Funcoes do ui.js (editor, grade, desfazer, troca...) que a lista chama.
 let ligacoes = {};
@@ -356,6 +357,9 @@ export function renderOfertasList() {
 
     const appendRow = (row, previousRow = null) => {
         const tr = document.createElement('tr');
+        // Para o atalho "Ir para a oferta" (Indicadores > Componente) achar a linha.
+        tr.dataset.componente = chaveComponente(row.disciplina || row.baseAlloc?.disciplina);
+        tr.dataset.subturma = chaveSubturma(row.baseAlloc?.subGrupo);
         if (previousRow && previousRow.rowType !== 'pendente' && row.rowType !== 'pendente') {
             if ((previousRow.componentKey || '') === (row.componentKey || '')) {
                 tr.classList.add('oferta-sep-faixa');

@@ -106,3 +106,39 @@ test('nome improvisado ("n.n.") fica marcado e vai para o grupo das vagas', () =
     assert.deepEqual(ordenarLinhas(r.linhas).map((l) => l.nome), ['Ana Souza', 'n.n. (substituto)']);
     assert.equal(linha(r, 'Ana Souza').improvisado, false);
 });
+
+// ===== Componente (26/11/2026) =====
+import { chaveComponente, nomesDasComponentes, resumoDasAulas } from '../js/indicadores.mjs';
+
+test('Componente: busca sem acento, sem maiusculas e sem o (60h)', () => {
+    assert.equal(chaveComponente('Química Geral (45h)'), chaveComponente('quimica  geral'));
+});
+
+test('Componente: subturma vem na oferta (T01 e T02 separadas)', () => {
+    const ofertas = ofertasDoPlano([
+        { turmaId: 'CB2025', subGrupo: 'BL3_T01', disciplina: 'ZOOLOGIA', modo: 'semanal', docente: 'Ana Souza' },
+        { turmaId: 'CB2025', subGrupo: 'BL3_T02', disciplina: 'ZOOLOGIA', modo: 'semanal', docente: 'Ana Souza' },
+        { turmaId: 'EP2026', subGrupo: 'BL1', disciplina: 'CALCULO I', modo: 'semanal', docente: 'Ana Souza' }
+    ], opcoes);
+    assert.deepEqual(ofertas.map((o) => o.subturma), ['BL3_T01', 'BL3_T02', '']);
+});
+
+test('Componente: um nome por componente na lista de sugestoes', () => {
+    const nomes = nomesDasComponentes([
+        { disciplina: 'Zoologia (90h)' }, { disciplina: 'ZOOLOGIA' }, { disciplina: 'Cálculo I' }
+    ]);
+    assert.deepEqual(nomes, ['Cálculo I', 'Zoologia']);
+});
+
+test('Componente: inicio, fim, dias e horario das aulas', () => {
+    const r = resumoDasAulas([
+        { date: '2027-03-17', horario: '10:00 - 10:50' },
+        { date: '2027-03-15', horario: '08:00 - 08:50' },
+        { date: '2027-04-30', horario: '09:00 - 09:50' }
+    ]);
+    assert.equal(r.inicio, '2027-03-15');
+    assert.equal(r.fim, '2027-04-30');
+    assert.equal(r.dias, 'seg, qua e sex');
+    assert.equal(r.turnos, 'manhã');
+    assert.deepEqual(resumoDasAulas([]).inicio, '');
+});

@@ -13,8 +13,10 @@
 // Estagio com "CH do orientador" informada (janela Montar estagio): o docente
 // unico conta essa CH (45 de 90), nao a CH toda.
 
-import { normalizeTeacherNameForMatch, ehVaga, nomeImprovisado } from './docente_nomes.mjs?v=202611211609';
-import { chDoOrientador } from './estagio.mjs?v=202611211609';
+import { normalizeTeacherNameForMatch, ehVaga, nomeImprovisado } from './docente_nomes.mjs?v=202611261735';
+import { chDoOrientador } from './estagio.mjs?v=202611261735';
+import { formatWeekdays, summarizeHorarios } from './resumo_docente.mjs?v=202611261735';
+import { weekdayOf } from './datas.mjs?v=202611261735';
 
 export const SEM_DOCENTE = 'A definir';
 
@@ -33,7 +35,7 @@ function chaveDisciplina(nome) {
 }
 
 // Vazio ou so o bloco ("BL6") = turma inteira; "BL6_T01" = subturma.
-function chaveSubturma(subGrupo) {
+export function chaveSubturma(subGrupo) {
     const sg = String(subGrupo || '').trim().toUpperCase();
     return !sg || /^BL\d+$/.test(sg) ? '' : sg;
 }
@@ -75,6 +77,7 @@ export function ofertasDoPlano(allocations = [], { cursoDaTurma, chDaComponente 
             const semSufixo = disciplina.replace(/\s*\(\s*\d+\s*h\s*\)\s*$/i, '').trim();
             oferta = {
                 turmaId,
+                subturma: chaveSubturma(alloc?.subGrupo),
                 disciplina,
                 curso: cursoDaTurma(turmaId) || '?',
                 ch: toCH(chDaComponente(disciplina, turmaId)) || toCH(chDaComponente(semSufixo, turmaId)) || toCH(alloc?.ch),
@@ -100,6 +103,7 @@ export function ofertasDoPlano(allocations = [], { cursoDaTurma, chDaComponente 
         const chDoUnico = oferta.chOrientador || oferta.ch;
         return {
             turmaId: oferta.turmaId,
+            subturma: oferta.subturma,
             disciplina: oferta.disciplina,
             curso: oferta.curso,
             ch: oferta.ch,
@@ -178,4 +182,39 @@ export function ordenarLinhas(linhas = [], { coluna = 'total', crescente = false
         if (d) return crescente ? d : -d;
         return porNome(a, b);
     });
+}
+
+// ===== Componente (26/11/2026) =====
+// Sub-aba "Componente": em qual PL, turma e com qual docente uma componente e dada.
+
+// Nome para buscar: sem o "(60h)", sem acento, sem diferenca de maiusculas.
+export function chaveComponente(nome) {
+    return chaveDisciplina(nome).normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+}
+
+// Nomes (sem o "(60h)") das componentes destas ofertas, um por componente, em ordem.
+export function nomesDasComponentes(ofertas = []) {
+    const porChave = new Map();
+    ofertas.forEach((o) => {
+        const nome = String(o?.disciplina || '').replace(/\s*\(\s*\d+\s*h\s*\)\s*$/i, '').trim();
+        const k = chaveComponente(nome);
+        if (k && !porChave.has(k)) porChave.set(k, nome);
+    });
+    return [...porChave.values()].sort((a, b) => a.localeCompare(b, 'pt-BR', { sensitivity: 'base' }));
+}
+
+// Aulas de uma oferta ([{ date, horario }], do calendario) em uma linha da tabela:
+//   { inicio, fim, dias: 'Seg a Sex', horario: '08:00-10:00', turnos: 'manhã' }.
+// Sem aulas: tudo vazio.
+export function resumoDasAulas(aulas = []) {
+    const datas = aulas.map((a) => String(a?.date || '')).filter(Boolean).sort();
+    if (!datas.length) return { inicio: '', fim: '', dias: '', horario: '', turnos: '' };
+    const h = summarizeHorarios(aulas.map((a) => a?.horario).filter(Boolean));
+    return {
+        inicio: datas[0],
+        fim: datas[datas.length - 1],
+        dias: formatWeekdays(datas.map(weekdayOf)),
+        horario: h.range,
+        turnos: h.turnos
+    };
 }

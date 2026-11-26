@@ -10,14 +10,14 @@
         // Vai para o aviso antes de carregar o programa. A agenda publica nao passa por aqui.
         if (/\.github\.io$/i.test(location.hostname)) location.replace('mudou.html');
     </script>
-    <link rel="stylesheet" href="css/style.css?v=202611211609">
+    <link rel="stylesheet" href="css/style.css?v=202611261735">
     <!-- Redesenho da aba Alocar Componentes (por partes); carrega depois do style.css -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
-    <link rel="stylesheet" href="css/alocar-componentes.css?v=202611211609">
-    <link rel="stylesheet" href="css/ajuda.css?v=202611211609">
-    <link rel="stylesheet" href="css/montar-estagio.css?v=202611211609">
+    <link rel="stylesheet" href="css/alocar-componentes.css?v=202611261735">
+    <link rel="stylesheet" href="css/ajuda.css?v=202611261735">
+    <link rel="stylesheet" href="css/montar-estagio.css?v=202611261735">
 
     <style>
         :root {
@@ -349,7 +349,7 @@
         }
     </style>
     <!-- Visual da barra lateral: depois de todos os estilos, so vale dentro de .sidebar -->
-    <link rel="stylesheet" href="css/sidebar.css?v=202611211609">
+    <link rel="stylesheet" href="css/sidebar.css?v=202611261735">
 </head>
 
 <body>
@@ -1079,6 +1079,7 @@
                 <div class="subtab-bar ind-subabas no-print" role="tablist" aria-label="Tipos de indicador">
                     <button type="button" class="ind-subaba is-ativa" data-subaba="carga" role="tab" aria-selected="true">Carga por docente</button>
                     <button type="button" class="ind-subaba" data-subaba="dias" role="tab" aria-selected="false">Dias do docente</button>
+                    <button type="button" class="ind-subaba" data-subaba="componente" role="tab" aria-selected="false">Componente</button>
                 </div>
                 <div class="ind-filtros no-print">
                     <span class="ind-filtros-rotulo">Unidade:</span>
@@ -1093,6 +1094,11 @@
                     <span id="ind-docente-box" class="ind-docente-box hidden">
                         <span class="ind-filtros-rotulo">Docente:</span>
                         <input type="text" id="inp-docente-dias" aria-label="Docente" placeholder="Busque o professor..." autocomplete="off">
+                    </span>
+                    <span id="ind-componente-box" class="ind-docente-box hidden">
+                        <span class="ind-filtros-rotulo">Componente:</span>
+                        <input type="text" id="inp-componente-ind" list="list-componentes-ind" aria-label="Componente" placeholder="Busque a componente..." autocomplete="off">
+                        <datalist id="list-componentes-ind"></datalist>
                     </span>
                     <button id="btn-atualizar-indicadores" type="button" class="docente-icon-btn docente-icon-btn--refresh"
                         title="Ler de novo as alocações (outros coordenadores podem ter mudado algo)" aria-label="Atualizar">⟳</button>
@@ -1434,7 +1440,7 @@
                                 <ul class="aj-lista">
                                     <li>As componentes aparecem em ordem, com as faixas uma embaixo da outra.</li>
                                     <li><b>Editar</b> abre a componente na aba Alocar; <b>Excluir</b> apaga a oferta.</li>
-                                    <li><b>Trocar</b> troca duas componentes de lugar. Com a mesma CH, em qualquer posição; com CH diferente, só quando estão em sequência. Choque barra a troca. Logo depois de trocar, o botão <b>Desfazer troca</b> aparece ao lado do título da lista. Ele some se a página for atualizada (F5).</li>
+                                    <li><b>Trocar</b> troca duas componentes de lugar. Com a mesma CH, em qualquer posição; com CH diferente, só quando estão em sequência. A janela já abre conferida: só ficam liberadas as trocas sem choque de turma nem de professor, e as outras mostram o motivo. Estágio não troca de lugar. Logo depois de trocar, o botão <b>Desfazer troca</b> aparece ao lado do título da lista. Ele some se a página for atualizada (F5).</li>
                                     <li>O selo <span class="aj-tag aj-tag--alerta">faltam Xh</span> marca a oferta com menos aulas que a CH. Ajuste em <b>Editar</b>.</li>
                                     <li>Na coluna <b>SIGAA</b>, o botão <b>Copiar</b> (com várias faixas, <b>Copiar faixas</b>) copia o horário da componente inteira, com as datas de cada faixa, pronto para colar no SIGAA.</li>
                                 </ul>
@@ -1528,11 +1534,11 @@
                                 <h3><span aria-hidden="true">🗓️</span> Indicadores › Dias do docente</h3>
                                 <ul class="aj-lista aj-lista--2col">
                                     <li>Digite o nome do docente: cada linha é uma componente dele e cada quadradinho é um dia do PL; o mesmo dia fica alinhado na vertical. Uma linha verde marca o começo de cada mês.</li>
-                                    <li><b>Dia a dia</b>: verde = 1 componente no dia; <b>vermelho = sobrecarga</b> (dia carregado), com 2 ou mais componentes (ex.: uma de manhã e outra à tarde). Não é choque: é um dia pesado para o docente.</li>
+                                    <li><b>Sobrecarga diária</b> (1ª linha, com a legenda <b>sim</b>/<b>não</b>): verde = não, 1 componente no dia; <b>vermelho = sim</b>, 2 ou mais componentes no mesmo dia (ex.: uma de manhã e outra à tarde). Não é choque: é um dia pesado para o docente. O mesmo quadro aparece para os docentes na <b>Agenda Pública</b> (botão <b>Dias</b>, só no computador), com o que está publicado.</li>
                                     <li>Passe o mouse num dia: a caixa no cabeçalho do PL diz as aulas daquele dia. Componente com <b>risco vermelho embaixo</b> = aula num dia carregado; <b>listra cinza</b> = feriado; a <b>coluna fina</b> é o domingo.</li>
                                     <li>Os PLs se sobrepõem (o PL3 começa antes do fim do PL2). Componente de <b>outro PL</b> que cai nas datas deste aparece <b>fraca e listrada</b>, com o nome apagado. <b>Estágio em campo</b> aparece em cinza e não pesa o dia.</li>
                                 </ul>
-                                <img class="aj-print" src="img/instrucoes/dias-docente.png" width="1000" height="302" alt="Quadro Dias do docente: linha Dia a dia com dias vermelhos e uma linha por componente" loading="lazy">
+                                <img class="aj-print" src="img/instrucoes/dias-docente.png" width="1000" height="302" alt="Quadro Dias do docente: linha Sobrecarga diária com dias vermelhos e uma linha por componente" loading="lazy">
                             </article>
                         </div>
                     </div>
@@ -1629,7 +1635,7 @@
         </main>
     </div>
 
-    <script type="module" src="js/main.js?v=202611211609"></script>
+    <script type="module" src="js/main.js?v=202611261735"></script>
 </body>
 
 </html>

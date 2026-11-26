@@ -1,38 +1,38 @@
-import { UNIDADE_PADRAO, unidadeDoCurso } from './unidades.mjs?v=202611211609';
-import { getLocalTodayIso } from './datas.mjs?v=202611211609';
-import { store } from './store.js?v=202611211609';
-import { MAX_FAIXAS, MAX_FAIXAS_COMUM, NUMEROS_FAIXAS, idsDatasFaixas, limiteDeFaixas } from './faixas.mjs?v=202611211609';
-import { ehEstagio, letrasDoTurno } from './estagio.mjs?v=202611211609';
-import { abrirMontarEstagio } from './montar_estagio_ui.js?v=202611211609';
-import { escapeTrocaHtml, contarHorasExecutadas, sugerirInicioSemChoque, fraseComeceEm, cursoDaTurma, sugerirComoResolverChoque, abrirTrocaDeOrdem, ligarTroca } from './troca_ui.js?v=202611211609';
-import { cadastrosDocentes, findNewDocenteNames, getCadastroDocente, refreshAvisoDocenteNovo, coletarCadastrosDocentes, setupAvisoDocenteNovo, ligarCadastroDocente } from './cadastro_docente_ui.js?v=202611211609';
-import { renderOfertasList, ligarListaOfertas } from './lista_ofertas_ui.js?v=202611211609';
-import { ligarImportacao, ligarImportacaoJson, handleImportBloco, updateImportBlocoButtonState } from './importacao_ui.js?v=202611211609';
-import { arrastoAtivo, esquecerAncora, endDrawingDrag, setDrawingCellSelection, marcarAncoraNaGrade, ligarSelecaoDaGrade } from './grade_selecao.js?v=202611211609';
-import { stableStringify } from './sync_diff.mjs?v=202611211609';
-import { getTurnoLetter, mapSlotToTurno, turnoDaTurmaInclui } from './turns.js?v=202611211609';
-import { normalizePeriodo as normalizePeriodoLetivoCode } from './plan_storage.js?v=202611211609';
-import { getCalendarEvents } from './calendar.js?v=202611211609';
-import { isDateOverlap } from './utils.js?v=202611211609';
-import { weeklyState } from './weekly_state.js?v=202611211609';
-import { findPendentesCobertas, isPendenteJaAlocada } from './pendentes.mjs?v=202611211609';
+import { UNIDADE_PADRAO, unidadeDoCurso } from './unidades.mjs?v=202611261735';
+import { getLocalTodayIso } from './datas.mjs?v=202611261735';
+import { store } from './store.js?v=202611261735';
+import { MAX_FAIXAS, MAX_FAIXAS_COMUM, NUMEROS_FAIXAS, idsDatasFaixas, limiteDeFaixas } from './faixas.mjs?v=202611261735';
+import { ehEstagio, letrasDoTurno } from './estagio.mjs?v=202611261735';
+import { abrirMontarEstagio } from './montar_estagio_ui.js?v=202611261735';
+import { escapeTrocaHtml, contarHorasExecutadas, sugerirInicioSemChoque, fraseComeceEm, cursoDaTurma, sugerirComoResolverChoque, abrirTrocaDeOrdem, ligarTroca } from './troca_ui.js?v=202611261735';
+import { cadastrosDocentes, findNewDocenteNames, getCadastroDocente, refreshAvisoDocenteNovo, coletarCadastrosDocentes, setupAvisoDocenteNovo, ligarCadastroDocente } from './cadastro_docente_ui.js?v=202611261735';
+import { renderOfertasList, ligarListaOfertas } from './lista_ofertas_ui.js?v=202611261735';
+import { ligarImportacao, ligarImportacaoJson, handleImportBloco, updateImportBlocoButtonState } from './importacao_ui.js?v=202611261735';
+import { arrastoAtivo, esquecerAncora, endDrawingDrag, setDrawingCellSelection, marcarAncoraNaGrade, ligarSelecaoDaGrade } from './grade_selecao.js?v=202611261735';
+import { stableStringify } from './sync_diff.mjs?v=202611261735';
+import { getTurnoLetter, mapSlotToTurno, turnoDaTurmaInclui } from './turns.js?v=202611261735';
+import { normalizePeriodo as normalizePeriodoLetivoCode } from './plan_storage.js?v=202611261735';
+import { getCalendarEvents } from './calendar.js?v=202611261735';
+import { isDateOverlap } from './utils.js?v=202611261735';
+import { weeklyState } from './weekly_state.js?v=202611261735';
+import { findPendentesCobertas, isPendenteJaAlocada } from './pendentes.mjs?v=202611261735';
 
-import { datasFeriadoDaTurma, feriadosDaTurma } from './feriados.mjs?v=202611211609';
-import { closeFaixaEnds, isPauseEnd, listFaixaPauses } from './pausa_faixas.mjs?v=202611211609';
-import { numeroDaSubturma, isTurmaInteira, proximaSubturma, codigoT01Como, saoSubturmasDiferentes, sufixoSubturma, semSubturma, subturmaFicouSozinha } from './subturmas.mjs?v=202611211609';
-import { abrirMiniCalendario, fecharMiniCalendario, miniCalendarioAberto } from './mini_calendario.mjs?v=202611211609';
+import { datasFeriadoDaTurma, feriadosDaTurma } from './feriados.mjs?v=202611261735';
+import { closeFaixaEnds, isPauseEnd, listFaixaPauses } from './pausa_faixas.mjs?v=202611261735';
+import { numeroDaSubturma, isTurmaInteira, proximaSubturma, codigoT01Como, saoSubturmasDiferentes, sufixoSubturma, semSubturma, subturmaFicouSozinha } from './subturmas.mjs?v=202611261735';
+import { abrirMiniCalendario, fecharMiniCalendario, miniCalendarioAberto } from './mini_calendario.mjs?v=202611261735';
 import {
     getSigaaCode,
     buildScopedSigaaAllocationFromOfferFaixa,
     buildSigaaHorarioResumo
-} from './sigaa_metadata.js?v=202611211609';
+} from './sigaa_metadata.js?v=202611261735';
 import {
     showToastWarning,
     showPersistentStatusMessage,
     copyTextToClipboard,
     flashButtonCopyState,
     setupCopyActionButtons
-} from './ui_feedback.js?v=202611211609';
+} from './ui_feedback.js?v=202611261735';
 import {
     normalizeHexColor,
     adjustHexColor,
@@ -41,7 +41,7 @@ import {
     tonsDaCor,
     aplicarTonsBloco,
     PALETA_CORES
-} from './color_utils.js?v=202611211609';
+} from './color_utils.js?v=202611261735';
 import {
     isFaixaAllocation,
     isPriorityRegularAllocation,
@@ -50,8 +50,8 @@ import {
     normalizeTeacherNameForMatch,
     getDocenteShortLabel,
     getAllocationTeachersForConflict
-} from './allocation_helpers.js?v=202611211609';
-import { setupSeletorCor } from './seletor_cor.js?v=202611211609';
+} from './allocation_helpers.js?v=202611261735';
+import { setupSeletorCor } from './seletor_cor.js?v=202611261735';
 
 import {
     UNIDADES,
@@ -59,11 +59,11 @@ import {
     acharNomeConhecido,
     filtrarDocentes,
     umNomePorPessoa
-} from './docente_nomes.mjs?v=202611211609';
+} from './docente_nomes.mjs?v=202611261735';
 import {
     fetchAllocationsForPlans
-} from './sync_remoto.js?v=202611211609';
-import { resolveBackendMode } from './backend_config.js?v=202611211609';
+} from './sync_remoto.js?v=202611261735';
+import { resolveBackendMode } from './backend_config.js?v=202611261735';
 import {
     normalizeConflictSlotLabel,
     getAvailableTurnoOfertaOptions,
@@ -73,7 +73,7 @@ import {
     buildHorariosForUI,
     getShiftChangeMeta,
     getNativeTurnoValueForAllocation
-} from './turno_helpers.js?v=202611211609';
+} from './turno_helpers.js?v=202611261735';
 import {
     getDisciplinaCHGlobal,
     derivarBloco,
@@ -83,7 +83,7 @@ import {
     getDisciplinaInfo,
     getCursoSiglaDaTurma,
     getPrintAcademicMetaLine
-} from './curso_turma_helpers.js?v=202611211609';
+} from './curso_turma_helpers.js?v=202611261735';
 import {
     renderMonthlyCalendar,
     renderTeacherCalendar,
@@ -91,14 +91,14 @@ import {
     clearTeacherRangeCache,
     setTeacherPeriod,
     getTeacherPeriod
-} from './calendarios_ui.js?v=202611211609';
-import { setupIndicadores, renderIndicadores, setIndicadoresLigacoes } from './indicadores_ui.js?v=202611211609';
+} from './calendarios_ui.js?v=202611261735';
+import { setupIndicadores, renderIndicadores, setIndicadoresLigacoes } from './indicadores_ui.js?v=202611261735';
 import {
     refreshTeacherConflictsUI,
     setCrossPlanLoader,
     setResolverDeChoque,
     acharChoqueComOutroPL
-} from './conflitos_ui.js?v=202611211609';
+} from './conflitos_ui.js?v=202611261735';
 import {
     shouldIgnoreTurmaEventForCandidate,
     candidatoSemChoque,
@@ -114,7 +114,7 @@ import {
     resolveEditableFaixasFromStoredExecution,
     alignFaixasToExecutionEnd,
     buildFinalAdjustmentFaixaSuggestion
-} from './faixa_utils.js?v=202611211609';
+} from './faixa_utils.js?v=202611261735';
 import {
     timeToMinutes,
     shiftISODate,
@@ -128,14 +128,14 @@ import {
     isDateInsideRange,
     formatDateBRShortYear,
     formatDateBR
-} from './date_utils_ui.js?v=202611211609';
+} from './date_utils_ui.js?v=202611261735';
 import {
     initializeWeeklyScheduleForTurma,
     reconcileTurmaSelectionAfterPLChange,
     resetWeeklyViewOnTurmaChange,
     resolveActiveAcademicPeriod,
     slotLabelsOverlap
-} from './academic_rules.mjs?v=202611211609';
+} from './academic_rules.mjs?v=202611261735';
 
 const gridContainer = document.getElementById('weekly-grid');
 const selCurso = document.getElementById('sel-curso');
@@ -339,7 +339,9 @@ function setupTeacherYearControls() {
             }
             setTeacherPeriod(periodo);
             switchTab('teacher');
-        }
+        },
+        irParaOferta,
+        plNaBarra
     });
 
     btnAno.addEventListener('click', () => mostrar({ tipo: 'ano', ano: selAno.value }));
@@ -349,6 +351,65 @@ function setupTeacherYearControls() {
         if (getTeacherPeriod()?.tipo === 'ano') mostrar({ tipo: 'ano', ano: selAno.value });
         else renderActiveSubtab('tab-teacher', 'docente-calendar');
     });
+}
+
+// ---- Ir para a oferta (26/11/2026) ------------------------------------------
+// Atalho de outras telas (Indicadores > Componente): abre a barra lateral no PL,
+// unidade, curso e turma da oferta e mostra a Lista de ofertas com a linha da
+// componente destacada. Nao abre o Editar: quem decide e o usuario.
+// Faz os mesmos passos de quem escolhe nos menus (eventos "change"), para nao
+// criar um segundo caminho de troca de PL/turma.
+
+// O PL aparece no menu Periodo da barra lateral? (so o PL em curso e os seguintes)
+function plNaBarra(planKey) {
+    const sel = document.getElementById('sel-periodo-letivo');
+    return !!sel && [...sel.options].some((o) => o.value === planKey);
+}
+
+function escolherNoMenu(sel, valor) {
+    if (!sel || sel.value === valor) return;
+    sel.value = valor;
+    sel.dispatchEvent(new Event('change', { bubbles: true }));
+}
+
+// oferta: { planKey, turmaId, componente (chave de chaveComponente), subturma (chave de chaveSubturma) }
+function irParaOferta({ planKey, turmaId, componente, subturma = '' } = {}) {
+    if (!plNaBarra(planKey)) {
+        showToastWarning('Este PL já terminou e não aparece mais na barra lateral.', 'warning', 3500);
+        return false;
+    }
+    // Componente desenhada na grade e ainda nao salva: trocar de turma a descarta.
+    const desenhando = NUMEROS_FAIXAS.some((n) => (faixasPatterns[n]?.length || 0) > 0);
+    if (desenhando && !confirm('Há uma componente desenhada na grade e ainda não salva. Ir para a oferta assim mesmo? O desenho será descartado.')) {
+        return false;
+    }
+
+    escolherNoMenu(document.getElementById('sel-periodo-letivo'), planKey);
+    const cursoSigla = getCursoSiglaDaTurma(turmaId);
+    const curso = (store.rawData?.cursos || []).find((c) => c.sigla === cursoSigla);
+    if (curso) escolherNoMenu(document.getElementById('sel-unidade'), getUnidadeDoCurso(curso));
+    escolherNoMenu(selCurso, cursoSigla);
+    escolherNoMenu(selTurma, String(turmaId));
+    if (String(selTurma?.value || '') !== String(turmaId)) {
+        showToastWarning('Não foi possível abrir esta turma na barra lateral.', 'warning', 3500);
+        return false;
+    }
+
+    switchTab('list');
+    const linhas = [...document.querySelectorAll('#ofertas-table tbody tr[data-componente]')]
+        .filter((tr) => tr.dataset.componente === componente && (tr.dataset.subturma || '') === subturma);
+    if (!linhas.length) {
+        showToastWarning('A turma foi aberta, mas a componente não está na Lista de ofertas.', 'warning', 3500);
+        return true;
+    }
+    linhas.forEach((tr) => {
+        tr.classList.remove('oferta-destaque');
+        void tr.offsetWidth; // reinicia a animacao se ja estava destacada
+        tr.classList.add('oferta-destaque');
+    });
+    linhas[0].scrollIntoView({ block: 'center', behavior: 'smooth' });
+    setTimeout(() => linhas.forEach((tr) => tr.classList.remove('oferta-destaque')), 4500);
+    return true;
 }
 
 function setupTeacherFilterControls() {

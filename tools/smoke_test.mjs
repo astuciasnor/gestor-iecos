@@ -401,6 +401,108 @@ async function run() {
       assert(await waitFor(`document.getElementById('tab-teacher').classList.contains('active') && document.getElementById('sel-view-docente').value === ${JSON.stringify(nome)}`, 5000), 'o clique no nome nao abriu a agenda do docente');
       return `${ano.n} docentes; colunas ${ano.heads.slice(2).join(' ')}`;
     });
+
+    await check('Menu Indicadores: Componente (busca e tabela das ofertas)', async () => {
+      await evaluate("document.querySelector('.tab-btn[data-tab=\"indicadores\"]').click()");
+      await evaluate("document.querySelector('#tab-indicadores .ind-subaba[data-subaba=\"componente\"]').click()");
+      await evaluate("document.getElementById('btn-ano-inteiro-indicadores').click()");
+      assert(await waitFor("document.querySelectorAll('#list-componentes-ind option').length > 0", 10000), 'lista de componentes vazia');
+      // Escolhe a 1a componente da lista, como quem clica na sugestao.
+      const nome = await evaluate(`(() => {
+        const nome = document.querySelector('#list-componentes-ind option').value;
+        const inp = document.getElementById('inp-componente-ind');
+        inp.value = nome;
+        inp.dispatchEvent(new Event('input', { bubbles: true }));
+        return nome;
+      })()`);
+      assert(await waitFor("document.querySelectorAll('#ind-tabela .ind-tabela-comp tbody tr').length > 0", 5000), `sem ofertas de ${nome}`);
+      // Toda componente da lista acha ao menos uma oferta (o desenho e sincrono).
+      const r = await evaluate(`(() => {
+        const inp = document.getElementById('inp-componente-ind');
+        const nomes = [...document.querySelectorAll('#list-componentes-ind option')].map((o) => o.value);
+        const vazias = [];
+        let maior = { nome: '', linhas: [] };
+        nomes.forEach((nome) => {
+          inp.value = nome;
+          inp.dispatchEvent(new Event('input', { bubbles: true }));
+          const linhas = [...document.querySelectorAll('#ind-tabela .ind-tabela-comp tbody tr')]
+            .map((tr) => [...tr.cells].map((td) => td.textContent.replace(/\\s+/g, ' ').trim()).join(' | '));
+          if (!linhas.length) vazias.push(nome);
+          if (linhas.length > maior.linhas.length) maior = { nome, linhas };
+        });
+        return { n: nomes.length, vazias, maior };
+      })()`);
+      assert(!r.vazias.length, `componentes da lista sem oferta: ${r.vazias.slice(0, 5).join(', ')}`);
+      assert(r.maior.linhas.every((l) => /^PL\d/.test(l)), `linha sem PL: ${r.maior.linhas[0]}`);
+      // Atalho: abre a Lista de ofertas da turma com a linha da componente destacada.
+      const ir = await evaluate(`(() => {
+        const inp = document.getElementById('inp-componente-ind');
+        inp.value = ${JSON.stringify(r.maior.nome)};
+        inp.dispatchEvent(new Event('input', { bubbles: true }));
+        const btns = [...document.querySelectorAll('#ind-tabela button[data-ir-oferta]')];
+        const btn = btns[btns.length - 1];
+        if (!btn) return null;
+        const turma = btn.closest('tr').querySelector('.ind-comp-turma').textContent.trim();
+        btn.click();
+        return { turma, botoes: btns.length };
+      })()`);
+      assert(ir, 'nenhum botao Ir para a oferta');
+      assert(await waitFor("document.getElementById('tab-list').classList.contains('active') && !!document.querySelector('#ofertas-table tr.oferta-destaque')", 5000), 'o atalho nao abriu a Lista de ofertas com a linha destacada');
+      const destaque = await evaluate(`(() => {
+        const sem = (t) => t.normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').toUpperCase();
+        const trs = [...document.querySelectorAll('#ofertas-table tr.oferta-destaque')];
+        return { n: trs.length, ok: trs.every((tr) => sem(tr.cells[0].textContent).includes(sem(${JSON.stringify(r.maior.nome)}))), turma: document.getElementById('sel-turma').selectedOptions[0]?.textContent || '' };
+      })()`);
+      assert(destaque.ok, 'a linha destacada nao e da componente buscada');
+      // Oferta de outro PL: a barra lateral troca de PL.
+      await evaluate("document.querySelector('.tab-btn[data-tab=\"indicadores\"]').click()");
+      const outro = await evaluate(`(() => {
+        const ativo = document.getElementById('sel-periodo-letivo').selectedOptions[0]?.dataset.periodo || '';
+        const inp = document.getElementById('inp-componente-ind');
+        for (const opt of document.querySelectorAll('#list-componentes-ind option')) {
+          inp.value = opt.value;
+          inp.dispatchEvent(new Event('input', { bubbles: true }));
+          const btn = [...document.querySelectorAll('#ind-tabela button[data-ir-oferta]')]
+            .find((b) => b.closest('tr').cells[0].textContent.trim() !== ativo);
+          if (btn) {
+            const pl = btn.closest('tr').cells[0].textContent.trim();
+            btn.click();
+            return { de: ativo, para: pl, nome: opt.value };
+          }
+        }
+        return null;
+      })()`);
+      if (outro) {
+        assert(await waitFor(`document.getElementById('sel-periodo-letivo').selectedOptions[0]?.dataset.periodo === ${JSON.stringify(outro.para)} && !!document.querySelector('#ofertas-table tr.oferta-destaque')`, 5000), `o atalho nao trocou de ${outro.de} para ${outro.para}`);
+      }
+      // Clicar na linha abre o quadro da turma, com a componente em destaque.
+      await evaluate("document.querySelector('.tab-btn[data-tab=\"indicadores\"]').click()");
+      const quadroTurma = await evaluate(`(() => {
+        const inp = document.getElementById('inp-componente-ind');
+        inp.value = ${JSON.stringify(r.maior.nome)};
+        inp.dispatchEvent(new Event('input', { bubbles: true }));
+        document.querySelector('#ind-tabela tr[data-comp-linha] .ind-comp-turma').click();
+        const q = document.querySelector('#ind-tabela .ind-comp-quadro .dd-quadro');
+        if (!q) return null;
+        return {
+          titulo: q.querySelector('.dd-pl').textContent,
+          linhas: q.querySelectorAll('.dd-rot-nome').length,
+          destaque: q.querySelectorAll('.dd-rot-destaque').length,
+          sobrecarga: /Sobrecarga/.test(q.textContent)
+        };
+      })()`);
+      assert(quadroTurma, 'clicar na linha nao abriu o quadro da turma');
+      assert(quadroTurma.destaque === 1 && !quadroTurma.sobrecarga, `quadro da turma: ${JSON.stringify(quadroTurma)}`);
+      if (process.env.CARDUME_PRINT_QUADRO) {
+        await evaluate("document.querySelector('#ind-tabela .ind-comp-quadro').scrollIntoView({ block: 'end' })");
+        await sleep(400);
+        const shot = await send('Page.captureScreenshot', { format: 'png' });
+        fs.writeFileSync(process.env.CARDUME_PRINT_QUADRO, Buffer.from(shot.result.data, 'base64'));
+      }
+      const fechou = await evaluate("document.querySelector('#ind-tabela tr[data-comp-linha] .ind-comp-turma').click(), !document.querySelector('#ind-tabela .ind-comp-quadro')");
+      assert(fechou, 'clicar de novo na linha nao fechou o quadro');
+      return `${r.n} componentes, todas com oferta; mais ofertas: ${r.maior.nome} (${r.maior.linhas.length}); atalho -> ${ir.turma} (barra lateral: ${destaque.turma}), ${destaque.n} linha(s) destacada(s); ${outro ? `outro PL: ${outro.nome} ${outro.de} -> ${outro.para} OK` : 'sem oferta em outro PL para testar a troca'}; quadro da turma ${quadroTurma.titulo}: ${quadroTurma.linhas} componentes, 1 em destaque`;
+    });
   } finally {
     const falhou = results.some((r) => !r.ok);
     if (falhou) {

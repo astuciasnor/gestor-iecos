@@ -4263,6 +4263,37 @@ body:has(#tab-weekly.active) .top-bar .btn-print { display: none; }
 }
 .ind-docente-box { display: inline-flex; align-items: center; gap: 8px; }
 .ind-quebra { flex-basis: 100%; height: 0; }
+/* Indicadores > Componente (26/11/2026): tabela das ofertas de uma componente. */
+.ind-tabela-comp thead th { text-align: left; cursor: default; }
+.ind-tabela-comp thead th.ind-num { text-align: right; }
+.ind-tabela-comp thead th:hover { background: #f4f6fb; }
+.ind-tabela-comp td { white-space: nowrap; vertical-align: top; }
+.ind-tabela-comp .ind-nome { min-width: 200px; }
+.ind-tabela-comp .ind-comp-pl { font-weight: 800; color: #2d34c6; }
+.ind-tabela-comp .ind-comp-parte { color: var(--text-muted); font-size: 0.78rem; }
+#inp-componente-ind { min-width: 280px; }
+/* Atalho "Ir para a oferta" (abre a Lista de ofertas da turma) e PL encerrado. */
+.ind-tabela-comp .ind-comp-ir { text-align: right; }
+.ind-ir-oferta {
+    border: 1px solid #b9c3f0; background: #f4f6fb; color: #2d34c6;
+    border-radius: 6px; padding: 3px 9px; font-size: 0.8rem; font-weight: 700; cursor: pointer;
+}
+.ind-ir-oferta:hover { background: #2d34c6; border-color: #2d34c6; color: #fff; }
+.ind-pl-encerrado { color: var(--text-muted); font-size: 0.78rem; font-style: italic; }
+/* Linha clicavel: abre o quadro da turma embaixo da tabela (Parte 2, 26/11/2026). */
+.ind-tabela-comp .ind-comp-linha { cursor: pointer; }
+.ind-tabela-comp .ind-comp-linha.is-aberta > td { background: #eef1fb; }
+.ind-tabela-comp .ind-comp-linha.is-aberta > td:first-child { box-shadow: inset 4px 0 0 #2d34c6; }
+.ind-comp-quadro { margin-top: 14px; }
+/* Quadro da turma: a componente buscada em destaque, as outras mais claras. */
+.dd-rot-destaque { box-shadow: inset 4px 0 0 #2d34c6; padding-left: 8px; background: #eef1fb; border-radius: 3px; }
+.dd-rot-destaque .dd-rot-nome { color: #2d34c6; }
+.dd-rot-apagada .dd-rot-nome, .dd-rot-apagada .dd-rot-sub { opacity: 0.6; }
+.dd-grade .dd-d.dd-on.dd-apagada { opacity: 0.4; }
+/* Lista de ofertas: linha que o atalho abriu, destacada por alguns segundos. */
+@keyframes oferta-destaque { 0%, 70% { background: #fff1a8; } 100% { background: transparent; } }
+#ofertas-table tbody tr.oferta-destaque > td { animation: oferta-destaque 4.5s ease-out; }
+#ofertas-table tbody tr.oferta-destaque > td:first-child { box-shadow: inset 4px 0 0 #e0a800; }
 /* Contorno verde visivel (21/11/2026): bate o olho e sabe em qual PL esta. */
 .dd-quadro {
     margin-bottom: 16px; padding: 12px 14px 14px; border: 1.5px solid #8fb3a0; border-radius: 12px; background: #fff;
@@ -4337,6 +4368,12 @@ body:has(#tab-weekly.active) .top-bar .btn-print { display: none; }
 .dd-d.dd-resumo { height: 9px; align-self: end; border-radius: 1px; }
 .dd-rot-resumo .dd-rot-nome { font-size: 0.66rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); }
 .dd-rot-resumo .dd-rot-sub { font-size: 0.62rem; }
+/* Legenda curta da linha Sobrecarga diaria: [vermelho] sim [verde] nao (24/11/2026). */
+.dd-rot-leg { display: flex; align-items: center; gap: 3px; font-size: 0.62rem; font-weight: 700; color: var(--text-muted); white-space: nowrap; }
+.dd-leg { display: inline-block; width: 9px; height: 9px; border-radius: 1px; }
+.dd-rot-leg .dd-leg-nao { margin-left: 6px; }
+.dd-leg-sim { background: #d61f1f; }
+.dd-leg-nao { background: #8fbfa2; }
 .dd-d.is-foco { position: relative; z-index: 1; outline: 2px solid #173728; outline-offset: 1px; }
 
 /* Com o menu Indicadores a barra de cima ficou mais cheia: em telas ate 1500px
