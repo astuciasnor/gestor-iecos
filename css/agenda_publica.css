@@ -1,0 +1,1475 @@
+/* Estilo da Agenda Publica (agenda_publica.html) e da Agenda do Docente
+   (agenda_docente.html). Saiu de dentro do agenda_publica.html em 24/11/2026
+   para as duas paginas usarem o mesmo arquivo. */
+:root {
+    --pub-bg: #eef3ef;
+    --pub-panel: #fbfcfb;
+    --pub-card: #ffffff;
+    --pub-line: #d7e3dc;
+    --pub-muted: #5b6b63;
+    --pub-ink: #173728;
+    --pub-soft: #edf5f0;
+    --pub-accent: #cfe4d6;
+    --pub-doc: #f7f5ef;
+    --pub-shadow: 0 16px 40px rgba(14, 35, 24, 0.10);
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    background:
+        radial-gradient(circle at top left, rgba(210, 230, 219, 0.9), transparent 32%),
+        linear-gradient(180deg, #f4f7f4 0%, var(--pub-bg) 100%);
+    color: var(--pub-ink);
+    overflow-y: auto !important;
+    height: auto !important;
+}
+
+.pub-shell {
+    width: min(1180px, calc(100% - 24px));
+    margin: 18px auto 42px auto;
+}
+
+/* Topo: faixa na cor do fundo da logo do Cardume (#1c5356), logo + UFPA
+   ao lado e so o titulo embaixo. O periodo ja aparece no quadro de selecao. */
+.pub-hero {
+    background: #1c5356;
+    color: #fff;
+    border-radius: 24px;
+    padding: 14px 20px 16px;
+    box-shadow: var(--pub-shadow);
+}
+
+.pub-marca {
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 12px;
+}
+
+.pub-marca-logo {
+    display: block;
+    flex: 1 1 auto;
+    min-width: 0;
+    width: 100%;
+    max-width: 300px;
+    height: auto;
+    /* Bordas esfumadas: o fundo da imagem varia um pouco e marcaria um retangulo */
+    -webkit-mask-image: linear-gradient(to right, transparent, #000 3%, #000 97%, transparent),
+                        linear-gradient(to bottom, transparent, #000 5%, #000 95%, transparent);
+    -webkit-mask-composite: source-in;
+    mask-image: linear-gradient(to right, transparent, #000 3%, #000 97%, transparent),
+                linear-gradient(to bottom, transparent, #000 5%, #000 95%, transparent);
+    mask-composite: intersect;
+}
+
+.pub-marca-ufpa {
+    display: block;
+    flex-shrink: 0;
+    width: auto;
+    height: 53px;                    /* ~5% maior que antes (50px) */
+    margin-top: 9px;                 /* desce para a altura do "CARDUME" */
+}
+
+.pub-titulo {
+    margin: 8px 0 0;
+    text-align: center;
+    font-size: clamp(1.5rem, 3vw, 2rem);
+    line-height: 1.1;
+    letter-spacing: 0.02em;
+}
+
+.pub-main {
+    margin-top: 16px;
+    display: grid;
+    gap: 18px;
+}
+
+.pub-plan-switch {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    gap: 8px 12px;
+    justify-self: start;
+    max-width: 100%;
+    padding: 12px 16px;
+    background: rgba(255, 255, 255, 0.72);
+    border: 1px solid rgba(0, 78, 40, 0.12);
+    border-radius: 18px;
+    box-shadow: 0 8px 22px rgba(15, 23, 42, 0.06);
+    backdrop-filter: blur(8px);
+}
+
+.pub-plan-switch[hidden] {
+    display: none;
+}
+
+.pub-plan-switch label {
+    font-size: 0.9rem;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    color: var(--pub-ink);
+    text-transform: uppercase;
+}
+
+.pub-plan-switch .pub-select {
+    width: auto;
+    min-width: 0;
+    max-width: 100%;
+    justify-self: start;
+    padding: 9px 14px;
+    border-radius: 14px;
+    font-weight: 700;
+}
+
+.pub-tabs {
+    display: inline-flex;
+    flex-wrap: nowrap;
+    align-items: stretch;
+    justify-self: start;
+    gap: 8px;
+    padding: 8px;
+    background: rgba(255, 255, 255, 0.72);
+    border: 1px solid rgba(0, 78, 40, 0.12);
+    border-radius: 20px;
+    width: fit-content;
+    max-width: 100%;
+    box-shadow: 0 8px 22px rgba(15, 23, 42, 0.06);
+    backdrop-filter: blur(8px);
+}
+
+.pub-tab {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    border-radius: 14px;
+    padding: 11px 16px;
+    font-size: 0.95rem;
+    font-weight: 800;
+    cursor: pointer;
+    background: transparent;
+    color: #355344;
+    white-space: normal;
+    text-align: center;
+    line-height: 1.08;
+    flex: 0 0 auto;
+    width: auto;
+    min-width: 134px;
+    min-height: 48px;
+    transition: background 0.18s ease, color 0.18s ease, transform 0.18s ease;
+}
+
+.pub-tab:hover {
+    transform: translateY(-1px);
+}
+
+.pub-tab:focus-visible,
+.pub-pill:focus-visible,
+.pub-link-btn:focus-visible,
+.pub-clear-btn:focus-visible,
+.mini-chip:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 4px rgba(0, 78, 40, 0.14);
+}
+
+.pub-tab.active {
+    background: #ffffff;
+    color: var(--pub-ink);
+    box-shadow: 0 10px 24px rgba(18, 43, 32, 0.10);
+}
+
+.pub-panel {
+    background: rgba(251, 252, 251, 0.92);
+    border: 1px solid rgba(0, 78, 40, 0.10);
+    border-radius: 24px;
+    padding: 20px;
+    box-shadow: 0 14px 34px rgba(15, 23, 42, 0.08);
+    backdrop-filter: blur(8px);
+}
+
+.pub-view[hidden] {
+    display: none !important;
+}
+
+.pub-subtabs {
+    margin-top: 4px;
+    padding: 6px;
+    border-radius: 16px;
+    gap: 6px;
+}
+
+.pub-subtabs .pub-tab {
+    min-width: 118px;
+    min-height: 42px;
+    padding: 10px 14px;
+    font-size: 0.9rem;
+}
+
+.pub-controls {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    gap: 16px;
+}
+
+.pub-group {
+    grid-column: span 12;
+}
+
+.pub-group.is-half {
+    grid-column: span 6;
+}
+
+.pub-group label {
+    display: block;
+    margin-bottom: 8px;
+    color: var(--pub-ink);
+    font-size: 0.92rem;
+    font-weight: 800;
+}
+
+.pub-hint {
+    margin: -2px 0 10px 0;
+    color: var(--pub-muted);
+    font-size: 0.84rem;
+}
+
+.pub-input,
+.pub-select {
+    width: 100%;
+    border: 1px solid var(--pub-line);
+    background: #fff;
+    color: var(--pub-ink);
+    border-radius: 16px;
+    padding: 14px 16px;
+    font-size: 1rem;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.pub-input:focus,
+.pub-select:focus {
+    outline: none;
+    border-color: rgba(0, 78, 40, 0.34);
+    box-shadow: 0 0 0 4px rgba(0, 78, 40, 0.10);
+}
+
+.pub-pillbox {
+    min-height: 62px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 14px;
+    border-radius: 18px;
+    background: var(--pub-soft);
+    border: 1px solid var(--pub-line);
+    align-items: center;
+}
+
+.pub-empty {
+    width: 100%;
+    text-align: center;
+    color: #83958a;
+    font-size: 0.92rem;
+    font-style: italic;
+}
+
+.pub-pill {
+    border: 1px solid #dbe6df;
+    background: #fff;
+    color: #2d4839;
+    border-radius: 999px;
+    padding: 10px 14px;
+    font-size: 0.92rem;
+    font-weight: 800;
+    cursor: pointer;
+    box-shadow: 0 3px 8px rgba(15, 23, 42, 0.04);
+    transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease, background 0.16s ease;
+}
+
+.pub-pill:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 16px rgba(15, 23, 42, 0.08);
+}
+
+.pub-pill.active {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: #fff;
+    box-shadow: 0 12px 24px rgba(0, 78, 40, 0.20);
+}
+
+.pub-doc-tools {
+    margin-top: 16px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+}
+
+.pub-doc-tools[hidden] {
+    display: none !important;
+}
+
+.pub-doc-total {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    border-radius: 999px;
+    background: var(--pub-doc);
+    border: 1px solid #e7dfce;
+    color: #6f5522;
+    font-size: 0.9rem;
+    font-weight: 800;
+}
+
+.pub-link-btn {
+    border: 1px solid rgba(0, 78, 40, 0.14);
+    background: rgba(255, 255, 255, 0.9);
+    color: var(--pub-ink);
+    border-radius: 999px;
+    padding: 10px 14px;
+    font-size: 0.88rem;
+    font-weight: 800;
+    cursor: pointer;
+    transition: background 0.16s ease, transform 0.16s ease;
+}
+
+.pub-link-btn:hover {
+    background: #fff;
+    transform: translateY(-1px);
+}
+
+.pub-link-btn.is-active {
+    background: var(--pub-ink);
+    color: #fff;
+    border-color: var(--pub-ink);
+}
+
+.pub-result {
+    min-height: 100px;
+    scroll-margin-top: 14px;
+}
+
+.pub-result-context {
+    margin-bottom: 16px;
+    padding: 16px 18px;
+    border-radius: 20px;
+    background: linear-gradient(180deg, #ffffff, #f7fbf8);
+    border: 1px solid var(--pub-line);
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05);
+}
+
+.pub-result-eyebrow {
+    color: #70847a;
+    font-size: 0.78rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.pub-result-title {
+    margin: 6px 0 0 0;
+    color: var(--pub-ink);
+    font-size: 1.12rem;
+    font-weight: 900;
+    line-height: 1.2;
+}
+
+.pub-result-meta {
+    margin-top: 12px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.pub-result-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 8px 12px;
+    border-radius: 999px;
+    background: #f1f6f3;
+    border: 1px solid #dde7e1;
+    color: #456252;
+    font-size: 0.82rem;
+    font-weight: 800;
+}
+
+.pub-loading,
+.pub-empty-state {
+    text-align: center;
+    padding: 42px 20px;
+    border-radius: 20px;
+    background: var(--pub-card);
+    border: 1px solid var(--pub-line);
+    color: var(--pub-muted);
+    font-size: 1rem;
+    font-weight: 700;
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05);
+}
+
+.pub-loading {
+    color: var(--primary);
+    animation: pubPulse 1.35s infinite;
+}
+
+@keyframes pubPulse {
+    0% {
+        opacity: 0.55;
+        transform: scale(0.985);
+    }
+
+    50% {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    100% {
+        opacity: 0.55;
+        transform: scale(0.985);
+    }
+}
+
+.semana-block {
+    margin-bottom: 22px;
+    background: var(--pub-card);
+    border: 1px solid var(--pub-line);
+    border-radius: 20px;
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+    overflow: hidden;
+}
+
+.semana-header {
+    padding: 10px 14px;
+    background: linear-gradient(90deg, rgba(0, 78, 40, 0.96), rgba(12, 94, 56, 0.88));
+    color: #fff;
+    text-align: center;
+    font-size: 0.86rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.grade-semana {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 1px;
+    background: #dbe4de;
+}
+
+.grade-dia {
+    min-height: 110px;
+    background: #fff;
+    display: flex;
+    flex-direction: column;
+}
+
+.grade-dia-header {
+    padding: 8px 0;
+    text-align: center;
+    background: #f9fbfa;
+    border-bottom: 1px solid #edf2ef;
+}
+
+.grade-dia-header .nome-dia {
+    font-size: 0.7rem;
+    font-weight: 800;
+    color: #718378;
+    text-transform: uppercase;
+}
+
+.grade-dia-header .num-dia {
+    margin-top: 2px;
+    font-size: 1rem;
+    font-weight: 900;
+    color: #243c30;
+}
+
+.grade-slots {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 8px;
+    flex: 1;
+}
+
+.mini-chip {
+    color: #111111;
+    border-radius: 10px;
+    min-height: 66px;
+    padding: 8px 3px;
+    text-align: center;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(15, 23, 42, 0.16);
+    transition: transform 0.12s ease, box-shadow 0.12s ease;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.mini-chip:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 16px rgba(15, 23, 42, 0.18);
+}
+
+.chip-hora {
+    font-size: 1rem;
+    line-height: 1;
+    font-weight: 800;
+    opacity: 0.92;
+}
+
+.chip-sigla {
+    margin-top: 1px;
+    font-size: 1.19rem;
+    font-weight: 900;
+    line-height: 0.95;
+    letter-spacing: 0;
+    white-space: normal;
+    overflow: hidden;
+    text-overflow: clip;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow-wrap: anywhere;
+    min-height: 1.9em;
+}
+
+.chip-sigla.wrap {
+    -webkit-line-clamp: 2;
+}
+
+.mini-chip-shift {
+    margin-top: 4px;
+    line-height: 1;
+    display: flex;
+    justify-content: center;
+}
+
+.pub-shift-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 1px 5px;
+    border-radius: 4px;
+    background: #e67e22;
+    color: #fff;
+    font-size: 0.65rem;
+    font-weight: 800;
+    line-height: 1.15;
+    text-shadow: none;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
+}
+
+.pub-shift-badge.is-compact {
+    font-size: 0.58rem;
+    padding: 1px 4px;
+}
+
+.pub-shift-badge-symbol {
+    font-size: 0.9em;
+    line-height: 1;
+}
+
+.feriado-chip {
+    border-radius: 10px;
+    border: 1px dashed #d97a56;
+    background: #fff4ef;
+    color: #b14b25;
+    padding: 10px 4px;
+    text-align: center;
+    font-size: 0.7rem;
+    font-weight: 800;
+}
+
+
+
+.slot-lens {
+    position: fixed;
+    z-index: 2105;
+    width: min(258px, calc(100vw - 16px));
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(8px) scale(0.98);
+    transform-origin: calc(var(--lens-arrow-left, 42px) + 7px) 100%;
+    transition: opacity 0.16s ease, transform 0.18s ease;
+}
+
+.slot-lens[hidden] {
+    display: none !important;
+}
+
+.slot-lens.active {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0) scale(1);
+}
+
+.slot-lens-card {
+    position: relative;
+    overflow: visible;
+    border-radius: 16px;
+    background: #fff;
+    border: 1px solid #dce7e0;
+    box-shadow: 0 20px 42px rgba(15, 23, 42, 0.20);
+    padding: 12px 12px 10px 12px;
+}
+
+.slot-lens-card::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 5px;
+    background: var(--lens-accent, #0b5a35);
+}
+
+.slot-lens-arrow {
+    position: absolute;
+    top: auto;
+    bottom: -6px;
+    left: var(--lens-arrow-left, 42px);
+    width: 12px;
+    height: 12px;
+    background: #fff;
+    border-left: 1px solid #dce7e0;
+    border-top: 1px solid #dce7e0;
+    transform: rotate(225deg);
+}
+
+.slot-lens.is-below .slot-lens-arrow {
+    top: -6px;
+    bottom: auto;
+    transform: rotate(45deg);
+}
+
+.slot-lens.is-below {
+    transform-origin: calc(var(--lens-arrow-left, 42px) + 7px) 0%;
+}
+
+.slot-lens-stem {
+    position: absolute;
+    left: calc(var(--lens-arrow-left, 42px) + 4px);
+    bottom: -15px;
+    width: 3px;
+    height: 10px;
+    background: #fff;
+    border-left: 1px solid #dce7e0;
+    border-right: 1px solid #dce7e0;
+    border-radius: 999px;
+    box-shadow: 0 8px 18px rgba(15, 23, 42, 0.08);
+    pointer-events: none;
+}
+
+.slot-lens.is-below .slot-lens-stem {
+    top: -15px;
+    bottom: auto;
+}
+
+.slot-lens-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 10px;
+    margin-top: 6px;
+}
+
+.slot-lens-title {
+    margin: 0;
+    color: #173728;
+    font-size: 0.94rem;
+    font-weight: 900;
+    line-height: 1.12;
+}
+
+.slot-lens-close {
+    width: 26px;
+    height: 26px;
+    border: none;
+    border-radius: 999px;
+    background: #edf3ef;
+    color: #466254;
+    font-size: 0.94rem;
+    font-weight: 900;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.slot-lens-body {
+    margin-top: 8px;
+    display: grid;
+    gap: 6px;
+}
+
+.slot-lens-inline {
+    display: grid;
+    gap: 8px;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+}
+
+.slot-lens-line {
+    min-width: 0;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 4px;
+}
+
+.slot-lens-line strong {
+    color: #688074;
+    font-size: 0.68rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    flex-shrink: 0;
+}
+
+.slot-lens-line span {
+    min-width: 0;
+    color: #173728;
+    font-size: 0.8rem;
+    font-weight: 700;
+    line-height: 1.18;
+    overflow-wrap: anywhere;
+}
+.pub-shift-warning {
+    margin-top: 10px;
+    padding: 8px 10px;
+    background: #fff3cd;
+    color: #856404;
+    font-size: 0.8rem;
+    border-radius: 8px;
+    border-left: 4px solid #e67e22;
+    line-height: 1.35;
+    text-shadow: none;
+}
+.pub-shift-warning strong {
+    font-weight: 900;
+}
+
+.btn-topo {
+    position: fixed;
+    right: 18px;
+    bottom: 18px;
+    width: 56px;
+    height: 56px;
+    border: none;
+    border-radius: 50%;
+    background: linear-gradient(180deg, #0b5a35, #0a4e2f);
+    color: #fff;
+    box-shadow: 0 10px 24px rgba(11, 90, 53, 0.30);
+    font-size: 1.4rem;
+    cursor: pointer;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1400;
+}
+
+.pub-autocomplete {
+    position: relative;
+    top: 0;
+    scroll-margin-top: 156px;
+    transition: top 0.18s ease;
+}
+
+.pub-autocomplete.is-lifted {
+    z-index: 40;
+    top: -46px;
+}
+
+.pub-clear-btn {
+    position: absolute;
+    top: 50%;
+    right: 12px;
+    transform: translateY(-50%);
+    width: 28px;
+    height: 28px;
+    border: none;
+    border-radius: 50%;
+    background: #c8d3cd;
+    color: #fff;
+    font-size: 1rem;
+    font-weight: 900;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.pub-suggestions {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: calc(100% + 2px);
+    z-index: 1200;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    border-radius: 16px;
+    background: #fff;
+    border: 1px solid var(--pub-line);
+    box-shadow: 0 16px 32px rgba(15, 23, 42, 0.14);
+    max-height: 250px;
+    overflow-y: auto;
+    display: none;
+}
+
+.pub-suggestions.is-floating {
+    position: fixed;
+    left: 0;
+    right: auto;
+    top: 0;
+    width: 0;
+    max-height: 58vh;
+    z-index: 2400;
+}
+
+.pub-suggestions li {
+    padding: 9px 12px;
+    cursor: pointer;
+    color: #274236;
+    font-size: 0.9rem;
+    line-height: 1.12;
+    font-weight: 700;
+    border-bottom: 1px solid #eef2ef;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.pub-suggestions li:last-child {
+    border-bottom: none;
+}
+
+.pub-suggestions li:hover,
+.pub-suggestions li.active {
+    background: var(--primary);
+    color: #fff;
+}
+
+@media (max-width: 960px) {
+    .pub-group.is-half {
+        grid-column: span 12;
+    }
+}
+
+@media (max-width: 720px) {
+    .pub-shell {
+        width: min(100%, calc(100% - 12px));
+        margin-top: 10px;
+    }
+
+    .pub-hero {
+        padding: 12px 12px 14px;
+        border-radius: 20px;
+    }
+
+    .pub-marca-ufpa {
+        height: 44px;
+        margin-top: 8px;
+    }
+
+    .pub-titulo {
+        font-size: 1.4rem;
+    }
+
+    .pub-autocomplete.is-lifted {
+        top: -84px;
+    }
+
+    .pub-panel {
+        padding: 16px;
+        border-radius: 20px;
+    }
+
+    .grade-semana {
+        grid-template-columns: repeat(6, minmax(0, 1fr));
+    }
+
+    .semana-header {
+        padding: 7px 8px;
+        font-size: 0.7rem;
+    }
+
+    .grade-dia {
+        min-height: 80px;
+    }
+
+    .grade-dia-header {
+        padding: 4px 0;
+    }
+
+    .grade-dia-header .nome-dia {
+        font-size: 0.5rem;
+    }
+
+    .grade-dia-header .num-dia {
+        font-size: 0.72rem;
+    }
+
+    .grade-slots {
+        gap: 2px;
+        padding: 3px;
+    }
+
+    .mini-chip {
+        border-radius: 6px;
+        min-height: 51px;
+        padding: 4px 1px;
+        box-shadow: 0 3px 8px rgba(15, 23, 42, 0.14);
+    }
+
+    .chip-hora {
+        font-size: 0.76rem;
+    }
+
+    .chip-sigla {
+        margin-top: 1px;
+        font-size: 0.89rem;
+        line-height: 1;
+        letter-spacing: 0;
+        min-height: 1.9em;
+    }
+
+    .feriado-chip {
+        padding: 5px 2px;
+        font-size: 0.48rem;
+    }
+
+    .slot-lens-inline {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 520px) {
+    .pub-tabs {
+        width: fit-content;
+        max-width: 100%;
+        gap: 6px;
+        padding: 6px;
+    }
+
+    .pub-tab {
+        width: auto;
+        min-width: 118px;
+        padding: 10px 12px;
+        font-size: 0.88rem;
+        min-height: 44px;
+    }
+
+    .grade-semana {
+        grid-template-columns: repeat(6, minmax(0, 1fr));
+    }
+
+    .semana-block {
+        margin-bottom: 16px;
+    }
+
+    .semana-header {
+        padding: 6px 6px;
+        font-size: 0.64rem;
+        letter-spacing: 0.01em;
+    }
+
+    .grade-dia {
+        min-height: 70px;
+    }
+
+    .grade-dia-header {
+        padding: 4px 0 3px 0;
+    }
+
+    .grade-dia-header .nome-dia {
+        font-size: 0.44rem;
+    }
+
+    .grade-dia-header .num-dia {
+        margin-top: 1px;
+        font-size: 0.64rem;
+    }
+
+    .grade-slots {
+        gap: 2px;
+        padding: 2px;
+    }
+
+    .mini-chip {
+        border-radius: 5px;
+        min-height: 44px;
+        padding: 3px 1px;
+        box-shadow: 0 2px 6px rgba(15, 23, 42, 0.12);
+    }
+
+    .chip-hora {
+        font-size: 0.68rem;
+    }
+
+    .chip-sigla {
+        font-size: 0.78rem;
+        line-height: 0.96;
+        min-height: 1.92em;
+    }
+
+    .chip-sigla.wrap {
+        -webkit-line-clamp: 2;
+    }
+
+    .feriado-chip {
+        padding: 4px 1px;
+        font-size: 0.42rem;
+    }
+}
+
+@media (max-width: 390px) {
+    .pub-tabs {
+        gap: 5px;
+        padding: 5px;
+    }
+
+    .pub-tab {
+        width: auto;
+        min-width: 104px;
+        padding: 9px 8px;
+        font-size: 0.8rem;
+        min-height: 42px;
+    }
+
+    .grade-dia {
+        min-height: 64px;
+    }
+
+    .grade-slots {
+        padding: 2px 1px;
+    }
+
+    .mini-chip {
+        min-height: 41px;
+        padding: 2px 1px;
+    }
+
+    .chip-hora {
+        font-size: 0.59rem;
+    }
+
+    .chip-sigla {
+        font-size: 0.68rem;
+        min-height: 1.9em;
+    }
+
+}
+/* ─── Monthly Calendar (Docente) ─── */
+.month-cal { --mc-gap: 3px; }
+.month-cal-header {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: var(--mc-gap);
+    margin-bottom: 4px;
+}
+.month-cal-hdcell {
+    text-align: center;
+    font-size: 0.72rem;
+    font-weight: 900;
+    color: #688074;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: 6px 0;
+}
+.month-cal-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: var(--mc-gap);
+}
+.month-cal-day {
+    min-height: 84px;
+    background: #fff;
+    border: 1px solid var(--pub-line);
+    border-radius: 10px;
+    padding: 7px 6px 5px 6px;
+    cursor: pointer;
+    transition: box-shadow 0.14s ease, background 0.14s ease;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    user-select: none;
+}
+.month-cal-day:hover { background: #f4f8f6; box-shadow: 0 4px 12px rgba(15,23,42,0.08); }
+.month-cal-day:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(0,78,40,0.18); }
+.month-cal-day.is-empty { background: transparent; border-color: transparent; cursor: default; pointer-events: none; }
+.month-cal-day.is-weekend { background: #f9fbfa; }
+.month-cal-day.is-today .mcd-num {
+    background: var(--primary, #0b5a35);
+    color: #fff;
+    border-radius: 50%;
+    width: 22px; height: 22px;
+    display: flex; align-items: center; justify-content: center;
+}
+.mcd-num { font-size: 0.8rem; font-weight: 900; color: #3a5445; line-height: 1; align-self: flex-start; }
+.mcd-event {
+    border-radius: 5px;
+    padding: 3px 5px;
+    color: #111;
+    display: flex;
+    flex-direction: column;
+    line-height: 1.1;
+    min-width: 0;
+    cursor: pointer;
+    transition: filter 0.12s ease, transform 0.1s ease;
+}
+.mcd-event:hover { filter: brightness(0.88); transform: scale(1.03); }
+.mcd-event:focus-visible { outline: 2px solid rgba(0,0,0,0.35); outline-offset: 1px; }
+.mcd-event-hora { font-size: 0.6rem; font-weight: 700; opacity: 0.75; white-space: nowrap; }
+.mcd-event-sigla { font-size: 0.68rem; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mcd-event-shift { margin-top: 3px; display: flex; justify-content: flex-start; }
+.mcd-event .pub-shift-badge { max-width: 100%; white-space: normal; }
+.mcd-feriado { font-size: 0.56rem; color: #b14b25; background: #fff4ef; border: 1px dashed #d97a56; border-radius: 4px; padding: 2px 4px; font-weight: 700; text-align: center; }
+.mcd-more { font-size: 0.58rem; color: #7f9b8c; font-weight: 700; padding-left: 2px; }
+
+/* ─── Day Lens Popup ─── */
+.day-lens {
+    position: fixed;
+    z-index: 2200;
+    width: min(310px, calc(100vw - 16px));
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(8px) scale(0.97);
+    transform-origin: center top;
+    transition: opacity 0.16s ease, transform 0.18s ease;
+}
+.day-lens[hidden] { display: none !important; }
+.day-lens.active { opacity: 1; pointer-events: auto; transform: translateY(0) scale(1); }
+.day-lens.is-below { transform-origin: center bottom; }
+.day-lens-card {
+    background: #fff;
+    border-radius: 16px;
+    border: 1px solid #dce7e0;
+    box-shadow: 0 22px 52px rgba(15,23,42,0.22);
+    padding: 14px 14px 12px 14px;
+    position: relative;
+}
+.day-lens-arrow {
+    position: absolute;
+    bottom: -6px; left: 50%;
+    transform: translateX(-50%) rotate(225deg);
+    width: 11px; height: 11px;
+    background: #fff;
+    border-left: 1px solid #dce7e0;
+    border-top: 1px solid #dce7e0;
+}
+.day-lens.is-below .day-lens-arrow { top: -6px; bottom: auto; transform: translateX(-50%) rotate(45deg); }
+.day-lens-date { font-size: 0.72rem; font-weight: 900; color: #688074; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 10px; }
+.day-lens-close {
+    position: absolute; top: 10px; right: 10px;
+    width: 26px; height: 26px;
+    border: none; border-radius: 50%;
+    background: #edf3ef; color: #466254;
+    font-size: 1rem; font-weight: 900; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+}
+.day-lens-groups { display: flex; gap: 12px; }
+.day-lens-groups.is-single { flex-direction: column; }
+.day-lens-groups.is-multi > .day-lens-group { flex: 1; min-width: 0; }
+.day-lens-group { border-left: 3px solid var(--dlg-cor, #355344); padding-left: 10px; }
+.dlg-title { font-size: 0.9rem; font-weight: 900; color: #173728; line-height: 1.15; margin-bottom: 8px; padding-right: 24px; display: flex; align-items: baseline; gap: 7px; flex-wrap: wrap; }
+.dlg-ch { font-size: 0.7rem; font-weight: 800; background: #edf3ef; color: #355344; border-radius: 6px; padding: 2px 7px; white-space: nowrap; flex-shrink: 0; }
+.dlg-row { margin-bottom: 5px; }
+.dlg-label { display: block; font-size: 0.6rem; font-weight: 900; color: #688074; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 1px; }
+.dlg-val { font-size: 0.82rem; font-weight: 700; color: #173728; }
+.dlg-horarios { border: 1px solid #e4ece6; border-radius: 8px; overflow: hidden; margin-top: 2px; }
+.dlg-hrow { display: flex; align-items: center; gap: 6px; padding: 5px 8px; font-size: 0.8rem; font-weight: 700; font-variant-numeric: tabular-nums; color: #173728; border-bottom: 1px solid #f0f5f2; }
+.dlg-hrow:last-child { border-bottom: none; }
+.dlg-dash { color: #b0bfb8; }
+.day-lens-divider { width: 1px; background: #e4ece6; flex-shrink: 0; }
+
+@media (max-width: 720px) {
+    .month-cal-day { min-height: 62px; padding: 5px 4px; }
+    .mcd-event-sigla { font-size: 0.6rem; }
+    .day-lens-groups.is-multi { flex-direction: column; }
+    .day-lens-divider { width: auto; height: 1px; }
+}
+@media (max-width: 520px) {
+    .month-cal-hdcell { font-size: 0.6rem; padding: 4px 0; }
+    .month-cal-day { min-height: 48px; padding: 4px 3px; }
+    .mcd-num { font-size: 0.65rem; }
+    .mcd-event-sigla { font-size: 0.56rem; }
+}
+
+/* ===== Resumo do ano do docente ===== */
+.pub-pill--resumo { font-weight: 900; }
+.resumo-voltar {
+    margin: 0 0 12px; padding: 8px 14px; border-radius: 999px; border: 1px solid var(--pub-line);
+    background: #fff; color: #004e28; font-weight: 800; font-size: 0.85rem; cursor: pointer;
+}
+.resumo-voltar:hover { background: var(--pub-soft); }
+.resumo-ano { display: flex; flex-direction: column; gap: 14px; }
+.resumo-pl {
+    background: var(--pub-card); border: 1px solid var(--pub-line); border-radius: 18px;
+    padding: 14px 16px; box-shadow: 0 6px 16px rgba(15, 23, 42, 0.04);
+}
+.resumo-pl.is-vazio { padding: 10px 16px; background: var(--pub-panel); box-shadow: none; }
+.resumo-pl-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; }
+.resumo-pl-titulo { margin: 0; font-size: 1rem; font-weight: 900; color: #004e28; }
+.resumo-pl-datas { color: var(--pub-muted); font-size: 0.85rem; }
+.resumo-selo {
+    padding: 3px 10px; border-radius: 999px; background: #004e28; color: #fff;
+    font-size: 0.72rem; font-weight: 800; letter-spacing: 0.03em;
+}
+.resumo-pl-vazio { margin-left: auto; color: var(--pub-muted); font-size: 0.85rem; font-style: italic; }
+.resumo-comp {
+    margin-top: 12px; padding: 10px 12px 10px 14px; border-left: 5px solid var(--comp-cor);
+    border-radius: 10px; background: var(--pub-panel);
+}
+.resumo-comp-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 10px; }
+.resumo-comp-nome { color: var(--pub-ink); font-size: 0.92rem; letter-spacing: 0.01em; }
+.resumo-comp-turma { color: var(--pub-muted); font-size: 0.82rem; font-weight: 700; }
+.resumo-comp-info { display: flex; flex-direction: column; gap: 2px; margin-top: 4px; color: #3d5548; font-size: 0.84rem; }
+/* Estagio com CH do orientador: linha discreta (24/11/2026). */
+.resumo-comp-estagio { color: #8a5a12; font-size: 0.78rem; }
+
+/* ===== Consulta Docente: botoes Semanas | Dias e vista Dias (so no computador) ===== */
+.pub-result-titulo-linha { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; }
+.pub-vista {
+    display: inline-flex; margin-top: 6px; padding: 3px; gap: 3px;
+    border: 1px solid var(--pub-line); border-radius: 999px; background: #f1f6f3;
+}
+.pub-vista-btn {
+    border: 0; border-radius: 999px; padding: 6px 16px; background: transparent;
+    color: #456252; font-size: 0.86rem; font-weight: 800; cursor: pointer;
+}
+.pub-vista-btn:hover { background: #fff; }
+.pub-vista-btn.active { background: var(--primary); color: #fff; cursor: default; }
+.pub-dias-linha { margin: 12px 0 0; color: #456252; font-size: 0.86rem; }
+.pub-dias-linha .dd-alerta { margin-left: 0; }
+.pub-dias-dica { color: #d61f1f; }
+/* Nome da componente com o dobro do espaco do Indicadores (aqui a tela e
+   inteira, sem a barra lateral do Cardume) - pedido de 24/11/2026. */
+.pub-dias { --dd-col-nome: minmax(260px, 416px); }
+/* Vista Dias: a pagina usa a largura inteira da tela (uma coluna por dia). */
+body.pub-larga .pub-shell { width: calc(100% - 24px); }
+/* --gap tambem entra na conta da posicao das linhas dos meses (agenda_publica.js). */
+.resumo-faixa { --gap: 3px; position: relative; margin-top: 12px; }
+.resumo-semanas {
+    display: grid; grid-template-columns: repeat(var(--semanas), minmax(0, 1fr)); gap: var(--gap);
+}
+.resumo-semana {
+    position: relative; height: 16px; padding: 0; border: 1px solid var(--pub-line);
+    border-radius: 4px; background: #fff; cursor: default;
+}
+.resumo-semana.is-on { background: var(--comp-cor); border-color: rgba(23, 55, 40, 0.28); cursor: pointer; }
+.resumo-semana.is-on:hover, .resumo-semana.is-on.is-armed { outline: 2px solid #004e28; outline-offset: 1px; }
+.resumo-semana::after {
+    content: attr(data-tip); position: absolute; bottom: calc(100% + 8px); left: 50%;
+    transform: translateX(-50%); width: max-content; max-width: 230px; padding: 6px 10px;
+    border-radius: 8px; background: #173728; color: #fff; font-size: 0.75rem; font-weight: 600;
+    line-height: 1.3; text-align: left; white-space: normal; pointer-events: none;
+    opacity: 0; visibility: hidden; transition: opacity 0.12s; z-index: 5;
+}
+.resumo-semana.tip-left::after { left: 0; transform: none; }
+.resumo-semana.tip-right::after { left: auto; right: 0; transform: none; }
+.resumo-semana:hover::after, .resumo-semana:focus-visible::after, .resumo-semana.is-armed::after {
+    opacity: 1; visibility: visible;
+}
+/* No toque o balao so aparece no 1o toque (is-armed), nao no :hover que "gruda". */
+@media (hover: none) {
+    .resumo-semana:hover::after { opacity: 0; visibility: hidden; }
+    .resumo-semana.is-armed::after { opacity: 1; visibility: visible; }
+}
+.resumo-meses { position: relative; height: 1.15em; margin-top: 3px; color: var(--pub-muted); font-size: 0.68rem; }
+.resumo-mes-rotulo { position: absolute; top: 0; padding-left: 4px; white-space: nowrap; }
+.resumo-mes-rotulo.is-primeiro { padding-left: 0; }
+/* Dia 1o de cada mes; nao bloqueia o clique nas semanas. */
+.resumo-mes-linha {
+    position: absolute; top: -4px; bottom: 0; width: 0; margin-left: -1px;
+    border-left: 2px dotted #2e7d4f; pointer-events: none;
+}
+.resumo-ver-cal {
+    margin-top: 8px; padding: 0; border: 0; background: none; color: #004e28;
+    font-weight: 800; font-size: 0.82rem; cursor: pointer;
+}
+.resumo-ver-cal:hover { text-decoration: underline; }
+.month-cal .month-cal-day.is-semana-destacada { background: #edf5f0; box-shadow: inset 0 0 0 2px #004e28; }
+@media (max-width: 520px) {
+    .resumo-pl { padding: 12px; }
+    .resumo-pl-vazio { margin-left: 0; width: 100%; }
+    .resumo-semana { height: 14px; }
+    .resumo-faixa { --gap: 2px; }
+}
+
+@media print {
+    @page {
+        size: A4 landscape;
+        margin: 0.8cm;
+    }
+
+    body {
+        background: #fff !important;
+    }
+
+    .btn-topo,
+    .slot-lens,
+    .day-lens {
+        display: none !important;
+    }
+}
+
+/* Agenda Discente x Agenda Docente: dois botoes separados (o fundo da pagina
+   aparece entre eles), discretos. Fica no fim para valer sobre as regras
+   de celular acima. Nao mexe nos .pub-subtabs (que tambem usam .pub-tab). */
+.pub-main > .pub-tabs {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 210px));
+    gap: 12px;
+    width: auto;
+    max-width: 100%;
+    padding: 0;
+    background: none;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+    backdrop-filter: none;
+}
+
+.pub-main > .pub-tabs > .pub-tab {
+    width: 100%;
+    min-width: 0;
+    min-height: 42px;
+    padding: 9px 12px;
+    border: 1px solid rgba(28, 83, 86, 0.18);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.55);
+    color: #5b7268;
+    font-size: 0.9rem;
+    font-weight: 700;
+    box-shadow: none;
+    transition: background-color 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.pub-main > .pub-tabs > .pub-tab:hover {
+    transform: none;
+    background: #fff;
+    border-color: rgba(28, 83, 86, 0.35);
+    color: #1c5356;
+}
+
+.pub-main > .pub-tabs > .pub-tab.active {
+    background: #fff;
+    border-color: #1c5356;
+    color: #1c5356;
+    box-shadow: inset 0 -3px 0 #1c5356, 0 4px 12px rgba(18, 43, 32, 0.08);
+}
+
+@media (max-width: 720px) {
+    .pub-main > .pub-tabs {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        justify-self: stretch;           /* ocupa a largura toda do celular */
+        gap: 10px;
+    }
+
+    .pub-main > .pub-tabs > .pub-tab {
+        font-size: 0.86rem;
+        padding: 9px 8px;
+    }
+}
+
+/* Agenda Docente mais compacta: menos espaco entre rotulo, dica e campo. */
+#view-docente .pub-controls { gap: 12px; }
+#view-docente .pub-group label { margin-bottom: 4px; }
+#view-docente .pub-hint { margin: 0 0 8px; }
+#view-docente .pub-input { padding: 11px 14px; border-radius: 14px; }
+
+/* Botoes de mes (e o "Resumo do ano"): menores e esticados para dividir a
+   linha; no celular os 6 botoes de um PL de 5 meses cabem em 2 linhas. */
+#container-meses-docente,
+#container-meses-discente {
+    gap: 6px;
+    padding: 8px;
+    min-height: 0;
+}
+
+#container-meses-docente .pub-pill,
+#container-meses-discente .pub-pill {
+    flex: 1 1 auto;
+    padding: 7px 10px;
+    font-size: 0.82rem;
+    white-space: nowrap;
+    box-shadow: none;
+}
+
+#container-meses-docente .pub-pill.active,
+#container-meses-discente .pub-pill.active {
+    box-shadow: 0 4px 10px rgba(0, 78, 40, 0.18);
+}
+
+/* Meses numa linha so: com a caixa estreita (celular, ou a metade da tela
+   na Agenda Docente) os meses viram "Ago", "Set"... (nome inteiro no title).
+   Se nem assim couber, o "Resumo do ano" sobe para uma linha propria. */
+#container-meses-docente,
+#container-meses-discente { container-type: inline-size; }
+.pub-pill .mes-curto { display: none; }
+@container (max-width: 600px) {
+    .pub-pill .mes-longo { display: none; }
+    .pub-pill .mes-curto { display: inline; }
+    #container-meses-docente .pub-pill,
+    #container-meses-discente .pub-pill { padding: 7px 6px; }
+}
+@container (max-width: 420px) {
+    #container-meses-docente .pub-pill--resumo { flex-basis: 100%; }
+}
+
+/* Deslizar o dedo troca o mes: o novo mes entra pelo lado do gesto */
+#resultado-agenda.deslize-prox { animation: deslize-prox 0.22s ease-out; }
+#resultado-agenda.deslize-ant { animation: deslize-ant 0.22s ease-out; }
+@keyframes deslize-prox { from { opacity: 0.3; transform: translateX(40px); } to { opacity: 1; transform: none; } }
+@keyframes deslize-ant { from { opacity: 0.3; transform: translateX(-40px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) {
+    #resultado-agenda.deslize-prox, #resultado-agenda.deslize-ant { animation: none; }
+}
+
+/* Resumo do professor: horas-aula de cada ano lado a lado e o total embaixo */
+.pub-result-meta.resumo-horas {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+    max-width: 420px;
+}
+
+.resumo-horas .pub-result-badge {
+    justify-content: center;
+    padding: 7px 10px;
+    border-radius: 10px;
+}
+
+.resumo-horas .pub-result-badge.is-total {
+    grid-column: 1 / -1;
+    background: #fff;
+    border-color: rgba(28, 83, 86, 0.35);
+    color: #1c5356;
+}
+
+/* Agenda Discente: Unidade / Curso / Turma com o rotulo ao lado da caixinha */
+.pub-linhas {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    gap: 8px 12px;
+    max-width: 560px;
+}
+
+.pub-group.pub-linhas label {
+    margin: 0;
+}
+
+.pub-linhas .pub-select {
+    padding: 9px 12px;
+    border-radius: 12px;
+    font-size: 0.95rem;
+}
+
+.pub-linhas .pub-select:disabled {
+    background: var(--pub-soft);
+    color: #83958a;
+}

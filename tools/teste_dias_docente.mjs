@@ -86,7 +86,7 @@ try {
             const t0 = performance.now();
             sel.value = nome; sel.dispatchEvent(new Event('change'));
             pior = Math.max(pior, performance.now() - t0);
-            const m = document.getElementById('ind-resumo').textContent.match(/(\\d+) dias? com 2/);
+            const m = document.getElementById('ind-resumo').textContent.match(/(\\d+) dias? com sobrecarga/);
             out.push([nome, m ? Number(m[1]) : 0]);
         }
         out.sort((a, b) => b[1] - a[1]);

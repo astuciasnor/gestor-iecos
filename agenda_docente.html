@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cardume | Agenda do Docente</title>
+    <!-- Agenda so para professores (24/11/2026): o docente digita o nome e ve, dia a
+         dia, onde da aula na graduacao em cada PL do ano. Mesmo codigo da Agenda
+         Publica (js/agenda_publica.js, data-modo="docente"), sem a parte dos alunos.
+         Dados: o que foi publicado (Publicar Online). -->
+    <link rel="stylesheet" href="css/style.css?v=202611261735">
+    <link rel="stylesheet" href="css/agenda_publica.css?v=202611261735">
+    <link rel="stylesheet" href="css/agenda_docente.css?v=202611261735">
+</head>
+
+<body class="pub-docente-page" data-modo="docente">
+    <div class="pub-shell">
+        <!-- Uma faixa so: marca a esquerda, Ano e Professor a direita. -->
+        <header class="doc-faixa">
+            <div class="doc-marca">
+                <img class="doc-marca-logo" src="img/cardume_agenda_1x.png"
+                    srcset="img/cardume_agenda_1x.png 1x, img/cardume_agenda_2x.png 2x"
+                    alt="Cardume – Planejador Acadêmico" width="300" height="84">
+                <h1 class="doc-titulo">Agenda do Docente</h1>
+            </div>
+
+            <section id="view-docente" class="doc-controles">
+                <label class="doc-campo">
+                    <span>Ano</span>
+                    <select id="doc-sel-ano" class="pub-select" aria-label="Ano"></select>
+                </label>
+                <div class="doc-campo doc-campo-nome">
+                    <label for="inp-docente-publico">Professor</label>
+                    <div class="pub-autocomplete">
+                        <input id="inp-docente-publico" class="pub-input" type="text" autocomplete="off"
+                            placeholder="Digite seu nome...">
+                        <button id="btn-limpar-docente-publico" type="button" class="pub-clear-btn"
+                            title="Limpar">&times;</button>
+                        <ul id="lista-sugestoes-publico" class="pub-suggestions"></ul>
+                    </div>
+                </div>
+            </section>
+
+            <img class="doc-marca-ufpa" src="img/ufpa_sidebar_1x.png"
+                srcset="img/ufpa_sidebar_1x.png 1x, img/ufpa_sidebar_2x.png 2x, img/ufpa_sidebar_3x.png 3x"
+                alt="UFPA" title="Universidade Federal do Pará" width="40" height="50">
+        </header>
+
+        <div class="pub-main">
+            <!-- 2a linha: Ano inteiro | PL1 | PL2 ... (comeca em Ano inteiro) -->
+            <nav id="doc-pls" class="doc-pls" aria-label="Período letivo"></nav>
+            <section id="resultado-agenda" class="pub-result"></section>
+        </div>
+    </div>
+
+    <button id="btn-topo" class="btn-topo" title="Voltar ao topo">&#8593;</button>
+
+    <div id="slot-lens" class="slot-lens" hidden></div>
+    <div id="day-lens" class="day-lens" hidden></div>
+
+    <script type="module" src="js/agenda_publica.js?v=202611261735"></script>
+</body>
+
+</html>

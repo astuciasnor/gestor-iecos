@@ -1,4 +1,5 @@
-import { isoToUtc, weekdayOf, addDaysISO as addDaysIso } from './datas.mjs?v=202611211609';
+import { weekdayOf, addDaysISO as addDaysIso } from './datas.mjs?v=202611261735';
+import { ehEstagio } from './estagio.mjs?v=202611261735';
 // Botao "Trocar" da Lista de Ofertas: quando duas componentes da mesma turma podem trocar
 // de lugar. Funcoes puras (sem DOM nem store), testadas em tests/troca_ordem.test.mjs.
 //
@@ -7,6 +8,10 @@ import { isoToUtc, weekdayOf, addDaysISO as addDaysIso } from './datas.mjs?v=202
 //  - Cargas diferentes: so quando estao em sequencia (nenhum dia de aula livre
 //    entre elas) e cada uma tem um unico padrao de horarios. A que vinha depois
 //    passa a comecar onde a primeira comecava e a outra vem logo em seguida.
+//  - Estagio nao troca: as faixas dele (campo/encontro, horarios fora do turno)
+//    sao proprias e iriam parar na outra componente ou se perderiam.
+//  - Choque de turma e de professor nas novas posicoes: troca_ui.js confere
+//    ao abrir a janela, antes de liberar o botao.
 //
 // Componente esperada: { disciplina, subGrupo, ch, dataInicio, dataFim,
 //   registros (quantos registros de alocacao formam a oferta),
@@ -57,6 +62,9 @@ export function classifySwap(a, b, { feriados = [] } = {}) {
   const dividida = [a, b].find((comp) => Number(comp.registros) !== 1);
   if (dividida) return { ok: false, motivo: 'oferta dividida em mais de um registro' };
 
+  const estagio = [b, a].find((comp) => ehEstagio(comp.disciplina));
+  if (estagio) return { ok: false, motivo: 'estágio não troca de lugar: ajuste pelo Editar ou pelo Montar estágio' };
+
   const subA = String(a.subGrupo || '');
   const subB = String(b.subGrupo || '');
   if (subA !== subB) return { ok: false, motivo: `sub-turma diferente (${nomeSubGrupo(subB)} x ${nomeSubGrupo(subA)})` };
@@ -67,7 +75,8 @@ export function classifySwap(a, b, { feriados = [] } = {}) {
 
   const [first, second] = String(a.dataInicio) <= String(b.dataInicio) ? [a, b] : [b, a];
   if (!areInSequence(first, second, { feriados })) {
-    return { ok: false, motivo: `carga diferente (${chB}h x ${chA}h) e não estão em sequência` };
+    const juntas = String(second.dataInicio) < String(first.dataFim);
+    return { ok: false, motivo: `carga diferente (${chB}h x ${chA}h) e ${juntas ? 'correm no mesmo período' : 'não estão em sequência'}` };
   }
   const variada = [a, b].find((comp) => !hasSinglePattern(comp.faixas || []));
   if (variada) {

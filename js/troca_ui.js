@@ -1,20 +1,21 @@
-import { escapeHtml as escapeTrocaHtml } from './texto.mjs?v=202611211609';
+import { escapeHtml as escapeTrocaHtml } from './texto.mjs?v=202611261735';
 // Botao "Trocar" da Lista de Ofertas (janela, calculo das novas posicoes e
 // gravacao) e o "Como resolver?" do Calendario Docente. Saiu do ui.js em
-// 14/11/2026 sem mudar nada; as funcoes do editor que ele usa chegam por
-// ligarTroca (ver ui.js). Quem pode trocar com quem: troca_ordem.mjs.
-import { slotLabelsOverlap } from './academic_rules.mjs?v=202611211609';
-import { getAllocationTeachersForConflict, isFaixaAllocation } from './allocation_helpers.js?v=202611211609';
-import { getCalendarEvents } from './calendar.js?v=202611211609';
-import { getCursoSiglaDaTurma, getDisciplinaInfo, getTurmaLabel } from './curso_turma_helpers.js?v=202611211609';
-import { addDaysISO, formatDateBR } from './date_utils_ui.js?v=202611211609';
-import { alignFaixasToExecutionEnd, buildFinalAdjustmentFaixaSuggestion, computeIntensiveExecution, getNormalizedIntensiveFaixas, normalizeFaixaEntry, shouldIgnoreTurmaEventForCandidate, candidatoSemChoque } from './faixa_utils.js?v=202611211609';
-import { datasFeriadoDaTurma } from './feriados.mjs?v=202611211609';
-import { store } from './store.js?v=202611211609';
-import { saoSubturmasDiferentes } from './subturmas.mjs?v=202611211609';
-import { classifySwap } from './troca_ordem.mjs?v=202611211609';
-import { normalizeConflictSlotLabel } from './turno_helpers.js?v=202611211609';
-import { showToastWarning } from './ui_feedback.js?v=202611211609';
+// 14/11/2026; as funcoes do editor que ele usa chegam por ligarTroca (ver
+// ui.js). Quem pode trocar com quem: troca_ordem.mjs. Desde 23/11/2026 a
+// janela ja abre com o choque de turma e de professor conferido em cada opcao.
+import { slotLabelsOverlap } from './academic_rules.mjs?v=202611261735';
+import { getAllocationTeachersForConflict, isFaixaAllocation } from './allocation_helpers.js?v=202611261735';
+import { getCalendarEvents } from './calendar.js?v=202611261735';
+import { getCursoSiglaDaTurma, getDisciplinaInfo, getTurmaLabel } from './curso_turma_helpers.js?v=202611261735';
+import { addDaysISO, formatDateBR } from './date_utils_ui.js?v=202611261735';
+import { alignFaixasToExecutionEnd, buildFinalAdjustmentFaixaSuggestion, computeIntensiveExecution, getNormalizedIntensiveFaixas, normalizeFaixaEntry, shouldIgnoreTurmaEventForCandidate, candidatoSemChoque } from './faixa_utils.js?v=202611261735';
+import { datasFeriadoDaTurma } from './feriados.mjs?v=202611261735';
+import { store } from './store.js?v=202611261735';
+import { saoSubturmasDiferentes } from './subturmas.mjs?v=202611261735';
+import { classifySwap } from './troca_ordem.mjs?v=202611261735';
+import { normalizeConflictSlotLabel } from './turno_helpers.js?v=202611261735';
+import { showToastWarning } from './ui_feedback.js?v=202611261735';
 
 // Do ui.js: editor, conflitos de professor, desfazer e recalculo das datas.
 let ligacoes = {};
@@ -167,7 +168,7 @@ function acharChoqueNaTurma(candidato) {
     return null;
 }
 
-// Resultado: { novas: Map(alloc -> posicao), avisos } ou { erro }.
+// Resultado: { novas: Map(alloc -> posicao) } ou { erro }.
 function planejarTrocaDeOrdem(compA, compB, modo) {
     const a = compA.alloc;
     const b = compB.alloc;
@@ -200,7 +201,6 @@ function planejarTrocaDeOrdem(compA, compB, modo) {
         }
     }
 
-    const avisos = [];
     for (const [alloc, posicao] of novas) {
         const candidato = { ...alloc, ...posicao, ignoreAllocationIds: [a.id, b.id] };
         const choque = acharChoqueNaTurma(candidato);
@@ -213,7 +213,30 @@ function planejarTrocaDeOrdem(compA, compB, modo) {
             return { erro: `Choque de professor: ${onde}` };
         }
     }
-    return { novas, avisos };
+    return { novas };
+}
+
+// As componentes da turma de "alloc" para o Trocar: a propria (atual), as
+// outras e os feriados da turma. null se a oferta nao esta na turma.
+function prepararTroca(alloc) {
+    const componentes = buildComponentesParaTroca(alloc.turmaId);
+    const atual = componentes.find((c) => c.ids.includes(alloc.id));
+    if (!atual) return null;
+    return {
+        atual,
+        outras: componentes.filter((c) => c !== atual),
+        feriados: [...datasFeriadoDaTurma(store.rawData?.feriados, alloc.turmaId)]
+    };
+}
+
+// Uma troca conferida por inteiro: a regra (troca_ordem.mjs) e, se ela deixa,
+// as novas posicoes sem choque de turma nem de professor (sobrecarga nao entra).
+// Resultado: { plano, modo } quando pode trocar; { motivo } quando nao pode.
+function avaliarTroca(atual, outra, feriados) {
+    const regra = classifySwap(atual, outra, { feriados });
+    if (!regra.ok) return { motivo: regra.motivo };
+    const plano = planejarTrocaDeOrdem(atual, outra, regra.modo);
+    return plano.erro ? { motivo: plano.erro } : { plano, modo: regra.modo };
 }
 
 // ===== "Como resolver?" (alerta de choque do Calendario Docente) =====
@@ -243,19 +266,12 @@ function inicioQueResolve(alloc) {
 // nem de professor nas novas posicoes). Testa no maximo 8 componentes.
 function trocaQueResolve(alloc) {
     if (!ofertaUnicaNaTurma(alloc)) return null;
-    const componentes = buildComponentesParaTroca(alloc.turmaId);
-    const atual = componentes.find((c) => c.ids.includes(alloc.id));
-    if (!atual) return null;
-    const feriados = [...datasFeriadoDaTurma(store.rawData?.feriados, alloc.turmaId)];
+    const troca = prepararTroca(alloc);
+    if (!troca) return null;
+    const { atual, feriados } = troca;
     const distancia = (c) => Math.abs(new Date(`${c.dataInicio}T12:00:00`) - new Date(`${atual.dataInicio}T12:00:00`));
-    const outras = componentes.filter((c) => c !== atual && c.registros === 1).sort((x, y) => distancia(x) - distancia(y)).slice(0, 8);
-    for (const outra of outras) {
-        const regra = classifySwap(atual, outra, { feriados });
-        if (!regra.ok) continue;
-        const plano = planejarTrocaDeOrdem(atual, outra, regra.modo);
-        if (!plano.erro) return outra;
-    }
-    return null;
+    const maisPerto = troca.outras.filter((c) => c.registros === 1).sort((x, y) => distancia(x) - distancia(y)).slice(0, 8);
+    return maisPerto.find((outra) => avaliarTroca(atual, outra, feriados).plano) || null;
 }
 
 // Frases comuns ao bloqueio do salvar e ao "Como resolver?".
@@ -322,20 +338,19 @@ function onTrocaKeydown(e) {
 
 export function abrirTrocaDeOrdem(baseAlloc) {
     if (!baseAlloc || ligacoes.bloquearSeSomenteLeitura(baseAlloc.turmaId)) return;
-    const componentes = buildComponentesParaTroca(baseAlloc.turmaId);
-    const atual = componentes.find((c) => c.ids.includes(baseAlloc.id));
-    if (!atual) return;
-    const outras = componentes.filter((c) => c !== atual);
-    const feriados = [...datasFeriadoDaTurma(store.rawData?.feriados, baseAlloc.turmaId)];
-    const opcoes = outras.map((outra) => ({ outra, regra: classifySwap(atual, outra, { feriados }) }));
+    const troca = prepararTroca(baseAlloc);
+    if (!troca) return;
+    const { atual, outras, feriados } = troca;
+    // Cada opcao ja vem conferida (regra + choques): so as que podem ficam liberadas.
+    const opcoes = outras.map((outra) => ({ outra, ...avaliarTroca(atual, outra, feriados) }));
 
-    const itens = opcoes.map(({ outra, regra }, idx) => {
-        const selo = regra.ok
-            ? `<span class="troca-selo">${regra.modo === 'mesma-ch' ? 'mesma carga' : 'em sequência'}</span>`
-            : `<span class="troca-motivo">${escapeTrocaHtml(regra.motivo)}</span>`;
+    const itens = opcoes.map(({ outra, plano, modo, motivo }, idx) => {
+        const selo = plano
+            ? `<span class="troca-selo">${modo === 'mesma-ch' ? 'mesma carga' : 'em sequência'}</span>`
+            : `<span class="troca-motivo">${escapeTrocaHtml(motivo)}</span>`;
         return `
             <li>
-                <button type="button" class="troca-opcao" data-idx="${idx}" ${regra.ok ? '' : 'disabled'}>
+                <button type="button" class="troca-opcao" data-idx="${idx}" ${plano ? '' : 'disabled'}>
                     <strong>${escapeTrocaHtml(outra.disciplina)}${outra.subGrupo ? ` (${escapeTrocaHtml(outra.subGrupo)})` : ''}</strong>
                     <span class="troca-info">${formatPeriodoTroca(outra.dataInicio, outra.dataFim)} · ${outra.ch}h</span>
                     ${selo}
@@ -352,7 +367,7 @@ export function abrirTrocaDeOrdem(baseAlloc) {
             <h3 id="troca-titulo">Trocar a ordem de ${escapeTrocaHtml(atual.disciplina)}</h3>
             <p class="troca-sub">${formatPeriodoTroca(atual.dataInicio, atual.dataFim)} · ${atual.ch}h. Escolha com qual componente ela troca de lugar:</p>
             ${itens ? `<ul class="troca-lista">${itens}</ul>` : '<p class="troca-sub">Não há outra componente alocada nesta turma.</p>'}
-            <p class="troca-nota">Mesma carga: troca em qualquer posição. Carga diferente: só se estiverem em sequência.</p>
+            <p class="troca-nota">Mesma carga: troca em qualquer posição. Carga diferente: só se estiverem em sequência. Só ficam liberadas as trocas sem choque de turma nem de professor.</p>
             <div class="troca-acoes"><button type="button" class="btn-secondary troca-cancelar">Cancelar</button></div>
         </div>`;
     document.body.appendChild(overlay);
@@ -365,14 +380,8 @@ export function abrirTrocaDeOrdem(baseAlloc) {
         }
         const botao = e.target.closest('.troca-opcao');
         if (!botao || botao.disabled) return;
-        const { outra, regra } = opcoes[Number(botao.dataset.idx)];
-        const plano = planejarTrocaDeOrdem(atual, outra, regra.modo);
-        if (plano.erro) {
-            botao.disabled = true;
-            botao.querySelector('.troca-selo')?.remove();
-            botao.insertAdjacentHTML('beforeend', `<span class="troca-motivo">${escapeTrocaHtml(plano.erro)}</span>`);
-            return;
-        }
+        const { plano } = opcoes[Number(botao.dataset.idx)] || {};
+        if (!plano) return;
         const linhas = [...plano.novas].map(([alloc, posicao]) =>
             `${alloc.disciplina}\n   antes: ${formatPeriodoTroca(alloc.dataInicio, alloc.dataFim)}\n   depois: ${formatPeriodoTroca(posicao.dataInicio, posicao.dataFim)}`);
         if (!confirm(`Trocar a ordem das componentes?\n\n${linhas.join('\n\n')}\n\nSe precisar, use o botão "Desfazer troca", ao lado do título da lista.`)) return;
@@ -381,14 +390,20 @@ export function abrirTrocaDeOrdem(baseAlloc) {
 }
 
 function aplicarTrocaDeOrdem(plano) {
+    // Sem a foto de antes nao da para voltar atras (nem pelo Desfazer troca).
     const undoSnapshot = ligacoes.snapshotAllocationsForUndo();
+    if (!undoSnapshot) {
+        fecharTrocaDeOrdem();
+        showToastWarning('Troca não feita: não consegui guardar a cópia para desfazer. Recarregue a página e tente de novo.', 'error', 6000);
+        return;
+    }
     const esperado = [...plano.novas].map(([alloc, posicao]) => [alloc, contarHorasExecutadas(posicao.executionByDate)]);
     plano.novas.forEach((posicao, alloc) => Object.assign(alloc, posicao));
     ligacoes.syncAllIntensiveDates();
 
     // O recalculo geral nao pode ter cortado aulas de nenhuma das duas.
     const cortada = esperado.find(([alloc, horas]) => contarHorasExecutadas(alloc.executionByDate) < horas);
-    if (cortada && undoSnapshot) {
+    if (cortada) {
         store.replaceAllocations(undoSnapshot);
         ligacoes.rerenderPlanBoundViews();
         fecharTrocaDeOrdem();
@@ -399,8 +414,7 @@ function aplicarTrocaDeOrdem(plano) {
     ligacoes.commitAllocationUndoSnapshot(undoSnapshot, { troca: true });
     fecharTrocaDeOrdem();
     ligacoes.rerenderPlanBoundViews();
-    plano.avisos.forEach((aviso) => showToastWarning(aviso, 'warning', 6000));
-    if (!plano.avisos.length) showToastWarning('Ordem trocada. Se precisar, clique em "Desfazer troca", ao lado do título da lista (antes de atualizar a página).', 'success', 4500);
+    showToastWarning('Ordem trocada. Se precisar, clique em "Desfazer troca", ao lado do título da lista (antes de atualizar a página).', 'success', 4500);
 }
 
 // escapeTrocaHtml (= escapeHtml de js/texto.mjs) segue exportado daqui para o ui.js.

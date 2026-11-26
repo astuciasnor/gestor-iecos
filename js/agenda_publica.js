@@ -1,21 +1,32 @@
-import { UNIDADE_PADRAO, unidadeDoCurso } from './unidades.mjs?v=202611211609';
-import { escapeHtml } from './texto.mjs?v=202611211609';
-import { store, normalizeLoadedAllocation } from './store.js?v=202611211609';
-import { getTurnoLetter } from './turns.js?v=202611211609';
-import { getCalendarEvents } from './calendar.js?v=202611211609';
-import { resolveActiveAcademicPeriod } from './academic_rules.mjs?v=202611211609';
-import { buildMonthMarkers, summarizeTeacherPeriod } from './resumo_docente.mjs?v=202611211609';
-import { resolveBackendMode, UFPA_API_URL } from './backend_config.js?v=202611211609';
-import { filtrarDocentes, UNIDADES } from './docente_nomes.mjs?v=202611211609';
-import { nomeComSubturma, sufixoSubturma } from './subturmas.mjs?v=202611211609';
+import { UNIDADE_PADRAO, unidadeDoCurso } from './unidades.mjs?v=202611261735';
+import { escapeHtml } from './texto.mjs?v=202611261735';
+import { store, normalizeLoadedAllocation } from './store.js?v=202611261735';
+import { getTurnoLetter } from './turns.js?v=202611261735';
+import { getCalendarEvents } from './calendar.js?v=202611261735';
+import { resolveActiveAcademicPeriod } from './academic_rules.mjs?v=202611261735';
+import { buildMonthMarkers, summarizeTeacherPeriod } from './resumo_docente.mjs?v=202611261735';
+import { resolveBackendMode, UFPA_API_URL } from './backend_config.js?v=202611261735';
+import { filtrarDocentes, UNIDADES } from './docente_nomes.mjs?v=202611261735';
+import { nomeComSubturma, sufixoSubturma } from './subturmas.mjs?v=202611261735';
+import { feriadosDaTurma } from './feriados.mjs?v=202611261735';
+import { chOrientadorDaOferta } from './estagio.mjs?v=202611261735';
+import { focarDiaDoQuadro, DICA_MOUSE, entradaDias, montarQuadrosDias, textoSobrecarga } from './quadro_dias.mjs?v=202611261735';
 
 const collator = new Intl.Collator('pt-BR', { sensitivity: 'base' });
 const PUBLIC_ASSET_VERSION = '20261028a';
 const PUBLIC_ROUTING_CONFIG_URL = 'publicacoes/publicacao_config.json';
 const PUBLIC_ROUTING_CATALOG_FALLBACK_URL = 'publicacoes/catalogo_publicacoes.json';
 
+// Agenda do Docente (agenda_docente.html, 24/11/2026): a mesma agenda, so para
+// professores - sem a parte dos alunos, so o quadro Dias, os PLs do Ano escolhido.
+const MODO_DOCENTE = document.body?.dataset?.modo === 'docente';
+
 const state = {
-    activeTab: 'discente',
+    activeTab: MODO_DOCENTE ? 'docente' : 'discente',
+    // Agenda do Docente: ano dos PLs mostrados (um quadro por PL) e o PL escolhido
+    // nos botoes da 2a linha ('' = Ano inteiro; senao o periodo, ex.: 'PL2').
+    anoDocente: '',
+    plDocente: '',
     publicCatalog: null,
     publicPublicationRoute: null,
     publicPublications: [],
@@ -35,9 +46,27 @@ const state = {
         totalHoras: null,
         // Sem mes escolhido, a consulta docente mostra o resumo do ano.
         resumo: null,
-        highlightWeek: null
+        highlightWeek: null,
+        // Sem mes: 'semanas' (resumo do ano) ou 'dias' (quadro dia a dia, so no
+        // computador). '' = o padrao da tela (computador abre em Dias).
+        vista: ''
     }
 };
+
+// Quadros da vista Dias (texto do dia ao passar o mouse).
+let quadrosDiasPub = [];
+
+// Vista Dias so no computador (tela larga + mouse): no celular o quadro nao cabe
+// e a agenda fica so com Semanas (pedido de 24/11/2026).
+const TELA_DE_COMPUTADOR = '(min-width: 900px) and (pointer: fine)';
+function podeVerDias() {
+    return !!window.matchMedia?.(TELA_DE_COMPUTADOR).matches;
+}
+function vistaDoDocente() {
+    if (!podeVerDias()) return 'semanas';
+    if (MODO_DOCENTE) return 'dias';
+    return state.docente.vista || 'dias';
+}
 
 const els = {};
 let renderSequence = 0;
@@ -221,8 +250,79 @@ async function init() {
     syncDocenteInputState();
     syncTabUI();
     renderActiveEmptyState();
-    setupPlanSwitcher();
+    if (MODO_DOCENTE) setupAnoDocente();
+    else setupPlanSwitcher();
     abrirDocenteDaUrl();
+}
+
+// Agenda do Docente: so o Ano (todos os PLs publicados dele aparecem, um quadro
+// por PL). Padrao: ?ano= do link, senao o ano do PL em curso (ou o proximo).
+function setupAnoDocente() {
+    const sel = document.getElementById('doc-sel-ano');
+    const pubs = state.publicPublications?.length
+        ? getDisplayPublications(state.publicPublications, state.activePublicationKey)
+        : [{ termStart: store.settings.termStart }];
+    const anos = [...new Set(pubs.map(publicationYear).filter(Boolean))].sort();
+    const pedido = String(new URLSearchParams(window.location.search || '').get('ano') || '').trim();
+    const emCurso = publicationYear(pickActivePublication(pubs.filter((pub) => pub.termEnd)) || pubs[0]);
+    state.anoDocente = anos.includes(pedido) ? pedido : (anos.includes(emCurso) ? emCurso : (anos[0] || ''));
+    state.plDocente = String(new URLSearchParams(window.location.search || '').get('periodo') || '').trim().toUpperCase();
+    renderBotoesPLDocente();
+    if (!sel) return;
+    sel.innerHTML = anos.map((ano) => `<option value="${ano}"${ano === state.anoDocente ? ' selected' : ''}>${ano}</option>`).join('');
+    sel.disabled = anos.length < 2;
+    sel.addEventListener('change', () => {
+        state.anoDocente = sel.value;
+        state.plDocente = ''; // outro ano: volta para Ano inteiro
+        renderBotoesPLDocente();
+        atualizarLinkDocente();
+        renderActiveView();
+    });
+}
+
+// Agenda do Docente, 2a linha: Ano inteiro | PL1 | PL2 ... (os PLs do ano escolhido,
+// publicados ou so cadastrados). Comeca em Ano inteiro (pedido de 24/11/2026).
+function periodosDoAnoDocente() {
+    const { publications, naoPublicados } = publicacoesDoDocente();
+    return [...publications, ...naoPublicados]
+        .sort((a, b) => String(a.termStart).localeCompare(String(b.termStart)))
+        .map((pub) => String(pub.periodo || '').trim().toUpperCase())
+        .filter((periodo, i, lista) => periodo && lista.indexOf(periodo) === i);
+}
+
+function renderBotoesPLDocente() {
+    const nav = document.getElementById('doc-pls');
+    if (!nav) return;
+    const periodos = periodosDoAnoDocente();
+    if (state.plDocente && !periodos.includes(state.plDocente)) state.plDocente = '';
+    const botao = (valor, texto) => `<button type="button" class="pub-pill doc-pl-btn${state.plDocente === valor ? ' active' : ''}" data-doc-pl="${escapeHtmlAttr(valor)}" aria-pressed="${state.plDocente === valor}">${texto}</button>`;
+    nav.innerHTML = botao('', '&#128197; Ano inteiro') + periodos.map((periodo) => botao(periodo, escapeHtml(periodo))).join('');
+    if (nav.dataset.ligado) return;
+    nav.dataset.ligado = '1';
+    nav.addEventListener('click', (event) => {
+        const alvo = event.target.closest('[data-doc-pl]');
+        if (!alvo || alvo.dataset.docPl === state.plDocente) return;
+        state.plDocente = alvo.dataset.docPl;
+        renderBotoesPLDocente();
+        atualizarLinkDocente();
+        renderActiveView();
+    });
+}
+
+// Agenda do Docente: o endereco leva o nome e o ano (o professor pode guardar o link).
+function atualizarLinkDocente() {
+    if (!MODO_DOCENTE) return;
+    try {
+        const url = new URL(window.location.href);
+        if (state.docente.nome) url.searchParams.set('docente', state.docente.nome);
+        else url.searchParams.delete('docente');
+        if (state.anoDocente) url.searchParams.set('ano', state.anoDocente);
+        if (state.plDocente) url.searchParams.set('periodo', state.plDocente);
+        else url.searchParams.delete('periodo');
+        window.history.replaceState({}, '', url);
+    } catch (_) {
+        // ignora ambientes sem history API
+    }
 }
 
 // ?docente=Nome abre direto na consulta desse professor (Resumo do ano). Usado
@@ -275,6 +375,21 @@ function bindEvents() {
     els.resultadoAgenda?.addEventListener('click', handleAgendaChipClick);
     els.resultadoAgenda?.addEventListener('keydown', handleAgendaChipKeydown);
     els.resultadoAgenda?.addEventListener('click', handleResumoClick);
+    els.resultadoAgenda?.addEventListener('click', (event) => {
+        const botao = event.target.closest('[data-pub-vista]');
+        if (!botao || botao.classList.contains('active')) return;
+        state.docente.vista = botao.dataset.pubVista;
+        renderActiveView();
+    });
+    els.resultadoAgenda?.addEventListener('mouseover', (event) => {
+        const cel = event.target.closest('.dd-d[data-dd-date]');
+        if (cel) focarDiaDoQuadro(cel, quadrosDiasPub);
+    });
+    // Janela estreitada (ou mouse trocado por toque): volta para Semanas.
+    window.matchMedia?.(TELA_DE_COMPUTADOR).addEventListener?.('change', () => {
+        if (state.activeTab === 'docente' && state.docente.nome && !state.docente.mes) renderActiveView();
+    });
+    ligarDeslizeMeses(els.resultadoAgenda);
     els.slotLens?.addEventListener('click', handleSlotLensClick);
     els.dayLens?.addEventListener('click', (e) => { if (e.target.closest('.day-lens-close')) fecharDayLens(true); });
 
@@ -964,6 +1079,63 @@ function renderMonthButtons({ container, selectedMonth, emptyLabel, onSelect, en
     });
 }
 
+// Celular: deslizar o dedo de lado sobre a agenda troca o mes (esquerda =
+// proximo, direita = anterior). Rolagem vertical continua normal: so conta
+// arrasto claramente horizontal, com um dedo so (pinça de zoom nao conta).
+function ligarDeslizeMeses(area) {
+    if (!area) return;
+    let inicio = null;
+
+    area.addEventListener('touchstart', (e) => {
+        inicio = e.touches.length === 1
+            ? { x: e.touches[0].clientX, y: e.touches[0].clientY, t: Date.now() }
+            : null;
+    }, { passive: true });
+
+    area.addEventListener('touchmove', (e) => {
+        if (e.touches.length > 1) inicio = null;
+    }, { passive: true });
+
+    area.addEventListener('touchend', (e) => {
+        if (!inicio) return;
+        const toque = e.changedTouches[0];
+        const dx = toque.clientX - inicio.x;
+        const dy = toque.clientY - inicio.y;
+        const rapido = Date.now() - inicio.t < 800;
+        inicio = null;
+        if (!rapido || Math.abs(dx) < 60 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
+        mudarMesPorDeslize(dx < 0 ? 1 : -1);
+    }, { passive: true });
+}
+
+function mudarMesPorDeslize(passo) {
+    const aba = state.activeTab === 'docente' ? state.docente : state.discente;
+    const temQuem = state.activeTab === 'docente' ? !!state.docente.nome : !!state.discente.turmaId;
+    if (!temQuem || !aba.mes) return; // sem mes escolhido (ex.: Resumo do ano) nao desliza
+
+    const meses = getTermMonths();
+    const i = meses.findIndex((m) => m.key === aba.mes);
+    const destino = meses[i + passo];
+    if (i < 0 || !destino) return; // primeiro/ultimo mes do PL: fica onde esta
+
+    aba.mes = destino.key;
+    if (state.activeTab === 'docente') {
+        state.docente.highlightWeek = null;
+        preencherMesesDocente();
+    } else {
+        preencherMesesDiscente();
+    }
+    renderActiveView();
+
+    const area = els.resultadoAgenda;
+    if (!area) return;
+    // Se o usuario estava no meio do mes, volta ao topo do novo mes.
+    if (area.getBoundingClientRect().top < 0) area.scrollIntoView({ block: 'start' });
+    area.classList.remove('deslize-prox', 'deslize-ant');
+    void area.offsetWidth; // reinicia a animacao
+    area.classList.add(passo > 0 ? 'deslize-prox' : 'deslize-ant');
+}
+
 function getTermMonths() {
     const start = store.settings.termStart;
     const end = store.settings.termEnd;
@@ -1250,6 +1422,7 @@ function selecionarDocente(nomeProfessor) {
 
     esconderSugestoes();
     preencherMesesDocente();
+    atualizarLinkDocente();
     renderActiveView();
     els.inpDocente?.blur();
 }
@@ -1257,6 +1430,7 @@ function selecionarDocente(nomeProfessor) {
 function limparDocenteSelecionado() {
     if (els.inpDocente) els.inpDocente.value = '';
     resetDocenteState(true);
+    atualizarLinkDocente();
     els.inpDocente?.focus();
 }
 
@@ -1326,6 +1500,9 @@ function toggleTabButton(button, active) {
 }
 
 function renderActiveView() {
+    // Vista Dias: a pagina usa a largura inteira da tela (o quadro tem uma coluna por dia).
+    document.body.classList.toggle('pub-larga', state.activeTab === 'docente'
+        && !!state.docente.nome && !state.docente.mes && vistaDoDocente() === 'dias');
     if (state.activeTab === 'discente') {
         if (els.resultadoAgenda) els.resultadoAgenda.hidden = false;
         if (!state.discente.turmaId || !state.discente.mes) {
@@ -1371,6 +1548,14 @@ function renderActiveEmptyState() {
     }
 
     // Aba Docente
+    if (!state.docente.nome && MODO_DOCENTE && els.resultadoAgenda) {
+        els.resultadoAgenda.hidden = false;
+        els.resultadoAgenda.innerHTML = `<div class="doc-boas-vindas">Digite seu nome em <b>Professor</b>, no alto, e escolha na lista.
+            Aparece um quadro por período letivo (PL) do ano, com um quadradinho por dia: onde você dá aula na graduação
+            e os dias com <b>sobrecarga</b> (2 ou mais componentes no mesmo dia).${podeVerDias() ? ' Passe o mouse num dia para ver as aulas.' : ' <b>No celular</b> aparece o resumo por semanas; o quadro dia a dia é para o computador.'}
+            <br>Mostra o que a coordenação já publicou.</div>`;
+        return;
+    }
     if (!state.docente.nome) {
         if (els.resultadoAgenda) {
             els.resultadoAgenda.hidden = true;
@@ -1457,6 +1642,12 @@ function renderResumoDocente() {
 
     window.setTimeout(() => {
         if (token !== renderSequence) return;
+        if (vistaDoDocente() === 'dias') {
+            state.docente.resumo = null;
+            els.resultadoAgenda.innerHTML = buildDiasMarkup(state.docente.nome);
+            scrollResultIntoView();
+            return;
+        }
         const periodos = buildTeacherYearSummary(state.docente.nome);
         state.docente.resumo = periodos;
         els.resultadoAgenda.innerHTML = buildResumoMarkup(periodos);
@@ -1464,9 +1655,9 @@ function renderResumoDocente() {
     }, 140);
 }
 
-// Calcula cada PL com o mesmo motor do calendario (feriados e divisao entre
-// docentes ja aplicados), trocando o plano do store so durante a conta.
-function buildTeacherYearSummary(teacherName) {
+// Os PLs da consulta docente: os publicados que a agenda mostra e, vazios, os
+// cadastrados (em curso ou futuros) ainda sem ofertas publicadas.
+function publicacoesDoDocente() {
     const publications = state.publicPublications?.length
         ? getDisplayPublications(state.publicPublications, state.activePublicationKey)
         : [{
@@ -1476,76 +1667,181 @@ function buildTeacherYearSummary(teacherName) {
             termEnd: store.settings.termEnd,
             allocations: store.allocations
         }];
-    const teacherKey = normalizeText(teacherName);
     const today = getTodayIso();
+    // Agenda do Docente: so os PLs do ano escolhido (o ano e o do inicio do PL).
+    const doAno = (termStart) => !MODO_DOCENTE || !state.anoDocente || String(termStart || '').slice(0, 4) === state.anoDocente;
+    const publishedRanges = new Set(publications.map((pub) => `${pub.termStart}|${pub.termEnd}`));
+    const naoPublicados = getOfficialPlanCandidates()
+        .filter((plan) => plan.termStart && plan.termEnd && plan.termEnd >= today)
+        .filter((plan) => !publishedRanges.has(`${plan.termStart}|${plan.termEnd}`))
+        .filter((plan) => doAno(plan.termStart));
+    return { publications: publications.filter((pub) => pub.termStart && pub.termEnd && doAno(pub.termStart)), naoPublicados, today };
+}
+
+// Roda conta(pub) com o plano do store trocado pelo da publicacao (o motor do
+// calendario le o store) e devolve o store como estava.
+function comPlanoDaPublicacao(pub, conta) {
     const saved = {
         allocations: store.allocations,
         termStart: store.settings.termStart,
         termEnd: store.settings.termEnd,
         periodo: store.settings.periodo
     };
-
-    // PLs cadastrados (em curso ou futuros) que ainda nao tem nenhuma oferta
-    // publicada: aparecem como "ainda sem ofertas", diferente de "sem aulas".
-    const publishedRanges = new Set(publications.map((pub) => `${pub.termStart}|${pub.termEnd}`));
-    const naoPublicados = getOfficialPlanCandidates()
-        .filter((plan) => plan.termStart && plan.termEnd && plan.termEnd >= today)
-        .filter((plan) => !publishedRanges.has(`${plan.termStart}|${plan.termEnd}`))
-        .map((plan) => ({
-            publication: { key: '', periodo: plan.periodo, termStart: plan.termStart, termEnd: plan.termEnd },
-            naoPublicado: true,
-            isCurrent: plan.termStart <= today && today <= plan.termEnd,
-            weeks: [],
-            components: [],
-            totalAulas: 0
-        }));
-
     try {
-        const calculados = publications
-            .filter((pub) => pub.termStart && pub.termEnd)
-            .map((pub) => {
-                store.allocations = Array.isArray(pub.allocations) ? pub.allocations : [];
-                store.settings.termStart = pub.termStart;
-                store.settings.termEnd = pub.termEnd;
-                store.settings.periodo = pub.periodo || saved.periodo;
-
-                const calendarData = getCalendarEvents(null, pub.termStart, pub.termEnd, teacherName);
-                const entries = [];
-                Object.entries(calendarData || {}).forEach(([date, events]) => {
-                    (events || []).forEach((ev) => {
-                        if (ev?.type === 'holiday') return;
-                        const disciplina = ev.disciplina || ev.title || '';
-                        entries.push({
-                            date,
-                            key: `${ev.turmaId || ''}|${normalizeText(disciplina)}|${ev.subGrupo || ''}`,
-                            disciplina,
-                            turmaId: ev.turmaId,
-                            subGrupo: ev.subGrupo,
-                            cor: ev.cor,
-                            aulas: calculateEventHours(ev),
-                            horario: getEventHorario(ev, date),
-                            chTotal: ev.ch,
-                            coDocentes: (Array.isArray(ev.docentes) ? ev.docentes : [])
-                                .map((d) => String(d?.nome || d || '').trim())
-                                .filter((nome) => nome && normalizeText(nome) !== teacherKey && normalizeText(nome) !== 'A DEFINIR')
-                        });
-                    });
-                });
-
-                return {
-                    publication: pub,
-                    isCurrent: pub.termStart <= today && today <= pub.termEnd,
-                    ...summarizeTeacherPeriod({ termStart: pub.termStart, termEnd: pub.termEnd, entries })
-                };
-            });
-        return [...calculados, ...naoPublicados]
-            .sort((a, b) => String(a.publication.termStart).localeCompare(String(b.publication.termStart)));
+        store.allocations = Array.isArray(pub.allocations) ? pub.allocations : [];
+        store.settings.termStart = pub.termStart;
+        store.settings.termEnd = pub.termEnd;
+        store.settings.periodo = pub.periodo || saved.periodo;
+        return conta();
     } finally {
         store.allocations = saved.allocations;
         store.settings.termStart = saved.termStart;
         store.settings.termEnd = saved.termEnd;
         store.settings.periodo = saved.periodo;
     }
+}
+
+// ===== Vista Dias (so no computador) =====
+// O mesmo quadro de Indicadores > Dias do docente (js/quadro_dias.mjs), com o
+// que esta publicado: uma coluna por dia de cada PL, a linha Sobrecarga diaria
+// e uma linha por componente.
+function buildDiasMarkup(teacherName) {
+    const { publications, naoPublicados } = publicacoesDoDocente();
+    const entries = [];
+    const rotulos = new Map();
+    publications.forEach((pub) => comPlanoDaPublicacao(pub, () => {
+        const porData = getCalendarEvents(null, pub.termStart, pub.termEnd, teacherName) || {};
+        Object.entries(porData).forEach(([date, eventos]) => {
+            (eventos || []).forEach((ev) => {
+                if (!ev || ev.type === 'holiday') return;
+                // Horas da aula: a mesma conta das horas-aula do resumo (Semanas).
+                const entry = entradaDias(ev, date, pub.key, {
+                    chComponente: Number(ev.ch) || 0,
+                    aulas: calculateEventHours(ev),
+                    horario: getEventHorario(ev, date)
+                });
+                if (!rotulos.has(entry.key)) rotulos.set(entry.key, getTurmaLabel(ev.turmaId, ev.subGrupo));
+                entries.push(entry);
+            });
+        });
+    }));
+
+    const feriadosLista = feriadosDaTurma(store.rawData?.feriados || [], '');
+    const feriados = feriadosLista.map((f) => String(f?.data || f || '').trim());
+    const nomeFeriado = new Map(feriadosLista.map((f) => [String(f?.data || f || '').trim(), String(f?.feriado || f?.nome || 'Feriado')]));
+    const planos = [
+        ...publications.map((pub) => ({ key: pub.key, periodo: pub.periodo, termStart: pub.termStart, termEnd: pub.termEnd })),
+        ...naoPublicados.map((plan) => ({ key: `nao-publicado|${plan.termStart}`, periodo: plan.periodo, termStart: plan.termStart, termEnd: plan.termEnd, naoPublicado: true }))
+    ].sort((a, b) => String(a.termStart).localeCompare(String(b.termStart)));
+
+    // Agenda do Docente com um PL escolhido: so o quadro dele (as aulas dos outros PLs
+    // continuam na conta, porque os PLs se sobrepoem nas datas).
+    const mostrar = MODO_DOCENTE && state.plDocente
+        ? planos.filter((meta) => String(meta.periodo || '').trim().toUpperCase() === state.plDocente)
+        : planos;
+    const { html, quadros, carregados } = montarQuadrosDias({
+        planos, mostrar, entries, rotulos, feriados, nomeFeriado,
+        fmtData: formatIsoDateBR,
+        avisoVazio: (meta) => (meta.naoPublicado ? 'Ainda sem ofertas publicadas' : undefined)
+    });
+    quadrosDiasPub = quadros;
+
+    // Selos de horas-aula por ano: as mesmas contas da vista Semanas.
+    const aulasPorAno = {};
+    entries.forEach((e) => { const ano = e.date.slice(0, 4); aulasPorAno[ano] = (aulasPorAno[ano] || 0) + e.aulas; });
+    const linha = [
+        carregados ? `<b class="dd-alerta">${textoSobrecarga(carregados)}</b>` : textoSobrecarga(0),
+        quadros.length ? `<span class="pub-dias-dica">${DICA_MOUSE}</span>` : ''
+    ].filter(Boolean).join(' &nbsp;|&nbsp; ');
+    const context = buildConsultaDocenteContext(aulasPorAno, `<p class="pub-dias-linha">${linha}</p>`);
+    if (!planos.length) return context + '<div class="pub-empty-state">Nenhum período letivo publicado.</div>';
+    return `${context}<div class="pub-dias">${html}</div>`;
+}
+
+// Botoes Semanas | Dias ao lado do nome (so no computador).
+function buildVistaToggleMarkup() {
+    if (MODO_DOCENTE || !podeVerDias()) return '';
+    const atual = vistaDoDocente();
+    const botao = (valor, texto, dica) => `<button type="button" class="pub-vista-btn${atual === valor ? ' active' : ''}" data-pub-vista="${valor}" aria-pressed="${atual === valor}" title="${dica}">${texto}</button>`;
+    return `<div class="pub-vista" role="group" aria-label="Como ver o ano">${botao('semanas', 'Semanas', 'Resumo por semanas de cada PL')}${botao('dias', 'Dias', 'Um quadradinho por dia, com a sobrecarga diária')}</div>`;
+}
+
+// Cabecalho da consulta docente (Semanas e Dias): nome, botoes e horas-aula por ano.
+function buildConsultaDocenteContext(aulasPorAno, extra = '') {
+    const anos = Object.keys(aulasPorAno).sort();
+    const totalAulas = anos.reduce((n, ano) => n + aulasPorAno[ano], 0);
+    // So a carga horaria: um selo por ano (lado a lado) e o total embaixo,
+    // quando ha mais de um ano.
+    const badges = anos.map((ano) => `<span class="pub-result-badge">${escapeHtml(`${ano}: ${aulasPorAno[ano]} horas-aula`)}</span>`);
+    if (anos.length > 1) {
+        badges.push(`<span class="pub-result-badge is-total">Total: ${totalAulas} horas-aula</span>`);
+    }
+    return `
+        <div class="pub-result-context">
+            <div class="pub-result-eyebrow">Consulta Docente</div>
+            <div class="pub-result-titulo-linha">
+                <h2 class="pub-result-title">${escapeHtml(state.docente.nome)}</h2>
+                ${buildVistaToggleMarkup()}
+            </div>
+            ${badges.length ? `<div class="pub-result-meta resumo-horas">${badges.join('')}</div>` : ''}
+            ${extra}
+        </div>`;
+}
+
+// Calcula cada PL com o mesmo motor do calendario (feriados e divisao entre
+// docentes ja aplicados), trocando o plano do store so durante a conta.
+function buildTeacherYearSummary(teacherName) {
+    const { publications, naoPublicados, today } = publicacoesDoDocente();
+    const teacherKey = normalizeText(teacherName);
+
+    // PLs cadastrados (em curso ou futuros) que ainda nao tem nenhuma oferta
+    // publicada: aparecem como "ainda sem ofertas", diferente de "sem aulas".
+    const vazios = naoPublicados.map((plan) => ({
+        publication: { key: '', periodo: plan.periodo, termStart: plan.termStart, termEnd: plan.termEnd },
+        naoPublicado: true,
+        isCurrent: plan.termStart <= today && today <= plan.termEnd,
+        weeks: [],
+        components: [],
+        totalAulas: 0
+    }));
+
+    const calculados = publications.map((pub) => comPlanoDaPublicacao(pub, () => {
+        const calendarData = getCalendarEvents(null, pub.termStart, pub.termEnd, teacherName);
+        const entries = [];
+        Object.entries(calendarData || {}).forEach(([date, events]) => {
+            (events || []).forEach((ev) => {
+                if (ev?.type === 'holiday') return;
+                const disciplina = ev.disciplina || ev.title || '';
+                entries.push({
+                    date,
+                    key: `${ev.turmaId || ''}|${normalizeText(disciplina)}|${ev.subGrupo || ''}`,
+                    disciplina,
+                    turmaId: ev.turmaId,
+                    subGrupo: ev.subGrupo,
+                    cor: ev.cor,
+                    aulas: calculateEventHours(ev),
+                    horario: getEventHorario(ev, date),
+                    chTotal: ev.ch,
+                    // Estagio com CH do orientador (Montar estagio): linha discreta no resumo.
+                    chOrientador: chOrientadorDaOferta([ev], Number(ev.ch) || 0,
+                        Array.isArray(ev.docentes) && ev.docentes.length > 1),
+                    coDocentes: (Array.isArray(ev.docentes) ? ev.docentes : [])
+                        .map((d) => String(d?.nome || d || '').trim())
+                        .filter((nome) => nome && normalizeText(nome) !== teacherKey && normalizeText(nome) !== 'A DEFINIR')
+                });
+            });
+        });
+
+        return {
+            publication: pub,
+            isCurrent: pub.termStart <= today && today <= pub.termEnd,
+            ...summarizeTeacherPeriod({ termStart: pub.termStart, termEnd: pub.termEnd, entries })
+        };
+    }));
+    const doPL = (p) => !MODO_DOCENTE || !state.plDocente
+        || String(p.publication.periodo || '').trim().toUpperCase() === state.plDocente;
+    return [...calculados, ...vazios].filter(doPL)
+        .sort((a, b) => String(a.publication.termStart).localeCompare(String(b.publication.termStart)));
 }
 
 function formatDayMonth(iso) {
@@ -1561,25 +1857,11 @@ function getWeekDisplayEnd(week) {
 }
 
 function buildResumoMarkup(periodos) {
-    const totalAulas = periodos.reduce((n, p) => n + p.totalAulas, 0);
     const aulasPorAno = {};
     periodos.forEach((p) => Object.entries(p.aulasPorAno || {}).forEach(([ano, aulas]) => {
         aulasPorAno[ano] = (aulasPorAno[ano] || 0) + aulas;
     }));
-    const anos = Object.keys(aulasPorAno).sort();
-
-    // So a carga horaria: um selo por ano (lado a lado) e o total embaixo,
-    // quando ha mais de um ano.
-    const badges = anos.map((ano) => `<span class="pub-result-badge">${escapeHtml(`${ano}: ${aulasPorAno[ano]} horas-aula`)}</span>`);
-    if (anos.length > 1) {
-        badges.push(`<span class="pub-result-badge is-total">Total: ${totalAulas} horas-aula</span>`);
-    }
-    const context = `
-        <div class="pub-result-context">
-            <div class="pub-result-eyebrow">Consulta Docente</div>
-            <h2 class="pub-result-title">${escapeHtml(state.docente.nome)}</h2>
-            ${badges.length ? `<div class="pub-result-meta resumo-horas">${badges.join('')}</div>` : ''}
-        </div>`;
+    const context = buildConsultaDocenteContext(aulasPorAno);
 
     if (!periodos.length) {
         return context + '<div class="pub-empty-state">Nenhum período letivo publicado.</div>';
@@ -1661,6 +1943,7 @@ function buildResumoComponenteMarkup(comp, periodo) {
             <div class="resumo-comp-info">
                 <span>${escapeHtml(carga)}</span>
                 <span>${escapeHtml(quando)}</span>
+                ${comp.chOrientador ? `<span class="resumo-comp-estagio">Estágio: ${comp.aulas} horas-aula no calendário · ${comp.chOrientador} h atribuídas ao orientador</span>` : ''}
             </div>
             <div class="resumo-faixa" style="--semanas:${total}">
                 <div class="resumo-semanas">${semanas}</div>
@@ -2496,7 +2779,8 @@ function syncBackToTopButton() {
 }
 
 function scrollResultIntoView() {
-    if (!els.resultadoAgenda) return;
+    // Agenda do Docente: o quadro ja fica logo embaixo da faixa; rolar a esconderia.
+    if (!els.resultadoAgenda || MODO_DOCENTE) return;
     requestAnimationFrame(() => {
         // Dentro da moldura de celular do app, rola so a agenda (scrollIntoView
         // rolaria tambem a pagina do app).

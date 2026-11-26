@@ -79,3 +79,21 @@ test('faixa de ajuste do ultimo dia conta como padrao unico; regime diferente na
   // Com a mesma carga, o regime diferente nao impede.
   assert.deepEqual(classifySwap(a, { ...b, ch: 60 }), { ok: true, modo: 'mesma-ch' });
 });
+
+test('carga diferente correndo no mesmo periodo diz isso no motivo', () => {
+  const a = comp('CARTOGRAFIA', 60, '2027-05-19', '2027-06-16');
+  const b = comp('MAQUINAS', 45, '2027-05-20', '2027-06-22');
+  const r = classifySwap(a, b);
+  assert.equal(r.ok, false);
+  assert.match(r.motivo, /carga diferente \(45h x 60h\) e correm no mesmo período/);
+});
+
+test('estagio nao troca de lugar, nem com a mesma carga', () => {
+  const estagio = comp('ESTAGIO SUPERVISIONADO OBRIGATORIO DE AQUICULTURA', 90, '2026-08-31', '2026-10-16');
+  const outra = comp('TOPICOS ESPECIAIS', 90, '2026-10-19', '2026-12-04');
+  for (const r of [classifySwap(estagio, outra), classifySwap(outra, estagio)]) {
+    assert.equal(r.ok, false);
+    assert.match(r.motivo, /estágio não troca de lugar/);
+  }
+  assert.equal(classifySwap(comp('Estágio III', 60, '2026-08-31', '2026-09-28'), comp('B', 60, '2026-11-02', '2026-11-27')).ok, false);
+});

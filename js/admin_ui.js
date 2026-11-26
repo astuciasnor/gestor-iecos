@@ -1,10 +1,10 @@
-import { escapeHtml as esc } from './texto.mjs?v=202611211609';
+import { escapeHtml as esc } from './texto.mjs?v=202611261735';
 // Janela "Usuarios e backup" do administrador (so no servidor da UFPA).
 // Cadastra, edita e exclui acessos, gera senha provisoria e baixa a copia do
 // banco. Quem garante que so o administrador faz isso e a API (api/index.php).
 // Mostra tambem os docentes novos cadastrados pelos coordenadores para conferir.
-import { store } from './store.js?v=202611211609';
-import { fetchAllocationsForPlans, salvarAlocacoesRevisadas, getSessionEmail, getPerfil } from './sync_remoto.js?v=202611211609';
+import { store } from './store.js?v=202611261735';
+import { fetchAllocationsForPlans, salvarAlocacoesRevisadas, getSessionEmail, getPerfil } from './sync_remoto.js?v=202611261735';
 import {
   listarDocentesParaConferir,
   aplicarRevisaoDocente,
@@ -14,7 +14,7 @@ import {
   normalizeTeacherNameForMatch,
   VINCULOS_DOCENTE_NOVO,
   UNIDADES
-} from './docente_nomes.mjs?v=202611211609';
+} from './docente_nomes.mjs?v=202611261735';
 
 let ctx = null;      // { tools, meuId, showToast, aoContarDocentes }
 let usuarios = [];

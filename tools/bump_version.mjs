@@ -13,7 +13,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 export const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const HTML_FILES = ['index.html', 'agenda_publica.html'];
+const HTML_FILES = ['index.html', 'agenda_publica.html', 'agenda_docente.html'];
 
 // import x from './a.js' | export ... from './a.js' | import './a.js' | import('./a.js')
 const JS_REF = /(\bfrom\s*|\bimport\s*\(\s*|\bimport\s+)(['"])(\.{1,2}\/[^'"?]+\.m?js)(\?[^'"]*)?\2/g;

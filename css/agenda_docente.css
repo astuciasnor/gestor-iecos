@@ -1,0 +1,111 @@
+/* Agenda do Docente (agenda_docente.html), por cima de agenda_publica.css.
+   Pedido de 24/11/2026: pagina so para professores, no notebook, usando bem o
+   espaco: uma faixa so no alto (marca + Ano + Professor), o quadro Dias na
+   largura inteira e os PLs bem marcados. */
+
+/* Largura inteira desde o inicio (no celular a regra de 720px continua valendo). */
+.pub-docente-page .pub-shell { width: calc(100% - 24px); margin-top: 10px; }
+.pub-docente-page .pub-main { margin-top: 10px; gap: 10px; }
+
+/* ===== Faixa do alto ===== */
+.doc-faixa {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 10px 24px;
+    padding: 8px 18px; border-radius: 18px;
+    background: #1c5356; color: #fff; box-shadow: var(--pub-shadow);
+}
+.doc-marca { display: flex; align-items: center; gap: 16px; min-width: 0; }
+.doc-marca-logo {
+    display: block; width: auto; height: 48px;
+    /* Bordas esfumadas, como na Agenda Publica */
+    -webkit-mask-image: linear-gradient(to right, transparent, #000 3%, #000 97%, transparent),
+                        linear-gradient(to bottom, transparent, #000 5%, #000 95%, transparent);
+    -webkit-mask-composite: source-in;
+    mask-image: linear-gradient(to right, transparent, #000 3%, #000 97%, transparent),
+                linear-gradient(to bottom, transparent, #000 5%, #000 95%, transparent);
+    mask-composite: intersect;
+}
+.doc-titulo { margin: 0; font-size: 1.35rem; line-height: 1.1; letter-spacing: 0.02em; white-space: nowrap; }
+.doc-marca-ufpa { display: block; height: 42px; width: auto; margin-left: auto; }
+
+.doc-controles { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 18px; flex: 1 1 520px; }
+.doc-campo { display: flex; align-items: center; gap: 8px; margin: 0; }
+.doc-campo > span, .doc-campo > label {
+    font-size: 0.82rem; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; color: #d6ebe0;
+}
+.doc-campo .pub-select { width: auto; min-width: 96px; padding-top: 8px; padding-bottom: 8px; }
+.doc-campo-nome { flex: 1 1 360px; max-width: 620px; }
+.doc-campo-nome .pub-autocomplete { flex: 1 1 auto; }
+.doc-campo-nome .pub-input { padding-top: 9px; padding-bottom: 9px; }
+.doc-campo-nome .pub-suggestions { color: var(--pub-ink); }
+
+/* ===== Cabecalho do resultado: uma linha so ===== */
+.pub-docente-page .pub-result-context {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 6px 18px;
+    margin-bottom: 10px; padding: 10px 16px; border-radius: 14px;
+}
+.pub-docente-page .pub-result-eyebrow { display: none; }
+.pub-docente-page .pub-result-title { margin: 0; }
+.pub-docente-page .pub-result-meta.resumo-horas { display: flex; flex-wrap: wrap; gap: 6px; max-width: none; margin-top: 0; }
+.pub-docente-page .resumo-horas .pub-result-badge { padding: 5px 10px; }
+.pub-docente-page .resumo-horas .pub-result-badge.is-total { grid-column: auto; }
+.pub-docente-page .pub-dias-linha { margin: 0; }
+
+/* ===== 2a linha: Ano inteiro | PL1 | PL2 ... ===== */
+.doc-pls { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.doc-pls:empty { display: none; }
+.doc-pls .pub-pill { padding: 7px 16px; font-size: 0.9rem; }
+.doc-pls .pub-pill.active { cursor: default; }
+
+/* Notebook (26/11/2026): o nome, as horas e a linha da sobrecarga ao lado dos
+   botoes dos PLs (uma linha so). O #resultado-agenda "some" (display: contents)
+   e seus filhos entram na grade da pub-main: o cabecalho na coluna 2, o resto
+   na largura inteira. No celular fica como antes (um embaixo do outro). */
+@media (min-width: 721px) {
+    .pub-docente-page .pub-main { grid-template-columns: auto minmax(0, 1fr); align-items: center; column-gap: 14px; }
+    .pub-docente-page .pub-main > *,
+    .pub-docente-page .pub-result > * { grid-column: 1 / -1; }
+    .pub-docente-page .pub-result:not([hidden]) { display: contents; }
+    .pub-docente-page .doc-pls { grid-column: 1; }
+    .pub-docente-page .pub-result > .pub-result-context { grid-column: 2; margin-bottom: 0; padding: 6px 16px; }
+    .pub-docente-page .pub-result-title { font-size: 1.45rem; }
+}
+
+/* ===== PLs (26/11/2026): mais juntos; o PL onde o docente tem aula com
+   contorno verde forte; o PL sem aula dele (0h) com contorno claro ===== */
+.pub-docente-page .dd-quadro {
+    margin-bottom: 12px; padding: 0 14px 14px;
+    border: 2px solid #b9cfc2; border-left: 8px solid #b9cfc2; border-radius: 12px;
+    box-shadow: none;
+}
+.pub-docente-page .dd-quadro.tem-aula {
+    border: 3px solid var(--primary); border-left-width: 10px;
+    box-shadow: 0 4px 14px rgba(23, 55, 40, 0.22);
+}
+.pub-docente-page .dd-quadro:not(.tem-aula):not(.is-vazio) .dd-pl { background: #6f9580; }
+.pub-docente-page .dd-quadro .dd-head {
+    margin: 0 -14px; padding: 10px 14px;
+    background: #e8f2ec; border-bottom: 1px solid #b9cfc2; border-radius: 4px 10px 0 0;
+}
+.pub-docente-page .dd-quadro .dd-head .dd-ch { background: #fff; border: 1px solid #c4d6cc; }
+.pub-docente-page .dd-quadro.is-vazio { padding: 0 14px; border-color: #c4d6cc; border-left-color: #b9cfc2; box-shadow: none; }
+.pub-docente-page .dd-quadro.is-vazio .dd-head { border-bottom: 0; background: transparent; }
+.pub-docente-page .dd-pl {
+    padding: 3px 12px; border-radius: 8px;
+    background: var(--primary); color: #fff; font-size: 1.05rem; letter-spacing: 0.02em;
+}
+.pub-docente-page .dd-quadro.is-vazio .dd-pl { background: #dbe8e0; color: #2d4839; font-size: 0.95rem; }
+
+/* Antes de escolher o nome */
+.doc-boas-vindas {
+    padding: 22px 24px; border-radius: 16px; border: 1px solid var(--pub-line);
+    background: var(--pub-card); color: #3d5548; font-size: 0.98rem; line-height: 1.5;
+}
+.doc-boas-vindas b { color: var(--pub-ink); }
+
+@media (max-width: 720px) {
+    .doc-faixa { padding: 10px 12px; }
+    .doc-marca-logo { height: 40px; }
+    .doc-titulo { font-size: 1.1rem; }
+    .doc-marca-ufpa { height: 34px; }
+    .doc-campo-nome { flex-basis: 100%; }
+}

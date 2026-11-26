@@ -1,4 +1,4 @@
-import { isoToUtc, weekdayOf } from './datas.mjs?v=202611211609';
+import { isoToUtc, weekdayOf } from './datas.mjs?v=202611261735';
 // Resumo do ano do docente (agenda publica): para cada periodo letivo, as
 // componentes do professor e em quais semanas do PL ele tem aula.
 // Funcoes puras (sem DOM nem store), testadas em tests/resumo_docente.test.mjs.
@@ -128,6 +128,8 @@ export function summarizeTeacherPeriod({ termStart, termEnd, entries = [] }) {
         subGrupo: entry.subGrupo || '',
         cor: entry.cor || '',
         chTotal: Number(entry.chTotal) || 0,
+        // Estagio com CH do orientador (0 = nao ha): so para mostrar no resumo.
+        chOrientador: Number(entry.chOrientador) || 0,
         coDocentes: Array.isArray(entry.coDocentes) ? entry.coDocentes : [],
         aulas: 0,
         dates: new Set(),
@@ -156,6 +158,7 @@ export function summarizeTeacherPeriod({ termStart, termEnd, entries = [] }) {
       subGrupo: comp.subGrupo,
       cor: comp.cor,
       chTotal: comp.chTotal,
+      chOrientador: comp.chOrientador,
       coDocentes: comp.coDocentes,
       aulas: comp.aulas,
       firstDate: dates[0],
