@@ -1,5 +1,5 @@
-import { UNIDADE_PADRAO, unidadeDoCurso } from './unidades.mjs?v=202611261735';
-import { escapeHtml as esc } from './texto.mjs?v=202611261735';
+import { UNIDADE_PADRAO, unidadeDoCurso } from './unidades.mjs?v=202611261834';
+import { escapeHtml as esc } from './texto.mjs?v=202611261834';
 // Menu Indicadores (so leitura: nada e gravado).
 // Sub-aba "Carga por docente": tabela com a CH de cada docente por curso e por PL,
 // do ano inteiro ou de um PL. As contas estao em indicadores.mjs.
@@ -7,17 +7,17 @@ import { escapeHtml as esc } from './texto.mjs?v=202611261735';
 // quadradinho por dia do PL, com os dias de 2+ componentes (dias_docente.mjs).
 // Sub-aba "Componente" (26/11/2026): em qual PL e turma uma componente e dada,
 // com qual docente, de quando a quando e em que dias/horario.
-import { store } from './store.js?v=202611261735';
-import { getCursoSiglaDaTurma, getDisciplinaCHGlobal } from './curso_turma_helpers.js?v=202611261735';
-import { formatDateBR } from './date_utils_ui.js?v=202611261735';
-import { UNIDADES } from './docente_nomes.mjs?v=202611261735';
-import { cargaPorDocente, ordenarLinhas, SEM_DOCENTE, ofertasDoPlano, chaveComponente, chaveSubturma, nomesDasComponentes, resumoDasAulas } from './indicadores.mjs?v=202611261735';
-import { getCalendarEvents } from './calendar.js?v=202611261735';
-import { withPlanContext } from './calendarios_ui.js?v=202611261735';
-import { getTurmaLabel } from './curso_turma_helpers.js?v=202611261735';
-import { feriadosDaTurma } from './feriados.mjs?v=202611261735';
-import { fmtCH, focarDiaDoQuadro, DICA_MOUSE, entradaDias, montarQuadrosDias, quadroTurmaHtml, textoSobrecarga } from './quadro_dias.mjs?v=202611261735';
-import { numeroDaSubturma } from './subturmas.mjs?v=202611261735';
+import { store } from './store.js?v=202611261834';
+import { getCursoSiglaDaTurma, getDisciplinaCHGlobal } from './curso_turma_helpers.js?v=202611261834';
+import { formatDateBR } from './date_utils_ui.js?v=202611261834';
+import { UNIDADES } from './docente_nomes.mjs?v=202611261834';
+import { cargaPorDocente, ordenarLinhas, SEM_DOCENTE, ofertasDoPlano, chaveComponente, chaveSubturma, nomesDasComponentes, resumoDasAulas } from './indicadores.mjs?v=202611261834';
+import { getCalendarEvents } from './calendar.js?v=202611261834';
+import { withPlanContext } from './calendarios_ui.js?v=202611261834';
+import { getTurmaLabel } from './curso_turma_helpers.js?v=202611261834';
+import { feriadosDaTurma } from './feriados.mjs?v=202611261834';
+import { fmtCH, focarDiaDoQuadro, DICA_MOUSE, entradaDias, montarQuadrosDias, quadroTurmaHtml, textoSobrecarga } from './quadro_dias.mjs?v=202611261834';
+import { numeroDaSubturma } from './subturmas.mjs?v=202611261834';
 
 const VALIDADE_MS = 2 * 60 * 1000; // depois disso, abrir o menu busca de novo
 
@@ -254,6 +254,7 @@ function desenhar() {
     document.getElementById('ind-docente-quebra')?.classList.toggle('hidden', !emDias && !emComponente);
     document.getElementById('ind-nota-carga')?.classList.toggle('hidden', emDias || emComponente);
     document.getElementById('ind-nota-dias')?.classList.toggle('hidden', !emDias);
+    document.getElementById('ind-nota-componente')?.classList.toggle('hidden', !emComponente);
 
     if (estado.carregando && (!estado.dados || estado.dados.ano !== estado.ano)) {
         alvo.innerHTML = '<p class="ind-vazio">Carregando os períodos letivos…</p>';

@@ -1,11 +1,11 @@
-import { store } from './store.js?v=202611261735';
-import { getCalendarEvents, regrasDoEstagioNoDia } from './calendar.js?v=202611261735';
-import { mapSlotToTurno } from './turns.js?v=202611261735';
-import { addDaysISO, timeToMinutes, toISODate } from './date_utils_ui.js?v=202611261735';
-import { normalizeConflictSlotLabel } from './turno_helpers.js?v=202611261735';
-import { isPriorityRegularAllocation } from './allocation_helpers.js?v=202611261735';
-import { datasFeriadoDaTurma } from './feriados.mjs?v=202611261735';
-import { computeRemainingFractionalHours, generateAllocationOccurrences, validateOccurrenceWithinSemesterBounds } from './academic_rules.mjs?v=202611261735';
+import { store } from './store.js?v=202611261834';
+import { getCalendarEvents, regrasDoEstagioNoDia } from './calendar.js?v=202611261834';
+import { mapSlotToTurno } from './turns.js?v=202611261834';
+import { addDaysISO, timeToMinutes, toISODate } from './date_utils_ui.js?v=202611261834';
+import { normalizeConflictSlotLabel } from './turno_helpers.js?v=202611261834';
+import { isPriorityRegularAllocation } from './allocation_helpers.js?v=202611261834';
+import { datasFeriadoDaTurma } from './feriados.mjs?v=202611261834';
+import { computeRemainingFractionalHours, generateAllocationOccurrences, validateOccurrenceWithinSemesterBounds } from './academic_rules.mjs?v=202611261834';
 
 // Horario da componente em edicao que nao gera choque (estagio, js/estagio.mjs).
 // date: dia da aula, para achar a faixa (campo/encontro). candidatoSemChoque

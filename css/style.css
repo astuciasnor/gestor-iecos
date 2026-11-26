@@ -4271,7 +4271,8 @@ body:has(#tab-weekly.active) .top-bar .btn-print { display: none; }
 .ind-tabela-comp .ind-nome { min-width: 200px; }
 .ind-tabela-comp .ind-comp-pl { font-weight: 800; color: #2d34c6; }
 .ind-tabela-comp .ind-comp-parte { color: var(--text-muted); font-size: 0.78rem; }
-#inp-componente-ind { min-width: 280px; }
+/* Largo para nomes longos ("Estatistica aplicada a pesca e aquicultura"). */
+#inp-componente-ind { width: 460px; max-width: 100%; }
 /* Atalho "Ir para a oferta" (abre a Lista de ofertas da turma) e PL encerrado. */
 .ind-tabela-comp .ind-comp-ir { text-align: right; }
 .ind-ir-oferta {

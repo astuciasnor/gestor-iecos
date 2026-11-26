@@ -4,10 +4,11 @@
 // fumaca), monta cada situacao e recorta so a parte da tela daquele passo.
 //
 // Uso (na raiz do projeto):   node tools/prints_instrucoes.mjs
+// So alguns:                   node tools/prints_instrucoes.mjs componente-turma dias-docente
 // Rode de novo sempre que a aparencia dessas partes mudar.
 // Saida: img/instrucoes/passo-1.png ... passo-8.png, estagio-turno.png,
 // aproveitamento.png e, do Montar estagio, estagio-botao.png e estagio-1-etapas,
-// -2-datas e -3-faixas.png, e dias-docente.png (Indicadores) (nada mais e gravado). passo-7 (pausa) aparece em Casos especiais.
+// -2-datas e -3-faixas.png, dias-docente.png e componente-turma.png (Indicadores) (nada mais e gravado). passo-7 (pausa) aparece em Casos especiais.
 // Na Ajuda (index.html) cada imagem aparece no tamanho do recorte (o print sai em escala 2, fica nitido):
 // ao gerar de novo, ajuste width/height das <img class="aj-print"> se o recorte mudar.
 import fs from 'node:fs';
@@ -18,6 +19,7 @@ import { sleep, startServer, findBrowser, openBrowser, cdp, loadPublishedData, s
 
 const SAIDA = path.join(ROOT, 'img', 'instrucoes');
 const FOLGA = 6; // px de margem em volta de cada recorte
+const SO = process.argv.slice(2); // nomes pedidos (vazio = todos)
 
 // Retangulo (em px da tela) que cobre todos os seletores, com folga.
 // Antes de medir, rola o primeiro elemento para o meio da tela (ex.: o campo
@@ -47,6 +49,7 @@ async function main() {
   // Recorta a uniao dos seletores e grava em img/instrucoes/<nome>.png
   // folga 0 na janela Montar estagio: sem pegar o fundo escuro em volta dela.
   const recortar = async (nome, seletores, folga = FOLGA) => {
+    if (SO.length && !SO.includes(nome)) return;
     await evaluate("(() => { const f = document.getElementById('feedback-msg'); if (f) f.style.display = 'none'; })()");
     await sleep(150);
     const clip = await evaluate(uniao(seletores, folga));
@@ -251,7 +254,7 @@ async function main() {
       let melhor = '', max = 0;
       for (const n of nomes) {
         inp.value = n; inp.dispatchEvent(new Event('change'));
-        const m = document.getElementById('ind-resumo').textContent.match(/(\\d+) dias? com 2/);
+        const m = document.getElementById('ind-resumo').textContent.match(/(\\d+) dias? com sobrecarga/);
         if (m && Number(m[1]) > max) { max = Number(m[1]); melhor = n; }
       }
       if (!melhor) return '';
@@ -268,6 +271,36 @@ async function main() {
     else {
       console.log(`dias do docente: ${docenteDias}`);
       await recortar('dias-docente', ['#print-dias-docente']);
+    }
+
+    // Indicadores > Componente (26/11/2026): a tabela de uma componente com 2 ou 3
+    // ofertas e o quadro da turma da ultima linha aberto embaixo.
+    const componente = await evaluate(`(async () => {
+      const wait = (ms) => new Promise(r => setTimeout(r, ms));
+      document.querySelector('.ind-subaba[data-subaba="componente"]').click(); await wait(300);
+      document.getElementById('btn-ano-inteiro-indicadores').click(); await wait(300);
+      const inp = document.getElementById('inp-componente-ind');
+      const escolher = (n) => { inp.value = n; inp.dispatchEvent(new Event('input', { bubbles: true })); };
+      let melhor = '', max = 0;
+      for (const o of document.querySelectorAll('#list-componentes-ind option')) {
+        escolher(o.value);
+        const n = document.querySelectorAll('#ind-tabela tr[data-comp-linha]').length;
+        if (n <= 3 && n > max) { max = n; melhor = o.value; }
+      }
+      if (!melhor) return '';
+      escolher(melhor); await wait(200);
+      const linhas = document.querySelectorAll('#ind-tabela tr[data-comp-linha]');
+      linhas[linhas.length - 1].querySelector('.ind-comp-turma').click(); await wait(300);
+      inp.blur();
+      // Aponta um dia da componente buscada: a caixa do cabecalho diz as aulas do dia
+      const cel = document.querySelector('.ind-comp-quadro .dd-d.dd-on:not(.dd-apagada)');
+      cel?.dispatchEvent(new MouseEvent('mouseover', { bubbles: true }));
+      return melhor + ' (' + max + ' ofertas)';
+    })()`);
+    if (!componente) console.log('aviso: nenhuma componente com ofertas; componente-turma.png nao gerado');
+    else {
+      console.log(`componente: ${componente}`);
+      await recortar('componente-turma', ['#ind-tabela .ind-tabela-comp', '#ind-tabela .ind-comp-quadro']);
     }
 
     if (errors.length) console.log(`erros no navegador: ${errors.join(' | ')}`);
