@@ -503,6 +503,72 @@ async function run() {
       assert(fechou, 'clicar de novo na linha nao fechou o quadro');
       return `${r.n} componentes, todas com oferta; mais ofertas: ${r.maior.nome} (${r.maior.linhas.length}); atalho -> ${ir.turma} (barra lateral: ${destaque.turma}), ${destaque.n} linha(s) destacada(s); ${outro ? `outro PL: ${outro.nome} ${outro.de} -> ${outro.para} OK` : 'sem oferta em outro PL para testar a troca'}; quadro da turma ${quadroTurma.titulo}: ${quadroTurma.linhas} componentes, 1 em destaque`;
     });
+
+    await check('Menu Indicadores: Turma (turmas e quadro por PL)', async () => {
+      await evaluate("document.querySelector('.tab-btn[data-tab=\"indicadores\"]').click()");
+      await evaluate("document.querySelector('#tab-indicadores .ind-subaba[data-subaba=\"turma\"]').click()");
+      await evaluate("document.getElementById('btn-ano-inteiro-indicadores').click()");
+      assert(await waitFor("document.querySelectorAll('#ind-turmas button[data-turma]').length > 0", 10000), 'nenhuma turma');
+      assert(await evaluate("!document.getElementById('ind-faculdade-box').classList.contains('hidden')"), 'Faculdade escondida');
+      // Toda turma da lista mostra o quadro; cada componente com docente e horario embaixo do nome.
+      const r = await evaluate(`(() => {
+        const ids = [...document.querySelectorAll('#ind-turmas button[data-turma]')].map((b) => b.dataset.turma);
+        const ruins = [];
+        let maior = { id: '', pls: 0, linhas: 0 };
+        ids.forEach((id) => {
+          document.querySelector('#ind-turmas button[data-turma="' + id + '"]').click();
+          const blocos = [...document.querySelectorAll('#ind-tabela .ind-turma-pl')];
+          if (!blocos.length) { ruins.push(id + ': sem quadro'); return; }
+          if (document.querySelector('#ind-tabela table')) ruins.push(id + ': ainda tem tabela');
+          let linhas = 0;
+          blocos.forEach((b) => {
+            const rots = [...b.querySelectorAll('.dd-quadro--turma .dd-rot[data-dd-comp]')];
+            linhas += rots.length;
+            if (!rots.length) ruins.push(id + ' ' + b.dataset.planKey + ': quadro vazio');
+            rots.forEach((rot) => {
+              const subs = [...rot.querySelectorAll('.dd-rot-sub')].map((x) => x.textContent);
+              if (subs.length < 2 || !/[0-9]+h/.test(subs[subs.length - 1])) ruins.push(id + ' ' + rot.querySelector('.dd-rot-nome').textContent + ': detalhe ' + JSON.stringify(subs));
+            });
+          });
+          if (blocos.length > maior.pls || (blocos.length === maior.pls && linhas > maior.linhas)) maior = { id, pls: blocos.length, linhas };
+        });
+        return { n: ids.length, ruins, maior };
+      })()`);
+      assert(!r.ruins.length, r.ruins.slice(0, 4).join('; '));
+      // Clicar no nome destaca a componente no quadro do mesmo PL; de novo tira.
+      const d = await evaluate(`(() => {
+        document.querySelector('#ind-turmas button[data-turma="${r.maior.id}"]').click();
+        const rots = document.querySelectorAll('#ind-tabela .dd-rot[data-dd-comp]');
+        const alvo = rots[rots.length - 1];
+        const nome = alvo.querySelector('.dd-rot-nome').textContent;
+        alvo.querySelector('.dd-rot-nome').click();
+        const marcados = [...document.querySelectorAll('#ind-tabela .dd-rot-destaque')];
+        return { destaques: marcados.length, mesmo: marcados[0]?.querySelector('.dd-rot-nome').textContent === nome };
+      })()`);
+      assert(d.destaques === 1 && d.mesmo, `destaque: ${JSON.stringify(d)}`);
+      if (process.env.CARDUME_PRINT_TURMA) {
+        await evaluate("window.scrollTo(0, 0)");
+        await sleep(400);
+        const shot = await send('Page.captureScreenshot', { format: 'png', captureBeyondViewport: true });
+        fs.writeFileSync(process.env.CARDUME_PRINT_TURMA, Buffer.from(shot.result.data, 'base64'));
+      }
+      const tirou = await evaluate("document.querySelector('#ind-tabela .dd-rot-destaque .dd-rot-nome').click(), !document.querySelector('#ind-tabela .dd-rot-destaque')");
+      assert(tirou, 'clicar de novo nao tirou o destaque');
+      // Faculdade: so as turmas do curso escolhido.
+      const f = await evaluate(`(() => {
+        const sel = document.getElementById('sel-curso-ind');
+        const sigla = sel.options[1]?.value;
+        if (!sigla) return null;
+        sel.value = sigla;
+        sel.dispatchEvent(new Event('change'));
+        const rot = [...document.querySelectorAll('#ind-turmas button[data-turma]')].map((b) => b.textContent.trim());
+        sel.value = '';
+        sel.dispatchEvent(new Event('change'));
+        return { sigla, rot };
+      })()`);
+      assert(!f || f.rot.every((t) => t.startsWith(f.sigla)), `filtro da faculdade: ${JSON.stringify(f)}`);
+      return `${r.n} turmas, todas com quadro e detalhe; maior: ${r.maior.id} (${r.maior.pls} PLs, ${r.maior.linhas} componentes); destaque OK; ${f ? `faculdade ${f.sigla}: ${f.rot.join(' ')}` : 'uma faculdade so'}`;
+    });
   } finally {
     const falhou = results.some((r) => !r.ok);
     if (falhou) {

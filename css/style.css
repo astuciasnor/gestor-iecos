@@ -4153,7 +4153,8 @@ body:has(#tab-weekly.active) .top-bar .btn-print { display: none; }
 #tab-indicadores .ind-filtros { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 10px; }
 #tab-indicadores .ind-filtros-rotulo { font-size: 0.84rem; font-weight: 700; color: #29485c; }
 #tab-indicadores #sel-ano-indicadores,
-#tab-indicadores #sel-unidade-indicadores {
+#tab-indicadores #sel-unidade-indicadores,
+#tab-indicadores #sel-curso-ind {
     height: 34px;
     padding: 0 8px;
     border: 1px solid #c9d6cf;
@@ -4286,6 +4287,25 @@ body:has(#tab-weekly.active) .top-bar .btn-print { display: none; }
 .ind-tabela-comp .ind-comp-linha.is-aberta > td { background: #eef1fb; }
 .ind-tabela-comp .ind-comp-linha.is-aberta > td:first-child { box-shadow: inset 4px 0 0 #2d34c6; }
 .ind-comp-quadro { margin-top: 14px; }
+/* Indicadores > Turma (26/11/2026): botoes das turmas e, por PL, o quadro dos
+   dias com docentes, horario e datas embaixo de cada nome (sem tabela). */
+.ind-turmas-box { display: inline-flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.ind-turmas { display: inline-flex; flex-wrap: wrap; gap: 6px; }
+.ind-turma-chip {
+    border: 1px solid #b9c3f0; background: #f4f6fb; color: #2d34c6;
+    border-radius: 999px; padding: 4px 12px; font: inherit; font-size: 0.82rem; font-weight: 700; cursor: pointer;
+}
+.ind-turma-chip:hover { border-color: #2d34c6; }
+.ind-turma-chip.is-active { background: #2d34c6; border-color: #2d34c6; color: #fff; }
+.ind-turmas-vazio { color: var(--text-muted); font-size: 0.82rem; font-style: italic; }
+.ind-turma-pl { margin-bottom: 18px; }
+.dd-quadro--turma { --dd-col-nome: minmax(250px, 340px); }
+.dd-quadro--turma .dd-grade { row-gap: 7px; }
+.dd-quadro--turma .dd-rot[data-dd-comp] { cursor: pointer; padding-top: 2px; padding-bottom: 2px; }
+.dd-quadro--turma .dd-rot-nome { white-space: normal; }
+.dd-quadro--turma .dd-rot-docente { color: #29485c; }
+.dd-quadro--turma .dd-rot-parte { font-size: 0.64rem; }
+.dd-quadro--turma .dd-rot-subturma { color: #2d34c6; }
 /* Quadro da turma: a componente buscada em destaque, as outras mais claras. */
 .dd-rot-destaque { box-shadow: inset 4px 0 0 #2d34c6; padding-left: 8px; background: #eef1fb; border-radius: 3px; }
 .dd-rot-destaque .dd-rot-nome { color: #2d34c6; }

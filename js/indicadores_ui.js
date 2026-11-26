@@ -1,5 +1,5 @@
-import { UNIDADE_PADRAO, unidadeDoCurso } from './unidades.mjs?v=202611261834';
-import { escapeHtml as esc } from './texto.mjs?v=202611261834';
+import { UNIDADE_PADRAO, unidadeDoCurso } from './unidades.mjs?v=202611261914';
+import { escapeHtml as esc } from './texto.mjs?v=202611261914';
 // Menu Indicadores (so leitura: nada e gravado).
 // Sub-aba "Carga por docente": tabela com a CH de cada docente por curso e por PL,
 // do ano inteiro ou de um PL. As contas estao em indicadores.mjs.
@@ -7,17 +7,19 @@ import { escapeHtml as esc } from './texto.mjs?v=202611261834';
 // quadradinho por dia do PL, com os dias de 2+ componentes (dias_docente.mjs).
 // Sub-aba "Componente" (26/11/2026): em qual PL e turma uma componente e dada,
 // com qual docente, de quando a quando e em que dias/horario.
-import { store } from './store.js?v=202611261834';
-import { getCursoSiglaDaTurma, getDisciplinaCHGlobal } from './curso_turma_helpers.js?v=202611261834';
-import { formatDateBR } from './date_utils_ui.js?v=202611261834';
-import { UNIDADES } from './docente_nomes.mjs?v=202611261834';
-import { cargaPorDocente, ordenarLinhas, SEM_DOCENTE, ofertasDoPlano, chaveComponente, chaveSubturma, nomesDasComponentes, resumoDasAulas } from './indicadores.mjs?v=202611261834';
-import { getCalendarEvents } from './calendar.js?v=202611261834';
-import { withPlanContext } from './calendarios_ui.js?v=202611261834';
-import { getTurmaLabel } from './curso_turma_helpers.js?v=202611261834';
-import { feriadosDaTurma } from './feriados.mjs?v=202611261834';
-import { fmtCH, focarDiaDoQuadro, DICA_MOUSE, entradaDias, montarQuadrosDias, quadroTurmaHtml, textoSobrecarga } from './quadro_dias.mjs?v=202611261834';
-import { numeroDaSubturma } from './subturmas.mjs?v=202611261834';
+// Sub-aba "Turma" (26/11/2026): escolhe a turma e ve, por PL, o quadro dos dias
+// (o mesmo do Componente) com docentes, horario e datas embaixo de cada nome.
+import { store } from './store.js?v=202611261914';
+import { getCursoSiglaDaTurma, getDisciplinaCHGlobal } from './curso_turma_helpers.js?v=202611261914';
+import { formatDateBR } from './date_utils_ui.js?v=202611261914';
+import { UNIDADES } from './docente_nomes.mjs?v=202611261914';
+import { cargaPorDocente, ordenarLinhas, SEM_DOCENTE, ofertasDoPlano, chaveComponente, chaveSubturma, nomesDasComponentes, resumoDasAulas } from './indicadores.mjs?v=202611261914';
+import { getCalendarEvents } from './calendar.js?v=202611261914';
+import { withPlanContext } from './calendarios_ui.js?v=202611261914';
+import { getTurmaLabel, getTurmaBaseLabel } from './curso_turma_helpers.js?v=202611261914';
+import { feriadosDaTurma } from './feriados.mjs?v=202611261914';
+import { fmtCH, focarDiaDoQuadro, DICA_MOUSE, entradaDias, montarQuadrosDias, quadroTurmaHtml, textoSobrecarga, corDoQuadro } from './quadro_dias.mjs?v=202611261914';
+import { numeroDaSubturma } from './subturmas.mjs?v=202611261914';
 
 const VALIDADE_MS = 2 * 60 * 1000; // depois disso, abrir o menu busca de novo
 
@@ -35,10 +37,13 @@ const estado = {
     ordem: { coluna: 'total', crescente: false },
     dados: null,             // { ano, planos: [{ meta, allocations }], em }
     carregando: false,
-    subaba: 'carga',         // 'carga' (tabela de CH), 'dias' (dias do docente) ou 'componente'
+    subaba: 'carga',         // 'carga' (tabela de CH), 'dias' (dias do docente), 'componente' ou 'turma'
     docente: '',             // docente escolhido em "Dias do docente"
     componente: '',          // componente escolhida em "Componente" (texto digitado)
-    compAberta: ''           // linha com o quadro da turma aberto (chave de chaveDaLinha)
+    compAberta: '',          // linha com o quadro da turma aberto (chave de chaveDaLinha)
+    turmaCurso: '',          // sub-aba Turma: faculdade (sigla do curso); '' = todas
+    turma: '',               // sub-aba Turma: turmaId escolhida
+    turmaDestaque: ''        // sub-aba Turma: 'planKey|key' da componente destacada no quadro
 };
 
 // Quadros desenhados em "Dias do docente" (para o texto do dia ao passar o mouse).
@@ -154,6 +159,18 @@ export function setupIndicadores() {
             desenhar();
         }
     });
+    // Turma: a faculdade filtra as turmas; clicar numa turma mostra os quadros dela.
+    document.getElementById('sel-curso-ind')?.addEventListener('change', (ev) => {
+        estado.turmaCurso = ev.target.value;
+        desenhar();
+    });
+    document.getElementById('ind-turmas')?.addEventListener('click', (ev) => {
+        const btn = ev.target.closest('button[data-turma]');
+        if (!btn) return;
+        estado.turma = btn.dataset.turma;
+        estado.turmaDestaque = '';
+        desenhar();
+    });
     // Passar o mouse (ou tocar) num dia do quadro: acende a coluna e diz o que ha no dia.
     const focarDia = (ev) => {
         const cel = ev.target.closest('[data-dd-date]');
@@ -174,7 +191,8 @@ export function setupIndicadores() {
         }
         const ir = ev.target.closest('button[data-ir-oferta]');
         if (ir && irParaOferta) {
-            const linha = linhasComponente[Number(ir.dataset.irOferta)];
+            const lista = ir.dataset.irLista === 'turma' ? linhasTurma : linhasComponente;
+            const linha = lista[Number(ir.dataset.irOferta)];
             if (linha) irParaOferta({ planKey: linha.meta.key, turmaId: linha.oferta.turmaId, componente: chaveComponente(linha.oferta.disciplina), subturma: linha.oferta.subturma });
             return;
         }
@@ -193,6 +211,15 @@ export function setupIndicadores() {
             estado.compAberta = estado.compAberta === chave ? '' : chave;
             desenhar();
             if (estado.compAberta) document.querySelector('#ind-tabela .ind-comp-quadro')?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+            return;
+        }
+        // Turma: clicar no nome da componente destaca a linha dela (de novo: tira).
+        const rot = ev.target.closest('.dd-quadro--turma [data-dd-comp]');
+        const bloco = rot?.closest('[data-plan-key]');
+        if (rot && bloco && !ev.target.closest('button, a')) {
+            const chave = `${bloco.dataset.planKey}|${rot.dataset.ddComp}`;
+            estado.turmaDestaque = estado.turmaDestaque === chave ? '' : chave;
+            desenhar();
         }
     });
 }
@@ -244,6 +271,7 @@ function desenhar() {
     });
     const emDias = estado.subaba === 'dias';
     const emComponente = estado.subaba === 'componente';
+    const emTurma = estado.subaba === 'turma';
     document.querySelectorAll('#tab-indicadores .ind-subaba[data-subaba]').forEach((btn) => {
         const ativa = btn.dataset.subaba === estado.subaba;
         btn.classList.toggle('is-ativa', ativa);
@@ -251,8 +279,11 @@ function desenhar() {
     });
     document.getElementById('ind-docente-box')?.classList.toggle('hidden', !emDias);
     document.getElementById('ind-componente-box')?.classList.toggle('hidden', !emComponente);
-    document.getElementById('ind-docente-quebra')?.classList.toggle('hidden', !emDias && !emComponente);
-    document.getElementById('ind-nota-carga')?.classList.toggle('hidden', emDias || emComponente);
+    document.getElementById('ind-faculdade-box')?.classList.toggle('hidden', !emTurma);
+    document.getElementById('ind-turmas-box')?.classList.toggle('hidden', !emTurma);
+    document.getElementById('ind-docente-quebra')?.classList.toggle('hidden', !emDias && !emComponente && !emTurma);
+    document.getElementById('ind-nota-carga')?.classList.toggle('hidden', emDias || emComponente || emTurma);
+    document.getElementById('ind-nota-turma')?.classList.toggle('hidden', !emTurma);
     document.getElementById('ind-nota-dias')?.classList.toggle('hidden', !emDias);
     document.getElementById('ind-nota-componente')?.classList.toggle('hidden', !emComponente);
 
@@ -269,6 +300,7 @@ function desenhar() {
 
     if (emDias) { desenharDias(alvo, resumo); return; }
     if (emComponente) { desenharComponente(alvo, resumo); return; }
+    if (emTurma) { desenharTurma(alvo, resumo); return; }
 
     // O PL aberto na barra lateral usa a copia da tela (mudancas de agora mesmo).
     const ativo = store.getActivePlanMeta()?.key || '';
@@ -459,26 +491,38 @@ const FOLGA_FIM_DIAS = 120;
 
 // Linhas desenhadas (o botao "Ir para a oferta" e a linha guardam o indice).
 let linhasComponente = [];
+let linhasTurma = [];
+
+// Docente(s) da oferta; dividida: a parte de cada um. O nome abre a agenda dele.
+function docentesHtml(oferta) {
+    if (!oferta.docentes.length) {
+        return `<span class="ind-sem-docente" title="Componente sem docente">${esc(SEM_DOCENTE)} (sem docente)</span>`;
+    }
+    const dividida = oferta.docentes.length > 1;
+    return oferta.docentes.map((d) => `<button type="button" class="ind-docente" data-docente="${esc(d.nome)}" title="Ver a agenda de ${esc(d.nome)} neste período">${esc(d.nome)}</button>${dividida ? ` <span class="ind-comp-parte">(${fmtCH(d.ch) || 0}h)</span>` : ''}`).join('<br>');
+}
+
+// Atalho para a Lista de ofertas. PL encerrado nao aparece na barra lateral:
+// sem atalho (decidido em 24/11/2026). lista: 'componente' ou 'turma'.
+function irParaOfertaHtml(l, i, lista) {
+    return plNaBarra(l.meta.key)
+        ? `<button type="button" class="ind-ir-oferta" data-ir-oferta="${i}" data-ir-lista="${lista}" title="Abrir ${esc(l.turma)} no ${esc(l.meta.periodo)} e mostrar a componente na Lista de ofertas">✎ Ir para a oferta</button>`
+        : '<span class="ind-pl-encerrado" title="Este PL já terminou e não aparece mais na barra lateral">PL encerrado</span>';
+}
 
 // Identifica a linha da tabela (para lembrar qual quadro esta aberto).
 const chaveDaLinha = (l) => [chaveComponente(l.oferta.disciplina), l.meta.key, l.oferta.turmaId, l.oferta.subturma].join('|');
 
-// Quadro da turma da linha no PL dela: todas as componentes da turma, a buscada
-// em destaque, e ao lado de cada uma o(s) docente(s). Devolve { html, quadro }.
-function quadroDaTurma(linha, planos) {
-    const plano = planos.find((p) => p.meta.key === linha.meta.key);
-    if (!plano) return { html: '', quadro: null };
-    const { meta } = linha;
-    const turmaId = linha.oferta.turmaId;
-    const buscada = chaveComponente(linha.oferta.disciplina);
-    const docentesDe = new Map(plano.ofertas.filter((o) => o.turmaId === turmaId).map((o) => [
-        `${chaveComponente(o.disciplina)}|${o.subturma}`,
-        o.docentes.map((d) => d.nome).join(' / ') || SEM_DOCENTE
-    ]));
+// Aulas de uma turma num PL (o calendario ja tira feriados e pausas): as
+// entradas do quadro e, por oferta ('COMPONENTE|subturma'), as aulas, a cor e as
+// keys do quadro. rotuloTurma: nome da turma naquele PL (ex.: EP2024_BL7).
+function aulasDaTurma(plano, turmaId) {
+    const { meta } = plano;
     const entries = [];
-    const rotulos = new Map();
-    let destaque = '';
+    const porOferta = new Map();
+    let rotuloTurma = '';
     withPlanContext(meta, plano.allocations, () => {
+        rotuloTurma = getTurmaLabel(turmaId, '') || turmaId;
         const porData = getCalendarEvents(turmaId, meta.termStart, somarDias(meta.termEnd, FOLGA_FIM_DIAS)) || {};
         Object.entries(porData).forEach(([date, eventos]) => (eventos || []).forEach((ev) => {
             if (!ev || ev.type === 'holiday') return;
@@ -486,17 +530,42 @@ function quadroDaTurma(linha, planos) {
             const chComponente = Number(getDisciplinaCHGlobal(disciplina, turmaId)) || Number(ev.ch) || 0;
             const entry = entradaDias(ev, date, meta.key, { chComponente });
             entries.push(entry);
-            if (rotulos.has(entry.key)) return;
-            const sub = chaveSubturma(ev.subGrupo);
-            const num = numeroDaSubturma(ev.subGrupo);
-            const quem = docentesDe.get(`${chaveComponente(disciplina)}|${sub}`) || '';
-            rotulos.set(entry.key, [num ? `T${String(num).padStart(2, '0')}` : '', quem].filter(Boolean).join(' · '));
-            if (!destaque && chaveComponente(disciplina) === buscada && sub === linha.oferta.subturma) destaque = entry.key;
+            const k = `${chaveComponente(disciplina)}|${chaveSubturma(ev.subGrupo)}`;
+            let o = porOferta.get(k);
+            if (!o) {
+                o = { key: entry.key, keys: new Set(), cor: ev.cor, subGrupo: ev.subGrupo || '', aulas: [] };
+                porOferta.set(k, o);
+            }
+            o.keys.add(entry.key);
+            o.aulas.push({ date, horario: ev.horario });
         }));
+    });
+    return { entries, porOferta, rotuloTurma };
+}
+
+const nomesDosDocentes = (oferta) => oferta.docentes.map((d) => d.nome).join(' / ') || SEM_DOCENTE;
+const rotuloSubturma = (subGrupo) => {
+    const num = numeroDaSubturma(subGrupo);
+    return num ? `T${String(num).padStart(2, '0')}` : '';
+};
+
+// Quadro de uma turma num PL: uma linha por componente e, ao lado de cada uma,
+// T0n e o(s) docente(s). destaque = key da componente em destaque (as outras
+// ficam mais claras). aulas: de aulasDaTurma. Devolve { html, quadro }.
+function quadroTurmaDoPlano({ plano, turmaId, aulas, titulo, destaque = '', indice = 0, detalhe = null, classe = '' }) {
+    const { meta } = plano;
+    const { entries, porOferta } = aulas;
+    const docentesDe = new Map(plano.ofertas.filter((o) => o.turmaId === turmaId)
+        .map((o) => [`${chaveComponente(o.disciplina)}|${o.subturma}`, nomesDosDocentes(o)]));
+    const rotulos = new Map();
+    porOferta.forEach((o, k) => {
+        const texto = [rotuloSubturma(o.subGrupo), docentesDe.get(k) || ''].filter(Boolean).join(' · ');
+        o.keys.forEach((key) => rotulos.set(key, texto));
     });
     const feriadosLista = feriadosDaTurma(store.rawData?.feriados || [], turmaId);
     return quadroTurmaHtml({
-        titulo: `${linha.turma} · ${estado.ano} - ${meta.periodo}`,
+        indice,
+        titulo: `${titulo || aulas.rotuloTurma} · ${estado.ano} - ${meta.periodo}`,
         datas: `${formatDateBR(meta.termStart)} a ${formatDateBR(meta.termEnd)}`,
         termStart: meta.termStart,
         termEnd: meta.termEnd,
@@ -505,8 +574,21 @@ function quadroDaTurma(linha, planos) {
         feriados: feriadosLista.map((f) => String(f?.data || f || '').trim()),
         nomeFeriado: new Map(feriadosLista.map((f) => [String(f?.data || f || '').trim(), String(f?.feriado || f?.nome || 'Feriado')])),
         destaque,
-        dica: DICA_MOUSE
+        dica: DICA_MOUSE,
+        detalhe,
+        classe
     });
+}
+
+// Componente: quadro da turma da linha no PL dela, a componente buscada em
+// destaque; o titulo usa o nome da linha (com a subturma, ex.: EP2024_BL7_T01).
+function quadroDaTurma(linha, planos) {
+    const plano = planos.find((p) => p.meta.key === linha.meta.key);
+    if (!plano) return { html: '', quadro: null };
+    const turmaId = linha.oferta.turmaId;
+    const aulas = aulasDaTurma(plano, turmaId);
+    const destaque = aulas.porOferta.get(`${chaveComponente(linha.oferta.disciplina)}|${linha.oferta.subturma}`)?.key || '';
+    return quadroTurmaDoPlano({ plano, turmaId, aulas, titulo: linha.turma, destaque });
 }
 
 function somarDias(iso, n) {
@@ -608,17 +690,7 @@ function desenharComponente(alvo, resumo) {
     }
 
     const nomeCurso = (sigla) => (store.rawData?.cursos || []).find((c) => c.sigla === sigla)?.curso || sigla;
-    const docentesHtml = (oferta) => {
-        if (!oferta.docentes.length) {
-            return `<span class="ind-sem-docente" title="Componente sem docente">${esc(SEM_DOCENTE)} (sem docente)</span>`;
-        }
-        const dividida = oferta.docentes.length > 1;
-        return oferta.docentes.map((d) => `<button type="button" class="ind-docente" data-docente="${esc(d.nome)}" title="Ver a agenda de ${esc(d.nome)} neste período">${esc(d.nome)}</button>${dividida ? ` <span class="ind-comp-parte">(${fmtCH(d.ch) || 0}h)</span>` : ''}`).join('<br>');
-    };
-    // PL encerrado nao aparece na barra lateral: sem atalho (decidido em 24/11/2026).
-    const irHtml = (l, i) => (plNaBarra(l.meta.key)
-        ? `<button type="button" class="ind-ir-oferta" data-ir-oferta="${i}" title="Abrir ${esc(l.turma)} no ${esc(l.meta.periodo)} e mostrar a componente na Lista de ofertas">✎ Ir para a oferta</button>`
-        : '<span class="ind-pl-encerrado" title="Este PL já terminou e não aparece mais na barra lateral">PL encerrado</span>');
+    const irHtml = (l, i) => irParaOfertaHtml(l, i, 'componente');
     const corpo = linhas.map((l, i) => {
         const horario = [l.dias, `${l.turnos} ${l.horario}`.trim()].filter(Boolean).join(' · ');
         const aberta = chaveDaLinha(l) === estado.compAberta;
@@ -658,4 +730,134 @@ function desenharComponente(alvo, resumo) {
         if (quadro) quadrosDias = [quadro];
         return `<div class="ind-comp-quadro">${html}</div>`;
     }
+}
+
+
+// ===== Turma =====
+
+// Faculdades (cursos) da unidade escolhida, para o filtro da sub-aba Turma.
+function montarFaculdades() {
+    const sel = document.getElementById('sel-curso-ind');
+    if (!sel) return;
+    const cursos = (store.rawData?.cursos || []).filter((c) => unidadeDe(c.sigla) === estado.unidade);
+    if (!cursos.some((c) => c.sigla === estado.turmaCurso)) estado.turmaCurso = '';
+    const html = `<option value="">Todas</option>${cursos.map((c) => `<option value="${esc(c.sigla)}">${esc(`${c.curso} (${c.sigla})`)}</option>`).join('')}`;
+    if (sel.dataset.unidade !== estado.unidade) {
+        sel.innerHTML = html;
+        sel.dataset.unidade = estado.unidade;
+    }
+    sel.value = estado.turmaCurso;
+}
+
+// Turmas com horario no periodo, na unidade e na faculdade escolhidas, na ordem
+// dos cursos do cadastro e depois pelo nome (EP2023, EP2024...).
+function turmasDosPlanos(planos) {
+    const ids = new Set();
+    planos.forEach((p) => p.ofertas.forEach((o) => {
+        if (!estado.turmaCurso || o.curso === estado.turmaCurso) ids.add(o.turmaId);
+    }));
+    const ordemCursos = (store.rawData?.cursos || []).map((c) => c.sigla);
+    const pos = (sigla) => { const i = ordemCursos.indexOf(sigla); return i < 0 ? ordemCursos.length : i; };
+    return [...ids].map((id) => {
+        const t = (store.rawData?.turmas || []).find((x) => String(x.turma_id) === String(id));
+        return { id, rotulo: getTurmaBaseLabel(id), curso: getCursoSiglaDaTurma(id), turno: t?.turno || '', campus: t?.campus || '' };
+    }).sort((a, b) => pos(a.curso) - pos(b.curso) || a.rotulo.localeCompare(b.rotulo, 'pt-BR', { numeric: true }));
+}
+
+// Uma linha por componente da turma no PL (T01 e T02 separadas), com as keys do
+// quadro (para as linhas de detalhe e o destaque).
+function linhasDaTurma(plano, turmaId, aulas) {
+    return plano.ofertas.filter((o) => o.turmaId === turmaId).map((oferta) => {
+        const o = aulas.porOferta.get(`${chaveComponente(oferta.disciplina)}|${oferta.subturma}`);
+        return {
+            meta: plano.meta,
+            oferta,
+            key: o?.key || '',
+            keys: o ? [...o.keys] : [],
+            sub: rotuloSubturma(o?.subGrupo || oferta.subturma),
+            turma: [aulas.rotuloTurma, rotuloSubturma(o?.subGrupo || oferta.subturma)].filter(Boolean).join(' '),
+            ...resumoDasAulas(o?.aulas || [])
+        };
+    });
+}
+
+// Embaixo do nome da componente no quadro da Turma (pedido de 26/11/2026):
+// 1) o(s) docente(s), um por linha (dividida: a parte de cada um);
+// 2) T01 (subturma) · CH · dias · horario · inicio-fim.
+function detalheDaLinha(l) {
+    const docentes = l.oferta.docentes;
+    const dividida = docentes.length > 1;
+    const quem = docentes.length
+        ? docentes.map((d) => `<span class="dd-rot-docente">${esc(d.nome)}</span>${dividida ? ` <span class="dd-rot-parte">(${fmtCH(d.ch) || 0}h)</span>` : ''}`)
+        : [`<span class="ind-sem-docente">${esc(SEM_DOCENTE)} (sem docente)</span>`];
+    const dm = (iso) => (iso ? `${iso.slice(8, 10)}/${iso.slice(5, 7)}` : '');
+    const quando = [
+        l.sub ? `<b class="dd-rot-subturma">${esc(l.sub)}</b>` : '',
+        `<b class="dd-rot-ch">${fmtCH(l.oferta.ch) || 0}h</b>`,
+        esc(l.dias),
+        esc(`${l.turnos} ${l.horario}`.trim()),
+        l.inicio ? `${dm(l.inicio)}–${dm(l.fim)}` : ''
+    ].filter(Boolean).join(' · ');
+    return [...quem, quando];
+}
+
+function desenharTurma(alvo, resumo) {
+    montarFaculdades();
+    const planos = planosDaUnidade();
+    const metaPL = metasDoAno(estado.ano).find((m) => m.key === estado.periodo);
+    const rotuloPeriodo = `${nomeUnidade(estado.unidade)} · ${estado.periodo === 'ano' ? `Ano inteiro de ${estado.ano}` : `${estado.ano} - ${metaPL?.periodo || ''}`}`;
+
+    // Botoes das turmas (2a linha dos filtros).
+    const turmas = turmasDosPlanos(planos);
+    if (!turmas.some((t) => t.id === estado.turma)) { estado.turma = ''; estado.turmaDestaque = ''; }
+    const box = document.getElementById('ind-turmas');
+    if (box) {
+        box.innerHTML = turmas.length
+            ? turmas.map((t) => `<button type="button" class="ind-turma-chip${t.id === estado.turma ? ' is-active' : ''}" data-turma="${esc(t.id)}" aria-pressed="${t.id === estado.turma}"
+                title="${esc([t.rotulo, t.turno, t.campus].filter(Boolean).join(' · '))}">${esc(t.rotulo)}</button>`).join('')
+            : '<span class="ind-turmas-vazio">nenhuma turma com horário neste período</span>';
+    }
+
+    linhasTurma = [];
+    quadrosDias = [];
+    if (!estado.turma) {
+        if (resumo) resumo.innerHTML = `<b>${esc(rotuloPeriodo)}</b> &nbsp;|&nbsp; ${turmas.length} turma${turmas.length === 1 ? '' : 's'} com horário`;
+        alvo.innerHTML = turmas.length ? '<p class="ind-vazio">Clique numa turma, no alto.</p>' : '';
+        return;
+    }
+
+    const turmaId = estado.turma;
+    const nomeCurso = (store.rawData?.cursos || []).find((c) => c.sigla === getCursoSiglaDaTurma(turmaId))?.curso || '';
+    const [plDestaque, ...resto] = estado.turmaDestaque.split('|');
+    let chTotal = 0;
+    let nComp = 0;
+    const blocos = planos.filter((p) => p.ofertas.some((o) => o.turmaId === turmaId)).map((plano) => {
+        const aulas = aulasDaTurma(plano, turmaId);
+        const linhas = linhasDaTurma(plano, turmaId, aulas);
+        nComp += linhas.length;
+        chTotal += linhas.reduce((n, l) => n + (Number(l.oferta.ch) || 0), 0);
+        linhasTurma.push(...linhas);
+        const porKey = new Map();
+        linhas.forEach((l) => l.keys.forEach((k) => porKey.set(k, l)));
+        const destaque = plDestaque === plano.meta.key ? resto.join('|') : '';
+        const { html, quadro } = quadroTurmaDoPlano({
+            plano, turmaId, aulas, destaque,
+            indice: quadrosDias.length,
+            classe: 'dd-quadro--turma',
+            detalhe: (comp) => (porKey.has(comp.key) ? detalheDaLinha(porKey.get(comp.key)) : null)
+        });
+        if (quadro) quadrosDias.push(quadro);
+        return `<div class="ind-turma-pl" data-plan-key="${esc(plano.meta.key)}">${html}</div>`;
+    }).join('');
+
+    if (resumo) {
+        resumo.innerHTML = [
+            `<b>${esc(getTurmaBaseLabel(turmaId))}</b>${nomeCurso ? ` · ${esc(nomeCurso)}` : ''}`,
+            esc(rotuloPeriodo),
+            `${nComp} componente${nComp === 1 ? '' : 's'} · ${fmtCH(chTotal) || 0} h`,
+            ...(estado.carregando ? ['atualizando…'] : []),
+            '<span class="ind-dica-mouse">Clique no nome de uma componente para destacá-la.</span>'
+        ].join(' &nbsp;|&nbsp; ');
+    }
+    alvo.innerHTML = blocos || '<p class="ind-vazio">Sem aulas desta turma neste período.</p>';
 }
