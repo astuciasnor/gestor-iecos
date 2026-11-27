@@ -10,14 +10,14 @@
         // Vai para o aviso antes de carregar o programa. A agenda publica nao passa por aqui.
         if (/\.github\.io$/i.test(location.hostname)) location.replace('mudou.html');
     </script>
-    <link rel="stylesheet" href="css/style.css?v=202611261914">
+    <link rel="stylesheet" href="css/style.css?v=202611262130">
     <!-- Redesenho da aba Alocar Componentes (por partes); carrega depois do style.css -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
-    <link rel="stylesheet" href="css/alocar-componentes.css?v=202611261914">
-    <link rel="stylesheet" href="css/ajuda.css?v=202611261914">
-    <link rel="stylesheet" href="css/montar-estagio.css?v=202611261914">
+    <link rel="stylesheet" href="css/alocar-componentes.css?v=202611262130">
+    <link rel="stylesheet" href="css/ajuda.css?v=202611262130">
+    <link rel="stylesheet" href="css/montar-estagio.css?v=202611262130">
 
     <style>
         :root {
@@ -349,7 +349,7 @@
         }
     </style>
     <!-- Visual da barra lateral: depois de todos os estilos, so vale dentro de .sidebar -->
-    <link rel="stylesheet" href="css/sidebar.css?v=202611261914">
+    <link rel="stylesheet" href="css/sidebar.css?v=202611262130">
 </head>
 
 <body>
@@ -1081,6 +1081,8 @@
                     <button type="button" class="ind-subaba" data-subaba="dias" role="tab" aria-selected="false">Dias do docente</button>
                     <button type="button" class="ind-subaba" data-subaba="componente" role="tab" aria-selected="false">Componente</button>
                     <button type="button" class="ind-subaba" data-subaba="turma" role="tab" aria-selected="false">Turma</button>
+                    <!-- Volta para a tela de antes de um atalho (Componente > Turma > Docente...). -->
+                    <button type="button" id="btn-ind-voltar" class="ind-voltar hidden"></button>
                 </div>
                 <div class="ind-filtros no-print">
                     <span class="ind-filtros-rotulo">Unidade:</span>
@@ -1099,11 +1101,17 @@
                     <span id="ind-docente-quebra" class="ind-quebra hidden" aria-hidden="true"></span>
                     <span id="ind-docente-box" class="ind-docente-box hidden">
                         <span class="ind-filtros-rotulo">Docente:</span>
-                        <input type="text" id="inp-docente-dias" aria-label="Docente" placeholder="Busque o professor..." autocomplete="off">
+                        <span class="ind-busca">
+                            <input type="text" id="inp-docente-dias" aria-label="Docente" placeholder="Busque o professor..." autocomplete="off">
+                            <button type="button" class="ind-busca-limpar hidden" data-limpar="inp-docente-dias" aria-label="Limpar o docente" title="Limpar e buscar outro docente">×</button>
+                        </span>
                     </span>
                     <span id="ind-componente-box" class="ind-docente-box hidden">
                         <span class="ind-filtros-rotulo">Componente:</span>
-                        <input type="text" id="inp-componente-ind" list="list-componentes-ind" aria-label="Componente" placeholder="Busque a componente..." autocomplete="off">
+                        <span class="ind-busca">
+                            <input type="text" id="inp-componente-ind" list="list-componentes-ind" aria-label="Componente" placeholder="Busque a componente..." autocomplete="off">
+                            <button type="button" class="ind-busca-limpar hidden" data-limpar="inp-componente-ind" aria-label="Limpar a componente" title="Limpar e buscar outra componente">×</button>
+                        </span>
                         <datalist id="list-componentes-ind"></datalist>
                     </span>
                     <span id="ind-turmas-box" class="ind-turmas-box hidden">
@@ -1119,7 +1127,7 @@
                     Conta tudo o que está no Cardume, <b>inclusive o que ainda não foi publicado</b>, nos cursos da unidade escolhida.
                     Componente dividida entre docentes: a parte de cada um (ex.: 30 de 90 h).
                     Componentes pendentes (ainda sem horário) não entram.
-                    Clique no nome para ver a agenda do docente no mesmo período.
+                    Clique no nome para ver os <b>Dias do docente</b> no mesmo período (← Voltar, no alto, volta para cá).
                 </p>
                 <ul class="ind-nota ind-nota-lista hidden" id="ind-nota-dias">
                     <li>Cada linha é uma componente do docente e cada quadradinho é um dia do período letivo; o mesmo dia fica alinhado na vertical.</li>
@@ -1128,16 +1136,19 @@
                     <li>T01 e T02 da mesma componente contam como duas.</li>
                     <li>Ao lado de cada componente: <b>CH do docente / CH da componente</b> (ex.: 60/90h quando a componente é dividida ou é estágio com CH do orientador).</li>
                     <li>Entram as componentes do docente em todas as unidades, inclusive o que ainda não foi publicado.</li>
+                    <li><b>Clique no nome de uma componente</b> para ver a turma dela no PL (sub-aba Turma), com a componente em destaque.</li>
                 </ul>
                 <ul class="ind-nota ind-nota-lista hidden" id="ind-nota-componente">
                     <li>Cada linha é uma <b>oferta</b> da componente (turma + componente); T01 e T02 aparecem separadas. A lista de sugestões mostra só as componentes com horário na unidade e no período escolhidos.</li>
                     <li><b>Clique na linha</b> para ver o quadro da turma naquele PL: a componente buscada em destaque, as outras mais claras. Clique de novo para fechar.</li>
                     <li><b>✎ Ir para a oferta</b> abre a turma na barra lateral e mostra a componente na Lista de ofertas, para Editar ou Trocar. PL que já terminou: <i>PL encerrado</i>.</li>
+                    <li>Nome da <b>turma</b>: abre a sub-aba Turma. Nome do <b>docente</b>: abre Dias do docente. <b>← Voltar</b> (no alto) volta para cá.</li>
                     <li>Conta tudo o que está no Cardume, inclusive o que ainda não foi publicado. Pendentes (sem horário) não entram.</li>
                 </ul>
                 <ul class="ind-nota ind-nota-lista hidden" id="ind-nota-turma">
                     <li>Escolha a turma na 2ª linha: aparecem só as turmas com horário na unidade, na faculdade e no período escolhidos. No <b>Ano inteiro</b>, um quadro por PL.</li>
                     <li>Embaixo do nome de cada componente: o(s) docente(s) e depois subturma, CH, dias, horário e datas (início–fim). <b>Clique no nome</b> para destacá-la no quadro; clique de novo para tirar o destaque.</li>
+                    <li><b>↗</b> ao lado do nome: em quais turmas e PLs a componente é dada (sub-aba Componente). <b>✎</b>: abre a componente na Lista de ofertas, para Editar ou Trocar. Nome do <b>docente</b>: Dias do docente. <b>← Voltar</b> (no alto) volta para cá.</li>
                     <li>Conta tudo o que está no Cardume, inclusive o que ainda não foi publicado. Pendentes (sem horário) não entram.</li>
                 </ul>
             </section>
@@ -1667,7 +1678,7 @@
         </main>
     </div>
 
-    <script type="module" src="js/main.js?v=202611261914"></script>
+    <script type="module" src="js/main.js?v=202611262130"></script>
 </body>
 
 </html>

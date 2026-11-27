@@ -396,9 +396,20 @@ async function run() {
       assert(ano.ordenado, 'docentes fora da ordem do total (maior primeiro)');
       await evaluate("document.querySelector('#ind-pl-buttons [data-plan-key]').click()");
       assert(await waitFor("!document.querySelector('#ind-tabela thead .ind-pl') && document.querySelector('#ind-pl-buttons .is-active')", 3000), 'o PL nao trocou a tabela');
-      const nome = await evaluate("document.querySelector('#ind-tabela .ind-docente').dataset.docente");
+      const nome = await evaluate("document.querySelector('#ind-tabela .ind-docente').dataset.verDocente");
       await evaluate("document.querySelector('#ind-tabela .ind-docente').click()");
-      assert(await waitFor(`document.getElementById('tab-teacher').classList.contains('active') && document.getElementById('sel-view-docente').value === ${JSON.stringify(nome)}`, 5000), 'o clique no nome nao abriu a agenda do docente');
+      assert(await waitFor(`document.querySelector('#tab-indicadores .ind-subaba.is-ativa')?.dataset.subaba === 'dias' && document.getElementById('inp-docente-dias').value === ${JSON.stringify(nome)} && !!document.querySelector('#ind-tabela .dd-quadro')`, 5000), 'o clique no nome nao abriu Dias do docente');
+      // O x da caixa limpa o docente; o Voltar volta para a Carga.
+      const limpou = await evaluate(`(() => {
+        const x = document.querySelector('[data-limpar="inp-docente-dias"]');
+        if (x.classList.contains('hidden')) return 'x escondido com nome na caixa';
+        x.click();
+        if (document.getElementById('inp-docente-dias').value || !x.classList.contains('hidden')) return 'x nao limpou';
+        if (!/Digite o nome do docente/.test(document.getElementById('ind-tabela').textContent)) return 'nao voltou para Escolha o docente';
+        document.getElementById('btn-ind-voltar').click();
+        return document.querySelector('#tab-indicadores .ind-subaba.is-ativa')?.dataset.subaba === 'carga' ? '' : 'Voltar nao voltou para a Carga';
+      })()`);
+      assert(!limpou, limpou);
       return `${ano.n} docentes; colunas ${ano.heads.slice(2).join(' ')}`;
     });
 
@@ -568,6 +579,92 @@ async function run() {
       })()`);
       assert(!f || f.rot.every((t) => t.startsWith(f.sigla)), `filtro da faculdade: ${JSON.stringify(f)}`);
       return `${r.n} turmas, todas com quadro e detalhe; maior: ${r.maior.id} (${r.maior.pls} PLs, ${r.maior.linhas} componentes); destaque OK; ${f ? `faculdade ${f.sigla}: ${f.rot.join(' ')}` : 'uma faculdade so'}`;
+    });
+
+    await check('Menu Indicadores: atalhos entre as sub-abas e Voltar', async () => {
+      await evaluate("document.querySelector('.tab-btn[data-tab=\"indicadores\"]').click()");
+      await evaluate("document.querySelector('#tab-indicadores .ind-subaba[data-subaba=\"componente\"]').click()");
+      await evaluate("document.getElementById('btn-ano-inteiro-indicadores').click()");
+      assert(await waitFor("document.querySelectorAll('#list-componentes-ind option').length > 0", 10000), 'lista de componentes vazia');
+      const r = await evaluate(`(() => {
+        const passos = [];
+        const ativa = () => document.querySelector('#tab-indicadores .ind-subaba.is-ativa')?.dataset.subaba;
+        const voltar = document.getElementById('btn-ind-voltar');
+        // 1) Componente: escolhe a 1a e clica na turma da 1a linha.
+        const inp = document.getElementById('inp-componente-ind');
+        inp.value = document.querySelector('#list-componentes-ind option').value;
+        inp.dispatchEvent(new Event('input', { bubbles: true }));
+        const comp = inp.value;
+        if (!voltar.classList.contains('hidden')) passos.push('Voltar aparece sem atalho');
+        const bt = document.querySelector('#ind-tabela button[data-ver-turma]');
+        if (!bt) return { erro: 'sem atalho de turma no Componente' };
+        bt.click();
+        if (ativa() !== 'turma') return { erro: 'Componente > turma nao abriu a sub-aba Turma' };
+        const destaque = document.querySelectorAll('#ind-tabela .dd-rot-destaque').length;
+        const turma = document.querySelector('#ind-turmas .is-active')?.textContent.trim();
+        if (destaque !== 1) passos.push('turma sem a componente em destaque (' + destaque + ')');
+        if (!voltar.textContent.includes(comp)) passos.push('Voltar sem o nome da componente: ' + voltar.textContent);
+        // 2) Turma: docente > Dias do docente.
+        const bd = document.querySelector('#ind-tabela button[data-ver-docente]');
+        if (!bd) return { erro: 'sem atalho de docente na Turma' };
+        const docente = bd.dataset.verDocente;
+        bd.click();
+        if (ativa() !== 'dias' || document.getElementById('inp-docente-dias').value !== docente) return { erro: 'Turma > docente nao abriu Dias do docente' };
+        if (!document.querySelector('#ind-tabela .dd-quadro .dd-rot[data-dd-comp]')) return { erro: 'Dias do docente sem quadro' };
+        // 3) Dias: componente > Turma dela, em destaque.
+        document.querySelector('#ind-tabela .dd-rot[data-dd-comp] .dd-rot-nome').click();
+        if (ativa() !== 'turma' || document.querySelectorAll('#ind-tabela .dd-rot-destaque').length !== 1) return { erro: 'Dias > componente nao abriu a turma com destaque' };
+        // 4) Turma: componente > Componente.
+        const bc = document.querySelector('#ind-tabela button[data-ver-componente]');
+        const nomeC = bc.dataset.verComponente;
+        bc.click();
+        if (ativa() !== 'componente' || !document.querySelector('#ind-tabela tr[data-comp-linha]')) return { erro: 'Turma > componente nao abriu o Componente: ' + nomeC };
+        // Voltar 4 vezes: Turma, Dias, Turma, Componente do inicio.
+        const volta = [];
+        for (let i = 0; i < 4; i++) { voltar.click(); volta.push(ativa()); }
+        if (volta.join(',') !== 'turma,dias,turma,componente') passos.push('voltar: ' + volta.join(','));
+        if (inp.value !== comp) passos.push('voltou com outra componente: ' + inp.value);
+        if (!voltar.classList.contains('hidden')) passos.push('Voltar ainda aparece no fim');
+        return { passos, comp, turma, docente, nomeC };
+      })()`);
+      assert(!r.erro, r.erro);
+      assert(!r.passos.length, r.passos.join('; '));
+      // Componente: docente > Dias do docente; Turma: ✎ > Lista de ofertas com a linha destacada.
+      const extra = await evaluate(`(() => {
+        const ativa = () => document.querySelector('#tab-indicadores .ind-subaba.is-ativa')?.dataset.subaba;
+        const bd = document.querySelector('#ind-tabela .ind-tabela-comp button[data-ver-docente]');
+        if (!bd) return { erro: 'Componente sem atalho de docente' };
+        const nome = bd.dataset.verDocente;
+        bd.click();
+        if (ativa() !== 'dias' || document.getElementById('inp-docente-dias').value !== nome) return { erro: 'Componente > docente nao abriu Dias do docente' };
+        document.getElementById('btn-ind-voltar').click();
+        document.querySelector('#ind-tabela button[data-ver-turma]').click();
+        const lapis = document.querySelector('#ind-tabela button[data-ir-oferta][data-ir-lista="turma"]');
+        if (!lapis) return { erro: 'Turma sem o atalho ✎' };
+        const nomeComp = lapis.closest('.dd-rot').querySelector('.dd-rot-nome').firstChild.textContent.trim();
+        lapis.click();
+        return { nome, nomeComp };
+      })()`);
+      assert(!extra.erro, extra.erro);
+      assert(await waitFor("document.getElementById('tab-list').classList.contains('active') && !!document.querySelector('#ofertas-table tr.oferta-destaque')", 5000), 'o ✎ da Turma nao abriu a Lista de ofertas com a linha destacada');
+      await evaluate("document.querySelector('.tab-btn[data-tab=\"indicadores\"]').click()");
+      await evaluate("document.getElementById('btn-ind-voltar')?.click()");
+      if (process.env.CARDUME_PRINT_BUSCA) {
+        // Caixa da componente com o x (sub-aba Componente, no alto).
+        await evaluate("document.querySelector('#tab-indicadores .ind-subaba[data-subaba=\"componente\"]').click(); document.getElementById('tab-indicadores').scrollTop = 0");
+        await sleep(300);
+        const shot = await send('Page.captureScreenshot', { format: 'png' });
+        fs.writeFileSync(process.env.CARDUME_PRINT_BUSCA, Buffer.from(shot.result.data, 'base64'));
+      }
+      if (process.env.CARDUME_PRINT_NAV) {
+        // Turma aberta pelo atalho do Componente (com o Voltar); depois volta.
+        await evaluate("document.querySelector('#ind-tabela button[data-ver-turma]').click()");
+        await sleep(400);
+        const shot = await send('Page.captureScreenshot', { format: 'png' });
+        fs.writeFileSync(process.env.CARDUME_PRINT_NAV, Buffer.from(shot.result.data, 'base64'));
+        await evaluate("document.getElementById('btn-ind-voltar').click()");
+      }
+      return `${r.comp} > ${r.turma} > ${r.docente} > turma > ${r.nomeC}; Voltar x4 OK; Componente > docente ${extra.nome} OK; Turma ✎ ${extra.nomeComp} > Lista de ofertas OK`;
     });
   } finally {
     const falhou = results.some((r) => !r.ok);

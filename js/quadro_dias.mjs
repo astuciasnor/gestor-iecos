@@ -1,7 +1,7 @@
-import { escapeHtml as esc } from './texto.mjs?v=202611261914';
-import { vividHexColor, hexToRgb, rgbToHsl, hslToRgb } from './color_utils.js?v=202611261914';
-import { diasDoDocente } from './dias_docente.mjs?v=202611261914';
-import { chOrientadorDaOferta } from './estagio.mjs?v=202611261914';
+import { escapeHtml as esc } from './texto.mjs?v=202611262130';
+import { vividHexColor, hexToRgb, rgbToHsl, hslToRgb } from './color_utils.js?v=202611262130';
+import { diasDoDocente } from './dias_docente.mjs?v=202611262130';
+import { chOrientadorDaOferta } from './estagio.mjs?v=202611262130';
 // Desenho do quadro "Dias do docente": uma coluna por dia do PL, a linha
 // "Sobrecarga diaria" (verde = 1 componente, vermelho = 2 ou mais) e uma linha por
 // componente. Usado em Indicadores > Dias do docente e na agenda publica
@@ -63,8 +63,9 @@ export function corDoQuadro(cor) {
 // linha "Sobrecarga diaria" e o aviso do cabecalho; destaque = key da componente
 // buscada (as outras ficam mais claras); rotuloCH = dica da CH do cabecalho.
 // Sub-aba Turma (26/11/2026): detalhe(comp) = linhas (HTML ja escapado) que
-// substituem a linha curta embaixo do nome; classe = classe extra do quadro.
-export function quadroDiasHtml(indice, titulo, datas, r, rotulos, ch, { aulas = ch, outroPL = () => '', dica = '', chComp = (comp) => ({ docente: comp.aulas, total: 0 }), semSobrecarga = false, destaque = '', rotuloCH = 'Carga horária do docente neste PL', detalhe = null, classe = '' } = {}) {
+// substituem a linha curta embaixo do nome; classe = classe extra do quadro;
+// aposNome(comp) = HTML logo depois do nome (atalho para a sub-aba Componente).
+export function quadroDiasHtml(indice, titulo, datas, r, rotulos, ch, { aulas = ch, outroPL = () => '', dica = '', chComp = (comp) => ({ docente: comp.aulas, total: 0 }), semSobrecarga = false, destaque = '', rotuloCH = 'Carga horária do docente neste PL', detalhe = null, classe = '', aposNome = null } = {}) {
     const col = (k) => k + 2;
     const colunas = r.datas.map((d) => (d.weekday === 0 ? '4.75px' : 'minmax(5.7px, 1fr)')).join(' ');
     const pos = (k, linha) => `grid-column:${col(k)};grid-row:${linha}`;
@@ -133,7 +134,7 @@ export function quadroDiasHtml(indice, titulo, datas, r, rotulos, ch, { aulas = 
         const dica = `${comp.disciplina}${pl ? ` (componente do ${pl})` : ''}\n${chDica}\n${sub}`;
         // Quadro da turma: a componente buscada em destaque, as outras mais claras.
         const apagada = destaque && comp.key !== destaque;
-        html += `<span class="dd-rot${pl ? ' dd-rot-outro' : ''}${destaque && !apagada ? ' dd-rot-destaque' : ''}${apagada ? ' dd-rot-apagada' : ''}" style="grid-row:${linha}" title="${esc(dica)}" data-dd-comp="${esc(comp.key)}"><span class="dd-rot-nome">${esc(comp.disciplina)}</span>${linhasDoRotulo(comp, chTxt, sub)}</span>`;
+        html += `<span class="dd-rot${pl ? ' dd-rot-outro' : ''}${destaque && !apagada ? ' dd-rot-destaque' : ''}${apagada ? ' dd-rot-apagada' : ''}" style="grid-row:${linha}" title="${esc(dica)}" data-dd-comp="${esc(comp.key)}"><span class="dd-rot-nome">${esc(comp.disciplina)}${aposNome ? aposNome(comp) : ''}</span>${linhasDoRotulo(comp, chTxt, sub)}</span>`;
         const cor = corDe(comp);
         r.datas.forEach((d, k) => {
             if (!comp.porData[d.date]) { html += celula(d, k, linha, '', ''); return; }
@@ -258,7 +259,7 @@ export function montarQuadrosDias({ planos, mostrar = planos, entries, rotulos, 
         const r = diasDoDocente({ termStart: meta.termStart, termEnd: meta.termEnd, entries, feriados });
         carregados += r.carregados;
         if (!r.componentes.length) return quadroVazioHtml(titulo, datas, avisoVazio(meta));
-        const indice = quadros.push({ r, rotulos, nomeFeriado }) - 1;
+        const indice = quadros.push({ r, rotulos, nomeFeriado, plano: meta.key }) - 1;
         const outroPL = (key) => {
             const plano = plDaKey.get(key);
             return plano && plano !== meta.key ? (periodoDoPlano.get(plano) || '') : '';
@@ -275,7 +276,7 @@ export function montarQuadrosDias({ planos, mostrar = planos, entries, rotulos, 
 // ao lado (docente); destaque: key da componente buscada.
 // Devolve { html, quadro (para focarDiaDoQuadro) } ou html vazio sem aulas.
 // detalhe/classe: como em quadroDiasHtml (a sub-aba Turma poe docentes e datas).
-export function quadroTurmaHtml({ indice = 0, titulo, datas, termStart, termEnd, entries = [], rotulos = new Map(), feriados = [], nomeFeriado = new Map(), destaque = '', dica = '', detalhe = null, classe = '' }) {
+export function quadroTurmaHtml({ indice = 0, titulo, datas, termStart, termEnd, entries = [], rotulos = new Map(), feriados = [], nomeFeriado = new Map(), destaque = '', dica = '', detalhe = null, classe = '', aposNome = null }) {
     // O quadro vai ate a ultima aula, se alguma passa do fim do PL.
     const ultima = entries.reduce((m, e) => (e.date > m ? e.date : m), termEnd);
     const base = diasDoDocente({ termStart, termEnd: ultima, entries, feriados });
@@ -291,6 +292,7 @@ export function quadroTurmaHtml({ indice = 0, titulo, datas, termStart, termEnd,
         rotuloCH: 'Horas de aula da turma neste PL',
         detalhe,
         classe,
+        aposNome,
         chComp: (comp) => ({ docente: chPorKey.get(comp.key) || comp.aulas, total: 0 })
     });
     return { html, quadro: { r, rotulos, nomeFeriado } };

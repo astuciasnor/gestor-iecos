@@ -4138,6 +4138,9 @@ body:has(#tab-weekly.active) .top-bar .btn-print { display: none; }
 /* Menu Indicadores: sub-abas (por enquanto so "Carga por docente"), o periodo
    (mesmos botoes do Calendario Docente) e a tabela de CH por docente. */
 #tab-indicadores .ind-subabas { justify-content: flex-start; gap: 8px; margin-bottom: 14px; }
+/* Presa no alto ao rolar: as sub-abas e o Voltar ficam sempre a mao (26/11/2026).
+   top = -padding da aba (30px), para colar na borda de cima. */
+#tab-indicadores .ind-subabas { position: sticky; top: -30px; z-index: 6; background: var(--bg-app); padding: 10px 0 8px; margin-top: -10px; }
 #tab-indicadores .ind-subaba {
     padding: 7px 16px;
     border: 1px solid #c9d6cf;
@@ -4258,10 +4261,26 @@ body:has(#tab-weekly.active) .top-bar .btn-print { display: none; }
 .ind-nota { max-width: 760px; margin-top: 12px; font-size: 0.78rem; color: var(--text-muted); line-height: 1.5; }
 
 /* Indicadores > Dias do docente: uma linha por componente, uma coluna por dia. */
-#tab-indicadores #inp-docente-dias {
-    height: 34px; width: 320px; max-width: 100%; padding: 0 10px; border: 1px solid #c9d6cf; border-radius: 8px;
-    background: #fff; font: inherit; font-size: 0.86rem;
+/* Caixas de busca (Docente, Componente) com o x para limpar (26/11/2026). */
+.ind-busca { position: relative; display: inline-flex; align-items: center; max-width: 100%; }
+#tab-indicadores #inp-docente-dias,
+#tab-indicadores #inp-componente-ind {
+    height: 38px; width: 340px; max-width: 100%; padding: 0 36px 0 12px;
+    border: 1.5px solid #c9d6cf; border-radius: 10px; background: #fff;
+    font: inherit; font-size: 0.9rem; font-weight: 700; color: #173728;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); transition: border-color 0.15s, box-shadow 0.15s;
 }
+#tab-indicadores #inp-componente-ind { width: 520px; }
+#tab-indicadores #inp-docente-dias::placeholder,
+#tab-indicadores #inp-componente-ind::placeholder { font-weight: 400; color: #8a9a92; }
+#tab-indicadores #inp-docente-dias:focus,
+#tab-indicadores #inp-componente-ind:focus { outline: none; border-color: #2d34c6; box-shadow: 0 0 0 3px rgba(45, 52, 198, 0.15); }
+.ind-busca-limpar {
+    position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+    width: 22px; height: 22px; padding: 0; border: 0; border-radius: 50%;
+    background: #e3e8f6; color: #2d34c6; font-size: 1rem; line-height: 22px; font-weight: 700; cursor: pointer;
+}
+.ind-busca-limpar:hover { background: #2d34c6; color: #fff; }
 .ind-docente-box { display: inline-flex; align-items: center; gap: 8px; }
 .ind-quebra { flex-basis: 100%; height: 0; }
 /* Indicadores > Componente (26/11/2026): tabela das ofertas de uma componente. */
@@ -4272,8 +4291,6 @@ body:has(#tab-weekly.active) .top-bar .btn-print { display: none; }
 .ind-tabela-comp .ind-nome { min-width: 200px; }
 .ind-tabela-comp .ind-comp-pl { font-weight: 800; color: #2d34c6; }
 .ind-tabela-comp .ind-comp-parte { color: var(--text-muted); font-size: 0.78rem; }
-/* Largo para nomes longos ("Estatistica aplicada a pesca e aquicultura"). */
-#inp-componente-ind { width: 460px; max-width: 100%; }
 /* Atalho "Ir para a oferta" (abre a Lista de ofertas da turma) e PL encerrado. */
 .ind-tabela-comp .ind-comp-ir { text-align: right; }
 .ind-ir-oferta {
@@ -4306,6 +4323,27 @@ body:has(#tab-weekly.active) .top-bar .btn-print { display: none; }
 .dd-quadro--turma .dd-rot-docente { color: #29485c; }
 .dd-quadro--turma .dd-rot-parte { font-size: 0.64rem; }
 .dd-quadro--turma .dd-rot-subturma { color: #2d34c6; }
+/* Navegacao entre as sub-abas (Etapa 1, 26/11/2026): atalhos com cara de link
+   e o botao Voltar na barra das sub-abas. */
+.ind-link {
+    border: 0; padding: 0; background: none; font: inherit; color: #2d34c6; cursor: pointer; text-align: left;
+}
+.ind-link:hover { text-decoration: underline; color: #287fd0; }
+.dd-quadro--turma .dd-rot-docente.ind-link { color: #29485c; font-size: inherit; }
+.dd-quadro--turma .dd-rot-docente.ind-link:hover { color: #287fd0; }
+.dd-rot-ir {
+    border: 1px solid #b9c3f0; background: #f4f6fb; color: #2d34c6; border-radius: 4px;
+    padding: 0 4px; margin-left: 2px; font-size: 0.68rem; line-height: 1.3; cursor: pointer; vertical-align: 1px;
+}
+.dd-rot-ir:hover { background: #2d34c6; border-color: #2d34c6; color: #fff; }
+#ind-tabela[data-subaba="dias"] .dd-rot[data-dd-comp] { cursor: pointer; }
+#ind-tabela[data-subaba="dias"] .dd-rot[data-dd-comp]:hover .dd-rot-nome { color: #287fd0; text-decoration: underline; }
+#tab-indicadores .ind-voltar {
+    margin-left: 14px; border: 1px solid #2d34c6; background: #fff; color: #2d34c6;
+    border-radius: 999px; padding: 6px 14px; font: inherit; font-size: 0.84rem; font-weight: 700; cursor: pointer;
+    max-width: 340px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+#tab-indicadores .ind-voltar:hover { background: #2d34c6; color: #fff; }
 /* Quadro da turma: a componente buscada em destaque, as outras mais claras. */
 .dd-rot-destaque { box-shadow: inset 4px 0 0 #2d34c6; padding-left: 8px; background: #eef1fb; border-radius: 3px; }
 .dd-rot-destaque .dd-rot-nome { color: #2d34c6; }
