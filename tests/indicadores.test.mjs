@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { ofertasDoPlano, cargaPorDocente, ordenarLinhas, SEM_DOCENTE } from '../js/indicadores.mjs';
+import { ofertasDoPlano, cargaPorDocente, ordenarLinhas, SEM_DOCENTE, semSufixoCH } from '../js/indicadores.mjs';
 
 const CH = { 'CALCULO I': 60, 'ZOOLOGIA': 90, 'QUIMICA GERAL': 45, 'ESTAGIO': 105 };
 const opcoes = {
@@ -141,4 +141,11 @@ test('Componente: inicio, fim, dias e horario das aulas', () => {
     assert.equal(r.dias, 'seg, qua e sex');
     assert.equal(r.turnos, 'manhã');
     assert.deepEqual(resumoDasAulas([]).inicio, '');
+});
+
+test('semSufixoCH tira so o "(60h)" do fim do nome', () => {
+    assert.equal(semSufixoCH('ZOOLOGIA (90h)'), 'ZOOLOGIA');
+    assert.equal(semSufixoCH('Calculo I ( 60 H ) '), 'Calculo I');
+    assert.equal(semSufixoCH('TOPICOS (EAD) DE PESCA'), 'TOPICOS (EAD) DE PESCA');
+    assert.equal(semSufixoCH(undefined), '');
 });

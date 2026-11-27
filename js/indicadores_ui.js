@@ -1,5 +1,3 @@
-import { UNIDADE_PADRAO, unidadeDoCurso } from './unidades.mjs?v=202611262130';
-import { escapeHtml as esc } from './texto.mjs?v=202611262130';
 // Menu Indicadores (so leitura: nada e gravado).
 // Sub-aba "Carga por docente": tabela com a CH de cada docente por curso e por PL,
 // do ano inteiro ou de um PL. As contas estao em indicadores.mjs.
@@ -11,17 +9,18 @@ import { escapeHtml as esc } from './texto.mjs?v=202611262130';
 // (o mesmo do Componente) com docentes, horario e datas embaixo de cada nome.
 // Navegacao (Etapa 1 da integracao, 26/11/2026): turma, componente e docente
 // levam a sub-aba deles, com "Voltar". O Indicadores so le; mudar e na Lista de ofertas.
-import { store } from './store.js?v=202611262130';
-import { getCursoSiglaDaTurma, getDisciplinaCHGlobal } from './curso_turma_helpers.js?v=202611262130';
-import { formatDateBR } from './date_utils_ui.js?v=202611262130';
-import { UNIDADES } from './docente_nomes.mjs?v=202611262130';
-import { cargaPorDocente, ordenarLinhas, SEM_DOCENTE, ofertasDoPlano, chaveComponente, chaveSubturma, nomesDasComponentes, resumoDasAulas } from './indicadores.mjs?v=202611262130';
-import { getCalendarEvents } from './calendar.js?v=202611262130';
-import { withPlanContext } from './calendarios_ui.js?v=202611262130';
-import { getTurmaLabel, getTurmaBaseLabel } from './curso_turma_helpers.js?v=202611262130';
-import { feriadosDaTurma } from './feriados.mjs?v=202611262130';
-import { fmtCH, focarDiaDoQuadro, DICA_MOUSE, entradaDias, montarQuadrosDias, quadroTurmaHtml, textoSobrecarga, corDoQuadro } from './quadro_dias.mjs?v=202611262130';
-import { numeroDaSubturma } from './subturmas.mjs?v=202611262130';
+import { UNIDADE_PADRAO, unidadeDoCurso } from './unidades.mjs?v=202611262205';
+import { escapeHtml as esc } from './texto.mjs?v=202611262205';
+import { store } from './store.js?v=202611262205';
+import { getCursoSiglaDaTurma, getDisciplinaCHGlobal, getTurmaLabel, getTurmaBaseLabel } from './curso_turma_helpers.js?v=202611262205';
+import { formatDateBR } from './date_utils_ui.js?v=202611262205';
+import { UNIDADES } from './docente_nomes.mjs?v=202611262205';
+import { cargaPorDocente, ordenarLinhas, SEM_DOCENTE, ofertasDoPlano, chaveComponente, chaveSubturma, nomesDasComponentes, resumoDasAulas, semSufixoCH } from './indicadores.mjs?v=202611262205';
+import { getCalendarEvents } from './calendar.js?v=202611262205';
+import { withPlanContext } from './calendarios_ui.js?v=202611262205';
+import { feriadosDaTurma } from './feriados.mjs?v=202611262205';
+import { fmtCH, focarDiaDoQuadro, DICA_MOUSE, entradaDias, montarQuadrosDias, quadroTurmaHtml, textoSobrecarga, corDoQuadro } from './quadro_dias.mjs?v=202611262205';
+import { numeroDaSubturma } from './subturmas.mjs?v=202611262205';
 
 const VALIDADE_MS = 2 * 60 * 1000; // depois disso, abrir o menu busca de novo
 
@@ -65,6 +64,39 @@ function unidadeDe(sigla) {
 
 function nomeUnidade(sigla) {
     return UNIDADES.find((u) => u.sigla === sigla)?.nome || sigla;
+}
+
+function nomeDoCurso(sigla) {
+    return (store.rawData?.cursos || []).find((c) => c.sigla === sigla)?.curso || sigla;
+}
+
+// Posicao do curso na ordem do cadastro (para ordenar tabelas e turmas).
+function posicaoDoCurso(sigla) {
+    const ordem = (store.rawData?.cursos || []).map((c) => c.sigla);
+    const i = ordem.indexOf(sigla);
+    return i < 0 ? ordem.length : i;
+}
+
+// O PL aberto na barra lateral usa a copia da tela (mudancas de agora mesmo).
+function alocacoesDoPlano(meta, allocations) {
+    return meta.key === (store.getActivePlanMeta()?.key || '') ? store.allocations : (allocations || []);
+}
+
+// "IECOS · Ano inteiro de 2027" ou "IECOS · 2027 - PL2" (sem a unidade: comUnidade false).
+function rotuloDoPeriodo({ comUnidade = true } = {}) {
+    const pl = metasDoAno(estado.ano).find((m) => m.key === estado.periodo)?.periodo || '';
+    const periodo = estado.periodo === 'ano' ? `Ano inteiro de ${estado.ano}` : `${estado.ano} - ${pl}`;
+    return comUnidade ? `${nomeUnidade(estado.unidade)} · ${periodo}` : periodo;
+}
+
+// Feriados para o quadro dos dias: as datas e o nome de cada uma (turmaId '' = gerais).
+function feriadosDoQuadro(turmaId = '') {
+    const lista = feriadosDaTurma(store.rawData?.feriados || [], turmaId);
+    const data = (f) => String(f?.data || f || '').trim();
+    return {
+        feriados: lista.map(data),
+        nomeFeriado: new Map(lista.map((f) => [data(f), String(f?.feriado || f?.nome || 'Feriado')]))
+    };
 }
 
 function rawPlans() {
@@ -335,13 +367,11 @@ function desenhar() {
     if (emComponente) { desenharComponente(alvo, resumo); return; }
     if (emTurma) { desenharTurma(alvo, resumo); return; }
 
-    // O PL aberto na barra lateral usa a copia da tela (mudancas de agora mesmo).
-    const ativo = store.getActivePlanMeta()?.key || '';
     const planos = estado.dados.planos
         .filter(({ meta }) => estado.periodo === 'ano' || meta.key === estado.periodo)
         .map(({ meta, allocations }) => ({
             periodo: meta.periodo,
-            allocations: (meta.key === ativo ? store.allocations : allocations)
+            allocations: alocacoesDoPlano(meta, allocations)
                 .filter((a) => unidadeDe(getCursoSiglaDaTurma(a?.turmaId)) === estado.unidade)
         }));
     const ordemCursos = (store.rawData?.cursos || []).map((c) => c.sigla);
@@ -369,9 +399,7 @@ function desenhar() {
     const improvisados = linhas.filter((l) => l.improvisado);
     const semDocente = linhas.find((l) => l.semDocente);
     const somaDe = (lista) => lista.reduce((s, l) => s + l.total, 0);
-    const rotuloPeriodo = `${nomeUnidade(estado.unidade)} · ${anoInteiro
-        ? `Ano inteiro de ${estado.ano}`
-        : `${estado.ano} - ${metasDoAno(estado.ano).find((m) => m.key === estado.periodo)?.periodo || ''}`}`;
+    const rotuloPeriodo = rotuloDoPeriodo();
     if (resumo) {
         const partes = [`<b>${esc(rotuloPeriodo)}</b>`, `${pessoas.length} docente${pessoas.length === 1 ? '' : 's'} · ${fmtCH(somaDe(pessoas)) || 0} h`];
         if (vagas.length) partes.push(`${vagas.length} vaga${vagas.length === 1 ? '' : 's'} · ${fmtCH(somaDe(vagas))} h`);
@@ -386,7 +414,6 @@ function desenhar() {
         return;
     }
 
-    const nomeCurso = (sigla) => (store.rawData?.cursos || []).find((c) => c.sigla === sigla)?.curso || sigla;
     const seta = (coluna) => (estado.ordem.coluna === coluna ? (estado.ordem.crescente ? ' ▲' : ' ▼') : '');
     const th = (coluna, texto, titulo, classe = '', extra = '') => `<th scope="col" data-coluna="${esc(coluna)}" class="${classe}" title="${esc(titulo)} (clique para ordenar)"${extra}>${esc(texto)}${seta(coluna)}</th>`;
     const cel = (n, classe = '') => `<td class="ind-num ${classe}">${n ? fmtCH(n) : '<span class="ind-zero">—</span>'}</td>`;
@@ -400,7 +427,7 @@ function desenhar() {
         th('total', 'Total', `CH total no período (só ${nomeUnidade(estado.unidade)})`, 'ind-grupo ind-total', ' rowspan="2"')
     ].join('');
     const cabecalho = [
-        ...cursos.map((c, i) => th(`curso:${c}`, c, `CH no curso ${nomeCurso(c)} (${nomeUnidade(unidadeDe(c))})`, abreGrupo(i) ? 'ind-grupo' : '')),
+        ...cursos.map((c, i) => th(`curso:${c}`, c, `CH no curso ${nomeDoCurso(c)} (${nomeUnidade(unidadeDe(c))})`, abreGrupo(i) ? 'ind-grupo' : '')),
         ...colunasPL.map((p, i) => th(`pl:${p}`, p, `CH no ${p}`, i === 0 ? 'ind-grupo ind-pl' : 'ind-pl'))
     ].join('');
 
@@ -475,15 +502,11 @@ function aulasDoDocente(nome, planos) {
 }
 
 function desenharDias(alvo, resumo) {
-    const ativo = store.getActivePlanMeta()?.key || '';
-    const planos = estado.dados.planos.map(({ meta, allocations }) => ({
-        meta,
-        allocations: meta.key === ativo ? store.allocations : (allocations || [])
-    }));
+    const planos = estado.dados.planos.map(({ meta, allocations }) => ({ meta, allocations: alocacoesDoPlano(meta, allocations) }));
     quadrosDias = [];
 
-    const metaPL = metasDoAno(estado.ano).find((m) => m.key === estado.periodo);
-    const rotuloPeriodo = estado.periodo === 'ano' ? `Ano inteiro de ${estado.ano}` : `${estado.ano} - ${metaPL?.periodo || ''}`;
+    // Dias do docente olha todas as unidades: o periodo vai sem a unidade.
+    const rotuloPeriodo = rotuloDoPeriodo({ comUnidade: false });
     if (!estado.docente) {
         if (resumo) resumo.innerHTML = `<b>${esc(rotuloPeriodo)}</b>`;
         alvo.innerHTML = '<p class="ind-vazio">Digite o nome do docente no alto e escolha na lista.</p>';
@@ -493,9 +516,7 @@ function desenharDias(alvo, resumo) {
     const { entries, rotulos } = aulasDoDocente(estado.docente, planos);
     diasPlanoDaKey = new Map();
     entries.forEach((e) => { if (!diasPlanoDaKey.has(e.key)) diasPlanoDaKey.set(e.key, e.plano); });
-    const feriadosLista = feriadosDaTurma(store.rawData?.feriados || [], '');
-    const feriados = feriadosLista.map((f) => String(f?.data || f || '').trim());
-    const nomeFeriado = new Map(feriadosLista.map((f) => [String(f?.data || f || '').trim(), String(f?.feriado || f?.nome || 'Feriado')]));
+    const { feriados, nomeFeriado } = feriadosDoQuadro('');
 
     const metas = planos.map(({ meta }) => meta);
     const mostrar = metas.filter((meta) => estado.periodo === 'ano' || meta.key === estado.periodo);
@@ -518,7 +539,7 @@ function desenharDias(alvo, resumo) {
 }
 
 
-// ===== Componente =====
+// ===== Comum a Componente e Turma =====
 
 // As aulas podem passar do fim do PL (aviso na Lista de ofertas): a busca olha
 // ate 4 meses depois, para o "Fim" sair certo.
@@ -598,7 +619,7 @@ function quadroTurmaDoPlano({ plano, turmaId, aulas, titulo, destaque = '', indi
         const texto = [rotuloSubturma(o.subGrupo), docentesDe.get(k) || ''].filter(Boolean).join(' · ');
         o.keys.forEach((key) => rotulos.set(key, texto));
     });
-    const feriadosLista = feriadosDaTurma(store.rawData?.feriados || [], turmaId);
+    const { feriados, nomeFeriado } = feriadosDoQuadro(turmaId);
     return quadroTurmaHtml({
         indice,
         titulo: `${titulo || aulas.rotuloTurma} · ${estado.ano} - ${meta.periodo}`,
@@ -607,8 +628,8 @@ function quadroTurmaDoPlano({ plano, turmaId, aulas, titulo, destaque = '', indi
         termEnd: meta.termEnd,
         entries,
         rotulos,
-        feriados: feriadosLista.map((f) => String(f?.data || f || '').trim()),
-        nomeFeriado: new Map(feriadosLista.map((f) => [String(f?.data || f || '').trim(), String(f?.feriado || f?.nome || 'Feriado')])),
+        feriados,
+        nomeFeriado,
         destaque,
         dica: DICA_MOUSE,
         detalhe,
@@ -636,16 +657,17 @@ function somarDias(iso, n) {
 
 // Planos do periodo escolhido (ano ou um PL), so a unidade escolhida, com as ofertas.
 function planosDaUnidade() {
-    const ativo = store.getActivePlanMeta()?.key || '';
     return estado.dados.planos
         .filter(({ meta }) => estado.periodo === 'ano' || meta.key === estado.periodo)
         .map(({ meta, allocations }) => {
-            const allocs = (meta.key === ativo ? store.allocations : (allocations || []))
+            const allocs = alocacoesDoPlano(meta, allocations)
                 .filter((a) => unidadeDe(getCursoSiglaDaTurma(a?.turmaId)) === estado.unidade);
             const ofertas = ofertasDoPlano(allocs, { cursoDaTurma: getCursoSiglaDaTurma, chDaComponente: getDisciplinaCHGlobal });
             return { meta, allocations: allocs, ofertas };
         });
 }
+
+// ===== Componente =====
 
 // Uma linha por oferta da componente: PL, turma, docentes, CH e as datas das aulas.
 function linhasDaComponente(chave, planos) {
@@ -680,17 +702,14 @@ function linhasDaComponente(chave, planos) {
     });
     // Ordem: PL, depois o curso (ordem do cadastro), depois a turma.
     const ordemPL = metasDoAno(estado.ano).map((m) => m.key);
-    const ordemCursos = (store.rawData?.cursos || []).map((c) => c.sigla);
-    const pos = (lista, v) => { const i = lista.indexOf(v); return i < 0 ? lista.length : i; };
-    return linhas.sort((a, b) => pos(ordemPL, a.meta.key) - pos(ordemPL, b.meta.key)
-        || pos(ordemCursos, a.oferta.curso) - pos(ordemCursos, b.oferta.curso)
+    return linhas.sort((a, b) => ordemPL.indexOf(a.meta.key) - ordemPL.indexOf(b.meta.key)
+        || posicaoDoCurso(a.oferta.curso) - posicaoDoCurso(b.oferta.curso)
         || a.turma.localeCompare(b.turma, 'pt-BR', { numeric: true }));
 }
 
 function desenharComponente(alvo, resumo) {
     const planos = planosDaUnidade();
-    const metaPL = metasDoAno(estado.ano).find((m) => m.key === estado.periodo);
-    const rotuloPeriodo = `${nomeUnidade(estado.unidade)} · ${estado.periodo === 'ano' ? `Ano inteiro de ${estado.ano}` : `${estado.ano} - ${metaPL?.periodo || ''}`}`;
+    const rotuloPeriodo = rotuloDoPeriodo();
 
     // Sugestoes: so as componentes com horario neste periodo e unidade.
     const nomes = nomesDasComponentes(planos.flatMap((p) => p.ofertas));
@@ -726,21 +745,19 @@ function desenharComponente(alvo, resumo) {
         ].join(' &nbsp;|&nbsp; ');
     }
 
-    const nomeCurso = (sigla) => (store.rawData?.cursos || []).find((c) => c.sigla === sigla)?.curso || sigla;
-    const irHtml = (l, i) => irParaOfertaHtml(l, i, 'componente');
     const corpo = linhas.map((l, i) => {
         const horario = [l.dias, `${l.turnos} ${l.horario}`.trim()].filter(Boolean).join(' · ');
         const aberta = chaveDaLinha(l) === estado.compAberta;
         return `<tr class="ind-comp-linha${aberta ? ' is-aberta' : ''}" data-comp-linha="${i}" title="${esc(`Clique para ${aberta ? 'fechar' : 'ver'} o quadro da turma ${l.turma} no ${l.meta.periodo}`)}">
             <td class="ind-comp-pl" title="${esc(`${estado.ano} - ${l.meta.periodo}: ${formatDateBR(l.meta.termStart)} a ${formatDateBR(l.meta.termEnd)}`)}">${esc(l.meta.periodo)}</td>
-            <td title="${esc(nomeCurso(l.oferta.curso))}">${esc(l.oferta.curso)}</td>
+            <td title="${esc(nomeDoCurso(l.oferta.curso))}">${esc(l.oferta.curso)}</td>
             <td class="ind-comp-turma"><button type="button" class="ind-link" data-ver-turma="${i}" title="${esc(`Ver a turma ${l.turma} inteira (sub-aba Turma)`)}">${esc(l.turma)}</button></td>
             <td class="ind-nome">${docentesHtml(l.oferta)}</td>
             <td class="ind-num">${fmtCH(l.oferta.ch) || '—'}</td>
             <td>${l.inicio ? formatDateBR(l.inicio) : '—'}</td>
             <td>${l.fim ? formatDateBR(l.fim) : '—'}</td>
             <td>${esc(horario) || '—'}</td>
-            <td class="ind-comp-ir">${irHtml(l, i)}</td>
+            <td class="ind-comp-ir">${irParaOfertaHtml(l, i, 'componente')}</td>
         </tr>`;
     }).join('');
 
@@ -793,12 +810,10 @@ function turmasDosPlanos(planos) {
     planos.forEach((p) => p.ofertas.forEach((o) => {
         if (!estado.turmaCurso || o.curso === estado.turmaCurso) ids.add(o.turmaId);
     }));
-    const ordemCursos = (store.rawData?.cursos || []).map((c) => c.sigla);
-    const pos = (sigla) => { const i = ordemCursos.indexOf(sigla); return i < 0 ? ordemCursos.length : i; };
     return [...ids].map((id) => {
         const t = (store.rawData?.turmas || []).find((x) => String(x.turma_id) === String(id));
         return { id, rotulo: getTurmaBaseLabel(id), curso: getCursoSiglaDaTurma(id), turno: t?.turno || '', campus: t?.campus || '' };
-    }).sort((a, b) => pos(a.curso) - pos(b.curso) || a.rotulo.localeCompare(b.rotulo, 'pt-BR', { numeric: true }));
+    }).sort((a, b) => posicaoDoCurso(a.curso) - posicaoDoCurso(b.curso) || a.rotulo.localeCompare(b.rotulo, 'pt-BR', { numeric: true }));
 }
 
 // Uma linha por componente da turma no PL (T01 e T02 separadas), com as keys do
@@ -841,8 +856,7 @@ function detalheDaLinha(l) {
 function desenharTurma(alvo, resumo) {
     montarFaculdades();
     const planos = planosDaUnidade();
-    const metaPL = metasDoAno(estado.ano).find((m) => m.key === estado.periodo);
-    const rotuloPeriodo = `${nomeUnidade(estado.unidade)} · ${estado.periodo === 'ano' ? `Ano inteiro de ${estado.ano}` : `${estado.ano} - ${metaPL?.periodo || ''}`}`;
+    const rotuloPeriodo = rotuloDoPeriodo();
 
     // Botoes das turmas (2a linha dos filtros).
     const turmas = turmasDosPlanos(planos);
@@ -864,7 +878,8 @@ function desenharTurma(alvo, resumo) {
     }
 
     const turmaId = estado.turma;
-    const nomeCurso = (store.rawData?.cursos || []).find((c) => c.sigla === getCursoSiglaDaTurma(turmaId))?.curso || '';
+    const sigla = getCursoSiglaDaTurma(turmaId);
+    const nomeCurso = sigla ? nomeDoCurso(sigla) : '';
     const [plDestaque, ...resto] = estado.turmaDestaque.split('|');
     let chTotal = 0;
     let nComp = 0;
@@ -995,7 +1010,7 @@ function irParaDocente(nome) {
 }
 
 function irParaComponente(disciplina) {
-    const nome = String(disciplina || '').replace(/\s*\(\s*\d+\s*h\s*\)\s*$/i, '').trim();
+    const nome = semSufixoCH(disciplina);
     if (nome) navegar({ subaba: 'componente', componente: nome, compAberta: '' });
 }
 

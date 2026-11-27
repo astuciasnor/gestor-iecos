@@ -1,21 +1,21 @@
-import { escapeHtml as escapeTrocaHtml } from './texto.mjs?v=202611262130';
+import { escapeHtml as escapeTrocaHtml } from './texto.mjs?v=202611262205';
 // Botao "Trocar" da Lista de Ofertas (janela, calculo das novas posicoes e
 // gravacao) e o "Como resolver?" do Calendario Docente. Saiu do ui.js em
 // 14/11/2026; as funcoes do editor que ele usa chegam por ligarTroca (ver
 // ui.js). Quem pode trocar com quem: troca_ordem.mjs. Desde 23/11/2026 a
 // janela ja abre com o choque de turma e de professor conferido em cada opcao.
-import { slotLabelsOverlap } from './academic_rules.mjs?v=202611262130';
-import { getAllocationTeachersForConflict, isFaixaAllocation } from './allocation_helpers.js?v=202611262130';
-import { getCalendarEvents } from './calendar.js?v=202611262130';
-import { getCursoSiglaDaTurma, getDisciplinaInfo, getTurmaLabel } from './curso_turma_helpers.js?v=202611262130';
-import { addDaysISO, formatDateBR } from './date_utils_ui.js?v=202611262130';
-import { alignFaixasToExecutionEnd, buildFinalAdjustmentFaixaSuggestion, computeIntensiveExecution, getNormalizedIntensiveFaixas, normalizeFaixaEntry, shouldIgnoreTurmaEventForCandidate, candidatoSemChoque } from './faixa_utils.js?v=202611262130';
-import { datasFeriadoDaTurma } from './feriados.mjs?v=202611262130';
-import { store } from './store.js?v=202611262130';
-import { saoSubturmasDiferentes } from './subturmas.mjs?v=202611262130';
-import { classifySwap } from './troca_ordem.mjs?v=202611262130';
-import { normalizeConflictSlotLabel } from './turno_helpers.js?v=202611262130';
-import { showToastWarning } from './ui_feedback.js?v=202611262130';
+import { slotLabelsOverlap } from './academic_rules.mjs?v=202611262205';
+import { getAllocationTeachersForConflict, isFaixaAllocation } from './allocation_helpers.js?v=202611262205';
+import { getCalendarEvents } from './calendar.js?v=202611262205';
+import { getCursoSiglaDaTurma, getDisciplinaInfo, getTurmaLabel } from './curso_turma_helpers.js?v=202611262205';
+import { addDaysISO, formatDateBR } from './date_utils_ui.js?v=202611262205';
+import { alignFaixasToExecutionEnd, buildFinalAdjustmentFaixaSuggestion, computeIntensiveExecution, getNormalizedIntensiveFaixas, normalizeFaixaEntry, shouldIgnoreTurmaEventForCandidate, candidatoSemChoque } from './faixa_utils.js?v=202611262205';
+import { datasFeriadoDaTurma } from './feriados.mjs?v=202611262205';
+import { store } from './store.js?v=202611262205';
+import { saoSubturmasDiferentes } from './subturmas.mjs?v=202611262205';
+import { classifySwap } from './troca_ordem.mjs?v=202611262205';
+import { normalizeConflictSlotLabel } from './turno_helpers.js?v=202611262205';
+import { showToastWarning } from './ui_feedback.js?v=202611262205';
 
 // Do ui.js: editor, conflitos de professor, desfazer e recalculo das datas.
 let ligacoes = {};

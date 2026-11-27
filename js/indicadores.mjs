@@ -13,10 +13,10 @@
 // Estagio com "CH do orientador" informada (janela Montar estagio): o docente
 // unico conta essa CH (45 de 90), nao a CH toda.
 
-import { normalizeTeacherNameForMatch, ehVaga, nomeImprovisado } from './docente_nomes.mjs?v=202611262130';
-import { chDoOrientador } from './estagio.mjs?v=202611262130';
-import { formatWeekdays, summarizeHorarios } from './resumo_docente.mjs?v=202611262130';
-import { weekdayOf } from './datas.mjs?v=202611262130';
+import { normalizeTeacherNameForMatch, ehVaga, nomeImprovisado } from './docente_nomes.mjs?v=202611262205';
+import { chDoOrientador } from './estagio.mjs?v=202611262205';
+import { formatWeekdays, summarizeHorarios } from './resumo_docente.mjs?v=202611262205';
+import { weekdayOf } from './datas.mjs?v=202611262205';
 
 export const SEM_DOCENTE = 'A definir';
 
@@ -64,6 +64,11 @@ function docentesDaAlocacao(alloc) {
 
 // Ofertas de um PL: [{ turmaId, disciplina, curso, ch, docentes: [{ nome, ch }] }].
 //   cursoDaTurma(turmaId) -> 'EP'; chDaComponente(disciplina, turmaId) -> 60.
+// Nome sem o "(60h)" do fim: 'ZOOLOGIA (90h)' -> 'ZOOLOGIA'.
+export function semSufixoCH(nome) {
+    return String(nome || '').replace(/\s*\(\s*\d+\s*h\s*\)\s*$/i, '').trim();
+}
+
 export function ofertasDoPlano(allocations = [], { cursoDaTurma, chDaComponente }) {
     const porOferta = new Map();
     (Array.isArray(allocations) ? allocations : []).forEach((alloc) => {
@@ -74,7 +79,7 @@ export function ofertasDoPlano(allocations = [], { cursoDaTurma, chDaComponente 
         const chave = `${turmaId}|${chaveSubturma(alloc?.subGrupo)}|${chaveDisciplina(disciplina)}`;
         let oferta = porOferta.get(chave);
         if (!oferta) {
-            const semSufixo = disciplina.replace(/\s*\(\s*\d+\s*h\s*\)\s*$/i, '').trim();
+            const semSufixo = semSufixoCH(disciplina);
             oferta = {
                 turmaId,
                 subturma: chaveSubturma(alloc?.subGrupo),
@@ -196,7 +201,7 @@ export function chaveComponente(nome) {
 export function nomesDasComponentes(ofertas = []) {
     const porChave = new Map();
     ofertas.forEach((o) => {
-        const nome = String(o?.disciplina || '').replace(/\s*\(\s*\d+\s*h\s*\)\s*$/i, '').trim();
+        const nome = semSufixoCH(o?.disciplina);
         const k = chaveComponente(nome);
         if (k && !porChave.has(k)) porChave.set(k, nome);
     });
