@@ -603,6 +603,10 @@ async function run() {
         const destaque = document.querySelectorAll('#ind-tabela .dd-rot-destaque').length;
         const turma = document.querySelector('#ind-turmas .is-active')?.textContent.trim();
         if (destaque !== 1) passos.push('turma sem a componente em destaque (' + destaque + ')');
+        // Vindo do Ano inteiro, a Turma abre so no PL da componente.
+        const anoBtn = document.getElementById('btn-ano-inteiro-indicadores');
+        if (anoBtn.classList.contains('is-active') || !document.querySelector('#ind-pl-buttons .is-active')) passos.push('Turma nao abriu num PL');
+        if (document.querySelectorAll('#ind-tabela .ind-turma-pl').length !== 1) passos.push('Turma com mais de um PL pelo atalho');
         if (!voltar.textContent.includes(comp)) passos.push('Voltar sem o nome da componente: ' + voltar.textContent);
         // 2) Turma: docente > Dias do docente.
         const bd = document.querySelector('#ind-tabela button[data-ver-docente]');
@@ -623,6 +627,7 @@ async function run() {
         const volta = [];
         for (let i = 0; i < 4; i++) { voltar.click(); volta.push(ativa()); }
         if (volta.join(',') !== 'turma,dias,turma,componente') passos.push('voltar: ' + volta.join(','));
+        if (!document.getElementById('btn-ano-inteiro-indicadores').classList.contains('is-active')) passos.push('Voltar nao devolveu o Ano inteiro');
         if (inp.value !== comp) passos.push('voltou com outra componente: ' + inp.value);
         if (!voltar.classList.contains('hidden')) passos.push('Voltar ainda aparece no fim');
         return { passos, comp, turma, docente, nomeC };

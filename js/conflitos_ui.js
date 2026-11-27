@@ -1,18 +1,18 @@
-import { store } from './store.js?v=202611262205';
-import { getCalendarEvents } from './calendar.js?v=202611262205';
-import { timeToMinutes } from './date_utils_ui.js?v=202611262205';
+import { store } from './store.js?v=202611262209';
+import { getCalendarEvents } from './calendar.js?v=202611262209';
+import { timeToMinutes } from './date_utils_ui.js?v=202611262209';
 import {
     isPendingAllocation,
     getAllocationTeachersForConflict,
     normalizeTeacherNameForMatch
-} from './allocation_helpers.js?v=202611262205';
-import { normalizeConflictSlotLabel } from './turno_helpers.js?v=202611262205';
-import { slotLabelsOverlap } from './academic_rules.mjs?v=202611262205';
-import { getTurmaLabel } from './curso_turma_helpers.js?v=202611262205';
-import { renderTeacherCalendar, withPlanContext } from './calendarios_ui.js?v=202611262205';
-import { showToastWarning } from './ui_feedback.js?v=202611262205';
-import { saoSubturmasDiferentes } from './subturmas.mjs?v=202611262205';
-import { umNomePorPessoa } from './docente_nomes.mjs?v=202611262205';
+} from './allocation_helpers.js?v=202611262209';
+import { normalizeConflictSlotLabel } from './turno_helpers.js?v=202611262209';
+import { slotLabelsOverlap } from './academic_rules.mjs?v=202611262209';
+import { getTurmaLabel } from './curso_turma_helpers.js?v=202611262209';
+import { renderTeacherCalendar, withPlanContext } from './calendarios_ui.js?v=202611262209';
+import { showToastWarning } from './ui_feedback.js?v=202611262209';
+import { saoSubturmasDiferentes } from './subturmas.mjs?v=202611262209';
+import { umNomePorPessoa } from './docente_nomes.mjs?v=202611262209';
 
 // Ref DOM de nivel de modulo (modulo deferred, DOM pronto).
 const selViewDocente = document.getElementById('sel-view-docente');

@@ -9,18 +9,18 @@
 // (o mesmo do Componente) com docentes, horario e datas embaixo de cada nome.
 // Navegacao (Etapa 1 da integracao, 26/11/2026): turma, componente e docente
 // levam a sub-aba deles, com "Voltar". O Indicadores so le; mudar e na Lista de ofertas.
-import { UNIDADE_PADRAO, unidadeDoCurso } from './unidades.mjs?v=202611262205';
-import { escapeHtml as esc } from './texto.mjs?v=202611262205';
-import { store } from './store.js?v=202611262205';
-import { getCursoSiglaDaTurma, getDisciplinaCHGlobal, getTurmaLabel, getTurmaBaseLabel } from './curso_turma_helpers.js?v=202611262205';
-import { formatDateBR } from './date_utils_ui.js?v=202611262205';
-import { UNIDADES } from './docente_nomes.mjs?v=202611262205';
-import { cargaPorDocente, ordenarLinhas, SEM_DOCENTE, ofertasDoPlano, chaveComponente, chaveSubturma, nomesDasComponentes, resumoDasAulas, semSufixoCH } from './indicadores.mjs?v=202611262205';
-import { getCalendarEvents } from './calendar.js?v=202611262205';
-import { withPlanContext } from './calendarios_ui.js?v=202611262205';
-import { feriadosDaTurma } from './feriados.mjs?v=202611262205';
-import { fmtCH, focarDiaDoQuadro, DICA_MOUSE, entradaDias, montarQuadrosDias, quadroTurmaHtml, textoSobrecarga, corDoQuadro } from './quadro_dias.mjs?v=202611262205';
-import { numeroDaSubturma } from './subturmas.mjs?v=202611262205';
+import { UNIDADE_PADRAO, unidadeDoCurso } from './unidades.mjs?v=202611262209';
+import { escapeHtml as esc } from './texto.mjs?v=202611262209';
+import { store } from './store.js?v=202611262209';
+import { getCursoSiglaDaTurma, getDisciplinaCHGlobal, getTurmaLabel, getTurmaBaseLabel } from './curso_turma_helpers.js?v=202611262209';
+import { formatDateBR } from './date_utils_ui.js?v=202611262209';
+import { UNIDADES } from './docente_nomes.mjs?v=202611262209';
+import { cargaPorDocente, ordenarLinhas, SEM_DOCENTE, ofertasDoPlano, chaveComponente, chaveSubturma, nomesDasComponentes, resumoDasAulas, semSufixoCH } from './indicadores.mjs?v=202611262209';
+import { getCalendarEvents } from './calendar.js?v=202611262209';
+import { withPlanContext } from './calendarios_ui.js?v=202611262209';
+import { feriadosDaTurma } from './feriados.mjs?v=202611262209';
+import { fmtCH, focarDiaDoQuadro, DICA_MOUSE, entradaDias, montarQuadrosDias, quadroTurmaHtml, textoSobrecarga, corDoQuadro } from './quadro_dias.mjs?v=202611262209';
+import { numeroDaSubturma } from './subturmas.mjs?v=202611262209';
 
 const VALIDADE_MS = 2 * 60 * 1000; // depois disso, abrir o menu busca de novo
 
@@ -990,8 +990,9 @@ function voltar() {
     if (abaIndicadores()) abaIndicadores().scrollTop = ultimo.rolagem;
 }
 
-// Turma (no PL da componente, que fica em destaque). O periodo so muda se o PL
-// escolhido nao e o da componente; a unidade passa a ser a da turma.
+// Turma no PL da componente, que fica em destaque (mesmo vindo do "Ano inteiro":
+// pedido de 26/11/2026, um PL so e mais facil de ler). O Voltar devolve o periodo
+// de antes. A unidade passa a ser a da turma.
 function irParaTurma({ turmaId, planKey = '', key = '' }) {
     if (!turmaId) return;
     const curso = getCursoSiglaDaTurma(turmaId);
@@ -1001,7 +1002,7 @@ function irParaTurma({ turmaId, planKey = '', key = '' }) {
         turma: turmaId,
         turmaCurso: estado.turmaCurso && estado.turmaCurso !== curso ? '' : estado.turmaCurso,
         turmaDestaque: key && planKey ? `${planKey}|${key}` : '',
-        periodo: estado.periodo === 'ano' || !planKey || estado.periodo === planKey ? estado.periodo : planKey
+        periodo: planKey || estado.periodo
     });
 }
 
