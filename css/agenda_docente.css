@@ -166,7 +166,7 @@
 /* Linha Sobrecarga diaria (28/11/2026): faixa azul clara atras da linha toda,
    para se destacar das componentes; o verde (1 componente no dia) forte. */
 .pub-docente-page .dd-faixa-resumo {
-    align-self: stretch; margin: 1px 0; border-radius: 7px;
+    align-self: stretch; margin: 1px 0 -4px; border-radius: 7px;
     background: rgba(120, 190, 235, 0.28); border: 1px solid rgba(70, 150, 210, 0.35);
 }
 .pub-docente-page .dd-rot-resumo, .pub-docente-page .dd-d.dd-resumo { position: relative; }
