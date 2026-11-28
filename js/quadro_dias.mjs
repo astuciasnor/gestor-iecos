@@ -1,7 +1,7 @@
-import { escapeHtml as esc } from './texto.mjs?v=202611281744';
-import { vividHexColor, hexToRgb, rgbToHsl, hslToRgb } from './color_utils.js?v=202611281744';
-import { diasDoDocente } from './dias_docente.mjs?v=202611281744';
-import { chOrientadorDaOferta } from './estagio.mjs?v=202611281744';
+import { escapeHtml as esc } from './texto.mjs?v=202611281759';
+import { vividHexColor, hexToRgb, rgbToHsl, hslToRgb } from './color_utils.js?v=202611281759';
+import { diasDoDocente } from './dias_docente.mjs?v=202611281759';
+import { chOrientadorDaOferta } from './estagio.mjs?v=202611281759';
 // Desenho do quadro "Dias do docente": uma coluna por dia do PL, a linha
 // "Sobrecarga diaria" (verde = 1 componente, vermelho = 2 ou mais) e uma linha por
 // componente. Usado em Indicadores > Dias do docente e na agenda publica

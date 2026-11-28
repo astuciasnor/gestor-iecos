@@ -1,5 +1,5 @@
-import { resolveActiveAcademicPeriod } from './academic_rules.mjs?v=202611281744';
-import { buildCanonicalOfferProjection } from './execution_engine.js?v=202611281744';
+import { resolveActiveAcademicPeriod } from './academic_rules.mjs?v=202611281759';
+import { buildCanonicalOfferProjection } from './execution_engine.js?v=202611281759';
 
 // ==========================================
 // EXPORTAÇÃO JSON (BACKUP E OFERTAS)

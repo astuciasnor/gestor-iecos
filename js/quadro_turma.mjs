@@ -6,16 +6,16 @@
 // plano: { meta: { key, periodo, termStart, termEnd }, allocations, ofertas }
 // (ofertas: de ofertasDoPlano). comPlano(meta, allocations, fn): roda fn com o
 // PL no store (o motor do calendario le o store); cada tela passa o seu.
-import { escapeHtml as esc } from './texto.mjs?v=202611281744';
-import { store } from './store.js?v=202611281744';
-import { getCalendarEvents } from './calendar.js?v=202611281744';
-import { getCursoSiglaDaTurma, getDisciplinaCHGlobal, getTurmaBaseLabel, getTurmaLabel } from './curso_turma_helpers.js?v=202611281744';
-import { formatDateBR } from './date_utils_ui.js?v=202611281744';
-import { feriadosDaTurma } from './feriados.mjs?v=202611281744';
-import { chaveComponente, chaveSubturma, ofertasDoPlano, resumoDasAulas, SEM_DOCENTE } from './indicadores.mjs?v=202611281744';
-import { DICA_MOUSE, entradaDias, fmtCH, quadroTurmaHtml } from './quadro_dias.mjs?v=202611281744';
-import { numeroDaSubturma } from './subturmas.mjs?v=202611281744';
-import { UNIDADES, unidadeDoCurso } from './unidades.mjs?v=202611281744';
+import { escapeHtml as esc } from './texto.mjs?v=202611281759';
+import { store } from './store.js?v=202611281759';
+import { getCalendarEvents } from './calendar.js?v=202611281759';
+import { getCursoSiglaDaTurma, getDisciplinaCHGlobal, getTurmaBaseLabel, getTurmaLabel } from './curso_turma_helpers.js?v=202611281759';
+import { formatDateBR } from './date_utils_ui.js?v=202611281759';
+import { feriadosDaTurma } from './feriados.mjs?v=202611281759';
+import { chaveComponente, chaveSubturma, ofertasDoPlano, resumoDasAulas, SEM_DOCENTE } from './indicadores.mjs?v=202611281759';
+import { DICA_MOUSE, entradaDias, fmtCH, quadroTurmaHtml } from './quadro_dias.mjs?v=202611281759';
+import { numeroDaSubturma } from './subturmas.mjs?v=202611281759';
+import { UNIDADES, unidadeDoCurso } from './unidades.mjs?v=202611281759';
 
 // ===== Unidade, curso e turmas (os filtros da Turma) =====
 

@@ -1,24 +1,28 @@
-// Menu Indicadores (so leitura: nada e gravado).
-// Sub-aba "Carga por docente": tabela com a CH de cada docente por curso e por PL,
-// do ano inteiro ou de um PL. As contas estao em indicadores.mjs.
-// Sub-aba "Dias do docente": quadro de um docente, uma linha por componente e um
-// quadradinho por dia do PL, com os dias de 2+ componentes (dias_docente.mjs).
-// Sub-aba "Componente" (26/11/2026): em qual PL e turma uma componente e dada,
-// com qual docente, de quando a quando e em que dias/horario.
-// Sub-aba "Turma" (26/11/2026): escolhe a turma e ve, por PL, o quadro dos dias
-// (o mesmo do Componente) com docentes, horario e datas embaixo de cada nome.
-// Navegacao (Etapa 1 da integracao, 26/11/2026): turma, componente e docente
-// levam a sub-aba deles, com "Voltar". O Indicadores so le; mudar e na Lista de ofertas.
-import { UNIDADE_PADRAO } from './unidades.mjs?v=202611281744';
-import { escapeHtml as esc } from './texto.mjs?v=202611281744';
-import { store } from './store.js?v=202611281744';
-import { getCursoSiglaDaTurma, getDisciplinaCHGlobal, getTurmaLabel, getTurmaBaseLabel } from './curso_turma_helpers.js?v=202611281744';
-import { formatDateBR } from './date_utils_ui.js?v=202611281744';
-import { cargaPorDocente, ordenarLinhas, SEM_DOCENTE, chaveComponente, nomesDasComponentes, semSufixoCH } from './indicadores.mjs?v=202611281744';
-import { getCalendarEvents } from './calendar.js?v=202611281744';
-import { withPlanContext } from './calendarios_ui.js?v=202611281744';
-import { fmtCH, focarDiaDoQuadro, DICA_MOUSE, entradaDias, montarQuadrosDias, textoSobrecarga, corDoQuadro } from './quadro_dias.mjs?v=202611281744';
-import { aulasDaTurma, cursosDaUnidade, detalheDaLinha, linhasDaComponente, feriadosDoQuadro, linhasDaTurma, nomeDoCurso, nomeUnidade, planoDaUnidade, quadroTurmaDoPlano, turmasDosPlanos, unidadeDe } from './quadro_turma.mjs?v=202611281744';
+// Menu Indicadores (so leitura: nada e gravado). Chaves internas das sub-abas
+// entre parenteses (estado.subaba).
+// "Carga por docente" (carga): tabela com a CH de cada docente por curso e por PL,
+// do ano inteiro ou de um PL. As contas estao em indicadores.mjs. So existe aqui
+// (coordenadores); a Agenda do Docente nao tem.
+// "Busca componente" (componente, 26/11/2026): em qual PL e turma uma componente
+// e dada, com qual docente, de quando a quando e em que dias/horario.
+// "Dia a dia do docente" (dias): quadro de um docente, uma linha por componente e
+// um quadradinho por dia do PL, com os dias de 2+ componentes (quadro_dias.mjs).
+// "Dia a dia da turma" (turma, 26/11/2026): escolhe a turma e ve, por PL, o quadro
+// dos dias com docentes, horario e datas embaixo de cada nome (quadro_turma.mjs).
+// Navegacao (26/11/2026): turma, componente e docente levam a sub-aba deles, com
+// "Voltar". O Indicadores so le; mudar e na Lista de ofertas.
+// 28/11/2026: barra lateral estreita (Ano, Anual/PLs, Unidade, Faculdade, Turmas)
+// e quadros com o visual da Agenda do Docente; cada sub-aba lembra o seu PL.
+import { UNIDADE_PADRAO } from './unidades.mjs?v=202611281759';
+import { escapeHtml as esc } from './texto.mjs?v=202611281759';
+import { store } from './store.js?v=202611281759';
+import { getCursoSiglaDaTurma, getDisciplinaCHGlobal, getTurmaLabel, getTurmaBaseLabel } from './curso_turma_helpers.js?v=202611281759';
+import { formatDateBR } from './date_utils_ui.js?v=202611281759';
+import { cargaPorDocente, ordenarLinhas, SEM_DOCENTE, chaveComponente, nomesDasComponentes, semSufixoCH } from './indicadores.mjs?v=202611281759';
+import { getCalendarEvents } from './calendar.js?v=202611281759';
+import { withPlanContext } from './calendarios_ui.js?v=202611281759';
+import { fmtCH, focarDiaDoQuadro, DICA_MOUSE, entradaDias, montarQuadrosDias, textoSobrecarga, corDoQuadro } from './quadro_dias.mjs?v=202611281759';
+import { aulasDaTurma, cursosDaUnidade, detalheDaLinha, linhasDaComponente, feriadosDoQuadro, linhasDaTurma, nomeDoCurso, nomeUnidade, planoDaUnidade, quadroTurmaDoPlano, turmasDosPlanos, unidadeDe } from './quadro_turma.mjs?v=202611281759';
 
 const VALIDADE_MS = 2 * 60 * 1000; // depois disso, abrir o menu busca de novo
 
@@ -31,7 +35,10 @@ let plNaBarra = () => false;  // (planKey) => o PL ainda aparece na barra latera
 const estado = {
     unidade: UNIDADE_PADRAO, // so os cursos desta unidade (IECOS, CBRAG...)
     ano: '',
-    periodo: 'ano',          // 'ano' ou a chave do PL
+    periodo: 'ano',          // 'ano' ou a chave do PL (o da sub-aba aberta)
+    // Cada sub-aba lembra o seu PL (28/11/2026, como na Agenda do Docente): olhar
+    // uma e outra sem perder o lugar. periodoPorSubaba guarda o das outras.
+    periodoPorSubaba: { carga: 'ano', componente: 'ano', dias: 'ano', turma: 'ano' },
     ordem: { coluna: 'total', crescente: false },
     dados: null,             // { ano, planos: [{ meta, allocations }], em }
     carregando: false,
@@ -60,10 +67,10 @@ function alocacoesDoPlano(meta, allocations) {
     return meta.key === (store.getActivePlanMeta()?.key || '') ? store.allocations : (allocations || []);
 }
 
-// "IECOS · Ano inteiro de 2027" ou "IECOS · 2027 - PL2" (sem a unidade: comUnidade false).
+// "IECOS · Ano de 2027" ou "IECOS · 2027 - PL2" (sem a unidade: comUnidade false).
 function rotuloDoPeriodo({ comUnidade = true } = {}) {
     const pl = metasDoAno(estado.ano).find((m) => m.key === estado.periodo)?.periodo || '';
-    const periodo = estado.periodo === 'ano' ? `Ano inteiro de ${estado.ano}` : `${estado.ano} - ${pl}`;
+    const periodo = estado.periodo === 'ano' ? `Ano de ${estado.ano}` : `${estado.ano} - ${pl}`;
     return comUnidade ? `${nomeUnidade(estado.unidade)} · ${periodo}` : periodo;
 }
 
@@ -84,6 +91,34 @@ function metasDoAno(ano) {
             termEnd: item.fim
         }))
         .filter((meta) => meta?.key);
+}
+
+// PL do momento do ano: o em curso; senao o proximo; senao o ultimo (a mesma
+// regra da Agenda do Docente). Ano sem PL: 'ano'.
+function plDoMomento(ano) {
+    const metas = metasDoAno(ano);
+    if (!metas.length) return 'ano';
+    const d = new Date();
+    const hoje = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    const meta = metas.find((m) => m.termStart <= hoje && hoje <= m.termEnd)
+        || metas.find((m) => m.termStart > hoje)
+        || metas[metas.length - 1];
+    return meta.key;
+}
+
+// Ao abrir: Dia a dia do docente, Dia a dia da turma e Busca componente no PL do
+// momento; a Carga por docente no Anual (a tabela com as colunas PL1..PL4).
+function periodosIniciais(ano) {
+    const pl = plDoMomento(ano);
+    return { carga: 'ano', componente: pl, dias: pl, turma: pl };
+}
+
+// Troca a sub-aba aberta: guarda o PL da que sai e volta o PL da que entra.
+function trocarSubaba(nova) {
+    if (nova === estado.subaba) return;
+    estado.periodoPorSubaba = { ...estado.periodoPorSubaba, [estado.subaba]: estado.periodo };
+    estado.subaba = nova;
+    estado.periodo = estado.periodoPorSubaba[nova] || 'ano';
 }
 
 export function setupIndicadores() {
@@ -107,23 +142,27 @@ export function setupIndicadores() {
     const anoAtivo = String(store.settings?.termStart || '').slice(0, 4);
     estado.ano = anos.includes(anoAtivo) ? anoAtivo : (anos[anos.length - 1] || '');
     selAno.value = estado.ano;
+    estado.periodoPorSubaba = periodosIniciais(estado.ano);
+    estado.periodo = estado.periodoPorSubaba[estado.subaba];
     montarBotoesPL();
 
     btnAno.addEventListener('click', () => { estado.periodo = 'ano'; desenhar(); });
     selAno.addEventListener('change', () => {
         historico.length = 0;
         estado.ano = selAno.value;
+        // Outro ano: todas as sub-abas voltam para Anual (como na Agenda do Docente).
         estado.periodo = 'ano';
+        estado.periodoPorSubaba = { carga: 'ano', componente: 'ano', dias: 'ano', turma: 'ano' };
         montarBotoesPL();
         renderIndicadores({ recarregar: true });
     });
     btnAtualizar?.addEventListener('click', () => renderIndicadores({ recarregar: true }));
     ligarVoltar();
 
-    // Sub-abas: Carga por docente | Dias do docente (mesmos filtros e dados).
+    // Sub-abas (mesmos dados; cada uma lembra o seu PL).
     document.querySelectorAll('#tab-indicadores .ind-subaba[data-subaba]').forEach((btn) => {
         btn.addEventListener('click', () => {
-            estado.subaba = btn.dataset.subaba;
+            trocarSubaba(btn.dataset.subaba);
             desenhar();
         });
     });
@@ -221,7 +260,7 @@ export function setupIndicadores() {
             return;
         }
         const verDocente = ev.target.closest('button[data-ver-docente]');
-        if (verDocente) { irParaDocente(verDocente.dataset.verDocente); return; }
+        if (verDocente) { irParaDocente(verDocente.dataset.verDocente, verDocente.closest('[data-plan-key]')?.dataset.planKey || ''); return; }
         const verComp = ev.target.closest('button[data-ver-componente]');
         if (verComp) { irParaComponente(verComp.dataset.verComponente); return; }
         // Dias do docente: clicar na componente abre a turma dela, com a componente em destaque.
@@ -599,7 +638,7 @@ function desenharComponente(alvo, resumo) {
     const corpo = linhas.map((l, i) => {
         const horario = [l.dias, `${l.turnos} ${l.horario}`.trim()].filter(Boolean).join(' · ');
         const aberta = chaveDaLinha(l) === estado.compAberta;
-        return `<tr class="ind-comp-linha${aberta ? ' is-aberta' : ''}" data-comp-linha="${i}" title="${esc(`Clique para ${aberta ? 'fechar' : 'ver'} o quadro da turma ${l.turma} no ${l.meta.periodo}`)}">
+        return `<tr class="ind-comp-linha${aberta ? ' is-aberta' : ''}" data-comp-linha="${i}" data-plan-key="${esc(l.meta.key)}" title="${esc(`Clique para ${aberta ? 'fechar' : 'ver'} o quadro da turma ${l.turma} no ${l.meta.periodo}`)}">
             <td class="ind-comp-pl" title="${esc(`${estado.ano} - ${l.meta.periodo}: ${formatDateBR(l.meta.termStart)} a ${formatDateBR(l.meta.termEnd)}`)}">${esc(l.meta.periodo)}</td>
             <td title="${esc(nomeDoCurso(l.oferta.curso))}">${esc(l.oferta.curso)}</td>
             <td class="ind-comp-turma"><button type="button" class="ind-link" data-ver-turma="${i}" title="${esc(`Ver a turma ${l.turma} inteira (sub-aba Dia a dia da turma)`)}">${esc(l.turma)}</button></td>
@@ -646,7 +685,8 @@ function montarFaculdades() {
     if (!sel) return;
     const cursos = cursosDaUnidade(estado.unidade);
     if (!cursos.some((c) => c.sigla === estado.turmaCurso)) estado.turmaCurso = '';
-    const html = `<option value="">Todas</option>${cursos.map((c) => `<option value="${esc(c.sigla)}">${esc(`${c.curso} (${c.sigla})`)}</option>`).join('')}`;
+    // Como na Agenda do Docente: "Todos" e a sigla antes do nome (cabe na barra estreita).
+    const html = `<option value="">Todos</option>${cursos.map((c) => `<option value="${esc(c.sigla)}" title="${esc(c.curso)}">${esc(`${c.sigla} - ${c.curso}`)}</option>`).join('')}`;
     if (sel.dataset.unidade !== estado.unidade) {
         sel.innerHTML = html;
         sel.dataset.unidade = estado.unidade;
@@ -735,7 +775,7 @@ function desenharTurma(alvo, resumo) {
 // Dias do docente: de qual PL e cada componente desenhada (key -> planKey).
 let diasPlanoDaKey = new Map();
 
-const CAMPOS_NAV = ['subaba', 'unidade', 'periodo', 'docente', 'componente', 'compAberta', 'turmaCurso', 'turma', 'turmaDestaque'];
+const CAMPOS_NAV = ['subaba', 'unidade', 'periodo', 'periodoPorSubaba', 'docente', 'componente', 'compAberta', 'turmaCurso', 'turma', 'turmaDestaque'];
 const historico = []; // [{ foto, rolagem }], o ultimo e a tela de antes
 const MAX_HISTORICO = 20;
 
@@ -776,6 +816,13 @@ function sincronizarCampos() {
 function navegar(muda) {
     historico.push({ foto: Object.fromEntries(CAMPOS_NAV.map((k) => [k, estado[k]])), rolagem: abaIndicadores()?.scrollTop || 0 });
     if (historico.length > MAX_HISTORICO) historico.shift();
+    // A sub-aba que sai guarda o PL dela; a que entra usa o PL do atalho (muda.periodo)
+    // ou o que ela lembrava.
+    const destino = muda.subaba || estado.subaba;
+    if (destino !== estado.subaba) {
+        estado.periodoPorSubaba = { ...estado.periodoPorSubaba, [estado.subaba]: estado.periodo };
+        if (!('periodo' in muda)) muda = { ...muda, periodo: estado.periodoPorSubaba[destino] || 'ano' };
+    }
     Object.assign(estado, muda);
     sincronizarCampos();
     desenhar();
@@ -810,13 +857,16 @@ function irParaTurma({ turmaId, planKey = '', key = '' }) {
     });
 }
 
-function irParaDocente(nome) {
-    if (nome) navegar({ subaba: 'dias', docente: nome });
+// Docente: abre o Dia a dia dele no PL do quadro (ou da linha) em que o nome estava;
+// sem PL (tabela da Carga), no mesmo periodo da tela de agora.
+function irParaDocente(nome, planKey = '') {
+    if (nome) navegar({ subaba: 'dias', docente: nome, periodo: planKey || estado.periodo });
 }
 
+// Componente (↗ no quadro da turma): onde mais ela e dada, no mesmo periodo.
 function irParaComponente(disciplina) {
     const nome = semSufixoCH(disciplina);
-    if (nome) navegar({ subaba: 'componente', componente: nome, compAberta: '' });
+    if (nome) navegar({ subaba: 'componente', componente: nome, compAberta: '', periodo: estado.periodo });
 }
 
 // Liga o botao Voltar (chamado uma vez, no setup).

@@ -46,6 +46,12 @@ try {
         await new Promise(r => setTimeout(r, 500));
         return 'ok';
     })()`);
+    // 28/11/2026: a sub-aba abre no PL do momento (um PL marcado, nao o Anual).
+    const abriuNoPL = await evaluate(`!document.getElementById('btn-ano-inteiro-indicadores').classList.contains('is-active')
+        && !!document.querySelector('#ind-pl-buttons .is-active')`);
+    confere('Dia a dia do docente abre no PL do momento', abriuNoPL);
+    // O resto do teste olha o ano inteiro: clica em Anual.
+    await evaluate(`(async () => { document.getElementById('btn-ano-inteiro-indicadores').click(); await new Promise(r => setTimeout(r, 300)); return 'ok'; })()`);
 
     const telaVazia = JSON.parse(await evaluate(`JSON.stringify({
         caixa: !document.getElementById('ind-docente-box').classList.contains('hidden'),

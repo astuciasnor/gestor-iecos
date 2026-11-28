@@ -57,36 +57,20 @@
 }
 .pub-docente-page .doc-corpo .pub-main { margin-top: 0; gap: 10px; min-width: 0; }
 
-.doc-lateral {
-    position: sticky; top: 10px;
-    display: flex; flex-direction: column; gap: 10px;
-    padding: 12px 10px; border-radius: 16px;
-    background: var(--pub-card); border: 1px solid var(--pub-line); box-shadow: var(--pub-shadow);
-}
-.doc-lat-campo { display: flex; flex-direction: column; gap: 4px; margin: 0; }
-.doc-lat-campo > span, .doc-lat-titulo {
-    font-size: 0.72rem; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase; color: #5b7268;
-}
+/* O visual da barra lateral, das turmas, das sub-abas e da caixa de busca e
+   comum com os Indicadores do Cardume: fica em css/style.css (bloco "Barra
+   lateral estreita, sub-abas e caixa de busca"). Aqui, so o que e desta pagina. */
+.doc-lateral { position: sticky; top: 10px; }
 .doc-lat-campo .pub-select { width: 100%; padding-top: 7px; padding-bottom: 7px; }
 
-/* Anual, PL1, PL2... um abaixo do outro, todos da mesma largura */
-.doc-pls { display: grid; grid-template-columns: 1fr; gap: 6px; }
-.doc-pls:empty { display: none; }
+/* Anual, PL1, PL2... (botoes .pub-pill da agenda) */
 .doc-pls .pub-pill { justify-content: center; padding: 6px 8px; font-size: 0.9rem; }
 .doc-pls .pub-pill.active { cursor: default; }
 
 /* Dia a dia da Turma: Unidade, Faculdade/Curso e as turmas (uma abaixo da
    outra, cartao maior: pedido de 28/11/2026) */
-.doc-lat-turma { display: flex; flex-direction: column; gap: 10px; padding-top: 10px; border-top: 1px solid var(--pub-line); }
+.doc-lat-turma { display: flex; flex-direction: column; gap: 10px; }
 .doc-lat-turma[hidden] { display: none; }
-.doc-turmas { display: grid; grid-template-columns: 1fr; gap: 6px; }
-.doc-turma-chip {
-    padding: 8px 6px; border: 1px solid var(--pub-line); border-radius: 10px;
-    background: #f4f8f5; color: var(--pub-ink); font: inherit; font-size: 0.9rem; font-weight: 800;
-    cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-}
-.doc-turma-chip:hover { border-color: #1c5356; background: #fff; }
-.doc-turma-chip.active { background: #1c5356; border-color: #1c5356; color: #fff; cursor: default; }
 .doc-turmas-vazio { grid-column: 1 / -1; font-size: 0.78rem; color: #5b7268; }
 
 /* Dia a dia do Docente: a componente leva a turma dela (clique) */
@@ -102,18 +86,6 @@
 .doc-link-docente:focus-visible { outline: 2px solid #287fd0; outline-offset: 1px; }
 .dd-rot-docente.doc-eu { font-weight: 800; color: #173728; }
 .doc-turma-pl + .doc-turma-pl { margin-top: 0; }
-
-/* Sub-abas: Dia a dia do Docente | Dia a dia da Turma */
-.doc-subabas { display: flex; flex-wrap: wrap; gap: 6px; border-bottom: 3px solid #1c5356; }
-.doc-subaba {
-    padding: 8px 20px; border: 1px solid rgba(28, 83, 86, 0.25); border-bottom: 0;
-    border-radius: 12px 12px 0 0; background: rgba(255, 255, 255, 0.6);
-    color: #5b7268; font: inherit; font-size: 0.95rem; font-weight: 800; cursor: pointer;
-    transition: background-color 0.15s, color 0.15s;
-}
-.doc-subaba:hover { background: #fff; color: #1c5356; }
-.doc-subaba.active { background: #1c5356; border-color: #1c5356; color: #fff; cursor: default; }
-.doc-subaba:focus-visible { outline: none; box-shadow: 0 0 0 4px rgba(0, 78, 40, 0.18); }
 
 /* Visual dos quadros (PLs, cabecalho, faixa da Sobrecarga): desde 28/11/2026 no
    fim do css/style.css, na classe .dd-estilo-agenda, comum a esta pagina e ao
@@ -138,12 +110,7 @@
 }
 
 /* Buscar Componente: o campo do nome, embaixo das sub-abas */
-.doc-busca {
-    display: flex; align-items: center; gap: 10px; padding: 8px 14px; border-radius: 14px;
-    background: var(--pub-card); border: 1px solid var(--pub-line);
-}
 .doc-busca[hidden] { display: none; }
-.doc-busca label { font-size: 0.78rem; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase; color: #5b7268; }
 .doc-busca-campo { flex: 1 1 auto; max-width: 620px; }
 .doc-busca .pub-input { width: 100%; padding-top: 8px; padding-bottom: 8px; padding-right: 48px; }
 /* Sem a setinha da lista (o X fica no lugar dela, como no campo Professor) */
