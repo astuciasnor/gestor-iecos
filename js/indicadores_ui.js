@@ -9,18 +9,18 @@
 // (o mesmo do Componente) com docentes, horario e datas embaixo de cada nome.
 // Navegacao (Etapa 1 da integracao, 26/11/2026): turma, componente e docente
 // levam a sub-aba deles, com "Voltar". O Indicadores so le; mudar e na Lista de ofertas.
-import { UNIDADE_PADRAO, unidadeDoCurso } from './unidades.mjs?v=202611262209';
-import { escapeHtml as esc } from './texto.mjs?v=202611262209';
-import { store } from './store.js?v=202611262209';
-import { getCursoSiglaDaTurma, getDisciplinaCHGlobal, getTurmaLabel, getTurmaBaseLabel } from './curso_turma_helpers.js?v=202611262209';
-import { formatDateBR } from './date_utils_ui.js?v=202611262209';
-import { UNIDADES } from './docente_nomes.mjs?v=202611262209';
-import { cargaPorDocente, ordenarLinhas, SEM_DOCENTE, ofertasDoPlano, chaveComponente, chaveSubturma, nomesDasComponentes, resumoDasAulas, semSufixoCH } from './indicadores.mjs?v=202611262209';
-import { getCalendarEvents } from './calendar.js?v=202611262209';
-import { withPlanContext } from './calendarios_ui.js?v=202611262209';
-import { feriadosDaTurma } from './feriados.mjs?v=202611262209';
-import { fmtCH, focarDiaDoQuadro, DICA_MOUSE, entradaDias, montarQuadrosDias, quadroTurmaHtml, textoSobrecarga, corDoQuadro } from './quadro_dias.mjs?v=202611262209';
-import { numeroDaSubturma } from './subturmas.mjs?v=202611262209';
+import { UNIDADE_PADRAO, unidadeDoCurso } from './unidades.mjs?v=202611281337';
+import { escapeHtml as esc } from './texto.mjs?v=202611281337';
+import { store } from './store.js?v=202611281337';
+import { getCursoSiglaDaTurma, getDisciplinaCHGlobal, getTurmaLabel, getTurmaBaseLabel } from './curso_turma_helpers.js?v=202611281337';
+import { formatDateBR } from './date_utils_ui.js?v=202611281337';
+import { UNIDADES } from './docente_nomes.mjs?v=202611281337';
+import { cargaPorDocente, ordenarLinhas, SEM_DOCENTE, ofertasDoPlano, chaveComponente, chaveSubturma, nomesDasComponentes, resumoDasAulas, semSufixoCH } from './indicadores.mjs?v=202611281337';
+import { getCalendarEvents } from './calendar.js?v=202611281337';
+import { withPlanContext } from './calendarios_ui.js?v=202611281337';
+import { feriadosDaTurma } from './feriados.mjs?v=202611281337';
+import { fmtCH, focarDiaDoQuadro, DICA_MOUSE, entradaDias, montarQuadrosDias, quadroTurmaHtml, textoSobrecarga, corDoQuadro } from './quadro_dias.mjs?v=202611281337';
+import { numeroDaSubturma } from './subturmas.mjs?v=202611281337';
 
 const VALIDADE_MS = 2 * 60 * 1000; // depois disso, abrir o menu busca de novo
 

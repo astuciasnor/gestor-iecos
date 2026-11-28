@@ -1,14 +1,14 @@
-import { addDaysISO } from './datas.mjs?v=202611262209';
-import { timeToMinutesSafe, normalizeDayList, normalizeSlotList, normalizeDrawnSlotsByDay, buildDrawnSlotsByDay } from './horarios.mjs?v=202611262209';
-import { normalizeKeyPart, normalizeKeyPart as normalizeTeacherKey } from './texto.mjs?v=202611262209';
-import { getNativeTurnoValueForAllocation, getQuadroTodosRegimes } from './turno_helpers.js?v=202611262209';
-import { store } from './store.js?v=202611262209';
-import { getDaysArray, toLocalDateString } from './utils.js?v=202611262209';
-import { mapSlotToTurno, turnoDaTurmaInclui } from './turns.js?v=202611262209';
-import { slotLabelsOverlap } from './academic_rules.mjs?v=202611262209';
-import { mesmoDocente } from './docente_nomes.mjs?v=202611262209';
-import { datasFeriadoDaTurma, feriadosDaTurma } from './feriados.mjs?v=202611262209';
-import { estagioContaChoque, ehEstagio } from './estagio.mjs?v=202611262209';
+import { addDaysISO } from './datas.mjs?v=202611281337';
+import { timeToMinutesSafe, normalizeDayList, normalizeSlotList, normalizeDrawnSlotsByDay, buildDrawnSlotsByDay } from './horarios.mjs?v=202611281337';
+import { normalizeKeyPart, normalizeKeyPart as normalizeTeacherKey } from './texto.mjs?v=202611281337';
+import { getNativeTurnoValueForAllocation, getQuadroTodosRegimes } from './turno_helpers.js?v=202611281337';
+import { store } from './store.js?v=202611281337';
+import { getDaysArray, toLocalDateString } from './utils.js?v=202611281337';
+import { mapSlotToTurno, turnoDaTurmaInclui } from './turns.js?v=202611281337';
+import { slotLabelsOverlap } from './academic_rules.mjs?v=202611281337';
+import { mesmoDocente } from './docente_nomes.mjs?v=202611281337';
+import { datasFeriadoDaTurma, feriadosDaTurma } from './feriados.mjs?v=202611281337';
+import { estagioContaChoque, ehEstagio } from './estagio.mjs?v=202611281337';
 
 function normalizeCalendarSlotKey(value) {
   const match = String(value || '').match(/\d{1,2}:\d{2}/);
@@ -25,13 +25,13 @@ function applyExceptionalSaturdayShift(allocation = {}, dayOfWeek = 0, slots = [
   // no horario desenhado.
   if (turnoDaTurmaInclui(nativeTurno, 'manha')) return normalizedSlots;
 
+  // Horarios do regime do curso DA TURMA, nao o da tela: a agenda publica nao
+  // escolhe curso e ficava no regime padrao (13:30), sem achar o 14:00 do
+  // regime 2; o sabado aparecia a tarde (28/11/2026).
+  const turma = (store.rawData?.turmas || []).find((t) => String(t?.turma_id) === String(allocation?.turmaId || ''));
+  const horarios = store.getHorariosPorTurnoDoCurso(turma?.sigla || store.selectedCurso);
   return normalizeSlotList(
-    normalizedSlots.map((slot) => mapSlotToTurno(
-      slot,
-      nativeTurno,
-      'Manha',
-      store.getActiveHorariosPorTurno()
-    ))
+    normalizedSlots.map((slot) => mapSlotToTurno(slot, nativeTurno, 'Manha', horarios))
   );
 }
 
