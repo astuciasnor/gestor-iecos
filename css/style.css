@@ -4181,15 +4181,15 @@ body:has(#tab-weekly.active) .top-bar .btn-print { display: none; }
 .ind-lat-bloco, .ind-lat-turma { padding-top: 10px; border-top: 1px solid #d7e3dc; }
 .ind-lat-turma { display: flex; flex-direction: column; gap: 6px; }
 .ind-lat-turma + .ind-lat-turma { padding-top: 0; border-top: 0; }
-.ind-lateral .ind-turmas { display: grid; grid-template-columns: 1fr; gap: 6px; }
-.ind-lateral .ind-turma-chip {
+.ind-turmas { display: grid; grid-template-columns: 1fr; gap: 6px; }
+.ind-turma-chip {
     padding: 8px 6px; border: 1px solid #d7e3dc; border-radius: 10px;
-    background: #f4f8f5; color: #173728; font-size: 0.9rem; font-weight: 800;
+    background: #f4f8f5; color: #173728; font: inherit; font-size: 0.9rem; font-weight: 800; cursor: pointer;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-.ind-lateral .ind-turma-chip:hover { border-color: #1c5356; background: #fff; }
-.ind-lateral .ind-turma-chip.is-active { background: #1c5356; border-color: #1c5356; color: #fff; cursor: default; }
-.ind-lateral .ind-turmas-vazio { font-size: 0.78rem; }
+.ind-turma-chip:hover { border-color: #1c5356; background: #fff; }
+.ind-turma-chip.is-active { background: #1c5356; border-color: #1c5356; color: #fff; cursor: default; }
+.ind-turmas-vazio { color: var(--text-muted); font-size: 0.78rem; font-style: italic; }
 .ind-lat-atualizar {
     padding: 7px 8px; border: 1px solid #dbe6f1; border-radius: 10px;
     background: #f4f9ff; color: #287fd0; font: inherit; font-size: 0.84rem; font-weight: 700; cursor: pointer;
@@ -4328,16 +4328,8 @@ body:has(#tab-weekly.active) .top-bar .btn-print { display: none; }
 .ind-tabela-comp .ind-comp-linha.is-aberta > td { background: #eef1fb; }
 .ind-tabela-comp .ind-comp-linha.is-aberta > td:first-child { box-shadow: inset 4px 0 0 #2d34c6; }
 .ind-comp-quadro { margin-top: 14px; }
-/* Indicadores > Turma (26/11/2026): botoes das turmas e, por PL, o quadro dos
+/* Indicadores > Turma (26/11/2026): por PL, o quadro dos
    dias com docentes, horario e datas embaixo de cada nome (sem tabela). */
-.ind-turmas { display: inline-flex; flex-wrap: wrap; gap: 6px; }
-.ind-turma-chip {
-    border: 1px solid #b9c3f0; background: #f4f6fb; color: #2d34c6;
-    border-radius: 999px; padding: 4px 12px; font: inherit; font-size: 0.82rem; font-weight: 700; cursor: pointer;
-}
-.ind-turma-chip:hover { border-color: #2d34c6; }
-.ind-turma-chip.is-active { background: #2d34c6; border-color: #2d34c6; color: #fff; }
-.ind-turmas-vazio { color: var(--text-muted); font-size: 0.82rem; font-style: italic; }
 .ind-turma-pl { margin-bottom: 18px; }
 .dd-quadro--turma { --dd-col-nome: minmax(250px, 340px); }
 .dd-quadro--turma .dd-grade { row-gap: 7px; }
@@ -4481,3 +4473,50 @@ body:has(#tab-weekly.active) .top-bar .btn-print { display: none; }
 }
 .ind-tabela thead th.ind-unidade:hover { background: #f4f6fb; }
 .ind-tabela thead th[rowspan] { vertical-align: bottom; }
+
+/* ===== Quadros dos dias com o visual da Agenda do Docente (28/11/2026) =====
+   Vale onde houver a classe .dd-estilo-agenda: o <body> da agenda_docente_turma.html
+   e a aba Indicadores (index.html). Um lugar so: mudou aqui, muda nas duas telas.
+   Fica no fim do arquivo para ganhar das regras basicas dos quadros (.dd-*). */
+/* ===== PLs (26/11/2026): mais juntos; o PL onde o docente tem aula com
+   contorno verde forte; o PL sem aula dele (0h) com contorno claro ===== */
+.dd-estilo-agenda .dd-quadro {
+    margin-bottom: 12px; padding: 0 14px 14px;
+    border: 2px solid #b9cfc2; border-left: 8px solid #b9cfc2; border-radius: 12px;
+    box-shadow: none;
+}
+.dd-estilo-agenda .dd-quadro.tem-aula {
+    border: 3px solid var(--primary); border-left-width: 10px;
+    box-shadow: 0 4px 14px rgba(23, 55, 40, 0.22);
+}
+.dd-estilo-agenda .dd-quadro:not(.tem-aula):not(.is-vazio) .dd-pl { background: #6f9580; }
+.dd-estilo-agenda .dd-quadro .dd-head {
+    margin: 0 -14px; padding: 10px 14px;
+    background: #e8f2ec; border-bottom: 1px solid #b9cfc2; border-radius: 4px 10px 0 0;
+}
+.dd-estilo-agenda .dd-quadro .dd-head .dd-ch { background: #fff; border: 1px solid #c4d6cc; }
+.dd-estilo-agenda .dd-quadro.is-vazio { padding: 0 14px; border-color: #c4d6cc; border-left-color: #b9cfc2; box-shadow: none; }
+.dd-estilo-agenda .dd-quadro.is-vazio .dd-head { border-bottom: 0; background: transparent; }
+.dd-estilo-agenda .dd-pl {
+    padding: 3px 12px; border-radius: 8px;
+    background: var(--primary); color: #fff; font-size: 1.05rem; letter-spacing: 0.02em;
+}
+.dd-estilo-agenda .dd-quadro.is-vazio .dd-pl { background: #dbe8e0; color: #2d4839; font-size: 0.95rem; }
+
+/* Caixa do dia (passar o mouse): sempre com a altura de 2 linhas. Com o padding
+   do cabecalho desta pagina, o texto longo (2 linhas) aumentava o cabecalho e a
+   grade descia e subia sob o mouse (visto no Dia a dia da Turma, 28/11/2026). */
+.dd-estilo-agenda .dd-quadro:not(.is-vazio) .dd-info { height: calc(2.6em + 8px); }
+
+/* Linha Sobrecarga diaria (28/11/2026): faixa azul clara atras da linha toda,
+   para se destacar das componentes; o verde (1 componente no dia) forte. */
+.dd-estilo-agenda .dd-faixa-resumo {
+    align-self: stretch; margin: 1px 0 -4px; border-radius: 7px;
+    background: rgba(120, 190, 235, 0.28); border: 1px solid rgba(70, 150, 210, 0.35);
+}
+.dd-estilo-agenda .dd-rot-resumo, .dd-estilo-agenda .dd-d.dd-resumo { position: relative; }
+.dd-estilo-agenda .dd-rot-resumo .dd-rot-nome { color: #1c5356; }
+/* O texto mais para dentro da faixa (nao fica rente a borda esquerda) */
+.dd-estilo-agenda .dd-rot-resumo { padding: 3px 12px 3px 9px; }
+.dd-estilo-agenda .dd-d.dd-resumo.dd-um { background: #2f9e5b; border-color: #237a46; }
+.dd-estilo-agenda .dd-leg-nao { background: #2f9e5b; }

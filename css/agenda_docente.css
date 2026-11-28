@@ -115,30 +115,9 @@
 .doc-subaba.active { background: #1c5356; border-color: #1c5356; color: #fff; cursor: default; }
 .doc-subaba:focus-visible { outline: none; box-shadow: 0 0 0 4px rgba(0, 78, 40, 0.18); }
 
-/* ===== PLs (26/11/2026): mais juntos; o PL onde o docente tem aula com
-   contorno verde forte; o PL sem aula dele (0h) com contorno claro ===== */
-.pub-docente-page .dd-quadro {
-    margin-bottom: 12px; padding: 0 14px 14px;
-    border: 2px solid #b9cfc2; border-left: 8px solid #b9cfc2; border-radius: 12px;
-    box-shadow: none;
-}
-.pub-docente-page .dd-quadro.tem-aula {
-    border: 3px solid var(--primary); border-left-width: 10px;
-    box-shadow: 0 4px 14px rgba(23, 55, 40, 0.22);
-}
-.pub-docente-page .dd-quadro:not(.tem-aula):not(.is-vazio) .dd-pl { background: #6f9580; }
-.pub-docente-page .dd-quadro .dd-head {
-    margin: 0 -14px; padding: 10px 14px;
-    background: #e8f2ec; border-bottom: 1px solid #b9cfc2; border-radius: 4px 10px 0 0;
-}
-.pub-docente-page .dd-quadro .dd-head .dd-ch { background: #fff; border: 1px solid #c4d6cc; }
-.pub-docente-page .dd-quadro.is-vazio { padding: 0 14px; border-color: #c4d6cc; border-left-color: #b9cfc2; box-shadow: none; }
-.pub-docente-page .dd-quadro.is-vazio .dd-head { border-bottom: 0; background: transparent; }
-.pub-docente-page .dd-pl {
-    padding: 3px 12px; border-radius: 8px;
-    background: var(--primary); color: #fff; font-size: 1.05rem; letter-spacing: 0.02em;
-}
-.pub-docente-page .dd-quadro.is-vazio .dd-pl { background: #dbe8e0; color: #2d4839; font-size: 0.95rem; }
+/* Visual dos quadros (PLs, cabecalho, faixa da Sobrecarga): desde 28/11/2026 no
+   fim do css/style.css, na classe .dd-estilo-agenda, comum a esta pagina e ao
+   menu Indicadores do Cardume. */
 
 /* Antes de escolher o nome */
 .doc-boas-vindas {
@@ -157,24 +136,6 @@
     .doc-marca-ufpa { height: 34px; }
     .doc-campo-nome { flex-basis: 100%; }
 }
-
-/* Caixa do dia (passar o mouse): sempre com a altura de 2 linhas. Com o padding
-   do cabecalho desta pagina, o texto longo (2 linhas) aumentava o cabecalho e a
-   grade descia e subia sob o mouse (visto no Dia a dia da Turma, 28/11/2026). */
-.pub-docente-page .dd-quadro:not(.is-vazio) .dd-info { height: calc(2.6em + 8px); }
-
-/* Linha Sobrecarga diaria (28/11/2026): faixa azul clara atras da linha toda,
-   para se destacar das componentes; o verde (1 componente no dia) forte. */
-.pub-docente-page .dd-faixa-resumo {
-    align-self: stretch; margin: 1px 0 -4px; border-radius: 7px;
-    background: rgba(120, 190, 235, 0.28); border: 1px solid rgba(70, 150, 210, 0.35);
-}
-.pub-docente-page .dd-rot-resumo, .pub-docente-page .dd-d.dd-resumo { position: relative; }
-.pub-docente-page .dd-rot-resumo .dd-rot-nome { color: #1c5356; }
-/* O texto mais para dentro da faixa (nao fica rente a borda esquerda) */
-.pub-docente-page .dd-rot-resumo { padding: 3px 12px 3px 9px; }
-.pub-docente-page .dd-d.dd-resumo.dd-um { background: #2f9e5b; border-color: #237a46; }
-.pub-docente-page .dd-leg-nao { background: #2f9e5b; }
 
 /* Buscar Componente: o campo do nome, embaixo das sub-abas */
 .doc-busca {
