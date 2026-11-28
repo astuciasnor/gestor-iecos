@@ -30,7 +30,12 @@ feriados:
   data | feriado | dia | tipo | turmas (opcional; ex.: "EP2027, CB2027" = so
   essas turmas, como Recepcao Calouros; vazio = todas as turmas)
   | campus (opcional; ex.: "Cametá" = feriado municipal so das turmas desse
-  campus; vazio = todos os campi)
+  campus; vazio = todos os campi) | usar (opcional; "não" = linha ignorada,
+  dia normal de aula; ponto facultativo fica em laranja: decidir sim/não)
+  | observacao (opcional; so para quem le)
+  Linha sem data e ignorada: cada ano tem, no fim, linhas amarelas
+  reservadas para eventos academicos (SIEPE, Recepcao Calouros...).
+  Coluna "dia" vazia: preenchida pela data.
 
 periodos_letivos:
   ano | periodo_letivo | inicio | fim
@@ -65,6 +70,10 @@ UNIDADE_PADRAO = {"MT": "CBRAG"}
 # Campus da turma quando a coluna "campus" da aba turmas esta vazia.
 # Tem que ser igual a CAMPUS_PADRAO de js/feriados.mjs.
 CAMPUS_PADRAO = "Bragança"
+
+# Coluna "dia" dos feriados, quando vazia (indice = date.weekday()).
+DIAS_SEMANA = ["Segunda-feira", "Terça-feira", "Quarta-feira", "Quinta-feira",
+               "Sexta-feira", "Sábado", "Domingo"]
 
 def norm_key(value: Any) -> str:
     if value is None:
@@ -334,6 +343,16 @@ def build_json_from_excel(xlsx_path: Path) -> Dict[str, Any]:
             "dia": to_str(row.get("dia")),
             "tipo": to_str(row.get("tipo")),
         }
+        # Linha sem data (ex.: evento academico reservado, ainda sem dias): ignora.
+        if not item["data"]:
+            continue
+        # Coluna opcional "usar": "não" = dia normal de aula (ex.: ponto
+        # facultativo que a direcao decidiu nao dar); vazio = sim.
+        if norm_key(to_str(row.get("usar"))) in ("nao", "n", "off"):
+            continue
+        # Coluna "dia" vazia: preenche pelo dia da semana da data.
+        if not item["dia"]:
+            item["dia"] = DIAS_SEMANA[date.fromisoformat(item["data"]).weekday()]
         # Coluna opcional "turmas": bloqueio so dessas turmas (ver js/feriados.mjs).
         turmas = [t.strip() for t in re.split(r"[,;]", to_str(row.get("turmas"))) if t.strip()]
         # Coluna opcional "campus": feriado municipal, so das turmas desse campus.

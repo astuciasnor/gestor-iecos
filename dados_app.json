@@ -1,6 +1,6 @@
 {
   "meta": {
-    "generated_at": "2026-11-20T16:18:33",
+    "generated_at": "2026-11-28T14:18:03",
     "source_file": "planilha_base.xlsx"
   },
   "docentes": [
@@ -3683,39 +3683,6 @@
       "tipo": "Municipal"
     },
     {
-      "data": "2026-07-08",
-      "feriado": "Fundação de Bragança",
-      "dia": "Quarta-feira",
-      "tipo": "Municipal",
-      "campus": "Bragança",
-      "turmas": [
-        "EP2022",
-        "EP2023",
-        "EP2024",
-        "EP2025",
-        "EP2026",
-        "EP2027",
-        "CB2022",
-        "CB2023",
-        "CB2024",
-        "CB2025",
-        "CB2026",
-        "CB2027",
-        "CN2022",
-        "CN2023",
-        "CN2024",
-        "CN2025",
-        "CN2026",
-        "CN2027",
-        "MT2022",
-        "MT2023",
-        "MT2024",
-        "MT2025",
-        "MT2026",
-        "MT2027"
-      ]
-    },
-    {
       "data": "2026-08-15",
       "feriado": "Adesão do Grão-Pará",
       "dia": "Sábado",
@@ -3758,186 +3725,42 @@
       "tipo": "Nacional"
     },
     {
+      "data": "2026-07-08",
+      "feriado": "Fundação de Bragança",
+      "dia": "Quarta-feira",
+      "tipo": "Municipal",
+      "campus": "Bragança",
+      "turmas": [
+        "EP2022",
+        "EP2023",
+        "EP2024",
+        "EP2025",
+        "EP2026",
+        "EP2027",
+        "CB2022",
+        "CB2023",
+        "CB2024",
+        "CB2025",
+        "CB2026",
+        "CB2027",
+        "CN2022",
+        "CN2023",
+        "CN2024",
+        "CN2025",
+        "CN2026",
+        "CN2027",
+        "MT2022",
+        "MT2023",
+        "MT2024",
+        "MT2025",
+        "MT2026",
+        "MT2027"
+      ]
+    },
+    {
       "data": "2026-12-26",
       "feriado": "Dia de São Benedito",
       "dia": "Sábado",
-      "tipo": "Municipal",
-      "campus": "Bragança",
-      "turmas": [
-        "EP2022",
-        "EP2023",
-        "EP2024",
-        "EP2025",
-        "EP2026",
-        "EP2027",
-        "CB2022",
-        "CB2023",
-        "CB2024",
-        "CB2025",
-        "CB2026",
-        "CB2027",
-        "CN2022",
-        "CN2023",
-        "CN2024",
-        "CN2025",
-        "CN2026",
-        "CN2027",
-        "MT2022",
-        "MT2023",
-        "MT2024",
-        "MT2025",
-        "MT2026",
-        "MT2027"
-      ]
-    },
-    {
-      "data": "2027-01-01",
-      "feriado": "Confraternização Universal",
-      "dia": "Sexta-feira",
-      "tipo": "Nacional"
-    },
-    {
-      "data": "2027-02-09",
-      "feriado": "Carnaval",
-      "dia": "Terça-feira",
-      "tipo": "Nacional"
-    },
-    {
-      "data": "2027-03-26",
-      "feriado": "Sexta-feira Santa",
-      "dia": "Sexta-feira",
-      "tipo": "Nacional"
-    },
-    {
-      "data": "2027-04-21",
-      "feriado": "Tiradentes",
-      "dia": "Quarta-feira",
-      "tipo": "Nacional"
-    },
-    {
-      "data": "2027-05-01",
-      "feriado": "Dia do Trabalho",
-      "dia": "Sábado",
-      "tipo": "Nacional"
-    },
-    {
-      "data": "2027-05-27",
-      "feriado": "Corpus Christi",
-      "dia": "Quinta-feira",
-      "tipo": "Municipal"
-    },
-    {
-      "data": "2027-07-08",
-      "feriado": "Fundação de Bragança",
-      "dia": "Quinta-feira",
-      "tipo": "Municipal",
-      "campus": "Bragança",
-      "turmas": [
-        "EP2022",
-        "EP2023",
-        "EP2024",
-        "EP2025",
-        "EP2026",
-        "EP2027",
-        "CB2022",
-        "CB2023",
-        "CB2024",
-        "CB2025",
-        "CB2026",
-        "CB2027",
-        "CN2022",
-        "CN2023",
-        "CN2024",
-        "CN2025",
-        "CN2026",
-        "CN2027",
-        "MT2022",
-        "MT2023",
-        "MT2024",
-        "MT2025",
-        "MT2026",
-        "MT2027"
-      ]
-    },
-    {
-      "data": "2027-08-15",
-      "feriado": "Adesão do Grão-Pará",
-      "dia": "Domingo",
-      "tipo": "Estadual"
-    },
-    {
-      "data": "2027-09-07",
-      "feriado": "Independência do Brasil",
-      "dia": "Terça-feira",
-      "tipo": "Nacional"
-    },
-    {
-      "data": "2027-10-07",
-      "feriado": "N. Sra. do Rosário (Padroeira)",
-      "dia": "Quinta-feira",
-      "tipo": "Municipal",
-      "campus": "Bragança",
-      "turmas": [
-        "EP2022",
-        "EP2023",
-        "EP2024",
-        "EP2025",
-        "EP2026",
-        "EP2027",
-        "CB2022",
-        "CB2023",
-        "CB2024",
-        "CB2025",
-        "CB2026",
-        "CB2027",
-        "CN2022",
-        "CN2023",
-        "CN2024",
-        "CN2025",
-        "CN2026",
-        "CN2027",
-        "MT2022",
-        "MT2023",
-        "MT2024",
-        "MT2025",
-        "MT2026",
-        "MT2027"
-      ]
-    },
-    {
-      "data": "2027-10-12",
-      "feriado": "Nossa Senhora Aparecida",
-      "dia": "Terça-feira",
-      "tipo": "Nacional"
-    },
-    {
-      "data": "2027-11-02",
-      "feriado": "Finados",
-      "dia": "Terça-feira",
-      "tipo": "Nacional"
-    },
-    {
-      "data": "2027-11-15",
-      "feriado": "Proclamação da República",
-      "dia": "Segunda-feira",
-      "tipo": "Nacional"
-    },
-    {
-      "data": "2027-11-20",
-      "feriado": "Dia da Consciência Negra",
-      "dia": "Sábado",
-      "tipo": "Nacional"
-    },
-    {
-      "data": "2027-12-25",
-      "feriado": "Natal",
-      "dia": "Sábado",
-      "tipo": "Nacional"
-    },
-    {
-      "data": "2027-12-26",
-      "feriado": "Dia de São Benedito",
-      "dia": "Domingo",
       "tipo": "Municipal",
       "campus": "Bragança",
       "turmas": [
@@ -3986,9 +3809,21 @@
       "tipo": "evento-academico"
     },
     {
+      "data": "2027-01-01",
+      "feriado": "Confraternização Universal",
+      "dia": "Sexta-feira",
+      "tipo": "Nacional"
+    },
+    {
       "data": "2027-02-08",
       "feriado": "Carnaval",
       "dia": "Segunda-feira",
+      "tipo": "Nacional"
+    },
+    {
+      "data": "2027-02-09",
+      "feriado": "Carnaval",
+      "dia": "Terça-feira",
       "tipo": "Nacional"
     },
     {
@@ -3998,59 +3833,74 @@
       "tipo": "Nacional"
     },
     {
-      "data": "2027-11-29",
-      "feriado": "SIEPE",
-      "dia": "Segunda-feira",
-      "tipo": "evento-academico"
+      "data": "2027-03-26",
+      "feriado": "Sexta-feira Santa",
+      "dia": "Sexta-feira",
+      "tipo": "Nacional"
     },
     {
-      "data": "2027-11-30",
-      "feriado": "SIEPE",
-      "dia": "Terça-feira",
-      "tipo": "evento-academico"
-    },
-    {
-      "data": "2027-12-01",
-      "feriado": "SIEPE",
+      "data": "2027-04-21",
+      "feriado": "Tiradentes",
       "dia": "Quarta-feira",
-      "tipo": "evento-academico"
+      "tipo": "Nacional"
     },
     {
-      "data": "2027-03-15",
-      "feriado": "Recepção Calouros",
-      "dia": "Segunda-feira",
-      "tipo": "evento-academico",
-      "turmas": [
-        "EP2027",
-        "CB2027",
-        "CN2027"
-      ]
+      "data": "2027-05-01",
+      "feriado": "Dia do Trabalho",
+      "dia": "Sábado",
+      "tipo": "Nacional"
     },
     {
-      "data": "2027-03-16",
-      "feriado": "Recepção Calouros",
+      "data": "2027-05-27",
+      "feriado": "Corpus Christi",
+      "dia": "Quinta-feira",
+      "tipo": "Municipal"
+    },
+    {
+      "data": "2027-08-15",
+      "feriado": "Adesão do Grão-Pará",
+      "dia": "Domingo",
+      "tipo": "Estadual"
+    },
+    {
+      "data": "2027-09-07",
+      "feriado": "Independência do Brasil",
       "dia": "Terça-feira",
-      "tipo": "evento-academico",
-      "turmas": [
-        "EP2027",
-        "CB2027",
-        "CN2027"
-      ]
+      "tipo": "Nacional"
     },
     {
-      "data": "2027-03-17",
-      "feriado": "Recepção Calouros",
-      "dia": "Quarta-feira",
-      "tipo": "evento-academico",
-      "turmas": [
-        "EP2027",
-        "CB2027",
-        "CN2027"
-      ]
+      "data": "2027-10-12",
+      "feriado": "Nossa Senhora Aparecida",
+      "dia": "Terça-feira",
+      "tipo": "Nacional"
     },
     {
-      "data": "2028-01-01",
-      "feriado": "Confraternização Universal",
+      "data": "2027-10-28",
+      "feriado": "Dia do Servidor Público",
+      "dia": "Quinta-feira",
+      "tipo": "Federal"
+    },
+    {
+      "data": "2027-11-02",
+      "feriado": "Finados",
+      "dia": "Terça-feira",
+      "tipo": "Nacional"
+    },
+    {
+      "data": "2027-11-15",
+      "feriado": "Proclamação da República",
+      "dia": "Segunda-feira",
+      "tipo": "Nacional"
+    },
+    {
+      "data": "2027-11-20",
+      "feriado": "Dia da Consciência Negra",
+      "dia": "Sábado",
+      "tipo": "Nacional"
+    },
+    {
+      "data": "2027-12-25",
+      "feriado": "Natal",
       "dia": "Sábado",
       "tipo": "Nacional"
     },
@@ -4117,6 +3967,105 @@
       "tipo": "Municipal",
       "campus": "Belém",
       "turmas": []
+    },
+    {
+      "data": "2027-07-08",
+      "feriado": "Fundação de Bragança",
+      "dia": "Quinta-feira",
+      "tipo": "Municipal",
+      "campus": "Bragança",
+      "turmas": [
+        "EP2022",
+        "EP2023",
+        "EP2024",
+        "EP2025",
+        "EP2026",
+        "EP2027",
+        "CB2022",
+        "CB2023",
+        "CB2024",
+        "CB2025",
+        "CB2026",
+        "CB2027",
+        "CN2022",
+        "CN2023",
+        "CN2024",
+        "CN2025",
+        "CN2026",
+        "CN2027",
+        "MT2022",
+        "MT2023",
+        "MT2024",
+        "MT2025",
+        "MT2026",
+        "MT2027"
+      ]
+    },
+    {
+      "data": "2027-10-07",
+      "feriado": "N. Sra. do Rosário (Padroeira)",
+      "dia": "Quinta-feira",
+      "tipo": "Municipal",
+      "campus": "Bragança",
+      "turmas": [
+        "EP2022",
+        "EP2023",
+        "EP2024",
+        "EP2025",
+        "EP2026",
+        "EP2027",
+        "CB2022",
+        "CB2023",
+        "CB2024",
+        "CB2025",
+        "CB2026",
+        "CB2027",
+        "CN2022",
+        "CN2023",
+        "CN2024",
+        "CN2025",
+        "CN2026",
+        "CN2027",
+        "MT2022",
+        "MT2023",
+        "MT2024",
+        "MT2025",
+        "MT2026",
+        "MT2027"
+      ]
+    },
+    {
+      "data": "2027-12-26",
+      "feriado": "Dia de São Benedito",
+      "dia": "Domingo",
+      "tipo": "Municipal",
+      "campus": "Bragança",
+      "turmas": [
+        "EP2022",
+        "EP2023",
+        "EP2024",
+        "EP2025",
+        "EP2026",
+        "EP2027",
+        "CB2022",
+        "CB2023",
+        "CB2024",
+        "CB2025",
+        "CB2026",
+        "CB2027",
+        "CN2022",
+        "CN2023",
+        "CN2024",
+        "CN2025",
+        "CN2026",
+        "CN2027",
+        "MT2022",
+        "MT2023",
+        "MT2024",
+        "MT2025",
+        "MT2026",
+        "MT2027"
+      ]
     },
     {
       "data": "2027-01-20",
@@ -4286,6 +4235,1350 @@
       "data": "2027-12-31",
       "feriado": "Aniversário de Tucuruí",
       "dia": "Sexta-feira",
+      "tipo": "Municipal (ponto facultativo)",
+      "campus": "Tucuruí",
+      "turmas": []
+    },
+    {
+      "data": "2027-03-15",
+      "feriado": "Recepção Calouros",
+      "dia": "Segunda-feira",
+      "tipo": "evento-academico",
+      "turmas": [
+        "EP2027",
+        "CB2027",
+        "CN2027"
+      ]
+    },
+    {
+      "data": "2027-03-16",
+      "feriado": "Recepção Calouros",
+      "dia": "Terça-feira",
+      "tipo": "evento-academico",
+      "turmas": [
+        "EP2027",
+        "CB2027",
+        "CN2027"
+      ]
+    },
+    {
+      "data": "2027-03-17",
+      "feriado": "Recepção Calouros",
+      "dia": "Quarta-feira",
+      "tipo": "evento-academico",
+      "turmas": [
+        "EP2027",
+        "CB2027",
+        "CN2027"
+      ]
+    },
+    {
+      "data": "2027-11-29",
+      "feriado": "SIEPE",
+      "dia": "Segunda-feira",
+      "tipo": "evento-academico"
+    },
+    {
+      "data": "2027-11-30",
+      "feriado": "SIEPE",
+      "dia": "Terça-feira",
+      "tipo": "evento-academico"
+    },
+    {
+      "data": "2027-12-01",
+      "feriado": "SIEPE",
+      "dia": "Quarta-feira",
+      "tipo": "evento-academico"
+    },
+    {
+      "data": "2028-01-01",
+      "feriado": "Confraternização Universal",
+      "dia": "Sábado",
+      "tipo": "Nacional"
+    },
+    {
+      "data": "2028-02-28",
+      "feriado": "Carnaval",
+      "dia": "Segunda-feira",
+      "tipo": "Nacional"
+    },
+    {
+      "data": "2028-02-29",
+      "feriado": "Carnaval",
+      "dia": "Terça-feira",
+      "tipo": "Nacional"
+    },
+    {
+      "data": "2028-03-01",
+      "feriado": "Carnaval",
+      "dia": "Quarta-feira",
+      "tipo": "Nacional"
+    },
+    {
+      "data": "2028-04-14",
+      "feriado": "Sexta-feira Santa",
+      "dia": "Sexta-feira",
+      "tipo": "Nacional"
+    },
+    {
+      "data": "2028-04-21",
+      "feriado": "Tiradentes",
+      "dia": "Sexta-feira",
+      "tipo": "Nacional"
+    },
+    {
+      "data": "2028-05-01",
+      "feriado": "Dia do Trabalho",
+      "dia": "Segunda-feira",
+      "tipo": "Nacional"
+    },
+    {
+      "data": "2028-06-15",
+      "feriado": "Corpus Christi",
+      "dia": "Quinta-feira",
+      "tipo": "Municipal"
+    },
+    {
+      "data": "2028-08-15",
+      "feriado": "Adesão do Grão-Pará",
+      "dia": "Terça-feira",
+      "tipo": "Estadual"
+    },
+    {
+      "data": "2028-09-07",
+      "feriado": "Independência do Brasil",
+      "dia": "Quinta-feira",
+      "tipo": "Nacional"
+    },
+    {
+      "data": "2028-10-12",
+      "feriado": "Nossa Senhora Aparecida",
+      "dia": "Quinta-feira",
+      "tipo": "Nacional"
+    },
+    {
+      "data": "2028-10-28",
+      "feriado": "Dia do Servidor Público",
+      "dia": "Sábado",
+      "tipo": "Federal"
+    },
+    {
+      "data": "2028-11-02",
+      "feriado": "Finados",
+      "dia": "Quinta-feira",
+      "tipo": "Nacional"
+    },
+    {
+      "data": "2028-11-15",
+      "feriado": "Proclamação da República",
+      "dia": "Quarta-feira",
+      "tipo": "Nacional"
+    },
+    {
+      "data": "2028-11-20",
+      "feriado": "Dia da Consciência Negra",
+      "dia": "Segunda-feira",
+      "tipo": "Nacional"
+    },
+    {
+      "data": "2028-12-25",
+      "feriado": "Natal",
+      "dia": "Segunda-feira",
+      "tipo": "Nacional"
+    },
+    {
+      "data": "2028-12-08",
+      "feriado": "N. Sra. da Conceição",
+      "dia": "Sexta-feira",
+      "tipo": "Municipal",
+      "campus": "Abaetetuba",
+      "turmas": []
+    },
+    {
+      "data": "2028-01-20",
+      "feriado": "São Sebastião",
+      "dia": "Quinta-feira",
+      "tipo": "Municipal",
+      "campus": "Altamira",
+      "turmas": []
+    },
+    {
+      "data": "2028-11-06",
+      "feriado": "Aniversário de Altamira",
+      "dia": "Segunda-feira",
+      "tipo": "Municipal (ponto facultativo)",
+      "campus": "Altamira",
+      "turmas": []
+    },
+    {
+      "data": "2028-01-03",
+      "feriado": "Aniversário de Ananindeua",
+      "dia": "Segunda-feira",
+      "tipo": "Municipal (ponto facultativo)",
+      "campus": "Ananindeua",
+      "turmas": []
+    },
+    {
+      "data": "2028-11-27",
+      "feriado": "N. Sra. das Graças",
+      "dia": "Segunda-feira",
+      "tipo": "Municipal (ponto facultativo)",
+      "campus": "Ananindeua",
+      "turmas": []
+    },
+    {
+      "data": "2028-12-08",
+      "feriado": "N. Sra. da Conceição",
+      "dia": "Sexta-feira",
+      "tipo": "Municipal",
+      "campus": "Ananindeua",
+      "turmas": []
+    },
+    {
+      "data": "2028-01-12",
+      "feriado": "Aniversário de Belém",
+      "dia": "Quarta-feira",
+      "tipo": "Municipal (ponto facultativo)",
+      "campus": "Belém",
+      "turmas": []
+    },
+    {
+      "data": "2028-12-08",
+      "feriado": "N. Sra. da Conceição",
+      "dia": "Sexta-feira",
+      "tipo": "Municipal",
+      "campus": "Belém",
+      "turmas": []
+    },
+    {
+      "data": "2028-07-08",
+      "feriado": "Fundação de Bragança",
+      "dia": "Sábado",
+      "tipo": "Municipal",
+      "campus": "Bragança",
+      "turmas": [
+        "EP2022",
+        "EP2023",
+        "EP2024",
+        "EP2025",
+        "EP2026",
+        "EP2027",
+        "CB2022",
+        "CB2023",
+        "CB2024",
+        "CB2025",
+        "CB2026",
+        "CB2027",
+        "CN2022",
+        "CN2023",
+        "CN2024",
+        "CN2025",
+        "CN2026",
+        "CN2027",
+        "MT2022",
+        "MT2023",
+        "MT2024",
+        "MT2025",
+        "MT2026",
+        "MT2027"
+      ]
+    },
+    {
+      "data": "2028-10-07",
+      "feriado": "N. Sra. do Rosário (Padroeira)",
+      "dia": "Sábado",
+      "tipo": "Municipal",
+      "campus": "Bragança",
+      "turmas": [
+        "EP2022",
+        "EP2023",
+        "EP2024",
+        "EP2025",
+        "EP2026",
+        "EP2027",
+        "CB2022",
+        "CB2023",
+        "CB2024",
+        "CB2025",
+        "CB2026",
+        "CB2027",
+        "CN2022",
+        "CN2023",
+        "CN2024",
+        "CN2025",
+        "CN2026",
+        "CN2027",
+        "MT2022",
+        "MT2023",
+        "MT2024",
+        "MT2025",
+        "MT2026",
+        "MT2027"
+      ]
+    },
+    {
+      "data": "2028-12-26",
+      "feriado": "Dia de São Benedito",
+      "dia": "Terça-feira",
+      "tipo": "Municipal",
+      "campus": "Bragança",
+      "turmas": [
+        "EP2022",
+        "EP2023",
+        "EP2024",
+        "EP2025",
+        "EP2026",
+        "EP2027",
+        "CB2022",
+        "CB2023",
+        "CB2024",
+        "CB2025",
+        "CB2026",
+        "CB2027",
+        "CN2022",
+        "CN2023",
+        "CN2024",
+        "CN2025",
+        "CN2026",
+        "CN2027",
+        "MT2022",
+        "MT2023",
+        "MT2024",
+        "MT2025",
+        "MT2026",
+        "MT2027"
+      ]
+    },
+    {
+      "data": "2028-01-20",
+      "feriado": "São Sebastião",
+      "dia": "Quinta-feira",
+      "tipo": "Municipal",
+      "campus": "Breves",
+      "turmas": []
+    },
+    {
+      "data": "2028-07-26",
+      "feriado": "N. Sra. Santana",
+      "dia": "Quarta-feira",
+      "tipo": "Municipal",
+      "campus": "Breves",
+      "turmas": []
+    },
+    {
+      "data": "2028-11-30",
+      "feriado": "Aniversário de Breves",
+      "dia": "Quinta-feira",
+      "tipo": "Municipal (ponto facultativo)",
+      "campus": "Breves",
+      "turmas": []
+    },
+    {
+      "data": "2028-06-24",
+      "feriado": "São João (Padroeiro)",
+      "dia": "Sábado",
+      "tipo": "Municipal",
+      "campus": "Cametá",
+      "turmas": [
+        "EP2027C"
+      ]
+    },
+    {
+      "data": "2028-12-24",
+      "feriado": "Aniversário de Cametá",
+      "dia": "Domingo",
+      "tipo": "Municipal (ponto facultativo)",
+      "campus": "Cametá",
+      "turmas": [
+        "EP2027C"
+      ]
+    },
+    {
+      "data": "2028-10-04",
+      "feriado": "São Francisco de Assis",
+      "dia": "Quarta-feira",
+      "tipo": "Municipal",
+      "campus": "Capanema",
+      "turmas": []
+    },
+    {
+      "data": "2028-11-05",
+      "feriado": "Aniversário de Capanema",
+      "dia": "Domingo",
+      "tipo": "Municipal (ponto facultativo)",
+      "campus": "Capanema",
+      "turmas": []
+    },
+    {
+      "data": "2028-12-08",
+      "feriado": "N. Sra. do Perpétuo Socorro",
+      "dia": "Sexta-feira",
+      "tipo": "Municipal",
+      "campus": "Capanema",
+      "turmas": []
+    },
+    {
+      "data": "2028-01-28",
+      "feriado": "Aniversário de Castanhal",
+      "dia": "Sexta-feira",
+      "tipo": "Municipal (ponto facultativo)",
+      "campus": "Castanhal",
+      "turmas": []
+    },
+    {
+      "data": "2028-03-19",
+      "feriado": "São José (Padroeiro)",
+      "dia": "Domingo",
+      "tipo": "Municipal",
+      "campus": "Castanhal",
+      "turmas": []
+    },
+    {
+      "data": "2028-12-08",
+      "feriado": "N. Sra. da Conceição",
+      "dia": "Sexta-feira",
+      "tipo": "Municipal",
+      "campus": "Castanhal",
+      "turmas": []
+    },
+    {
+      "data": "2028-09-08",
+      "feriado": "N. Sra. do Socorro (Padroeira)",
+      "dia": "Sexta-feira",
+      "tipo": "Municipal",
+      "campus": "Salinópolis",
+      "turmas": []
+    },
+    {
+      "data": "2028-10-22",
+      "feriado": "Aniversário de Salinópolis",
+      "dia": "Domingo",
+      "tipo": "Municipal (ponto facultativo)",
+      "campus": "Salinópolis",
+      "turmas": []
+    },
+    {
+      "data": "2028-01-20",
+      "feriado": "Aniversário de Soure",
+      "dia": "Quinta-feira",
+      "tipo": "Municipal (ponto facultativo)",
+      "campus": "Soure",
+      "turmas": []
+    },
+    {
+      "data": "2028-06-29",
+      "feriado": "São Pedro (Padroeiro)",
+      "dia": "Quinta-feira",
+      "tipo": "Municipal",
+      "campus": "Soure",
+      "turmas": []
+    },
+    {
+      "data": "2028-11-30",
+      "feriado": "Dia do Evangélico",
+      "dia": "Quinta-feira",
+      "tipo": "Municipal",
+      "campus": "Soure",
+      "turmas": []
+    },
+    {
+      "data": "2028-12-08",
+      "feriado": "Imaculada Conceição",
+      "dia": "Sexta-feira",
+      "tipo": "Municipal (ponto facultativo)",
+      "campus": "Soure",
+      "turmas": []
+    },
+    {
+      "data": "2028-03-19",
+      "feriado": "São José (Padroeiro)",
+      "dia": "Domingo",
+      "tipo": "Municipal",
+      "campus": "Tucuruí",
+      "turmas": []
+    },
+    {
+      "data": "2028-10-31",
+      "feriado": "Dia da Consciência Evangélica",
+      "dia": "Terça-feira",
+      "tipo": "Municipal",
+      "campus": "Tucuruí",
+      "turmas": []
+    },
+    {
+      "data": "2028-12-08",
+      "feriado": "N. Sra. da Conceição",
+      "dia": "Sexta-feira",
+      "tipo": "Municipal",
+      "campus": "Tucuruí",
+      "turmas": []
+    },
+    {
+      "data": "2028-12-31",
+      "feriado": "Aniversário de Tucuruí",
+      "dia": "Domingo",
+      "tipo": "Municipal (ponto facultativo)",
+      "campus": "Tucuruí",
+      "turmas": []
+    },
+    {
+      "data": "2029-01-01",
+      "feriado": "Confraternização Universal",
+      "dia": "Segunda-feira",
+      "tipo": "Nacional"
+    },
+    {
+      "data": "2029-02-12",
+      "feriado": "Carnaval",
+      "dia": "Segunda-feira",
+      "tipo": "Nacional"
+    },
+    {
+      "data": "2029-02-13",
+      "feriado": "Carnaval",
+      "dia": "Terça-feira",
+      "tipo": "Nacional"
+    },
+    {
+      "data": "2029-02-14",
+      "feriado": "Carnaval",
+      "dia": "Quarta-feira",
+      "tipo": "Nacional"
+    },
+    {
+      "data": "2029-03-30",
+      "feriado": "Sexta-feira Santa",
+      "dia": "Sexta-feira",
+      "tipo": "Nacional"
+    },
+    {
+      "data": "2029-04-21",
+      "feriado": "Tiradentes",
+      "dia": "Sábado",
+      "tipo": "Nacional"
+    },
+    {
+      "data": "2029-05-01",
+      "feriado": "Dia do Trabalho",
+      "dia": "Terça-feira",
+      "tipo": "Nacional"
+    },
+    {
+      "data": "2029-05-31",
+      "feriado": "Corpus Christi",
+      "dia": "Quinta-feira",
+      "tipo": "Municipal"
+    },
+    {
+      "data": "2029-08-15",
+      "feriado": "Adesão do Grão-Pará",
+      "dia": "Quarta-feira",
+      "tipo": "Estadual"
+    },
+    {
+      "data": "2029-09-07",
+      "feriado": "Independência do Brasil",
+      "dia": "Sexta-feira",
+      "tipo": "Nacional"
+    },
+    {
+      "data": "2029-10-12",
+      "feriado": "Nossa Senhora Aparecida",
+      "dia": "Sexta-feira",
+      "tipo": "Nacional"
+    },
+    {
+      "data": "2029-10-28",
+      "feriado": "Dia do Servidor Público",
+      "dia": "Domingo",
+      "tipo": "Federal"
+    },
+    {
+      "data": "2029-11-02",
+      "feriado": "Finados",
+      "dia": "Sexta-feira",
+      "tipo": "Nacional"
+    },
+    {
+      "data": "2029-11-15",
+      "feriado": "Proclamação da República",
+      "dia": "Quinta-feira",
+      "tipo": "Nacional"
+    },
+    {
+      "data": "2029-11-20",
+      "feriado": "Dia da Consciência Negra",
+      "dia": "Terça-feira",
+      "tipo": "Nacional"
+    },
+    {
+      "data": "2029-12-25",
+      "feriado": "Natal",
+      "dia": "Terça-feira",
+      "tipo": "Nacional"
+    },
+    {
+      "data": "2029-12-08",
+      "feriado": "N. Sra. da Conceição",
+      "dia": "Sábado",
+      "tipo": "Municipal",
+      "campus": "Abaetetuba",
+      "turmas": []
+    },
+    {
+      "data": "2029-01-20",
+      "feriado": "São Sebastião",
+      "dia": "Sábado",
+      "tipo": "Municipal",
+      "campus": "Altamira",
+      "turmas": []
+    },
+    {
+      "data": "2029-11-06",
+      "feriado": "Aniversário de Altamira",
+      "dia": "Terça-feira",
+      "tipo": "Municipal (ponto facultativo)",
+      "campus": "Altamira",
+      "turmas": []
+    },
+    {
+      "data": "2029-01-03",
+      "feriado": "Aniversário de Ananindeua",
+      "dia": "Quarta-feira",
+      "tipo": "Municipal (ponto facultativo)",
+      "campus": "Ananindeua",
+      "turmas": []
+    },
+    {
+      "data": "2029-11-27",
+      "feriado": "N. Sra. das Graças",
+      "dia": "Terça-feira",
+      "tipo": "Municipal (ponto facultativo)",
+      "campus": "Ananindeua",
+      "turmas": []
+    },
+    {
+      "data": "2029-12-08",
+      "feriado": "N. Sra. da Conceição",
+      "dia": "Sábado",
+      "tipo": "Municipal",
+      "campus": "Ananindeua",
+      "turmas": []
+    },
+    {
+      "data": "2029-01-12",
+      "feriado": "Aniversário de Belém",
+      "dia": "Sexta-feira",
+      "tipo": "Municipal (ponto facultativo)",
+      "campus": "Belém",
+      "turmas": []
+    },
+    {
+      "data": "2029-12-08",
+      "feriado": "N. Sra. da Conceição",
+      "dia": "Sábado",
+      "tipo": "Municipal",
+      "campus": "Belém",
+      "turmas": []
+    },
+    {
+      "data": "2029-07-08",
+      "feriado": "Fundação de Bragança",
+      "dia": "Domingo",
+      "tipo": "Municipal",
+      "campus": "Bragança",
+      "turmas": [
+        "EP2022",
+        "EP2023",
+        "EP2024",
+        "EP2025",
+        "EP2026",
+        "EP2027",
+        "CB2022",
+        "CB2023",
+        "CB2024",
+        "CB2025",
+        "CB2026",
+        "CB2027",
+        "CN2022",
+        "CN2023",
+        "CN2024",
+        "CN2025",
+        "CN2026",
+        "CN2027",
+        "MT2022",
+        "MT2023",
+        "MT2024",
+        "MT2025",
+        "MT2026",
+        "MT2027"
+      ]
+    },
+    {
+      "data": "2029-10-07",
+      "feriado": "N. Sra. do Rosário (Padroeira)",
+      "dia": "Domingo",
+      "tipo": "Municipal",
+      "campus": "Bragança",
+      "turmas": [
+        "EP2022",
+        "EP2023",
+        "EP2024",
+        "EP2025",
+        "EP2026",
+        "EP2027",
+        "CB2022",
+        "CB2023",
+        "CB2024",
+        "CB2025",
+        "CB2026",
+        "CB2027",
+        "CN2022",
+        "CN2023",
+        "CN2024",
+        "CN2025",
+        "CN2026",
+        "CN2027",
+        "MT2022",
+        "MT2023",
+        "MT2024",
+        "MT2025",
+        "MT2026",
+        "MT2027"
+      ]
+    },
+    {
+      "data": "2029-12-26",
+      "feriado": "Dia de São Benedito",
+      "dia": "Quarta-feira",
+      "tipo": "Municipal",
+      "campus": "Bragança",
+      "turmas": [
+        "EP2022",
+        "EP2023",
+        "EP2024",
+        "EP2025",
+        "EP2026",
+        "EP2027",
+        "CB2022",
+        "CB2023",
+        "CB2024",
+        "CB2025",
+        "CB2026",
+        "CB2027",
+        "CN2022",
+        "CN2023",
+        "CN2024",
+        "CN2025",
+        "CN2026",
+        "CN2027",
+        "MT2022",
+        "MT2023",
+        "MT2024",
+        "MT2025",
+        "MT2026",
+        "MT2027"
+      ]
+    },
+    {
+      "data": "2029-01-20",
+      "feriado": "São Sebastião",
+      "dia": "Sábado",
+      "tipo": "Municipal",
+      "campus": "Breves",
+      "turmas": []
+    },
+    {
+      "data": "2029-07-26",
+      "feriado": "N. Sra. Santana",
+      "dia": "Quinta-feira",
+      "tipo": "Municipal",
+      "campus": "Breves",
+      "turmas": []
+    },
+    {
+      "data": "2029-11-30",
+      "feriado": "Aniversário de Breves",
+      "dia": "Sexta-feira",
+      "tipo": "Municipal (ponto facultativo)",
+      "campus": "Breves",
+      "turmas": []
+    },
+    {
+      "data": "2029-06-24",
+      "feriado": "São João (Padroeiro)",
+      "dia": "Domingo",
+      "tipo": "Municipal",
+      "campus": "Cametá",
+      "turmas": [
+        "EP2027C"
+      ]
+    },
+    {
+      "data": "2029-12-24",
+      "feriado": "Aniversário de Cametá",
+      "dia": "Segunda-feira",
+      "tipo": "Municipal (ponto facultativo)",
+      "campus": "Cametá",
+      "turmas": [
+        "EP2027C"
+      ]
+    },
+    {
+      "data": "2029-10-04",
+      "feriado": "São Francisco de Assis",
+      "dia": "Quinta-feira",
+      "tipo": "Municipal",
+      "campus": "Capanema",
+      "turmas": []
+    },
+    {
+      "data": "2029-11-05",
+      "feriado": "Aniversário de Capanema",
+      "dia": "Segunda-feira",
+      "tipo": "Municipal (ponto facultativo)",
+      "campus": "Capanema",
+      "turmas": []
+    },
+    {
+      "data": "2029-12-08",
+      "feriado": "N. Sra. do Perpétuo Socorro",
+      "dia": "Sábado",
+      "tipo": "Municipal",
+      "campus": "Capanema",
+      "turmas": []
+    },
+    {
+      "data": "2029-01-28",
+      "feriado": "Aniversário de Castanhal",
+      "dia": "Domingo",
+      "tipo": "Municipal (ponto facultativo)",
+      "campus": "Castanhal",
+      "turmas": []
+    },
+    {
+      "data": "2029-03-19",
+      "feriado": "São José (Padroeiro)",
+      "dia": "Segunda-feira",
+      "tipo": "Municipal",
+      "campus": "Castanhal",
+      "turmas": []
+    },
+    {
+      "data": "2029-12-08",
+      "feriado": "N. Sra. da Conceição",
+      "dia": "Sábado",
+      "tipo": "Municipal",
+      "campus": "Castanhal",
+      "turmas": []
+    },
+    {
+      "data": "2029-09-08",
+      "feriado": "N. Sra. do Socorro (Padroeira)",
+      "dia": "Sábado",
+      "tipo": "Municipal",
+      "campus": "Salinópolis",
+      "turmas": []
+    },
+    {
+      "data": "2029-10-22",
+      "feriado": "Aniversário de Salinópolis",
+      "dia": "Segunda-feira",
+      "tipo": "Municipal (ponto facultativo)",
+      "campus": "Salinópolis",
+      "turmas": []
+    },
+    {
+      "data": "2029-01-20",
+      "feriado": "Aniversário de Soure",
+      "dia": "Sábado",
+      "tipo": "Municipal (ponto facultativo)",
+      "campus": "Soure",
+      "turmas": []
+    },
+    {
+      "data": "2029-06-29",
+      "feriado": "São Pedro (Padroeiro)",
+      "dia": "Sexta-feira",
+      "tipo": "Municipal",
+      "campus": "Soure",
+      "turmas": []
+    },
+    {
+      "data": "2029-11-30",
+      "feriado": "Dia do Evangélico",
+      "dia": "Sexta-feira",
+      "tipo": "Municipal",
+      "campus": "Soure",
+      "turmas": []
+    },
+    {
+      "data": "2029-12-08",
+      "feriado": "Imaculada Conceição",
+      "dia": "Sábado",
+      "tipo": "Municipal (ponto facultativo)",
+      "campus": "Soure",
+      "turmas": []
+    },
+    {
+      "data": "2029-03-19",
+      "feriado": "São José (Padroeiro)",
+      "dia": "Segunda-feira",
+      "tipo": "Municipal",
+      "campus": "Tucuruí",
+      "turmas": []
+    },
+    {
+      "data": "2029-10-31",
+      "feriado": "Dia da Consciência Evangélica",
+      "dia": "Quarta-feira",
+      "tipo": "Municipal",
+      "campus": "Tucuruí",
+      "turmas": []
+    },
+    {
+      "data": "2029-12-08",
+      "feriado": "N. Sra. da Conceição",
+      "dia": "Sábado",
+      "tipo": "Municipal",
+      "campus": "Tucuruí",
+      "turmas": []
+    },
+    {
+      "data": "2029-12-31",
+      "feriado": "Aniversário de Tucuruí",
+      "dia": "Segunda-feira",
+      "tipo": "Municipal (ponto facultativo)",
+      "campus": "Tucuruí",
+      "turmas": []
+    },
+    {
+      "data": "2030-01-01",
+      "feriado": "Confraternização Universal",
+      "dia": "Terça-feira",
+      "tipo": "Nacional"
+    },
+    {
+      "data": "2030-03-04",
+      "feriado": "Carnaval",
+      "dia": "Segunda-feira",
+      "tipo": "Nacional"
+    },
+    {
+      "data": "2030-03-05",
+      "feriado": "Carnaval",
+      "dia": "Terça-feira",
+      "tipo": "Nacional"
+    },
+    {
+      "data": "2030-03-06",
+      "feriado": "Carnaval",
+      "dia": "Quarta-feira",
+      "tipo": "Nacional"
+    },
+    {
+      "data": "2030-04-19",
+      "feriado": "Sexta-feira Santa",
+      "dia": "Sexta-feira",
+      "tipo": "Nacional"
+    },
+    {
+      "data": "2030-04-21",
+      "feriado": "Tiradentes",
+      "dia": "Domingo",
+      "tipo": "Nacional"
+    },
+    {
+      "data": "2030-05-01",
+      "feriado": "Dia do Trabalho",
+      "dia": "Quarta-feira",
+      "tipo": "Nacional"
+    },
+    {
+      "data": "2030-06-20",
+      "feriado": "Corpus Christi",
+      "dia": "Quinta-feira",
+      "tipo": "Municipal"
+    },
+    {
+      "data": "2030-08-15",
+      "feriado": "Adesão do Grão-Pará",
+      "dia": "Quinta-feira",
+      "tipo": "Estadual"
+    },
+    {
+      "data": "2030-09-07",
+      "feriado": "Independência do Brasil",
+      "dia": "Sábado",
+      "tipo": "Nacional"
+    },
+    {
+      "data": "2030-10-12",
+      "feriado": "Nossa Senhora Aparecida",
+      "dia": "Sábado",
+      "tipo": "Nacional"
+    },
+    {
+      "data": "2030-10-28",
+      "feriado": "Dia do Servidor Público",
+      "dia": "Segunda-feira",
+      "tipo": "Federal"
+    },
+    {
+      "data": "2030-11-02",
+      "feriado": "Finados",
+      "dia": "Sábado",
+      "tipo": "Nacional"
+    },
+    {
+      "data": "2030-11-15",
+      "feriado": "Proclamação da República",
+      "dia": "Sexta-feira",
+      "tipo": "Nacional"
+    },
+    {
+      "data": "2030-11-20",
+      "feriado": "Dia da Consciência Negra",
+      "dia": "Quarta-feira",
+      "tipo": "Nacional"
+    },
+    {
+      "data": "2030-12-25",
+      "feriado": "Natal",
+      "dia": "Quarta-feira",
+      "tipo": "Nacional"
+    },
+    {
+      "data": "2030-12-08",
+      "feriado": "N. Sra. da Conceição",
+      "dia": "Domingo",
+      "tipo": "Municipal",
+      "campus": "Abaetetuba",
+      "turmas": []
+    },
+    {
+      "data": "2030-01-20",
+      "feriado": "São Sebastião",
+      "dia": "Domingo",
+      "tipo": "Municipal",
+      "campus": "Altamira",
+      "turmas": []
+    },
+    {
+      "data": "2030-11-06",
+      "feriado": "Aniversário de Altamira",
+      "dia": "Quarta-feira",
+      "tipo": "Municipal (ponto facultativo)",
+      "campus": "Altamira",
+      "turmas": []
+    },
+    {
+      "data": "2030-01-03",
+      "feriado": "Aniversário de Ananindeua",
+      "dia": "Quinta-feira",
+      "tipo": "Municipal (ponto facultativo)",
+      "campus": "Ananindeua",
+      "turmas": []
+    },
+    {
+      "data": "2030-11-27",
+      "feriado": "N. Sra. das Graças",
+      "dia": "Quarta-feira",
+      "tipo": "Municipal (ponto facultativo)",
+      "campus": "Ananindeua",
+      "turmas": []
+    },
+    {
+      "data": "2030-12-08",
+      "feriado": "N. Sra. da Conceição",
+      "dia": "Domingo",
+      "tipo": "Municipal",
+      "campus": "Ananindeua",
+      "turmas": []
+    },
+    {
+      "data": "2030-01-12",
+      "feriado": "Aniversário de Belém",
+      "dia": "Sábado",
+      "tipo": "Municipal (ponto facultativo)",
+      "campus": "Belém",
+      "turmas": []
+    },
+    {
+      "data": "2030-12-08",
+      "feriado": "N. Sra. da Conceição",
+      "dia": "Domingo",
+      "tipo": "Municipal",
+      "campus": "Belém",
+      "turmas": []
+    },
+    {
+      "data": "2030-07-08",
+      "feriado": "Fundação de Bragança",
+      "dia": "Segunda-feira",
+      "tipo": "Municipal",
+      "campus": "Bragança",
+      "turmas": [
+        "EP2022",
+        "EP2023",
+        "EP2024",
+        "EP2025",
+        "EP2026",
+        "EP2027",
+        "CB2022",
+        "CB2023",
+        "CB2024",
+        "CB2025",
+        "CB2026",
+        "CB2027",
+        "CN2022",
+        "CN2023",
+        "CN2024",
+        "CN2025",
+        "CN2026",
+        "CN2027",
+        "MT2022",
+        "MT2023",
+        "MT2024",
+        "MT2025",
+        "MT2026",
+        "MT2027"
+      ]
+    },
+    {
+      "data": "2030-10-07",
+      "feriado": "N. Sra. do Rosário (Padroeira)",
+      "dia": "Segunda-feira",
+      "tipo": "Municipal",
+      "campus": "Bragança",
+      "turmas": [
+        "EP2022",
+        "EP2023",
+        "EP2024",
+        "EP2025",
+        "EP2026",
+        "EP2027",
+        "CB2022",
+        "CB2023",
+        "CB2024",
+        "CB2025",
+        "CB2026",
+        "CB2027",
+        "CN2022",
+        "CN2023",
+        "CN2024",
+        "CN2025",
+        "CN2026",
+        "CN2027",
+        "MT2022",
+        "MT2023",
+        "MT2024",
+        "MT2025",
+        "MT2026",
+        "MT2027"
+      ]
+    },
+    {
+      "data": "2030-12-26",
+      "feriado": "Dia de São Benedito",
+      "dia": "Quinta-feira",
+      "tipo": "Municipal",
+      "campus": "Bragança",
+      "turmas": [
+        "EP2022",
+        "EP2023",
+        "EP2024",
+        "EP2025",
+        "EP2026",
+        "EP2027",
+        "CB2022",
+        "CB2023",
+        "CB2024",
+        "CB2025",
+        "CB2026",
+        "CB2027",
+        "CN2022",
+        "CN2023",
+        "CN2024",
+        "CN2025",
+        "CN2026",
+        "CN2027",
+        "MT2022",
+        "MT2023",
+        "MT2024",
+        "MT2025",
+        "MT2026",
+        "MT2027"
+      ]
+    },
+    {
+      "data": "2030-01-20",
+      "feriado": "São Sebastião",
+      "dia": "Domingo",
+      "tipo": "Municipal",
+      "campus": "Breves",
+      "turmas": []
+    },
+    {
+      "data": "2030-07-26",
+      "feriado": "N. Sra. Santana",
+      "dia": "Sexta-feira",
+      "tipo": "Municipal",
+      "campus": "Breves",
+      "turmas": []
+    },
+    {
+      "data": "2030-11-30",
+      "feriado": "Aniversário de Breves",
+      "dia": "Sábado",
+      "tipo": "Municipal (ponto facultativo)",
+      "campus": "Breves",
+      "turmas": []
+    },
+    {
+      "data": "2030-06-24",
+      "feriado": "São João (Padroeiro)",
+      "dia": "Segunda-feira",
+      "tipo": "Municipal",
+      "campus": "Cametá",
+      "turmas": [
+        "EP2027C"
+      ]
+    },
+    {
+      "data": "2030-12-24",
+      "feriado": "Aniversário de Cametá",
+      "dia": "Terça-feira",
+      "tipo": "Municipal (ponto facultativo)",
+      "campus": "Cametá",
+      "turmas": [
+        "EP2027C"
+      ]
+    },
+    {
+      "data": "2030-10-04",
+      "feriado": "São Francisco de Assis",
+      "dia": "Sexta-feira",
+      "tipo": "Municipal",
+      "campus": "Capanema",
+      "turmas": []
+    },
+    {
+      "data": "2030-11-05",
+      "feriado": "Aniversário de Capanema",
+      "dia": "Terça-feira",
+      "tipo": "Municipal (ponto facultativo)",
+      "campus": "Capanema",
+      "turmas": []
+    },
+    {
+      "data": "2030-12-08",
+      "feriado": "N. Sra. do Perpétuo Socorro",
+      "dia": "Domingo",
+      "tipo": "Municipal",
+      "campus": "Capanema",
+      "turmas": []
+    },
+    {
+      "data": "2030-01-28",
+      "feriado": "Aniversário de Castanhal",
+      "dia": "Segunda-feira",
+      "tipo": "Municipal (ponto facultativo)",
+      "campus": "Castanhal",
+      "turmas": []
+    },
+    {
+      "data": "2030-03-19",
+      "feriado": "São José (Padroeiro)",
+      "dia": "Terça-feira",
+      "tipo": "Municipal",
+      "campus": "Castanhal",
+      "turmas": []
+    },
+    {
+      "data": "2030-12-08",
+      "feriado": "N. Sra. da Conceição",
+      "dia": "Domingo",
+      "tipo": "Municipal",
+      "campus": "Castanhal",
+      "turmas": []
+    },
+    {
+      "data": "2030-09-08",
+      "feriado": "N. Sra. do Socorro (Padroeira)",
+      "dia": "Domingo",
+      "tipo": "Municipal",
+      "campus": "Salinópolis",
+      "turmas": []
+    },
+    {
+      "data": "2030-10-22",
+      "feriado": "Aniversário de Salinópolis",
+      "dia": "Terça-feira",
+      "tipo": "Municipal (ponto facultativo)",
+      "campus": "Salinópolis",
+      "turmas": []
+    },
+    {
+      "data": "2030-01-20",
+      "feriado": "Aniversário de Soure",
+      "dia": "Domingo",
+      "tipo": "Municipal (ponto facultativo)",
+      "campus": "Soure",
+      "turmas": []
+    },
+    {
+      "data": "2030-06-29",
+      "feriado": "São Pedro (Padroeiro)",
+      "dia": "Sábado",
+      "tipo": "Municipal",
+      "campus": "Soure",
+      "turmas": []
+    },
+    {
+      "data": "2030-11-30",
+      "feriado": "Dia do Evangélico",
+      "dia": "Sábado",
+      "tipo": "Municipal",
+      "campus": "Soure",
+      "turmas": []
+    },
+    {
+      "data": "2030-12-08",
+      "feriado": "Imaculada Conceição",
+      "dia": "Domingo",
+      "tipo": "Municipal (ponto facultativo)",
+      "campus": "Soure",
+      "turmas": []
+    },
+    {
+      "data": "2030-03-19",
+      "feriado": "São José (Padroeiro)",
+      "dia": "Terça-feira",
+      "tipo": "Municipal",
+      "campus": "Tucuruí",
+      "turmas": []
+    },
+    {
+      "data": "2030-10-31",
+      "feriado": "Dia da Consciência Evangélica",
+      "dia": "Quinta-feira",
+      "tipo": "Municipal",
+      "campus": "Tucuruí",
+      "turmas": []
+    },
+    {
+      "data": "2030-12-08",
+      "feriado": "N. Sra. da Conceição",
+      "dia": "Domingo",
+      "tipo": "Municipal",
+      "campus": "Tucuruí",
+      "turmas": []
+    },
+    {
+      "data": "2030-12-31",
+      "feriado": "Aniversário de Tucuruí",
+      "dia": "Terça-feira",
       "tipo": "Municipal (ponto facultativo)",
       "campus": "Tucuruí",
       "turmas": []
