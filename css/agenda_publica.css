@@ -1,5 +1,5 @@
 /* Estilo da Agenda Publica (agenda_publica.html) e da Agenda do Docente
-   (agenda_docente.html). Saiu de dentro do agenda_publica.html em 24/11/2026
+   (agenda_docente_turma.html). Saiu de dentro do agenda_publica.html em 24/11/2026
    para as duas paginas usarem o mesmo arquivo. */
 :root {
     --pub-bg: #eef3ef;

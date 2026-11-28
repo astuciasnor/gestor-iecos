@@ -1,10 +1,10 @@
-import { addDaysISO as shiftISODate, sortUniqueIsoDates } from './datas.mjs?v=202611281337';
-import { timeToMinutesSafe, normalizeDayList, normalizeSlotList, normalizeDrawnSlotsByDay, buildDrawnSlotsByDay as buildDrawnSlotsMap } from './horarios.mjs?v=202611281337';
-import { normalizeKeyPart, normalizeKeyPart as normalizeTeacherKey } from './texto.mjs?v=202611281337';
-import { store } from './store.js?v=202611281337';
-import { getCalendarEvents } from './calendar.js?v=202611281337';
-import { detectTeacherConflicts } from './conflicts.js?v=202611281337';
-import { filterExportableAllocations, getTeacherActiveShifts } from './academic_rules.mjs?v=202611281337';
+import { addDaysISO as shiftISODate, sortUniqueIsoDates } from './datas.mjs?v=202611281554';
+import { timeToMinutesSafe, normalizeDayList, normalizeSlotList, normalizeDrawnSlotsByDay, buildDrawnSlotsByDay as buildDrawnSlotsMap } from './horarios.mjs?v=202611281554';
+import { normalizeKeyPart, normalizeKeyPart as normalizeTeacherKey } from './texto.mjs?v=202611281554';
+import { store } from './store.js?v=202611281554';
+import { getCalendarEvents } from './calendar.js?v=202611281554';
+import { detectTeacherConflicts } from './conflicts.js?v=202611281554';
+import { filterExportableAllocations, getTeacherActiveShifts } from './academic_rules.mjs?v=202611281554';
 
 function ensureExecutionEntry(maps, allocId) {
     if (!allocId) return;

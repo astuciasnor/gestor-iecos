@@ -10,14 +10,14 @@
         // Vai para o aviso antes de carregar o programa. A agenda publica nao passa por aqui.
         if (/\.github\.io$/i.test(location.hostname)) location.replace('mudou.html');
     </script>
-    <link rel="stylesheet" href="css/style.css?v=202611281337">
+    <link rel="stylesheet" href="css/style.css?v=202611281554">
     <!-- Redesenho da aba Alocar Componentes (por partes); carrega depois do style.css -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
-    <link rel="stylesheet" href="css/alocar-componentes.css?v=202611281337">
-    <link rel="stylesheet" href="css/ajuda.css?v=202611281337">
-    <link rel="stylesheet" href="css/montar-estagio.css?v=202611281337">
+    <link rel="stylesheet" href="css/alocar-componentes.css?v=202611281554">
+    <link rel="stylesheet" href="css/ajuda.css?v=202611281554">
+    <link rel="stylesheet" href="css/montar-estagio.css?v=202611281554">
 
     <style>
         :root {
@@ -349,7 +349,7 @@
         }
     </style>
     <!-- Visual da barra lateral: depois de todos os estilos, so vale dentro de .sidebar -->
-    <link rel="stylesheet" href="css/sidebar.css?v=202611281337">
+    <link rel="stylesheet" href="css/sidebar.css?v=202611281554">
 </head>
 
 <body>
@@ -1078,9 +1078,11 @@
             <section id="tab-indicadores" class="tab-content" role="tabpanel" aria-labelledby="tabbtn-indicadores">
                 <div class="subtab-bar ind-subabas no-print" role="tablist" aria-label="Tipos de indicador">
                     <button type="button" class="ind-subaba is-ativa" data-subaba="carga" role="tab" aria-selected="true">Carga por docente</button>
-                    <button type="button" class="ind-subaba" data-subaba="dias" role="tab" aria-selected="false">Dias do docente</button>
-                    <button type="button" class="ind-subaba" data-subaba="componente" role="tab" aria-selected="false">Componente</button>
-                    <button type="button" class="ind-subaba" data-subaba="turma" role="tab" aria-selected="false">Turma</button>
+                    <!-- 28/11/2026: Busca componente logo depois da Carga; Dia a dia do docente e
+                         Dia a dia da turma lado a lado (os mesmos nomes da Agenda do Docente). -->
+                    <button type="button" class="ind-subaba" data-subaba="componente" role="tab" aria-selected="false">Busca componente</button>
+                    <button type="button" class="ind-subaba" data-subaba="dias" role="tab" aria-selected="false">Dia a dia do docente</button>
+                    <button type="button" class="ind-subaba" data-subaba="turma" role="tab" aria-selected="false">Dia a dia da turma</button>
                     <!-- Volta para a tela de antes de um atalho (Componente > Turma > Docente...). -->
                     <button type="button" id="btn-ind-voltar" class="ind-voltar hidden"></button>
                 </div>
@@ -1127,7 +1129,7 @@
                     Conta tudo o que está no Cardume, <b>inclusive o que ainda não foi publicado</b>, nos cursos da unidade escolhida.
                     Componente dividida entre docentes: a parte de cada um (ex.: 30 de 90 h).
                     Componentes pendentes (ainda sem horário) não entram.
-                    Clique no nome para ver os <b>Dias do docente</b> no mesmo período (← Voltar, no alto, volta para cá).
+                    Clique no nome para ver o <b>Dia a dia do docente</b> no mesmo período (← Voltar, no alto, volta para cá).
                 </p>
                 <ul class="ind-nota ind-nota-lista hidden" id="ind-nota-dias">
                     <li>Cada linha é uma componente do docente e cada quadradinho é um dia do período letivo; o mesmo dia fica alinhado na vertical.</li>
@@ -1136,19 +1138,19 @@
                     <li>T01 e T02 da mesma componente contam como duas.</li>
                     <li>Ao lado de cada componente: <b>CH do docente / CH da componente</b> (ex.: 60/90h quando a componente é dividida ou é estágio com CH do orientador).</li>
                     <li>Entram as componentes do docente em todas as unidades, inclusive o que ainda não foi publicado.</li>
-                    <li><b>Clique no nome de uma componente</b> para ver a turma dela no PL (sub-aba Turma), com a componente em destaque.</li>
+                    <li><b>Clique no nome de uma componente</b> para ver a turma dela no PL (sub-aba Dia a dia da turma), com a componente em destaque.</li>
                 </ul>
                 <ul class="ind-nota ind-nota-lista hidden" id="ind-nota-componente">
                     <li>Cada linha é uma <b>oferta</b> da componente (turma + componente); T01 e T02 aparecem separadas. A lista de sugestões mostra só as componentes com horário na unidade e no período escolhidos.</li>
                     <li><b>Clique na linha</b> para ver o quadro da turma naquele PL: a componente buscada em destaque, as outras mais claras. Clique de novo para fechar.</li>
                     <li><b>✎ Ir para a oferta</b> abre a turma na barra lateral e mostra a componente na Lista de ofertas, para Editar ou Trocar. PL que já terminou: <i>PL encerrado</i>.</li>
-                    <li>Nome da <b>turma</b>: abre a sub-aba Turma. Nome do <b>docente</b>: abre Dias do docente. <b>← Voltar</b> (no alto) volta para cá.</li>
+                    <li>Nome da <b>turma</b>: abre o Dia a dia da turma. Nome do <b>docente</b>: abre o Dia a dia do docente. <b>← Voltar</b> (no alto) volta para cá.</li>
                     <li>Conta tudo o que está no Cardume, inclusive o que ainda não foi publicado. Pendentes (sem horário) não entram.</li>
                 </ul>
                 <ul class="ind-nota ind-nota-lista hidden" id="ind-nota-turma">
                     <li>Escolha a turma na 2ª linha: aparecem só as turmas com horário na unidade, na faculdade e no período escolhidos. No <b>Ano inteiro</b>, um quadro por PL.</li>
                     <li>Embaixo do nome de cada componente: o(s) docente(s) e depois subturma, CH, dias, horário e datas (início–fim). <b>Clique no nome</b> para destacá-la no quadro; clique de novo para tirar o destaque.</li>
-                    <li><b>↗</b> ao lado do nome: em quais turmas e PLs a componente é dada (sub-aba Componente). <b>✎</b>: abre a componente na Lista de ofertas, para Editar ou Trocar. Nome do <b>docente</b>: Dias do docente. <b>← Voltar</b> (no alto) volta para cá.</li>
+                    <li><b>↗</b> ao lado do nome: em quais turmas e PLs a componente é dada (sub-aba Busca componente). <b>✎</b>: abre a componente na Lista de ofertas, para Editar ou Trocar. Nome do <b>docente</b>: Dia a dia do docente. <b>← Voltar</b> (no alto) volta para cá.</li>
                     <li>Conta tudo o que está no Cardume, inclusive o que ainda não foi publicado. Pendentes (sem horário) não entram.</li>
                 </ul>
             </section>
@@ -1445,7 +1447,7 @@
                                 <h3><span aria-hidden="true">📏</span> Estágio (2 de 2): choque, CH do orientador e à mão</h3>
                                 <ul class="aj-lista aj-lista--2col">
                                     <li><b>Encontro</b> conta choque como aula normal, em qualquer turno: o Cardume avisa se o orientador já tem aula em outra turma no mesmo horário.</li>
-                                    <li><b>Estágio em campo</b> nunca dá choque para o docente (os alunos estão no campo, sem ele). Em Indicadores › Dias do docente aparece em cinza e não pesa o dia.</li>
+                                    <li><b>Estágio em campo</b> nunca dá choque para o docente (os alunos estão no campo, sem ele). Em Indicadores › Dia a dia do docente aparece em cinza e não pesa o dia.</li>
                                     <li><b>Para a turma:</b> campo que usa o turno da turma deixa a turma ocupada o dia inteiro; campo só no contraturno deixa a turma livre para outras componentes no turno dela.</li>
                                     <li><b>CH do orientador:</b> se só parte do estágio conta para o docente (ex.: 45 h de 90 h), escreva no campo <b>Orientador</b>, ao lado do botão (ou no passo 1 da janela). Vale na soma do docente (Indicadores e Calendário Docente); aulas, choques e SIGAA continuam com a CH toda. Vazio (caixa laranja): conta a CH toda.</li>
                                     <li><b>Sábado:</b> no estágio, é sempre de manhã, a partir da 1ª aula (8h), com até 5 aulas, qualquer que seja o turno da etapa.</li>
@@ -1563,25 +1565,25 @@
                             </article>
 
                             <article class="aj-cartao aj-cartao--largo">
-                                <h3><span aria-hidden="true">🗓️</span> Indicadores › Dias do docente</h3>
+                                <h3><span aria-hidden="true">🗓️</span> Indicadores › Dia a dia do docente</h3>
                                 <ul class="aj-lista aj-lista--2col">
                                     <li>Digite o nome do docente: cada linha é uma componente dele e cada quadradinho é um dia do PL; o mesmo dia fica alinhado na vertical. Uma linha verde marca o começo de cada mês.</li>
                                     <li><b>Sobrecarga diária</b> (1ª linha, com a legenda <b>sim</b>/<b>não</b>): verde = não, 1 componente no dia; <b>vermelho = sim</b>, 2 ou mais componentes no mesmo dia (ex.: uma de manhã e outra à tarde). Não é choque: é um dia pesado para o docente. O mesmo quadro aparece para os docentes na <b>Agenda Pública</b> (botão <b>Dias</b>, só no computador), com o que está publicado.</li>
                                     <li>Passe o mouse num dia: a caixa no cabeçalho do PL diz as aulas daquele dia. Componente com <b>risco vermelho embaixo</b> = aula num dia carregado; <b>listra cinza</b> = feriado; a <b>coluna fina</b> é o domingo.</li>
                                     <li>Os PLs se sobrepõem (o PL3 começa antes do fim do PL2). Componente de <b>outro PL</b> que cai nas datas deste aparece <b>fraca e listrada</b>, com o nome apagado. <b>Estágio em campo</b> aparece em cinza e não pesa o dia.</li>
                                 </ul>
-                                <img class="aj-print" src="img/instrucoes/dias-docente.png" width="1000" height="302" alt="Quadro Dias do docente: linha Sobrecarga diária com dias vermelhos e uma linha por componente" loading="lazy">
+                                <img class="aj-print" src="img/instrucoes/dias-docente.png" width="1000" height="302" alt="Quadro Dia a dia do docente: linha Sobrecarga diária com dias vermelhos e uma linha por componente" loading="lazy">
                             </article>
 
                             <article class="aj-cartao aj-cartao--largo">
-                                <h3><span aria-hidden="true">🔎</span> Indicadores › Componente</h3>
+                                <h3><span aria-hidden="true">🔎</span> Indicadores › Busca componente</h3>
                                 <ul class="aj-lista aj-lista--2col">
                                     <li>Digite o nome da componente (sem se preocupar com acento) e escolha na lista: aparece <b>quem dá</b>, em <b>qual turma</b> e em <b>qual PL</b>, com a CH, o início, o fim e os dias e horário. Componente dividida: a parte de cada docente.</li>
                                     <li><b>Clique na linha</b>: embaixo abre o quadro da turma naquele PL, com todas as componentes dela na ordem de início. A buscada fica <b>em destaque</b> e as outras mais claras; ao lado de cada uma, a CH e o docente. Bom para ver se dá para trocar a posição.</li>
                                     <li>No quadro da turma não há <b>Sobrecarga diária</b>: numa turma, duas componentes no mesmo dia (manhã e tarde) são normais. Passe o mouse num dia para ver as aulas dele.</li>
                                     <li><b>✎ Ir para a oferta</b>: abre o PL, o curso e a turma na barra lateral e mostra a componente <b>piscando</b> na Lista de ofertas, para Editar ou Trocar. Se houver uma componente desenhada na grade e não salva, o Cardume pergunta antes. PL que já terminou: <i>PL encerrado</i>, sem atalho.</li>
                                 </ul>
-                                <img class="aj-print" src="img/instrucoes/componente-turma.png" width="1000" height="408" alt="Indicadores › Componente: tabela com três ofertas de Matemática Básica e, embaixo, o quadro da turma CN2027_BL1 com a componente em destaque" loading="lazy">
+                                <img class="aj-print" src="img/instrucoes/componente-turma.png" width="1000" height="408" alt="Indicadores › Busca componente: tabela com três ofertas de Matemática Básica e, embaixo, o quadro da turma CN2027_BL1 com a componente em destaque" loading="lazy">
                             </article>
                         </div>
                     </div>
@@ -1678,7 +1680,7 @@
         </main>
     </div>
 
-    <script type="module" src="js/main.js?v=202611281337"></script>
+    <script type="module" src="js/main.js?v=202611281554"></script>
 </body>
 
 </html>

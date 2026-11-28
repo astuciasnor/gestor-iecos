@@ -1,7 +1,8 @@
 /* Agenda do Docente (agenda_docente.html), por cima de agenda_publica.css.
    Pedido de 24/11/2026: pagina so para professores, no notebook, usando bem o
-   espaco: uma faixa so no alto (marca + Ano + Professor), o quadro Dias na
-   largura inteira e os PLs bem marcados. */
+   espaco: uma faixa so no alto (marca + Professor), o quadro Dias na largura
+   inteira e os PLs bem marcados. 28/11/2026: Ano e PLs numa barra lateral
+   estreita; sub-abas Dia a dia do Docente | Dia a dia da Turma. */
 
 /* Largura inteira desde o inicio (no celular a regra de 720px continua valendo). */
 .pub-docente-page .pub-shell { width: calc(100% - 24px); margin-top: 10px; }
@@ -32,7 +33,6 @@
 .doc-campo > span, .doc-campo > label {
     font-size: 0.82rem; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; color: #d6ebe0;
 }
-.doc-campo .pub-select { width: auto; min-width: 96px; padding-top: 8px; padding-bottom: 8px; }
 .doc-campo-nome { flex: 1 1 360px; max-width: 620px; }
 .doc-campo-nome .pub-autocomplete { flex: 1 1 auto; }
 .doc-campo-nome .pub-input { padding-top: 9px; padding-bottom: 9px; }
@@ -50,25 +50,69 @@
 .pub-docente-page .resumo-horas .pub-result-badge.is-total { grid-column: auto; }
 .pub-docente-page .pub-dias-linha { margin: 0; }
 
-/* ===== 2a linha: Ano inteiro | PL1 | PL2 ... ===== */
-.doc-pls { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+/* ===== Corpo (28/11/2026): barra lateral estreita + sub-abas ===== */
+.doc-corpo {
+    display: grid; grid-template-columns: 176px minmax(0, 1fr);
+    align-items: start; gap: 12px; margin-top: 10px;
+}
+.pub-docente-page .doc-corpo .pub-main { margin-top: 0; gap: 10px; min-width: 0; }
+
+.doc-lateral {
+    position: sticky; top: 10px;
+    display: flex; flex-direction: column; gap: 10px;
+    padding: 12px 10px; border-radius: 16px;
+    background: var(--pub-card); border: 1px solid var(--pub-line); box-shadow: var(--pub-shadow);
+}
+.doc-lat-campo { display: flex; flex-direction: column; gap: 4px; margin: 0; }
+.doc-lat-campo > span, .doc-lat-titulo {
+    font-size: 0.72rem; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase; color: #5b7268;
+}
+.doc-lat-campo .pub-select { width: 100%; padding-top: 7px; padding-bottom: 7px; }
+
+/* Anual, PL1, PL2... um abaixo do outro, todos da mesma largura */
+.doc-pls { display: grid; grid-template-columns: 1fr; gap: 6px; }
 .doc-pls:empty { display: none; }
-.doc-pls .pub-pill { padding: 7px 16px; font-size: 0.9rem; }
+.doc-pls .pub-pill { justify-content: center; padding: 6px 8px; font-size: 0.9rem; }
 .doc-pls .pub-pill.active { cursor: default; }
 
-/* Notebook (26/11/2026): o nome, as horas e a linha da sobrecarga ao lado dos
-   botoes dos PLs (uma linha so). O #resultado-agenda "some" (display: contents)
-   e seus filhos entram na grade da pub-main: o cabecalho na coluna 2, o resto
-   na largura inteira. No celular fica como antes (um embaixo do outro). */
-@media (min-width: 721px) {
-    .pub-docente-page .pub-main { grid-template-columns: auto minmax(0, 1fr); align-items: center; column-gap: 14px; }
-    .pub-docente-page .pub-main > *,
-    .pub-docente-page .pub-result > * { grid-column: 1 / -1; }
-    .pub-docente-page .pub-result:not([hidden]) { display: contents; }
-    .pub-docente-page .doc-pls { grid-column: 1; }
-    .pub-docente-page .pub-result > .pub-result-context { grid-column: 2; margin-bottom: 0; padding: 6px 16px; }
-    .pub-docente-page .pub-result-title { font-size: 1.45rem; }
+/* Dia a dia da Turma: Unidade, Faculdade/Curso e as turmas (duas por linha) */
+.doc-lat-turma { display: flex; flex-direction: column; gap: 10px; padding-top: 10px; border-top: 1px solid var(--pub-line); }
+.doc-lat-turma[hidden] { display: none; }
+.doc-turmas { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
+.doc-turma-chip {
+    padding: 5px 2px; border: 1px solid var(--pub-line); border-radius: 8px;
+    background: #f4f8f5; color: var(--pub-ink); font: inherit; font-size: 0.78rem; font-weight: 700;
+    cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
+.doc-turma-chip:hover { border-color: #1c5356; background: #fff; }
+.doc-turma-chip.active { background: #1c5356; border-color: #1c5356; color: #fff; cursor: default; }
+.doc-turmas-vazio { grid-column: 1 / -1; font-size: 0.78rem; color: #5b7268; }
+
+/* Dia a dia do Docente: a componente leva a turma dela (clique) */
+.doc-dia-docente .dd-rot[data-dd-comp] { cursor: pointer; }
+.doc-dia-docente .dd-rot[data-dd-comp]:hover .dd-rot-nome { color: #2d34c6; text-decoration: underline; }
+/* Dia a dia da Turma: o nome do docente e um link (abre o Dia a dia dele);
+   o docente escolhido em negrito */
+.doc-link-docente {
+    padding: 0; border: 0; background: none; font: inherit; color: #29485c;
+    text-align: left; cursor: pointer;
+}
+.doc-link-docente:hover { color: #287fd0; text-decoration: underline; }
+.doc-link-docente:focus-visible { outline: 2px solid #287fd0; outline-offset: 1px; }
+.dd-rot-docente.doc-eu { font-weight: 800; color: #173728; }
+.doc-turma-pl + .doc-turma-pl { margin-top: 0; }
+
+/* Sub-abas: Dia a dia do Docente | Dia a dia da Turma */
+.doc-subabas { display: flex; flex-wrap: wrap; gap: 6px; border-bottom: 3px solid #1c5356; }
+.doc-subaba {
+    padding: 8px 20px; border: 1px solid rgba(28, 83, 86, 0.25); border-bottom: 0;
+    border-radius: 12px 12px 0 0; background: rgba(255, 255, 255, 0.6);
+    color: #5b7268; font: inherit; font-size: 0.95rem; font-weight: 800; cursor: pointer;
+    transition: background-color 0.15s, color 0.15s;
+}
+.doc-subaba:hover { background: #fff; color: #1c5356; }
+.doc-subaba.active { background: #1c5356; border-color: #1c5356; color: #fff; cursor: default; }
+.doc-subaba:focus-visible { outline: none; box-shadow: 0 0 0 4px rgba(0, 78, 40, 0.18); }
 
 /* ===== PLs (26/11/2026): mais juntos; o PL onde o docente tem aula com
    contorno verde forte; o PL sem aula dele (0h) com contorno claro ===== */
@@ -103,9 +147,17 @@
 .doc-boas-vindas b { color: var(--pub-ink); }
 
 @media (max-width: 720px) {
+    .doc-corpo { grid-template-columns: minmax(0, 1fr); }
+    .doc-lateral { position: static; }
+    .doc-pls { grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); }
     .doc-faixa { padding: 10px 12px; }
     .doc-marca-logo { height: 40px; }
     .doc-titulo { font-size: 1.1rem; }
     .doc-marca-ufpa { height: 34px; }
     .doc-campo-nome { flex-basis: 100%; }
 }
+
+/* Caixa do dia (passar o mouse): sempre com a altura de 2 linhas. Com o padding
+   do cabecalho desta pagina, o texto longo (2 linhas) aumentava o cabecalho e a
+   grade descia e subia sob o mouse (visto no Dia a dia da Turma, 28/11/2026). */
+.pub-docente-page .dd-quadro:not(.is-vazio) .dd-info { height: calc(2.6em + 8px); }

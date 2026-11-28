@@ -11,9 +11,9 @@
 import {
     calcularEstagio, faixasDoEstagio, expressaoSigaaDaEtapa, letrasDoTurno, turnoQueMostra,
     choqueDaEtapa, maxHorasDia, limitesDoMes, horasDaEtapa, horasNoSabado, opcoesDoCampo, somaPlanejada, horasPorTurno
-} from './estagio.mjs?v=202611281337';
-import { addDaysISO, weekdayOf } from './datas.mjs?v=202611281337';
-import { MAX_FAIXAS } from './faixas.mjs?v=202611281337';
+} from './estagio.mjs?v=202611281554';
+import { addDaysISO, weekdayOf } from './datas.mjs?v=202611281554';
+import { MAX_FAIXAS } from './faixas.mjs?v=202611281554';
 
 const MESES = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
 const SEMANA = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];

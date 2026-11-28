@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cardume | Agenda do Docente</title>
+    <!-- Agenda so para professores (24/11/2026): o docente digita o nome e ve, dia a
+         dia, onde da aula na graduacao em cada PL do ano. Mesmo codigo da Agenda
+         Publica (js/agenda_publica.js, data-modo="docente"), sem a parte dos alunos.
+         Dados: o que foi publicado (Publicar Online). -->
+    <link rel="stylesheet" href="css/style.css?v=202611281554">
+    <link rel="stylesheet" href="css/agenda_publica.css?v=202611281554">
+    <link rel="stylesheet" href="css/agenda_docente.css?v=202611281554">
+</head>
+
+<body class="pub-docente-page" data-modo="docente">
+    <div class="pub-shell">
+        <!-- Uma faixa so: marca a esquerda, Professor a direita (o Ano foi para a barra lateral). -->
+        <header class="doc-faixa">
+            <div class="doc-marca">
+                <img class="doc-marca-logo" src="img/cardume_agenda_1x.png"
+                    srcset="img/cardume_agenda_1x.png 1x, img/cardume_agenda_2x.png 2x"
+                    alt="Cardume – Planejador Acadêmico" width="300" height="84">
+                <h1 class="doc-titulo">Agenda do Docente</h1>
+            </div>
+
+            <section id="view-docente" class="doc-controles">
+                <div class="doc-campo doc-campo-nome">
+                    <label for="inp-docente-publico">Professor</label>
+                    <div class="pub-autocomplete">
+                        <input id="inp-docente-publico" class="pub-input" type="text" autocomplete="off"
+                            placeholder="Digite seu nome...">
+                        <button id="btn-limpar-docente-publico" type="button" class="pub-clear-btn"
+                            title="Limpar">&times;</button>
+                        <ul id="lista-sugestoes-publico" class="pub-suggestions"></ul>
+                    </div>
+                </div>
+            </section>
+
+            <img class="doc-marca-ufpa" src="img/ufpa_sidebar_1x.png"
+                srcset="img/ufpa_sidebar_1x.png 1x, img/ufpa_sidebar_2x.png 2x, img/ufpa_sidebar_3x.png 3x"
+                alt="UFPA" title="Universidade Federal do Pará" width="40" height="50">
+        </header>
+
+        <!-- 28/11/2026: barra lateral estreita (Ano e PLs; no Dia a dia da Turma tambem
+             Unidade, Faculdade/Curso e Turmas) e, ao lado, duas sub-abas:
+             Dia a dia do Docente | Dia a dia da Turma (as mesmas dos Indicadores). -->
+        <div class="doc-corpo">
+            <aside class="doc-lateral" aria-label="Filtros">
+                <label class="doc-lat-campo">
+                    <span>Ano</span>
+                    <select id="doc-sel-ano" class="pub-select" aria-label="Ano"></select>
+                </label>
+                <!-- Anual | PL1 | PL2 ... um abaixo do outro (comeca em Anual) -->
+                <nav id="doc-pls" class="doc-pls" aria-label="Período letivo"></nav>
+
+                <!-- So no Dia a dia da Turma: Unidade, Faculdade/Curso e as turmas -->
+                <div id="doc-lat-turma" class="doc-lat-turma" hidden>
+                    <label class="doc-lat-campo">
+                        <span>Unidade</span>
+                        <select id="doc-sel-unidade" class="pub-select" aria-label="Unidade"></select>
+                    </label>
+                    <label class="doc-lat-campo">
+                        <span>Faculdade / Curso</span>
+                        <select id="doc-sel-curso" class="pub-select" aria-label="Faculdade ou curso"></select>
+                    </label>
+                    <span class="doc-lat-titulo">Turmas</span>
+                    <div id="doc-turmas" class="doc-turmas" role="group" aria-label="Turmas"></div>
+                </div>
+            </aside>
+
+            <div class="pub-main">
+                <nav class="doc-subabas" role="tablist" aria-label="O que ver">
+                    <button type="button" class="doc-subaba active" role="tab" data-doc-subaba="docente"
+                        aria-selected="true">Dia a dia do Docente</button>
+                    <button type="button" class="doc-subaba" role="tab" data-doc-subaba="turma"
+                        aria-selected="false">Dia a dia da Turma</button>
+                </nav>
+                <section id="resultado-agenda" class="pub-result"></section>
+            </div>
+        </div>
+    </div>
+
+    <button id="btn-topo" class="btn-topo" title="Voltar ao topo">&#8593;</button>
+
+    <div id="slot-lens" class="slot-lens" hidden></div>
+    <div id="day-lens" class="day-lens" hidden></div>
+
+    <script type="module" src="js/agenda_publica.js?v=202611281554"></script>
+</body>
+
+</html>

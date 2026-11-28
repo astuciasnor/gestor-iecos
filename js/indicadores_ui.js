@@ -9,18 +9,16 @@
 // (o mesmo do Componente) com docentes, horario e datas embaixo de cada nome.
 // Navegacao (Etapa 1 da integracao, 26/11/2026): turma, componente e docente
 // levam a sub-aba deles, com "Voltar". O Indicadores so le; mudar e na Lista de ofertas.
-import { UNIDADE_PADRAO, unidadeDoCurso } from './unidades.mjs?v=202611281337';
-import { escapeHtml as esc } from './texto.mjs?v=202611281337';
-import { store } from './store.js?v=202611281337';
-import { getCursoSiglaDaTurma, getDisciplinaCHGlobal, getTurmaLabel, getTurmaBaseLabel } from './curso_turma_helpers.js?v=202611281337';
-import { formatDateBR } from './date_utils_ui.js?v=202611281337';
-import { UNIDADES } from './docente_nomes.mjs?v=202611281337';
-import { cargaPorDocente, ordenarLinhas, SEM_DOCENTE, ofertasDoPlano, chaveComponente, chaveSubturma, nomesDasComponentes, resumoDasAulas, semSufixoCH } from './indicadores.mjs?v=202611281337';
-import { getCalendarEvents } from './calendar.js?v=202611281337';
-import { withPlanContext } from './calendarios_ui.js?v=202611281337';
-import { feriadosDaTurma } from './feriados.mjs?v=202611281337';
-import { fmtCH, focarDiaDoQuadro, DICA_MOUSE, entradaDias, montarQuadrosDias, quadroTurmaHtml, textoSobrecarga, corDoQuadro } from './quadro_dias.mjs?v=202611281337';
-import { numeroDaSubturma } from './subturmas.mjs?v=202611281337';
+import { UNIDADE_PADRAO } from './unidades.mjs?v=202611281554';
+import { escapeHtml as esc } from './texto.mjs?v=202611281554';
+import { store } from './store.js?v=202611281554';
+import { getCursoSiglaDaTurma, getDisciplinaCHGlobal, getTurmaLabel, getTurmaBaseLabel } from './curso_turma_helpers.js?v=202611281554';
+import { formatDateBR } from './date_utils_ui.js?v=202611281554';
+import { cargaPorDocente, ordenarLinhas, SEM_DOCENTE, chaveComponente, chaveSubturma, nomesDasComponentes, resumoDasAulas, semSufixoCH } from './indicadores.mjs?v=202611281554';
+import { getCalendarEvents } from './calendar.js?v=202611281554';
+import { withPlanContext } from './calendarios_ui.js?v=202611281554';
+import { fmtCH, focarDiaDoQuadro, DICA_MOUSE, entradaDias, montarQuadrosDias, textoSobrecarga, corDoQuadro } from './quadro_dias.mjs?v=202611281554';
+import { aulasDaTurma, cursosDaUnidade, detalheDaLinha, feriadosDoQuadro, FOLGA_FIM_DIAS, linhasDaTurma, nomeDoCurso, nomeUnidade, planoDaUnidade, posicaoDoCurso, quadroTurmaDoPlano, somarDias, turmasDosPlanos, unidadeDe } from './quadro_turma.mjs?v=202611281554';
 
 const VALIDADE_MS = 2 * 60 * 1000; // depois disso, abrir o menu busca de novo
 
@@ -57,26 +55,6 @@ export function setIndicadoresLigacoes({ carregar, erro, ajustarNomeDocente, irP
     if (typeof erro === 'function') avisarErro = erro;
 }
 
-// Unidade do curso (cursos[].unidade no dados_app.json; sem ela, UNIDADE_PADRAO).
-function unidadeDe(sigla) {
-    return unidadeDoCurso((store.rawData?.cursos || []).find((c) => c.sigla === sigla));
-}
-
-function nomeUnidade(sigla) {
-    return UNIDADES.find((u) => u.sigla === sigla)?.nome || sigla;
-}
-
-function nomeDoCurso(sigla) {
-    return (store.rawData?.cursos || []).find((c) => c.sigla === sigla)?.curso || sigla;
-}
-
-// Posicao do curso na ordem do cadastro (para ordenar tabelas e turmas).
-function posicaoDoCurso(sigla) {
-    const ordem = (store.rawData?.cursos || []).map((c) => c.sigla);
-    const i = ordem.indexOf(sigla);
-    return i < 0 ? ordem.length : i;
-}
-
 // O PL aberto na barra lateral usa a copia da tela (mudancas de agora mesmo).
 function alocacoesDoPlano(meta, allocations) {
     return meta.key === (store.getActivePlanMeta()?.key || '') ? store.allocations : (allocations || []);
@@ -87,16 +65,6 @@ function rotuloDoPeriodo({ comUnidade = true } = {}) {
     const pl = metasDoAno(estado.ano).find((m) => m.key === estado.periodo)?.periodo || '';
     const periodo = estado.periodo === 'ano' ? `Ano inteiro de ${estado.ano}` : `${estado.ano} - ${pl}`;
     return comUnidade ? `${nomeUnidade(estado.unidade)} · ${periodo}` : periodo;
-}
-
-// Feriados para o quadro dos dias: as datas e o nome de cada uma (turmaId '' = gerais).
-function feriadosDoQuadro(turmaId = '') {
-    const lista = feriadosDaTurma(store.rawData?.feriados || [], turmaId);
-    const data = (f) => String(f?.data || f || '').trim();
-    return {
-        feriados: lista.map(data),
-        nomeFeriado: new Map(lista.map((f) => [data(f), String(f?.feriado || f?.nome || 'Feriado')]))
-    };
 }
 
 function rawPlans() {
@@ -247,7 +215,7 @@ export function setupIndicadores() {
             const linha = linhasComponente[Number(verTurma.dataset.verTurma)];
             if (linha) {
                 const plano = estado.dados && planosDaUnidade().find((p) => p.meta.key === linha.meta.key);
-                const key = plano ? aulasDaTurma(plano, linha.oferta.turmaId).porOferta.get(`${chaveComponente(linha.oferta.disciplina)}|${linha.oferta.subturma}`)?.key : '';
+                const key = plano ? aulasDaTurma(plano, linha.oferta.turmaId, withPlanContext).porOferta.get(`${chaveComponente(linha.oferta.disciplina)}|${linha.oferta.subturma}`)?.key : '';
                 irParaTurma({ turmaId: linha.oferta.turmaId, planKey: linha.meta.key, key });
             }
             return;
@@ -434,7 +402,7 @@ function desenhar() {
     const linhaHtml = (l, pos) => {
         const nome = l.semDocente
             ? `<span class="ind-sem-docente" title="Componentes alocadas sem docente ou com docente &quot;${SEM_DOCENTE}&quot;">${esc(SEM_DOCENTE)} (sem docente)</span>`
-            : `<button type="button" class="ind-docente" data-ver-docente="${esc(l.nome)}" title="${esc(`Ver os dias de ${l.nome} (sub-aba Dias do docente)`)}">${esc(l.nome)}</button>${l.improvisado
+            : `<button type="button" class="ind-docente" data-ver-docente="${esc(l.nome)}" title="${esc(`Ver os dias de ${l.nome} (sub-aba Dia a dia do docente)`)}">${esc(l.nome)}</button>${l.improvisado
                 ? ' <span class="ind-improvisado" title="Nome improvisado: troque por uma vaga (ex.: Vaga1 FACED) pelo Editar da componente. O administrador também pode trocar ou remover em Usuários e backup › Docentes para conferir.">⚠ nome improvisado: troque por uma vaga</span>'
                 : ''}`;
         return `<tr class="${l.vaga || l.improvisado ? 'ind-linha-vaga' : ''}${l.semDocente ? 'ind-linha-sem' : ''}">
@@ -541,10 +509,6 @@ function desenharDias(alvo, resumo) {
 
 // ===== Comum a Componente e Turma =====
 
-// As aulas podem passar do fim do PL (aviso na Lista de ofertas): a busca olha
-// ate 4 meses depois, para o "Fim" sair certo.
-const FOLGA_FIM_DIAS = 120;
-
 // Linhas desenhadas (o botao "Ir para a oferta" e a linha guardam o indice).
 let linhasComponente = [];
 let linhasTurma = [];
@@ -556,7 +520,7 @@ function docentesHtml(oferta) {
         return `<span class="ind-sem-docente" title="Componente sem docente">${esc(SEM_DOCENTE)} (sem docente)</span>`;
     }
     const dividida = oferta.docentes.length > 1;
-    return oferta.docentes.map((d) => `<button type="button" class="ind-docente" data-ver-docente="${esc(d.nome)}" title="${esc(`Ver os dias de ${d.nome} (sub-aba Dias do docente)`)}">${esc(d.nome)}</button>${dividida ? ` <span class="ind-comp-parte">(${fmtCH(d.ch) || 0}h)</span>` : ''}`).join('<br>');
+    return oferta.docentes.map((d) => `<button type="button" class="ind-docente" data-ver-docente="${esc(d.nome)}" title="${esc(`Ver os dias de ${d.nome} (sub-aba Dia a dia do docente)`)}">${esc(d.nome)}</button>${dividida ? ` <span class="ind-comp-parte">(${fmtCH(d.ch) || 0}h)</span>` : ''}`).join('<br>');
 }
 
 // Atalho para a Lista de ofertas. PL encerrado nao aparece na barra lateral:
@@ -570,101 +534,22 @@ function irParaOfertaHtml(l, i, lista) {
 // Identifica a linha da tabela (para lembrar qual quadro esta aberto).
 const chaveDaLinha = (l) => [chaveComponente(l.oferta.disciplina), l.meta.key, l.oferta.turmaId, l.oferta.subturma].join('|');
 
-// Aulas de uma turma num PL (o calendario ja tira feriados e pausas): as
-// entradas do quadro e, por oferta ('COMPONENTE|subturma'), as aulas, a cor e as
-// keys do quadro. rotuloTurma: nome da turma naquele PL (ex.: EP2024_BL7).
-function aulasDaTurma(plano, turmaId) {
-    const { meta } = plano;
-    const entries = [];
-    const porOferta = new Map();
-    let rotuloTurma = '';
-    withPlanContext(meta, plano.allocations, () => {
-        rotuloTurma = getTurmaLabel(turmaId, '') || turmaId;
-        const porData = getCalendarEvents(turmaId, meta.termStart, somarDias(meta.termEnd, FOLGA_FIM_DIAS)) || {};
-        Object.entries(porData).forEach(([date, eventos]) => (eventos || []).forEach((ev) => {
-            if (!ev || ev.type === 'holiday') return;
-            const disciplina = String(ev.disciplina || ev.title || '').trim();
-            const chComponente = Number(getDisciplinaCHGlobal(disciplina, turmaId)) || Number(ev.ch) || 0;
-            const entry = entradaDias(ev, date, meta.key, { chComponente });
-            entries.push(entry);
-            const k = `${chaveComponente(disciplina)}|${chaveSubturma(ev.subGrupo)}`;
-            let o = porOferta.get(k);
-            if (!o) {
-                o = { key: entry.key, keys: new Set(), cor: ev.cor, subGrupo: ev.subGrupo || '', aulas: [] };
-                porOferta.set(k, o);
-            }
-            o.keys.add(entry.key);
-            o.aulas.push({ date, horario: ev.horario });
-        }));
-    });
-    return { entries, porOferta, rotuloTurma };
-}
-
-const nomesDosDocentes = (oferta) => oferta.docentes.map((d) => d.nome).join(' / ') || SEM_DOCENTE;
-const rotuloSubturma = (subGrupo) => {
-    const num = numeroDaSubturma(subGrupo);
-    return num ? `T${String(num).padStart(2, '0')}` : '';
-};
-
-// Quadro de uma turma num PL: uma linha por componente e, ao lado de cada uma,
-// T0n e o(s) docente(s). destaque = key da componente em destaque (as outras
-// ficam mais claras). aulas: de aulasDaTurma. Devolve { html, quadro }.
-function quadroTurmaDoPlano({ plano, turmaId, aulas, titulo, destaque = '', indice = 0, detalhe = null, classe = '', aposNome = null }) {
-    const { meta } = plano;
-    const { entries, porOferta } = aulas;
-    const docentesDe = new Map(plano.ofertas.filter((o) => o.turmaId === turmaId)
-        .map((o) => [`${chaveComponente(o.disciplina)}|${o.subturma}`, nomesDosDocentes(o)]));
-    const rotulos = new Map();
-    porOferta.forEach((o, k) => {
-        const texto = [rotuloSubturma(o.subGrupo), docentesDe.get(k) || ''].filter(Boolean).join(' · ');
-        o.keys.forEach((key) => rotulos.set(key, texto));
-    });
-    const { feriados, nomeFeriado } = feriadosDoQuadro(turmaId);
-    return quadroTurmaHtml({
-        indice,
-        titulo: `${titulo || aulas.rotuloTurma} · ${estado.ano} - ${meta.periodo}`,
-        datas: `${formatDateBR(meta.termStart)} a ${formatDateBR(meta.termEnd)}`,
-        termStart: meta.termStart,
-        termEnd: meta.termEnd,
-        entries,
-        rotulos,
-        feriados,
-        nomeFeriado,
-        destaque,
-        dica: DICA_MOUSE,
-        detalhe,
-        classe,
-        aposNome
-    });
-}
-
 // Componente: quadro da turma da linha no PL dela, a componente buscada em
 // destaque; o titulo usa o nome da linha (com a subturma, ex.: EP2024_BL7_T01).
 function quadroDaTurma(linha, planos) {
     const plano = planos.find((p) => p.meta.key === linha.meta.key);
     if (!plano) return { html: '', quadro: null };
     const turmaId = linha.oferta.turmaId;
-    const aulas = aulasDaTurma(plano, turmaId);
+    const aulas = aulasDaTurma(plano, turmaId, withPlanContext);
     const destaque = aulas.porOferta.get(`${chaveComponente(linha.oferta.disciplina)}|${linha.oferta.subturma}`)?.key || '';
-    return quadroTurmaDoPlano({ plano, turmaId, aulas, titulo: linha.turma, destaque });
-}
-
-function somarDias(iso, n) {
-    const d = new Date(`${iso}T12:00:00`);
-    d.setDate(d.getDate() + n);
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    return quadroTurmaDoPlano({ plano, turmaId, aulas, titulo: linha.turma, ano: estado.ano, destaque });
 }
 
 // Planos do periodo escolhido (ano ou um PL), so a unidade escolhida, com as ofertas.
 function planosDaUnidade() {
     return estado.dados.planos
         .filter(({ meta }) => estado.periodo === 'ano' || meta.key === estado.periodo)
-        .map(({ meta, allocations }) => {
-            const allocs = alocacoesDoPlano(meta, allocations)
-                .filter((a) => unidadeDe(getCursoSiglaDaTurma(a?.turmaId)) === estado.unidade);
-            const ofertas = ofertasDoPlano(allocs, { cursoDaTurma: getCursoSiglaDaTurma, chDaComponente: getDisciplinaCHGlobal });
-            return { meta, allocations: allocs, ofertas };
-        });
+        .map(({ meta, allocations }) => planoDaUnidade(meta, alocacoesDoPlano(meta, allocations), estado.unidade));
 }
 
 // ===== Componente =====
@@ -751,7 +636,7 @@ function desenharComponente(alvo, resumo) {
         return `<tr class="ind-comp-linha${aberta ? ' is-aberta' : ''}" data-comp-linha="${i}" title="${esc(`Clique para ${aberta ? 'fechar' : 'ver'} o quadro da turma ${l.turma} no ${l.meta.periodo}`)}">
             <td class="ind-comp-pl" title="${esc(`${estado.ano} - ${l.meta.periodo}: ${formatDateBR(l.meta.termStart)} a ${formatDateBR(l.meta.termEnd)}`)}">${esc(l.meta.periodo)}</td>
             <td title="${esc(nomeDoCurso(l.oferta.curso))}">${esc(l.oferta.curso)}</td>
-            <td class="ind-comp-turma"><button type="button" class="ind-link" data-ver-turma="${i}" title="${esc(`Ver a turma ${l.turma} inteira (sub-aba Turma)`)}">${esc(l.turma)}</button></td>
+            <td class="ind-comp-turma"><button type="button" class="ind-link" data-ver-turma="${i}" title="${esc(`Ver a turma ${l.turma} inteira (sub-aba Dia a dia da turma)`)}">${esc(l.turma)}</button></td>
             <td class="ind-nome">${docentesHtml(l.oferta)}</td>
             <td class="ind-num">${fmtCH(l.oferta.ch) || '—'}</td>
             <td>${l.inicio ? formatDateBR(l.inicio) : '—'}</td>
@@ -793,7 +678,7 @@ function desenharComponente(alvo, resumo) {
 function montarFaculdades() {
     const sel = document.getElementById('sel-curso-ind');
     if (!sel) return;
-    const cursos = (store.rawData?.cursos || []).filter((c) => unidadeDe(c.sigla) === estado.unidade);
+    const cursos = cursosDaUnidade(estado.unidade);
     if (!cursos.some((c) => c.sigla === estado.turmaCurso)) estado.turmaCurso = '';
     const html = `<option value="">Todas</option>${cursos.map((c) => `<option value="${esc(c.sigla)}">${esc(`${c.curso} (${c.sigla})`)}</option>`).join('')}`;
     if (sel.dataset.unidade !== estado.unidade) {
@@ -803,55 +688,8 @@ function montarFaculdades() {
     sel.value = estado.turmaCurso;
 }
 
-// Turmas com horario no periodo, na unidade e na faculdade escolhidas, na ordem
-// dos cursos do cadastro e depois pelo nome (EP2023, EP2024...).
-function turmasDosPlanos(planos) {
-    const ids = new Set();
-    planos.forEach((p) => p.ofertas.forEach((o) => {
-        if (!estado.turmaCurso || o.curso === estado.turmaCurso) ids.add(o.turmaId);
-    }));
-    return [...ids].map((id) => {
-        const t = (store.rawData?.turmas || []).find((x) => String(x.turma_id) === String(id));
-        return { id, rotulo: getTurmaBaseLabel(id), curso: getCursoSiglaDaTurma(id), turno: t?.turno || '', campus: t?.campus || '' };
-    }).sort((a, b) => posicaoDoCurso(a.curso) - posicaoDoCurso(b.curso) || a.rotulo.localeCompare(b.rotulo, 'pt-BR', { numeric: true }));
-}
-
-// Uma linha por componente da turma no PL (T01 e T02 separadas), com as keys do
-// quadro (para as linhas de detalhe e o destaque).
-function linhasDaTurma(plano, turmaId, aulas) {
-    return plano.ofertas.filter((o) => o.turmaId === turmaId).map((oferta) => {
-        const o = aulas.porOferta.get(`${chaveComponente(oferta.disciplina)}|${oferta.subturma}`);
-        return {
-            meta: plano.meta,
-            oferta,
-            key: o?.key || '',
-            keys: o ? [...o.keys] : [],
-            sub: rotuloSubturma(o?.subGrupo || oferta.subturma),
-            turma: [aulas.rotuloTurma, rotuloSubturma(o?.subGrupo || oferta.subturma)].filter(Boolean).join(' '),
-            ...resumoDasAulas(o?.aulas || [])
-        };
-    });
-}
-
-// Embaixo do nome da componente no quadro da Turma (pedido de 26/11/2026):
-// 1) o(s) docente(s), um por linha (dividida: a parte de cada um);
-// 2) T01 (subturma) · CH · dias · horario · inicio-fim.
-function detalheDaLinha(l) {
-    const docentes = l.oferta.docentes;
-    const dividida = docentes.length > 1;
-    const quem = docentes.length
-        ? docentes.map((d) => `<button type="button" class="dd-rot-docente ind-link" data-ver-docente="${esc(d.nome)}" title="${esc(`Ver os dias de ${d.nome} (sub-aba Dias do docente)`)}">${esc(d.nome)}</button>${dividida ? ` <span class="dd-rot-parte">(${fmtCH(d.ch) || 0}h)</span>` : ''}`)
-        : [`<span class="ind-sem-docente">${esc(SEM_DOCENTE)} (sem docente)</span>`];
-    const dm = (iso) => (iso ? `${iso.slice(8, 10)}/${iso.slice(5, 7)}` : '');
-    const quando = [
-        l.sub ? `<b class="dd-rot-subturma">${esc(l.sub)}</b>` : '',
-        `<b class="dd-rot-ch">${fmtCH(l.oferta.ch) || 0}h</b>`,
-        esc(l.dias),
-        esc(`${l.turnos} ${l.horario}`.trim()),
-        l.inicio ? `${dm(l.inicio)}–${dm(l.fim)}` : ''
-    ].filter(Boolean).join(' · ');
-    return [...quem, quando];
-}
+// Nome do docente no quadro da Turma: abre os dias dele (sub-aba Dia a dia do docente).
+const botaoDocente = (d) => `<button type="button" class="dd-rot-docente ind-link" data-ver-docente="${esc(d.nome)}" title="${esc(`Ver os dias de ${d.nome} (sub-aba Dia a dia do docente)`)}">${esc(d.nome)}</button>`;
 
 function desenharTurma(alvo, resumo) {
     montarFaculdades();
@@ -859,7 +697,7 @@ function desenharTurma(alvo, resumo) {
     const rotuloPeriodo = rotuloDoPeriodo();
 
     // Botoes das turmas (2a linha dos filtros).
-    const turmas = turmasDosPlanos(planos);
+    const turmas = turmasDosPlanos(planos, estado.turmaCurso);
     if (!turmas.some((t) => t.id === estado.turma)) { estado.turma = ''; estado.turmaDestaque = ''; }
     const box = document.getElementById('ind-turmas');
     if (box) {
@@ -884,7 +722,7 @@ function desenharTurma(alvo, resumo) {
     let chTotal = 0;
     let nComp = 0;
     const blocos = planos.filter((p) => p.ofertas.some((o) => o.turmaId === turmaId)).map((plano) => {
-        const aulas = aulasDaTurma(plano, turmaId);
+        const aulas = aulasDaTurma(plano, turmaId, withPlanContext);
         const linhas = linhasDaTurma(plano, turmaId, aulas);
         nComp += linhas.length;
         chTotal += linhas.reduce((n, l) => n + (Number(l.oferta.ch) || 0), 0);
@@ -893,7 +731,7 @@ function desenharTurma(alvo, resumo) {
         linhas.forEach((l) => l.keys.forEach((k) => porKey.set(k, l)));
         const destaque = plDestaque === plano.meta.key ? resto.join('|') : '';
         const { html, quadro } = quadroTurmaDoPlano({
-            plano, turmaId, aulas, destaque,
+            plano, turmaId, aulas, destaque, ano: estado.ano,
             indice: quadrosDias.length,
             classe: 'dd-quadro--turma',
             // ↗ = onde mais a componente e dada; ✎ = Lista de ofertas (editar/trocar la).
@@ -903,9 +741,9 @@ function desenharTurma(alvo, resumo) {
                 const ir = plNaBarra(l.meta.key)
                     ? ` <button type="button" class="dd-rot-ir" data-ir-oferta="${linhasTurma.indexOf(l)}" data-ir-lista="turma" title="${esc(`Abrir ${l.turma} no ${l.meta.periodo} e mostrar a componente na Lista de ofertas (Editar, Trocar...)`)}">✎</button>`
                     : '';
-                return ` <button type="button" class="dd-rot-ir" data-ver-componente="${esc(l.oferta.disciplina)}" title="Em quais turmas e PLs esta componente é dada (sub-aba Componente)">↗</button>${ir}`;
+                return ` <button type="button" class="dd-rot-ir" data-ver-componente="${esc(l.oferta.disciplina)}" title="Em quais turmas e PLs esta componente é dada (sub-aba Busca componente)">↗</button>${ir}`;
             },
-            detalhe: (comp) => (porKey.has(comp.key) ? detalheDaLinha(porKey.get(comp.key)) : null)
+            detalhe: (comp) => (porKey.has(comp.key) ? detalheDaLinha(porKey.get(comp.key), botaoDocente) : null)
         });
         if (quadro) quadrosDias.push(quadro);
         return `<div class="ind-turma-pl" data-plan-key="${esc(plano.meta.key)}">${html}</div>`;
@@ -942,7 +780,7 @@ function nomeDaTela(foto) {
     if (foto.subaba === 'turma' && foto.turma) return `Turma ${getTurmaBaseLabel(foto.turma)}`;
     if (foto.subaba === 'componente' && foto.componente) return foto.componente;
     if (foto.subaba === 'dias' && foto.docente) return foto.docente;
-    return { carga: 'Carga por docente', dias: 'Dias do docente', componente: 'Componente', turma: 'Turma' }[foto.subaba] || 'tela anterior';
+    return { carga: 'Carga por docente', dias: 'Dia a dia do docente', componente: 'Busca componente', turma: 'Dia a dia da turma' }[foto.subaba] || 'tela anterior';
 }
 
 function atualizarVoltar() {

@@ -12,7 +12,7 @@ from pathlib import Path
 
 RAIZ = Path(__file__).resolve().parent.parent
 DESTINO = RAIZ.parent / 'cardume_envio_ufpa'
-ARQUIVOS = ['.htaccess', 'index.html', 'agenda_publica.html', 'agenda_docente.html', 'dados_app.json', 'alocacoes_publicas.json',
+ARQUIVOS = ['.htaccess', 'index.html', 'agenda_publica.html', 'agenda_docente.html', 'agenda_docente_turma.html', 'dados_app.json', 'alocacoes_publicas.json',
             'api/index.php', 'api/.htaccess']
 PASTAS = ['css', 'img', 'js', 'publicacoes']
 
