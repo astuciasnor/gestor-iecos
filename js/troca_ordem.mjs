@@ -1,5 +1,5 @@
-import { weekdayOf, addDaysISO as addDaysIso } from './datas.mjs?v=202611281554';
-import { ehEstagio } from './estagio.mjs?v=202611281554';
+import { weekdayOf, addDaysISO as addDaysIso } from './datas.mjs?v=202611281645';
+import { ehEstagio } from './estagio.mjs?v=202611281645';
 // Botao "Trocar" da Lista de Ofertas: quando duas componentes da mesma turma podem trocar
 // de lugar. Funcoes puras (sem DOM nem store), testadas em tests/troca_ordem.test.mjs.
 //

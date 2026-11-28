@@ -6,16 +6,16 @@
 // plano: { meta: { key, periodo, termStart, termEnd }, allocations, ofertas }
 // (ofertas: de ofertasDoPlano). comPlano(meta, allocations, fn): roda fn com o
 // PL no store (o motor do calendario le o store); cada tela passa o seu.
-import { escapeHtml as esc } from './texto.mjs?v=202611281554';
-import { store } from './store.js?v=202611281554';
-import { getCalendarEvents } from './calendar.js?v=202611281554';
-import { getCursoSiglaDaTurma, getDisciplinaCHGlobal, getTurmaBaseLabel, getTurmaLabel } from './curso_turma_helpers.js?v=202611281554';
-import { formatDateBR } from './date_utils_ui.js?v=202611281554';
-import { feriadosDaTurma } from './feriados.mjs?v=202611281554';
-import { chaveComponente, chaveSubturma, ofertasDoPlano, resumoDasAulas, SEM_DOCENTE } from './indicadores.mjs?v=202611281554';
-import { DICA_MOUSE, entradaDias, fmtCH, quadroTurmaHtml } from './quadro_dias.mjs?v=202611281554';
-import { numeroDaSubturma } from './subturmas.mjs?v=202611281554';
-import { UNIDADES, unidadeDoCurso } from './unidades.mjs?v=202611281554';
+import { escapeHtml as esc } from './texto.mjs?v=202611281645';
+import { store } from './store.js?v=202611281645';
+import { getCalendarEvents } from './calendar.js?v=202611281645';
+import { getCursoSiglaDaTurma, getDisciplinaCHGlobal, getTurmaBaseLabel, getTurmaLabel } from './curso_turma_helpers.js?v=202611281645';
+import { formatDateBR } from './date_utils_ui.js?v=202611281645';
+import { feriadosDaTurma } from './feriados.mjs?v=202611281645';
+import { chaveComponente, chaveSubturma, ofertasDoPlano, resumoDasAulas, SEM_DOCENTE } from './indicadores.mjs?v=202611281645';
+import { DICA_MOUSE, entradaDias, fmtCH, quadroTurmaHtml } from './quadro_dias.mjs?v=202611281645';
+import { numeroDaSubturma } from './subturmas.mjs?v=202611281645';
+import { UNIDADES, unidadeDoCurso } from './unidades.mjs?v=202611281645';
 
 // ===== Unidade, curso e turmas (os filtros da Turma) =====
 
@@ -168,6 +168,46 @@ export function linhasDaTurma(plano, turmaId, aulas) {
             ...resumoDasAulas(o?.aulas || [])
         };
     });
+}
+
+// ===== Busca componente =====
+
+// Uma linha por oferta da componente (chave: chaveComponente do nome): PL, turma,
+// docentes, CH e as datas das aulas. ordemPL: keys dos PLs na ordem de mostrar.
+// Ordem: PL, depois o curso (ordem do cadastro), depois a turma.
+export function linhasDaComponente(chave, planos, comPlano, ordemPL = planos.map((p) => p.meta.key)) {
+    const linhas = [];
+    planos.forEach(({ meta, allocations, ofertas }) => {
+        const daComponente = ofertas.filter((o) => chaveComponente(o.disciplina) === chave);
+        if (!daComponente.length) return;
+        comPlano(meta, allocations, () => {
+            // Aulas de cada turma (o calendario ja tira feriados e pausas).
+            const aulasPorTurma = new Map();
+            [...new Set(daComponente.map((o) => o.turmaId))].forEach((turmaId) => {
+                const porData = getCalendarEvents(turmaId, meta.termStart, somarDias(meta.termEnd, FOLGA_FIM_DIAS)) || {};
+                const aulas = [];
+                Object.entries(porData).forEach(([date, eventos]) => (eventos || []).forEach((ev) => {
+                    if (!ev || ev.type === 'holiday') return;
+                    if (chaveComponente(ev.disciplina || ev.title) !== chave) return;
+                    aulas.push({ date, horario: ev.horario, subturma: chaveSubturma(ev.subGrupo), subGrupo: ev.subGrupo || '' });
+                }));
+                aulasPorTurma.set(turmaId, aulas);
+            });
+            daComponente.forEach((oferta) => {
+                const aulas = (aulasPorTurma.get(oferta.turmaId) || []).filter((a) => a.subturma === oferta.subturma);
+                const subGrupo = aulas[0]?.subGrupo || oferta.subturma;
+                linhas.push({
+                    meta,
+                    oferta,
+                    turma: getTurmaLabel(oferta.turmaId, subGrupo) || oferta.turmaId,
+                    ...resumoDasAulas(aulas)
+                });
+            });
+        });
+    });
+    return linhas.sort((a, b) => ordemPL.indexOf(a.meta.key) - ordemPL.indexOf(b.meta.key)
+        || posicaoDoCurso(a.oferta.curso) - posicaoDoCurso(b.oferta.curso)
+        || a.turma.localeCompare(b.turma, 'pt-BR', { numeric: true }));
 }
 
 // Embaixo do nome da componente no quadro da Turma (pedido de 26/11/2026):

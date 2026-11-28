@@ -1,7 +1,7 @@
-import { escapeHtml as esc } from './texto.mjs?v=202611281554';
-import { vividHexColor, hexToRgb, rgbToHsl, hslToRgb } from './color_utils.js?v=202611281554';
-import { diasDoDocente } from './dias_docente.mjs?v=202611281554';
-import { chOrientadorDaOferta } from './estagio.mjs?v=202611281554';
+import { escapeHtml as esc } from './texto.mjs?v=202611281645';
+import { vividHexColor, hexToRgb, rgbToHsl, hslToRgb } from './color_utils.js?v=202611281645';
+import { diasDoDocente } from './dias_docente.mjs?v=202611281645';
+import { chOrientadorDaOferta } from './estagio.mjs?v=202611281645';
 // Desenho do quadro "Dias do docente": uma coluna por dia do PL, a linha
 // "Sobrecarga diaria" (verde = 1 componente, vermelho = 2 ou mais) e uma linha por
 // componente. Usado em Indicadores > Dias do docente e na agenda publica
@@ -102,7 +102,10 @@ export function quadroDiasHtml(indice, titulo, datas, r, rotulos, ch, { aulas = 
 
     // Sobrecarga diaria (todas as componentes juntas), com a legenda curta ao lado
     // do nome: vermelho = sim, verde = nao (pedido de 24/11/2026; antes "Dia a dia").
-    if (!semSobrecarga) html += '<span class="dd-rot dd-rot-resumo" style="grid-row:4" title="Sobrecarga = 2 ou mais componentes no mesmo dia (não é choque)"><span class="dd-rot-nome">Sobrecarga diária</span><span class="dd-rot-leg"><i class="dd-leg dd-leg-sim"></i>sim<i class="dd-leg dd-leg-nao"></i>não</span></span>';
+    // Faixa atras da linha inteira (vem antes: fica embaixo das celulas). Sem
+    // estilo, nao aparece; a Agenda do Docente pinta (28/11/2026).
+    if (!semSobrecarga) html += '<span class="dd-faixa-resumo" style="grid-column:1 / -1;grid-row:4" aria-hidden="true"></span>';
+    if (!semSobrecarga) html += '<span class="dd-rot dd-rot-resumo" style="grid-column:1;grid-row:4" title="Sobrecarga = 2 ou mais componentes no mesmo dia (não é choque)"><span class="dd-rot-nome">Sobrecarga diária</span><span class="dd-rot-leg"><i class="dd-leg dd-leg-sim"></i>sim<i class="dd-leg dd-leg-nao"></i>não</span></span>';
     if (!semSobrecarga) r.datas.forEach((d, k) => {
         if (d.carregado) html += celula(d, k, 4, ' dd-resumo dd-n2', '');
         // Um verde so (nao a cor da componente): uma componente vermelha nao parece dia carregado.

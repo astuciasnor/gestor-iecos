@@ -1,18 +1,19 @@
-import { UNIDADE_PADRAO, unidadeDoCurso } from './unidades.mjs?v=202611281554';
-import { escapeHtml } from './texto.mjs?v=202611281554';
-import { store, normalizeLoadedAllocation } from './store.js?v=202611281554';
-import { getTurnoLetter } from './turns.js?v=202611281554';
-import { getCalendarEvents } from './calendar.js?v=202611281554';
-import { resolveActiveAcademicPeriod } from './academic_rules.mjs?v=202611281554';
-import { buildMonthMarkers, summarizeTeacherPeriod } from './resumo_docente.mjs?v=202611281554';
-import { resolveBackendMode, UFPA_API_URL } from './backend_config.js?v=202611281554';
-import { filtrarDocentes, UNIDADES } from './docente_nomes.mjs?v=202611281554';
-import { nomeComSubturma, sufixoSubturma } from './subturmas.mjs?v=202611281554';
-import { feriadosDaTurma } from './feriados.mjs?v=202611281554';
-import { chOrientadorDaOferta } from './estagio.mjs?v=202611281554';
-import { focarDiaDoQuadro, DICA_MOUSE, entradaDias, fmtCH, montarQuadrosDias, textoSobrecarga } from './quadro_dias.mjs?v=202611281554';
-import { getCursoSiglaDaTurma, getTurmaBaseLabel } from './curso_turma_helpers.js?v=202611281554';
-import { aulasDaTurma, cursosDaUnidade, detalheDaLinha, linhasDaTurma, nomeDoCurso, nomeUnidade, planoDaUnidade, quadroTurmaDoPlano, turmasDosPlanos, unidadeDe } from './quadro_turma.mjs?v=202611281554';
+import { UNIDADE_PADRAO, unidadeDoCurso } from './unidades.mjs?v=202611281645';
+import { escapeHtml } from './texto.mjs?v=202611281645';
+import { store, normalizeLoadedAllocation } from './store.js?v=202611281645';
+import { getTurnoLetter } from './turns.js?v=202611281645';
+import { getCalendarEvents } from './calendar.js?v=202611281645';
+import { resolveActiveAcademicPeriod } from './academic_rules.mjs?v=202611281645';
+import { buildMonthMarkers, summarizeTeacherPeriod } from './resumo_docente.mjs?v=202611281645';
+import { resolveBackendMode, UFPA_API_URL } from './backend_config.js?v=202611281645';
+import { filtrarDocentes, UNIDADES } from './docente_nomes.mjs?v=202611281645';
+import { nomeComSubturma, sufixoSubturma } from './subturmas.mjs?v=202611281645';
+import { feriadosDaTurma } from './feriados.mjs?v=202611281645';
+import { chOrientadorDaOferta } from './estagio.mjs?v=202611281645';
+import { focarDiaDoQuadro, DICA_MOUSE, entradaDias, fmtCH, montarQuadrosDias, textoSobrecarga } from './quadro_dias.mjs?v=202611281645';
+import { getCursoSiglaDaTurma, getTurmaBaseLabel } from './curso_turma_helpers.js?v=202611281645';
+import { chaveComponente, nomesDasComponentes, SEM_DOCENTE } from './indicadores.mjs?v=202611281645';
+import { aulasDaTurma, cursosDaUnidade, detalheDaLinha, linhasDaComponente, linhasDaTurma, nomeDoCurso, nomeUnidade, planoDaUnidade, quadroTurmaDoPlano, turmasDosPlanos, unidadeDe } from './quadro_turma.mjs?v=202611281645';
 
 const collator = new Intl.Collator('pt-BR', { sensitivity: 'base' });
 const PUBLIC_ASSET_VERSION = '20261028a';
@@ -33,7 +34,9 @@ const state = {
     // Docente) ou 'turma' (Dia a dia da Turma). Cada sub-aba lembra o seu PL
     // (plDocente e o da sub-aba aberta), para olhar uma e outra sem perder o lugar.
     subabaDocente: 'docente',
-    plPorSubaba: { docente: '', turma: '' },
+    plPorSubaba: { docente: '', turma: '', componente: '' },
+    // Buscar Componente: o nome escolhido ('' = nenhum).
+    compDoc: '',
     // Dia a dia da Turma: unidade, faculdade/curso, turma e a componente em
     // destaque ('pubKey|key' do quadro; '' = nenhuma).
     turmaDoc: { unidade: UNIDADE_PADRAO, curso: '', turmaId: '', destaque: '' },
@@ -289,8 +292,10 @@ function setupAnoDocente() {
         const doMomento = pickActivePublication(pubs.filter((pub) => pub.termEnd && publicationYear(pub) === state.anoDocente));
         state.plDocente = String(doMomento?.periodo || '').trim().toUpperCase();
     }
-    state.plPorSubaba = { docente: state.plDocente, turma: state.plDocente };
-    if (String(params.get('vista') || '') === 'turma') state.subabaDocente = 'turma';
+    state.plPorSubaba = { docente: state.plDocente, turma: state.plDocente, componente: state.plDocente };
+    const vista = String(params.get('vista') || '');
+    if (vista === 'turma' || vista === 'componente') state.subabaDocente = vista;
+    state.compDoc = String(params.get('componente') || '').trim();
     // ?turma=EP2027: a turma do Dia a dia da Turma (com a unidade e o curso dela).
     const turmaId = String(params.get('turma') || '').trim();
     if (turmaId) {
@@ -300,6 +305,7 @@ function setupAnoDocente() {
     renderBotoesPLDocente();
     ligarSubabasDocente();
     ligarLateralTurma();
+    ligarBuscaComponente();
     if (sel) {
         sel.innerHTML = anos.map((ano) => `<option value="${ano}"${ano === state.anoDocente ? ' selected' : ''}>${ano}</option>`).join('');
         sel.disabled = anos.length < 2;
@@ -307,15 +313,15 @@ function setupAnoDocente() {
             state.anoDocente = sel.value;
             // Outro ano: as duas sub-abas voltam para Anual.
             state.plDocente = '';
-            state.plPorSubaba = { docente: '', turma: '' };
+            state.plPorSubaba = { docente: '', turma: '', componente: '' };
             state.turmaDoc.destaque = '';
             renderBotoesPLDocente();
             atualizarLinkDocente();
             renderActiveView();
         });
     }
-    // Aberta pelo link na Turma (sem nome de docente): desenha ja.
-    if (state.subabaDocente === 'turma') {
+    // Aberta pelo link na Turma ou na Busca (sem nome de docente): desenha ja.
+    if (state.subabaDocente !== 'docente') {
         syncSubabasDocente();
         renderActiveView();
     }
@@ -368,7 +374,7 @@ function ligarSubabasDocente() {
 
 // Troca a sub-aba aberta: guarda o PL da que sai e volta o PL da que entra.
 function mudarSubabaDocente(nova) {
-    const destino = nova === 'turma' ? 'turma' : 'docente';
+    const destino = ['turma', 'componente'].includes(nova) ? nova : 'docente';
     if (destino === state.subabaDocente) return;
     state.plPorSubaba[state.subabaDocente] = state.plDocente;
     state.subabaDocente = destino;
@@ -383,8 +389,13 @@ function syncSubabasDocente() {
         btn.classList.toggle('active', ativa);
         btn.setAttribute('aria-selected', ativa ? 'true' : 'false');
     });
+    // Barra lateral: Unidade na Turma e na Busca; Faculdade/Curso e turmas so na Turma.
     const lateral = document.getElementById('doc-lat-turma');
-    if (lateral) lateral.hidden = state.subabaDocente !== 'turma';
+    if (lateral) lateral.hidden = state.subabaDocente === 'docente';
+    const soTurma = document.getElementById('doc-lat-so-turma');
+    if (soTurma) soTurma.hidden = state.subabaDocente !== 'turma';
+    const busca = document.getElementById('doc-busca-comp');
+    if (busca) busca.hidden = state.subabaDocente !== 'componente';
 }
 
 // ===== Dia a dia da Turma (28/11/2026) =====
@@ -534,6 +545,124 @@ function renderTurmaDocente() {
     els.resultadoAgenda.querySelector('.dd-rot-destaque')?.scrollIntoView({ block: 'center' });
 }
 
+// ===== Buscar Componente (28/11/2026) =====
+// O professor digita a componente e ve quem da, em qual turma e PL (o que esta
+// publicado). A mesma busca de Indicadores > Busca componente (js/quadro_turma.mjs),
+// so para consulta: a linha abre a turma; o nome do docente, o Dia a dia dele.
+let linhasCompDoc = [];
+
+function ligarBuscaComponente() {
+    const inp = document.getElementById('doc-inp-componente');
+    if (!inp) return;
+    inp.value = state.compDoc;
+    inp.addEventListener('change', () => {
+        state.compDoc = inp.value.trim();
+        atualizarLinkDocente();
+        renderActiveView();
+    });
+    inp.addEventListener('input', () => {
+        if (inp.value.trim() || !state.compDoc) return;
+        state.compDoc = ''; // apagou: volta para "Digite o nome"
+        atualizarLinkDocente();
+        renderActiveView();
+    });
+}
+
+function docentesDaOfertaHtml(oferta) {
+    if (!oferta.docentes.length) return `<span class="ind-sem-docente">${escapeHtml(SEM_DOCENTE)} (sem docente)</span>`;
+    const dividida = oferta.docentes.length > 1;
+    return oferta.docentes.map((d) => `${nomeDocenteNaTurma(d)}${dividida ? ` <span class="ind-comp-parte">(${fmtCH(d.ch) || 0}h)</span>` : ''}`).join('<br>');
+}
+
+function renderComponenteDocente() {
+    fecharSlotLens(true);
+    fecharDayLens(true);
+    renderSequence++;
+    if (!els.resultadoAgenda) return;
+    els.resultadoAgenda.hidden = false;
+    const planos = planosDaTurmaDocente();
+    renderLateralTurma(planos);
+    quadrosDiasPub = [];
+    linhasCompDoc = [];
+    const periodo = state.plDocente ? `${state.anoDocente} - ${state.plDocente}` : `Ano de ${state.anoDocente}`;
+    const nomes = nomesDasComponentes(planos.flatMap((p) => p.ofertas));
+    const lista = document.getElementById('doc-lista-componentes');
+    if (lista) lista.innerHTML = nomes.map((n) => `<option value="${escapeHtmlAttr(n)}"></option>`).join('');
+    const inp = document.getElementById('doc-inp-componente');
+    if (inp && document.activeElement !== inp) inp.value = state.compDoc;
+
+    if (!state.compDoc) {
+        els.resultadoAgenda.innerHTML = `<div class="doc-boas-vindas">Digite o nome da <b>componente</b> no campo acima e escolha na lista
+            (${nomes.length} componente${nomes.length === 1 ? '' : 's'} com aula em ${escapeHtml(periodo)}, na unidade escolhida à esquerda).
+            Aparece <b>quem dá</b>, em <b>qual turma</b> e em <b>qual PL</b>, com a CH, as datas e o horário.
+            Clique numa linha para ver a turma; no nome do docente, o Dia a dia dele.</div>`;
+        return;
+    }
+    const chave = chaveComponente(state.compDoc);
+    const nome = nomes.find((n) => chaveComponente(n) === chave) || state.compDoc;
+    const linhas = linhasDaComponente(chave, planos, comPlanoDoPL);
+    linhasCompDoc = linhas;
+    if (!linhas.length) {
+        els.resultadoAgenda.innerHTML = `<div class="pub-empty-state">Nenhuma oferta publicada de “${escapeHtml(state.compDoc)}” em ${escapeHtml(periodo)}. Escolha um nome da lista.</div>`;
+        return;
+    }
+    const turmas = new Set(linhas.map((l) => l.oferta.turmaId));
+    const docentes = new Set(linhas.flatMap((l) => l.oferta.docentes.map((d) => d.nome)));
+    const resumo = [
+        escapeHtml(periodo),
+        `${linhas.length} oferta${linhas.length === 1 ? '' : 's'} · ${turmas.size} turma${turmas.size === 1 ? '' : 's'} · ${docentes.size} docente${docentes.size === 1 ? '' : 's'}`,
+        '<span class="pub-dias-dica">Clique numa linha para ver a turma; no nome do docente, o Dia a dia dele.</span>'
+    ].join(' &nbsp;|&nbsp; ');
+    const corpo = linhas.map((l, i) => {
+        const horario = [l.dias, `${l.turnos} ${l.horario}`.trim()].filter(Boolean).join(' · ');
+        return `<tr class="ind-comp-linha" data-comp-doc="${i}" data-plan-key="${escapeHtmlAttr(l.meta.key)}" title="${escapeHtmlAttr(`Ver a turma ${l.turma} no ${l.meta.periodo}`)}">
+            <td class="ind-comp-pl">${escapeHtml(l.meta.periodo)}</td>
+            <td title="${escapeHtmlAttr(nomeDoCurso(l.oferta.curso))}">${escapeHtml(l.oferta.curso)}</td>
+            <td class="ind-comp-turma"><button type="button" class="doc-link-turma" data-comp-doc-turma="${i}">${escapeHtml(l.turma)}</button></td>
+            <td class="ind-nome">${docentesDaOfertaHtml(l.oferta)}</td>
+            <td class="ind-num">${fmtCH(l.oferta.ch) || '—'}</td>
+            <td>${l.inicio ? formatIsoDateBR(l.inicio) : '—'}</td>
+            <td>${l.fim ? formatIsoDateBR(l.fim) : '—'}</td>
+            <td>${escapeHtml(horario) || '—'}</td>
+        </tr>`;
+    }).join('');
+    els.resultadoAgenda.innerHTML = `
+        <div class="pub-result-context">
+            <h2 class="pub-result-title">${escapeHtml(nome)}</h2>
+            <p class="pub-dias-linha">${resumo}</p>
+        </div>
+        <div class="ind-tabela-rolagem doc-comp-tabela"><table class="ind-tabela ind-tabela-comp">
+            <thead><tr>
+                <th scope="col">PL</th>
+                <th scope="col">Curso</th>
+                <th scope="col">Turma</th>
+                <th scope="col" class="ind-nome">Docente</th>
+                <th scope="col" class="ind-num" title="CH da componente">CH</th>
+                <th scope="col">Início</th>
+                <th scope="col">Fim</th>
+                <th scope="col">Dias e horário</th>
+            </tr></thead>
+            <tbody>${corpo}</tbody>
+        </table></div>`;
+}
+
+// Uma linha da busca: abre a turma no PL dela, com a componente em destaque.
+function abrirTurmaDaLinhaComp(i) {
+    const l = linhasCompDoc[i];
+    if (!l) return;
+    const plano = planosDaTurmaDocente().find((p) => p.meta.key === l.meta.key);
+    const key = plano
+        ? aulasDaTurma(plano, l.oferta.turmaId, comPlanoDoPL).porOferta.get(`${chaveComponente(l.oferta.disciplina)}|${l.oferta.subturma}`)?.key || ''
+        : '';
+    const curso = getCursoSiglaDaTurma(l.oferta.turmaId);
+    state.turmaDoc = { unidade: unidadeDe(curso), curso, turmaId: l.oferta.turmaId, destaque: key ? `${l.meta.key}|${key}` : '' };
+    state.plPorSubaba.turma = String(l.meta.periodo || '').trim().toUpperCase();
+    mudarSubabaDocente('turma');
+    atualizarLinkDocente();
+    renderActiveView();
+    window.scrollTo({ top: 0 });
+}
+
 // Dia a dia do Docente: clicar numa componente abre a turma dela no Dia a dia
 // da Turma, no PL dela, com a componente em destaque (e a unidade e o curso dela).
 function abrirTurmaDaComponente(key, pubKey) {
@@ -557,8 +686,10 @@ function atualizarLinkDocente() {
         else url.searchParams.delete('docente');
         if (state.anoDocente) url.searchParams.set('ano', state.anoDocente);
         url.searchParams.set('periodo', state.plDocente || 'anual');
-        if (state.subabaDocente === 'turma') url.searchParams.set('vista', 'turma');
+        if (state.subabaDocente !== 'docente') url.searchParams.set('vista', state.subabaDocente);
         else url.searchParams.delete('vista');
+        if (state.subabaDocente === 'componente' && state.compDoc) url.searchParams.set('componente', state.compDoc);
+        else url.searchParams.delete('componente');
         if (state.subabaDocente === 'turma' && state.turmaDoc.turmaId) url.searchParams.set('turma', state.turmaDoc.turmaId);
         else url.searchParams.delete('turma');
         window.history.replaceState({}, '', url);
@@ -628,6 +759,11 @@ function bindEvents() {
         const verDocente = event.target.closest('button[data-ver-docente]');
         if (verDocente) {
             abrirDocenteDaTurma(verDocente.dataset.verDocente, verDocente.closest('[data-plan-key]')?.dataset.planKey || '');
+            return;
+        }
+        const linhaComp = event.target.closest('[data-comp-doc-turma], tr[data-comp-doc]');
+        if (linhaComp) {
+            abrirTurmaDaLinhaComp(Number(linhaComp.dataset.compDocTurma ?? linhaComp.dataset.compDoc));
             return;
         }
         const rot = event.target.closest('.dd-rot[data-dd-comp]');
@@ -1771,6 +1907,11 @@ function renderActiveView() {
     if (MODO_DOCENTE && state.subabaDocente === 'turma') {
         document.body.classList.remove('pub-larga');
         renderTurmaDocente();
+        return;
+    }
+    if (MODO_DOCENTE && state.subabaDocente === 'componente') {
+        document.body.classList.remove('pub-larga');
+        renderComponenteDocente();
         return;
     }
     // Vista Dias: a pagina usa a largura inteira da tela (o quadro tem uma coluna por dia).

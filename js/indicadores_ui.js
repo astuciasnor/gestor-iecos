@@ -9,16 +9,16 @@
 // (o mesmo do Componente) com docentes, horario e datas embaixo de cada nome.
 // Navegacao (Etapa 1 da integracao, 26/11/2026): turma, componente e docente
 // levam a sub-aba deles, com "Voltar". O Indicadores so le; mudar e na Lista de ofertas.
-import { UNIDADE_PADRAO } from './unidades.mjs?v=202611281554';
-import { escapeHtml as esc } from './texto.mjs?v=202611281554';
-import { store } from './store.js?v=202611281554';
-import { getCursoSiglaDaTurma, getDisciplinaCHGlobal, getTurmaLabel, getTurmaBaseLabel } from './curso_turma_helpers.js?v=202611281554';
-import { formatDateBR } from './date_utils_ui.js?v=202611281554';
-import { cargaPorDocente, ordenarLinhas, SEM_DOCENTE, chaveComponente, chaveSubturma, nomesDasComponentes, resumoDasAulas, semSufixoCH } from './indicadores.mjs?v=202611281554';
-import { getCalendarEvents } from './calendar.js?v=202611281554';
-import { withPlanContext } from './calendarios_ui.js?v=202611281554';
-import { fmtCH, focarDiaDoQuadro, DICA_MOUSE, entradaDias, montarQuadrosDias, textoSobrecarga, corDoQuadro } from './quadro_dias.mjs?v=202611281554';
-import { aulasDaTurma, cursosDaUnidade, detalheDaLinha, feriadosDoQuadro, FOLGA_FIM_DIAS, linhasDaTurma, nomeDoCurso, nomeUnidade, planoDaUnidade, posicaoDoCurso, quadroTurmaDoPlano, somarDias, turmasDosPlanos, unidadeDe } from './quadro_turma.mjs?v=202611281554';
+import { UNIDADE_PADRAO } from './unidades.mjs?v=202611281645';
+import { escapeHtml as esc } from './texto.mjs?v=202611281645';
+import { store } from './store.js?v=202611281645';
+import { getCursoSiglaDaTurma, getDisciplinaCHGlobal, getTurmaLabel, getTurmaBaseLabel } from './curso_turma_helpers.js?v=202611281645';
+import { formatDateBR } from './date_utils_ui.js?v=202611281645';
+import { cargaPorDocente, ordenarLinhas, SEM_DOCENTE, chaveComponente, nomesDasComponentes, semSufixoCH } from './indicadores.mjs?v=202611281645';
+import { getCalendarEvents } from './calendar.js?v=202611281645';
+import { withPlanContext } from './calendarios_ui.js?v=202611281645';
+import { fmtCH, focarDiaDoQuadro, DICA_MOUSE, entradaDias, montarQuadrosDias, textoSobrecarga, corDoQuadro } from './quadro_dias.mjs?v=202611281645';
+import { aulasDaTurma, cursosDaUnidade, detalheDaLinha, linhasDaComponente, feriadosDoQuadro, linhasDaTurma, nomeDoCurso, nomeUnidade, planoDaUnidade, quadroTurmaDoPlano, turmasDosPlanos, unidadeDe } from './quadro_turma.mjs?v=202611281645';
 
 const VALIDADE_MS = 2 * 60 * 1000; // depois disso, abrir o menu busca de novo
 
@@ -554,44 +554,6 @@ function planosDaUnidade() {
 
 // ===== Componente =====
 
-// Uma linha por oferta da componente: PL, turma, docentes, CH e as datas das aulas.
-function linhasDaComponente(chave, planos) {
-    const linhas = [];
-    planos.forEach(({ meta, allocations, ofertas }) => {
-        const daComponente = ofertas.filter((o) => chaveComponente(o.disciplina) === chave);
-        if (!daComponente.length) return;
-        withPlanContext(meta, allocations, () => {
-            // Aulas de cada turma (o calendario ja tira feriados e pausas).
-            const aulasPorTurma = new Map();
-            [...new Set(daComponente.map((o) => o.turmaId))].forEach((turmaId) => {
-                const porData = getCalendarEvents(turmaId, meta.termStart, somarDias(meta.termEnd, FOLGA_FIM_DIAS)) || {};
-                const aulas = [];
-                Object.entries(porData).forEach(([date, eventos]) => (eventos || []).forEach((ev) => {
-                    if (!ev || ev.type === 'holiday') return;
-                    if (chaveComponente(ev.disciplina || ev.title) !== chave) return;
-                    aulas.push({ date, horario: ev.horario, subturma: chaveSubturma(ev.subGrupo), subGrupo: ev.subGrupo || '' });
-                }));
-                aulasPorTurma.set(turmaId, aulas);
-            });
-            daComponente.forEach((oferta) => {
-                const aulas = (aulasPorTurma.get(oferta.turmaId) || []).filter((a) => a.subturma === oferta.subturma);
-                const subGrupo = aulas[0]?.subGrupo || oferta.subturma;
-                linhas.push({
-                    meta,
-                    oferta,
-                    turma: getTurmaLabel(oferta.turmaId, subGrupo) || oferta.turmaId,
-                    ...resumoDasAulas(aulas)
-                });
-            });
-        });
-    });
-    // Ordem: PL, depois o curso (ordem do cadastro), depois a turma.
-    const ordemPL = metasDoAno(estado.ano).map((m) => m.key);
-    return linhas.sort((a, b) => ordemPL.indexOf(a.meta.key) - ordemPL.indexOf(b.meta.key)
-        || posicaoDoCurso(a.oferta.curso) - posicaoDoCurso(b.oferta.curso)
-        || a.turma.localeCompare(b.turma, 'pt-BR', { numeric: true }));
-}
-
 function desenharComponente(alvo, resumo) {
     const planos = planosDaUnidade();
     const rotuloPeriodo = rotuloDoPeriodo();
@@ -609,7 +571,7 @@ function desenharComponente(alvo, resumo) {
 
     const chave = chaveComponente(estado.componente);
     const nome = nomes.find((n) => chaveComponente(n) === chave) || estado.componente;
-    const linhas = linhasDaComponente(chave, planos);
+    const linhas = linhasDaComponente(chave, planos, withPlanContext, metasDoAno(estado.ano).map((m) => m.key));
     linhasComponente = linhas;
     quadrosDias = [];
     if (!linhas.length) {

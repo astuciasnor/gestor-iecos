@@ -1,12 +1,12 @@
 // Exportacao do arquivo de metadados SIGAA da turma (botao "Exportar JSON SIGAA",
 // js/main.js). Saiu do ui.js em 20/11/2026 sem mudar nada. O payload e a
 // validacao estao em sigaa_metadata.js; aqui so o plano ativo e o download.
-import { store } from './store.js?v=202611281554';
-import { buildCanonicalOfferProjection } from './execution_engine.js?v=202611281554';
-import { buildSigaaMetadataPayload, validateSigaaMetadataPayload } from './sigaa_metadata.js?v=202611281554';
-import { getDisciplinaInfo } from './curso_turma_helpers.js?v=202611281554';
-import { formatDateBR } from './date_utils_ui.js?v=202611281554';
-import { showToastWarning } from './ui_feedback.js?v=202611281554';
+import { store } from './store.js?v=202611281645';
+import { buildCanonicalOfferProjection } from './execution_engine.js?v=202611281645';
+import { buildSigaaMetadataPayload, validateSigaaMetadataPayload } from './sigaa_metadata.js?v=202611281645';
+import { getDisciplinaInfo } from './curso_turma_helpers.js?v=202611281645';
+import { formatDateBR } from './date_utils_ui.js?v=202611281645';
+import { showToastWarning } from './ui_feedback.js?v=202611281645';
 
 // Datas do calendario da barra lateral (reserva quando o plano nao tem datas).
 const calStart = () => document.getElementById('cal-start');

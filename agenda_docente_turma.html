@@ -9,9 +9,9 @@
          dia, onde da aula na graduacao em cada PL do ano. Mesmo codigo da Agenda
          Publica (js/agenda_publica.js, data-modo="docente"), sem a parte dos alunos.
          Dados: o que foi publicado (Publicar Online). -->
-    <link rel="stylesheet" href="css/style.css?v=202611281554">
-    <link rel="stylesheet" href="css/agenda_publica.css?v=202611281554">
-    <link rel="stylesheet" href="css/agenda_docente.css?v=202611281554">
+    <link rel="stylesheet" href="css/style.css?v=202611281645">
+    <link rel="stylesheet" href="css/agenda_publica.css?v=202611281645">
+    <link rel="stylesheet" href="css/agenda_docente.css?v=202611281645">
 </head>
 
 <body class="pub-docente-page" data-modo="docente">
@@ -55,18 +55,20 @@
                 <!-- Anual | PL1 | PL2 ... um abaixo do outro (comeca em Anual) -->
                 <nav id="doc-pls" class="doc-pls" aria-label="Período letivo"></nav>
 
-                <!-- So no Dia a dia da Turma: Unidade, Faculdade/Curso e as turmas -->
+                <!-- Turma e Buscar Componente: a Unidade; so na Turma: Faculdade/Curso e as turmas -->
                 <div id="doc-lat-turma" class="doc-lat-turma" hidden>
                     <label class="doc-lat-campo">
                         <span>Unidade</span>
                         <select id="doc-sel-unidade" class="pub-select" aria-label="Unidade"></select>
                     </label>
+                    <div id="doc-lat-so-turma" class="doc-lat-turma doc-lat-so-turma">
                     <label class="doc-lat-campo">
                         <span>Faculdade / Curso</span>
                         <select id="doc-sel-curso" class="pub-select" aria-label="Faculdade ou curso"></select>
                     </label>
                     <span class="doc-lat-titulo">Turmas</span>
                     <div id="doc-turmas" class="doc-turmas" role="group" aria-label="Turmas"></div>
+                    </div>
                 </div>
             </aside>
 
@@ -76,7 +78,16 @@
                         aria-selected="true">Dia a dia do Docente</button>
                     <button type="button" class="doc-subaba" role="tab" data-doc-subaba="turma"
                         aria-selected="false">Dia a dia da Turma</button>
+                    <button type="button" class="doc-subaba" role="tab" data-doc-subaba="componente"
+                        aria-selected="false">Buscar Componente</button>
                 </nav>
+                <!-- So no Buscar Componente: o nome da componente (lista com as que tem aula) -->
+                <div id="doc-busca-comp" class="doc-busca" hidden>
+                    <label for="doc-inp-componente">Componente</label>
+                    <input id="doc-inp-componente" class="pub-input" type="text" list="doc-lista-componentes"
+                        autocomplete="off" placeholder="Digite o nome da componente e escolha na lista...">
+                    <datalist id="doc-lista-componentes"></datalist>
+                </div>
                 <section id="resultado-agenda" class="pub-result"></section>
             </div>
         </div>
@@ -87,7 +98,7 @@
     <div id="slot-lens" class="slot-lens" hidden></div>
     <div id="day-lens" class="day-lens" hidden></div>
 
-    <script type="module" src="js/agenda_publica.js?v=202611281554"></script>
+    <script type="module" src="js/agenda_publica.js?v=202611281645"></script>
 </body>
 
 </html>
