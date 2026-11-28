@@ -58,19 +58,20 @@ try {
     confere('lista de docentes preenchida', telaVazia.docentes > 0, `${telaVazia.docentes} docentes`);
     confere('sem docente: pede para escolher', /Digite o nome do docente/.test(telaVazia.texto));
 
-    // Docente na 2a linha (embaixo da Unidade) e a lista de sugestoes ao digitar "eva".
+    // Docente embaixo das sub-abas, ao lado da barra lateral (28/11/2026), e a lista de sugestoes ao digitar "eva".
     const caixa = JSON.parse(await evaluate(`(async () => {
         const inp = document.getElementById('inp-docente-dias');
-        const unidade = document.getElementById('sel-unidade-indicadores').getBoundingClientRect();
-        const rot = document.querySelector('#ind-docente-box .ind-filtros-rotulo').getBoundingClientRect();
+        const lateral = document.querySelector('#tab-indicadores .ind-lateral').getBoundingClientRect();
+        const abas = document.querySelector('#tab-indicadores .ind-subabas').getBoundingClientRect();
+        const rot = document.querySelector('#ind-docente-box .ind-busca-rotulo').getBoundingClientRect();
         inp.focus();
         inp.value = 'eva';
         inp.dispatchEvent(new Event('input', { bubbles: true }));
         await new Promise(r => setTimeout(r, 300));
         const itens = [...document.querySelectorAll('.sug-docente:not([hidden]) li')].map(li => li.textContent.trim());
-        return JSON.stringify({ linha2: rot.top > unidade.bottom, alinhado: Math.abs(rot.left - unidade.left) < 120, itens });
+        return JSON.stringify({ linha2: rot.top >= abas.bottom, alinhado: rot.left > lateral.right, itens });
     })()`));
-    confere('Docente fica na 2a linha, embaixo da Unidade', caixa.linha2 && caixa.alinhado);
+    confere('Docente fica embaixo das sub-abas, ao lado da barra lateral', caixa.linha2 && caixa.alinhado);
     confere('digitar "eva" mostra sugestoes', caixa.itens.length > 0, caixa.itens.slice(0, 4).join(' | '));
     const fotoTopo = await send('Page.captureScreenshot', { format: 'png', clip: { x: 0, y: 0, width: 1536, height: 420, scale: 1 } });
     fs.writeFileSync(path.join(os.tmpdir(), 'dias_docente_topo.png'), Buffer.from(fotoTopo.result.data, 'base64'));

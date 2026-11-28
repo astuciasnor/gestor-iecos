@@ -9,16 +9,16 @@
 // (o mesmo do Componente) com docentes, horario e datas embaixo de cada nome.
 // Navegacao (Etapa 1 da integracao, 26/11/2026): turma, componente e docente
 // levam a sub-aba deles, com "Voltar". O Indicadores so le; mudar e na Lista de ofertas.
-import { UNIDADE_PADRAO } from './unidades.mjs?v=202611281702';
-import { escapeHtml as esc } from './texto.mjs?v=202611281702';
-import { store } from './store.js?v=202611281702';
-import { getCursoSiglaDaTurma, getDisciplinaCHGlobal, getTurmaLabel, getTurmaBaseLabel } from './curso_turma_helpers.js?v=202611281702';
-import { formatDateBR } from './date_utils_ui.js?v=202611281702';
-import { cargaPorDocente, ordenarLinhas, SEM_DOCENTE, chaveComponente, nomesDasComponentes, semSufixoCH } from './indicadores.mjs?v=202611281702';
-import { getCalendarEvents } from './calendar.js?v=202611281702';
-import { withPlanContext } from './calendarios_ui.js?v=202611281702';
-import { fmtCH, focarDiaDoQuadro, DICA_MOUSE, entradaDias, montarQuadrosDias, textoSobrecarga, corDoQuadro } from './quadro_dias.mjs?v=202611281702';
-import { aulasDaTurma, cursosDaUnidade, detalheDaLinha, linhasDaComponente, feriadosDoQuadro, linhasDaTurma, nomeDoCurso, nomeUnidade, planoDaUnidade, quadroTurmaDoPlano, turmasDosPlanos, unidadeDe } from './quadro_turma.mjs?v=202611281702';
+import { UNIDADE_PADRAO } from './unidades.mjs?v=202611281736';
+import { escapeHtml as esc } from './texto.mjs?v=202611281736';
+import { store } from './store.js?v=202611281736';
+import { getCursoSiglaDaTurma, getDisciplinaCHGlobal, getTurmaLabel, getTurmaBaseLabel } from './curso_turma_helpers.js?v=202611281736';
+import { formatDateBR } from './date_utils_ui.js?v=202611281736';
+import { cargaPorDocente, ordenarLinhas, SEM_DOCENTE, chaveComponente, nomesDasComponentes, semSufixoCH } from './indicadores.mjs?v=202611281736';
+import { getCalendarEvents } from './calendar.js?v=202611281736';
+import { withPlanContext } from './calendarios_ui.js?v=202611281736';
+import { fmtCH, focarDiaDoQuadro, DICA_MOUSE, entradaDias, montarQuadrosDias, textoSobrecarga, corDoQuadro } from './quadro_dias.mjs?v=202611281736';
+import { aulasDaTurma, cursosDaUnidade, detalheDaLinha, linhasDaComponente, feriadosDoQuadro, linhasDaTurma, nomeDoCurso, nomeUnidade, planoDaUnidade, quadroTurmaDoPlano, turmasDosPlanos, unidadeDe } from './quadro_turma.mjs?v=202611281736';
 
 const VALIDADE_MS = 2 * 60 * 1000; // depois disso, abrir o menu busca de novo
 
