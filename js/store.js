@@ -8,11 +8,11 @@ import {
   readJsonStorage,
   upsertPlanIndexEntry,
   writeJsonStorage
-} from './plan_storage.js?v=202611262209';
-import { generateUUID } from './utils.js?v=202611262209';
-import { buildQuadroConversionMap, convertAllocationQuadro } from './quadro_horario.mjs?v=202611262209';
+} from './plan_storage.js?v=202611281337';
+import { generateUUID } from './utils.js?v=202611281337';
+import { buildQuadroConversionMap, convertAllocationQuadro } from './quadro_horario.mjs?v=202611281337';
 
-import { normalizeTurnoKey, getHorariosByTurno } from './turns.js?v=202611262209';
+import { normalizeTurnoKey, getHorariosByTurno } from './turns.js?v=202611281337';
 
 export function normalizeLoadedAllocation(alloc) {
   if (!alloc || typeof alloc !== 'object') return alloc;
@@ -396,13 +396,17 @@ class Store {
   // Antes de regime_vigencia (inicio do PL4/2026) todos seguem o regime padrao,
   // preservando turmas passadas. A partir dela, cada curso usa o regime atribuido.
   getActiveRegime() {
+    return this.getRegimeDoCurso(this.selectedCurso);
+  }
+
+  // Regime de um curso no PL ativo (sigla vazia = regime padrao).
+  getRegimeDoCurso(sigla) {
     const rd = this.rawData || {};
     const cutoff = String(rd.regime_vigencia || '').trim();
     const termStart = String(this.settings?.termStart || this.activePlanMeta?.termStart || '').trim();
     if (cutoff && termStart && termStart < cutoff) {
       return String(rd.regime_default || 1);
     }
-    const sigla = this.selectedCurso;
     if (sigla) {
       const curso = (rd.cursos || []).find((c) => String(c.sigla) === String(sigla));
       if (curso && curso.regime) return String(curso.regime);
@@ -412,9 +416,15 @@ class Store {
 
   // Grade horarios_por_turno do regime ativo (com fallback de compatibilidade).
   getActiveHorariosPorTurno() {
+    return this.getHorariosPorTurnoDoCurso(this.selectedCurso);
+  }
+
+  // Grade horarios_por_turno do regime de um curso. Telas sem curso escolhido
+  // (agenda publica, agenda do docente) usam esta, pelo curso da turma da aula.
+  getHorariosPorTurnoDoCurso(sigla) {
     const rd = this.rawData || {};
     const byRegime = rd.horarios_por_regime || {};
-    const regime = this.getActiveRegime();
+    const regime = this.getRegimeDoCurso(sigla);
     if (byRegime && byRegime[regime] && typeof byRegime[regime] === 'object') {
       return byRegime[regime];
     }
