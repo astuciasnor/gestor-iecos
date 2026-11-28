@@ -13,10 +13,10 @@
 // Estagio com "CH do orientador" informada (janela Montar estagio): o docente
 // unico conta essa CH (45 de 90), nao a CH toda.
 
-import { normalizeTeacherNameForMatch, ehVaga, nomeImprovisado } from './docente_nomes.mjs?v=202611281645';
-import { chDoOrientador } from './estagio.mjs?v=202611281645';
-import { formatWeekdays, summarizeHorarios } from './resumo_docente.mjs?v=202611281645';
-import { weekdayOf } from './datas.mjs?v=202611281645';
+import { normalizeTeacherNameForMatch, ehVaga, nomeImprovisado } from './docente_nomes.mjs?v=202611281702';
+import { chDoOrientador } from './estagio.mjs?v=202611281702';
+import { formatWeekdays, summarizeHorarios } from './resumo_docente.mjs?v=202611281702';
+import { weekdayOf } from './datas.mjs?v=202611281702';
 
 export const SEM_DOCENTE = 'A definir';
 

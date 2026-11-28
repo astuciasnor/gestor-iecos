@@ -10,14 +10,14 @@
         // Vai para o aviso antes de carregar o programa. A agenda publica nao passa por aqui.
         if (/\.github\.io$/i.test(location.hostname)) location.replace('mudou.html');
     </script>
-    <link rel="stylesheet" href="css/style.css?v=202611281645">
+    <link rel="stylesheet" href="css/style.css?v=202611281702">
     <!-- Redesenho da aba Alocar Componentes (por partes); carrega depois do style.css -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
-    <link rel="stylesheet" href="css/alocar-componentes.css?v=202611281645">
-    <link rel="stylesheet" href="css/ajuda.css?v=202611281645">
-    <link rel="stylesheet" href="css/montar-estagio.css?v=202611281645">
+    <link rel="stylesheet" href="css/alocar-componentes.css?v=202611281702">
+    <link rel="stylesheet" href="css/ajuda.css?v=202611281702">
+    <link rel="stylesheet" href="css/montar-estagio.css?v=202611281702">
 
     <style>
         :root {
@@ -349,7 +349,7 @@
         }
     </style>
     <!-- Visual da barra lateral: depois de todos os estilos, so vale dentro de .sidebar -->
-    <link rel="stylesheet" href="css/sidebar.css?v=202611281645">
+    <link rel="stylesheet" href="css/sidebar.css?v=202611281702">
 </head>
 
 <body>
@@ -1076,83 +1076,105 @@
             </section>
 
             <section id="tab-indicadores" class="tab-content" role="tabpanel" aria-labelledby="tabbtn-indicadores">
-                <div class="subtab-bar ind-subabas no-print" role="tablist" aria-label="Tipos de indicador">
-                    <button type="button" class="ind-subaba is-ativa" data-subaba="carga" role="tab" aria-selected="true">Carga por docente</button>
-                    <!-- 28/11/2026: Busca componente logo depois da Carga; Dia a dia do docente e
-                         Dia a dia da turma lado a lado (os mesmos nomes da Agenda do Docente). -->
-                    <button type="button" class="ind-subaba" data-subaba="componente" role="tab" aria-selected="false">Busca componente</button>
-                    <button type="button" class="ind-subaba" data-subaba="dias" role="tab" aria-selected="false">Dia a dia do docente</button>
-                    <button type="button" class="ind-subaba" data-subaba="turma" role="tab" aria-selected="false">Dia a dia da turma</button>
-                    <!-- Volta para a tela de antes de um atalho (Componente > Turma > Docente...). -->
-                    <button type="button" id="btn-ind-voltar" class="ind-voltar hidden"></button>
+                <!-- 28/11/2026 (parte 1 do visual da Agenda do Docente): nesta aba a barra
+                     verde do Cardume sai e entra a barra lateral estreita (Ano, Anual/PLs,
+                     Unidade; no Dia a dia da turma tambem Faculdade e Turmas). As sub-abas
+                     ficam ao lado. A Carga por docente (todos os docentes numa tabela) so
+                     existe aqui, para os coordenadores; a Agenda do Docente nao tem. -->
+                <div class="ind-corpo">
+                    <aside class="ind-lateral no-print" aria-label="Filtros dos indicadores">
+                        <label class="ind-lat-campo">
+                            <span>Ano</span>
+                            <select id="sel-ano-indicadores" aria-label="Ano"></select>
+                        </label>
+                        <!-- Anual | PL1 | PL2 ... um abaixo do outro -->
+                        <nav class="ind-pls" aria-label="Período letivo">
+                            <button id="btn-ano-inteiro-indicadores" type="button" class="ind-pl-btn is-active"
+                                title="PL1 a PL4 do ano escolhido, com a CH de cada PL">&#128197; Anual</button>
+                            <div id="ind-pl-buttons" class="ind-pls" role="group" aria-label="Período letivo"></div>
+                        </nav>
+                        <!-- Carga, Busca componente e Turma: a Unidade (o Dia a dia do docente olha todas) -->
+                        <label id="ind-lat-unidade" class="ind-lat-campo ind-lat-bloco">
+                            <span>Unidade</span>
+                            <select id="sel-unidade-indicadores" aria-label="Unidade"></select>
+                        </label>
+                        <!-- So no Dia a dia da turma: a faculdade (curso) filtra as turmas -->
+                        <div id="ind-faculdade-box" class="ind-lat-turma hidden">
+                            <label class="ind-lat-campo">
+                                <span>Faculdade / Curso</span>
+                                <select id="sel-curso-ind" aria-label="Faculdade"></select>
+                            </label>
+                        </div>
+                        <div id="ind-turmas-box" class="ind-lat-turma hidden">
+                            <span class="ind-lat-titulo">Turmas</span>
+                            <div id="ind-turmas" class="ind-turmas" role="group" aria-label="Turmas"></div>
+                        </div>
+                        <button id="btn-atualizar-indicadores" type="button" class="ind-lat-atualizar"
+                            title="Ler de novo as alocações (outros coordenadores podem ter mudado algo)">&#10227; Atualizar</button>
+                    </aside>
+
+                    <div class="ind-principal">
+                        <div class="ind-subabas no-print" role="tablist" aria-label="Tipos de indicador">
+                            <button type="button" class="ind-subaba is-ativa" data-subaba="carga" role="tab" aria-selected="true">Carga por docente</button>
+                            <!-- 28/11/2026: Busca componente logo depois da Carga; Dia a dia do docente e
+                                 Dia a dia da turma lado a lado (os mesmos nomes da Agenda do Docente). -->
+                            <button type="button" class="ind-subaba" data-subaba="componente" role="tab" aria-selected="false">Busca componente</button>
+                            <button type="button" class="ind-subaba" data-subaba="dias" role="tab" aria-selected="false">Dia a dia do docente</button>
+                            <button type="button" class="ind-subaba" data-subaba="turma" role="tab" aria-selected="false">Dia a dia da turma</button>
+                            <!-- Volta para a tela de antes de um atalho (Componente > Turma > Docente...). -->
+                            <button type="button" id="btn-ind-voltar" class="ind-voltar hidden"></button>
+                        </div>
+                        <!-- Embaixo das sub-abas: o nome do docente (Dia a dia do docente) ou da
+                             componente (Busca componente); some nas outras sub-abas. -->
+                        <div id="ind-buscas" class="ind-buscas no-print hidden">
+                            <span id="ind-docente-box" class="ind-docente-box hidden">
+                                <label class="ind-busca-rotulo" for="inp-docente-dias">Docente</label>
+                                <span class="ind-busca">
+                                    <input type="text" id="inp-docente-dias" aria-label="Docente" placeholder="Busque o professor..." autocomplete="off">
+                                    <button type="button" class="ind-busca-limpar hidden" data-limpar="inp-docente-dias" aria-label="Limpar o docente" title="Limpar e buscar outro docente">×</button>
+                                </span>
+                            </span>
+                            <span id="ind-componente-box" class="ind-docente-box hidden">
+                                <label class="ind-busca-rotulo" for="inp-componente-ind">Componente</label>
+                                <span class="ind-busca">
+                                    <input type="text" id="inp-componente-ind" list="list-componentes-ind" aria-label="Componente" placeholder="Busque a componente..." autocomplete="off">
+                                    <button type="button" class="ind-busca-limpar hidden" data-limpar="inp-componente-ind" aria-label="Limpar a componente" title="Limpar e buscar outra componente">×</button>
+                                </span>
+                                <datalist id="list-componentes-ind"></datalist>
+                            </span>
+                        </div>
+                        <p id="ind-resumo" class="ind-resumo" aria-live="polite"></p>
+                        <div id="ind-tabela"></div>
+                        <p class="ind-nota" id="ind-nota-carga">
+                            Conta tudo o que está no Cardume, <b>inclusive o que ainda não foi publicado</b>, nos cursos da unidade escolhida.
+                            Componente dividida entre docentes: a parte de cada um (ex.: 30 de 90 h).
+                            Componentes pendentes (ainda sem horário) não entram.
+                            Clique no nome para ver o <b>Dia a dia do docente</b> no mesmo período (← Voltar, no alto, volta para cá).
+                        </p>
+                        <ul class="ind-nota ind-nota-lista hidden" id="ind-nota-dias">
+                            <li>Cada linha é uma componente do docente e cada quadradinho é um dia do período letivo; o mesmo dia fica alinhado na vertical.</li>
+                            <li><b>Sobrecarga</b> (dia carregado, vermelho) = duas ou mais componentes diferentes no mesmo dia, por exemplo uma de manhã e outra à tarde.</li>
+                            <li>Não é choque de horário: é só um dia pesado para o docente. Estágio em campo não pesa o dia.</li>
+                            <li>T01 e T02 da mesma componente contam como duas.</li>
+                            <li>Ao lado de cada componente: <b>CH do docente / CH da componente</b> (ex.: 60/90h quando a componente é dividida ou é estágio com CH do orientador).</li>
+                            <li>Entram as componentes do docente em todas as unidades, inclusive o que ainda não foi publicado.</li>
+                            <li><b>Clique no nome de uma componente</b> para ver a turma dela no PL (sub-aba Dia a dia da turma), com a componente em destaque.</li>
+                        </ul>
+                        <ul class="ind-nota ind-nota-lista hidden" id="ind-nota-componente">
+                            <li>Cada linha é uma <b>oferta</b> da componente (turma + componente); T01 e T02 aparecem separadas. A lista de sugestões mostra só as componentes com horário na unidade e no período escolhidos.</li>
+                            <li><b>Clique na linha</b> para ver o quadro da turma naquele PL: a componente buscada em destaque, as outras mais claras. Clique de novo para fechar.</li>
+                            <li><b>✎ Ir para a oferta</b> abre a turma na barra lateral e mostra a componente na Lista de ofertas, para Editar ou Trocar. PL que já terminou: <i>PL encerrado</i>.</li>
+                            <li>Nome da <b>turma</b>: abre o Dia a dia da turma. Nome do <b>docente</b>: abre o Dia a dia do docente. <b>← Voltar</b> (no alto) volta para cá.</li>
+                            <li>Conta tudo o que está no Cardume, inclusive o que ainda não foi publicado. Pendentes (sem horário) não entram.</li>
+                        </ul>
+                        <ul class="ind-nota ind-nota-lista hidden" id="ind-nota-turma">
+                            <li>Escolha a turma na barra da esquerda: aparecem só as turmas com horário na unidade, na faculdade e no período escolhidos. No <b>Anual</b>, um quadro por PL.</li>
+                            <li>Embaixo do nome de cada componente: o(s) docente(s) e depois subturma, CH, dias, horário e datas (início–fim). <b>Clique no nome</b> para destacá-la no quadro; clique de novo para tirar o destaque.</li>
+                            <li><b>↗</b> ao lado do nome: em quais turmas e PLs a componente é dada (sub-aba Busca componente). <b>✎</b>: abre a componente na Lista de ofertas, para Editar ou Trocar. Nome do <b>docente</b>: Dia a dia do docente. <b>← Voltar</b> (no alto) volta para cá.</li>
+                            <li>Conta tudo o que está no Cardume, inclusive o que ainda não foi publicado. Pendentes (sem horário) não entram.</li>
+                        </ul>
+                    </div>
                 </div>
-                <div class="ind-filtros no-print">
-                    <span class="ind-filtros-rotulo">Unidade:</span>
-                    <select id="sel-unidade-indicadores" aria-label="Unidade"></select>
-                    <!-- Sub-aba Turma: a faculdade (curso) filtra as turmas da 2a linha. -->
-                    <span id="ind-faculdade-box" class="ind-docente-box hidden">
-                        <span class="ind-filtros-rotulo ind-filtros-rotulo--depois">Faculdade:</span>
-                        <select id="sel-curso-ind" aria-label="Faculdade"></select>
-                    </span>
-                    <span class="ind-filtros-rotulo ind-filtros-rotulo--depois">Período:</span>
-                    <select id="sel-ano-indicadores" aria-label="Ano"></select>
-                    <button id="btn-ano-inteiro-indicadores" type="button" class="docente-periodo-btn is-active"
-                        title="PL1 a PL4 do ano escolhido, com a CH de cada PL">📆 Ano inteiro</button>
-                    <div id="ind-pl-buttons" class="docente-pl-buttons" role="group" aria-label="Período letivo"></div>
-                    <!-- Quebra de linha: o Docente fica na 2a linha, embaixo da Unidade. -->
-                    <span id="ind-docente-quebra" class="ind-quebra hidden" aria-hidden="true"></span>
-                    <span id="ind-docente-box" class="ind-docente-box hidden">
-                        <span class="ind-filtros-rotulo">Docente:</span>
-                        <span class="ind-busca">
-                            <input type="text" id="inp-docente-dias" aria-label="Docente" placeholder="Busque o professor..." autocomplete="off">
-                            <button type="button" class="ind-busca-limpar hidden" data-limpar="inp-docente-dias" aria-label="Limpar o docente" title="Limpar e buscar outro docente">×</button>
-                        </span>
-                    </span>
-                    <span id="ind-componente-box" class="ind-docente-box hidden">
-                        <span class="ind-filtros-rotulo">Componente:</span>
-                        <span class="ind-busca">
-                            <input type="text" id="inp-componente-ind" list="list-componentes-ind" aria-label="Componente" placeholder="Busque a componente..." autocomplete="off">
-                            <button type="button" class="ind-busca-limpar hidden" data-limpar="inp-componente-ind" aria-label="Limpar a componente" title="Limpar e buscar outra componente">×</button>
-                        </span>
-                        <datalist id="list-componentes-ind"></datalist>
-                    </span>
-                    <span id="ind-turmas-box" class="ind-turmas-box hidden">
-                        <span class="ind-filtros-rotulo">Turma:</span>
-                        <span id="ind-turmas" class="ind-turmas" role="group" aria-label="Turmas"></span>
-                    </span>
-                    <button id="btn-atualizar-indicadores" type="button" class="docente-icon-btn docente-icon-btn--refresh"
-                        title="Ler de novo as alocações (outros coordenadores podem ter mudado algo)" aria-label="Atualizar">⟳</button>
-                </div>
-                <p id="ind-resumo" class="ind-resumo" aria-live="polite"></p>
-                <div id="ind-tabela"></div>
-                <p class="ind-nota" id="ind-nota-carga">
-                    Conta tudo o que está no Cardume, <b>inclusive o que ainda não foi publicado</b>, nos cursos da unidade escolhida.
-                    Componente dividida entre docentes: a parte de cada um (ex.: 30 de 90 h).
-                    Componentes pendentes (ainda sem horário) não entram.
-                    Clique no nome para ver o <b>Dia a dia do docente</b> no mesmo período (← Voltar, no alto, volta para cá).
-                </p>
-                <ul class="ind-nota ind-nota-lista hidden" id="ind-nota-dias">
-                    <li>Cada linha é uma componente do docente e cada quadradinho é um dia do período letivo; o mesmo dia fica alinhado na vertical.</li>
-                    <li><b>Sobrecarga</b> (dia carregado, vermelho) = duas ou mais componentes diferentes no mesmo dia, por exemplo uma de manhã e outra à tarde.</li>
-                    <li>Não é choque de horário: é só um dia pesado para o docente. Estágio em campo não pesa o dia.</li>
-                    <li>T01 e T02 da mesma componente contam como duas.</li>
-                    <li>Ao lado de cada componente: <b>CH do docente / CH da componente</b> (ex.: 60/90h quando a componente é dividida ou é estágio com CH do orientador).</li>
-                    <li>Entram as componentes do docente em todas as unidades, inclusive o que ainda não foi publicado.</li>
-                    <li><b>Clique no nome de uma componente</b> para ver a turma dela no PL (sub-aba Dia a dia da turma), com a componente em destaque.</li>
-                </ul>
-                <ul class="ind-nota ind-nota-lista hidden" id="ind-nota-componente">
-                    <li>Cada linha é uma <b>oferta</b> da componente (turma + componente); T01 e T02 aparecem separadas. A lista de sugestões mostra só as componentes com horário na unidade e no período escolhidos.</li>
-                    <li><b>Clique na linha</b> para ver o quadro da turma naquele PL: a componente buscada em destaque, as outras mais claras. Clique de novo para fechar.</li>
-                    <li><b>✎ Ir para a oferta</b> abre a turma na barra lateral e mostra a componente na Lista de ofertas, para Editar ou Trocar. PL que já terminou: <i>PL encerrado</i>.</li>
-                    <li>Nome da <b>turma</b>: abre o Dia a dia da turma. Nome do <b>docente</b>: abre o Dia a dia do docente. <b>← Voltar</b> (no alto) volta para cá.</li>
-                    <li>Conta tudo o que está no Cardume, inclusive o que ainda não foi publicado. Pendentes (sem horário) não entram.</li>
-                </ul>
-                <ul class="ind-nota ind-nota-lista hidden" id="ind-nota-turma">
-                    <li>Escolha a turma na 2ª linha: aparecem só as turmas com horário na unidade, na faculdade e no período escolhidos. No <b>Ano inteiro</b>, um quadro por PL.</li>
-                    <li>Embaixo do nome de cada componente: o(s) docente(s) e depois subturma, CH, dias, horário e datas (início–fim). <b>Clique no nome</b> para destacá-la no quadro; clique de novo para tirar o destaque.</li>
-                    <li><b>↗</b> ao lado do nome: em quais turmas e PLs a componente é dada (sub-aba Busca componente). <b>✎</b>: abre a componente na Lista de ofertas, para Editar ou Trocar. Nome do <b>docente</b>: Dia a dia do docente. <b>← Voltar</b> (no alto) volta para cá.</li>
-                    <li>Conta tudo o que está no Cardume, inclusive o que ainda não foi publicado. Pendentes (sem horário) não entram.</li>
-                </ul>
             </section>
 
             <section id="tab-list" class="tab-content" role="tabpanel" aria-labelledby="tabbtn-list">
@@ -1680,7 +1702,7 @@
         </main>
     </div>
 
-    <script type="module" src="js/main.js?v=202611281645"></script>
+    <script type="module" src="js/main.js?v=202611281702"></script>
 </body>
 
 </html>

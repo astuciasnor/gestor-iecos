@@ -181,7 +181,10 @@
 }
 .doc-busca[hidden] { display: none; }
 .doc-busca label { font-size: 0.78rem; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase; color: #5b7268; }
-.doc-busca .pub-input { flex: 1 1 auto; max-width: 620px; padding-top: 8px; padding-bottom: 8px; }
+.doc-busca-campo { flex: 1 1 auto; max-width: 620px; }
+.doc-busca .pub-input { width: 100%; padding-top: 8px; padding-bottom: 8px; padding-right: 48px; }
+/* Sem a setinha da lista (o X fica no lugar dela, como no campo Professor) */
+.doc-busca .pub-input::-webkit-calendar-picker-indicator { display: none !important; }
 .doc-lat-so-turma { padding-top: 0; border-top: 0; }
 .doc-lat-so-turma[hidden] { display: none; }
 /* Tabela das ofertas: a linha leva a turma (clique) */

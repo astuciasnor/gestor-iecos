@@ -1,19 +1,19 @@
-import { UNIDADE_PADRAO, unidadeDoCurso } from './unidades.mjs?v=202611281645';
-import { escapeHtml } from './texto.mjs?v=202611281645';
-import { store, normalizeLoadedAllocation } from './store.js?v=202611281645';
-import { getTurnoLetter } from './turns.js?v=202611281645';
-import { getCalendarEvents } from './calendar.js?v=202611281645';
-import { resolveActiveAcademicPeriod } from './academic_rules.mjs?v=202611281645';
-import { buildMonthMarkers, summarizeTeacherPeriod } from './resumo_docente.mjs?v=202611281645';
-import { resolveBackendMode, UFPA_API_URL } from './backend_config.js?v=202611281645';
-import { filtrarDocentes, UNIDADES } from './docente_nomes.mjs?v=202611281645';
-import { nomeComSubturma, sufixoSubturma } from './subturmas.mjs?v=202611281645';
-import { feriadosDaTurma } from './feriados.mjs?v=202611281645';
-import { chOrientadorDaOferta } from './estagio.mjs?v=202611281645';
-import { focarDiaDoQuadro, DICA_MOUSE, entradaDias, fmtCH, montarQuadrosDias, textoSobrecarga } from './quadro_dias.mjs?v=202611281645';
-import { getCursoSiglaDaTurma, getTurmaBaseLabel } from './curso_turma_helpers.js?v=202611281645';
-import { chaveComponente, nomesDasComponentes, SEM_DOCENTE } from './indicadores.mjs?v=202611281645';
-import { aulasDaTurma, cursosDaUnidade, detalheDaLinha, linhasDaComponente, linhasDaTurma, nomeDoCurso, nomeUnidade, planoDaUnidade, quadroTurmaDoPlano, turmasDosPlanos, unidadeDe } from './quadro_turma.mjs?v=202611281645';
+import { UNIDADE_PADRAO, unidadeDoCurso } from './unidades.mjs?v=202611281702';
+import { escapeHtml } from './texto.mjs?v=202611281702';
+import { store, normalizeLoadedAllocation } from './store.js?v=202611281702';
+import { getTurnoLetter } from './turns.js?v=202611281702';
+import { getCalendarEvents } from './calendar.js?v=202611281702';
+import { resolveActiveAcademicPeriod } from './academic_rules.mjs?v=202611281702';
+import { buildMonthMarkers, summarizeTeacherPeriod } from './resumo_docente.mjs?v=202611281702';
+import { resolveBackendMode, UFPA_API_URL } from './backend_config.js?v=202611281702';
+import { filtrarDocentes, UNIDADES } from './docente_nomes.mjs?v=202611281702';
+import { nomeComSubturma, sufixoSubturma } from './subturmas.mjs?v=202611281702';
+import { feriadosDaTurma } from './feriados.mjs?v=202611281702';
+import { chOrientadorDaOferta } from './estagio.mjs?v=202611281702';
+import { focarDiaDoQuadro, DICA_MOUSE, entradaDias, fmtCH, montarQuadrosDias, textoSobrecarga } from './quadro_dias.mjs?v=202611281702';
+import { getCursoSiglaDaTurma, getTurmaBaseLabel } from './curso_turma_helpers.js?v=202611281702';
+import { chaveComponente, nomesDasComponentes, SEM_DOCENTE } from './indicadores.mjs?v=202611281702';
+import { aulasDaTurma, cursosDaUnidade, detalheDaLinha, linhasDaComponente, linhasDaTurma, nomeDoCurso, nomeUnidade, planoDaUnidade, quadroTurmaDoPlano, turmasDosPlanos, unidadeDe } from './quadro_turma.mjs?v=202611281702';
 
 const collator = new Intl.Collator('pt-BR', { sensitivity: 'base' });
 const PUBLIC_ASSET_VERSION = '20261028a';
@@ -554,13 +554,27 @@ let linhasCompDoc = [];
 function ligarBuscaComponente() {
     const inp = document.getElementById('doc-inp-componente');
     if (!inp) return;
+    // X para apagar (como no campo Professor): aparece quando ha texto.
+    const limpar = document.getElementById('btn-limpar-componente');
+    const syncLimpar = () => { if (limpar) limpar.style.display = inp.value ? 'flex' : 'none'; };
     inp.value = state.compDoc;
+    syncLimpar();
+    limpar?.addEventListener('click', () => {
+        inp.value = '';
+        syncLimpar();
+        inp.focus();
+        if (!state.compDoc) return;
+        state.compDoc = '';
+        atualizarLinkDocente();
+        renderActiveView();
+    });
     inp.addEventListener('change', () => {
         state.compDoc = inp.value.trim();
         atualizarLinkDocente();
         renderActiveView();
     });
     inp.addEventListener('input', () => {
+        syncLimpar();
         if (inp.value.trim() || !state.compDoc) return;
         state.compDoc = ''; // apagou: volta para "Digite o nome"
         atualizarLinkDocente();
@@ -589,7 +603,11 @@ function renderComponenteDocente() {
     const lista = document.getElementById('doc-lista-componentes');
     if (lista) lista.innerHTML = nomes.map((n) => `<option value="${escapeHtmlAttr(n)}"></option>`).join('');
     const inp = document.getElementById('doc-inp-componente');
-    if (inp && document.activeElement !== inp) inp.value = state.compDoc;
+    if (inp && document.activeElement !== inp) {
+        inp.value = state.compDoc;
+        const limpar = document.getElementById('btn-limpar-componente');
+        if (limpar) limpar.style.display = inp.value ? 'flex' : 'none';
+    }
 
     if (!state.compDoc) {
         els.resultadoAgenda.innerHTML = `<div class="doc-boas-vindas">Digite o nome da <b>componente</b> no campo acima e escolha na lista
