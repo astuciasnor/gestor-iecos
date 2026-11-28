@@ -75,13 +75,14 @@
 .doc-pls .pub-pill { justify-content: center; padding: 6px 8px; font-size: 0.9rem; }
 .doc-pls .pub-pill.active { cursor: default; }
 
-/* Dia a dia da Turma: Unidade, Faculdade/Curso e as turmas (duas por linha) */
+/* Dia a dia da Turma: Unidade, Faculdade/Curso e as turmas (uma abaixo da
+   outra, cartao maior: pedido de 28/11/2026) */
 .doc-lat-turma { display: flex; flex-direction: column; gap: 10px; padding-top: 10px; border-top: 1px solid var(--pub-line); }
 .doc-lat-turma[hidden] { display: none; }
-.doc-turmas { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
+.doc-turmas { display: grid; grid-template-columns: 1fr; gap: 6px; }
 .doc-turma-chip {
-    padding: 5px 2px; border: 1px solid var(--pub-line); border-radius: 8px;
-    background: #f4f8f5; color: var(--pub-ink); font: inherit; font-size: 0.78rem; font-weight: 700;
+    padding: 8px 6px; border: 1px solid var(--pub-line); border-radius: 10px;
+    background: #f4f8f5; color: var(--pub-ink); font: inherit; font-size: 0.9rem; font-weight: 800;
     cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .doc-turma-chip:hover { border-color: #1c5356; background: #fff; }
